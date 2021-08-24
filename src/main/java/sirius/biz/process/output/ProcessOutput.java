@@ -64,7 +64,7 @@ public class ProcessOutput extends Nested {
     private String computeIcon(String outputType) {
         return Optional.of(globalContext.getPart(outputType, ProcessOutputType.class))
                        .map(ProcessOutputType::getIcon)
-                       .orElse("fa-bars");
+                       .orElse("fa fa-bars");
     }
 
     /**

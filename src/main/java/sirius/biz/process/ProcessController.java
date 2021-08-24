@@ -35,6 +35,7 @@ import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.services.InternalService;
@@ -54,8 +55,6 @@ public class ProcessController extends BizController {
      * Defines the permission required to view and manage processes of other tenants.
      */
     public static final String PERMISSION_MANAGE_ALL_PROCESSES = "permission-manage-all-processes";
-
-    private static final int NUMBER_OF_PREVIEW_LOGS = 15;
 
     @Part
     private Processes processes;
@@ -98,7 +97,8 @@ public class ProcessController extends BizController {
                                       DateRange.YESTERDAY,
                                       DateRange.THIS_WEEK,
                                       DateRange.LAST_WEEK);
-        pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
+        pageHelper.withSearchFields(QueryField.contains(Process.SEARCH_FIELD));
+        pageHelper.withTotalCount();
 
         ctx.respondWith().template("/templates/biz/process/processes.html.pasta", pageHelper.asPage());
     }
@@ -111,44 +111,22 @@ public class ProcessController extends BizController {
     }
 
     /**
-     * Shows the details of the given process.
-     *
-     * @param ctx       the current request
-     * @param processId the id of the process to show
-     */
-    @Routed("/ps/:1")
-    @LoginRequired
-    public void processDetails(WebContext ctx, String processId) {
-        Process process = findAccessibleProcess(processId);
-
-        ElasticQuery<ProcessLog> query = buildLogsQuery(process);
-
-        // If the whole logs fit into the preview, we sort them in natural order,
-        // otherwise we show the last N (descending)
-        long numberOfLogs = query.count();
-        if (numberOfLogs > NUMBER_OF_PREVIEW_LOGS) {
-            query = query.orderDesc(ProcessLog.SORT_KEY).limit(NUMBER_OF_PREVIEW_LOGS);
-        } else {
-            query = query.orderAsc(ProcessLog.SORT_KEY);
-        }
-
-        ctx.respondWith().template("/templates/biz/process/process-details.html.pasta", process, query.queryList());
-    }
-
-    /**
      * Shows the log entries of the given process.
+     * <p>
+     * Note that this is also the default view of a process.
      *
      * @param ctx       the current request
      * @param processId the id of the process to show the log entries for
      */
-    @Routed("/ps/:1/logs")
+    @Routed("/ps/:1")
     @LoginRequired
-    public void processLogs(WebContext ctx, String processId) {
+    public void process(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
 
         ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(buildLogsQuery(process));
         ph.withContext(ctx);
         ph.withPageSize(100);
+        ph.withTotalCount();
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
         ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
         ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
@@ -159,7 +137,11 @@ public class ProcessController extends BizController {
                               false,
                               DateRange.LAST_FIVE_MINUTES,
                               DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS);
+                              DateRange.LAST_TWO_HOURS,
+                              DateRange.TODAY,
+                              DateRange.YESTERDAY,
+                              DateRange.THIS_MONTH,
+                              DateRange.LAST_MONTH);
         ph.addTermAggregation(ProcessLog.NODE);
         ph.addSortFacet(Tuple.create("$ProcessController.sortDesc", qry -> qry.orderDesc(ProcessLog.SORT_KEY)),
                         Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));
@@ -176,7 +158,7 @@ public class ProcessController extends BizController {
      * @param type      the desired export file format
      * @see ProcessController#exportOutput(WebContext, String, String, String)
      */
-    @Routed("/ps/:1/logs/export/:2")
+    @Routed("/ps/:1/export/:2")
     @LoginRequired
     public void exportLogs(WebContext ctx, String processId, String type) {
         exportOutput(ctx, processId, null, type);
@@ -206,9 +188,30 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps/:1/toggleDebugging")
     @LoginRequired
+    @Permission(PERMISSION_MANAGE_PROCESSES)
     public void toggleDebugging(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
         processes.changeDebugging(process.getId(), !process.isDebugging());
+
+        // Give ES some time to digest the change before essentially reloading the page...
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet("/ps/" + process.getId()));
+    }
+
+    /**
+     * Toggles (enables / disables) debug output for the given process.
+     *
+     * @param ctx       the current request
+     * @param processId the id of the process to enable or disable debugging for
+     */
+    @Routed("/ps/:1/updatePersistence")
+    @LoginRequired
+    @Permission(PERMISSION_MANAGE_PROCESSES)
+    public void updatePersistencePeriod(WebContext ctx, String processId) {
+        Process process = findAccessibleProcess(processId);
+        processes.updatePersistence(process.getId(),
+                                    ctx.get("persistencePeriod")
+                                       .getEnum(PersistencePeriod.class)
+                                       .orElse(process.getPersistencePeriod()));
 
         // Give ES some time to digest the change before essentially reloading the page...
         delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet("/ps/" + process.getId()));
@@ -314,9 +317,8 @@ public class ProcessController extends BizController {
                                                            .format()));
         } catch (Exception e) {
             UserContext.handle(e);
+            ctx.respondWith().redirectToGet("/ps/" + processId);
         }
-
-        processDetails(ctx, processId);
     }
 
     /**

@@ -60,7 +60,7 @@ public class TableProcessOutputType implements ProcessOutputType {
 
     @Override
     public String getIcon() {
-        return "fa-table";
+        return "fa fa-table";
     }
 
     /**

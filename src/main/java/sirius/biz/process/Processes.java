@@ -497,6 +497,19 @@ public class Processes {
     }
 
     /**
+     * Changes the persistence period of a process.
+     *
+     * @param processId         the process to update
+     * @param persistencePeriod specifies the new persistence period
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    protected boolean updatePersistence(String processId, PersistencePeriod persistencePeriod) {
+        return modify(processId,
+                      process -> process.getPersistencePeriod() != persistencePeriod,
+                      process -> process.setPersistencePeriod(persistencePeriod));
+    }
+
+    /**
      * Marks a process as completed.
      *
      * @param processId    the process to update

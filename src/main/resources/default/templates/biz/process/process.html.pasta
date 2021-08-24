@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.process.Process" name="process"/>
 <i:arg type="String" name="page"/>
 
-<w:page title="@process.getTitle()">
+<t:page title="@process.getTitle()">
     <i:block name="breadcrumbs">
         <li>
             <a href="/ps">@i18n("Process.plural")</a>
@@ -11,118 +11,143 @@
         </li>
     </i:block>
 
-    <w:pageHeader>
-        <div class="row">
-            <div class="col-md-8">
-                <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
-                    <i class="fa fa-refresh fa-spin" id="spinner"></i>
-                    <i:else>
-                        <i class="fa @process.getIcon()" id="spinner"></i>
-                    </i:else>
-                </i:if>
-                @process.getTitle()
-                <span class="label @process.getLabelClass()">@process.getState()</span>
-            </div>
-            <div class="col-md-4 align-right">
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">
+                <span class="d-flex flex-row align-items-center">
+                    <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+                        <span class="pr-2 text-black-75 text-small"><i class="fa fa-sync fa-spin"></i></span>
+                    </i:if>
+                    <span>@process.getTitle()</span>
+                </span>
+            </i:block>
+            <i:block name="actions">
+                <i:render name="header-actions"/>
+            </i:block>
+            <i:block name="additionalActions">
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING || process.getState() == sirius.biz.process.ProcessState.STANDBY">
                     <i:if test="process.isDebugging()">
-                        <a class="btn btn-success" href="/ps/@process.getId()/toggleDebugging">@i18n("ProcessController.disableDebugging")</a>
+                        <t:dropdownItem labelKey="ProcessController.disableDebugging"
+                                        permission="permission-manage-processes"
+                                        url="@apply('/ps/%s/toggleDebugging', process.getId())"/>
                         <i:else>
-                            <a class="btn btn-default" href="/ps/@process.getId()/toggleDebugging">@i18n("ProcessController.enableDebugging")</a>
+                            <t:dropdownItem labelKey="ProcessController.enableDebugging"
+                                            permission="permission-manage-processes"
+                                            url="@apply('/ps/%s/toggleDebugging', process.getId())"/>
                         </i:else>
                     </i:if>
                 </i:if>
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
-                    <a class="btn btn-danger" href="/ps/@process.getId()/cancel">@i18n("NLS.cancel")</a>
+                    <t:dropdownItem labelKey="NLS.cancel" url="@apply('/ps/%s/cancel', process.getId())"
+                                    class="text-sirius-red danger"/>
                 </i:if>
-            </div>
-        </div>
-    </w:pageHeader>
+            </i:block>
 
-    <div class="row">
-        <div class="col-md-3">
-            <w:infobox titleKey="Model.details">
-                <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
-                    <w:infoboxElement labelKey="Process.lastInteraction" value="@process.getStartedAsString()"/>
-                    <w:infoboxElement labelKey="Process.persistencePeriod" value="@process.getPersistencePeriod()"/>
-                    <i:else>
-                        <w:infoboxElement labelKey="Process.userName" value="@process.getUserName()"/>
-                        <w:infoboxElement labelKey="Process.tenantName" value="@process.getTenantName()"/>
-                        <w:infoboxElement labelKey="Process.started" value="@process.getStartedAsString()"/>
-                        <w:infoboxElement labelKey="Process.runtime" value="@process.getRuntimeAsString()"/>
-                        <w:infoboxElement labelKey="Process.completed" value="@process.getCompletedAsString()"/>
-                        <w:infoboxElement labelKey="Process.persistencePeriod" value="@process.getPersistencePeriod()"/>
-                        <w:infoboxElement labelKey="Process.expires" value="@process.getExpiresAsString()"/>
-                    </i:else>
+            <t:dot color="@process.getStateColor()">@process.getState()</t:dot>
+            <i:if test="process.isWarnings()">
+                <t:tag color="yellow">@i18n("Process.warnings")</t:tag>
+            </i:if>
+            <i:if test="process.isErrorneous()">
+                <t:tag color="red">@i18n("Process.errorneous")</t:tag>
+            </i:if>
+            <t:iconInlineInfo icon="fa fa-user">
+                <t:smartValue type="user-account" payload="@process.getUserId()" label="@process.getUserName()"/>
+                <i:if test="isFilled(process.getTenantId()) && user().getTenantId() != process.getTenantId()">
+                    (
+                    <t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()"/>
+                    )
                 </i:if>
-                <i:extensions target="process" point="details" process="@process"/>
-            </w:infobox>
+            </t:iconInlineInfo>
+            <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
+                <t:iconInlineInfo icon="fa fa-wave-square">
+                    <t:smartFormatTemporal date="process.getStarted()"/>
+                </t:iconInlineInfo>
+                <i:else>
+                    <t:iconInlineInfo icon="fa fa-clock">
+                        <div class="cycle link"
+                             data-cycle="@process.getStartedAsString() - @process.getCompletedAsString()">
+                            @toSpokenDate(process.getStarted()) (@process.getRuntimeAsString())
+                        </div>
+                    </t:iconInlineInfo>
+                </i:else>
+            </i:if>
+        </t:pageHeader>
+    </i:block>
 
-            <w:navbox labelKey="Model.links">
-                <w:navboxLink icon="fa-info-circle" labelKey="Model.details" url="@apply('/ps/%s', process.getId())" active="page == 'details'"/>
-                <w:navboxLink icon="fa-bars" labelKey="ProcessLog.plural" url="@apply('/ps/%s/logs', process.getId())" active="page == 'logs'"/>
-
-                <i:for type="sirius.biz.process.output.ProcessOutput" var="output" items="@process.getOutputs()">
-                    <w:navboxLink icon="@output.getIcon()" label="@output.getLabel()"
-                                  url="@apply('/ps/%s/output/%s', process.getId(), output.getName())"
-                                  active="page == 'output-' + output.getName()"/>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:infobox labelKey="Process.counters">
+                <i:for type="String" var="counter" items="process.getCounterList()">
+                    <t:infoLine label="@process.getCounterLabel(counter)">
+                        <i:local name="timing" value="process.getCounterTiming(counter)"/>
+                        <b>@process.getCounterValue(counter)</b>
+                        <i:if test="isFilled(timing)">
+                            (@timing)
+                        </i:if>
+                    </t:infoLine>
                 </i:for>
+            </t:infobox>
 
-                <i:extensions target="process" point="sidebar-menu" process="@process"/>
-            </w:navbox>
+            <i:if test="@!process.getOutputs().isEmpty()">
+                <t:navbox labelKey="Process.outputs">
+                    <t:navboxLink icon="fa fa-bars" labelKey="ProcessLog.plural"
+                                  url="@apply('/ps/%s', process.getId())"
+                                  active="page == 'logs'"/>
 
-            <i:extensions target="process" point="sidebar-top" process="@process"/>
-            <i:render name="sidebar" />
-            <i:extensions target="process" point="sidebar-bottom" process="@process"/>
+                    <i:for type="sirius.biz.process.output.ProcessOutput" var="output" items="@process.getOutputs()">
+                        <t:navboxLink icon="@output.getIcon()" label="@output.getLabel()"
+                                      url="@apply('/ps/%s/output/%s', process.getId(), output.getName())"
+                                      active="page == 'output-' + output.getName()"/>
+                    </i:for>
 
-            <w:jobs target="process" />
-
-            <a href="/ps" class="btn btn-block">@i18n("NLS.back")</a>
-        </div>
-        <div class="col-md-9">
-            <i:if test="isFilled(process.getStateMessage())">
-                <w:helpbox>
-                    <i class="fa fa-info-circle"></i> <b>@i18n("Process.stateMessage"):</b>
-                    @process.getStateMessage()
-                </w:helpbox>
+                    <i:extensions target="process" point="sidebar-menu" process="@process"/>
+                </t:navbox>
             </i:if>
 
-            <i:render name="body" />
-        </div>
-    </div>
+            <i:extensions target="process" point="sidebar-top" process="@process"/>
+            <i:render name="sidebar"/>
 
+            <t:navbox labelKey="Process.externalLinks">
+                <i:for type="sirius.biz.process.ProcessLink" var="link" items="process.getLinks()">
+                    <t:navboxLink icon="fa fa-external-link-alt" url="@link.getUri()" label="@link.getLabel()"/>
+                </i:for>
+            </t:navbox>
+
+            <t:navbox labelKey="Process.files">
+                <i:for type="sirius.biz.storage.layer2.Blob" var="file" items="process.getFiles().findAttachedBlobs()">
+                    <i:local name="url" value="file.url().asDownload().buildURL()"/>
+                    <i:if test="url.isPresent()">
+                        <t:navboxLink icon="fa fa-file" url="@url.get()">
+                            @file.getFilename()
+                            <span class="text-small text-muted">(@formatSize(file.getSize()))</span>
+                        </t:navboxLink>
+                    </i:if>
+                </i:for>
+            </t:navbox>
+
+
+            <i:extensions target="process" point="sidebar-bottom" process="@process"/>
+
+            <w:jobs target="process"/>
+        </i:block>
+
+        <i:if test="isFilled(process.getStateMessage())">
+            <t:helpbox>
+                <i class="fa fa-info-circle"></i> <b>@i18n("Process.stateMessage"):</b>
+                @process.getStateMessage()
+            </t:helpbox>
+        </i:if>
+
+        <i:render name="body"/>
+    </t:sidebar>
+    ´
     <i:if test="process.shouldAutorefresh()">
-        <div class="autorefresh"></div>
+        <script type="text/javascript">
+            sirius.ready(function () {
+                setTimeout(function () {
+                    window.location.reload();
+                }, 5000);
+            });
+        </script>
     </i:if>
-    <script type="text/javascript">
-        function planUpdate() {
-            if ($('.autorefresh').length === 0) {
-                return;
-            }
-
-            setTimeout(function () {
-                $.ajax({
-                    url: location.href,
-                    success: function (response) {
-                        var container = $("<div></div>");
-                        container.html(response);
-                        var newContent = $(container).find(".wrap");
-                        if (newContent.length > 0) {
-                            $(".wrap").html(newContent);
-                            invokeResizeHandler();
-                        }
-
-                        planUpdate();
-                    },
-                    error: function(e) {
-                        planUpdate();
-                    }
-                });
-            }, 5000);
-        }
-
-        $(document).ready(function () {
-            planUpdate();
-        });
-    </script>
-</w:page>
+</t:page>

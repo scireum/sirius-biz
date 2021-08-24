@@ -8,45 +8,54 @@
 <i:invoke template="/templates/biz/process/process.html.pasta"
           process="process"
           page="@apply('output-%s', name)">
-    <i:block name="sidebar">
-        <w:filterbox page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
-    </i:block>
-
-    <w:tableSearchHeader page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)">
+    <i:block name="header-actions">
         <i:if test="process.getState() == sirius.biz.process.ProcessState.TERMINATED">
-            <w:dropdown class="btn" titleKey="ProcessController.export">
+            <t:dropdown labelKey="ProcessController.export"
+                        icon="fa fa-file-export"
+                        class="mr-2"
+                        labelClass="d-none d-xl-inline">
                 <i:for type="sirius.biz.jobs.batch.file.ExportFileType"
                        var="type"
                        items="enumValues(sirius.biz.jobs.batch.file.ExportFileType.class)">
-                    <li class="dropdown-item">
-                        <a href="@apply('/ps/%s/output/%s/export/%s', process.getId(), name, type.name())">@type</a>
-                    </li>
+                    <t:dropdownItem label="@type.toString()"
+                                    url="@apply('/ps/%s/output/%s/export/%s', process.getId(), name, type.name())"/>
                 </i:for>
-            </w:dropdown>
+            </t:dropdown>
         </i:if>
-    </w:tableSearchHeader>
+    </i:block>
+    <i:block name="sidebar">
+        <t:filterbox page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+    </i:block>
 
-    <w:table data="rows" class="table-bordered">
-        <thead>
-        <tr>
-            <i:for type="String" var="column" items="labels">
-                <th class="align-center">@column</th>
-            </i:for>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.process.logs.ProcessLog" var="row" items="rows.getItems()">
-            <tr>
-                <i:for type="String" var="column" items="columns">
-                    <i:raw>
-                        <td class="cell">@cells.render(column, row.getContext().data())</td>
-                    </i:raw>
-                </i:for>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
+    <t:searchHeader page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
 
-    <w:pagination page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+    <t:emptyCheck data="rows">
+        <div class="card mb-4">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <i:for type="String" var="column" items="labels">
+                            <th class="align-center">@column</th>
+                        </i:for>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <i:for type="sirius.biz.process.logs.ProcessLog" var="row" items="rows.getItems()">
+                        <tr>
+                            <i:for type="String" var="column" items="columns">
+                                <i:raw>
+                                    <td class="cell">@cells.render(column, row.getContext().data())</td>
+                                </i:raw>
+                            </i:for>
+                        </tr>
+                    </i:for>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </t:emptyCheck>
+
+    <t:pagination page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
 
 </i:invoke>

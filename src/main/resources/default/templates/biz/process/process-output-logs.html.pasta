@@ -5,53 +5,59 @@
 <i:invoke template="/templates/biz/process/process.html.pasta"
           process="process"
           page="@apply('output-%s', name)">
-    <i:block name="sidebar">
-        <w:filterbox page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
-    </i:block>
-
-    <w:tableSearchHeader page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)">
+    <i:block name="header-actions">
         <i:if test="process.getState() == sirius.biz.process.ProcessState.TERMINATED">
-            <w:dropdown class="btn" titleKey="ProcessController.export">
+            <t:dropdown labelKey="ProcessController.export"
+                        icon="fa fa-file-export"
+                        class="mr-2"
+                        labelClass="d-none d-xl-inline">
                 <i:for type="sirius.biz.jobs.batch.file.ExportFileType"
                        var="type"
                        items="enumValues(sirius.biz.jobs.batch.file.ExportFileType.class)">
-                    <li class="dropdown-item">
-                        <a href="@apply('/ps/%s/output/%s/export/%s', process.getId(), name, type.name())">@type</a>
-                    </li>
+                    <t:dropdownItem label="@type.toString()"
+                                    url="@apply('/ps/%s/output/%s/export/%s', process.getId(), name, type.name())"/>
                 </i:for>
-            </w:dropdown>
+            </t:dropdown>
         </i:if>
-    </w:tableSearchHeader>
+    </i:block>
+    <i:block name="sidebar">
+        <t:filterbox page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+    </i:block>
 
-    <w:table data="logs" colorized="true">
-        <thead>
-        <tr>
-            <th/>
-            <th>
-                @i18n("ProcessLog.message")
-            </th>
-            <th class="align-right">
-                @i18n("ProcessLog.timestamp")<br>
-                <small class="muted">@i18n("ProcessLog.node")</small>
-            </th>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="logs.getItems()">
-            <tr class="@log.getRowClass()">
-                <td/>
-                <td>
-                    <pre class="plain" style="white-space: break-spaces">@log.getMessage()</pre>
-                </td>
-                <td class="align-right">
-                    @log.getTimestampAsString()<br>
-                    <small class="muted">@log.getNode()</small>
-                </td>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
+    <t:searchHeader page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
 
-    <w:pagination page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+    <t:emptyCheck data="logs">
+        <div class="card mb-4">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>
+                            @i18n("ProcessLog.message")
+                        </th>
+                        <th class="text-right">
+                            @i18n("ProcessLog.timestamp")
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="logs.getItems()">
+                        <tr>
+                            <td class="left-border border-sirius-@log.getRowColor()">
+                                <div class="whitespace-pre-wrap overflow-hidden text-monospace text-small">@log.getMessage()</div>
+                            </td>
+                            <td class="text-right">
+                                <div class="cycle link text-small whitespace-no-wrap" data-cycle="@log.getNode()">
+                                    @log.getTimestampAsString()
+                                </div>
+                            </td>
+                        </tr>
+                    </i:for>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </t:emptyCheck>
 
+    <t:pagination page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
 </i:invoke>
