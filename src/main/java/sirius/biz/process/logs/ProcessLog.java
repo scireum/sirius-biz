@@ -154,6 +154,8 @@ public class ProcessLog extends SearchableEntity {
     @Transient
     private ProcessLogHandler handler;
 
+    private int maxMessagesToLog;
+
     @BeforeSave
     protected void onSave() {
         StringBuilder searchContent = new StringBuilder();
@@ -309,6 +311,22 @@ public class ProcessLog extends SearchableEntity {
     public ProcessLog withMessageType(String messageType) {
         this.messageType = messageType;
         return this;
+    }
+
+    /**
+     * Specifies a custom message type to be used as facet filter while also limiting the maximal number of messages
+     * recorded for this type.
+     * <p>
+     * Values will be {@link NLS#smartGet(String) smart translated}.
+     *
+     * @param messageType      the custom message type to provide as filter value.
+     * @param maxMessagesToLog the maximal number of messages to log with this type. All other messages will be skipped,
+     *                         but a counter will keep track of the total amount.
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withLimitedMessageType(String messageType, int maxMessagesToLog) {
+        this.maxMessagesToLog = maxMessagesToLog;
+        return withMessageType(messageType);
     }
 
     /**
@@ -512,5 +530,9 @@ public class ProcessLog extends SearchableEntity {
 
     public String getMessageType() {
         return messageType;
+    }
+
+    public int getMaxMessagesToLog() {
+        return maxMessagesToLog;
     }
 }
