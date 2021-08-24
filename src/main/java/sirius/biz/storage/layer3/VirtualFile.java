@@ -1382,19 +1382,19 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private String parsePathFromUrl(URL url, Predicate<String> fileExtensionVerifier) {
         // If the URL has a querystring, we check every parameter and determine if there is one with a valid
         // filename. Otherwise, we use the filename as provided by the URL path itself...
-        QueryStringDecoder qsd = new QueryStringDecoder(url.toString(), StandardCharsets.UTF_8);
-        return qsd.parameters()
-                  .values()
-                  .stream()
-                  .flatMap(List::stream)
-                  .filter(path -> fileExtensionVerifier.test(Files.getFileExtension(path)))
-                  .findFirst()
-                  .orElseGet(() -> {
-                      if (fileExtensionVerifier.test(Files.getFileExtension(url.getPath()))) {
-                          return url.getPath();
-                      }
-                      return null;
-                  });
+        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(url.toString(), StandardCharsets.UTF_8);
+        return queryStringDecoder.parameters()
+                                 .values()
+                                 .stream()
+                                 .flatMap(List::stream)
+                                 .filter(path -> fileExtensionVerifier.test(Files.getFileExtension(path)))
+                                 .findFirst()
+                                 .orElseGet(() -> {
+                                     if (fileExtensionVerifier.test(Files.getFileExtension(url.getPath()))) {
+                                         return url.getPath();
+                                     }
+                                     return null;
+                                 });
     }
 
     private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URL url, FetchFromUrlMode mode) throws IOException {
