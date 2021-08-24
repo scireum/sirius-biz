@@ -1,2 +1,3 @@
 ___include("assets/scripts/multiLanguageField.js")
 ___include("assets/scripts/lookupTables.js")
+___include("assets/scripts/smartValues.js")
