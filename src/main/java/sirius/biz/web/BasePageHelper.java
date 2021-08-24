@@ -57,7 +57,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     protected List<QueryField> searchFields = Collections.emptyList();
     protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
     protected int pageSize = DEFAULT_PAGE_SIZE;
-    protected boolean fetchTotalCount = false;
+    protected boolean withTotalCount;
     protected boolean debugging;
 
     protected BasePageHelper(Q query) {
@@ -106,15 +106,16 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     }
 
     /**
-     * Adds a flag, that the total count should also be fetched for the given query.
+     * Adds a flag, that the total count should also be supplied to the Page for the given query.
      * <p>
+     * This might trigger an additional count query.
      * The count is available via {@link Page#getTotal()} after creating the {@link Page}.
      *
      * @return the helper itself for fluent method calls
      */
     @SuppressWarnings("unchecked")
     public B withTotalCount() {
-        this.fetchTotalCount = true;
+        this.withTotalCount = true;
         return (B) this;
     }
 
@@ -408,19 +409,15 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
 
     protected void enforcePaging(Page<E> result, List<E> items) {
         int originalSize = items.size();
-        Integer totalItems = null;
         if (originalSize > pageSize) {
             result.withHasMore(true);
             items.remove(items.size() - 1);
-        } else if (result.getStart() == 0) {
-            // we do not have any items before and after this page, so the total count is the current items count
-            totalItems = items.size();
-        }
-        if (fetchTotalCount && totalItems == null) {
-            result.withTotalItems((int) baseQuery.count());
-        }
-        if (totalItems != null) {
-            result.withTotalItems(totalItems);
+            if (withTotalCount) {
+                result.withTotalItems((int) baseQuery.count());
+            }
+        } else if (withTotalCount) {
+            // we don't have any more items, so total items is end of the current page
+            result.withTotalItems(result.getEnd());
         }
     }
 
