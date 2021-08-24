@@ -160,10 +160,9 @@ public class ProcessLog extends SearchableEntity {
     protected void onSave() {
         StringBuilder searchContent = new StringBuilder();
 
-        // Only add the message if it isn't an i18n key or a JSON object...
-        if (Strings.isFilled(message) && !message.startsWith("$") && !message.startsWith("{")) {
-            searchContent.append(message).append(" ");
-        }
+        // We generate the message in the current language as this is still better to have a searchable content
+        // in one language (which is most probably the correct language) than to skip the message entirely...
+        searchContent.append(getMessage()).append(" ");
 
         // Append the content of each non-internal context field
         getContext().data().forEach((key, value) -> {
