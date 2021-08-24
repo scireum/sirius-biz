@@ -3,7 +3,7 @@
 
 <i:switch test="@point">
     <i:block name="left">
-        <t:menuDropdown titleKey="Menu.settings" permission="flag-logged-in">
+        <t:menuDropdown labelKey="Menu.settings" permission="flag-logged-in">
             <i:extensions target="biz-tycho-menu" point="settings"/>
         </t:menuDropdown>
     </i:block>
@@ -35,7 +35,7 @@
                              link="/ps"/>
 
             <t:menuImageDropdownItem icon="@user().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/user_avatar_d.png')"
-                                     title="@format('<b>${user}</b>[<br>${tenant}]').set('user', currentUserName()).set('tenant', user().getTenantName()).smartFormat()"
+                                     label="@format('<b>${user}</b>[<br>${tenant}]').set('user', currentUserName()).set('tenant', user().getTenantName()).smartFormat()"
                                      smallLabel="@currentUserName()"
                                      class="right-large-menu-icon">
                 <i:extensions target="biz-tycho-menu" point="user"/>

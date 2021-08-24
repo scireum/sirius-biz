@@ -12,7 +12,7 @@
     </i:block>
 
     <t:editForm url="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">
-        <t:heading titleKey="DisasterController.maintenanceMessage"/>
+        <t:heading labelKey="DisasterController.maintenanceMessage"/>
         <t:textfield name="previewMessage"
                      helpKey="DisasterController.previewMessageHelp"
                      labelKey="DisasterController.message"
@@ -28,7 +28,7 @@
                          class="col-12 col-lg-6"/>
         </div>
 
-        <t:heading titleKey="DisasterController.lock"/>
+        <t:heading labelKey="DisasterController.lock"/>
         <t:textfield name="lockMessage"
                      labelKey="DisasterController.message"
                      helpKey="DisasterController.lockMessageHelp"
