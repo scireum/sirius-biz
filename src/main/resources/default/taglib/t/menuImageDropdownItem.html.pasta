@@ -19,7 +19,7 @@
                aria-expanded="false">
                 <i:if test="@active">
                     <img src="@staticAssetUri()@activeIcon"
-                         @if (isFilled(title)) {
+                         @if (isFilled(label)) {
                             data-toggle="tooltip"
                             data-placement="left"
                             data-html="true"
