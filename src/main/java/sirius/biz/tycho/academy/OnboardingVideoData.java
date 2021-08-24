@@ -14,6 +14,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.kernel.di.std.Priorized;
 
 import java.time.LocalDateTime;
 
@@ -49,7 +50,7 @@ public class OnboardingVideoData extends Composite {
      * Contains the priority copied from {@link AcademyVideoData#PRIORITY}.
      */
     public static final Mapping PRIORITY = Mapping.named("priority");
-    private int priority;
+    private int priority = Priorized.DEFAULT_PRIORITY;
 
     /**
      * Assigns a random priority which is updated frequently by a {@link RecomputeOnboardingVideosCheck}.
@@ -58,7 +59,7 @@ public class OnboardingVideoData extends Composite {
      * the same video for a day or so instead of suggesting another video for every page load.
      */
     public static final Mapping RANDOM_PRIORITY = Mapping.named("randomPriority");
-    private int randomPriority;
+    private int randomPriority = Priorized.DEFAULT_PRIORITY;
 
     /**
      * Determines when the recommendation was created.

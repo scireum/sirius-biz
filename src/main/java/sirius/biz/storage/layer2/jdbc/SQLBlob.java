@@ -165,7 +165,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
      * Contains the size (in bytes) of the blob data.
      */
     public static final Mapping SIZE = Mapping.named("size");
-    private long size = 0;
+    private long size;
 
     /**
      * Stores the last modification timestamp.

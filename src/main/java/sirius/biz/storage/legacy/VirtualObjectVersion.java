@@ -62,7 +62,7 @@ public class VirtualObjectVersion extends SQLEntity {
      * Contains the file size in bytes.
      */
     public static final Mapping FILE_SIZE = Mapping.named("fileSize");
-    private long fileSize = 0;
+    private long fileSize;
 
     /**
      * Contains the MD5 checksum of the data of this version.

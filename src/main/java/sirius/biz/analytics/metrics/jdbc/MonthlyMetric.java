@@ -25,13 +25,13 @@ public class MonthlyMetric extends YearlyMetric {
      * Contains the month for which this metric is recorded.
      */
     public static final Mapping MONTH = Mapping.named("month");
-    private int month;
+    private Integer month;
 
-    public int getMonth() {
+    public Integer getMonth() {
         return month;
     }
 
-    public void setMonth(int month) {
+    public void setMonth(Integer month) {
         this.month = month;
     }
 }

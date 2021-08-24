@@ -14,6 +14,7 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Priorized;
 
 import java.time.LocalDateTime;
 
@@ -97,7 +98,7 @@ public class AcademyVideoData extends Composite {
      * Contains the sort priority of the video.
      */
     public static final Mapping PRIORITY = Mapping.named("priority");
-    private int priority;
+    private int priority = Priorized.DEFAULT_PRIORITY;
 
     /**
      * Contains the feature required to view this video.

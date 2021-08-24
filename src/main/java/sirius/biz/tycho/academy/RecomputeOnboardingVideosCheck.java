@@ -73,12 +73,12 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
         private final E entity;
         private final String syncToken;
 
-        private int available = 0;
-        private int watchable = 0;
-        private int skipped = 0;
-        private int watched = 0;
-        private int mandatoryAvailable = 0;
-        private int mandatoryHandled = 0;
+        private int available;
+        private int watchable;
+        private int skipped;
+        private int watched;
+        private int mandatoryAvailable;
+        private int mandatoryHandled;
 
         protected Computation(String academy, E entity) {
             this.academy = academy;

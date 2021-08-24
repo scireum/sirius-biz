@@ -360,4 +360,10 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
         multiLanguageString.setFallback(values.at(0).getString());
     }
+
+    @Override
+    public String getColumnDefaultValue() {
+        // not supported
+        return null;
+    }
 }

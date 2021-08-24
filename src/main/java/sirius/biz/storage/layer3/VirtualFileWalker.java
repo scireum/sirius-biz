@@ -22,7 +22,7 @@ class VirtualFileWalker implements Spliterator<VirtualFile> {
     private final TreeVisitorBuilder settings;
     private final LinkedList<Iterator<VirtualFile>> stack = new LinkedList<>();
     private Iterator<VirtualFile> children;
-    private int filesScanned = 0;
+    private int filesScanned;
 
     VirtualFileWalker(VirtualFile rootFile, TreeVisitorBuilder settings) {
         this.settings = settings;
