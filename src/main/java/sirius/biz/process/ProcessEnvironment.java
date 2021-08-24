@@ -24,6 +24,7 @@ import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.RateLimit;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.commons.Value;
@@ -45,6 +46,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -62,6 +64,8 @@ class ProcessEnvironment implements ProcessContext {
     private final CombinedFuture barrier = new CombinedFuture();
     private Map<String, Average> timings;
     private Map<String, Average> adminTimings;
+    private final Map<String, Integer> limitsPerType = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> messageCountsPerType = new ConcurrentHashMap<>();
 
     @Part
     @Nullable
@@ -194,7 +198,21 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void log(ProcessLog logEntry) {
+        if (Strings.isFilled(logEntry.getMessageType()) && logEntry.getMaxMessagesToLog() > 0) {
+            AtomicInteger messagesSoFar =
+                    messageCountsPerType.computeIfAbsent(logEntry.getMessageType(), this::countMessagesForType);
+            if (messagesSoFar.incrementAndGet() > logEntry.getMaxMessagesToLog()) {
+                return;
+            }
+
+            limitsPerType.put(logEntry.getMessageType(), logEntry.getMaxMessagesToLog());
+        }
+
         processes.log(processId, logEntry);
+    }
+
+    private AtomicInteger countMessagesForType(String messageType) {
+        return new AtomicInteger((int) processes.countMessagesForType(processId, messageType));
     }
 
     @Override
@@ -207,7 +225,20 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public HandledException handle(Exception e) {
         HandledException handledException = Exceptions.handle(Log.BACKGROUND, e);
-        log(ProcessLog.error().withMessage(handledException.getMessage()));
+        ProcessLog logEntry = ProcessLog.error().withMessage(handledException.getMessage());
+
+        String messageType = handledException.getHint(ProcessContext.HINT_MESSAGE_TYPE).getString();
+        if (Strings.isFilled(messageType)) {
+            int messageCount = handledException.getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
+            if (messageCount > 0) {
+                logEntry.withLimitedMessageType(messageType, messageCount);
+            } else {
+                logEntry.withMessageType(messageType);
+            }
+        }
+
+        log(logEntry);
+
         return handledException;
     }
 
@@ -223,6 +254,7 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void markCompleted() {
+        processes.reportLimitedMessages(processId, messageCountsPerType, limitsPerType);
         processes.markCompleted(processId, timings, adminTimings);
     }
 
@@ -233,6 +265,7 @@ class ProcessEnvironment implements ProcessContext {
         if (timings != null) {
             processes.addTimings(processId, getTimings(), getAdminTimings());
         }
+        processes.reportLimitedMessages(processId, messageCountsPerType, limitsPerType);
     }
 
     @Override

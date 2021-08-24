@@ -65,9 +65,11 @@ public class ConversionEngine {
     private GlobalContext globalContext;
 
     @Part
+    @Nullable
     private Processes processes;
 
     @Part
+    @Nullable
     private Tenants<?, ?, ?> tenants;
 
     /**
@@ -218,12 +220,13 @@ public class ConversionEngine {
         if (resultFileHandle != null) {
             resultFileHandle.close();
         }
-        processes.executeInStandbyProcess("conversion",
-                                          () -> NLS.get("ConversionEngine.processTitle"),
-                                          conversionProcess.getBlobToConvert().getTenantId(),
-                                          () -> tenants.fetchCachedTenantName(conversionProcess.getBlobToConvert()
-                                                                                               .getTenantId()),
-                                          processContext -> createErrorLog(conversionProcess, processContext));
+        if (processes != null && tenants != null) {
+            processes.executeInStandbyProcess("conversion",
+                                              () -> NLS.get("ConversionEngine.processTitle"),
+                                              conversionProcess.getBlobToConvert().getTenantId(),
+                                              () -> tenants.fetchCachedTenantName(conversionProcess.getBlobToConvert().getTenantId()),
+                                              processContext -> createErrorLog(conversionProcess, processContext));
+        }
         throw new IllegalArgumentException(Strings.apply(
                 "The conversion engine created an empty result for variant %s of %s (%s)",
                 conversionProcess.getVariantName(),

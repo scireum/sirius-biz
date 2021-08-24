@@ -246,6 +246,12 @@ public class Process extends SearchableEntity {
     private boolean errorneous;
 
     /**
+     * Determines if this process encountered warnings but no errors during its execution.
+     */
+    public static final Mapping WARNINGS = Mapping.named("warnings");
+    private boolean warnings;
+
+    /**
      * Determines if this process has debugging enabled.
      * <p>
      * This permits to add tracing logs and other instrumentation which can be enabled on demand.
@@ -675,5 +681,13 @@ public class Process extends SearchableEntity {
 
     public void setPersistencePeriod(PersistencePeriod persistencePeriod) {
         this.persistencePeriod = persistencePeriod;
+    }
+
+    public boolean isWarnings() {
+        return warnings;
+    }
+
+    public void setWarnings(boolean warnings) {
+        this.warnings = warnings;
     }
 }

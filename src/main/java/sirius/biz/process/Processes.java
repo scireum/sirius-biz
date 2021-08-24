@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -461,7 +462,24 @@ public class Processes {
     protected boolean markErrorneous(String processId) {
         return modify(processId,
                       process -> !process.isErrorneous() && process.getState() == ProcessState.RUNNING,
-                      process -> process.setErrorneous(true));
+                      process -> {
+                          process.setErrorneous(true);
+                          process.setWarnings(false);
+                      });
+    }
+
+    /**
+     * Records, that a process has warnings.
+     *
+     * @param processId the process to update
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    protected boolean markWarnings(String processId) {
+        return modify(processId,
+                      process -> !process.isErrorneous()
+                                 && !process.isWarnings()
+                                 && process.getState() == ProcessState.RUNNING,
+                      process -> process.setWarnings(true));
     }
 
     /**
@@ -679,6 +697,8 @@ public class Processes {
         try {
             if (logEntry.getType() == ProcessLogType.ERROR) {
                 markErrorneous(processId);
+            } else if (logEntry.getType() == ProcessLogType.WARNING) {
+                markWarnings(processId);
             }
 
             logEntry.setNode(CallContext.getNodeName());
@@ -700,6 +720,32 @@ public class Processes {
                       .error(e)
                       .to(Log.BACKGROUND)
                       .handle();
+        }
+    }
+
+    protected long countMessagesForType(String processId, String messageType) {
+        return elastic.select(ProcessLog.class)
+                      .eq(ProcessLog.PROCESS, processId)
+                      .eq(ProcessLog.MESSAGE_TYPE, messageType)
+                      .count();
+    }
+
+    protected void reportLimitedMessages(String processId,
+                                         Map<String, AtomicInteger> messageCountsPerType,
+                                         Map<String, Integer> limitsPerType) {
+        for (Map.Entry<String, AtomicInteger> entry : messageCountsPerType.entrySet()) {
+            String type = entry.getKey();
+            int limit = limitsPerType.getOrDefault(type, Integer.MAX_VALUE);
+            int count = entry.getValue().intValue();
+            if (count > limit) {
+                log(processId,
+                    ProcessLog.warn()
+                              .withMessageType(entry.getKey())
+                              .withNLSKey("Processes.messageLimitReached")
+                              .withContext("type", type)
+                              .withContext("limit", limit)
+                              .withContext("count", count));
+            }
         }
     }
 
