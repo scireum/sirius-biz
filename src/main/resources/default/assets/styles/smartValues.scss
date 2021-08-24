@@ -1,0 +1,29 @@
+.smart-values {
+
+  opacity: 1;
+
+  .tooltip-inner {
+    background-color: #ffffff;
+    color: #3b3b3b;
+    border: 1px solid #3b3b3b;
+    font-size: 1rem;
+    max-width: inherit;
+    overflow: hidden;
+  }
+
+  .tooltip.top .tooltip-arrow {
+    border-top-color: #3b3b3b;
+  }
+
+  .tooltip.right .tooltip-arrow {
+    border-right-color: #3b3b3b;
+  }
+
+  .tooltip.bottom .tooltip-arrow {
+    border-bottom-color: #3b3b3b;
+  }
+
+  .tooltip.left .tooltip-arrow {
+    border-left-color: #3b3b3b;
+  }
+}

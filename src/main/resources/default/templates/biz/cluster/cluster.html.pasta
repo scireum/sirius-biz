@@ -38,16 +38,16 @@
                     <i:block name="actions">
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
-                                <t:dropdownItem title="Stop Bleeding"
+                                <t:dropdownItem label="Stop Bleeding"
                                                 url="@apply('/system/cluster/bleed/disable/%s', node.getNodeName())"/>
                                 <i:else>
-                                    <t:dropdownItem title="Start Bleeding"
+                                    <t:dropdownItem label="Start Bleeding"
                                                     url="@apply('/system/cluster/bleed/enable/%s', node.getNodeName())"/>
                                 </i:else>
                             </i:if>
                         </t:dropdownSection>
                         <t:dropdownSection>
-                            <t:dropdownItem class="text-sirius-red" title="Remove From Cluster"
+                            <t:dropdownItem class="text-sirius-red" label="Remove From Cluster"
                                             url="@apply('/system/cluster/kill/%s', node.getNodeName())"/>
                         </t:dropdownSection>
                     </i:block>
@@ -127,16 +127,16 @@
                     <i:block name="actions">
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
-                                <t:dropdownItem title="Stop Bleeding"
+                                <t:dropdownItem label="Stop Bleeding"
                                                 url="@apply('/system/cluster/bleed/disable/%s', node.getNodeName())"/>
                                 <i:else>
-                                    <t:dropdownItem title="Start Bleeding"
+                                    <t:dropdownItem label="Start Bleeding"
                                                     url="@apply('/system/cluster/bleed/enable/%s', node.getNodeName())"/>
                                 </i:else>
                             </i:if>
                         </t:dropdownSection>
                         <t:dropdownSection>
-                            <t:dropdownItem class="text-sirius-red" title="Remove From Cluster"
+                            <t:dropdownItem class="text-sirius-red" label="Remove From Cluster"
                                             url="@apply('/system/cluster/kill/%s', node.getNodeName())"/>
                         </t:dropdownSection>
                     </i:block>
@@ -173,10 +173,10 @@
                     <t:datacard title="@job" subTitle="@toUserString(descriptions.get(job))">
                         <i:block name="actions">
                             <i:if test="referenceInfo.isGloballyEnabled()">
-                                <t:dropdownItem title="Disable Globally"
+                                <t:dropdownItem label="Disable Globally"
                                                 url="@apply('/system/cluster/global/disable/%s', job)"/>
                                 <i:else>
-                                    <t:dropdownItem title="Enable Globally"
+                                    <t:dropdownItem label="Enable Globally"
                                                     url="@apply('/system/cluster/global/enable/%s', job)"/>
                                 </i:else>
                             </i:if>
@@ -239,7 +239,7 @@
         </t:datacards>
     </i:if>
     <i:if test="locks != null">
-        <t:heading title="Locks"/>
+        <t:heading label="Locks"/>
         <t:emptyCheck data="locks.getLocks()">
             <t:datacard>
                 <table class="table mt-4">
