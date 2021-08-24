@@ -9,15 +9,14 @@
 package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
@@ -43,8 +42,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -74,6 +75,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     private static final String HANDLER_OUTPUT_STREAM_SUPPLIER = "outputStreamSupplier";
     private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
+    private static final int TEN_SECONDS = (int) Duration.ofSeconds(10).toMillis();
 
     protected String name;
     protected String description;
@@ -1244,27 +1246,42 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * If the contents of the file are not newer than the last modification date of this file, nothing will happen
      * unless the <tt>force</tt> parameter is set to <tt>true</tt>.
      *
-     * @param url   the URL to fetch
-     * @param force indicates whether the "if modified since" check should be suppressed
+     * @param url  the URL to fetch
+     * @param mode determines under which conditions the data from the given URL should be fetched
      * @return <tt>true</tt> if the file was successfully fetched or <tt>false</tt> if the contents weren't updated
      * as no change was detected
-     * @throws IOException in case of any IO error while downloading the contents
+     * @throws HandledException in case of any error while downloading the contents
      */
-    public boolean loadFromUrl(URL url, boolean force) throws IOException {
-        Outcall outcall = new Outcall(url);
-        if (!force && exists() && lastModifiedDate() != null) {
-            outcall.setIfModifiedSince(lastModifiedDate());
-        }
+    public boolean loadFromUrl(URL url, FetchFromUrlMode mode) {
+        try {
+            if (mode == FetchFromUrlMode.NEVER_FETCH) {
+                return false;
+            }
+            if (exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
+                return false;
+            }
 
+            Outcall outcall = new Outcall(url);
+            if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
+                outcall.setIfModifiedSince(lastModifiedDate());
+            }
+
+            return loadFromOutcall(outcall);
+        } catch (IOException e) {
+            throw Exceptions.createHandled().withNLSKey("VirtualFile.downloadFailed").set("url", url).handle();
+        }
+    }
+
+    private boolean loadFromOutcall(Outcall outcall) throws IOException {
         int responseCode = outcall.getResponseCode();
         if (responseCode == HttpResponseStatus.NOT_MODIFIED.code()) {
             return false;
         }
         if (responseCode >= 400) {
-            throw new IOException(Strings.apply(
-                    "Could not load the resource from: %s . The server responded with status %s!",
-                    url.toString(),
-                    HttpResponseStatus.valueOf(responseCode).toString()));
+            Streams.exhaust(outcall.getInput());
+            throw new IOException(Strings.apply("The server responded with status %s (%s)!",
+                                                HttpResponseStatus.valueOf(responseCode).toString(),
+                                                responseCode));
         }
 
         try (InputStream in = outcall.getInput()) {
@@ -1279,6 +1296,29 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
 
         return true;
+    }
+
+    /**
+     * Performs a download just as {@link #loadFromUrl(URL, FetchFromUrlMode)} but reports to the given process.
+     * <p>
+     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
+     * errors to the process without spamming the system logs.
+     *
+     * @param url            the url to fetch
+     * @param mode           determines under which conditions the data from the given URL should be fetched
+     * @param processContext the process to report to
+     */
+    public void loadFromUrl(URL url, FetchFromUrlMode mode, ProcessContext processContext) {
+        try {
+            Watch watch = Watch.start();
+            if (loadFromUrl(url, mode)) {
+                processContext.addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
+            } else {
+                processContext.addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
+            }
+        } catch (Exception e) {
+            processContext.handle(e);
+        }
     }
 
     /**
@@ -1306,106 +1346,42 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * </ol>
      *
      * @param url                   the URL which determines the filename/path as well as the source of the file to fetch
-     * @param force                 if set to <tt>true</tt> a download will be performed, even if we already downloaded the file
-     *                              before and no modification was detected.
+     * @param mode                  determines under which conditions the data from the given URL should be fetched
      * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
      *                              ".php" or the like as effective file name.
-     * @return the file which has been resolved (and downloaded if necessary)
-     * @throws IOException      in case of an IO error during the download
-     * @throws HandledException in case no effective filename can be detected
+     * @return the file which has been resolved (and downloaded if necessary) along with a flag which indicates if an
+     * update (download) has been performed
+     * @throws HandledException in case of an any error during the download (or if the effective file path cannot be
+     *                          determined)
      */
-    public VirtualFile resolveOrLoadChildFromURL(URL url, boolean force, Predicate<String> fileExtensionVerifier)
-            throws IOException {
-        Watch watch = Watch.start();
-        String path = parsePathFromUrl(url, fileExtensionVerifier);
-        Optional<LocalDateTime> lastModifiedHeader = Optional.empty();
-
-        if (Strings.isEmpty(path)) {
-            Tuple<Optional<String>, Optional<LocalDateTime>> pathAndModifiedHeaders = requestHeaders(url);
-            Optional<String> pathFromContentDisposition = pathAndModifiedHeaders.getFirst();
-            lastModifiedHeader = pathAndModifiedHeaders.getSecond();
-            if (pathFromContentDisposition.isPresent() && fileExtensionVerifier.test(Files.getFileExtension(
-                    pathFromContentDisposition.get()))) {
-                path = pathFromContentDisposition.get();
+    public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URL url,
+                                                                 FetchFromUrlMode mode,
+                                                                 Predicate<String> fileExtensionVerifier) {
+        try {
+            String path = parsePathFromUrl(url, fileExtensionVerifier);
+            if (Strings.isFilled(path)) {
+                VirtualFile file = resolve(path);
+                return Tuple.create(file, file.loadFromUrl(url, mode));
             }
-        }
 
-        if (Strings.isEmpty(path)) {
-            throw Exceptions.createHandled().withNLSKey("VirtualFile.loadFromUrl.noValidPath").set("url", url).handle();
-        }
-
-        return doDownload(url, force, watch, path, lastModifiedHeader);
-    }
-
-    private Tuple<Optional<String>, Optional<LocalDateTime>> requestHeaders(URL url) throws IOException {
-        Outcall headRequest = new Outcall(url);
-        headRequest.markAsHeadRequest();
-        Optional<String> contentDispositionPath = headRequest.parseFileNameFromContentDisposition();
-        Optional<LocalDateTime> lastModifiedHeader =
-                headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
-
-        if (contentDispositionPath.isPresent()) {
-            return Tuple.create(contentDispositionPath, lastModifiedHeader);
-        }
-
-        if (shouldRetryWithGet(headRequest)) {
-            Outcall getRequest = new Outcall(url);
-            contentDispositionPath = getRequest.parseFileNameFromContentDisposition();
-            lastModifiedHeader = getRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
-            try {
-                // input has been opened by reading the header and as we don't read the body, close it to free resources
-                getRequest.getInput().close();
-            } catch (IOException e) {
-                Exceptions.ignore(e);
+            if (mode == FetchFromUrlMode.NEVER_FETCH) {
+                throw createInvalidPathError(url);
             }
+
+            return resolveViaHeadRequest(url, mode);
+        } catch (IOException e) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("VirtualFile.downloadFailed")
+                            .set("url", url)
+                            .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                            .handle();
         }
-
-        return Tuple.create(contentDispositionPath, lastModifiedHeader);
-    }
-
-    private boolean shouldRetryWithGet(Outcall headRequest) throws IOException {
-        if (headRequest.getResponseCode() == HttpResponseStatus.METHOD_NOT_ALLOWED.code()
-            && Value.of(headRequest.getHeaderField(HttpHeaderNames.ALLOW.toString())).toUpperCase().contains("GET")) {
-            // server disallows head request and indicates GET is allowed
-            return true;
-        }
-
-        // some servers will improperly respond with 503 or 501 if HEAD requests are not allowed - we want to retry anyway
-        return headRequest.getResponseCode() == HttpResponseStatus.NOT_IMPLEMENTED.code()
-               || headRequest.getResponseCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code();
-    }
-
-    private VirtualFile doDownload(URL url,
-                                   boolean force,
-                                   Watch watch,
-                                   String path,
-                                   Optional<LocalDateTime> lastModifiedHeader) throws IOException {
-        boolean downloaded;
-        VirtualFile file = resolve(path);
-
-        if (force || !file.exists() || file.lastModifiedDate() == null || lastModifiedHeader.isEmpty()) {
-            // We haven't checked last modified, use original logic to send if-modfied-since header
-            downloaded = file.loadFromUrl(url, force);
-        } else {
-            // We already know the last modified header, we can short-circuit the if-modified-since header logic
-            if (lastModifiedHeader.get().isAfter(file.lastModifiedDate())) {
-                // We force the download as the resource has been modified
-                downloaded = file.loadFromUrl(url, true);
-            } else {
-                // We skip the download as the resource has not been modified
-                downloaded = false;
-            }
-        }
-
-        if (downloaded) {
-            TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
-        } else {
-            TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
-        }
-        return file;
     }
 
     private String parsePathFromUrl(URL url, Predicate<String> fileExtensionVerifier) {
+        // If the URL has a querystring, we check every parameter and determine if there is one with a valid
+        // filename. Otherwise, we use the filename as provided by the URL path itself...
         QueryStringDecoder qsd = new QueryStringDecoder(url.toString(), StandardCharsets.UTF_8);
         return qsd.parameters()
                   .values()
@@ -1421,30 +1397,135 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                   });
     }
 
+    private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URL url, FetchFromUrlMode mode) throws IOException {
+        try {
+            Outcall headRequest = new Outcall(url);
+            headRequest.markAsHeadRequest();
+
+            // We use quite a short timeout here, as if this HEAD request fails, we re-attempt a GET request
+            // with "better" timeouts anyway. Otherwise, slow servers which also don't accept HEAD requests can
+            // drastically slow down this process.
+            headRequest.setConnectTimeout(TEN_SECONDS);
+            headRequest.setReadTimeout(TEN_SECONDS);
+
+            String path = headRequest.parseFileNameFromContentDisposition().orElse(null);
+
+            // Drain any (unexpected) content...
+            Streams.exhaust(headRequest.getInput());
+
+            if (path != null) {
+                VirtualFile file = resolve(path);
+                LocalDateTime lastModifiedHeader =
+                        headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
+                if (lastModifiedHeader == null
+                    || !file.exists()
+                    || mode == FetchFromUrlMode.ALWAYS_FETCH
+                    || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
+                    return Tuple.create(file, file.loadFromUrl(url, mode));
+                } else {
+                    return Tuple.create(file, false);
+                }
+            }
+
+            if (!shouldRetryWithGet(headRequest)) {
+                throw createInvalidPathError(url);
+            }
+        } catch (SocketTimeoutException ex) {
+            Exceptions.ignore(ex);
+        }
+
+        // We either ran into a timeout or the server doesn't support HEAD requests -> re-attempt with a GET
+        return resolveViaGetRequest(url, mode);
+    }
+
+    private HandledException createInvalidPathError(URL url) {
+        return Exceptions.createHandled()
+                         .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
+                         .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
+                         .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                         .set("url", url)
+                         .handle();
+    }
+
+    private boolean shouldRetryWithGet(Outcall headRequest) throws IOException {
+        if (headRequest.getResponseCode() == HttpResponseStatus.METHOD_NOT_ALLOWED.code()
+            && Value.of(headRequest.getHeaderField(HttpHeaderNames.ALLOW.toString()))
+                    .toUpperCase()
+                    .contains(HttpMethod.GET.name())) {
+            // server disallows head request and indicates GET is allowed
+            return true;
+        }
+
+        // some servers will improperly respond with 503 or 501 if HEAD requests are not allowed
+        // - we want to retry anyway
+        return headRequest.getResponseCode() == HttpResponseStatus.NOT_IMPLEMENTED.code()
+               || headRequest.getResponseCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code();
+    }
+
+    private Tuple<VirtualFile, Boolean> resolveViaGetRequest(URL url, FetchFromUrlMode mode) throws IOException {
+        Outcall request = new Outcall(url);
+        String path = request.parseFileNameFromContentDisposition().orElse(null);
+        if (Strings.isEmpty(path)) {
+            // Drain any content, the server sent, as we have no way of processing it...
+            Streams.exhaust(request.getInput());
+            throw createInvalidPathError(url);
+        }
+
+        VirtualFile file = resolve(path);
+        if (exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
+            // Drain any content, as the mode dictates not to update the file (which might require another upload,
+            // so discarding the data is faster).
+            Streams.exhaust(request.getInput());
+            return Tuple.create(file, false);
+        }
+
+        LocalDateTime lastModifiedHeader =
+                request.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
+        if (lastModifiedHeader == null
+            || !file.exists()
+            || mode == FetchFromUrlMode.ALWAYS_FETCH
+            || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
+            loadFromOutcall(request);
+            return Tuple.create(file, true);
+        } else {
+            // Drain any content, as the mode dictates not to update the file (which might require another upload,
+            // so discarding the data is faster).
+            Streams.exhaust(request.getInput());
+            return Tuple.create(file, false);
+        }
+    }
+
     /**
-     * Performs a download just as {@link #loadFromUrl(URL, boolean)} but reports to the given process.
+     * Tries to resolve and maybe download a file just as
+     * {@link #resolveOrLoadChildFromURL(URL, FetchFromUrlMode, Predicate)} but reports to the given process.
      * <p>
      * This will increment one of the timings (downloaded or download skipped) and also directly report IO
      * errors to the process without spamming the system logs.
      *
-     * @param url            the url to fetch
-     * @param force          indicates whether the "if modified since" check should be suppressed
-     * @param processContext the process to report to
+     * @param url                   the url to fetch
+     * @param mode                  determines under which conditions the data from the given URL should be fetched
+     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
+     *                              ".php" or the like as effective file name.
+     * @param processContext        the process to report to
+     * @return the updated file wrapped as optional or an empty optional, if the file could not be resolved
      */
-    public void loadFromUrl(URL url, boolean force, ProcessContext processContext) {
+    public Optional<VirtualFile> resolveOrLoadChildFromURL(URL url,
+                                                           FetchFromUrlMode mode,
+                                                           Predicate<String> fileExtensionVerifier,
+                                                           ProcessContext processContext) {
         try {
             Watch watch = Watch.start();
-            if (loadFromUrl(url, force)) {
+            Tuple<VirtualFile, Boolean> fileAndFlag = resolveOrLoadChildFromURL(url, mode, fileExtensionVerifier);
+            if (Boolean.TRUE.equals(fileAndFlag.getSecond())) {
                 processContext.addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
             } else {
                 processContext.addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
             }
-        } catch (IOException e) {
-            processContext.log(ProcessLog.error()
-                                         .withNLSKey("VirtualFile.downloadFailed")
-                                         .withContext("url", url.toString())
-                                         .withContext("errorMessage",
-                                                      Exceptions.createHandled().error(e).handle().getMessage()));
+
+            return Optional.of(fileAndFlag.getFirst());
+        } catch (Exception e) {
+            processContext.handle(e);
+            return Optional.empty();
         }
     }
 
