@@ -404,7 +404,7 @@ public class ProcessLog extends SearchableEntity {
     }
 
     /**
-     * Tries to determine the {@link ProcessLogHandler} which is in charge for this log entry.
+     * Tries to determine the {@link ProcessLogHandler} which is in charge of this log entry.
      *
      * @return the handler wrapped as optional or an empty one if no handler is present
      */
