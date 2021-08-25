@@ -88,4 +88,8 @@ public abstract class ImportJob extends BatchJob {
         }
         super.close();
     }
+
+    public Importer getImporter() {
+        return importer;
+    }
 }
