@@ -30,7 +30,6 @@ public abstract class BatchJob implements Closeable {
     protected ProcessContext process;
     protected final ErrorContext errorContext;
 
-
     /**
      * Creates a new batch job for the given batch process.
      * <p>
