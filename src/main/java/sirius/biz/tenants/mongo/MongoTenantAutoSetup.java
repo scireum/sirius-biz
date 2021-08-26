@@ -67,10 +67,10 @@ public class MongoTenantAutoSetup extends BaseTenantAutoSetup {
         // We only create the system user, if no SAML settings are present...
         if (Strings.isEmpty(tenant.getTenantData().getSamlRequestIssuerName())) {
             AutoSetup.LOG.INFO("Creating user 'system' with password 'system'....");
-            MongoUserAccount ua = new MongoUserAccount();
-            ua.getTenant().setValue(tenant);
-            setupUserData(ua);
-            mango.update(ua);
+            MongoUserAccount userAccount = new MongoUserAccount();
+            userAccount.getTenant().setValue(tenant);
+            setupUserData(userAccount);
+            mango.update(userAccount);
         }
     }
 

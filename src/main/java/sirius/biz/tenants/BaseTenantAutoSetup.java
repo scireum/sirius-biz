@@ -34,15 +34,15 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
     @ConfigValue("security.system-saml.fingerprint")
     private String samlFingerprint;
 
-    protected void setupUserData(UserAccount<?, ?> ua) {
-        ua.getUserAccountData().setEmail("system@localhost.local");
-        ua.getUserAccountData().getLogin().setUsername("system");
-        ua.getUserAccountData().getLogin().setCleartextPassword("system");
-        ua.getTrace().setSilent(true);
+    protected void setupUserData(UserAccount<?, ?> userAccount) {
+        userAccount.getUserAccountData().setEmail("system@localhost.local");
+        userAccount.getUserAccountData().getLogin().setUsername("system");
+        userAccount.getUserAccountData().getLogin().setCleartextPassword("system");
+        userAccount.getTrace().setSilent(true);
         // This should be enough to grant us more roles via the UI
-        ua.getUserAccountData().getPermissions().getPermissions().add("administrator");
-        ua.getUserAccountData().getPermissions().getPermissions().add("user-administrator");
-        ua.getUserAccountData().getPermissions().getPermissions().add("system-administrator");
+        userAccount.getUserAccountData().getPermissions().getPermissions().add("administrator");
+        userAccount.getUserAccountData().getPermissions().getPermissions().add("user-administrator");
+        userAccount.getUserAccountData().getPermissions().getPermissions().add("system-administrator");
     }
 
     protected void setupTenantData(Tenant<?> tenant) {

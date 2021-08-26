@@ -51,10 +51,10 @@ public class SQLTenantAutoSetup extends BaseTenantAutoSetup {
         // We only create the system user, if no SAML settings are present...
         if (Strings.isEmpty(tenant.getTenantData().getSamlRequestIssuerName())) {
             AutoSetup.LOG.INFO("Creating user 'system' with password 'system'....");
-            SQLUserAccount ua = new SQLUserAccount();
-            ua.getTenant().setValue(tenant);
-            setupUserData(ua);
-            oma.update(ua);
+            SQLUserAccount userAccount = new SQLUserAccount();
+            userAccount.getTenant().setValue(tenant);
+            setupUserData(userAccount);
+            oma.update(userAccount);
         }
     }
 
