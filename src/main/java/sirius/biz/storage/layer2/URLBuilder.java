@@ -45,6 +45,7 @@ public class URLBuilder {
     protected String addonText;
     protected boolean eternallyValid;
     protected boolean reusable;
+    protected boolean delayResolve;
     protected boolean forceDownload;
     protected boolean suppressCache;
     protected String hook;
@@ -166,6 +167,20 @@ public class URLBuilder {
     }
 
     /**
+     * Instructs the system to use the virtual blob URL instead of resolving the physical URL.
+     * <p>
+     * This might be feasible, if the caller knows, that there is a great chance, that the URL being generated is
+     * not actually invoked. We therefore can generate a virtual URL (which requires no additional lookup, but is
+     * not as "cacheable" as a physical one).
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder delayResolved() {
+        this.delayResolve = true;
+        return this;
+    }
+
+    /**
      * Disables HTTP caching entirely.
      *
      * @return the builder itself for fluent method calls
@@ -216,11 +231,28 @@ public class URLBuilder {
             return Optional.empty();
         }
 
-        if (!eternallyValid && !suppressCache && !reusable && isPhysicalKeyReadilyAvailable()) {
-            return Optional.ofNullable(createPhysicalDeliveryURL());
-        } else {
-            return Optional.ofNullable(createVirtualDeliveryURL());
+        if (eternallyValid) {
+            // If a URL is eternally valid, there is no point of generating a physical URL, as this will be outdated
+            // as soon as the underlying blob contents change and not "live as long as the blob itself"...
+            return Optional.ofNullable(createVirtualDeliveryUrl());
         }
+        if (reusable) {
+            // If the caller requested a reusable URL (one to be output and sent to 3rd parties, we probably also
+            // want it to be valid as long as the "blob lives" and not to become obsolete once the blob contents
+            // change...
+            return Optional.ofNullable(createVirtualDeliveryUrl());
+        }
+        if (suppressCache) {
+            // Manual cache control is only supported in virtual calls, not physical...
+            return Optional.ofNullable(createVirtualDeliveryUrl());
+        }
+        if (delayResolve && !isPhysicalKeyReadilyAvailable()) {
+            // The caller specifically requested, that we do not forcefully compute the physical URL (which might
+            // require a lookup, but to rather use the virtual URL...
+            return Optional.ofNullable(createVirtualDeliveryUrl());
+        }
+
+        return Optional.ofNullable(createPhysicalDeliveryUrl());
     }
 
     protected boolean isPhysicalKeyReadilyAvailable() {
