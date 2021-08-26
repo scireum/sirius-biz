@@ -8,18 +8,23 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.tenants.BaseTenantAutoSetup;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.AutoSetup;
 import sirius.kernel.AutoSetupRule;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 
 /**
  * Creates an initial tenant and user if none are available.
+ * <p>
+ * Also, if SAML settings are present in the system config, the system tenant is updated accordingly. This can
+ * be used to distribute SAML settings via the system configuration and thus use configuration management tools
+ * like puppet.
  */
-@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
-public class SQLTenantAutoSetup implements AutoSetupRule {
+@Register(classes = AutoSetupRule.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+public class SQLTenantAutoSetup extends BaseTenantAutoSetup {
 
     @Part
     private OMA oma;
@@ -27,6 +32,7 @@ public class SQLTenantAutoSetup implements AutoSetupRule {
     @Override
     public void setup() throws Exception {
         if (oma.select(SQLTenant.class).exists()) {
+            updateSystemTenantIfNecessary();
             return;
         }
         if (oma.select(SQLUserAccount.class).exists()) {
@@ -35,25 +41,37 @@ public class SQLTenantAutoSetup implements AutoSetupRule {
 
         AutoSetup.LOG.INFO("Creating system tenant....");
         SQLTenant tenant = new SQLTenant();
-        tenant.getTenantData().setName("System Tenant");
+        if (tenants != null) {
+            tenant.setId(Long.parseLong(tenants.getSystemTenantId()));
+        }
+        setupTenantData(tenant);
+
         oma.update(tenant);
 
-        AutoSetup.LOG.INFO("Creating user 'system' with password 'system'....");
-        SQLUserAccount ua = new SQLUserAccount();
-        ua.getTenant().setValue(tenant);
-        ua.getUserAccountData().setEmail("system@localhost.local");
-        ua.getUserAccountData().getLogin().setUsername("system");
-        ua.getUserAccountData().getLogin().setCleartextPassword("system");
-        ua.getTrace().setSilent(true);
-        // This should be enough to grant us more roles via the UI
-        ua.getUserAccountData().getPermissions().getPermissions().add("administrator");
-        ua.getUserAccountData().getPermissions().getPermissions().add("user-administrator");
-        ua.getUserAccountData().getPermissions().getPermissions().add("system-administrator");
-        oma.update(ua);
+        // We only create the system user, if no SAML settings are present...
+        if (Strings.isEmpty(tenant.getTenantData().getSamlRequestIssuerName())) {
+            AutoSetup.LOG.INFO("Creating user 'system' with password 'system'....");
+            SQLUserAccount userAccount = new SQLUserAccount();
+            userAccount.getTenant().setValue(tenant);
+            setupUserData(userAccount);
+            oma.update(userAccount);
+        }
     }
 
-    @Override
-    public int getPriority() {
-        return Priorized.DEFAULT_PRIORITY;
+    private void updateSystemTenantIfNecessary() {
+        if (tenants == null) {
+            return;
+        }
+
+        SQLTenant tenant = oma.find(SQLTenant.class, tenants.getSystemTenantId()).orElse(null);
+        if (tenant != null) {
+            updateSamlData(tenant);
+        }
+
+        if (tenant.isAnyMappingChanged()) {
+            AutoSetup.LOG.INFO(
+                    "Updating the SAML settings of the system tenant using the data from the system config...");
+            oma.update(tenant);
+        }
     }
 }

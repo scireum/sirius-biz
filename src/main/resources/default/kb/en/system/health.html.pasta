@@ -15,7 +15,7 @@
         also to obtain all recorded metrics in a <b>Prometheus</b> compatible format. Note that next to the monitoring
         API provided here (<k:inlineCode>/system/monitor</k:inlineCode>), the Cluster API <k:ref code="V7FGJ" /> also
         provides a monitoring URL (<k:inlineCode>/system/cluster/ready</k:inlineCode>), which takes the node-bleeding into
-        account. Therefore the former should be used by monitoring tools, to get notified if a node is down and the latter
+        account. Therefore, the former should be used by monitoring tools, to get notified if a node is down and the latter
         should be used by an upstream load-balancer to check the node health/readiness.
     </k:section>
 </k:article>
