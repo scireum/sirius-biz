@@ -17,6 +17,7 @@ import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
@@ -1253,6 +1254,17 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @throws HandledException in case of any error while downloading the contents
      */
     public boolean loadFromUrl(URL url, FetchFromUrlMode mode) {
+        Watch watch = Watch.start();
+        if (performLoadFromUrl(url, mode)) {
+            TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
+            return true;
+        } else {
+            TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
+            return false;
+        }
+    }
+
+    private boolean performLoadFromUrl(URL url, FetchFromUrlMode mode) {
         try {
             if (mode == FetchFromUrlMode.NEVER_FETCH) {
                 return false;
@@ -1268,7 +1280,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
             return loadFromOutcall(outcall);
         } catch (IOException e) {
-            throw Exceptions.createHandled().withNLSKey("VirtualFile.downloadFailed").set("url", url).handle();
+            throw Exceptions.createHandled()
+                            .withNLSKey("VirtualFile.downloadFailed")
+                            .set("url", url)
+                            .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                            .handle();
         }
     }
 
@@ -1299,34 +1316,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
-     * Performs a download just as {@link #loadFromUrl(URL, FetchFromUrlMode)} but reports to the given process.
-     * <p>
-     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
-     * errors to the process without spamming the system logs.
-     *
-     * @param url            the url to fetch
-     * @param mode           determines under which conditions the data from the given URL should be fetched
-     * @param processContext the process to report to
-     */
-    public void loadFromUrl(URL url, FetchFromUrlMode mode, ProcessContext processContext) {
-        try {
-            Watch watch = Watch.start();
-            if (loadFromUrl(url, mode)) {
-                processContext.addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
-            } else {
-                processContext.addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
-            }
-        } catch (Exception e) {
-            processContext.handle(e);
-        }
-    }
-
-    /**
      * Attempts to resolve the file from the given URL or performs a download if the file does not exist.
      * <p>
      * Uses the path of the given URL relative to this directory and tries to resolve the child file. If this file
-     * does not exist, or has been modified since its last download (or if <tt>force</tt> is set), a download will
-     * be attempted.
+     * does not exist, or has been modified since its last download, a download will be attempted.
      * <p>
      * As a result, the resolved file will be returned (which was either already there or has been downloaded).
      * <p>
@@ -1344,8 +1337,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      *         the <tt>content-disposition</tt> header.
      *     </li>
      * </ol>
+     * <p>
+     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
+     * errors to the process without spamming the system logs.
      *
-     * @param url                   the URL which determines the filename/path as well as the source of the file to fetch
+     * @param url                   the url to fetch
      * @param mode                  determines under which conditions the data from the given URL should be fetched
      * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
      *                              ".php" or the like as effective file name.
@@ -1357,6 +1353,20 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URL url,
                                                                  FetchFromUrlMode mode,
                                                                  Predicate<String> fileExtensionVerifier) {
+        Watch watch = Watch.start();
+        Tuple<VirtualFile, Boolean> fileAndFlag = performResolveOrLoadChildFromURL(url, mode, fileExtensionVerifier);
+        if (Boolean.TRUE.equals(fileAndFlag.getSecond())) {
+            TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
+        } else {
+            TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
+        }
+
+        return fileAndFlag;
+    }
+
+    private Tuple<VirtualFile, Boolean> performResolveOrLoadChildFromURL(URL url,
+                                                                         FetchFromUrlMode mode,
+                                                                         Predicate<String> fileExtensionVerifier) {
         try {
             String path = parsePathFromUrl(url, fileExtensionVerifier);
             if (Strings.isFilled(path)) {
@@ -1492,40 +1502,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             // so discarding the data is faster).
             Streams.exhaust(request.getInput());
             return Tuple.create(file, false);
-        }
-    }
-
-    /**
-     * Tries to resolve and maybe download a file just as
-     * {@link #resolveOrLoadChildFromURL(URL, FetchFromUrlMode, Predicate)} but reports to the given process.
-     * <p>
-     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
-     * errors to the process without spamming the system logs.
-     *
-     * @param url                   the url to fetch
-     * @param mode                  determines under which conditions the data from the given URL should be fetched
-     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
-     *                              ".php" or the like as effective file name.
-     * @param processContext        the process to report to
-     * @return the updated file wrapped as optional or an empty optional, if the file could not be resolved
-     */
-    public Optional<VirtualFile> resolveOrLoadChildFromURL(URL url,
-                                                           FetchFromUrlMode mode,
-                                                           Predicate<String> fileExtensionVerifier,
-                                                           ProcessContext processContext) {
-        try {
-            Watch watch = Watch.start();
-            Tuple<VirtualFile, Boolean> fileAndFlag = resolveOrLoadChildFromURL(url, mode, fileExtensionVerifier);
-            if (Boolean.TRUE.equals(fileAndFlag.getSecond())) {
-                processContext.addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
-            } else {
-                processContext.addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
-            }
-
-            return Optional.of(fileAndFlag.getFirst());
-        } catch (Exception e) {
-            processContext.handle(e);
-            return Optional.empty();
         }
     }
 
