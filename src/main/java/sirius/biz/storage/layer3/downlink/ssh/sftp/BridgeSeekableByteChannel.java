@@ -52,7 +52,10 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
             lastRead = in.read(destination.array(),
                                destination.arrayOffset() + destination.position() + read,
                                destination.remaining() - read);
-            read += lastRead;
+
+            if (lastRead > 0) {
+                read += lastRead;
+            }
         }
 
         if (read > 0) {
