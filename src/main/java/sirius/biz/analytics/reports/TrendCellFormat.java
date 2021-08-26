@@ -36,7 +36,7 @@ public class TrendCellFormat implements CellFormat {
         String hint = data.getString(KEY_HINT);
         String icon = data.getString(KEY_ICON);
 
-        StringBuilder sb = new StringBuilder("<div class=\"align-right\"");
+        StringBuilder sb = new StringBuilder("<div class=\"text-right\"");
         if (Strings.isFilled(hint)) {
             sb.append(" title=\"");
             sb.append(ContentHelper.escapeXML(hint));
@@ -68,7 +68,7 @@ public class TrendCellFormat implements CellFormat {
                 sb.append(ContentHelper.escapeXML(classes));
                 sb.append("\">");
             }
-            sb.append(" <i class=\"fa " + icon + "\"></i>");
+            sb.append(" <i class=\"" + icon + "\"></i>");
             if (Strings.isEmpty(trend)) {
                 sb.append("</span>");
             }

@@ -8,6 +8,10 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.Parameter;
+import sirius.kernel.nls.NLS;
+
 import java.net.URL;
 import java.util.function.Predicate;
 
@@ -37,5 +41,24 @@ public enum FetchFromUrlMode {
      * which do not reveal the effective file name, <tt>VirtualFile.resolveOrLoadChildFromURL</tt> will fail with an
      * appropriate error message.
      */
-    NEVER_FETCH
+    NEVER_FETCH;
+
+    /**
+     * Provides a parameter to be used to select the mode to use during an import job.
+     */
+    public static final Parameter<FetchFromUrlMode> PARAMETER = createParameter();
+
+    private static Parameter<FetchFromUrlMode> createParameter() {
+        return new EnumParameter<>("fetchFromUrlMode",
+                                   "$FetchFromUrlMode.parameter.name",
+                                   FetchFromUrlMode.class).withDefault(FetchFromUrlMode.NON_EXISTENT_OR_MODIFIED)
+                                                          .withDescription("$FetchFromUrlMode.parameter.description")
+                                                          .markRequired()
+                                                          .build();
+    }
+
+    @Override
+    public String toString() {
+        return NLS.get(getClass().getSimpleName() + "." + name());
+    }
 }

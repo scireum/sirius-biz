@@ -38,8 +38,9 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Represents recordings of a background process.
@@ -370,61 +371,34 @@ public class Process extends SearchableEntity {
     }
 
     /**
-     * Determines the bootstrap CSS class to be used for rendering the row of this process.
+     * Determines the dot color to use when rendering the state.
      *
-     * @return the class used in the colorized table of the process list
+     * @return the color used for the state of this process
      */
-    public String getRowClass() {
-        if (state == ProcessState.STANDBY) {
-            if (Duration.between(getStarted(), LocalDateTime.now()).compareTo(ACTIVE_INTERVAL) <= 0) {
-                return "info";
-            } else {
-                return "default";
-            }
-        }
-
-        if (state == ProcessState.RUNNING && !errorneous) {
-            return "info";
-        }
-
-        if (state == ProcessState.CANCELED || state == ProcessState.RUNNING) {
-            return "warning";
-        }
-
-        if (errorneous) {
-            return "danger";
-        } else {
-            return "success";
-        }
+    public String getStateColor() {
+        return switch (state) {
+            case RUNNING -> "blue";
+            case STANDBY -> "violet-light";
+            case TERMINATED -> "green";
+            case CANCELED -> "yellow";
+        };
     }
 
-    /**
-     * Returns the bootstrap CSS class to be used for rendering the state label in the details view.
-     *
-     * @return the class used for the state label on the details page
-     */
-    public String getLabelClass() {
-        if (state == ProcessState.STANDBY) {
-            if (Duration.between(getStarted(), LocalDateTime.now()).compareTo(ACTIVE_INTERVAL) <= 0) {
-                return "label-info";
-            } else {
-                return "";
-            }
+    public String getMessage() {
+        if (Strings.isFilled(stateMessage)) {
+            return stateMessage;
         }
 
-        if (state == ProcessState.RUNNING && !errorneous) {
-            return "label-info";
+        String counters = getCounterList().stream()
+                                          .limit(5)
+                                          .map(counter -> getCounterLabel(counter) + ": " + NLS.toUserString(
+                                                  getCounterValue(counter)))
+                                          .collect(Collectors.joining(", "));
+        if (Strings.isEmpty(counters)) {
+            return "";
         }
 
-        if (state == ProcessState.CANCELED || state == ProcessState.RUNNING) {
-            return "label-warning";
-        }
-
-        if (errorneous) {
-            return "label-danger";
-        } else {
-            return "label-success";
-        }
+        return NLS.get("Process.counters") + ": " + counters;
     }
 
     /**
@@ -432,14 +406,14 @@ public class Process extends SearchableEntity {
      *
      * @return the names of counters recorded for this process that the user has access to
      */
-    public Collection<String> getCounterList() {
-        Collection<String> collection = new HashSet<>(performanceCounters.data().keySet());
+    public List<String> getCounterList() {
+        Stream<String> counterStream = performanceCounters.data().keySet().stream();
 
         if (UserContext.getCurrentUser().hasPermission(Tenant.PERMISSION_SYSTEM_TENANT)) {
-            collection.addAll(adminPerformanceCounters.data().keySet());
+            counterStream = Stream.concat(counterStream, adminPerformanceCounters.data().keySet().stream());
         }
 
-        return collection;
+        return counterStream.sorted().collect(Collectors.toList());
     }
 
     /**
@@ -459,7 +433,7 @@ public class Process extends SearchableEntity {
      * @return the count value of the given counter
      */
     public String getCounterValue(String name) {
-        Integer value = performanceCounters.get(name).orElse(adminPerformanceCounters.get(name).orElse(0));
+        Integer value = performanceCounters.get(name).or(() -> adminPerformanceCounters.get(name)).orElse(0);
         return Amount.of(value).toString(NumberFormat.NO_DECIMAL_PLACES).asString();
     }
 
@@ -467,11 +441,11 @@ public class Process extends SearchableEntity {
      * Returns the average duration in milliseconds for the given counter
      *
      * @param name the counter to read
-     * @return the averags duration in millis (readily formatted as string) or an empty string is the average
+     * @return the average duration in millis (readily formatted as string) or an empty string is the average
      * is zero or less
      */
     public String getCounterTiming(String name) {
-        Integer counter = timings.get(name).orElse(adminTimings.get(name).orElse(0));
+        Integer counter = timings.get(name).or(() -> adminTimings.get(name)).orElse(0);
 
         return counter > 0 ? Strings.apply("%s ms", counter) : "";
     }

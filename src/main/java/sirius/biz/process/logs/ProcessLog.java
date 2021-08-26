@@ -184,28 +184,28 @@ public class ProcessLog extends SearchableEntity {
     }
 
     /**
-     * Determines the bootstrap CSS class to be used for rendering the row of this log entry.
+     * Determines the color to be used for rendering the row of this log entry.
      *
-     * @return the bootstrap CSS class used to render this log message.
+     * @return the row color to be used for this log entry
      */
-    public String getRowClass() {
+    public String getRowColor() {
         if (state == ProcessLogState.IGNORED) {
-            return "default";
+            return "gray";
         }
         if (type == ProcessLogType.ERROR) {
-            return "danger";
+            return "red";
         }
         if (type == ProcessLogType.WARNING) {
-            return "warning";
+            return "yellow";
         }
         if (type == ProcessLogType.SUCCESS) {
-            return "success";
+            return "green";
         }
         if (state == ProcessLogState.OPEN) {
-            return "info";
+            return "blue";
         }
 
-        return "default";
+        return "gray";
     }
 
     /**
@@ -404,7 +404,7 @@ public class ProcessLog extends SearchableEntity {
     }
 
     /**
-     * Tries to determine the {@link ProcessLogHandler} which is in charge for this log entry.
+     * Tries to determine the {@link ProcessLogHandler} which is in charge of this log entry.
      *
      * @return the handler wrapped as optional or an empty one if no handler is present
      */

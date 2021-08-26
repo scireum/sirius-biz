@@ -80,7 +80,7 @@ public class Cells {
         }
 
         return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "align-right")
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-right")
                                         .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
@@ -96,7 +96,7 @@ public class Cells {
         }
 
         return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "bold")
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-bold")
                                         .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
@@ -119,7 +119,7 @@ public class Cells {
      */
     public Cell green(Object value) {
         return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "color green")
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-sirius-green")
                                         .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
@@ -131,7 +131,7 @@ public class Cells {
      */
     public Cell yellow(Object value) {
         return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "color yellow")
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-sirius-yellow")
                                         .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
@@ -143,7 +143,7 @@ public class Cells {
      */
     public Cell red(Object value) {
         return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "color red")
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-sirius-red")
                                         .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
@@ -162,16 +162,16 @@ public class Cells {
         String color = computeCellColor(value);
 
         return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "align-right " + color)
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-right " + color)
                                         .fluentPut(CSSCellFormat.KEY_VALUE, safeFormat(value, formatter)));
     }
 
     private String computeCellColor(Amount value) {
         String color = "";
         if (value.isPositive()) {
-            color = "color green bold";
+            color = "text-sirius-green text-bold";
         } else if (value.isNegative()) {
-            color = "color red bold";
+            color = "text-sirius-red text-bold";
         }
         return color;
     }
@@ -201,7 +201,7 @@ public class Cells {
                                         .fluentPut(TrendCellFormat.KEY_HINT,
                                                    safeFormat(value, formatter) + " / " + safeFormat(comparisonValue,
                                                                                                      formatter))
-                                        .fluentPut(TrendCellFormat.KEY_TREND, delta.toString(NumberFormat.PERCENT)));
+                                        .fluentPut(TrendCellFormat.KEY_TREND, delta.toString(NumberFormat.PERCENT).get()));
     }
 
     /**
@@ -226,7 +226,7 @@ public class Cells {
                                                    safeFormat(value, formatter) + " / " + safeFormat(comparisonValue,
                                                                                                      formatter))
                                         .fluentPut(TrendCellFormat.KEY_VALUE, safeFormat(value, formatter))
-                                        .fluentPut(TrendCellFormat.KEY_TREND, delta.toString(NumberFormat.PERCENT)));
+                                        .fluentPut(TrendCellFormat.KEY_TREND, delta.toString(NumberFormat.PERCENT).get()));
     }
 
     /**
@@ -243,11 +243,11 @@ public class Cells {
             return of(safeFormat(value, formatter));
         }
 
-        String icon = "fa-arrow-right";
+        String icon = "fa fa-arrow-right";
         if (delta.isPositive()) {
-            icon = "fa-arrow-up";
+            icon = "fa fa-arrow-up";
         } else if (delta.isNegative()) {
-            icon = "fa-arrow-down";
+            icon = "fa fa-arrow-down";
         }
 
         String color = computeCellColor(delta);

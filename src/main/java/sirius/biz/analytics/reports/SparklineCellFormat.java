@@ -28,10 +28,10 @@ public class SparklineCellFormat implements CellFormat {
         String value = data.getString(KEY_VALUE);
         String values = data.getString(KEY_VALUES);
 
-        StringBuilder sb = new StringBuilder("<div class=\"align-right\">");
+        StringBuilder sb = new StringBuilder("<div class=\"text-right\">");
         sb.append(value);
         sb.append(" ");
-        sb.append("<canvas width=\"40\" height=\"20\" class=\"sparkline\" data-sparkline=\"");
+        sb.append("<canvas width=\"40\" height=\"20\" class=\"sparkline-js\" data-sparkline=\"");
         sb.append(values);
         sb.append("\"></canvas>");
         sb.append("</div>");

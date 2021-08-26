@@ -1,61 +1,74 @@
 <i:arg type="Page" name="processes"/>
 
-<w:page titleKey="Process.plural">
+<t:page titleKey="Process.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/ps">@i18n("Process.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="Process.plural"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="Process.plural"/>
+    </i:block>
 
-    <div class="row">
-        <div class="col-md-3">
-            <w:filterbox page="processes" baseUrl="/ps"/>
-        </div>
-        <div class="col-md-9">
-            <w:tableSearchHeader page="processes" baseUrl="/ps"/>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:filterbox page="processes" baseUrl="/ps"/>
+        </i:block>
 
-            <w:table data="processes" colorized="true">
-                <thead>
-                <tr>
-                    <th />
-                    <th>
-                        @i18n("Process.title")<br>
-                        <small class="muted">@i18n("Process.state")</small>
-                    </th>
-                    <th>
-                        @i18n("Process.userName")<br>
-                        <small class="muted">@i18n("Process.tenantName")</small>
-                    </th>
-                    <th class="align-right">
-                        @i18n("Process.started")
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
+        <t:searchHeader page="processes" baseUrl="/ps"/>
+        <t:emptyCheck data="processes">
+            <t:datacards size="large">
                 <i:for type="sirius.biz.process.Process" var="process" items="processes.getItems()">
-                    <tr class="@process.getRowClass()">
-                        <td />
-                        <td>
-                            <a href="/ps/@process.getId()" class="link"><i class="fa @process.getIcon()"></i> @limit(process.getTitle(), 65)</a><br>
-                            <small class="muted">@limit(process.getStateMessage(), 65)</small>
-                        </td>
-                        <td>
-                            @process.getUserName()<br>
-                            <small class="muted">@process.getTenantName()</small>
-                        </td>
-                        <td class="align-right">
-                            @toSpokenDate(process.getStarted().toLocalDate())<br>
-                            <small class="muted">@toUserString(process.getStarted().toLocalTime())</small>
-                        </td>
-                    </tr>
+                    <t:datacard link="@apply('/ps/%s', process.getId())">
+                        <i:block name="title">
+                            <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+                                <span class="pr-1"><i class="fa fa-spin fa-sync"></i></span>
+                            </i:if>
+                            @limit(process.getTitle(), 65)
+                        </i:block>
+                        <div class="mb-3 mt-1 text-small text-muted">
+                            @process.getMessage()
+                        </div>
+                        <div class="mt-2">
+                            <i:if test="process.getTenantId() != user().getTenantId()">
+                                <t:iconInlineInfo icon="fa fa-industry">
+                                    <t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()" />
+                                </t:iconInlineInfo>
+                            </i:if>
+                            <t:iconInlineInfo icon="fa fa-user">
+                                <t:smartValue type="user-account" payload="@process.getUserId()" label="@process.getUserName()" />
+                            </t:iconInlineInfo>
+                            <i:if test="process.getStarted() != null">
+                                <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
+                                    <t:iconInlineInfo icon="fa fa-wave-square">
+                                        <t:smartFormatTemporal date="process.getStarted()"/>
+                                    </t:iconInlineInfo>
+                                    <i:else>
+                                        <t:iconInlineInfo icon="fa fa-clock">
+                                            <t:smartFormatTemporal date="process.getStarted()"/>
+                                        </t:iconInlineInfo>
+                                    </i:else>
+                                </i:if>
+                            </i:if>
+                        </div>
+                        <i:block name="footer">
+                            <div>
+                                <i:if test="process.isWarnings()">
+                                    <t:tag color="yellow">@i18n("Process.warnings")</t:tag>
+                                </i:if>
+                                <i:if test="process.isErrorneous()">
+                                    <t:tag color="red">@i18n("Process.errorneous")</t:tag>
+                                </i:if>
+                            </div>
+                            <div>
+                                <t:dot color="@process.getStateColor()">@process.getState()</t:dot>
+                            </div>
+                        </i:block>
+                    </t:datacard>
                 </i:for>
-                </tbody>
-            </w:table>
-
-            <w:pagination page="processes" baseUrl="/ps"/>
-        </div>
-    </div>
-
-</w:page>
+            </t:datacards>
+            <t:pagination page="processes" baseUrl="/ps"/>
+        </t:emptyCheck>
+    </t:sidebar>
+</t:page>

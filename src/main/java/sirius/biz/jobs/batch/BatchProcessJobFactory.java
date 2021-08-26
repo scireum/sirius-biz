@@ -18,6 +18,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.HandledException;
@@ -210,11 +211,17 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected void executeTask(ProcessContext process) throws Exception {
         logParameters(process);
         try (BatchJob job = createJob(process)) {
-            job.execute();
+            executeJob(process, job);
         }
     }
 
     protected abstract BatchJob createJob(ProcessContext process) throws Exception;
+
+    @SuppressWarnings("java:S1172")
+    @Explain("The process parameter might be used by overriding subclasses.")
+    protected void executeJob(ProcessContext process, BatchJob job) throws Exception {
+        job.execute();
+    }
 
     protected void logParameters(ProcessContext process) {
         List<Parameter<?>> parameters = getParameters();

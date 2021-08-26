@@ -1,6 +1,11 @@
-<i:arg type="String" name="type" />
-<i:arg type="String" name="payload" default="" />
-<i:arg type="String" name="label" default="" />
+<i:arg type="String" name="type" description="Contains the type of the payload" />
+<i:arg type="String" name="payload" default="" description="Contains the payload data itself." />
+<i:arg type="String" name="label" default="" description="Contains the textual representation of the payload to show as link" />
+
+<i:pragma name="description">
+    Permits to show a link in the UI when (on click) will load additional data and show this as tooltip. This can
+    e.g. be used to output a user-name and reveal contact infos etc. on click.
+</i:pragma>
 
 <i:if test="isFilled(payload)">
     <i:local name="signature" value="@computeAuthSignature(apply('%s/%s', type, payload))" />
