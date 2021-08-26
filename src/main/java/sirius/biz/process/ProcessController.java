@@ -71,15 +71,15 @@ public class ProcessController extends BizController {
     /**
      * Lists all processes visible to the current user.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Routed("/ps")
     @LoginRequired
-    public void processes(WebContext ctx) {
+    public void processes(WebContext webContext) {
         ElasticQuery<Process> query = processes.queryProcessesForCurrentUser();
 
         ElasticPageHelper<Process> pageHelper = ElasticPageHelper.withQuery(query);
-        pageHelper.withContext(ctx);
+        pageHelper.withContext(webContext);
         pageHelper.addTermAggregation(Process.STATE, ProcessState.class);
         pageHelper.addBooleanAggregation(Process.ERRORNEOUS);
         pageHelper.addParameterFacet("reference",
@@ -100,7 +100,7 @@ public class ProcessController extends BizController {
         pageHelper.withSearchFields(QueryField.contains(Process.SEARCH_FIELD));
         pageHelper.withTotalCount();
 
-        ctx.respondWith().template("/templates/biz/process/processes.html.pasta", pageHelper.asPage());
+        webContext.respondWith().template("/templates/biz/process/processes.html.pasta", pageHelper.asPage());
     }
 
     private Process findAccessibleProcess(String processId) {
@@ -115,121 +115,122 @@ public class ProcessController extends BizController {
      * <p>
      * Note that this is also the default view of a process.
      *
-     * @param ctx       the current request
-     * @param processId the id of the process to show the log entries for
+     * @param webContext the current request
+     * @param processId  the id of the process to show the log entries for
      */
     @Routed("/ps/:1")
     @LoginRequired
-    public void process(WebContext ctx, String processId) {
+    public void process(WebContext webContext, String processId) {
         Process process = findAccessibleProcess(processId);
 
-        ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(buildLogsQuery(process));
-        ph.withContext(ctx);
-        ph.withPageSize(100);
-        ph.withTotalCount();
-        ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
-        ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
-        ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
+        ElasticPageHelper<ProcessLog> pageHelper = ElasticPageHelper.withQuery(buildLogsQuery(process));
+        pageHelper.withContext(webContext);
+        pageHelper.withPageSize(100);
+        pageHelper.withTotalCount();
+        pageHelper.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
+        pageHelper.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
+        pageHelper.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         if (getUser().hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
-            ph.addBooleanAggregation(ProcessLog.SYSTEM_MESSAGE);
+            pageHelper.addBooleanAggregation(ProcessLog.SYSTEM_MESSAGE);
         }
-        ph.addTimeAggregation(ProcessLog.TIMESTAMP,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS,
-                              DateRange.TODAY,
-                              DateRange.YESTERDAY,
-                              DateRange.THIS_MONTH,
-                              DateRange.LAST_MONTH);
-        ph.addTermAggregation(ProcessLog.NODE);
-        ph.addSortFacet(Tuple.create("$ProcessController.sortDesc", qry -> qry.orderDesc(ProcessLog.SORT_KEY)),
-                        Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));
-        ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
+        pageHelper.addTimeAggregation(ProcessLog.TIMESTAMP,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_MONTH,
+                                      DateRange.LAST_MONTH);
+        pageHelper.addTermAggregation(ProcessLog.NODE);
+        pageHelper.addSortFacet(Tuple.create("$ProcessController.sortDesc", qry -> qry.orderDesc(ProcessLog.SORT_KEY)),
+                                Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));
+        pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith().template("/templates/biz/process/process-logs.html.pasta", process, ph.asPage());
+        webContext.respondWith()
+                  .template("/templates/biz/process/process-logs.html.pasta", process, pageHelper.asPage());
     }
 
     /**
      * Trigger the creation of an export file containing the log messages of the given process.
      *
-     * @param ctx       the current request
-     * @param processId the process to export the output for
-     * @param type      the desired export file format
+     * @param webContext the current request
+     * @param processId  the process to export the output for
+     * @param type       the desired export file format
      * @see ProcessController#exportOutput(WebContext, String, String, String)
      */
     @Routed("/ps/:1/export/:2")
     @LoginRequired
-    public void exportLogs(WebContext ctx, String processId, String type) {
-        exportOutput(ctx, processId, null, type);
+    public void exportLogs(WebContext webContext, String processId, String type) {
+        exportOutput(webContext, processId, null, type);
     }
 
     /**
      * Cancels the execution of the given process.
      *
-     * @param ctx       the current request
-     * @param processId the id of the process to cancel
+     * @param webContext the current request
+     * @param processId  the id of the process to cancel
      */
     @Routed("/ps/:1/cancel")
     @LoginRequired
-    public void cancelProcess(WebContext ctx, String processId) {
+    public void cancelProcess(WebContext webContext, String processId) {
         Process process = findAccessibleProcess(processId);
         processes.markCanceled(process.getId());
 
         // Give ES some time to digest the change before essentially reloading the page...
-        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet("/ps/" + process.getId()));
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> webContext.respondWith().redirectToGet("/ps/" + process.getId()));
     }
 
     /**
      * Toggles (enables / disables) debug output for the given process.
      *
-     * @param ctx       the current request
-     * @param processId the id of the process to enable or disable debugging for
+     * @param webContext the current request
+     * @param processId  the id of the process to enable or disable debugging for
      */
     @Routed("/ps/:1/toggleDebugging")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_PROCESSES)
-    public void toggleDebugging(WebContext ctx, String processId) {
+    public void toggleDebugging(WebContext webContext, String processId) {
         Process process = findAccessibleProcess(processId);
         processes.changeDebugging(process.getId(), !process.isDebugging());
 
         // Give ES some time to digest the change before essentially reloading the page...
-        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet("/ps/" + process.getId()));
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> webContext.respondWith().redirectToGet("/ps/" + process.getId()));
     }
 
     /**
-     * Toggles (enables / disables) debug output for the given process.
+     * Updates the persistence period for given process.
      *
-     * @param ctx       the current request
-     * @param processId the id of the process to enable or disable debugging for
+     * @param webContext the current request
+     * @param processId  the id of the process to update the persistence period for
      */
     @Routed("/ps/:1/updatePersistence")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_PROCESSES)
-    public void updatePersistencePeriod(WebContext ctx, String processId) {
+    public void updatePersistencePeriod(WebContext webContext, String processId) {
         Process process = findAccessibleProcess(processId);
         processes.updatePersistence(process.getId(),
-                                    ctx.get("persistencePeriod")
-                                       .getEnum(PersistencePeriod.class)
-                                       .orElse(process.getPersistencePeriod()));
+                                    webContext.get("persistencePeriod")
+                                              .getEnum(PersistencePeriod.class)
+                                              .orElse(process.getPersistencePeriod()));
 
         // Give ES some time to digest the change before essentially reloading the page...
-        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet("/ps/" + process.getId()));
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> webContext.respondWith().redirectToGet("/ps/" + process.getId()));
     }
 
     /**
      * Executes the given action for the given process and log entry.
      *
-     * @param ctx          the current request
+     * @param webContext   the current request
      * @param processId    the process to which the entry belongs
      * @param processLogId the log entry to execute the action on
      * @param action       the action to execute
      */
     @Routed("/ps/:1/action/:2/:3")
     @LoginRequired
-    public void executeLogAction(WebContext ctx, String processId, String processLogId, String action) {
+    public void executeLogAction(WebContext webContext, String processId, String processLogId, String action) {
         Process process = findAccessibleProcess(processId);
-        String returnUrl = ctx.get("returnUrl").asString();
+        String returnUrl = webContext.get("returnUrl").asString();
         try {
             ProcessLog log = elastic.select(ProcessLog.class)
                                     .eq(ProcessLog.ID, processLogId)
@@ -238,32 +239,32 @@ public class ProcessController extends BizController {
             assertNotNull(log);
 
             ProcessLogHandler handler = log.getHandler().orElse(null);
-            if (handler != null && handler.executeAction(ctx, process, log, action, returnUrl)) {
+            if (handler != null && handler.executeAction(webContext, process, log, action, returnUrl)) {
                 return;
             }
 
-            handleDefaultAction(ctx, log, action, returnUrl);
+            handleDefaultAction(webContext, log, action, returnUrl);
         } catch (Exception e) {
             UserContext.handle(e);
-            ctx.respondWith().redirectToGet(returnUrl);
+            webContext.respondWith().redirectToGet(returnUrl);
         }
     }
 
     /**
      * Handles the default actions which simply toggle the state of a {@link ProcessLog}.
      *
-     * @param ctx       the current request
-     * @param log       the log entry to mutate
-     * @param action    the action to execute
-     * @param returnUrl the URL to redirect to once the action is completed
+     * @param webContext the current request
+     * @param log        the log entry to mutate
+     * @param action     the action to execute
+     * @param returnUrl  the URL to redirect to once the action is completed
      */
-    private void handleDefaultAction(WebContext ctx, ProcessLog log, String action, String returnUrl) {
+    private void handleDefaultAction(WebContext webContext, ProcessLog log, String action, String returnUrl) {
         if (Strings.areEqual(ProcessLog.ACTION_MARK_OPEN, action)) {
-            updateStateAndReturn(ctx, log, ProcessLogState.OPEN, returnUrl);
+            updateStateAndReturn(webContext, log, ProcessLogState.OPEN, returnUrl);
         } else if (Strings.areEqual(ProcessLog.ACTION_MARK_RESOLVED, action)) {
-            updateStateAndReturn(ctx, log, ProcessLogState.RESOLVED, returnUrl);
+            updateStateAndReturn(webContext, log, ProcessLogState.RESOLVED, returnUrl);
         } else if (Strings.areEqual(ProcessLog.ACTION_MARK_IGNORED, action)) {
-            updateStateAndReturn(ctx, log, ProcessLogState.IGNORED, returnUrl);
+            updateStateAndReturn(webContext, log, ProcessLogState.IGNORED, returnUrl);
         } else {
             throw Exceptions.createHandled()
                             .withNLSKey("ProcessController.unknownAction")
@@ -272,9 +273,9 @@ public class ProcessController extends BizController {
         }
     }
 
-    private void updateStateAndReturn(WebContext ctx, ProcessLog log, ProcessLogState state, String returnUrl) {
+    private void updateStateAndReturn(WebContext webContext, ProcessLog log, ProcessLogState state, String returnUrl) {
         UserContext.message(Message.info().withTextMessage(NLS.get("ProcessController.logUpdated")));
-        processes.updateProcessLogStateAndReturn(log, state, ctx, returnUrl);
+        processes.updateProcessLogStateAndReturn(log, state, webContext, returnUrl);
     }
 
     private ElasticQuery<ProcessLog> buildLogsQuery(Process process) {
@@ -293,20 +294,20 @@ public class ProcessController extends BizController {
     /**
      * Renders the given output for the given process.
      *
-     * @param ctx       the current request
-     * @param processId the process to render the output for
-     * @param name      the name of the output to render
+     * @param webContext the current request
+     * @param processId  the process to render the output for
+     * @param name       the name of the output to render
      */
     @Routed("/ps/:1/output/:2")
     @LoginRequired
-    public void processOutput(WebContext ctx, String processId, String name) {
+    public void processOutput(WebContext webContext, String processId, String name) {
         Process process = findAccessibleProcess(processId);
 
         try {
             for (ProcessOutput output : process.getOutputs()) {
                 if (Strings.areEqual(output.getName(), name)) {
                     ProcessOutputType outputType = context.findPart(output.getType(), ProcessOutputType.class);
-                    outputType.render(ctx, process, output);
+                    outputType.render(webContext, process, output);
                     return;
                 }
             }
@@ -317,7 +318,7 @@ public class ProcessController extends BizController {
                                                            .format()));
         } catch (Exception e) {
             UserContext.handle(e);
-            ctx.respondWith().redirectToGet("/ps/" + processId);
+            webContext.respondWith().redirectToGet("/ps/" + processId);
         }
     }
 
@@ -327,15 +328,15 @@ public class ProcessController extends BizController {
      * To compute the export, the referenced process is {@link Processes#restartProcess(String, String) restarted}
      * and an appropriate distributed task is submitted which will then perform the export.
      *
-     * @param ctx       the current request
-     * @param processId the process to export the output for
-     * @param name      the name of the output to export
-     * @param type      the desired export file format
+     * @param webContext the current request
+     * @param processId  the process to export the output for
+     * @param name       the name of the output to export
+     * @param type       the desired export file format
      * @see ExportLogsAsFileTaskExecutor
      */
     @Routed("/ps/:1/output/:2/export/:3")
     @LoginRequired
-    public void exportOutput(WebContext ctx, String processId, String name, String type) {
+    public void exportOutput(WebContext webContext, String processId, String name, String type) {
         // We need to perform this lookup to ensure that we may access the process...
         Process process = findAccessibleProcess(processId);
 
@@ -353,19 +354,19 @@ public class ProcessController extends BizController {
                                                exportSpec);
 
         UserContext.message(Message.info().withTextMessage(NLS.get("ProcessController.exportStarted")));
-        ctx.respondWith().redirectToGet("/ps/" + process.getId());
+        webContext.respondWith().redirectToGet("/ps/" + process.getId());
     }
 
     /**
      * Provides a JSON representation of the given process.
      *
-     * @param ctx       the current request
-     * @param out       the output to write the JSON data to
-     * @param processId the process to output
+     * @param webContext the current request
+     * @param out        the output to write the JSON data to
+     * @param processId  the process to output
      */
     @Routed("/ps/:1/api")
     @InternalService
-    public void processAPI(WebContext ctx, JSONStructuredOutput out, String processId) {
+    public void processAPI(WebContext webContext, JSONStructuredOutput out, String processId) {
         processes.outputAsJSON(processId, out);
     }
 }
