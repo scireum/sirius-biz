@@ -99,7 +99,7 @@ public class URLBuilder {
     }
 
     /**
-     * Make the URL a downlod url using the given filename.
+     * Make the URL a download url using the given filename.
      *
      * @param filename the filename to send to the browser
      * @return the builder itself for fluent method calls
@@ -112,7 +112,7 @@ public class URLBuilder {
     }
 
     /**
-     * Make the URL a downlod url using the filename of the blob.
+     * Make the URL a download url using the filename of the blob.
      *
      * @return the builder itself for fluent method calls
      */
@@ -124,6 +124,9 @@ public class URLBuilder {
 
     /**
      * Specifies the base URL to use.
+     * <p>
+     * Note that the system tries to provide a proper base URL based on the <b>storage space</b> in which
+     * the blob resides. Therefore, this method only needs to be invoked if an external / exotic base URL is to be used.
      *
      * @param baseURL the base URL to use
      * @return the builder itself for fluent method calls
@@ -148,9 +151,12 @@ public class URLBuilder {
     /**
      * Makes this URL reusable.
      * <p>
-     * Such URLs use an virtual access path which are not as cachable as physical ones (which are infinitely cached).
-     * On the other hand these URLs remain constant for the same blob where as physical URLs change once the underlying
-     * blob is updated.
+     * Such URLs use a virtual access path which are not as cacheable as physical ones (which are infinitely cached).
+     * On the other hand these URLs remain constant for the same blob whereas physical URLs change once the underlying
+     * blob is updated. Therefore, these URLs can be passed on to 3rd parties as they remain valid as long as the
+     * referenced blob "lives".
+     * <p>
+     * Note that the authentication of this URL is still limited unless {@link #eternallyValid()} is invoked.
      *
      * @return the builder itself for fluent method calls
      */
@@ -170,7 +176,7 @@ public class URLBuilder {
     }
 
     /**
-     * Permits to add additional text to the URL which is ignored by the {@link BlobDispatcher}.
+     * Permits adding additional text to the URL which is ignored by the {@link BlobDispatcher}.
      * <p>
      * This can be used to add SEO texts for image URLs...
      *
@@ -188,7 +194,7 @@ public class URLBuilder {
      * This can be used to emit events etc.
      *
      * @param hook    the name of the hook to trigger
-     * @param payload the paylog to send to the tirgger (e.g. a database id or the like)
+     * @param payload the payload to send to the trigger (e.g. a database id or the like)
      * @return the builder itself for fluent method calls
      */
     public URLBuilder withHook(String hook, @Nullable String payload) {
@@ -223,12 +229,12 @@ public class URLBuilder {
         return Strings.areEqual(variant, URLBuilder.VARIANT_RAW) && blob != null;
     }
 
-    private String createPhysicalDeliveryURL() {
+    private String createPhysicalDeliveryUrl() {
         StringBuilder result = createBaseURL();
 
         String physicalKey = determinePhysicalKey();
         if (Strings.isEmpty(physicalKey)) {
-            return createVirtualDeliveryURL();
+            return createVirtualDeliveryUrl();
         }
 
         result.append(BlobDispatcher.URI_PREFIX);
@@ -261,12 +267,12 @@ public class URLBuilder {
         return result.toString();
     }
 
-    private String createVirtualDeliveryURL() {
+    private String createVirtualDeliveryUrl() {
         StringBuilder result = createBaseURL();
         result.append(BlobDispatcher.URI_PREFIX);
         result.append("/");
         if (!suppressCache) {
-            result.append(BlobDispatcher.FLAG_CACHABLE);
+            result.append(BlobDispatcher.FLAG_CACHEABLE);
         }
         result.append(BlobDispatcher.FLAG_VIRTUAL);
         if (forceDownload) {
@@ -331,8 +337,8 @@ public class URLBuilder {
             return blob.getPhysicalObjectKey();
         }
 
-        Tuple<String, Boolean>
-                result = ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
+        Tuple<String, Boolean> result =
+                ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
         if (result != null) {
             return result.getFirst();
         } else {
