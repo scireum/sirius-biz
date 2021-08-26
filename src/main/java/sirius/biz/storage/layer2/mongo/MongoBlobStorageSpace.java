@@ -764,6 +764,6 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
     @Override
     protected void purgeVariantFromCache(MongoBlob blob, String variantName) {
-        blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), variantName));
+        blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), variantName));
     }
 }

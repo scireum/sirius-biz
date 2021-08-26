@@ -841,6 +841,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
     @Override
     protected void purgeVariantFromCache(SQLBlob blob, String variantName) {
-        blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), variantName));
+        blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), variantName));
     }
 }

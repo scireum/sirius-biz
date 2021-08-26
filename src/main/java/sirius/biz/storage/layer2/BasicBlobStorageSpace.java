@@ -1049,7 +1049,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String nextPhysicalId = keyGenerator.generateId();
         try {
             getPhysicalSpace().upload(nextPhysicalId, file);
-            blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
+            blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
             if (previousPhysicalId.isPresent()) {
                 deleteBlobVariants(blob);
@@ -1104,7 +1104,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String nextPhysicalId = keyGenerator.generateId();
         try {
             getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
-            blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
+            blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
             if (previousPhysicalId.isPresent()) {
                 deleteBlobVariants(blob);
@@ -1243,7 +1243,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     @Nullable
     protected Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
-        String cacheKey = buildPhysicalKey(blobKey, variantName);
+        String cacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
         if (Strings.isFilled(cachedPhysicalKey)) {
             return Tuple.create(cachedPhysicalKey, true);
@@ -1258,7 +1258,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
     }
 
-    protected String buildPhysicalKey(String blobKey, String variantName) {
+    protected String buildCacheLookupKey(String blobKey, String variantName) {
         return spaceName + "-" + blobKey + "-" + variantName;
     }
 
