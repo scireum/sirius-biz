@@ -62,7 +62,7 @@ public class PackageData extends Composite {
     private final StringList upgrades = new StringList();
 
     /**
-     * List of the additionaly granted permissions as string
+     * List of the additionally granted permissions as string
      */
     public static final Mapping ADDITIONAL_PERMISSIONS = Mapping.named("additionalPermissions");
     @NullAllowed

@@ -23,9 +23,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- * This helper class is a wrapper for the <tt>security.packages</tt> configuratuions.
+ * This helper class is a wrapper for the <tt>security.packages</tt> configurations.
  * <p>
- * For a highlevel overview see the README.md of this package.
+ * For a high-level overview see the README.md of this package.
  */
 @Register(classes = Packages.class)
 public class Packages {
@@ -124,7 +124,7 @@ public class Packages {
      * This utilizes the same mapping as {@link #hasRequiredPermissionForPermission(String, Predicate)}
      *
      * @param allPermissions         the list of permissions to process
-     * @param hasPermissionPredicate the predicate which deciedes if a given permission is present
+     * @param hasPermissionPredicate the predicate which decides if a given permission is present
      * @return a list of all accessible permissions (in <tt>allPermissions</tt>)
      */
     public List<String> filterAccessiblePermissions(List<String> allPermissions,

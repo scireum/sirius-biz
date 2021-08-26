@@ -23,7 +23,7 @@ public interface AdditionalPackagePermissionsProvider {
      * Adds additional roles to the given permissionConsumer, based on the given {@link PackageData} and parent.
      *
      * @param packageData        the {@link PackageData} instance this is called from
-     * @param permissionConsumer the consumer for the additonal permissions
+     * @param permissionConsumer the consumer for the additional permissions
      */
     void addAdditionalPermissions(PackageData packageData, Consumer<String> permissionConsumer);
 }
