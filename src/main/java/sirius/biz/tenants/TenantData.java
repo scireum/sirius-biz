@@ -177,7 +177,8 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Contains the SHA-1 fingerprint of the X509 certificate which is used to sign the SAML assertions.
      * <p>
-     * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
+     * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>. This can also be used
+     * to mitigate a certificate turn-over as both fingerprint can be accepted simultaneously.
      */
     public static final Mapping SAML_FINGERPRINT = Mapping.named("samlFingerprint");
     @Trim
