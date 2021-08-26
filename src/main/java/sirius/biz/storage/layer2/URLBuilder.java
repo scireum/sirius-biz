@@ -45,6 +45,7 @@ public class URLBuilder {
     protected String addonText;
     protected boolean eternallyValid;
     protected boolean reusable;
+    protected boolean delayResolve;
     protected boolean forceDownload;
     protected boolean suppressCache;
     protected String hook;
@@ -99,7 +100,7 @@ public class URLBuilder {
     }
 
     /**
-     * Make the URL a downlod url using the given filename.
+     * Make the URL a download url using the given filename.
      *
      * @param filename the filename to send to the browser
      * @return the builder itself for fluent method calls
@@ -112,7 +113,7 @@ public class URLBuilder {
     }
 
     /**
-     * Make the URL a downlod url using the filename of the blob.
+     * Make the URL a download url using the filename of the blob.
      *
      * @return the builder itself for fluent method calls
      */
@@ -124,6 +125,9 @@ public class URLBuilder {
 
     /**
      * Specifies the base URL to use.
+     * <p>
+     * Note that the system tries to provide a proper base URL based on the <b>storage space</b> in which
+     * the blob resides. Therefore, this method only needs to be invoked if an external / exotic base URL is to be used.
      *
      * @param baseURL the base URL to use
      * @return the builder itself for fluent method calls
@@ -148,14 +152,31 @@ public class URLBuilder {
     /**
      * Makes this URL reusable.
      * <p>
-     * Such URLs use an virtual access path which are not as cachable as physical ones (which are infinitely cached).
-     * On the other hand these URLs remain constant for the same blob where as physical URLs change once the underlying
-     * blob is updated.
+     * Such URLs use a virtual access path which are not as cacheable as physical ones (which are infinitely cached).
+     * On the other hand these URLs remain constant for the same blob whereas physical URLs change once the underlying
+     * blob is updated. Therefore, these URLs can be passed on to 3rd parties as they remain valid as long as the
+     * referenced blob "lives".
+     * <p>
+     * Note that the authentication of this URL is still limited unless {@link #eternallyValid()} is invoked.
      *
      * @return the builder itself for fluent method calls
      */
     public URLBuilder reusable() {
         this.reusable = true;
+        return this;
+    }
+
+    /**
+     * Instructs the system to use the virtual blob URL instead of resolving the physical URL.
+     * <p>
+     * This might be feasible, if the caller knows, that there is a great chance, that the URL being generated is
+     * not actually invoked. We therefore can generate a virtual URL (which requires no additional lookup, but is
+     * not as "cacheable" as a physical one).
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder delayResolved() {
+        this.delayResolve = true;
         return this;
     }
 
@@ -170,7 +191,7 @@ public class URLBuilder {
     }
 
     /**
-     * Permits to add additional text to the URL which is ignored by the {@link BlobDispatcher}.
+     * Permits adding additional text to the URL which is ignored by the {@link BlobDispatcher}.
      * <p>
      * This can be used to add SEO texts for image URLs...
      *
@@ -188,7 +209,7 @@ public class URLBuilder {
      * This can be used to emit events etc.
      *
      * @param hook    the name of the hook to trigger
-     * @param payload the paylog to send to the tirgger (e.g. a database id or the like)
+     * @param payload the payload to send to the trigger (e.g. a database id or the like)
      * @return the builder itself for fluent method calls
      */
     public URLBuilder withHook(String hook, @Nullable String payload) {
@@ -210,11 +231,28 @@ public class URLBuilder {
             return Optional.empty();
         }
 
-        if (!eternallyValid && !suppressCache && !reusable && isPhysicalKeyReadilyAvailable()) {
-            return Optional.ofNullable(createPhysicalDeliveryURL());
-        } else {
-            return Optional.ofNullable(createVirtualDeliveryURL());
+        if (eternallyValid) {
+            // If a URL is eternally valid, there is no point of generating a physical URL, as this will be outdated
+            // as soon as the underlying blob contents change and not "live as long as the blob itself"...
+            return Optional.ofNullable(createVirtualDeliveryUrl());
         }
+        if (reusable) {
+            // If the caller requested a reusable URL (one to be output and sent to 3rd parties, we probably also
+            // want it to be valid as long as the "blob lives" and not to become obsolete once the blob contents
+            // change...
+            return Optional.ofNullable(createVirtualDeliveryUrl());
+        }
+        if (suppressCache) {
+            // Manual cache control is only supported in virtual calls, not physical...
+            return Optional.ofNullable(createVirtualDeliveryUrl());
+        }
+        if (delayResolve && !isPhysicalKeyReadilyAvailable()) {
+            // The caller specifically requested, that we do not forcefully compute the physical URL (which might
+            // require a lookup, but to rather use the virtual URL...
+            return Optional.ofNullable(createVirtualDeliveryUrl());
+        }
+
+        return Optional.ofNullable(createPhysicalDeliveryUrl());
     }
 
     protected boolean isPhysicalKeyReadilyAvailable() {
@@ -223,12 +261,12 @@ public class URLBuilder {
         return Strings.areEqual(variant, URLBuilder.VARIANT_RAW) && blob != null;
     }
 
-    private String createPhysicalDeliveryURL() {
+    private String createPhysicalDeliveryUrl() {
         StringBuilder result = createBaseURL();
 
         String physicalKey = determinePhysicalKey();
         if (Strings.isEmpty(physicalKey)) {
-            return createVirtualDeliveryURL();
+            return createVirtualDeliveryUrl();
         }
 
         result.append(BlobDispatcher.URI_PREFIX);
@@ -261,12 +299,12 @@ public class URLBuilder {
         return result.toString();
     }
 
-    private String createVirtualDeliveryURL() {
+    private String createVirtualDeliveryUrl() {
         StringBuilder result = createBaseURL();
         result.append(BlobDispatcher.URI_PREFIX);
         result.append("/");
         if (!suppressCache) {
-            result.append(BlobDispatcher.FLAG_CACHABLE);
+            result.append(BlobDispatcher.FLAG_CACHEABLE);
         }
         result.append(BlobDispatcher.FLAG_VIRTUAL);
         if (forceDownload) {
@@ -331,8 +369,8 @@ public class URLBuilder {
             return blob.getPhysicalObjectKey();
         }
 
-        Tuple<String, Boolean>
-                result = ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
+        Tuple<String, Boolean> result =
+                ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
         if (result != null) {
             return result.getFirst();
         } else {
