@@ -19,7 +19,7 @@
         always/never fulfilled. Additionally, the absence or a permission or role can be enforced by prepending an
         exclamation mark like <b>!permission</b>. Furthermore, multiple permissions can be requested by combining them
         using a plus sign like <b>permission1+permission2</b>. Finally, multiple alternative permission strings can
-        be combined, where only one of all must be fulfilled. These strings must be separated by a comma like:
+        be combined, where only one of them must be fulfilled. These strings must be separated by a comma like:
         <b>permission1+permission2,permission3</b>.
     </k:section>
     <k:section heading="Permissions">
