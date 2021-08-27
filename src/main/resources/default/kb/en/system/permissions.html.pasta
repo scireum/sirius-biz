@@ -4,11 +4,11 @@
            title="Roles and Permissions"
            permissions="flag-system-tenant"
 >
-    <i:block name="description">Provides an overview of available roles, permissions and their relationship.</i:block>
+    <i:block name="description">Provides an overview of available roles, permissions, and their relationship.</i:block>
     <k:section heading="Theory of Operation">
         The system uses <b>permissions</b> to check whether the current user can perform a specific action. These
         permissions are defined within the software itself. On the other hand <b>roles</b> (or sometimes called
-        <b>features</b> are assigned to users, tenants and other entities. The link between these two, are
+        <b>features</b> are assigned to users, tenants, and other entities. The link between these two, are
         <b>profiles</b>. A profile defines which roles (or maybe permissions) need to be present to be activated.
         If a profile is active, it specifies a set of permissions to grant or to revoke and thus controls the effective
         set of permissions granted to a user.
@@ -16,11 +16,11 @@
     <k:section heading="Permission Strings">
         <b>Permission strings</b> can be specified in various places of the system. These can either be the name of
         a <b>role</b> or <b>permission</b>. Alternatively, these can be <b>enabled</b> or <b>disabled</b> which are
-        always/never fulfilled. Additionally, the absence or a permission or role can be enforced by prepending an
+        always/never fulfilled. Additionally, the absence of a permission or role can be enforced by prepending an
         exclamation mark like <b>!permission</b>. Furthermore, multiple permissions can be requested by combining them
         using a plus sign like <b>permission1+permission2</b>. Finally, multiple alternative permission strings can
         be combined, where only one of them must be fulfilled. These strings must be separated by a comma like:
-        <b>permission1+permission2,permission3</b>.
+        <b>permission1+permission2,permission3</b>. Note that plus takes precedence over comma.
     </k:section>
     <k:section heading="Permissions">
         The following permissions are available (defined in <k:inlineCode>security.permissions</k:inlineCode> in the
