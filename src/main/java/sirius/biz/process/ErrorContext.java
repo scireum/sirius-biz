@@ -80,7 +80,7 @@ public class ErrorContext implements SubContext {
     /**
      * Adds the given value to the context, performs the given task and then removes the value again.
      *
-     * @param label the name of the value (this will be {@link NLS#smartGet(String) auto translated}.
+     * @param label the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
      * @param value the value to store
      * @param task  the task to perform while the value is set
      * @return the context for fluent method calls
@@ -113,7 +113,7 @@ public class ErrorContext implements SubContext {
     /**
      * Executes the given supplied and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
      *
-     * @param label              the name of the value (this will be {@link NLS#smartGet(String) auto translated}.
+     * @param label              the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
      * @param value              the value to store
      * @param failureDescription annotates a given error message so that the user is notified what task actually went
      *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
@@ -200,7 +200,7 @@ public class ErrorContext implements SubContext {
     /**
      * Performs the given task and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
      *
-     * @param label              the name of the value (this will be {@link NLS#smartGet(String) auto translated}.
+     * @param label              the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
      * @param value              the value to store
      * @param failureDescription annotates a given error message so that the user is notified what task actually went
      *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
@@ -235,7 +235,7 @@ public class ErrorContext implements SubContext {
      * Most probably, using {@link #performInContext(String, Object, UnaryOperator, UnitOfWork)} is a better idea,
      * as it permits to provide more context to what actually went wrong.
      *
-     * @param label the name of the value (this will be {@link NLS#smartGet(String) auto translated}.
+     * @param label the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
      * @param value the value to store
      * @param task  the task to perform
      */
@@ -262,7 +262,7 @@ public class ErrorContext implements SubContext {
      * Most probably, using {@link #performInContextAndGet(String, Object, UnaryOperator, Producer)} is a better idea,
      * as it permits to provide more context to what actually went wrong.
      *
-     * @param label    the name of the value (this will be {@link NLS#smartGet(String) auto translated}.
+     * @param label    the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
      * @param value    the value to store
      * @param producer the producer to execute
      * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
