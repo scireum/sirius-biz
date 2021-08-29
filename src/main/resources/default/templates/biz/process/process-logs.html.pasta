@@ -67,7 +67,7 @@
                                 </div>
                             </td>
                             <td class="text-right">
-                                <div class="cycle link text-small whitespace-no-wrap" data-cycle="@log.getNode()">
+                                <div class="cycle-js link text-small whitespace-no-wrap" data-cycle="@log.getNode()">
                                     @log.getTimestampAsString()
                                 </div>
                             </td>
