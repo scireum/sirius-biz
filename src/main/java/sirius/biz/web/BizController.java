@@ -308,6 +308,10 @@ public class BizController extends BasicController {
             return false;
         }
 
+        if (property instanceof ComplexLoadProperty complexProperty) {
+            return complexProperty.shouldAutoload(webContext);
+        }
+
         // If the parameter is present in the request we're good to go
         if (webContext.hasParameter(property.getName())) {
             return true;

@@ -355,6 +355,14 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         return true;
     }
 
+
+    @Override
+    public boolean shouldAutoload(WebContext webContext) {
+        // As an MLS field might not have a default value, we have to inspect all
+        // parameters instead of just the one with the proper name...
+        return webContext.getParameterNames().stream().anyMatch(parameter -> parameter.startsWith(getPropertyName()));
+    }
+
     @Override
     public void parseValues(Object entity, Values values) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);

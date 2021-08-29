@@ -28,4 +28,17 @@ public interface ComplexLoadProperty {
      * @return <tt>true</tt> if loading succeeded, <tt>false</tt> if an error occurred
      */
     boolean loadFromWebContext(WebContext webContext, BaseEntity<?> entity);
+
+    /**
+     * Determines if "autoloading" should be used for the given request.
+     * <p>
+     * This can inspect the request a check if the required parameters are present in order to successfully perform
+     * an automatic load.
+     * <p>
+     * Note that a default property would check for {@code webContext.hasParameter(this.getPropertyName())}.
+     *
+     * @param webContext the request to inspect
+     * @return <tt>true</tt> if the proper parameters are filled so that the property can be loaded
+     */
+    boolean shouldAutoload(WebContext webContext);
 }
