@@ -5,7 +5,7 @@
           process="process"
           page="logs">
     <i:block name="sidebar">
-        <t:filterbox page="logs" baseUrl="@apply('/ps/%s/logs', process.getId())"/>
+        <t:filterbox page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
     </i:block>
     <i:block name="header-actions">
         <i:if test="process.getState() == sirius.biz.process.ProcessState.TERMINATED">
@@ -36,7 +36,7 @@
         </i:if>
     </i:block>
 
-    <t:searchHeader page="logs" baseUrl="@apply('/ps/%s/logs', process.getId())"/>
+    <t:searchHeader page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
 
     <t:emptyCheck data="logs">
         <div class="card mb-4">
@@ -79,5 +79,5 @@
         </div>
     </t:emptyCheck>
 
-    <t:pagination page="logs" baseUrl="@apply('/ps/%s/logs', process.getId())"/>
+    <t:pagination page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
 </i:invoke>
