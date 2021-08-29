@@ -113,6 +113,7 @@ public class MongoOnboardingEngine extends OnboardingEngine {
         AcademyVideoData academyVideoData = academyVideo.getAcademyVideoData();
         OnboardingVideoData onboardingVideoData = onboardingVideo.getOnboardingVideoData();
         onboardingVideoData.setAcademy(academyVideoData.getAcademy());
+        onboardingVideo.setTrackId(academyVideoData.getTrackId());
         onboardingVideoData.setPriority(academyVideoData.getPriority());
         onboardingVideoData.setLastUpdated(LocalDateTime.now());
         onboardingVideoData.setRandomPriority(ThreadLocalRandom.current().nextInt(99999));
@@ -172,8 +173,7 @@ public class MongoOnboardingEngine extends OnboardingEngine {
         return mango.select(MongoOnboardingVideo.class)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
-                    .eq(MongoOnboardingVideo.ACADEMY_VIDEO.join(AcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.TRACK_ID)),
-                        trackId)
+                    .eq(MongoOnboardingVideo.TRACK_ID, trackId)
                     .orderAsc(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PRIORITY))
                     .queryList();
     }
