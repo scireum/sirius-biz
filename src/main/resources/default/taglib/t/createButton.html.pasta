@@ -1,10 +1,19 @@
-<i:arg type="String" name="url"/>
+<i:arg type="String" name="url" default=""/>
 <i:arg type="String" name="class" default=""/>
 
-<i:pragma name="description">Provides a primary button which links to the given url, with a generic label to create a new entity.</i:pragma>
+<i:pragma name="description">Provides a primary button which links to the given url, with a generic label to create a new entity.
+                             If a body is given instead of a url, the body is rendered inside of a dropdown.</i:pragma>
+
+<i:local name="contents" value="@renderToString('body')"/>
 
 <i:if test="isFilled(url)">
     <a class="btn btn-primary @class" href="@url">
         <i class="fa fa-plus"></i> @i18n("Model.create")
     </a>
+</i:if>
+
+<i:if test="isFilled(contents)">
+    <t:dropdown class="@class" btnClass="btn btn-primary" icon="fa fa-plus" labelKey="Model.create">
+        <i:raw>@contents</i:raw>
+    </t:dropdown>
 </i:if>
