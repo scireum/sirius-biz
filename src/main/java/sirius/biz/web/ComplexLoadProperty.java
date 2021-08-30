@@ -32,7 +32,7 @@ public interface ComplexLoadProperty {
     /**
      * Determines if "autoloading" should be used for the given request.
      * <p>
-     * This can inspect the request a check if the required parameters are present in order to successfully perform
+     * This can inspect the request and check if the required parameters are present in order to successfully perform
      * an automatic load.
      * <p>
      * Note that a default property would check for {@code webContext.hasParameter(this.getPropertyName())}.
