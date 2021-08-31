@@ -407,9 +407,9 @@ public class ProcessLog extends SearchableEntity {
      */
     public ProcessLog withException(Exception exception) {
         this.withMessage(exception.getMessage());
-        if (exception instanceof HandledException) {
-            ((HandledException) exception).getHint(ProcessContext.HINT_MESSAGE_TYPE).ifFilled(hint -> {
-                int messageCount = ((HandledException) exception).getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
+        if (exception instanceof HandledException handledException) {
+            handledException.getHint(ProcessContext.HINT_MESSAGE_TYPE).ifFilled(hint -> {
+                int messageCount = handledException.getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
                 if (messageCount > 0) {
                     this.withLimitedMessageType(hint.getString(), messageCount);
                 } else {
