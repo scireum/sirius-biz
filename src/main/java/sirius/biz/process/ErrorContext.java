@@ -147,6 +147,7 @@ public class ErrorContext implements SubContext {
     private void logException(UnaryOperator<String> failureDescription, HandledException exception) {
         if (TaskContext.get().getAdapter() instanceof ProcessContext) {
             ((ProcessContext) TaskContext.get().getAdapter()).log(ProcessLog.error()
+                                                                            .withException(exception)
                                                                             .withMessage(enhanceMessage(
                                                                                     failureDescription.apply(exception.getMessage()))));
         } else {
