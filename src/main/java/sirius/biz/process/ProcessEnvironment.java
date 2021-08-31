@@ -225,20 +225,7 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public HandledException handle(Exception e) {
         HandledException handledException = Exceptions.handle(Log.BACKGROUND, e);
-        ProcessLog logEntry = ProcessLog.error().withMessage(handledException.getMessage());
-
-        String messageType = handledException.getHint(ProcessContext.HINT_MESSAGE_TYPE).getString();
-        if (Strings.isFilled(messageType)) {
-            int messageCount = handledException.getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
-            if (messageCount > 0) {
-                logEntry.withLimitedMessageType(messageType, messageCount);
-            } else {
-                logEntry.withMessageType(messageType);
-            }
-        }
-
-        log(logEntry);
-
+        log(ProcessLog.error().withHandledException(handledException));
         return handledException;
     }
 
