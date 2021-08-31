@@ -1426,11 +1426,17 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             String path = headRequest.parseFileNameFromContentDisposition()
                                      .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
                                      .orElse(null);
-
             // Drain any (unexpected) content...
             Streams.exhaust(headRequest.getInput());
 
-            if (path != null) {
+            URL lastConnectedURL = headRequest.getLastConnectedURL();
+
+            if (Strings.isEmpty(path) && !url.getPath().equals(lastConnectedURL.getPath())) {
+                // We don't have a path yet but we followed redirects so we check the new URL
+                path = parsePathFromUrl(lastConnectedURL, fileExtensionVerifier);
+            }
+
+            if (Strings.isFilled(path)) {
                 VirtualFile file = resolve(path);
                 LocalDateTime lastModifiedHeader =
                         headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
@@ -1438,7 +1444,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                     || !file.exists()
                     || mode == FetchFromUrlMode.ALWAYS_FETCH
                     || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-                    return Tuple.create(file, file.loadFromUrl(url, mode));
+                    return Tuple.create(file, file.loadFromUrl(lastConnectedURL, mode));
                 } else {
                     return Tuple.create(file, false);
                 }
