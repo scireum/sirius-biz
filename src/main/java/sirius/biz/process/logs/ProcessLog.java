@@ -396,27 +396,24 @@ public class ProcessLog extends SearchableEntity {
     }
 
     /**
-     * Specifies an exception from where to inherit the message.
+     * Specifies a handled handledException from where to inherit the message.
      * <p>
-     * If the provided exception is a {@link HandledException}, also considers the filled
-     * {@link ProcessContext#HINT_MESSAGE_TYPE} to categorize the log in message types and
-     * {@link ProcessContext#HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
+     * If set, the {@link ProcessContext#HINT_MESSAGE_TYPE} hint is used to categorize the log in message types
+     * and {@link ProcessContext#HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
      *
-     * @param exception the {@link Exception} to retrieve the message and eventually hints from
+     * @param handledException the {@link HandledException} to retrieve the message and eventually hints from
      * @return the log entry itself for fluent method calls
      */
-    public ProcessLog withException(Exception exception) {
-        this.withMessage(exception.getMessage());
-        if (exception instanceof HandledException handledException) {
-            handledException.getHint(ProcessContext.HINT_MESSAGE_TYPE).ifFilled(hint -> {
-                int messageCount = handledException.getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
-                if (messageCount > 0) {
-                    this.withLimitedMessageType(hint.getString(), messageCount);
-                } else {
-                    this.withMessageType(hint.getString());
-                }
-            });
-        }
+    public ProcessLog withHandledException(HandledException handledException) {
+        this.withMessage(handledException.getMessage());
+        handledException.getHint(ProcessContext.HINT_MESSAGE_TYPE).ifFilled(hint -> {
+            int messageCount = handledException.getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
+            if (messageCount > 0) {
+                this.withLimitedMessageType(hint.getString(), messageCount);
+            } else {
+                this.withMessageType(hint.getString());
+            }
+        });
         return this;
     }
 
