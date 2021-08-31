@@ -1,3 +1,5 @@
 <i:arg type="String" name="lang" />
 <i:arg type="String" name="class" default="" />
-<img class="@class" src="/assets/images/flags/languages/@(lang.toLowerCase()).png" />
+<i:if test="isFilled(lang)">
+    <img class="@class" src="/assets/images/flags/languages/@(lang.toLowerCase()).png" title="" />
+</i:if>

@@ -308,6 +308,10 @@ public class BizController extends BasicController {
             return false;
         }
 
+        if (property instanceof ComplexLoadProperty complexProperty) {
+            return complexProperty.shouldAutoload(webContext);
+        }
+
         // If the parameter is present in the request we're good to go
         if (webContext.hasParameter(property.getName())) {
             return true;
@@ -542,9 +546,8 @@ public class BizController extends BasicController {
     /**
      * Tries to find an entity for the given id, which belongs to the current tenant or fails otherwise.
      * <p>
-     * This behaves just like {@link #findExisting(Class, String)} but once an existing entity was found, which also extends
-     * {@link TenantAware}, it is ensured (using {@link #assertTenant(TenantAware)} that it belongs to the current
-     * tenant.
+     * This behaves just like {@link #findExisting(Class, String)} but once an existing entity was found,
+     * it is ensured (using {@link #assertTenant(TenantAware)} that it belongs to the current tenant.
      *
      * @param type the type of the entity to find
      * @param id   the id of the entity to find
@@ -552,11 +555,10 @@ public class BizController extends BasicController {
      * @return the requested entity, which belongs to the current tenant
      * @throws HandledException if no entity with the given id was found or if the id was <tt>new</tt>
      */
-    protected <E extends BaseEntity<?>> E findExistingForTenant(Class<E> type, String id) {
+    protected <E extends BaseEntity<?> & TenantAware> E findExistingForTenant(Class<E> type, String id) {
         E result = findExisting(type, id);
-        if (result instanceof TenantAware) {
-            assertTenant((TenantAware) result);
-        }
+        assertTenant(result);
+
         return result;
     }
 

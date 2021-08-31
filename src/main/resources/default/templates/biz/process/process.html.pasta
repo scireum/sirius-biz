@@ -64,7 +64,7 @@
                 </t:iconInlineInfo>
                 <i:else>
                     <t:iconInlineInfo icon="fa fa-clock">
-                        <div class="cycle link"
+                        <div class="cycle-js link"
                              data-cycle="@process.getStartedAsString() - @process.getCompletedAsString()">
                             @toSpokenDate(process.getStarted()) (@process.getRuntimeAsString())
                         </div>

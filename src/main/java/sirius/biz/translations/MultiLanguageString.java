@@ -9,7 +9,6 @@
 package sirius.biz.translations;
 
 import com.alibaba.fastjson.JSONObject;
-import sirius.biz.codelists.LookupTable;
 import sirius.db.mixing.types.SafeMap;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
@@ -42,7 +41,6 @@ public class MultiLanguageString extends SafeMap<String, String> {
     public static final String FALLBACK_KEY = "fallback";
 
     private List<String> validLanguages = Collections.emptyList();
-    private LookupTable lookupTable;
     private String i18nCondition;
     private String i18nPermission;
     private boolean withFallback;
@@ -72,17 +70,6 @@ public class MultiLanguageString extends SafeMap<String, String> {
      */
     public MultiLanguageString withValidLanguages(@Nonnull Collection<String> validLanguages) {
         this.validLanguages = new ArrayList<>(validLanguages);
-        return this;
-    }
-
-    /**
-     * Sets the provided {@link LookupTable} to be used when validating language codes.
-     *
-     * @param lookupTable the lookup table to validate against
-     * @return the object itself for fluent method calls
-     */
-    public MultiLanguageString withLookupTable(@Nonnull LookupTable lookupTable) {
-        this.lookupTable = lookupTable;
         return this;
     }
 
@@ -139,11 +126,6 @@ public class MultiLanguageString extends SafeMap<String, String> {
     @Nonnull
     public List<String> getValidLanguages() {
         return Collections.unmodifiableList(validLanguages);
-    }
-
-    @Nullable
-    public LookupTable getLookupTable() {
-        return lookupTable;
     }
 
     @Override

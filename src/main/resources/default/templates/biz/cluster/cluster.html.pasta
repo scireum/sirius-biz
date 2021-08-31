@@ -56,7 +56,7 @@
                         <t:inlineInfo label="Active Tasks" value="@toUserString(node.getActiveBackgroundTasks())"/>
                     </i:if>
                     <t:inlineInfo label="Version" class="mb-4">
-                        <span class="cycle cursor-pointer"
+                        <span class="cycle-js cursor-pointer"
                               data-cycle="@node.getDetailedVersion()">@node.getVersion()</span>
                     </t:inlineInfo>
 
@@ -145,7 +145,7 @@
                         <t:inlineInfo label="Active Tasks" value="@toUserString(node.getActiveBackgroundTasks())"/>
                     </i:if>
                     <t:inlineInfo label="Version" class="mb-4">
-                        <span class="cycle cursor-pointer"
+                        <span class="cycle-js cursor-pointer"
                               data-cycle="@node.getDetailedVersion()">@node.getVersion()</span>
                     </t:inlineInfo>
 

@@ -15,6 +15,8 @@ import sirius.biz.tycho.academy.OnboardingVideo;
 import sirius.biz.tycho.academy.OnboardingVideoData;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
@@ -35,6 +37,9 @@ import javax.annotation.Nullable;
 @Index(name = "owner_video_lookup",
         columns = {"onboardingVideoData_owner", "onboardingVideoData_recommended"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "owner_video_track_lookup",
+        columns = {"onboardingVideoData_owner", "onboardingVideoData_deleted", "trackId"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo {
 
     @Part
@@ -45,7 +50,25 @@ public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo
     private final MongoRef<MongoAcademyVideo> academyVideo =
             MongoRef.on(MongoAcademyVideo.class, BaseEntityRef.OnDelete.IGNORE);
 
+    /**
+     * Contains the track id, this video is part of.
+     * <p>
+     * This is copied from {@link AcademyVideoData#TRACK_ID} as we require this for filtering and MongoDB has
+     * not efficient joins.
+     */
+    public static final Mapping TRACK_ID = Mapping.named("trackId");
+    @Length(50)
+    @NullAllowed
+    private String trackId;
+
     private final OnboardingVideoData onboardingVideoData = new OnboardingVideoData();
+
+    /**
+     * Contains the academy this video belongs to.
+     */
+    public static final Mapping ACADEMY = Mapping.named("academy");
+    @Length(50)
+    private String academy;
 
     @Transient
     private AcademyVideoData academyVideoData;
@@ -67,5 +90,13 @@ public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo
         }
 
         return academyVideoData;
+    }
+
+    public String getTrackId() {
+        return trackId;
+    }
+
+    public void setTrackId(String trackId) {
+        this.trackId = trackId;
     }
 }

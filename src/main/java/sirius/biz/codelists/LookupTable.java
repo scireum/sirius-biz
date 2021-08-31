@@ -851,6 +851,6 @@ public abstract class LookupTable {
         return extension.get("description")
                         .asOptionalString()
                         .or(() -> NLS.getIfExists("LookupTable." + extension.getId() + ".description", null))
-                        .orElse(extension.getId());
+                        .orElse("");
     }
 }

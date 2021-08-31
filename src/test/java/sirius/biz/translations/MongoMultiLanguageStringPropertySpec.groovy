@@ -14,7 +14,6 @@ import sirius.db.mongo.Mongo
 import sirius.kernel.BaseSpecification
 import sirius.kernel.async.CallContext
 import sirius.kernel.di.std.Part
-import sirius.kernel.health.HandledException
 
 class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
@@ -23,45 +22,6 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     @Part
     private static Mongo mongo
-
-    def "invalid language"() {
-        given:
-        TenantsHelper.installTestTenant()
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangTextWithValidLanguages().addText("00", "some text")
-
-        when:
-        mango.update(entity)
-
-        then:
-        thrown(HandledException)
-    }
-
-    def "invalid language in composite"() {
-        given:
-        TenantsHelper.installTestTenant()
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangComposite().getCompositeMultiLangTextWithValidLanguages().addText("00", "some text")
-
-        when:
-        mango.update(entity)
-
-        then:
-        thrown(HandledException)
-    }
-
-    def "invalid language in mixin"() {
-        given:
-        TenantsHelper.installTestTenant()
-        def entity = new MongoMultiLanguageStringEntityWithMixin()
-        entity.as(MongoMultiLanguageStringMixin.class).getMixinMultiLangTextWithValidLanguages().addText("00", "some text")
-
-        when:
-        mango.update(entity)
-
-        then:
-        thrown(HandledException)
-    }
 
     def "Comparing persisted data with null keys works as expected"() {
         given:

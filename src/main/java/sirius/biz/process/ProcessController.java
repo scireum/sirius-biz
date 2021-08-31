@@ -46,6 +46,7 @@ import sirius.web.services.JSONStructuredOutput;
  */
 @Register(framework = Processes.FRAMEWORK_PROCESSES)
 public class ProcessController extends BizController {
+
     /**
      * Defines the permission required to view and manage processes of other users within the same tenant.
      */
@@ -82,6 +83,7 @@ public class ProcessController extends BizController {
         pageHelper.withContext(webContext);
         pageHelper.addTermAggregation(Process.STATE, ProcessState.class);
         pageHelper.addBooleanAggregation(Process.ERRORNEOUS);
+        pageHelper.addBooleanAggregation(Process.WARNINGS);
         pageHelper.addParameterFacet("reference",
                                      "reference-label",
                                      Process.REFERENCES,

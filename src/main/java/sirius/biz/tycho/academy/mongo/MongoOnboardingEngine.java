@@ -113,6 +113,7 @@ public class MongoOnboardingEngine extends OnboardingEngine {
         AcademyVideoData academyVideoData = academyVideo.getAcademyVideoData();
         OnboardingVideoData onboardingVideoData = onboardingVideo.getOnboardingVideoData();
         onboardingVideoData.setAcademy(academyVideoData.getAcademy());
+        onboardingVideo.setTrackId(academyVideoData.getTrackId());
         onboardingVideoData.setPriority(academyVideoData.getPriority());
         onboardingVideoData.setLastUpdated(LocalDateTime.now());
         onboardingVideoData.setRandomPriority(ThreadLocalRandom.current().nextInt(99999));
@@ -172,8 +173,7 @@ public class MongoOnboardingEngine extends OnboardingEngine {
         return mango.select(MongoOnboardingVideo.class)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
-                    .eq(MongoOnboardingVideo.ACADEMY_VIDEO.join(AcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.TRACK_ID)),
-                        trackId)
+                    .eq(MongoOnboardingVideo.TRACK_ID, trackId)
                     .orderAsc(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PRIORITY))
                     .queryList();
     }
@@ -183,7 +183,7 @@ public class MongoOnboardingEngine extends OnboardingEngine {
         return mango.select(MongoOnboardingVideo.class)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
-                    .eq(MongoOnboardingVideo.ID, Long.parseLong(videoId))
+                    .eq(MongoOnboardingVideo.ID, videoId)
                     .queryFirst();
     }
 
@@ -191,7 +191,7 @@ public class MongoOnboardingEngine extends OnboardingEngine {
     public List<? extends OnboardingVideo> fetchOtherRecommendations(String owner, String videoId, String tackId) {
         return mango.select(MongoOnboardingVideo.class)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
-                    .ne(MongoOnboardingVideo.ID, Long.parseLong(videoId))
+                    .ne(MongoOnboardingVideo.ID, videoId)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.RECOMMENDED), true)
                     .orderAsc(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.RANDOM_PRIORITY))
                     .limit(NUMBER_OF_VIDEOS_TO_RECOMMEND)

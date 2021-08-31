@@ -1,0 +1,5 @@
+<i:arg type="String" name="country" />
+<i:arg type="String" name="class" default="" />
+<i:if test="isFilled(country)">
+    <img class="@class" src="/assets/images/flags/countries/@(country.toLowerCase()).png" />
+</i:if>
