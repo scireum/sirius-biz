@@ -1,4 +1,5 @@
 <i:arg type="String" name="heading" default="" description="May contain a heading of this section."/>
+<i:arg type="String" name="anchor" default="" description="Defines an anchor to which a link can directly jump."/>
 <i:pragma name="description">
     Renders a block of an KB article. This is required to proper visual styling and layouting of
     KB articles and should be wrapped around every text or other content of an article.
@@ -6,7 +7,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <i:if test="isFilled(heading)">
-            <h5 class="card-title">@heading</h5>
+            <h5 id="@anchor" class="card-title">@heading</h5>
         </i:if>
 
         <i:render name="body"/>
