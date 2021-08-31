@@ -10,6 +10,7 @@ package sirius.biz.process.logs;
 
 import sirius.biz.elastic.SearchableEntity;
 import sirius.biz.process.Process;
+import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
@@ -24,6 +25,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
 import java.time.LocalDateTime;
@@ -391,6 +393,31 @@ public class ProcessLog extends SearchableEntity {
      */
     public ProcessLog withFormattedMessage(String message, Object... parameters) {
         return withMessage(Strings.apply(message, parameters));
+    }
+
+    /**
+     * Specifies an exception from where to inherit the message.
+     * <p>
+     * If the provided exception is a {@link HandledException}, also considers the filled
+     * {@link ProcessContext#HINT_MESSAGE_TYPE} to categorize the log in message types and
+     * {@link ProcessContext#HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
+     *
+     * @param exception the {@link Exception} to retrieve the message and eventually hints from
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withException(Exception exception) {
+        this.withMessage(exception.getMessage());
+        if (exception instanceof HandledException) {
+            ((HandledException) exception).getHint(ProcessContext.HINT_MESSAGE_TYPE).ifFilled(hint -> {
+                int messageCount = ((HandledException) exception).getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
+                if (messageCount > 0) {
+                    this.withLimitedMessageType(hint.getString(), messageCount);
+                } else {
+                    this.withMessageType(hint.getString());
+                }
+            });
+        }
+        return this;
     }
 
     /**
