@@ -1281,6 +1281,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return loadFromOutcall(outcall);
         } catch (IOException e) {
             throw Exceptions.createHandled()
+                            .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
                             .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
@@ -1381,6 +1382,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return resolveViaHeadRequest(url, mode);
         } catch (IOException e) {
             throw Exceptions.createHandled()
+                            .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
                             .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
