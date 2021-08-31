@@ -14,7 +14,6 @@ import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.async.CallContext
 import sirius.kernel.di.std.Part
-import sirius.kernel.health.HandledException
 
 class SQLMultiLanguageStringPropertySpec extends BaseSpecification {
 
@@ -62,19 +61,5 @@ class SQLMultiLanguageStringPropertySpec extends BaseSpecification {
         output.getMultiLangText().getText() == Optional.empty()
     }
 
-    def "invalid language with lookup table"() {
-        given:
-        TenantsHelper.installTestTenant()
-        codeLists.getValue("languages", "de")
-        codeLists.getValue("languages", "en")
-        def entity = new SQLMultiLanguageStringEntity()
-        entity.getMultiLangTextWithLookupTable().addText("00", "some text")
-
-        when:
-        oma.update(entity)
-
-        then:
-        thrown(HandledException)
-    }
 
 }
