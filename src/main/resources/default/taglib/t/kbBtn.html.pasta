@@ -1,5 +1,6 @@
 <i:arg type="String" name="code"/>
 <i:arg type="String" name="class" default=""/>
+<i:arg type="String" name="anchor" default=""/>
 
 <i:pragma name="description">Provides a help button which links to the given knowledge base article.</i:pragma>
 
@@ -8,7 +9,7 @@
 <i:if test="referencedArticle != null">
     <a class="btn btn-info ml-2 @class"
        target="_blank"
-       href="/kba/@referencedArticle.getLanguage()/@code"
+       href="/kba/@referencedArticle.getLanguage()/@code#@anchor"
        data-toggle="tooltip"
        data-placement="top"
        title="@referencedArticle.getTitle()">
