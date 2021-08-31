@@ -1379,7 +1379,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 throw createInvalidPathError(url);
             }
 
-            return resolveViaHeadRequest(url, mode);
+            return resolveViaHeadRequest(url, mode, fileExtensionVerifier);
         } catch (IOException e) {
             throw Exceptions.createHandled()
                             .error(e)
@@ -1409,7 +1409,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                  });
     }
 
-    private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URL url, FetchFromUrlMode mode) throws IOException {
+    private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URL url,
+                                                              FetchFromUrlMode mode,
+                                                              Predicate<String> fileExtensionVerifier)
+            throws IOException {
         try {
             Outcall headRequest = new Outcall(url);
             headRequest.markAsHeadRequest();
@@ -1420,7 +1423,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             headRequest.setConnectTimeout(TEN_SECONDS);
             headRequest.setReadTimeout(TEN_SECONDS);
 
-            String path = headRequest.parseFileNameFromContentDisposition().orElse(null);
+            String path = headRequest.parseFileNameFromContentDisposition()
+                                     .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
+                                     .orElse(null);
 
             // Drain any (unexpected) content...
             Streams.exhaust(headRequest.getInput());
