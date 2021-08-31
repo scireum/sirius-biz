@@ -73,7 +73,7 @@ public class LookupValue {
         /**
          * Makes the correct display string for the given table entry using this display mode.
          *
-         * @param entry the tableentry to be displayed
+         * @param entry the table entry to be displayed
          * @return a display string for the given table entry
          */
         public String makeDisplayString(LookupTableEntry entry) {
