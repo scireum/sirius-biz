@@ -1,18 +1,18 @@
-<i:arg type="String" name="lang" />
+<i:arg type="String" name="country" />
 <i:arg type="boolean" name="short" default="false" />
 
 <i:local name="body" value="@renderToString('body')" />
 <span class="d-inline-flex flex-row overflow-hidden align-items-center"
-    @if (short || isFilled(body)) { data-toggle="tooltip" title="@part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)" }>
-    <t:langFlag lang="@lang" class="pr-1" />
+      @if (short || isFilled(body)) { data-toggle="tooltip" title="@part(sirius.biz.util.Countries.class).all().resolveName(country).orElse(country)" }>
+    <t:countryFlag country="@country" class="pr-1" />
     <span>
         <i:if test="isFilled(body)">
             <i:raw>@body</i:raw>
             <i:else>
                 <i:if test="short">
-                    @lang.toUpperCase()
+                    @country.toUpperCase()
                     <i:else>
-                        @part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)
+                        @part(sirius.biz.util.Countries.class).all().resolveName(country).orElse(country)
                     </i:else>
                 </i:if>
             </i:else>

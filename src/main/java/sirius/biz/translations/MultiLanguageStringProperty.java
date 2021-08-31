@@ -11,7 +11,6 @@ package sirius.biz.translations;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.bson.Document;
-import sirius.biz.codelists.LookupTable;
 import sirius.biz.util.Languages;
 import sirius.biz.web.ComplexLoadProperty;
 import sirius.db.es.ESPropertyInfo;
@@ -42,7 +41,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -118,8 +116,6 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     protected void onBeforeSaveChecks(Object entity) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
 
-        validateLanguages(multiLanguageString);
-
         if (this.length > 0) {
             multiLanguageString.data()
                                .values()
@@ -164,28 +160,6 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                                    .handle();
                                });
         }
-    }
-
-    private void validateLanguages(MultiLanguageString multiLanguageString) {
-        LookupTable lookupTable = multiLanguageString.getLookupTable();
-        if (lookupTable == null && multiLanguageString.getValidLanguages().isEmpty()) {
-            return;
-        }
-        multiLanguageString.data()
-                           .entrySet()
-                           .stream()
-                           .filter(entry -> !Strings.areEqual(entry.getKey(), MultiLanguageString.FALLBACK_KEY))
-                           .filter(entry -> !multiLanguageString.getValidLanguages().contains(entry.getKey()))
-                           .filter(entry -> lookupTable == null || lookupTable.normalize(entry.getKey()).isEmpty())
-                           .findAny()
-                           .ifPresent(entry -> {
-                               throw Exceptions.createHandled()
-                                               .withNLSKey("MultiLanguageString.invalidLanguage")
-                                               .set("language", entry.getKey())
-                                               .set("text", entry.getValue())
-                                               .set(PARAM_FIELD, getField().getName())
-                                               .handle();
-                           });
     }
 
     /**
@@ -264,7 +238,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @SuppressWarnings("unchecked")
     protected Object transformToElastic(Object object) {
         JSONObject texts = new JSONObject();
-        ((Map<String, String>) object).forEach(texts::put);
+        texts.putAll(((Map<String, String>) object));
         return texts;
     }
 
@@ -334,25 +308,46 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         }
 
         if (i18nEnabled && multiLanguageString.isEnabledForCurrentUser()) {
-            Collection<String> languagesToLoad = multiLanguageString.getValidLanguages().isEmpty() ?
-                                                 ScopeInfo.DEFAULT_SCOPE.getKnownLanguages() :
-                                                 multiLanguageString.getValidLanguages();
-            languagesToLoad.forEach(code -> {
-                String parameterName = getPropertyName() + "-" + code;
-                if (webContext.hasParameter(parameterName)) {
-                    multiLanguageString.addText(code, webContext.getParameter(parameterName));
-                } else {
-                    languages.all().fetchMapping(code, Languages.MAPPING_LEGACY).ifPresent(legacyCode -> {
-                        String legacyParameterName = getPropertyName() + "-" + legacyCode;
-                        if (webContext.hasParameter(legacyParameterName)) {
-                            multiLanguageString.addText(code, webContext.getParameter(legacyParameterName));
-                        }
-                    });
-                }
-            });
+            webContext.getParameterNames()
+                      .stream()
+                      .filter(parameter -> parameter.startsWith(getPropertyName() + "-"))
+                      .forEach(parameter -> {
+                          String code = Strings.split(parameter, "-").getSecond();
+                          if (isValidLanguageCode(multiLanguageString, code)) {
+                              multiLanguageString.addText(code, webContext.getParameter(parameter));
+                          }
+                      });
         }
 
         return true;
+    }
+
+    /**
+     * Ensures that the given code is a valid (and accepted) language code.
+     * <p>
+     * This is mainly to either enforce the valid languages as set in the MLS property or to protect against
+     * malicious data in a WebContext. We therefore check if we know the given code either as it is a known
+     * language of the system or if it occurs in the list of all known languages. We perform both checks as
+     * the latter requires a properly populated lookup table, which might not be available on all systems. The
+     * know languages however are maintained via the system config and are always populated.
+     *
+     * @param multiLanguageString the property to check for valid languages
+     * @param code                the language code to check
+     * @return <tt>true</tt> if the code is accepted, <tt>false</tt> otherwise
+     */
+    private boolean isValidLanguageCode(MultiLanguageString multiLanguageString, String code) {
+        if (multiLanguageString.getValidLanguages().isEmpty()) {
+            return ScopeInfo.DEFAULT_SCOPE.getKnownLanguages().contains(code) || languages.all().contains(code);
+        }
+
+        return multiLanguageString.getValidLanguages().contains(code);
+    }
+
+    @Override
+    public boolean shouldAutoload(WebContext webContext) {
+        // As an MLS field might not have a default value, we have to inspect all
+        // parameters instead of just the one with the proper name...
+        return webContext.getParameterNames().stream().anyMatch(parameter -> parameter.startsWith(getPropertyName()));
     }
 
     @Override

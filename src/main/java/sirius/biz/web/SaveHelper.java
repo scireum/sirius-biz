@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * Provides a fluent API to control the process and user routing while creating or updating an entity in the
@@ -29,6 +30,7 @@ public class SaveHelper {
     private final WebContext ctx;
     private Consumer<Boolean> preSaveHandler;
     private Consumer<Boolean> postSaveHandler;
+    private UnaryOperator<Boolean> skipCreatePredicate;
     private String createdURI;
     private String afterSaveURI;
 
@@ -56,14 +58,32 @@ public class SaveHelper {
     /**
      * Installs a post save handler which is invoked just after the entity was persisted into the database.
      *
-     * @param postSaveHandler a consumer which is supplied with a boolean flag, indicating if the entiy was new.
-     *                        The
-     *                        handler can be used to modify the entity or related entities after it was created in
+     * @param postSaveHandler a consumer which is supplied with a boolean flag, indicating if the entity was new.
+     *                        The handler can be used to modify the entity or related entities after it was created in
      *                        the database.
      * @return the helper itself for fluent method calls
      */
     public SaveHelper withPostSaveHandler(Consumer<Boolean> postSaveHandler) {
         this.postSaveHandler = postSaveHandler;
+        return this;
+    }
+
+    /**
+     * Installs a predicate which can inspect the underlying entity and determine if a save for a POST should be
+     * attempted or not.
+     * <p>
+     * Note that these predicates are a bit exotic and only used if an entity is to be created in a two-step
+     * process. These are entities where some fields need to be set (like a type) before other fields
+     * can even be rendered (e.g. if their type or appearance depends on the type itself).
+     *
+     * @param skipCreatePredicate the predicate which decides if the entity should be persisted in the database
+     *                            or if the editor should be rendered again. They receive the {@link BaseEntity#isNew()}
+     *                            as if was before loading any data and may return <tt>true</tt> to save the entity
+     *                            or <tt>false</tt> to show the editor again.
+     * @return the helper itself for fluent method calls
+     */
+    public SaveHelper withSkipCreatePredicate(UnaryOperator<Boolean> skipCreatePredicate) {
+        this.skipCreatePredicate = skipCreatePredicate;
         return this;
     }
 
@@ -170,6 +190,10 @@ public class SaveHelper {
 
             if (preSaveHandler != null) {
                 preSaveHandler.accept(wasNew);
+            }
+
+            if (skipCreatePredicate != null && Boolean.TRUE.equals(skipCreatePredicate.apply(wasNew))) {
+                return false;
             }
 
             entity.getMapper().update(entity);

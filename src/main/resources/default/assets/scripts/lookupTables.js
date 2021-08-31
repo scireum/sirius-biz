@@ -10,18 +10,18 @@ function LookupTableInfo(options) {
     // Get rid of all previously registered event listeners etc. by re-creating the inner DOM...
     this._modal.innerHTML = this._modal.innerHTML;
 
-    this._queryField = this._modal.querySelector('.query-input');
+    this._queryField = this._modal.querySelector('.query-input-js');
     this._queryField.value = '';
     this._queryField.setAttribute('placeholder', '');
     this._title = this._modal.querySelector('.modal-title');
     this._title.textContent = this.tableName;
-    this._description = this._modal.querySelector('.lookuptable-description');
+    this._description = this._modal.querySelector('.lookuptable-description-js');
     this._output = this._modal.querySelector('.entries');
 
     const me = this;
 
     this.entriesToSkip = 0;
-    this._paginationLeft = this._modal.querySelector('.pagination-left');
+    this._paginationLeft = this._modal.querySelector('.pagination-left-js');
     this._paginationLeft.addEventListener('click', function (event) {
         if (this.dataset.skip != null) {
             me.entriesToSkip = this.dataset.skip;
@@ -29,7 +29,7 @@ function LookupTableInfo(options) {
         }
         event.preventDefault();
     });
-    this._paginationRight = this._modal.querySelector('.pagination-right');
+    this._paginationRight = this._modal.querySelector('.pagination-right-js');
     this._paginationRight.addEventListener('click', function (event) {
         if (this.dataset.skip != null) {
             me.entriesToSkip = this.dataset.skip;
@@ -37,7 +37,7 @@ function LookupTableInfo(options) {
         }
         event.preventDefault();
     });
-    this._paginationInfo = this._modal.querySelector('.pagination-info');
+    this._paginationInfo = this._modal.querySelector('.pagination-info-js');
 
 
     // Add a key-listener with some easing...
@@ -62,18 +62,18 @@ function LookupTableInfo(options) {
 LookupTableInfo.prototype.ENTRY_TEMPLATE = '<td>' +
     '<div class="d-flex flex-row">' +
     '   <div class="mr-auto">' +
-    '       <a class="font-weight-bold code-link" data-label="{{label}}" data-code="{{code}}">{{name}}</a>' +
+    '       <a class="font-weight-bold code-link-js" data-label="{{label}}" data-code="{{code}}">{{name}}</a>' +
     '       {{#showCode}} ({{code}}){{/showCode}}' +
     '   </div>' +
     '   {{#source}}' +
-    '   <div class="text-small cursor-pointer toggle-source-link d-none"><span class="icon"><i class="fa fa-plus"></i></span> <a class="toggle-source" href="#"> Source</a></div>' +
+    '   <div class="text-small cursor-pointer toggle-source-link-js d-none"><span class="icon-js"><i class="fa fa-plus"></i></span> <a class="toggle-source" href="#"> Source</a></div>' +
     '   {{/source}}' +
     '</div>' +
     '{{#description}}<div class="text-small text-muted mt-2">{{description}}</div>{{/description}}' +
     '{{#source}}' +
-    '   <div class="whitespace-pre text-monospace text-small left-border border-sirius-blue-dark pl-2 pr-2 mt-1 source d-none">{{source}}</div>' +
+    '   <div class="whitespace-pre text-monospace text-small left-border border-sirius-blue-dark pl-2 pr-2 mt-1 source-js d-none">{{source}}</div>' +
     '{{/source}}' +
-    '</td>'
+    '</td>';
 
 LookupTableInfo.prototype.reload = function () {
     const me = this;
@@ -108,7 +108,7 @@ LookupTableInfo.prototype.reload = function () {
 
             // Enable codeCallback if present...
             if (typeof me.codeCallback == 'function') {
-                const _codeLink = _entry.querySelector('.code-link');
+                const _codeLink = _entry.querySelector('.code-link-js');
                 _codeLink.setAttribute("href", "#");
                 _codeLink.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -118,12 +118,12 @@ LookupTableInfo.prototype.reload = function () {
             }
 
             // Activate source link if present...
-            let _toggleSource = _entry.querySelector('.toggle-source');
+            let _toggleSource = _entry.querySelector('.toggle-source-js');
             if (_toggleSource != null) {
                 _toggleSource.addEventListener('click', function (e) {
                     e.preventDefault();
-                    const _source = _entry.querySelector('.source');
-                    const _icon = _entry.querySelector('.icon');
+                    const _source = _entry.querySelector('.source-js');
+                    const _icon = _entry.querySelector('.icon-js');
                     if (_source.classList.contains('d-none')) {
                         _source.classList.remove('d-none');
                         _icon.innerHTML = '<i class="fa fa-minus"></i>';
@@ -133,7 +133,7 @@ LookupTableInfo.prototype.reload = function () {
                     }
                 });
             }
-            const _toggleSourceLink = _entry.querySelector('.toggle-source-link');
+            const _toggleSourceLink = _entry.querySelector('.toggle-source-link-js');
             if (_toggleSourceLink != null) {
                 _entry.addEventListener('mouseenter', function () {
                     if (_toggleSourceLink.classList.contains('d-none')) {
