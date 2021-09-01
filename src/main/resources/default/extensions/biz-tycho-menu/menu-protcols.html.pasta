@@ -4,7 +4,7 @@
 <i:switch test="@point">
     <i:block name="user">
         <t:dropdownSection>
-            <t:dropdownItem labelKey="AuditLogEntry.plural" url="/audit-log" framework="biz.protocols"/>
+            <t:dropdownItem labelKey="AuditLogEntry.plural" url="/audit-log" permission="permission-system-protocols" framework="biz.protocols"/>
         </t:dropdownSection>
     </i:block>
     <i:block name="system">
