@@ -16,13 +16,11 @@ import sirius.db.mixing.annotations.NullAllowed;
  * Represents a composite to test properties of type {@link MultiLanguageString}
  */
 public class MongoMultiLanguageStringComposite extends Composite {
-    public static final Mapping COMPOSITE_MULTILANGTEXT_WITH_VALID_LANGUAGES =
-            Mapping.named("compositeMultiLangTextWithValidLanguages");
+    public static final Mapping MIXIN_MULTILANGTEXT = Mapping.named("mixinMultiLangText");
     @NullAllowed
-    private final MultiLanguageString compositeMultiLangTextWithValidLanguages =
-            new MultiLanguageString().withValidLanguages(MongoMultiLanguageStringEntity.validLanguages);
+    private final MultiLanguageString mixinMultiLangText = new MultiLanguageString();
 
-    public MultiLanguageString getCompositeMultiLangTextWithValidLanguages() {
-        return compositeMultiLangTextWithValidLanguages;
+    public MultiLanguageString getMixinMultiLangText() {
+        return mixinMultiLangText;
     }
 }
