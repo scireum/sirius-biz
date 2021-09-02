@@ -143,19 +143,22 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()} write-once semantic}.
+     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()}
+     * write-once semantic}.
      * <p>
      * For new entities (owner), the given reference is initialized with the given target. For existing entities
-     * it is verified, that the given reference points to the given target.
+     * it is verified, that the given reference points to the given target. Also, we pre-fill the
+     * {@link BaseEntityRef#setValue(BaseEntity) value} so that the value can later be accessed more efficiently
+     * (without a fetch).
      * <p>
      * This method can also maintain references without a {@link BaseEntityRef#hasWriteOnceSemantics write-once semantic},
-     * but this might indicate an inconsistent or invalid usage pattern and one should strongly consider using a reference
-     * with {@link BaseEntityRef#hasWriteOnceSemantics write-once semantics}.
+     * but this might indicate an inconsistent or invalid usage pattern and one should strongly consider using a
+     * reference with {@link BaseEntityRef#hasWriteOnceSemantics write-once semantics}.
      *
      * @param owner  the entity which contains the reference
      * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
      * @param target the target the reference must point to
-     * @param <E>    the generic type the the parent being referenced
+     * @param <E>    the generic type the parent being referenced
      * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
      * @see BaseEntityRef#hasWriteOnceSemantics
@@ -163,7 +166,9 @@ public class BizController extends BasicController {
     protected <I extends Serializable, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner,
                                                                                  BaseEntityRef<I, E> ref,
                                                                                  E target) {
-        if (!Objects.equals(ref.getId(), target.getId())) {
+        if (Objects.equals(ref.getId(), target.getId())) {
+            ref.setValue(target);
+        } else {
             if (owner.isNew()) {
                 ref.setValue(target);
             } else {
