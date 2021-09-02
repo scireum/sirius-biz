@@ -145,12 +145,13 @@ public class ErrorContext implements SubContext {
     }
 
     private void logException(UnaryOperator<String> failureDescription, HandledException exception) {
-        if (TaskContext.get().getAdapter() instanceof ProcessContext) {
-            ((ProcessContext) TaskContext.get().getAdapter()).log(ProcessLog.error()
-                                                                            .withMessage(enhanceMessage(
-                                                                                    failureDescription.apply(exception.getMessage()))));
+        TaskContext taskContext = TaskContext.get();
+        if (taskContext.getAdapter() instanceof ProcessContext processContext) {
+            processContext.log(ProcessLog.error()
+                                         .withHandledException(exception)
+                                         .withMessage(enhanceMessage(failureDescription.apply(exception.getMessage()))));
         } else {
-            TaskContext.get().log(enhanceMessage(failureDescription.apply(exception.getMessage())));
+            taskContext.log(enhanceMessage(failureDescription.apply(exception.getMessage())));
         }
     }
 
