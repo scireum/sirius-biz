@@ -28,6 +28,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.ComparableTuple;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -54,6 +55,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -661,8 +663,9 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      *
      * @param entity the entity to extract its label
      * @return the formatted message
+     * @see sirius.biz.process.ErrorContext#performInContextAndGet(String, Object, UnaryOperator, Producer)
      */
-    public String getCannotSaveMessage(E entity) {
+    public String createCannotSaveMessage(@Nonnull E entity) {
         return NLS.fmtr("BaseImportHandler.cannotSaveEntity").set("entity", entity.getDescriptor().getLabel()).format();
     }
 
