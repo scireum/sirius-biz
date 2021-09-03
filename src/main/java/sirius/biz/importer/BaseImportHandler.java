@@ -34,6 +34,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -617,6 +618,22 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return fieldLookupCache.lookup((Class<? extends BaseEntity<?>>) descriptor.getType(),
                                        entityId,
                                        exportRepresentationMapping);
+    }
+
+    /**
+     * Builds a standard message that the given entity cannot be saved.
+     * <p>
+     * This message is mostly used with {@link sirius.biz.process.ErrorContext} methods which accept an extra failure description.
+     * For instance, when an entities required field is not populated, a standard message like this will be logged:
+     * {@code Field 'MyField' is required.}
+     * As to would be rather nice to tell the end user that an entity couldn't be saved due to the error.
+     * {@code MyEntity cannot be saved. Field 'MyField' is required.}
+     *
+     * @param entity the entity to extract its label
+     * @return the formatted message
+     */
+    public String getCannotSaveMessage(E entity) {
+        return NLS.fmtr("BaseImportHandler.cannotSaveEntity").set("entity", entity.getDescriptor().getLabel()).format();
     }
 
     /**
