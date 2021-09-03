@@ -134,8 +134,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param entity the entity to check
      */
     protected void enforcePostLoadConstraints(E entity) {
-        if (entity instanceof TenantAware) {
-            ((TenantAware) entity).setOrVerifyCurrentTenant();
+        if (entity instanceof TenantAware tenantAwareEntity) {
+            tenantAwareEntity.setOrVerifyCurrentTenant();
         }
     }
 
@@ -209,12 +209,12 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     @Override
     public void enforcePreSaveConstraints(E entity) {
-        if (entity instanceof TenantAware) {
-            ((TenantAware) entity).setOrVerifyCurrentTenant();
+        if (entity instanceof TenantAware tenantAwareEntity) {
+            tenantAwareEntity.setOrVerifyCurrentTenant();
         }
 
-        if (entity instanceof Journaled) {
-            ((Journaled) entity).getJournal().enableBatchLog();
+        if (entity instanceof Journaled journaledEntity) {
+            journaledEntity.getJournal().enableBatchLog();
         }
 
         if (entity instanceof ImportTransactionalEntity transactionalEntity) {
