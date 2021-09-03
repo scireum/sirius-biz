@@ -10,7 +10,6 @@ package sirius.biz.process.logs;
 
 import sirius.biz.elastic.SearchableEntity;
 import sirius.biz.process.Process;
-import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
@@ -22,9 +21,11 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
@@ -50,6 +51,26 @@ import java.util.Optional;
  */
 @Framework(Processes.FRAMEWORK_PROCESSES)
 public class ProcessLog extends SearchableEntity {
+
+    /**
+     * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
+     * {@link #withHandledException(HandledException)}.
+     * <p>
+     * A message key is suppose d to be {@link NLS#smartGet(String) smart translated}.
+     */
+    public static final ExceptionHint HINT_MESSAGE_KEY = new ExceptionHint("messageKey");
+
+    /**
+     * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
+     * {@link #withHandledException(HandledException)}.
+     */
+    public static final ExceptionHint HINT_MESSAGE_TYPE = new ExceptionHint("messageType");
+
+    /**
+     * Hints the limit to be used for {@link ProcessLog#withLimitedMessageType(String, int)} to be used when handling
+     * {@link #withHandledException(HandledException)}.
+     */
+    public static final ExceptionHint HINT_MESSAGE_COUNT = new ExceptionHint("messageCount");
 
     /**
      * Defines the name of the default action which simply toggles the state to {@link ProcessLogState#OPEN}.
@@ -398,20 +419,34 @@ public class ProcessLog extends SearchableEntity {
     /**
      * Specifies a handled handledException from where to inherit the message.
      * <p>
-     * If set, the {@link ProcessContext#HINT_MESSAGE_TYPE} hint is used to categorize the log in message types
-     * and {@link ProcessContext#HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
+     * If set, the {@link #HINT_MESSAGE_TYPE} or {@link #HINT_MESSAGE_KEY} is used to categorize the log in
+     * message types and {@link #HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
      *
      * @param handledException the {@link HandledException} to retrieve the message and eventually hints from
      * @return the log entry itself for fluent method calls
      */
     public ProcessLog withHandledException(HandledException handledException) {
         this.withMessage(handledException.getMessage());
-        handledException.getHint(ProcessContext.HINT_MESSAGE_TYPE).ifFilled(hint -> {
-            int messageCount = handledException.getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
-            if (messageCount > 0) {
-                this.withLimitedMessageType(hint.getString(), messageCount);
+        ValueHolder<String> hintMessage = ValueHolder.of(null);
+
+        handledException.getHint(HINT_MESSAGE_KEY).ifFilled(key -> {
+            if (key.startsWith("$")) {
+                hintMessage.set(key.getString());
             } else {
-                this.withMessageType(hint.getString());
+                hintMessage.set("$" + key.getString());
+            }
+        });
+
+        handledException.getHint(HINT_MESSAGE_TYPE).ifFilled(hint -> {
+            hintMessage.set(hint.getString());
+        });
+
+        hintMessage.asOptional().ifPresent(hintMessageType -> {
+            int messageCount = handledException.getHint(HINT_MESSAGE_COUNT).asInt(0);
+            if (messageCount > 0) {
+                this.withLimitedMessageType(hintMessageType, messageCount);
+            } else {
+                this.withMessageType(hintMessageType);
             }
         });
         return this;
