@@ -216,17 +216,17 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     /**
-     * Enforces some consistency checks before a delete is performed.
+     * Enforces some consistency checks before a deletion is performed.
      * <p>
      * This method should only rarely be overwritten as most checks should be either be performed during a load
      * or within the <tt>beforeDelete</tt> checks of the entity. The main point of this method is enforcing the
-     * correct tenant before deleteing, as some import handlers might yield (readonly) entities from parent
+     * correct tenant before deleting, as some import handlers might yield (readonly) entities from parent
      * tenants.
      *
      * @param entity the entity to check
      */
     protected void enforcePreDeleteConstraints(E entity) {
-        // By default the constraints are the same as when the entity is saved...
+        // By default, the constraints are the same as when the entity is saved...
         enforcePreSaveConstraints(entity);
     }
 
@@ -627,7 +627,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * By default the column wearing an {@link Exportable} with {@link Exportable#defaultRepresentation()} set to <tt>true</tt>
      * and the lowest {@link Exportable#priority()} is used.
      *
-     * @return the column / mapping to use when representing a entity of this type in an export
+     * @return the column / mapping to use when representing an entity of this type in an export
      */
     protected Mapping determineExportRepresentationMapping() {
         return descriptor.getProperties()
