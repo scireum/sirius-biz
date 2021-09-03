@@ -53,10 +53,29 @@ import java.util.Optional;
 @Framework(Processes.FRAMEWORK_PROCESSES)
 public class ProcessLog extends SearchableEntity {
 
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to one.
+     */
     public static final int MESSAGE_TYPE_COUNT_ONE = 1;
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to 10.
+     */
     public static final int MESSAGE_TYPE_COUNT_VERY_LOW = 10;
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to 100.
+     */
     public static final int MESSAGE_TYPE_COUNT_LOW = 100;
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to 250.
+     */
     public static final int MESSAGE_TYPE_COUNT_MEDIUM = 250;
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to 1000.
+     */
     public static final int MESSAGE_TYPE_COUNT_HIGH = 1000;
 
     /**
