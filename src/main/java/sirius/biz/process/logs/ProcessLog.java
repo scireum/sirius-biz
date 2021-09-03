@@ -52,6 +52,12 @@ import java.util.Optional;
 @Framework(Processes.FRAMEWORK_PROCESSES)
 public class ProcessLog extends SearchableEntity {
 
+    public static final int MESSAGE_TYPE_COUNT_ONE = 1;
+    public static final int MESSAGE_TYPE_COUNT_VERY_LOW = 10;
+    public static final int MESSAGE_TYPE_COUNT_LOW = 100;
+    public static final int MESSAGE_TYPE_COUNT_MEDIUM = 250;
+    public static final int MESSAGE_TYPE_COUNT_HIGH = 1000;
+
     /**
      * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
      * {@link #withHandledException(HandledException)}.

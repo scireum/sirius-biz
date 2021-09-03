@@ -75,8 +75,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @Parts(EntityImportHandlerExtender.class)
     protected static PartCollection<EntityImportHandlerExtender> extenders;
 
-    private static final int DEFAULT_MESSAGE_TYPE_COUNT = 250;
-
     protected EntityDescriptor descriptor;
     protected ImporterContext context;
     protected Mapping exportRepresentationMapping;
@@ -417,7 +415,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @return the amount of messages to limit
      */
     protected int obtainMessageTypeLimit() {
-        return DEFAULT_MESSAGE_TYPE_COUNT;
+        return ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM;
     }
 
     /**

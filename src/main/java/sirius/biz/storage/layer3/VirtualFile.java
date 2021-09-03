@@ -1285,7 +1285,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
                             .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
-                            .hint(ProcessLog.HINT_MESSAGE_COUNT, 250)
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
     }
@@ -1386,7 +1386,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
                             .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
-                            .hint(ProcessLog.HINT_MESSAGE_COUNT, 250)
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
     }
@@ -1465,7 +1465,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         return Exceptions.createHandled()
                          .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
                          .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
-                         .hint(ProcessLog.HINT_MESSAGE_COUNT, 250)
+                         .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                          .set("url", url)
                          .handle();
     }
