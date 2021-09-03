@@ -11,6 +11,8 @@ package sirius.biz.importer;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.FieldDefinitionSupplier;
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.importer.txn.ImportTransactionHelper;
+import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.TenantAware;
@@ -213,6 +215,25 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
         if (entity instanceof Journaled) {
             ((Journaled) entity).getJournal().enableBatchLog();
+        }
+
+        if (entity instanceof ImportTransactionalEntity transactionalEntity) {
+            markTransaction(transactionalEntity);
+        }
+    }
+
+    /**
+     * Marks the given entity with the current opened transaction id.
+     *
+     * @param transactionalEntity the entity to mark
+     * @see ImportTransactionHelper
+     */
+    protected void markTransaction(ImportTransactionalEntity transactionalEntity) {
+        ImportTransactionHelper importTransactionHelper =
+                context.getImporter().findHelper(ImportTransactionHelper.class);
+
+        if (importTransactionHelper.isActive()) {
+            importTransactionHelper.mark(transactionalEntity);
         }
     }
 
