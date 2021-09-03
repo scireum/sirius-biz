@@ -41,6 +41,7 @@ import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -419,6 +420,16 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     /**
+     * Returns the entity label key used to categorize messages for errors.
+     *
+     * @param entity the entity to retrieve the label
+     * @return the key
+     */
+    protected String obtainMessageTypeKey(@Nonnull E entity) {
+        return entity.getDescriptor().getLabelKey();
+    }
+
+    /**
      * Includes process hints to the {@link HandledException} thrown when saving an entity.
      * <p>
      * This permits processes to categorize these errors under the entity's label.
@@ -431,7 +442,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      */
     protected HandledException enhanceExceptionWithHints(HandledException exception, E entity) {
         if (exception.getHint(ProcessLog.HINT_MESSAGE_KEY).isEmptyString()) {
-            exception.withHint(ProcessLog.HINT_MESSAGE_KEY, entity.getDescriptor().getLabelKey());
+            exception.withHint(ProcessLog.HINT_MESSAGE_KEY, obtainMessageTypeKey(entity));
         }
         if (obtainMessageTypeLimit() > 0) {
             exception.withHint(ProcessLog.HINT_MESSAGE_COUNT, obtainMessageTypeLimit());
