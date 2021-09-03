@@ -56,7 +56,7 @@ public class ProcessLog extends SearchableEntity {
      * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
      * {@link #withHandledException(HandledException)}.
      * <p>
-     * A message key is suppose d to be {@link NLS#smartGet(String) smart translated}.
+     * A message key is supposed to be {@link NLS#smartGet(String) smart translated}.
      */
     public static final ExceptionHint HINT_MESSAGE_KEY = new ExceptionHint("messageKey");
 
