@@ -115,7 +115,7 @@ public class XMLValidator {
             process.log(processLog.withNLSKey("XMLValidatorErrorHandler.error")
                                   .withContext("line", exception.getLineNumber())
                                   .withContext("message", exception.getMessage())
-                                  .withLimitedMessageType("XMLValidatorErrorHandler.error.messageType", 250));
+                                  .withLimitedMessageType("$XMLValidatorErrorHandler.error.messageType", 250));
         }
 
         /**
