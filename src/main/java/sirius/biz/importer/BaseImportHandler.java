@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.FieldDefinitionSupplier;
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
@@ -32,6 +33,7 @@ import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -69,6 +71,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     @Parts(EntityImportHandlerExtender.class)
     protected static PartCollection<EntityImportHandlerExtender> extenders;
+
+    private static final int DEFAULT_MESSAGE_TYPE_COUNT = 250;
 
     protected EntityDescriptor descriptor;
     protected ImporterContext context;
@@ -380,6 +384,39 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         }
 
         return field;
+    }
+
+    /**
+     * Obtains the maximum amount of {@link sirius.biz.process.logs.ProcessLog entries} should be logged
+     * for the specific entity.
+     * <p>
+     * Override this method in order to provide a new limit or return 0 to skip limiting completely.
+     *
+     * @return the amount of messages to limit
+     */
+    protected int obtainMessageTypeLimit() {
+        return DEFAULT_MESSAGE_TYPE_COUNT;
+    }
+
+    /**
+     * Includes process hints to the {@link HandledException} thrown when saving an entity.
+     * <p>
+     * This permits processes to categorize these errors under the entity's label.
+     * The key won't be added if already present, so in rare circumstances the caller might want to provide
+     * a different content.
+     *
+     * @param exception a {@link HandledException} thrown saving an entity
+     * @param entity    the entity being saved
+     * @return the enriched exception
+     */
+    protected HandledException enhanceExceptionWithHints(HandledException exception, E entity) {
+        if (exception.getHint(ProcessLog.HINT_MESSAGE_KEY).isEmptyString()) {
+            exception.withHint(ProcessLog.HINT_MESSAGE_KEY, entity.getDescriptor().getLabelKey());
+        }
+        if (obtainMessageTypeLimit() > 0) {
+            exception.withHint(ProcessLog.HINT_MESSAGE_COUNT, obtainMessageTypeLimit());
+        }
+        return exception;
     }
 
     @Override

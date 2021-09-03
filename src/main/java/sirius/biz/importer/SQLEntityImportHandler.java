@@ -20,6 +20,7 @@ import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
+import sirius.kernel.health.HandledException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -227,16 +228,20 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return the updated or created entity or, if batch updates are active, the given entity
      */
     protected E createOrUpdate(E entity, boolean batch) {
-        enforcePreSaveConstraints(entity);
+        try {
+            enforcePreSaveConstraints(entity);
 
-        // Invoke the beforeSave checks so that the change-detection below works for
-        // computed properties...
-        descriptor.beforeSave(entity);
+            // Invoke the beforeSave checks so that the change-detection below works for
+            // computed properties...
+            descriptor.beforeSave(entity);
 
-        if (entity.isNew()) {
-            return createIfChanged(entity, batch);
-        } else {
-            return updateIfChanged(entity, batch);
+            if (entity.isNew()) {
+                return createIfChanged(entity, batch);
+            } else {
+                return updateIfChanged(entity, batch);
+            }
+        } catch (HandledException exception) {
+            throw enhanceExceptionWithHints(exception, entity);
         }
     }
 
