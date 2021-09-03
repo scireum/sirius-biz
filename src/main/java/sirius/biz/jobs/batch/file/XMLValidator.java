@@ -114,7 +114,8 @@ public class XMLValidator {
         private void log(SAXParseException exception, ProcessLog processLog) {
             process.log(processLog.withNLSKey("XMLValidatorErrorHandler.error")
                                   .withContext("line", exception.getLineNumber())
-                                  .withContext("message", exception.getMessage()));
+                                  .withContext("message", exception.getMessage())
+                                  .withLimitedMessageType("$XMLValidatorErrorHandler.error.messageType", 250));
         }
 
         /**
