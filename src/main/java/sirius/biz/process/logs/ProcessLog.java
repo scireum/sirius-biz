@@ -21,7 +21,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.ValueHolder;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -29,6 +29,7 @@ import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -433,28 +434,15 @@ public class ProcessLog extends SearchableEntity {
      */
     public ProcessLog withHandledException(HandledException handledException) {
         this.withMessage(handledException.getMessage());
-        ValueHolder<String> hintMessage = ValueHolder.of(null);
-
-        handledException.getHint(HINT_MESSAGE_KEY).ifFilled(key -> {
-            if (key.startsWith("$")) {
-                hintMessage.set(key.getString());
-            } else {
-                hintMessage.set("$" + key.getString());
-            }
-        });
-
-        handledException.getHint(HINT_MESSAGE_TYPE).ifFilled(hint -> {
-            hintMessage.set(hint.getString());
-        });
-
-        hintMessage.asOptional().ifPresent(hintMessageType -> {
-            int messageCount = handledException.getHint(HINT_MESSAGE_COUNT).asInt(0);
-            if (messageCount > 0) {
-                this.withLimitedMessageType(hintMessageType, messageCount);
-            } else {
-                this.withMessageType(hintMessageType);
-            }
-        });
+        obtainMessageKey(handledException).replaceEmptyWith(handledException.getHint(HINT_MESSAGE_TYPE))
+                                          .ifFilled(hintMessage -> {
+                                              int messageCount = handledException.getHint(HINT_MESSAGE_COUNT).asInt(0);
+                                              if (messageCount > 0) {
+                                                  this.withLimitedMessageType(hintMessage.getString(), messageCount);
+                                              } else {
+                                                  this.withMessageType(hintMessage.getString());
+                                              }
+                                          });
         return this;
     }
 
@@ -534,6 +522,19 @@ public class ProcessLog extends SearchableEntity {
         }
 
         return actions;
+    }
+
+    private Value obtainMessageKey(@Nonnull HandledException handledException) {
+        Value messageKey = handledException.getHint(HINT_MESSAGE_KEY);
+        if (messageKey.isEmptyString()) {
+            return Value.EMPTY;
+        }
+
+        if (messageKey.startsWith("$")) {
+            return messageKey;
+        } else {
+            return Value.of("$").append("", messageKey);
+        }
     }
 
     @Override
