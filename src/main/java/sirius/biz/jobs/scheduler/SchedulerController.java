@@ -13,6 +13,7 @@ import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.Jobs;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
+import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Strings;
@@ -32,7 +33,8 @@ import sirius.web.security.UserInfo;
  *
  * @param <J> the generic type of entities being managed by this controller.
  */
-public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEntry> extends BizController {
+public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEntry & TenantAware>
+        extends BizController {
 
     public static final String PERMISSION_MANAGE_SCHEDULER = "permission-manage-scheduler";
 
