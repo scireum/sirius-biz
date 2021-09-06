@@ -653,23 +653,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     /**
-     * Builds a standard message that the given entity cannot be saved.
-     * <p>
-     * This message is mostly used with {@link sirius.biz.process.ErrorContext} methods which accept an extra failure description.
-     * For instance, when an entities required field is not populated, a standard message like this will be logged:
-     * {@code Field 'MyField' is required.}
-     * As to would be rather nice to tell the end user that an entity couldn't be saved due to the error.
-     * {@code MyEntity cannot be saved. Field 'MyField' is required.}
-     *
-     * @param entity the entity to extract its label
-     * @return the formatted message
-     * @see sirius.biz.process.ErrorContext#performInContextAndGet(String, Object, UnaryOperator, Producer)
-     */
-    public String createCannotSaveMessage(@Nonnull E entity) {
-        return NLS.fmtr("BaseImportHandler.cannotSaveEntity").set("entity", entity.getDescriptor().getLabel()).format();
-    }
-
-    /**
      * Determines the export representation.
      * <p>
      * This will be used by {@link #renderExportRepresentation(Object)} to render a column value for a referenced ID of this type.
