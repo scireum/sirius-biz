@@ -47,18 +47,6 @@ import java.util.function.Supplier;
 public interface ProcessContext extends TaskContextAdapter {
 
     /**
-     * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
-     * {@link ProcessContext#handle(Exception)}.
-     */
-    ExceptionHint HINT_MESSAGE_TYPE = new ExceptionHint("messageType");
-
-    /**
-     * Hints the limit to be used for {@link ProcessLog#withLimitedMessageType(String, int)} to be used when handling
-     * an exception via {@link ProcessContext#handle(Exception)}.
-     */
-    ExceptionHint HINT_MESSAGE_COUNT = new ExceptionHint("messageCount");
-
-    /**
      * Returns the id of the process context.
      *
      * @return the id of the process

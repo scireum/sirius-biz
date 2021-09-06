@@ -14,6 +14,7 @@ import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.HandledException;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -113,17 +114,21 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E createOrUpdateNow(E entity) {
-        enforcePreSaveConstraints(entity);
+        try {
+            enforcePreSaveConstraints(entity);
 
-        // Invoke the beforeSave checks so that the change-detection below works for
-        // computed properties...
-        descriptor.beforeSave(entity);
+            // Invoke the beforeSave checks so that the change-detection below works for
+            // computed properties...
+            descriptor.beforeSave(entity);
 
-        if (isChanged(entity)) {
-            mango.update(entity);
+            if (isChanged(entity)) {
+                mango.update(entity);
+            }
+
+            return entity;
+        } catch (HandledException exception) {
+            throw enhanceExceptionWithHints(exception, entity);
         }
-
-        return entity;
     }
 
     /**
