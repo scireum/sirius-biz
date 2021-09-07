@@ -35,20 +35,20 @@ public class JournalEntry extends SearchableEntity {
     private LocalDateTime tod;
 
     /**
-     * Contains the name of the user which was active when the change occured.
+     * Contains the name of the user which was active when the change occurred.
      */
     public static final Mapping USERNAME = Mapping.named("username");
     @SearchContent
     private String username;
 
     /**
-     * Contaisn the id of the user which was active when the change occured.
+     * Contains the id of the user which was active when the change occurred.
      */
     public static final Mapping USER_ID = Mapping.named("userId");
     private String userId;
 
     /**
-     * Contains the system string, which indicates where the change occured.
+     * Contains the system string, which indicates where the change occurred.
      *
      * @see TaskContext#getSystemString()
      */

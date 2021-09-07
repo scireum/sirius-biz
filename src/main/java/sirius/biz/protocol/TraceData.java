@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
 public class TraceData extends Composite {
 
     /**
-     * Stores the username of the user which created the assoicated entity.
+     * Stores the username of the user which created the associated entity.
      */
     public static final Mapping CREATED_BY = Mapping.named("createdBy");
     @NoJournal
@@ -37,7 +37,7 @@ public class TraceData extends Composite {
     private String createdBy;
 
     /**
-     * Stores the timstamp when the associated entity was created.
+     * Stores the timestamp when the associated entity was created.
      */
     public static final Mapping CREATED_AT = Mapping.named("createdAt");
     @NoJournal

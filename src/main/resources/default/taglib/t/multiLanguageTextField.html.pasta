@@ -12,7 +12,7 @@
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
 <i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
-<i:arg name="validLanguages" type="List" default="@value.getValidLanguages()"/>
+<i:arg name="validLanguages" type="java.util.Collection" default="@value.getValidLanguages()"/>
 <i:arg name="languageManagementEnabled"
        type="boolean"
        default="false"

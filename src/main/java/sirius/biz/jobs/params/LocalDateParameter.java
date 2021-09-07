@@ -38,7 +38,7 @@ public class LocalDateParameter extends ParameterBuilder<LocalDate, LocalDatePar
      * A <tt>Supplier</tt> is used instead of a constant value as most probably this parameter is
      * only declared once but has to be able to provide an "up-to-date" value like "today".
      *
-     * @param defaultValueSupplier a supplier which returns a defaut value to use.
+     * @param defaultValueSupplier a supplier which returns a default value to use.
      * @return the parameter itself for fluent method calls
      */
     public LocalDateParameter withDefault(Supplier<LocalDate> defaultValueSupplier) {
