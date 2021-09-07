@@ -11,7 +11,6 @@ package sirius.biz.translations;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.bson.Document;
-import sirius.biz.util.Languages;
 import sirius.biz.web.ComplexLoadProperty;
 import sirius.db.es.ESPropertyInfo;
 import sirius.db.es.IndexMappings;
@@ -31,11 +30,9 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.http.WebContext;
-import sirius.web.security.ScopeInfo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -60,9 +57,6 @@ import java.util.function.Consumer;
  */
 public class MultiLanguageStringProperty extends BaseMapProperty
         implements SQLPropertyInfo, ESPropertyInfo, ComplexLoadProperty {
-
-    @Part
-    private static Languages languages;
 
     private static final String LANGUAGE_PROPERTY = "lang";
     private static final String TEXT_PROPERTY = "text";
@@ -336,10 +330,6 @@ public class MultiLanguageStringProperty extends BaseMapProperty
      * @return <tt>true</tt> if the code is accepted, <tt>false</tt> otherwise
      */
     private boolean isValidLanguageCode(MultiLanguageString multiLanguageString, String code) {
-        if (multiLanguageString.getValidLanguages().isEmpty()) {
-            return ScopeInfo.DEFAULT_SCOPE.getKnownLanguages().contains(code) || languages.all().contains(code);
-        }
-
         return multiLanguageString.getValidLanguages().contains(code);
     }
 

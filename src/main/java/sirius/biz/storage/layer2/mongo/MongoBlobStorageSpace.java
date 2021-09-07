@@ -276,7 +276,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
-                                    "Layer 2/Mongo: An error occured, cannot reference '%s' from '%s' ('%s'): The blob is either deleted, temporary or already in use.",
+                                    "Layer 2/Mongo: An error occurred, cannot reference '%s' from '%s' ('%s'): The blob is either deleted, temporary or already in use.",
                                     objectKey,
                                     referencingEntity,
                                     referenceDesignator)

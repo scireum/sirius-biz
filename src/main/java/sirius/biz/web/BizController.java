@@ -23,6 +23,7 @@ import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
+import sirius.db.util.BaseEntityCache;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
@@ -143,37 +144,94 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()} write-once semantic}.
+     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()}
+     * write-once semantic}.
      * <p>
      * For new entities (owner), the given reference is initialized with the given target. For existing entities
-     * it is verified, that the given reference points to the given target.
+     * it is verified, that the given reference points to the given target. Also, we pre-fill the
+     * {@link BaseEntityRef#setValue(BaseEntity) value} so that the value can later be accessed more efficiently
+     * (without a fetch).
      * <p>
      * This method can also maintain references without a {@link BaseEntityRef#hasWriteOnceSemantics write-once semantic},
-     * but this might indicate an inconsistent or invalid usage pattern and one should strongly consider using a reference
-     * with {@link BaseEntityRef#hasWriteOnceSemantics write-once semantics}.
+     * but this might indicate an inconsistent or invalid usage pattern and one should strongly consider using a
+     * reference with {@link BaseEntityRef#hasWriteOnceSemantics write-once semantics}.
      *
      * @param owner  the entity which contains the reference
      * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
      * @param target the target the reference must point to
-     * @param <E>    the generic type the the parent being referenced
+     * @param <E>    the generic type the parent being referenced
      * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
      * @see BaseEntityRef#hasWriteOnceSemantics
      */
-    protected <I extends Serializable, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner,
-                                                                                 BaseEntityRef<I, E> ref,
-                                                                                 E target) {
-        if (!Objects.equals(ref.getId(), target.getId())) {
+    protected <I extends Serializable, E extends BaseEntity<I>> void setOrVerify(@Nonnull BaseEntity<?> owner,
+                                                                                 @Nonnull BaseEntityRef<I, E> ref,
+                                                                                 @Nonnull E target) {
+        if (Objects.equals(ref.getId(), target.getId())) {
+            ref.setValue(target);
+        } else {
             if (owner.isNew()) {
                 ref.setValue(target);
             } else {
-                throw Exceptions.createHandled()
-                                .withNLSKey("BizController.invalidReference")
-                                .set("owner", owner.getUniqueName())
-                                .set("target", target.getUniqueName())
-                                .set("actual", ref.getUniqueObjectName())
-                                .handle();
+                throw createInvalidReferenceError(owner, ref, target.getIdAsString());
             }
+        }
+    }
+
+    private HandledException createInvalidReferenceError(BaseEntity<?> owner,
+                                                         BaseEntityRef<?, ?> ref,
+                                                         String referencedId) {
+        return Exceptions.createHandled()
+                         .withNLSKey("BizController.invalidReference")
+                         .set("owner", owner.getUniqueName())
+                         .set("target", Mixing.getUniqueName(ref.getType(), referencedId))
+                         .set("actual", ref.getUniqueObjectName())
+                         .handle();
+    }
+
+    /**
+     * Ensures, that the given <tt>owner</tt> contains the <tt>referencedEntityId</tt> in the given <tt>ref</tt>.
+     * <p>
+     * Note that we only compare IDs here, but do not check if the entity with the given <tt>referencedEntityId</tt>
+     * exists in the database.
+     *
+     * @param owner              the entity which contains the reference
+     * @param ref                the reference which is to be verified that it points to <tt>referencedEntityId</tt>
+     * @param referencedEntityId the target the reference must point to
+     * @param <E>                the generic type the parent being referenced
+     * @param <I>                the type of the id column of E
+     * @throws sirius.kernel.health.HandledException if the entities do no match
+     */
+    protected <I extends Serializable, E extends BaseEntity<I>> void verify(BaseEntity<?> owner,
+                                                                            BaseEntityRef<I, E> ref,
+                                                                            String referencedEntityId) {
+        if (!Objects.equals(ref.getIdAsString(), referencedEntityId)) {
+            throw createInvalidReferenceError(owner, ref, referencedEntityId);
+        }
+    }
+
+    /**
+     * Ensures, that the given <tt>owner</tt> contains the <tt>referencedEntityId</tt> in the given <tt>ref</tt> using
+     * the given <tt>cache</tt> for lookups.
+     * <p>
+     * Note that this also fills the reference with a value using the given cache.
+     *
+     * @param owner              the entity which contains the reference
+     * @param ref                the reference which is to be verified that it points to <tt>referencedEntityId</tt>
+     * @param referencedEntityId the target the reference must point to
+     * @param cache              the cache to use when resolving the referenced entity
+     * @param <E>                the generic type the parent being referenced
+     * @param <I>                the type of the id column of E
+     * @throws sirius.kernel.health.HandledException if the entities do no match
+     */
+    protected <I extends Serializable, E extends BaseEntity<I>> void verifyAndFill(BaseEntity<?> owner,
+                                                                                   BaseEntityRef<I, E> ref,
+                                                                                   String referencedEntityId,
+                                                                                   BaseEntityCache<I, E> cache) {
+        if (Objects.equals(ref.getIdAsString(), referencedEntityId)) {
+            ref.setValue(cache.fetchRequired(ref));
+        } else {
+            throw createInvalidReferenceError(owner, ref, referencedEntityId);
         }
     }
 

@@ -40,14 +40,14 @@ public class StoredIncident extends SearchableEntity {
     private String category;
 
     /**
-     * Contains the name of the node on which the error occured.
+     * Contains the name of the node on which the error occurred.
      */
     public static final Mapping NODE = Mapping.named("node");
     @SearchContent
     private String node;
 
     /**
-     * Contains the code-location where the error occured.
+     * Contains the code-location where the error occurred.
      */
     public static final Mapping LOCATION = Mapping.named("location");
     @SearchContent
@@ -62,13 +62,13 @@ public class StoredIncident extends SearchableEntity {
     private String stack;
 
     /**
-     * Contains the timestamp when the error first occured.
+     * Contains the timestamp when the error first occurred.
      */
     public static final Mapping FIRST_OCCURRENCE = Mapping.named("firstOccurrence");
     private LocalDateTime firstOccurrence = LocalDateTime.now();
 
     /**
-     * Contains the timestamp when the error last occured.
+     * Contains the timestamp when the error last occurred.
      */
     public static final Mapping LAST_OCCURRENCE = Mapping.named("lastOccurrence");
     private LocalDateTime lastOccurrence = LocalDateTime.now();
@@ -80,7 +80,7 @@ public class StoredIncident extends SearchableEntity {
     private int numberOfOccurrences;
 
     /**
-     * Contains the <tt>mapped diagnostic context</tt>, providing some insight how and why the error occured.
+     * Contains the <tt>mapped diagnostic context</tt>, providing some insight how and why the error occurred.
      */
     public static final Mapping MDC = Mapping.named("mdc");
     @SearchContent
@@ -88,7 +88,7 @@ public class StoredIncident extends SearchableEntity {
     private final StringMap mdc = new StringMap();
 
     /**
-     * Contains the name of the user that was logged in while the error occured.
+     * Contains the name of the user that was logged in while the error occurred.
      */
     public static final Mapping USER = Mapping.named("user");
     @SearchContent

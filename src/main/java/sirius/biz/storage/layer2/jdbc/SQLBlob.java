@@ -44,7 +44,7 @@ import java.util.Optional;
 /**
  * Stores the metadata of a {@link Blob} in the underlying JDBC database.
  * <p>
- * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
+ * Note that all non-trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @ComplexDelete(false)
@@ -115,7 +115,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     /**
      * Contains the file extension if a filename was provided.
      * <p>
-     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercased file extension without the ".".
+     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercase file extension without the ".".
      */
     public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
     @NullAllowed

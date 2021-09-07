@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 /**
  * Stores the metadata of a {@link Directory} in the underlying MongoDB.
  * <p>
- * Note that all non trivial methods delegate to the associated {@link MongoBlobStorage}.
+ * Note that all non-trivial methods delegate to the associated {@link MongoBlobStorage}.
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 @Index(name = "directory_tenant_lookup",

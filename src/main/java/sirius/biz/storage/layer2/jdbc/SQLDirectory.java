@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 /**
  * Stores the metadata of a {@link Directory} in the underlying JDBC database.
  * <p>
- * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
+ * Note that all nontrivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @Index(name = "directory_tenant_lookup", columns = {"spaceName", "tenantId", "deleted"})
