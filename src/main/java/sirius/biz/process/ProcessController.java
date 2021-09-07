@@ -57,6 +57,11 @@ public class ProcessController extends BizController {
      */
     public static final String PERMISSION_MANAGE_ALL_PROCESSES = "permission-manage-all-processes";
 
+    /**
+     * Defines the permission required to view processes of the same tenant.
+     */
+    public static final String PERMISSION_VIEW_PROCESSES = "permission-view-processes";
+
     @Part
     private Processes processes;
 
@@ -76,6 +81,7 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps")
     @LoginRequired
+    @Permission(PERMISSION_VIEW_PROCESSES)
     public void processes(WebContext webContext) {
         ElasticQuery<Process> query = processes.queryProcessesForCurrentUser();
 
@@ -122,6 +128,7 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps/:1")
     @LoginRequired
+    @Permission(PERMISSION_VIEW_PROCESSES)
     public void process(WebContext webContext, String processId) {
         Process process = findAccessibleProcess(processId);
 
@@ -163,6 +170,7 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps/:1/export/:2")
     @LoginRequired
+    @Permission(PERMISSION_VIEW_PROCESSES)
     public void exportLogs(WebContext webContext, String processId, String type) {
         exportOutput(webContext, processId, null, type);
     }
@@ -175,6 +183,7 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps/:1/cancel")
     @LoginRequired
+    @Permission(PERMISSION_VIEW_PROCESSES)
     public void cancelProcess(WebContext webContext, String processId) {
         Process process = findAccessibleProcess(processId);
         processes.markCanceled(process.getId());
@@ -230,6 +239,7 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps/:1/action/:2/:3")
     @LoginRequired
+    @Permission(PERMISSION_VIEW_PROCESSES)
     public void executeLogAction(WebContext webContext, String processId, String processLogId, String action) {
         Process process = findAccessibleProcess(processId);
         String returnUrl = webContext.get("returnUrl").asString();
@@ -302,6 +312,7 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps/:1/output/:2")
     @LoginRequired
+    @Permission(PERMISSION_VIEW_PROCESSES)
     public void processOutput(WebContext webContext, String processId, String name) {
         Process process = findAccessibleProcess(processId);
 
@@ -338,6 +349,7 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps/:1/output/:2/export/:3")
     @LoginRequired
+    @Permission(PERMISSION_VIEW_PROCESSES)
     public void exportOutput(WebContext webContext, String processId, String name, String type) {
         // We need to perform this lookup to ensure that we may access the process...
         Process process = findAccessibleProcess(processId);
@@ -368,6 +380,7 @@ public class ProcessController extends BizController {
      */
     @Routed("/ps/:1/api")
     @InternalService
+    @Permission(PERMISSION_VIEW_PROCESSES)
     public void processAPI(WebContext webContext, JSONStructuredOutput out, String processId) {
         processes.outputAsJSON(processId, out);
     }

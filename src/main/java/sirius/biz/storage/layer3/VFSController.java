@@ -23,6 +23,7 @@ import sirius.web.controller.Routed;
 import sirius.web.http.InputStreamHandler;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
@@ -39,6 +40,11 @@ import java.util.Optional;
 @Register
 public class VFSController extends BizController {
 
+    /**
+     * Permissions required to view files.
+     */
+    private static final String PERMISSION_VIEW_FILES = "permission-view-files";
+
     public static final String PARENT_DIR = "..";
     @Part
     private VirtualFileSystem vfs;
@@ -50,6 +56,7 @@ public class VFSController extends BizController {
      */
     @LoginRequired
     @Routed("/fs")
+    @Permission(PERMISSION_VIEW_FILES)
     public void list(WebContext ctx) {
         String path = ctx.get("path").asString("/");
         VirtualFile file = resolveToExistingFile(path);
@@ -108,6 +115,7 @@ public class VFSController extends BizController {
     @LoginRequired
     @Routed(value = "/fs/upload", preDispatchable = true)
     @InternalService
+    @Permission(PERMISSION_VIEW_FILES)
     public void upload(WebContext ctx, JSONStructuredOutput out, InputStreamHandler inputStream) throws Exception {
         VirtualFile parent = vfs.resolve(ctx.get("path").asString());
         parent.assertExistingDirectory();
@@ -154,6 +162,7 @@ public class VFSController extends BizController {
      */
     @LoginRequired
     @Routed("/fs/delete")
+    @Permission(PERMISSION_VIEW_FILES)
     public void delete(WebContext ctx) {
         VirtualFile file = vfs.resolve(ctx.get("path").asString());
         if (ctx.isSafePOST()) {
@@ -178,6 +187,7 @@ public class VFSController extends BizController {
      */
     @LoginRequired
     @Routed("/fs/rename")
+    @Permission(PERMISSION_VIEW_FILES)
     public void rename(WebContext ctx) {
         VirtualFile file = vfs.resolve(ctx.get("path").asString());
         if (ctx.isSafePOST()) {
@@ -203,6 +213,7 @@ public class VFSController extends BizController {
      */
     @LoginRequired
     @Routed("/fs/createDirectory")
+    @Permission(PERMISSION_VIEW_FILES)
     public void createDirectory(WebContext ctx) {
         VirtualFile parent = Optional.ofNullable(vfs.resolve(ctx.get("parent").asString()))
                                      .filter(VirtualFile::exists)
@@ -231,6 +242,7 @@ public class VFSController extends BizController {
      */
     @LoginRequired
     @Routed("/fs/move")
+    @Permission(PERMISSION_VIEW_FILES)
     public void move(WebContext ctx) {
         VirtualFile file = vfs.resolve(ctx.get("path").asString());
         VirtualFile newParent = vfs.resolve(ctx.get("newParent").asString());
@@ -269,6 +281,7 @@ public class VFSController extends BizController {
     @LoginRequired
     @Routed("/fs/list")
     @InternalService
+    @Permission(PERMISSION_VIEW_FILES)
     public void listAPI(WebContext webContext, JSONStructuredOutput out) {
         VirtualFile parent = vfs.resolve(webContext.get("path").asString("/"));
         if (parent.exists() && !parent.isDirectory()) {

@@ -18,6 +18,7 @@ import sirius.kernel.di.std.Register;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 
 /**
@@ -32,12 +33,18 @@ public class AuditLogController extends BizController {
     public static final String PERMISSION_AUDIT_LOGS = "permission-audit-logs";
 
     /**
+     * Names the permissions required to view the audit log page.
+     */
+    private static final String PERMISSION_VIEW_AUDIT_LOGS = "permissions-view-audit-log";
+
+    /**
      * Renders some metrics to determine system growth.
      *
      * @param ctx the current request
      */
     @LoginRequired
     @Routed("/audit-log")
+    @Permission(PERMISSION_VIEW_AUDIT_LOGS)
     public void auditLog(WebContext ctx) {
         ElasticQuery<AuditLogEntry> query = elastic.select(AuditLogEntry.class).orderDesc(AuditLogEntry.TIMESTAMP);
 
