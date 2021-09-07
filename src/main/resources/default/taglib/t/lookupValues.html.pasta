@@ -27,9 +27,7 @@
                 tableName: '___table',
                 labelFormat: '___values.getDisplay()',
                 codeCallback: function (code, name) {
-                    const entries = autocomplete.val();
-                    entries.push({value: code, text: name});
-                    autocomplete.val(entries);
+                    autocomplete.addToken({value: code, text: name});
                 }
             });
         });
