@@ -376,7 +376,7 @@ public class Storage {
             Exceptions.handle()
                       .to(LOG)
                       .error(e)
-                      .withSystemErrorMessage("An error occured, when marking the object '%s' as used: %s (%s)",
+                      .withSystemErrorMessage("An error occurred, when marking the object '%s' as used: %s (%s)",
                                               objectKey)
                       .handle();
         }

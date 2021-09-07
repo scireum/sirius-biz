@@ -239,7 +239,7 @@ public class StorageUtils {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .error(error)
-                            .withSystemErrorMessage("An error occured while writing to a temporary buffer: %s (%s)")
+                            .withSystemErrorMessage("An error occurred while writing to a temporary buffer: %s (%s)")
                             .handle();
         });
         out.getCompletionFuture().onSuccess(() -> {
@@ -271,7 +271,7 @@ public class StorageUtils {
                                 .to(StorageUtils.LOG)
                                 .error(e)
                                 .withSystemErrorMessage(
-                                        "An error occured while reading from a temporary buffer: %s (%s)")
+                                        "An error occurred while reading from a temporary buffer: %s (%s)")
                                 .handle();
             }
         });

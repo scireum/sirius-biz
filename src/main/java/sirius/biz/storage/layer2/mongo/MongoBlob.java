@@ -44,7 +44,7 @@ import java.util.Optional;
 /**
  * Stores the metadata of a {@link Blob} in the underlying MongoDB.
  * <p>
- * Note that all non trivial methods delegate to the associated {@link MongoBlobStorageSpace}.
+ * Note that all non-trivial methods delegate to the associated {@link MongoBlobStorageSpace}.
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 @ComplexDelete(false)
@@ -124,7 +124,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     /**
      * Contains the file extension if a filename was provided.
      * <p>
-     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercased file extension without the ".".
+     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercase file extension without the ".".
      */
     public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
     @NullAllowed

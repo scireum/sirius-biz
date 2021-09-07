@@ -155,7 +155,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                                 .to(Log.SYSTEM)
                                 .error(e)
                                 .withSystemErrorMessage(
-                                        "An error occured while handling an extracted file: %s - %s (%s)",
+                                        "An error occurred while handling an extracted file: %s - %s (%s)",
                                         currentFilePath)
                                 .handle();
             }

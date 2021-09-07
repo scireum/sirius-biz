@@ -69,7 +69,7 @@ public class CIFSUplink extends ConfigBasedUplink {
                 }
             } catch (CIFSException e) {
                 throw new IllegalArgumentException(Strings.apply(
-                        "An error occured when talking to the CIFS file system: %s - %s",
+                        "An error occurred when talking to the CIFS file system: %s - %s",
                         url,
                         e.getMessage()));
             } catch (MalformedURLException e) {

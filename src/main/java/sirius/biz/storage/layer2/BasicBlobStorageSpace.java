@@ -1372,10 +1372,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 // No variant is present, therefore we spawn a thread which will create it and start a conversion
                 // pipeline
                 if (tryCreateVariantAsync(blob, variantName)) {
-                    // We sucessfully created a variant and forked a conversion... Await its result...
+                    // We successfully created a variant and forked a conversion... Await its result...
                     return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
                 } else {
-                    // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+                    // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
                     // wait a short and random amount of time and retry...
                     return retryFindVariant(blob, variantName, retries);
                 }
@@ -1403,7 +1403,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 invokeConversionPipelineAsync(blob, variant);
                 return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
             } else {
-                // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+                // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
                 // wait a short and random amount of time and retry...
                 return retryFindVariant(blob, variantName, retries);
             }
@@ -1428,7 +1428,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws Exception if case of any error when performing the next attempt
      */
     private V retryFindVariant(B blob, String variantName, int retries) throws Exception {
-        // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+        // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
         // wait a short and random amount of time and retry...
         Wait.randomMillis(0, 150);
         return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
