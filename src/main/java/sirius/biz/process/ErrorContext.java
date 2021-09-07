@@ -110,8 +110,13 @@ public class ErrorContext implements SubContext {
     public <T> T annotateExceptionAndGet(UnaryOperator<String> failureDescription, Producer<T> producer) {
         try {
             return producer.create();
-        } catch (Exception exception) {
+        } catch (HandledException exception) {
             throw Exceptions.createHandled()
+                            .withDirectMessage(failureDescription.apply(exception.getMessage()))
+                            .handle();
+        } catch (Exception exception) {
+            throw Exceptions.handle()
+                            .to(Log.BACKGROUND)
                             .withDirectMessage(failureDescription.apply(exception.getMessage()))
                             .handle();
         }
