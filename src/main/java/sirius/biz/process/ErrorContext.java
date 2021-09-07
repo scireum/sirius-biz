@@ -160,47 +160,91 @@ public class ErrorContext implements SubContext {
      *
      * @param task the task to actually perform
      */
-    public void perform(UnitOfWork task) {
-        performAndGet(() -> {
+    public void handle(UnitOfWork task) {
+        handleAndGet(() -> {
             task.execute();
             return null;
         });
     }
 
     /**
-     * Performs the given task and directly logs any occurring error.
-     * <p>
+     * Executes the given task and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
+     *
+     * @param failureDescription annotates a given error message so that the user is notified what task actually went
+     *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
+     *                           it is only used for error reporting.
+     * @param task               the task to actually perform
+     */
+    public void handle(UnaryOperator<String> failureDescription, UnitOfWork task) {
+        handleAndGet(failureDescription, () -> {
+            task.execute();
+            return null;
+        });
+    }
+
+    /**
+     * Executes the given task and directly logs any occurring error.
      *
      * @param label the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
      * @param value the value to store
      * @param task  the task to perform
      */
-    public void performInContext(String label, Object value, UnitOfWork task) {
-        performInContextAndGet(label, value, () -> {
+    public void handleInContext(String label, Object value, UnitOfWork task) {
+        handleInContextAndGet(label, value, () -> {
             task.execute();
             return null;
         });
     }
 
     /**
-     * Executes the given supplier and directly reports any occurring error.
+     * Executes the given task and directly logs any occurring error.
      *
-     * @param producer the producer to execute
-     * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
+     * @param failureDescription annotates a given error message so that the user is notified what task actually went
+     *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
+     *                           it is only used for error reporting.
+     * @param label              the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
+     * @param value              the value to store
+     * @param task               the task to perform
      */
-    public <T> Optional<T> performAndGet(Producer<T> producer) {
-        return performInContextAndGet(null, null, producer);
+    public void handleInContext(UnaryOperator<String> failureDescription, String label, Object value, UnitOfWork task) {
+        handleInContextAndGet(failureDescription, label, value, () -> {
+            task.execute();
+            return null;
+        });
     }
 
     /**
-     * Executes the given supplier and directly reports any occurring error.
+     * Executes the given producer and directly reports any occurring error.
+     *
+     * @param producer the producer to execute
+     * @return an optional containing the object returned by the producer or an empty optional if exceptions happened during execution
+     */
+    public <T> Optional<T> handleAndGet(Producer<T> producer) {
+        return handleInContextAndGet(null, null, producer);
+    }
+
+    /**
+     * Executes the given producer and directly reports any occurring error.
+     *
+     * @param failureDescription annotates a given error message so that the user is notified what task actually went
+     *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
+     *                           it is only used for error reporting.
+     * @param producer           the producer to execute
+     * @return an optional containing the object returned by the producer or an empty optional if exceptions happened during execution
+     */
+    public <T> Optional<T> handleAndGet(UnaryOperator<String> failureDescription, Producer<T> producer) {
+        return handleInContextAndGet(failureDescription, null, null, producer);
+    }
+
+    /**
+     * Executes the given producer and directly reports any occurring error.
      *
      * @param label    the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
      * @param value    the value to store
      * @param producer the producer to execute
-     * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
+     * @return an optional containing the object returned by the producer or an empty optional if exceptions happened during execution
      */
-    public <T> Optional<T> performInContextAndGet(String label, Object value, Producer<T> producer) {
+    public <T> Optional<T> handleInContextAndGet(String label, Object value, Producer<T> producer) {
         withContext(label, value);
         try {
             return Optional.ofNullable(producer.create());
@@ -213,6 +257,24 @@ public class ErrorContext implements SubContext {
             removeContext(label);
         }
         return Optional.empty();
+    }
+
+    /**
+     * Executes the given producer and directly reports any occurring error.
+     *
+     * @param failureDescription annotates a given error message so that the user is notified what task actually went
+     *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
+     *                           it is only used for error reporting.
+     * @param label              the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
+     * @param value              the value to store
+     * @param producer           the producer to execute
+     * @return an optional containing the object returned by the producer or an empty optional if exceptions happened during execution
+     */
+    public <T> Optional<T> handleInContextAndGet(UnaryOperator<String> failureDescription,
+                                                 String label,
+                                                 Object value,
+                                                 Producer<T> producer) {
+        return handleInContextAndGet(label, value, () -> executeAndGet(failureDescription, producer));
     }
 
     /**
@@ -240,10 +302,10 @@ public class ErrorContext implements SubContext {
      * @param task             the import task to perform
      */
     public void performImport(Supplier<String> entityDescriptor, UnitOfWork task) {
-        perform(() -> execute(message -> NLS.fmtr("ErrorContext.importError")
-                                            .set("message", message)
-                                            .set("entity", entityDescriptor.get())
-                                            .format(), task));
+        handle(() -> execute(message -> NLS.fmtr("ErrorContext.importError")
+                                           .set("message", message)
+                                           .set("entity", entityDescriptor.get())
+                                           .format(), task));
     }
 
     /**
@@ -256,10 +318,10 @@ public class ErrorContext implements SubContext {
      * @param task             the import task to perform
      */
     public void performDelete(Supplier<String> entityDescriptor, UnitOfWork task) {
-        perform(() -> execute(message -> NLS.fmtr("ErrorContext.deleteError")
-                                            .set("message", message)
-                                            .set("entity", entityDescriptor.get())
-                                            .format(), task));
+        handle(() -> execute(message -> NLS.fmtr("ErrorContext.deleteError")
+                                           .set("message", message)
+                                           .set("entity", entityDescriptor.get())
+                                           .format(), task));
     }
 
     @Override
