@@ -14,6 +14,7 @@ import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 
 import java.util.Optional;
@@ -127,7 +128,11 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
             return entity;
         } catch (HandledException exception) {
-            throw enhanceExceptionWithHints(exception, entity);
+            HandledException handledException = Exceptions.createHandled()
+                                                          .withDirectMessage(entity.getDescriptor()
+                                                                                   .createCannotSaveMessage(exception.getMessage()))
+                                                          .handle();
+            throw enhanceExceptionWithHints(handledException, entity);
         }
     }
 
