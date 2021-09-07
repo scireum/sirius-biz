@@ -107,7 +107,7 @@ public class ErrorContext implements SubContext {
      * @param producer           the producer to execute
      * @return the object created by the given producer
      */
-    public <T> T executeAndGet(UnaryOperator<String> failureDescription, Producer<T> producer) {
+    public <T> T annotateExceptionAndGet(UnaryOperator<String> failureDescription, Producer<T> producer) {
         try {
             return producer.create();
         } catch (Exception exception) {
@@ -274,7 +274,7 @@ public class ErrorContext implements SubContext {
                                                  String label,
                                                  Object value,
                                                  Producer<T> producer) {
-        return handleInContextAndGet(label, value, () -> executeAndGet(failureDescription, producer));
+        return handleInContextAndGet(label, value, () -> annotateExceptionAndGet(failureDescription, producer));
     }
 
     /**
@@ -285,8 +285,8 @@ public class ErrorContext implements SubContext {
      *                           it is only used for error reporting.
      * @param task               the task to execute
      */
-    public void execute(UnaryOperator<String> failureDescription, UnitOfWork task) {
-        executeAndGet(failureDescription, () -> {
+    public void annotateException(UnaryOperator<String> failureDescription, UnitOfWork task) {
+        annotateExceptionAndGet(failureDescription, () -> {
             task.execute();
             return null;
         });
@@ -302,10 +302,10 @@ public class ErrorContext implements SubContext {
      * @param task             the import task to perform
      */
     public void performImport(Supplier<String> entityDescriptor, UnitOfWork task) {
-        handle(() -> execute(message -> NLS.fmtr("ErrorContext.importError")
-                                           .set("message", message)
-                                           .set("entity", entityDescriptor.get())
-                                           .format(), task));
+        handle(() -> annotateException(message -> NLS.fmtr("ErrorContext.importError")
+                                                     .set("message", message)
+                                                     .set("entity", entityDescriptor.get())
+                                                     .format(), task));
     }
 
     /**
@@ -318,10 +318,10 @@ public class ErrorContext implements SubContext {
      * @param task             the import task to perform
      */
     public void performDelete(Supplier<String> entityDescriptor, UnitOfWork task) {
-        handle(() -> execute(message -> NLS.fmtr("ErrorContext.deleteError")
-                                           .set("message", message)
-                                           .set("entity", entityDescriptor.get())
-                                           .format(), task));
+        handle(() -> annotateException(message -> NLS.fmtr("ErrorContext.deleteError")
+                                                     .set("message", message)
+                                                     .set("entity", entityDescriptor.get())
+                                                     .format(), task));
     }
 
     @Override
