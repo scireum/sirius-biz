@@ -125,7 +125,7 @@ public class DictionaryBasedImport {
         Context context = filterEmptyValues(dictionary.load(row, false));
         if (!isEmptyContext(context)) {
             Watch watch = Watch.start();
-            errorContext.perform(() -> {
+            errorContext.handle(() -> {
                 try {
                     rowHandler.invoke(Tuple.create(index, context));
                 } catch (Exception exception) {
