@@ -105,11 +105,11 @@ public class ErrorContext implements SubContext {
      *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
      *                           it is only used for error reporting.
      * @param producer           the producer to execute
-     * @return an optional containing the object returned by the producer
+     * @return the object created by the given producer
      */
-    public <T> Optional<T> executeAndGet(UnaryOperator<String> failureDescription, Producer<T> producer) {
+    public <T> T executeAndGet(UnaryOperator<String> failureDescription, Producer<T> producer) {
         try {
-            return Optional.ofNullable(producer.create());
+            return producer.create();
         } catch (Exception exception) {
             throw Exceptions.createHandled()
                             .withDirectMessage(failureDescription.apply(exception.getMessage()))
@@ -198,7 +198,7 @@ public class ErrorContext implements SubContext {
      * @param label    the name of the value (this will be {@link NLS#smartGet(String) auto translated}).
      * @param value    the value to store
      * @param producer the producer to execute
-     * @return an optional containing the object returned by the producer or an empty optional if exceptions happened during execution
+     * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
      */
     public <T> Optional<T> performInContextAndGet(String label, Object value, Producer<T> producer) {
         withContext(label, value);
