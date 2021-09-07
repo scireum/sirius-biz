@@ -78,7 +78,7 @@ public class XMLValidator {
     }
 
     /**
-     * Logs errors to a {@link ProcessContext} and keeps track if any error occured during validation.
+     * Logs errors to a {@link ProcessContext} and keeps track if any error occurred during validation.
      */
     private static class XMLValidatorErrorHandler implements ErrorHandler {
 

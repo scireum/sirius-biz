@@ -25,7 +25,7 @@ import java.util.Optional;
 /**
  * Stores the metadata of a {@link BlobVariant} in the underlying MongoDB.
  * <p>
- * Note that all non trivial methods delegate to the associated {@link MongoBlobStorage}.
+ * Note that all non-trivial methods delegate to the associated {@link MongoBlobStorage}.
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 public class MongoVariant extends MongoEntity implements BlobVariant {
@@ -88,13 +88,13 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
     private long conversionDuration;
 
     /**
-     * Stores how long the the conversion waited in the queue (in millis).
+     * Stores how long the conversion waited in the queue (in millis).
      */
     public static final Mapping QUEUE_DURATION = Mapping.named("queueDuration");
     private long queueDuration;
 
     /**
-     * Stores how long the the download and upload from and to the storage took (in millis).
+     * Stores how long the download and upload from and to the storage took (in millis).
      */
     public static final Mapping TRANSFER_DURATION = Mapping.named("transferDuration");
     private long transferDuration;

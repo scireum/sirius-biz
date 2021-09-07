@@ -79,7 +79,7 @@ public abstract class Event extends SQLEntity {
      * <p>
      * In most cases this method shouldn't be called manually as the event will initialize this field with <tt>now</tt>.
      *
-     * @param eventTimestamp the {@link LocalDateTime} the event occured.
+     * @param eventTimestamp the {@link LocalDateTime} the event occurred.
      */
     public void setCustomEventTimestamp(LocalDateTime eventTimestamp) {
         this.eventTimestamp = eventTimestamp;
