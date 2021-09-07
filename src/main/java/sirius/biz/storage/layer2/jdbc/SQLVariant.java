@@ -14,7 +14,6 @@ import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
-import sirius.db.mixing.annotations.DefaultValue;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.BaseEntityRef;
@@ -66,7 +65,6 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      * Contains the timestamp when the last conversion was attempted.
      */
     public static final Mapping LAST_CONVERSION_ATTEMPT = Mapping.named("lastConversionAttempt");
-    @DefaultValue("")
     private LocalDateTime lastConversionAttempt = LocalDateTime.now();
 
     /**

@@ -21,7 +21,6 @@ import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.ComplexDelete;
-import sirius.db.mixing.annotations.DefaultValue;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -172,7 +171,6 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
      * Stores the last modification timestamp.
      */
     public static final Mapping LAST_MODIFIED = Mapping.named("lastModified");
-    @DefaultValue("")
     private LocalDateTime lastModified = LocalDateTime.now();
 
     /**
