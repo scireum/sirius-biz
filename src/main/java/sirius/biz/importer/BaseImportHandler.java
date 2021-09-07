@@ -11,6 +11,9 @@ package sirius.biz.importer;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.FieldDefinitionSupplier;
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.importer.txn.ImportTransactionHelper;
+import sirius.biz.importer.txn.ImportTransactionalEntity;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
@@ -25,6 +28,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.ComparableTuple;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -32,10 +36,13 @@ import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -48,6 +55,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -127,8 +135,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param entity the entity to check
      */
     protected void enforcePostLoadConstraints(E entity) {
-        if (entity instanceof TenantAware) {
-            ((TenantAware) entity).setOrVerifyCurrentTenant();
+        if (entity instanceof TenantAware tenantAwareEntity) {
+            tenantAwareEntity.setOrVerifyCurrentTenant();
         }
     }
 
@@ -202,27 +210,46 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     @Override
     public void enforcePreSaveConstraints(E entity) {
-        if (entity instanceof TenantAware) {
-            ((TenantAware) entity).setOrVerifyCurrentTenant();
+        if (entity instanceof TenantAware tenantAwareEntity) {
+            tenantAwareEntity.setOrVerifyCurrentTenant();
         }
 
-        if (entity instanceof Journaled) {
-            ((Journaled) entity).getJournal().enableBatchLog();
+        if (entity instanceof Journaled journaledEntity) {
+            journaledEntity.getJournal().enableBatchLog();
+        }
+
+        if (entity instanceof ImportTransactionalEntity transactionalEntity) {
+            markTransaction(transactionalEntity);
         }
     }
 
     /**
-     * Enforces some consistency checks before a delete is performed.
+     * Marks the given entity with the current opened transaction id.
+     *
+     * @param transactionalEntity the entity to mark
+     * @see ImportTransactionHelper
+     */
+    protected void markTransaction(ImportTransactionalEntity transactionalEntity) {
+        ImportTransactionHelper importTransactionHelper =
+                context.getImporter().findHelper(ImportTransactionHelper.class);
+
+        if (importTransactionHelper.isActive()) {
+            importTransactionHelper.mark(transactionalEntity);
+        }
+    }
+
+    /**
+     * Enforces some consistency checks before a deletion is performed.
      * <p>
      * This method should only rarely be overwritten as most checks should be either be performed during a load
      * or within the <tt>beforeDelete</tt> checks of the entity. The main point of this method is enforcing the
-     * correct tenant before deleteing, as some import handlers might yield (readonly) entities from parent
+     * correct tenant before deleting, as some import handlers might yield (readonly) entities from parent
      * tenants.
      *
      * @param entity the entity to check
      */
     protected void enforcePreDeleteConstraints(E entity) {
-        // By default the constraints are the same as when the entity is saved...
+        // By default, the constraints are the same as when the entity is saved...
         enforcePreSaveConstraints(entity);
     }
 
@@ -380,6 +407,49 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         }
 
         return field;
+    }
+
+    /**
+     * Obtains the maximum amount of {@link sirius.biz.process.logs.ProcessLog entries} should be logged
+     * for the specific entity.
+     * <p>
+     * Override this method in order to provide a new limit or return 0 to skip limiting completely.
+     *
+     * @return the amount of messages to limit
+     */
+    protected int obtainMessageTypeLimit() {
+        return ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM;
+    }
+
+    /**
+     * Returns the entity label key used to categorize messages for errors.
+     *
+     * @param entity the entity to retrieve the label
+     * @return the key
+     */
+    protected String obtainMessageTypeKey(@Nonnull E entity) {
+        return entity.getDescriptor().getLabelKey();
+    }
+
+    /**
+     * Includes process hints to the {@link HandledException} thrown when saving an entity.
+     * <p>
+     * This permits processes to categorize these errors under the entity's label.
+     * The key won't be added if already present, so in rare circumstances the caller might want to provide
+     * a different content.
+     *
+     * @param exception a {@link HandledException} thrown saving an entity
+     * @param entity    the entity being saved
+     * @return the enriched exception
+     */
+    protected HandledException enhanceExceptionWithHints(HandledException exception, E entity) {
+        if (exception.getHint(ProcessLog.HINT_MESSAGE_KEY).isEmptyString()) {
+            exception.withHint(ProcessLog.HINT_MESSAGE_KEY, obtainMessageTypeKey(entity));
+        }
+        if (obtainMessageTypeLimit() > 0) {
+            exception.withHint(ProcessLog.HINT_MESSAGE_COUNT, obtainMessageTypeLimit());
+        }
+        return exception;
     }
 
     @Override
@@ -583,6 +653,23 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     /**
+     * Builds a standard message that the given entity cannot be saved.
+     * <p>
+     * This message is mostly used with {@link sirius.biz.process.ErrorContext} methods which accept an extra failure description.
+     * For instance, when an entities required field is not populated, a standard message like this will be logged:
+     * {@code Field 'MyField' is required.}
+     * As to would be rather nice to tell the end user that an entity couldn't be saved due to the error.
+     * {@code MyEntity cannot be saved. Field 'MyField' is required.}
+     *
+     * @param entity the entity to extract its label
+     * @return the formatted message
+     * @see sirius.biz.process.ErrorContext#performInContextAndGet(String, Object, UnaryOperator, Producer)
+     */
+    public String createCannotSaveMessage(@Nonnull E entity) {
+        return NLS.fmtr("BaseImportHandler.cannotSaveEntity").set("entity", entity.getDescriptor().getLabel()).format();
+    }
+
+    /**
      * Determines the export representation.
      * <p>
      * This will be used by {@link #renderExportRepresentation(Object)} to render a column value for a referenced ID of this type.
@@ -590,7 +677,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * By default the column wearing an {@link Exportable} with {@link Exportable#defaultRepresentation()} set to <tt>true</tt>
      * and the lowest {@link Exportable#priority()} is used.
      *
-     * @return the column / mapping to use when representing a entity of this type in an export
+     * @return the column / mapping to use when representing an entity of this type in an export
      */
     protected Mapping determineExportRepresentationMapping() {
         return descriptor.getProperties()

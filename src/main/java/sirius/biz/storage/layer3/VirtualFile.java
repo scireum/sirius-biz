@@ -12,7 +12,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.Attempt;
@@ -1284,8 +1284,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
-                            .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
-                            .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
     }
@@ -1385,8 +1385,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
-                            .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
-                            .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
     }
@@ -1464,8 +1464,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private HandledException createInvalidPathError(URL url) {
         return Exceptions.createHandled()
                          .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
-                         .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
-                         .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                         .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                         .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                          .set("url", url)
                          .handle();
     }

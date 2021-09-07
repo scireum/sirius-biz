@@ -10,7 +10,6 @@ package sirius.biz.process.logs;
 
 import sirius.biz.elastic.SearchableEntity;
 import sirius.biz.process.Process;
-import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
@@ -22,12 +21,15 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +52,51 @@ import java.util.Optional;
  */
 @Framework(Processes.FRAMEWORK_PROCESSES)
 public class ProcessLog extends SearchableEntity {
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to one.
+     */
+    public static final int MESSAGE_TYPE_COUNT_ONE = 1;
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to 10.
+     */
+    public static final int MESSAGE_TYPE_COUNT_VERY_LOW = 10;
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to 100.
+     */
+    public static final int MESSAGE_TYPE_COUNT_LOW = 100;
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to 250.
+     */
+    public static final int MESSAGE_TYPE_COUNT_MEDIUM = 250;
+
+    /**
+     * Defines a limit to log messages for a {@link #messageType} to 1000.
+     */
+    public static final int MESSAGE_TYPE_COUNT_HIGH = 1000;
+
+    /**
+     * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
+     * {@link #withHandledException(HandledException)}.
+     * <p>
+     * A message key is supposed to be {@link NLS#smartGet(String) smart translated}.
+     */
+    public static final ExceptionHint HINT_MESSAGE_KEY = new ExceptionHint("messageKey");
+
+    /**
+     * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
+     * {@link #withHandledException(HandledException)}.
+     */
+    public static final ExceptionHint HINT_MESSAGE_TYPE = new ExceptionHint("messageType");
+
+    /**
+     * Hints the limit to be used for {@link ProcessLog#withLimitedMessageType(String, int)} to be used when handling
+     * {@link #withHandledException(HandledException)}.
+     */
+    public static final ExceptionHint HINT_MESSAGE_COUNT = new ExceptionHint("messageCount");
 
     /**
      * Defines the name of the default action which simply toggles the state to {@link ProcessLogState#OPEN}.
@@ -398,22 +445,23 @@ public class ProcessLog extends SearchableEntity {
     /**
      * Specifies a handled handledException from where to inherit the message.
      * <p>
-     * If set, the {@link ProcessContext#HINT_MESSAGE_TYPE} hint is used to categorize the log in message types
-     * and {@link ProcessContext#HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
+     * If set, the {@link #HINT_MESSAGE_TYPE} or {@link #HINT_MESSAGE_KEY} is used to categorize the log in
+     * message types and {@link #HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
      *
      * @param handledException the {@link HandledException} to retrieve the message and eventually hints from
      * @return the log entry itself for fluent method calls
      */
     public ProcessLog withHandledException(HandledException handledException) {
         this.withMessage(handledException.getMessage());
-        handledException.getHint(ProcessContext.HINT_MESSAGE_TYPE).ifFilled(hint -> {
-            int messageCount = handledException.getHint(ProcessContext.HINT_MESSAGE_COUNT).asInt(0);
-            if (messageCount > 0) {
-                this.withLimitedMessageType(hint.getString(), messageCount);
-            } else {
-                this.withMessageType(hint.getString());
-            }
-        });
+        obtainMessageKey(handledException).replaceEmptyWith(handledException.getHint(HINT_MESSAGE_TYPE))
+                                          .ifFilled(hintMessage -> {
+                                              int messageCount = handledException.getHint(HINT_MESSAGE_COUNT).asInt(0);
+                                              if (messageCount > 0) {
+                                                  this.withLimitedMessageType(hintMessage.getString(), messageCount);
+                                              } else {
+                                                  this.withMessageType(hintMessage.getString());
+                                              }
+                                          });
         return this;
     }
 
@@ -493,6 +541,19 @@ public class ProcessLog extends SearchableEntity {
         }
 
         return actions;
+    }
+
+    private Value obtainMessageKey(@Nonnull HandledException handledException) {
+        Value messageKey = handledException.getHint(HINT_MESSAGE_KEY);
+        if (messageKey.isEmptyString()) {
+            return Value.EMPTY;
+        }
+
+        if (messageKey.startsWith("$")) {
+            return messageKey;
+        } else {
+            return Value.of("$").append("", messageKey);
+        }
     }
 
     @Override
