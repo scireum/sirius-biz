@@ -20,6 +20,7 @@ import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 
 import java.util.ArrayList;
@@ -241,7 +242,11 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
                 return updateIfChanged(entity, batch);
             }
         } catch (HandledException exception) {
-            throw enhanceExceptionWithHints(exception, entity);
+            HandledException handledException = Exceptions.createHandled()
+                                                          .withDirectMessage(entity.getDescriptor()
+                                                                                   .createCannotSaveMessage(exception.getMessage()))
+                                                          .handle();
+            throw enhanceExceptionWithHints(handledException, entity);
         }
     }
 
