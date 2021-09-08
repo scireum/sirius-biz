@@ -9,10 +9,12 @@
 package sirius.biz.storage.layer2;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.locks.Locks;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.biz.storage.layer2.variants.BlobConversionEvent;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.layer2.variants.ConversionProcess;
@@ -180,6 +182,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Part
     protected static ConversionEngine conversionEngine;
+
+    @Part
+    private EventRecorder eventRecorder;
 
     @Part
     protected static Tasks tasks;
@@ -1506,9 +1511,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 });
 
                 markConversionSuccess(variant, physicalKey, conversionProcess);
+                eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
+                                                              .withOutputFile(automaticHandle));
             }
         }).onFailure(conversionException -> {
             markConversionFailure(variant, conversionProcess);
+            eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
+                                                          .withConversionError(conversionException));
 
             throw Exceptions.handle()
                             .error(conversionException)
