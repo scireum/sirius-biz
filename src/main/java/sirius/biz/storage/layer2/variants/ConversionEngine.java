@@ -206,39 +206,45 @@ public class ConversionEngine {
             converter.performConversion(conversionProcess);
             FileHandle resultFileHandle = conversionProcess.getResultFileHandle();
             if (resultFileHandle == null || !resultFileHandle.exists() || resultFileHandle.getFile().length() == 0) {
-                handleEmptyResult(conversionProcess, resultFileHandle);
+                if (resultFileHandle != null) {
+                    resultFileHandle.close();
+                }
+
+                throw new IllegalArgumentException(Strings.apply(
+                        "The conversion engine created an empty result for variant %s of %s (%s)",
+                        conversionProcess.getVariantName(),
+                        conversionProcess.getBlobToConvert().getFilename(),
+                        conversionProcess.getBlobToConvert().getBlobKey()));
             }
 
             conversionDuration.addValue(conversionProcess.getConversionDuration());
             result.success();
-        } catch (Exception e) {
-            result.fail(e);
+        } catch (Exception exception) {
+            recordErrorInStandbyProcess(conversionProcess, exception);
+            result.fail(exception);
         }
     }
 
-    private void handleEmptyResult(ConversionProcess conversionProcess, FileHandle resultFileHandle) {
-        if (resultFileHandle != null) {
-            resultFileHandle.close();
-        }
+
+    private void recordErrorInStandbyProcess(ConversionProcess conversionProcess, Exception exception) {
         if (processes != null && tenants != null) {
             processes.executeInStandbyProcess("conversion",
                                               () -> NLS.get("ConversionEngine.processTitle"),
                                               conversionProcess.getBlobToConvert().getTenantId(),
-                                              () -> tenants.fetchCachedTenantName(conversionProcess.getBlobToConvert().getTenantId()),
-                                              processContext -> createErrorLog(conversionProcess, processContext));
+                                              () -> tenants.fetchCachedTenantName(conversionProcess.getBlobToConvert()
+                                                                                                   .getTenantId()),
+                                              processContext -> createStandbyProcessLogEntry(conversionProcess,
+                                                                                             processContext,
+                                                                                             exception.getMessage()));
         }
-        throw new IllegalArgumentException(Strings.apply(
-                "The conversion engine created an empty result for variant %s of %s (%s)",
-                conversionProcess.getVariantName(),
-                conversionProcess.getBlobToConvert().getFilename(),
-                conversionProcess.getBlobToConvert().getBlobKey()));
     }
 
-    private void createErrorLog(ConversionProcess conversionProcess, ProcessContext processContext) {
+    private void createStandbyProcessLogEntry(ConversionProcess conversionProcess, ProcessContext processContext, String message) {
         processContext.log(ProcessLog.error()
-                                     .withNLSKey("ConversionEngine.emptyResult")
+                                     .withNLSKey("ConversionEngine.conversionError")
                                      .withContext("variantName", conversionProcess.getVariantName())
-                                     .withContext("filename", conversionProcess.getBlobToConvert().getFilename()));
+                                     .withContext("filename", conversionProcess.getBlobToConvert().getFilename())
+                                     .withContext("message", message));
     }
 
     /**
