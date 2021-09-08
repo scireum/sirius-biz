@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 public class BlobHardRef {
 
     protected final String space;
+    protected String fallbackUri;
     protected Blob blob;
     protected String key;
 
@@ -37,6 +38,22 @@ public class BlobHardRef {
      */
     public BlobHardRef(String space) {
         this.space = space;
+    }
+
+    /**
+     * Permits to specify a fallback URI to use in case the reference is empty.
+     * <p>
+     * This URI will be passed along to the {@link URLBuilder} when {@link #url()} is invoked.
+     *
+     * @param fallbackUri the relative fallback URI to use
+     * @return the reference itself for fluent method calls
+     * @see URLBuilder#withFallbackUri(String)
+     * @see URLBuilder#safeBuildURL(String)
+     * @see URLBuilder#buildImageURL()
+     */
+    public BlobHardRef withFallbackUri(String fallbackUri) {
+        this.fallbackUri = fallbackUri;
+        return this;
     }
 
     /**
@@ -189,7 +206,7 @@ public class BlobHardRef {
         if (blob != null) {
             return new URLBuilder(getStorageSpace(), blob);
         } else {
-            return new URLBuilder(getStorageSpace(), key);
+            return new URLBuilder(getStorageSpace(), key).withFallbackUri(fallbackUri);
         }
     }
 }

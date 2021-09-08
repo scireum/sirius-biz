@@ -36,10 +36,19 @@ public class URLBuilder {
      */
     private static final Pattern NON_URL_CHARACTERS = Pattern.compile("[^a-zA-Z0-9_.]");
 
+    /**
+     * Contains the default fallback URI used by {@link #buildImageURL()}.
+     * <p>
+     * Note that a custom URI can be provided via {@link #withFallbackUri(String)}
+     * or {@link BlobHardRef#withFallbackUri(String)}.
+     */
+    public static final String IMAGE_FALLBACK_URI = "/assets/images/blob_image_fallback.png";
+
     protected BlobStorageSpace space;
     protected Blob blob;
     protected String blobKey;
     protected String variant = VARIANT_RAW;
+    protected String cachedPhysicalKey;
     protected String filename;
     protected String baseURL;
     protected String addonText;
@@ -50,6 +59,7 @@ public class URLBuilder {
     protected boolean suppressCache;
     protected String hook;
     protected String payload;
+    protected String fallbackUri;
     protected boolean largeFile;
 
     @Part
@@ -83,6 +93,20 @@ public class URLBuilder {
         this.space = space;
         this.blobKey = blob.getBlobKey();
         this.blob = blob;
+    }
+
+    /**
+     * Specifies a fallback URI to deliver if no blob or blob-key is available.
+     *
+     * @param fallbackUri the fallback URI to use
+     * @return the builder itself for fluent method calls
+     * @see #IMAGE_FALLBACK_URI
+     * @see #safeBuildURL(String)
+     * @see #buildImageURL()
+     */
+    public URLBuilder withFallbackUri(String fallbackUri) {
+        this.fallbackUri = fallbackUri;
+        return this;
     }
 
     /**
@@ -258,6 +282,9 @@ public class URLBuilder {
      */
     public Optional<String> buildURL() {
         if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
+            if (Strings.isFilled(fallbackUri)) {
+                return Optional.of(createBaseURL().append(fallbackUri).toString());
+            }
             return Optional.empty();
         }
 
@@ -283,6 +310,42 @@ public class URLBuilder {
         }
 
         return Optional.of(createPhysicalDeliveryUrl());
+    }
+
+    /**
+     * Builds the URL and permits to specify a custom fallback URI to deliver if no blob or blob-key is available.
+     *
+     * @param fallbackUri the fallback URI to use
+     * @return the effective URL to use
+     * @see #IMAGE_FALLBACK_URI
+     * @see #withFallbackUri(String)
+     * @see #buildImageURL()
+     */
+    public String safeBuildURL(String fallbackUri) {
+        return buildURL().orElseGet(() -> createBaseURL().append(fallbackUri).toString());
+    }
+
+    /**
+     * Builds the URL based on the given parameters or uses a generic fallback image if no blob or blob-key is
+     * available.
+     *
+     * @return the effective URL to use
+     * @see #IMAGE_FALLBACK_URI
+     * @see #withFallbackUri(String)
+     * @see #safeBuildURL(String)
+     */
+    public String buildImageURL() {
+        return safeBuildURL(IMAGE_FALLBACK_URI);
+    }
+
+
+    /**
+     * Obtains the fallback URI if present.
+     *
+     * @return the fallback URI or an empty optional if no fallback URI is present
+     */
+    public Optional<String> getFallbackUri() {
+        return Optional.ofNullable(fallbackUri);
     }
 
     protected boolean isPhysicalKeyReadilyAvailable() {
