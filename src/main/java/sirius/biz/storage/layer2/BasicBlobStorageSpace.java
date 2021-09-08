@@ -98,6 +98,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public static final int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
 
     /**
+     * Used to cache the fact, that a blob variant cannot be created/converted.
+     */
+    private static final String CACHED_FAILURE_MARKER = "-";
+
+    /**
      * Contains the name of the config key used to determine which permission is required to browse / read blobs in
      * the space.
      */
@@ -1251,15 +1256,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String cacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
         if (Strings.isFilled(cachedPhysicalKey)) {
+            if (CACHED_FAILURE_MARKER.equals(cachedPhysicalKey)) {
+                // We detected a cached failure (see below). Throw an appropriate but exception to the user. No
+                // need to log anything as the incident has already been reported...
+                throw Exceptions.createHandled()
+                                .withSystemErrorMessage("Failed to create the requested variant from the given image.")
+                                .handle();
+            }
             return Tuple.create(cachedPhysicalKey, true);
         }
 
-        String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
-        if (physicalKey != null) {
-            blobKeyToPhysicalCache.put(cacheKey, physicalKey);
-            return Tuple.create(physicalKey, false);
-        } else {
-            return null;
+        try {
+            String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
+            if (physicalKey != null) {
+                blobKeyToPhysicalCache.put(cacheKey, physicalKey);
+                return Tuple.create(physicalKey, false);
+            } else {
+                return null;
+            }
+        } catch (Exception ex) {
+            // The conversion ultimately failed, we can therefore cache the result, as no more conversion attempts
+            // will happen...
+            blobKeyToPhysicalCache.put(cacheKey, CACHED_FAILURE_MARKER);
+            throw ex;
         }
     }
 
