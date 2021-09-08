@@ -124,6 +124,8 @@ public class URLBuilder {
      */
     public URLBuilder withVariant(String variant) {
         this.variant = variant;
+        this.cachedPhysicalKey = null;
+
         return this;
     }
 
@@ -468,9 +470,14 @@ public class URLBuilder {
             return blob.getPhysicalObjectKey();
         }
 
+        if (cachedPhysicalKey != null) {
+            return cachedPhysicalKey;
+        }
+
         Tuple<String, Boolean> result =
                 ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
         if (result != null) {
+            cachedPhysicalKey = result.getFirst();
             return result.getFirst();
         } else {
             return null;
