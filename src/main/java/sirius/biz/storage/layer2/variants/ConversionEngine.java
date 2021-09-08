@@ -73,9 +73,9 @@ public class ConversionEngine {
     private Tenants<?, ?, ?> tenants;
 
     /**
-     * When delivering files (e.g. preview images to be shown in the browser), we normally don't bother to lookup the
-     * original filename of the image (as this would required a DB lookup). However, we need to generated a name with
-     * the appropriate file extension so that the <tt>Content-Type</tt> is setup properly.
+     * When delivering files (e.g. preview images to be shown in the browser), we normally don't bother to look up the
+     * original filename of the image (as this would require a DB lookup). However, we need to generate a name with
+     * the appropriate file extension so that the <tt>Content-Type</tt> is set up properly.
      * <p>
      * Therefore we keep a map which stores the effective file extension per variant as this is both, frequently used
      * and constant over the lifetime of the system.
@@ -195,7 +195,7 @@ public class ConversionEngine {
             conversionProcess.recordQueueDuration(queueWatch.elapsedMillis());
             Converter converter = fetchConverter(conversionProcess.getVariantName());
             if (converter == null) {
-                // We use a handled exception here as the error has already been reported and we do not want to jam
+                // We use a handled exception here as the error has already been reported, and we do not want to jam
                 // the logs with additional error reports for the same problem.
                 throw Exceptions.createHandled()
                                 .withSystemErrorMessage("A configuration problem is present for: %s",

@@ -359,7 +359,7 @@ public class BlobDispatcher implements WebDispatcher {
      * @param blobKey     the blob object key used to determine which {@link Blob} should be delivered
      * @param filename    the filename which is used to set up a proper <tt>Content-Type</tt>
      * @param download    determines if a download should be generated
-     * @param cacheable    determines if HTTP caching should be supported (<tt>true</tt>) or suppressed (<tt>false</tt>)
+     * @param cacheable   determines if HTTP caching should be supported (<tt>true</tt>) or suppressed (<tt>false</tt>)
      */
     @SuppressWarnings("squid:S00107")
     @Explain("As this is a super hot code path we use 8 parameters instead of a parameter object"

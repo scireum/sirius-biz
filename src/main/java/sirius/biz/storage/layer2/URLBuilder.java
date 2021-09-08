@@ -264,31 +264,31 @@ public class URLBuilder {
         if (eternallyValid) {
             // If a URL is eternally valid, there is no point of generating a physical URL, as this will be outdated
             // as soon as the underlying blob contents change and not "live as long as the blob itself"...
-            return Optional.ofNullable(createVirtualDeliveryUrl());
+            return Optional.of(createVirtualDeliveryUrl());
         }
         if (reusable) {
             // If the caller requested a reusable URL (one to be output and sent to 3rd parties, we probably also
             // want it to be valid as long as the "blob lives" and not to become obsolete once the blob contents
             // change...
-            return Optional.ofNullable(createVirtualDeliveryUrl());
+            return Optional.of(createVirtualDeliveryUrl());
         }
         if (suppressCache) {
             // Manual cache control is only supported in virtual calls, not physical...
-            return Optional.ofNullable(createVirtualDeliveryUrl());
+            return Optional.of(createVirtualDeliveryUrl());
         }
         if (delayResolve && !isPhysicalKeyReadilyAvailable()) {
             // The caller specifically requested, that we do not forcefully compute the physical URL (which might
             // require a lookup, but to rather use the virtual URL...
-            return Optional.ofNullable(createVirtualDeliveryUrl());
+            return Optional.of(createVirtualDeliveryUrl());
         }
 
-        return Optional.ofNullable(createPhysicalDeliveryUrl());
+        return Optional.of(createPhysicalDeliveryUrl());
     }
 
     protected boolean isPhysicalKeyReadilyAvailable() {
         // If the raw file is requested and the blob object is available, we can easily determine the effective
         // physical key to serve.
-        return Strings.areEqual(variant, URLBuilder.VARIANT_RAW) && blob != null;
+        return Strings.areEqual(variant, VARIANT_RAW) && blob != null;
     }
 
     private String createPhysicalDeliveryUrl() {

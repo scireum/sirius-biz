@@ -145,7 +145,7 @@ public class L3Uplink implements VFSRoot {
 
             if (parent.is(Placeholder.class)) {
                 // If the parent is a placeholder then we have already ensured that the storage space
-                // isn't readonly so therefore we can skip this check and pass null als parent directory.
+                // isn't readonly available, so we can skip this check and pass null als parent directory.
                 return createPlaceholder(null, parent, name);
             }
 

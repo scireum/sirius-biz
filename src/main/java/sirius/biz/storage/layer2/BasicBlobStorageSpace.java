@@ -1299,7 +1299,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Tries to either find or create the requested variant for the given blob.
      * <p>
-     * Note that there this is an recursive optimistic locking algorithm at work where
+     * Note that there this is a recursive optimistic locking algorithm at work where
      * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)} and
      * {@link #awaitConversionResultAndRetryToFindVariant(Blob, String, int)} build the "loop".
      *
@@ -1342,7 +1342,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     @Nullable
     @SuppressWarnings("java:S3776")
-    @Explain("This is a complex beast but we rather keep the whole logik in one place.")
+    @Explain("This is a complex beast, but we rather keep the whole logik in one place.")
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
         V variant = findAnyVariant(blob, variantName);
@@ -1392,7 +1392,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (!shouldRetryConversion(variant)) {
-            // A variant exists but didn't yield a useable result yet - try to wait and retry...
+            // A variant exists but didn't yield a usable result yet - try to wait and retry...
             return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
@@ -1450,7 +1450,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
-        // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish..
+        // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish...
         Wait.millis(TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS);
         return attemptToFindOrCreateVariant(blob,
                                             variantName,
@@ -1562,7 +1562,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to create and the asynchronically generated the requested variant.
+     * Tries to create and the asynchronous generated the requested variant.
      *
      * @param blob        the blob for which the variant is to be created
      * @param variantName the variant to generate

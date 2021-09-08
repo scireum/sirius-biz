@@ -69,7 +69,7 @@ public class ConversionProcess {
     }
 
     /**
-     * Convers the transfer process of the input data.
+     * Converts the transfer process of the input data.
      * <p>
      * This should be used by the {@link Converter} when an input file is obtained so that
      * the metrics are filled properly.
