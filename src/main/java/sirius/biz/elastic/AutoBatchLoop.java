@@ -12,6 +12,7 @@ import sirius.db.es.BulkContext;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticEntity;
 import sirius.kernel.async.BackgroundLoop;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -21,15 +22,19 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Collects and bulk-inserts {@link ElasticEntity entities} to be inserted into Elasticsearch.
  * <p>
  * Note that when worse comes to worst, this framework rather drops entities to insert than to crash the system.
- * Therefore this should only be used for non-critical tasks (e.g. log entries).
+ * Therefore, this should only be used for non-critical tasks (e.g. log entries).
  */
 @Register(classes = {AutoBatchLoop.class, BackgroundLoop.class})
 public class AutoBatchLoop extends BackgroundLoop {
@@ -39,6 +44,8 @@ public class AutoBatchLoop extends BackgroundLoop {
     private LocalDateTime frozenUntil;
     private final ConcurrentLinkedDeque<ElasticEntity> entities = new ConcurrentLinkedDeque<>();
     private final AtomicInteger queuedEntities = new AtomicInteger();
+    private final ReentrantLock signalLock = new ReentrantLock();
+    private final Condition loopExecuted = signalLock.newCondition();
 
     @Part
     private Elastic elastic;
@@ -77,6 +84,27 @@ public class AutoBatchLoop extends BackgroundLoop {
         return false;
     }
 
+    /**
+     * Blocks the current thread until this loop ran.
+     *
+     * @param timeout maximal time to wait for the loop (in case something hangs...)
+     * @return <tt>true</tt> if the execution was successfully awaited, <tt>false</tt> if the operation hit a timeout
+     * or if the current thread was interrupted.
+     */
+    @SuppressWarnings("java:S2274")
+    @Explain("We explicitly want to abort and return the result of await here.")
+    public boolean awaitNextFlush(Duration timeout) {
+        signalLock.lock();
+        try {
+            return loopExecuted.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+            return false;
+        } finally {
+            signalLock.unlock();
+        }
+    }
+
     @Nullable
     @Override
     protected String doWork() throws Exception {
@@ -113,6 +141,14 @@ public class AutoBatchLoop extends BackgroundLoop {
         } catch (Exception e) {
             Exceptions.handle(Log.BACKGROUND, e);
             frozenUntil = LocalDateTime.now().plusSeconds(10);
+        }
+
+        // Signal all waiting threads, that all entities from within the queue have been flushed...
+        signalLock.lock();
+        try {
+            loopExecuted.signalAll();
+        } finally {
+            signalLock.unlock();
         }
 
         return entitiesProcessed;
