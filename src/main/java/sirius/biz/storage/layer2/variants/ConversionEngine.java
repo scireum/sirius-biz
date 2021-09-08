@@ -97,7 +97,7 @@ public class ConversionEngine {
      * isn't known or not constant.
      */
     @Nullable
-    public String determineTargetFileExension(String variant) {
+    public String determineTargetFileExtension(String variant) {
         if (fileExtensionPerVariant == null) {
             initializeFileExtensions();
         }
