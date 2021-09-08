@@ -757,20 +757,47 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected void markConversionFailure(SQLVariant variant) {
-        variant.setQueuedForConversion(false);
-        oma.update(variant);
+    protected void markConversionFailure(SQLVariant variant, ConversionProcess conversionProcess) {
+        try {
+            oma.updateStatement(SQLVariant.class)
+               .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
+               .set(SQLVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+               .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+               .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+               .where(SQLVariant.ID, variant.getId())
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as failed: %s (%s)",
+                              variant.getIdAsString(), variant.getSourceBlob().getIdAsString())
+                      .handle();
+        }
     }
 
     @Override
     protected void markConversionSuccess(SQLVariant variant, String physicalKey, ConversionProcess conversionProcess) {
-        variant.setQueuedForConversion(false);
-        variant.setSize(conversionProcess.getResultFileHandle().getFile().length());
-        variant.setPhysicalObjectKey(physicalKey);
-        variant.setConversionDuration(conversionProcess.getConversionDuration());
-        variant.setQueueDuration(conversionProcess.getQueueDuration());
-        variant.setTransferDuration(conversionProcess.getTransferDuration());
-        oma.update(variant);
+        try {
+            oma.updateStatement(SQLVariant.class)
+               .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
+               .set(SQLVariant.PHYSICAL_OBJECT_KEY, physicalKey)
+               .set(SQLVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
+               .set(SQLVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+               .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+               .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+               .where(SQLVariant.ID, variant.getId())
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as converted: %s (%s)",
+                              variant.getIdAsString(), variant.getSourceBlob().getIdAsString())
+                      .handle();
+        }
     }
 
     @Override

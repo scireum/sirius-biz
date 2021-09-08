@@ -1507,11 +1507,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
                 markConversionSuccess(variant, physicalKey, conversionProcess);
             }
-        }).onFailure(e -> {
-            markConversionFailure(variant);
+        }).onFailure(conversionException -> {
+            markConversionFailure(variant, conversionProcess);
 
             throw Exceptions.handle()
-                            .error(e)
+                            .error(conversionException)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
                                                     variant.getVariantName(),
@@ -1536,7 +1536,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      *
      * @param variant the variant to record the failed attempt for
      */
-    protected abstract void markConversionFailure(V variant);
+    protected abstract void markConversionFailure(V variant, ConversionProcess conversionProcess);
 
     /**
      * Determines if another conversion of the variant should be attempted.
