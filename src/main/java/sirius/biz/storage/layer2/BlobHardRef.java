@@ -11,8 +11,10 @@ package sirius.biz.storage.layer2;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 /**
  * Represents a reference to a {@link Blob} which can be placed as field within an {@link BaseEntity}.
@@ -23,6 +25,7 @@ import javax.annotation.Nullable;
 public class BlobHardRef {
 
     protected final String space;
+    protected String fallbackUri;
     protected Blob blob;
     protected String key;
 
@@ -40,6 +43,22 @@ public class BlobHardRef {
     }
 
     /**
+     * Permits to specify a fallback URI to use in case the reference is empty.
+     * <p>
+     * This URI will be passed along to the {@link URLBuilder} when {@link #url()} is invoked.
+     *
+     * @param fallbackUri the relative fallback URI to use
+     * @return the reference itself for fluent method calls
+     * @see URLBuilder#withFallbackUri(String)
+     * @see URLBuilder#safeBuildURL(String)
+     * @see URLBuilder#buildImageURL()
+     */
+    public BlobHardRef withFallbackUri(String fallbackUri) {
+        this.fallbackUri = fallbackUri;
+        return this;
+    }
+
+    /**
      * Retrieves the actual referenced blob from the storage layer.
      *
      * @return the referenced blob or <tt>null</tt> if there is no referenced blob
@@ -53,6 +72,35 @@ public class BlobHardRef {
             }
         }
         return blob;
+    }
+
+    /**
+     * Fetches the underlying blob.
+     *
+     * @return the blob just like {@link #getBlob()} but returns an empty optional instead of <tt>null</tt> if
+     * the reference is empty.
+     */
+    public Optional<Blob> fetchBlob() {
+        return Optional.ofNullable(getBlob());
+    }
+
+    /**
+     * Directly fetches the file size of the referenced blob.
+     *
+     * @return the file size of the blob in bytes or 0 if the reference is empty
+     */
+    public long fetchSize() {
+        return fetchBlob().map(Blob::getSize).orElse(0L);
+    }
+
+    /**
+     * Returns the formatted file size of the referenced blob.
+     *
+     * @return the formatted (human-readable) file size of the referenced blob or an empty string, if the reference
+     * is empty
+     */
+    public String fetchFormattedSize() {
+        return fetchBlob().map(Blob::getSize).map(NLS::formatSize).orElse("");
     }
 
     /**
@@ -84,6 +132,15 @@ public class BlobHardRef {
                 this.blob = null;
             }
         }
+    }
+
+    /**
+     * Clears the reference.
+     * <p>
+     * This is a boilerplate for calling {@code ref.setKey(null)}.
+     */
+    public void clear() {
+        setKey(null);
     }
 
     /**
@@ -189,7 +246,7 @@ public class BlobHardRef {
         if (blob != null) {
             return new URLBuilder(getStorageSpace(), blob);
         } else {
-            return new URLBuilder(getStorageSpace(), key);
+            return new URLBuilder(getStorageSpace(), key).withFallbackUri(fallbackUri);
         }
     }
 }

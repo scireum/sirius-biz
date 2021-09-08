@@ -8,12 +8,15 @@
 
 package sirius.biz.process;
 
+import sirius.biz.analytics.reports.Cells;
 import sirius.biz.elastic.AutoBatchLoop;
 import sirius.biz.locks.Locks;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogState;
 import sirius.biz.process.logs.ProcessLogType;
+import sirius.biz.process.output.LogsProcessOutputType;
 import sirius.biz.process.output.ProcessOutput;
+import sirius.biz.process.output.TableProcessOutputType;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.tenants.Tenants;
@@ -49,13 +52,18 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Provides the central facility to create and use {@link Process processes}.
@@ -95,6 +103,12 @@ public class Processes {
 
     @Part
     private Locks locks;
+
+    @Part
+    private Cells cells;
+
+    @Part
+    private TableProcessOutputType tableProcessOutputType;
 
     /**
      * Due to some shortcomings in Elasticsearch (1 second delay until writes are visible), we need a layered cache
@@ -378,6 +392,12 @@ public class Processes {
         return Optional.ofNullable(process);
     }
 
+    private Process fetchRequiredProcess(String processId) {
+        return fetchProcess(processId).orElseThrow(() -> new IllegalStateException(Strings.apply(
+                "The requested process (%s) isn't available.",
+                processId)));
+    }
+
     /**
      * Modifies the process with the given id.
      * <p>
@@ -643,10 +663,7 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     public boolean addFile(String processId, String filename, File data) {
-        Process process = fetchProcess(processId).orElse(null);
-        if (process == null) {
-            return false;
-        }
+        Process process = fetchRequiredProcess(processId);
 
         process.getFiles().findOrCreateAttachedBlobByName(filename).updateContent(filename, data);
         return true;
@@ -664,10 +681,7 @@ public class Processes {
      * @return the output stream which can be used to provide content for the file to add
      */
     public OutputStream addFile(String processId, String filename) {
-        Process process = fetchProcess(processId).orElse(null);
-        if (process == null) {
-            throw new IllegalStateException(Strings.apply("The requested process (%s) isn't available.", processId));
-        }
+        Process process = fetchRequiredProcess(processId);
 
         return process.getFiles().findOrCreateAttachedBlobByName(filename).createOutputStream(filename);
     }
@@ -682,10 +696,7 @@ public class Processes {
      * @return an {@link InputStream} to the file or <tt>null</tt> if none was found
      */
     public InputStream getFile(String processId, String filename) {
-        Process process = fetchProcess(processId).orElse(null);
-        if (process == null) {
-            throw new IllegalStateException(Strings.apply("The requested process (%s) isn't available.", processId));
-        }
+        Process process = fetchRequiredProcess(processId);
 
         return process.getFiles().findAttachedBlobByName(filename).map(Blob::createInputStream).orElse(null);
     }
@@ -760,6 +771,20 @@ public class Processes {
                               .withContext("count", count));
             }
         }
+    }
+
+    protected boolean awaitFlushedLogs(String processId) {
+        if (!autoBatch.awaitNextFlush(Duration.ofSeconds(10))) {
+            log(processId,
+                ProcessLog.error()
+                          .withMessage("Failed to wait for logs to be flushed. Some reports might be incomplete!"));
+            return false;
+        }
+
+        // Even after a batch insert, we still should give ES some time to digest the data...
+        Wait.seconds(2);
+
+        return true;
     }
 
     /**
@@ -1018,5 +1043,99 @@ public class Processes {
         elastic.update(processLog);
         JournalData.addJournalEntry(processLog, NLS.get("ProcessLog.state") + ": " + newState.toString());
         delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet(returnUrl));
+    }
+
+    protected Optional<ProcessOutput> fetchOutput(String processId, String outputName) {
+        return fetchProcess(processId).flatMap(process -> process.getOutputs()
+                                                                 .data()
+                                                                 .stream()
+                                                                 .filter(output -> Strings.areEqual(output.getName(),
+                                                                                                    outputName))
+                                                                 .findFirst());
+    }
+
+    protected void fetchOutputEntries(String processId,
+                                      String outputName,
+                                      BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
+                                      BiPredicate<List<String>, List<String>> columnsAndValues) {
+        Process process = fetchRequiredProcess(processId);
+
+        if (Strings.isEmpty(outputName)) {
+            fetchOutputLogs(process, null, columnsAndLabelsConsumer, columnsAndValues);
+            return;
+        }
+
+        ProcessOutput processOutput = process.getOutputs()
+                                             .data()
+                                             .stream()
+                                             .filter(output -> Strings.areEqual(output.getName(), outputName))
+                                             .findFirst()
+                                             .orElseThrow(() -> new IllegalArgumentException(Strings.apply(
+                                                     "Unknown output (%s) requested for process %s",
+                                                     outputName,
+                                                     processId)));
+
+        if (TableProcessOutputType.TYPE.equals(processOutput.getType())) {
+            fetchOutputTable(process, processOutput, columnsAndLabelsConsumer, columnsAndValues);
+        } else if (LogsProcessOutputType.TYPE.equals(processOutput.getType())) {
+            fetchOutputLogs(process, processOutput, columnsAndLabelsConsumer, columnsAndValues);
+        } else {
+            throw new IllegalArgumentException(Strings.apply(
+                    "Exporting process outputs is only supported for logs and tables, not %s (of output %s of process %s)",
+                    processOutput.getType(),
+                    processOutput.getName(),
+                    processId));
+        }
+    }
+
+    private void fetchOutputLogs(Process process,
+                                 ProcessOutput processOutput,
+                                 BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
+                                 BiPredicate<List<String>, List<String>> columnsAndValues) {
+        List<String> columns = Arrays.asList("type", "timestamp", "message", "messageType", "node");
+        List<String> labels = Arrays.asList(NLS.get("ProcessLog.type"),
+                                            NLS.get("ProcessLog.timestamp"),
+                                            NLS.get("ProcessLog.message"),
+                                            NLS.get("ProcessLog.messageType"),
+                                            NLS.get("ProcessLog.node"));
+
+        columnsAndLabelsConsumer.accept(columns, labels);
+        createLogsQuery(processOutput, process).iterate(logEntry -> {
+            List<String> values = Arrays.asList(logEntry.getType().toString(),
+                                                NLS.toMachineString(logEntry.getTimestamp()),
+                                                logEntry.getMessage(),
+                                                logEntry.getMessageType(),
+                                                logEntry.getNode());
+            return columnsAndValues.test(columns, values);
+        });
+    }
+
+    private void fetchOutputTable(Process process,
+                                  ProcessOutput processOutput,
+                                  BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
+                                  BiPredicate<List<String>, List<String>> columnsAndValues) {
+        List<String> columns = tableProcessOutputType.determineColumns(processOutput);
+        List<String> labels = tableProcessOutputType.determineLabels(processOutput, columns);
+
+        columnsAndLabelsConsumer.accept(columns, labels);
+        createLogsQuery(processOutput, process).iterate(logEntry -> {
+            List<String> values = columns.stream()
+                                         .map(column -> cells.rawValue(logEntry.getContext().get(column).orElse(null)))
+                                         .collect(Collectors.toList());
+            return columnsAndValues.test(columns, values);
+        });
+    }
+
+    private ElasticQuery<ProcessLog> createLogsQuery(@Nullable ProcessOutput out, Process process) {
+        ElasticQuery<ProcessLog> logsQuery = elastic.select(ProcessLog.class)
+                                                    .eq(ProcessLog.PROCESS, process)
+                                                    .eq(ProcessLog.OUTPUT, out != null ? out.getName() : null)
+                                                    .orderAsc(ProcessLog.SORT_KEY);
+        UserInfo user = UserContext.getCurrentUser();
+        if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
+            logsQuery.eq(ProcessLog.SYSTEM_MESSAGE, false);
+        }
+
+        return logsQuery;
     }
 }

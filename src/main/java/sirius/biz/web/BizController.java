@@ -398,7 +398,7 @@ public class BizController extends BasicController {
     /**
      * Deletes the entity with the given type and id.
      * <p>
-     * If the entity is {@link TenantAware} a matching tenant will be ensured. If the entits
+     * If the entity is {@link TenantAware} a matching tenant will be ensured. If the entity
      * does no longer exist, this call will be ignored. If no valid POST with CSRF token is present,
      * and exception will be thrown.
      *
@@ -407,13 +407,14 @@ public class BizController extends BasicController {
      * @param id         the id of the entity to delete
      */
     public void deleteEntity(WebContext webContext, Class<? extends BaseEntity<?>> type, String id) {
-        deleteEntity(webContext, tryFindForTenant(type, id));
+        deleteEntity(webContext, tryFind(type, id));
     }
 
     /**
      * Deletes the entity with the given type and id.
      * <p>
-     * If the given optional is empty, this call will be ignored. If no valid POST with CSRF token is present,
+     * If the entity is {@link TenantAware} a matching tenant will be ensured. If the entity
+     * does no longer exist, this call will be ignored. If no valid POST with CSRF token is present,
      * and exception will be thrown.
      *
      * @param webContext     the current request
@@ -422,6 +423,9 @@ public class BizController extends BasicController {
     public void deleteEntity(WebContext webContext, Optional<? extends BaseEntity<?>> optionalEntity) {
         if (webContext.isSafePOST()) {
             optionalEntity.ifPresent(entity -> {
+                if (entity instanceof TenantAware) {
+                    assertTenant((TenantAware) entity);
+                }
                 if (entity.getDescriptor().isComplexDelete() && processes != null) {
                     deleteComplexEntity(entity);
                 } else {
@@ -566,16 +570,9 @@ public class BizController extends BasicController {
      * @param <E>  the generic type of the entity class
      * @return the requested entity, which is either new or belongs to the current tenant
      */
-    protected <E extends BaseEntity<?>> E findForTenant(Class<E> type, String id) {
+    protected <E extends BaseEntity<?> & TenantAware> E findForTenant(Class<E> type, String id) {
         E result = find(type, id);
-        if (result instanceof TenantAware) {
-            ((TenantAware) result).setOrVerifyCurrentTenant();
-            if (result.isNew()) {
-                ((TenantAware) result).fillWithCurrentTenant();
-            } else {
-                assertTenant((TenantAware) result);
-            }
-        }
+        result.setOrVerifyCurrentTenant();
         return result;
     }
 
@@ -592,12 +589,10 @@ public class BizController extends BasicController {
      * @return the requested entity, which belongs to the current tenant, wrapped as <tt>Optional</tt> or an empty
      * optional.
      */
-    protected <E extends BaseEntity<?>> Optional<E> tryFindForTenant(Class<E> type, String id) {
-        return tryFind(type, id).map(e -> {
-            if (e instanceof TenantAware) {
-                assertTenant((TenantAware) e);
-            }
-            return e;
+    protected <E extends BaseEntity<?> & TenantAware> Optional<E> tryFindForTenant(Class<E> type, String id) {
+        return tryFind(type, id).map(entity -> {
+            assertTenant(entity);
+            return entity;
         });
     }
 

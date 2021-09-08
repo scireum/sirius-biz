@@ -21,11 +21,11 @@ import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.commons.Value;
-import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +33,8 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -321,7 +323,7 @@ public interface ProcessContext extends TaskContextAdapter {
      * If no "work stealing" threads are available the main thread is blocked and the task is executed there.
      * <p>
      * Note that the process will await the completion of all of its forked side tasks. However, once this state has
-     * been reached no further tasks may be started. Therefore when processing the results of this task, a
+     * been reached no further tasks may be started. Therefore, when processing the results of this task, a
      * {@link sirius.kernel.async.CombinedFuture} has to be used in the main thread, rather than a simple completion
      * handler attached to the future.
      *
@@ -331,4 +333,38 @@ public interface ProcessContext extends TaskContextAdapter {
      * additional sideTasks (other than using a {@link sirius.kernel.async.CombinedFuture} in the main thread).
      */
     Future performInSideTask(UnitOfWork parallelTask);
+
+    /**
+     * Blocks the current thread until all logs have been flushed into Elasticsearch.
+     * <p>
+     * As we internally pump the logs through the {@link sirius.biz.elastic.AutoBatchLoop}, we have to wait
+     * until this ran, before trying to access them.
+     *
+     * @return <tt>true</tt> if the logs have successfully been flushed, <tt>false</tt> if a timeout occurred or if
+     * the thread was interrupted while waiting for the flush.
+     */
+    boolean awaitFlushedLogs();
+
+    /**
+     * Tries to resolve the output with the given name.
+     *
+     * @param outputName the name of the output to fetch
+     * @return the output with the given name or an empty optional, if no output with the given name exists
+     */
+    Optional<ProcessOutput> fetchOutput(String outputName);
+
+    /**
+     * Pulls all log/table entries from the given output and pumps it into the given consumers.
+     * <p>
+     * Note that {@link #awaitFlushedLogs()} should be called before this method to ensure that all logs are available.
+     *
+     * @param outputName               the name of the output to fetch the logs for. Use <tt>null</tt> to fetch the
+     *                                 main logs.
+     * @param columnsAndLabelsConsumer the consumer which is supplied with the column names and their labels
+     * @param columnsAndValues         the consumer which is invoked for each entry/row, providing the column names and
+     *                                 the actual row values
+     */
+    void fetchOutputEntries(@Nullable String outputName,
+                            BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
+                            BiPredicate<List<String>, List<String>> columnsAndValues);
 }

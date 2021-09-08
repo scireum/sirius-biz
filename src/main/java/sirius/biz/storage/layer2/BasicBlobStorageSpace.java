@@ -9,10 +9,12 @@
 package sirius.biz.storage.layer2;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.locks.Locks;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.biz.storage.layer2.variants.BlobConversionEvent;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.layer2.variants.ConversionProcess;
@@ -93,7 +95,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Specifies the maximal number of attempts to generate a variant.
      */
-    private static final int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
+    public static final int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
+
+    /**
+     * Used to cache the fact, that a blob variant cannot be created/converted.
+     */
+    private static final String CACHED_FAILURE_MARKER = "-";
 
     /**
      * Contains the name of the config key used to determine which permission is required to browse / read blobs in
@@ -180,6 +187,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Part
     protected static ConversionEngine conversionEngine;
+
+    @Part
+    private EventRecorder eventRecorder;
 
     @Part
     protected static Tasks tasks;
@@ -1246,15 +1256,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String cacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
         if (Strings.isFilled(cachedPhysicalKey)) {
+            if (CACHED_FAILURE_MARKER.equals(cachedPhysicalKey)) {
+                // We detected a cached failure (see below). Throw an appropriate but exception to the user. No
+                // need to log anything as the incident has already been reported...
+                throw Exceptions.createHandled()
+                                .withSystemErrorMessage("Failed to create the requested variant from the given image.")
+                                .handle();
+            }
             return Tuple.create(cachedPhysicalKey, true);
         }
 
-        String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
-        if (physicalKey != null) {
-            blobKeyToPhysicalCache.put(cacheKey, physicalKey);
-            return Tuple.create(physicalKey, false);
-        } else {
-            return null;
+        try {
+            String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
+            if (physicalKey != null) {
+                blobKeyToPhysicalCache.put(cacheKey, physicalKey);
+                return Tuple.create(physicalKey, false);
+            } else {
+                return null;
+            }
+        } catch (Exception ex) {
+            // The conversion ultimately failed, we can therefore cache the result, as no more conversion attempts
+            // will happen...
+            blobKeyToPhysicalCache.put(cacheKey, CACHED_FAILURE_MARKER);
+            throw ex;
         }
     }
 
@@ -1299,7 +1323,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Tries to either find or create the requested variant for the given blob.
      * <p>
-     * Note that there this is an recursive optimistic locking algorithm at work where
+     * Note that there this is a recursive optimistic locking algorithm at work where
      * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)} and
      * {@link #awaitConversionResultAndRetryToFindVariant(Blob, String, int)} build the "loop".
      *
@@ -1342,7 +1366,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     @Nullable
     @SuppressWarnings("java:S3776")
-    @Explain("This is a complex beast but we rather keep the whole logik in one place.")
+    @Explain("This is a complex beast, but we rather keep the whole logik in one place.")
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
         V variant = findAnyVariant(blob, variantName);
@@ -1392,7 +1416,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (!shouldRetryConversion(variant)) {
-            // A variant exists but didn't yield a useable result yet - try to wait and retry...
+            // A variant exists but didn't yield a usable result yet - try to wait and retry...
             return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
@@ -1450,7 +1474,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
-        // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish..
+        // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish...
         Wait.millis(TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS);
         return attemptToFindOrCreateVariant(blob,
                                             variantName,
@@ -1506,12 +1530,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 });
 
                 markConversionSuccess(variant, physicalKey, conversionProcess);
+                eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
+                                                              .withOutputFile(automaticHandle));
             }
-        }).onFailure(e -> {
-            markConversionFailure(variant);
+        }).onFailure(conversionException -> {
+            markConversionFailure(variant, conversionProcess);
+            eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
+                                                          .withConversionError(conversionException));
 
             throw Exceptions.handle()
-                            .error(e)
+                            .error(conversionException)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
                                                     variant.getVariantName(),
@@ -1536,7 +1564,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      *
      * @param variant the variant to record the failed attempt for
      */
-    protected abstract void markConversionFailure(V variant);
+    protected abstract void markConversionFailure(V variant, ConversionProcess conversionProcess);
 
     /**
      * Determines if another conversion of the variant should be attempted.
@@ -1562,7 +1590,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to create and the asynchronically generated the requested variant.
+     * Tries to create and the asynchronous generated the requested variant.
      *
      * @param blob        the blob for which the variant is to be created
      * @param variantName the variant to generate

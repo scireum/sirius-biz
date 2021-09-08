@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2.jdbc;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
@@ -124,6 +125,11 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
     }
 
     @Override
+    public boolean isFailed() {
+        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
+    }
+
+    @Override
     public String getVariantName() {
         return variantName;
     }
@@ -189,6 +195,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
         this.physicalObjectKey = physicalObjectKey;
     }
 
+    @Override
     public long getConversionDuration() {
         return conversionDuration;
     }
@@ -197,6 +204,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
         this.conversionDuration = conversionDuration;
     }
 
+    @Override
     public long getQueueDuration() {
         return queueDuration;
     }
@@ -205,6 +213,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
         this.queueDuration = queueDuration;
     }
 
+    @Override
     public long getTransferDuration() {
         return transferDuration;
     }

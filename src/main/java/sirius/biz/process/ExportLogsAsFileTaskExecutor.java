@@ -18,11 +18,10 @@ import sirius.biz.jobs.batch.file.ExportXLS;
 import sirius.biz.jobs.batch.file.ExportXLSX;
 import sirius.biz.jobs.batch.file.LineBasedExport;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.process.output.LogsProcessOutputType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableProcessOutputType;
 import sirius.db.es.Elastic;
-import sirius.db.es.ElasticQuery;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -30,16 +29,12 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
-import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Responsible for exporting a {@link ProcessOutput} as MS Excel or CSV file.
@@ -83,7 +78,7 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     @Override
     public String queueName() {
-        // We use the same queue as generic export jobs as the task is almost the same..
+        // We use the same queue as generic export jobs as the task is almost the same...
         return ExportBatchProcessFactory.ExportBatchProcessTaskExecutor.QUEUE_NAME;
     }
 
@@ -93,73 +88,58 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
     }
 
     private void executeInProcess(JSONObject context, ProcessContext processContext) {
-        try {
-            String outputName = context.getString(CONTEXT_OUTPUT);
-            if (Strings.isFilled(outputName)) {
-                exportSelectedOutput(context, processContext, outputName);
-            } else {
-                exportLogs(fetchExportFileType(context), null, processContext);
-            }
-            processContext.log(ProcessLog.success().withNLSKey("ExportLogsAsFileTaskExecutor.completed"));
+        String outputName = context.getString(CONTEXT_OUTPUT);
+        ProcessOutput processOutput = Strings.isFilled(outputName) ?
+                                      processContext.fetchOutput(outputName)
+                                                    .orElseThrow(() -> new IllegalArgumentException(Strings.apply("Unknown output: %s",
+                                                                                                    outputName))) :
+                                      null;
+        try (LineBasedExport export = createExport(processContext,
+                                                   fetchExportFileType(context),
+                                                   processOutput != null ?
+                                                   processOutput.getLabel() :
+                                                   NLS.get("ProcessLog.plural"))) {
+            AtomicInteger rowCount = new AtomicInteger(0);
+            processContext.fetchOutputEntries(outputName, (columns, labels) -> {
+                try {
+                    export.addRow(labels);
+                } catch (IOException e) {
+                    throw Exceptions.handle()
+                                    .to(Log.BACKGROUND)
+                                    .error(e)
+                                    .withSystemErrorMessage("An error occurred while exporting a row: %s (%s)")
+                                    .handle();
+                }
+            }, (columns, values) -> {
+                try {
+                    processContext.tryUpdateState(NLS.fmtr("Process.rowsExported")
+                                                     .set("rows", rowCount.incrementAndGet())
+                                                     .format());
+                    export.addRow(values);
+                    return true;
+                } catch (IOException e) {
+                    throw Exceptions.handle()
+                                    .to(Log.BACKGROUND)
+                                    .error(e)
+                                    .withSystemErrorMessage("An error occurred while exporting a row: %s (%s)")
+                                    .handle();
+                }
+            });
+
+            processContext.forceUpdateState(NLS.fmtr("Process.rowsExported").set("rows", rowCount.get()).format());
         } catch (Exception e) {
             processContext.handle(e);
         }
-    }
-
-    private void exportSelectedOutput(JSONObject context, ProcessContext processContext, String outputName)
-            throws Exception {
-        ProcessOutput out = fetchOutput(processContext, outputName);
-
-        if (TableProcessOutputType.TYPE.equals(out.getType())) {
-            exportTable(fetchExportFileType(context), out, processContext);
-        } else if (LogsProcessOutputType.TYPE.equals(out.getType())) {
-            exportLogs(fetchExportFileType(context), out, processContext);
-        } else {
-            throw new IllegalArgumentException(Strings.apply(
-                    "Exporting to file is only supported for logs and tables, not %s (of output %s)",
-                    out.getType(),
-                    out.getName()));
-        }
-    }
-
-    private ProcessOutput fetchOutput(ProcessContext processContext, String outputName) {
-        Process process = processes.fetchProcess(processContext.getProcessId())
-                                   .orElseThrow(() -> new IllegalArgumentException("Unknown process: "
-                                                                                   + processContext.getProcessId()));
-        return process.getOutputs()
-                      .data()
-                      .stream()
-                      .filter(output -> Strings.areEqual(output.getName(), outputName))
-                      .findAny()
-                      .orElseThrow(null);
+        processContext.log(ProcessLog.success().withNLSKey("ExportLogsAsFileTaskExecutor.completed"));
     }
 
     private ExportFileType fetchExportFileType(JSONObject context) {
         return Value.of(context.get(CONTEXT_FORMAT)).getEnum(ExportFileType.class).orElse(ExportFileType.XLSX);
     }
 
-    private void exportLogs(ExportFileType exportFileType, @Nullable ProcessOutput out, ProcessContext processContext)
-            throws Exception {
-        try (LineBasedExport export = createExport(processContext,
-                                                   exportFileType,
-                                                   out != null ? out.getLabel() : NLS.get("ProcessLog.plural"))) {
-            export.addArrayRow(NLS.get("ProcessLog.type"),
-                               NLS.get("ProcessLog.timestamp"),
-                               NLS.get("ProcessLog.message"),
-                               NLS.get("ProcessLog.messageType"),
-                               NLS.get("ProcessLog.node"));
-            AtomicInteger rowCount = new AtomicInteger(0);
-            createLogsQuery(out, processContext).iterateAll(logEntry -> {
-                writeLog(export, logEntry);
-                updateExportState(processContext, rowCount.incrementAndGet(), false);
-            });
-            updateExportState(processContext, rowCount.get(), true);
-        }
-    }
-
     private LineBasedExport createExport(ProcessContext processContext, ExportFileType type, String name)
             throws IOException {
-        String filename = name + "." + type.name().toLowerCase();
+        String filename = Files.toSaneFileName(name) + "." + type.name().toLowerCase();
         OutputStream outputStream = processContext.addFile(filename);
 
         processContext.log(ProcessLog.info()
@@ -178,71 +158,5 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
         }
 
         throw new IllegalArgumentException("Unknown export type: " + type);
-    }
-
-    private ElasticQuery<ProcessLog> createLogsQuery(@Nullable ProcessOutput out, ProcessContext processContext) {
-        ElasticQuery<ProcessLog> logsQuery = elastic.select(ProcessLog.class)
-                                                    .eq(ProcessLog.PROCESS, processContext.getProcessId())
-                                                    .eq(ProcessLog.OUTPUT, out != null ? out.getName() : null)
-                                                    .orderAsc(ProcessLog.SORT_KEY);
-        UserInfo user = UserContext.getCurrentUser();
-        if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
-            logsQuery.eq(ProcessLog.SYSTEM_MESSAGE, false);
-        }
-        return logsQuery;
-    }
-
-    private void writeLog(LineBasedExport export, ProcessLog logEntry) {
-        try {
-            export.addArrayRow(logEntry.getType().toString(),
-                               logEntry.getTimestamp(),
-                               logEntry.getMessage(),
-                               logEntry.getMessageType(),
-                               logEntry.getNode());
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(Log.BACKGROUND)
-                            .error(e)
-                            .withSystemErrorMessage("An error occurred while exporting a row: %s (%s)")
-                            .handle();
-        }
-    }
-
-    private void exportTable(ExportFileType exportFileType, ProcessOutput out, ProcessContext processContext)
-            throws Exception {
-        try (LineBasedExport export = createExport(processContext, exportFileType, out.getLabel())) {
-            List<String> columns = tableProcessOutputType.determineColumns(out);
-            List<String> labels = tableProcessOutputType.determineLabels(out, columns);
-            export.addRow(labels);
-            AtomicInteger rowCount = new AtomicInteger(0);
-            createLogsQuery(out, processContext).iterateAll(logEntry -> {
-                writeTableRow(columns, export, logEntry);
-                updateExportState(processContext, rowCount.incrementAndGet(), false);
-            });
-            updateExportState(processContext, rowCount.get(), true);
-        }
-    }
-
-    private void writeTableRow(List<String> columns, LineBasedExport export, ProcessLog logEntry) {
-        try {
-            List<Object> row = columns.stream()
-                                      .map(column -> cells.rawValue(logEntry.getContext().get(column).orElse(null)))
-                                      .collect(Collectors.toList());
-            export.addRow(row);
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(Log.BACKGROUND)
-                            .error(e)
-                            .withSystemErrorMessage("An error occurred while exporting a row: %s (%s)")
-                            .handle();
-        }
-    }
-
-    private void updateExportState(ProcessContext processContext, int currentRow, boolean lastCall) {
-        if (lastCall) {
-            processContext.forceUpdateState(NLS.fmtr("Process.rowsExported").set("rows", currentRow).format());
-        } else {
-            processContext.tryUpdateState(NLS.fmtr("Process.rowsExported").set("rows", currentRow).format());
-        }
     }
 }

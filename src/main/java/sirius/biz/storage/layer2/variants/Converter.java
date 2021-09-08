@@ -17,8 +17,8 @@ import javax.annotation.concurrent.ThreadSafe;
  * Provides the converter logic to generate a certain kind of {@link sirius.biz.storage.layer2.variants.BlobVariant}.
  * <p>
  * Instances are managed by the {@link ConversionEngine} which creates them via a {@link ConverterFactory}. Note
- * that only one instance per variant configuration is generated. Therefore implementing classes need to be
- * fully stateless and are therefore threadsafe.
+ * that only one instance per variant configuration is generated. Therefore, implementing classes need to be
+ * fully stateless and are therefore thread-safe.
  */
 @ThreadSafe
 public interface Converter {

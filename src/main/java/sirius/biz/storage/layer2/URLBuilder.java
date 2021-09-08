@@ -14,6 +14,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
@@ -36,10 +37,19 @@ public class URLBuilder {
      */
     private static final Pattern NON_URL_CHARACTERS = Pattern.compile("[^a-zA-Z0-9_.]");
 
+    /**
+     * Contains the default fallback URI used by {@link #buildImageURL()}.
+     * <p>
+     * Note that a custom URI can be provided via {@link #withFallbackUri(String)}
+     * or {@link BlobHardRef#withFallbackUri(String)}.
+     */
+    public static final String IMAGE_FALLBACK_URI = "/assets/images/blob_image_fallback.png";
+
     protected BlobStorageSpace space;
     protected Blob blob;
     protected String blobKey;
     protected String variant = VARIANT_RAW;
+    protected String cachedPhysicalKey;
     protected String filename;
     protected String baseURL;
     protected String addonText;
@@ -50,12 +60,17 @@ public class URLBuilder {
     protected boolean suppressCache;
     protected String hook;
     protected String payload;
+    protected String fallbackUri;
+    protected boolean largeFile;
 
     @Part
     private static StorageUtils utils;
 
     @Part
     private static ConversionEngine conversionEngine;
+
+    @ConfigValue("storage.layer2.largeFileLimit")
+    private static long largeFileLimit;
 
     /**
      * Creates a new builder with a direct reference to the space and the blob key.
@@ -82,6 +97,20 @@ public class URLBuilder {
     }
 
     /**
+     * Specifies a fallback URI to deliver if no blob or blob-key is available.
+     *
+     * @param fallbackUri the fallback URI to use
+     * @return the builder itself for fluent method calls
+     * @see #IMAGE_FALLBACK_URI
+     * @see #safeBuildURL(String)
+     * @see #buildImageURL()
+     */
+    public URLBuilder withFallbackUri(String fallbackUri) {
+        this.fallbackUri = fallbackUri;
+        return this;
+    }
+
+    /**
      * Specifies the version of the file to use.
      * <p>
      * If a value (other than {@link #VARIANT_RAW}) is given, the selected variant is delivered. If the variant
@@ -96,17 +125,19 @@ public class URLBuilder {
      */
     public URLBuilder withVariant(String variant) {
         this.variant = variant;
+        this.cachedPhysicalKey = null;
+
         return this;
     }
 
     /**
      * Make the URL a download url using the given filename.
      *
-     * @param filename the filename to send to the browser
+     * @param path the filename to send to the browser
      * @return the builder itself for fluent method calls
      */
-    public URLBuilder asDownload(String filename) {
-        this.filename = filename;
+    public URLBuilder asDownload(String path) {
+        this.filename = Files.getFilenameAndExtension(path);
         this.forceDownload = true;
 
         return this;
@@ -119,6 +150,32 @@ public class URLBuilder {
      */
     public URLBuilder asDownload() {
         this.forceDownload = true;
+
+        return this;
+    }
+
+    /**
+     * Enables a check which determines if the underlying file is considered "too large to be cached".
+     * <p>
+     * Downstream reverse proxies like Varnish are heavily impact by very large files (GBs). Therefore, this
+     * check can be enabled. If we then detect that the underlying file is larger than {@link #largeFileLimit}
+     * (specified in the config by <tt>storage.layer2.largeFileLimit</tt>), we add a special prefix to the
+     * URL (<tt>/dasd/xxl</tt>). This prefix is cut away by the {@link BlobDispatcher} and doesn't change the
+     * processing at all. However, a downstream reverse proxy can detect such links and by-pass caching etc.
+     * entirely.
+     * <p>
+     * This has to be enabled manually, as such large downloads are infrequent and require a lookup for the
+     * filesize.
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder enableLargeFileDetection() {
+        if (Strings.isFilled(blobKey) && blob == null) {
+            space.findByBlobKey(blobKey).ifPresent(resolvedBlob -> this.blob = resolvedBlob);
+        }
+        if (blob != null && blob.getSize() > largeFileLimit) {
+            this.largeFile = true;
+        }
 
         return this;
     }
@@ -228,37 +285,93 @@ public class URLBuilder {
      */
     public Optional<String> buildURL() {
         if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
+            if (Strings.isFilled(fallbackUri)) {
+                return Optional.of(createBaseURL().append(fallbackUri).toString());
+            }
             return Optional.empty();
         }
 
         if (eternallyValid) {
             // If a URL is eternally valid, there is no point of generating a physical URL, as this will be outdated
             // as soon as the underlying blob contents change and not "live as long as the blob itself"...
-            return Optional.ofNullable(createVirtualDeliveryUrl());
+            return Optional.of(createVirtualDeliveryUrl());
         }
         if (reusable) {
             // If the caller requested a reusable URL (one to be output and sent to 3rd parties, we probably also
             // want it to be valid as long as the "blob lives" and not to become obsolete once the blob contents
             // change...
-            return Optional.ofNullable(createVirtualDeliveryUrl());
+            return Optional.of(createVirtualDeliveryUrl());
         }
         if (suppressCache) {
             // Manual cache control is only supported in virtual calls, not physical...
-            return Optional.ofNullable(createVirtualDeliveryUrl());
+            return Optional.of(createVirtualDeliveryUrl());
         }
         if (delayResolve && !isPhysicalKeyReadilyAvailable()) {
             // The caller specifically requested, that we do not forcefully compute the physical URL (which might
             // require a lookup, but to rather use the virtual URL...
-            return Optional.ofNullable(createVirtualDeliveryUrl());
+            return Optional.of(createVirtualDeliveryUrl());
         }
 
-        return Optional.ofNullable(createPhysicalDeliveryUrl());
+        return Optional.of(createPhysicalDeliveryUrl());
+    }
+
+    /**
+     * Builds the URL and permits to specify a custom fallback URI to deliver if no blob or blob-key is available.
+     *
+     * @param fallbackUri the fallback URI to use
+     * @return the effective URL to use
+     * @see #IMAGE_FALLBACK_URI
+     * @see #withFallbackUri(String)
+     * @see #buildImageURL()
+     */
+    public String safeBuildURL(String fallbackUri) {
+        return buildURL().orElseGet(() -> createBaseURL().append(fallbackUri).toString());
+    }
+
+    /**
+     * Builds the URL based on the given parameters or uses a generic fallback image if no blob or blob-key is
+     * available.
+     *
+     * @return the effective URL to use
+     * @see #IMAGE_FALLBACK_URI
+     * @see #withFallbackUri(String)
+     * @see #safeBuildURL(String)
+     */
+    public String buildImageURL() {
+        return safeBuildURL(IMAGE_FALLBACK_URI);
+    }
+
+    /**
+     * Determines if a conversion for the given variant is expected.
+     *
+     * @return <tt>true</tt> if a variant is selected, for which no physical key is present, <tt>false</tt> otherwise
+     */
+    public boolean isConversionExpected() {
+        return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+    }
+
+    /**
+     * Determines if the builder is actually filled.
+     *
+     * @return <tt>true</tt> if a blob or blobKey is present, <tt>false</tt> otherwise
+     */
+    public boolean isFilled() {
+        return blob != null || Strings.isFilled(blobKey);
+    }
+
+    /**
+     * Obtains the fallback URI if present.
+     *
+     * @return the fallback URI or an empty optional if no fallback URI is present
+     */
+    public Optional<String> getFallbackUri() {
+        return Optional.ofNullable(fallbackUri);
     }
 
     protected boolean isPhysicalKeyReadilyAvailable() {
         // If the raw file is requested and the blob object is available, we can easily determine the effective
         // physical key to serve.
-        return Strings.areEqual(variant, URLBuilder.VARIANT_RAW) && blob != null;
+        return Strings.areEqual(variant, VARIANT_RAW) && blob != null;
     }
 
     private String createPhysicalDeliveryUrl() {
@@ -271,6 +384,9 @@ public class URLBuilder {
 
         result.append(BlobDispatcher.URI_PREFIX);
         result.append("/");
+        if (largeFile) {
+            result.append(BlobDispatcher.LARGE_FILE_MARKER);
+        }
         result.append(BlobDispatcher.FLAG_PHYSICAL);
         if (forceDownload) {
             result.append(BlobDispatcher.FLAG_DOWNLOAD);
@@ -291,7 +407,7 @@ public class URLBuilder {
         } else {
             appendAddonText(result);
             result.append(physicalKey);
-            result.append(determineEffectiveFileExtension());
+            result.append(fetchUrlEncodedFileExtension());
         }
 
         appendHook(result);
@@ -303,6 +419,9 @@ public class URLBuilder {
         StringBuilder result = createBaseURL();
         result.append(BlobDispatcher.URI_PREFIX);
         result.append("/");
+        if (largeFile) {
+            result.append(BlobDispatcher.LARGE_FILE_MARKER);
+        }
         if (!suppressCache) {
             result.append(BlobDispatcher.FLAG_CACHEABLE);
         }
@@ -326,7 +445,7 @@ public class URLBuilder {
             result.append("/");
             appendAddonText(result);
             result.append(blobKey);
-            result.append(determineEffectiveFileExtension());
+            result.append(fetchUrlEncodedFileExtension());
         }
 
         appendHook(result);
@@ -369,9 +488,14 @@ public class URLBuilder {
             return blob.getPhysicalObjectKey();
         }
 
+        if (cachedPhysicalKey != null) {
+            return cachedPhysicalKey;
+        }
+
         Tuple<String, Boolean> result =
                 ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
         if (result != null) {
+            cachedPhysicalKey = result.getFirst();
             return result.getFirst();
         } else {
             return null;
@@ -393,7 +517,7 @@ public class URLBuilder {
         }
     }
 
-    private String determineEffectiveFilename() {
+    private String determineFilename() {
         if (Strings.isFilled(filename)) {
             return filename;
         }
@@ -404,12 +528,25 @@ public class URLBuilder {
         return space.resolveFilename(blobKey).orElse(blobKey);
     }
 
-    private String determineEffectiveFileExtension() {
-        String result = Value.of(variant)
-                             .ignore(VARIANT_RAW)
-                             .asOptionalString()
-                             .map(conversionEngine::determineTargetFileExension)
-                             .orElseGet(() -> Files.getFileExtension(determineEffectiveFilename()));
+    private String determineEffectiveFilename() {
+        String effectiveFileName = determineFilename();
+        String effectiveFileExtension = determineVariantFileExtension().orElse(null);
+        if (Strings.isFilled(effectiveFileExtension)) {
+            return Files.getFilenameWithoutExtension(effectiveFileName) + effectiveFileExtension;
+        } else {
+            return effectiveFileName;
+        }
+    }
+
+    private Optional<String> determineVariantFileExtension() {
+        return Value.of(variant)
+                    .ignore(VARIANT_RAW)
+                    .asOptionalString()
+                    .map(conversionEngine::determineTargetFileExtension);
+    }
+
+    private String fetchUrlEncodedFileExtension() {
+        String result = determineVariantFileExtension().orElseGet(() -> Files.getFileExtension(determineFilename()));
 
         if (Strings.isFilled(result)) {
             return "." + Strings.urlEncode(result);

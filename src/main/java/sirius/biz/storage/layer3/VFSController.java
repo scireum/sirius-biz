@@ -39,7 +39,8 @@ import java.util.Optional;
 @Register
 public class VFSController extends BizController {
 
-    public static final String PARENT_DIR = "..";
+    private static final String PARENT_DIR = "..";
+
     @Part
     private VirtualFileSystem vfs;
 

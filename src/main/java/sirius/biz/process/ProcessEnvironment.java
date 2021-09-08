@@ -47,6 +47,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -452,5 +454,22 @@ class ProcessEnvironment implements ProcessContext {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean awaitFlushedLogs() {
+        return processes.awaitFlushedLogs(processId);
+    }
+
+    @Override
+    public Optional<ProcessOutput> fetchOutput(String outputName) {
+        return processes.fetchOutput(processId, outputName);
+    }
+
+    @Override
+    public void fetchOutputEntries(@Nullable String outputName,
+                                   BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
+                                   BiPredicate<List<String>, List<String>> columnsAndValues) {
+        processes.fetchOutputEntries(processId, outputName, columnsAndLabelsConsumer, columnsAndValues);
     }
 }
