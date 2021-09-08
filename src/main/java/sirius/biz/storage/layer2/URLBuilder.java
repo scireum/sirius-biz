@@ -340,6 +340,23 @@ public class URLBuilder {
         return safeBuildURL(IMAGE_FALLBACK_URI);
     }
 
+    /**
+     * Determines if a conversion for the given variant is expected.
+     *
+     * @return <tt>true</tt> if a variant is selected, for which no physical key is present, <tt>false</tt> otherwise
+     */
+    public boolean isConversionExpected() {
+        return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+    }
+
+    /**
+     * Determines if the builder is actually filled.
+     *
+     * @return <tt>true</tt> if a blob or blobKey is present, <tt>false</tt> otherwise
+     */
+    public boolean isFilled() {
+        return blob != null || Strings.isFilled(blobKey);
+    }
 
     /**
      * Obtains the fallback URI if present.
