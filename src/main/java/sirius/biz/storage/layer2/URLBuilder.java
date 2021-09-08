@@ -50,12 +50,16 @@ public class URLBuilder {
     protected boolean suppressCache;
     protected String hook;
     protected String payload;
+    protected boolean largeFile;
 
     @Part
     private static StorageUtils utils;
 
     @Part
     private static ConversionEngine conversionEngine;
+
+    @ConfigValue("storage.layer2.largeFileLimit")
+    private static long largeFileLimit;
 
     /**
      * Creates a new builder with a direct reference to the space and the blob key.
@@ -119,6 +123,32 @@ public class URLBuilder {
      */
     public URLBuilder asDownload() {
         this.forceDownload = true;
+
+        return this;
+    }
+
+    /**
+     * Enables a check which determines if the underlying file is considered "too large to be cached".
+     * <p>
+     * Downstream reverse proxies like Varnish are heavily impact by very large files (GBs). Therefore, this
+     * check can be enabled. If we then detect that the underlying file is larger than {@link #largeFileLimit}
+     * (specified in the config by <tt>storage.layer2.largeFileLimit</tt>), we add a special prefix to the
+     * URL (<tt>/dasd/xxl</tt>). This prefix is cut away by the {@link BlobDispatcher} and doesn't change the
+     * processing at all. However, a downstream reverse proxy can detect such links and by-pass caching etc.
+     * entirely.
+     * <p>
+     * This has to be enabled manually, as such large downloads are infrequent and require a lookup for the
+     * filesize.
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder enableLargeFileDetection() {
+        if (Strings.isFilled(blobKey) && blob == null) {
+            space.findByBlobKey(blobKey).ifPresent(resolvedBlob -> this.blob = resolvedBlob);
+        }
+        if (blob != null && blob.getSize() > largeFileLimit) {
+            this.largeFile = true;
+        }
 
         return this;
     }
@@ -271,6 +301,9 @@ public class URLBuilder {
 
         result.append(BlobDispatcher.URI_PREFIX);
         result.append("/");
+        if (largeFile) {
+            result.append(BlobDispatcher.LARGE_FILE_MARKER);
+        }
         result.append(BlobDispatcher.FLAG_PHYSICAL);
         if (forceDownload) {
             result.append(BlobDispatcher.FLAG_DOWNLOAD);
@@ -303,6 +336,9 @@ public class URLBuilder {
         StringBuilder result = createBaseURL();
         result.append(BlobDispatcher.URI_PREFIX);
         result.append("/");
+        if (largeFile) {
+            result.append(BlobDispatcher.LARGE_FILE_MARKER);
+        }
         if (!suppressCache) {
             result.append(BlobDispatcher.FLAG_CACHEABLE);
         }
