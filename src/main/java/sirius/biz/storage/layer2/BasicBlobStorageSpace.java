@@ -93,7 +93,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Specifies the maximal number of attempts to generate a variant.
      */
-    private static final int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
+    public static final int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
 
     /**
      * Contains the name of the config key used to determine which permission is required to browse / read blobs in
