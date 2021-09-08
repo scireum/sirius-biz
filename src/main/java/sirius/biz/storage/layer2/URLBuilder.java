@@ -132,11 +132,11 @@ public class URLBuilder {
     /**
      * Make the URL a download url using the given filename.
      *
-     * @param filename the filename to send to the browser
+     * @param path the filename to send to the browser
      * @return the builder itself for fluent method calls
      */
-    public URLBuilder asDownload(String filename) {
-        this.filename = filename;
+    public URLBuilder asDownload(String path) {
+        this.filename = Files.getFilenameAndExtension(path);
         this.forceDownload = true;
 
         return this;
