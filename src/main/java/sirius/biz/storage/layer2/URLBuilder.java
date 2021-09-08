@@ -14,6 +14,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
@@ -406,7 +407,7 @@ public class URLBuilder {
         } else {
             appendAddonText(result);
             result.append(physicalKey);
-            result.append(determineEffectiveFileExtension());
+            result.append(fetchUrlEncodedFileExtension());
         }
 
         appendHook(result);
@@ -444,7 +445,7 @@ public class URLBuilder {
             result.append("/");
             appendAddonText(result);
             result.append(blobKey);
-            result.append(determineEffectiveFileExtension());
+            result.append(fetchUrlEncodedFileExtension());
         }
 
         appendHook(result);
@@ -516,7 +517,7 @@ public class URLBuilder {
         }
     }
 
-    private String determineEffectiveFilename() {
+    private String determineFilename() {
         if (Strings.isFilled(filename)) {
             return filename;
         }
@@ -527,12 +528,25 @@ public class URLBuilder {
         return space.resolveFilename(blobKey).orElse(blobKey);
     }
 
-    private String determineEffectiveFileExtension() {
-        String result = Value.of(variant)
-                             .ignore(VARIANT_RAW)
-                             .asOptionalString()
-                             .map(conversionEngine::determineTargetFileExension)
-                             .orElseGet(() -> Files.getFileExtension(determineEffectiveFilename()));
+    private String determineEffectiveFilename() {
+        String effectiveFileName = determineFilename();
+        String effectiveFileExtension = determineVariantFileExtension().orElse(null);
+        if (Strings.isFilled(effectiveFileExtension)) {
+            return Files.getFilenameWithoutExtension(effectiveFileName) + effectiveFileExtension;
+        } else {
+            return effectiveFileName;
+        }
+    }
+
+    private Optional<String> determineVariantFileExtension() {
+        return Value.of(variant)
+                    .ignore(VARIANT_RAW)
+                    .asOptionalString()
+                    .map(conversionEngine::determineTargetFileExtension);
+    }
+
+    private String fetchUrlEncodedFileExtension() {
+        String result = determineVariantFileExtension().orElseGet(() -> Files.getFileExtension(determineFilename()));
 
         if (Strings.isFilled(result)) {
             return "." + Strings.urlEncode(result);
