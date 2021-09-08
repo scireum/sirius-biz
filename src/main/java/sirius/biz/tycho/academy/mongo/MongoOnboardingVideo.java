@@ -63,13 +63,6 @@ public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo
 
     private final OnboardingVideoData onboardingVideoData = new OnboardingVideoData();
 
-    /**
-     * Contains the academy this video belongs to.
-     */
-    public static final Mapping ACADEMY = Mapping.named("academy");
-    @Length(50)
-    private String academy;
-
     @Transient
     private AcademyVideoData academyVideoData;
 
