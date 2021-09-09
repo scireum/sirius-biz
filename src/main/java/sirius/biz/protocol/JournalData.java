@@ -103,7 +103,7 @@ public class JournalData extends Composite {
     /**
      * Reports all changed properties as a string.
      * <p>
-     * This will output one line per changed propery like {@code old_value -&gt; new_value}.
+     * This will output one line per changed property like {@code old_value -&gt; new_value}.
      *
      * @return a string which lists all changed properties
      */

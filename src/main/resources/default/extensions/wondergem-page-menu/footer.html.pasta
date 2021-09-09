@@ -31,7 +31,7 @@
 
                     $(document).ready(function() {
                         document.querySelector('#supportLink').addEventListener('click', function() {
-                            copyToClipboard(window.location.protocol + window.location.host + '/tenants/select/@user().getTenantId()?goto=' + encodeURI(window.location.href));
+                            copyToClipboard(window.location.protocol + '//' + window.location.host + '/tenants/select/@user().getTenantId()?goto=' + encodeURI(window.location.href));
 
                             document.querySelector('#messageBox').innerHTML = '<div class="alert alert-success">@i18n("footer.html.supportLinkCopiedSuccessfully")</div>';
                         });

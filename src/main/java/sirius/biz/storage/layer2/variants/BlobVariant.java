@@ -78,6 +78,34 @@ public interface BlobVariant {
     int getNumAttempts();
 
     /**
+     * Determines if the conversion has ultimately failed as the max number of attempts has been reached.
+     *
+     * @return <tt>true</tt> if the conversion is considered failed, <tt>false</tt> otherwise
+     */
+    boolean isFailed();
+
+    /**
+     * Returns the amount of time in which the conversion tool ran.
+     *
+     * @return the conversion duration in milliseconds
+     */
+    long getConversionDuration();
+
+    /**
+     * Returns the amount of time, the conversion task spent in the queue, waiting for a free thread.
+     *
+     * @return the queue duration in milliseconds
+     */
+    long getQueueDuration();
+
+    /**
+     * Returns the amount of time, the system spent down- and uploading the conversion in- and outputs.
+     *
+     * @return the transfer duration in milliseconds
+     */
+    long getTransferDuration();
+
+    /**
      * Deletes this variant.
      */
     void delete();

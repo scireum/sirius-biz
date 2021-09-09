@@ -40,12 +40,13 @@ import java.util.Optional;
 @Register
 public class VFSController extends BizController {
 
+    private static final String PARENT_DIR = "..";
+
     /**
      * Permissions required to view files.
      */
     private static final String PERMISSION_VIEW_FILES = "permission-view-files";
 
-    public static final String PARENT_DIR = "..";
     @Part
     private VirtualFileSystem vfs;
 

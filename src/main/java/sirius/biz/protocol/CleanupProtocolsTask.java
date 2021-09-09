@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 /**
  * Removes old protocol and journal entries.
  * <p>
- * The duration for which logs and incidents are kept can be controlled via the <tt>protocoals</tt> section in the
+ * The duration for which logs and incidents are kept can be controlled via the <tt>protocols</tt> section in the
  * system configuration.
  */
 @Register

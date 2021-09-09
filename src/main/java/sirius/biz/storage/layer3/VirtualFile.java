@@ -12,7 +12,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.Attempt;
@@ -1284,8 +1284,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
-                            .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
-                            .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
     }
@@ -1379,14 +1379,14 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 throw createInvalidPathError(url);
             }
 
-            return resolveViaHeadRequest(url, mode);
+            return resolveViaHeadRequest(url, mode, fileExtensionVerifier);
         } catch (IOException e) {
             throw Exceptions.createHandled()
                             .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
-                            .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
-                            .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
     }
@@ -1409,7 +1409,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                  });
     }
 
-    private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URL url, FetchFromUrlMode mode) throws IOException {
+    private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URL url,
+                                                              FetchFromUrlMode mode,
+                                                              Predicate<String> fileExtensionVerifier)
+            throws IOException {
         try {
             Outcall headRequest = new Outcall(url);
             headRequest.markAsHeadRequest();
@@ -1420,12 +1423,20 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             headRequest.setConnectTimeout(TEN_SECONDS);
             headRequest.setReadTimeout(TEN_SECONDS);
 
-            String path = headRequest.parseFileNameFromContentDisposition().orElse(null);
-
+            String path = headRequest.parseFileNameFromContentDisposition()
+                                     .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
+                                     .orElse(null);
             // Drain any (unexpected) content...
             Streams.exhaust(headRequest.getInput());
 
-            if (path != null) {
+            URL lastConnectedURL = headRequest.getLastConnectedURL();
+
+            if (Strings.isEmpty(path) && !url.getPath().equals(lastConnectedURL.getPath())) {
+                // We don't have a path yet but we followed redirects so we check the new URL
+                path = parsePathFromUrl(lastConnectedURL, fileExtensionVerifier);
+            }
+
+            if (Strings.isFilled(path)) {
                 VirtualFile file = resolve(path);
                 LocalDateTime lastModifiedHeader =
                         headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
@@ -1433,7 +1444,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                     || !file.exists()
                     || mode == FetchFromUrlMode.ALWAYS_FETCH
                     || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-                    return Tuple.create(file, file.loadFromUrl(url, mode));
+                    return Tuple.create(file, file.loadFromUrl(lastConnectedURL, mode));
                 } else {
                     return Tuple.create(file, false);
                 }
@@ -1453,8 +1464,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private HandledException createInvalidPathError(URL url) {
         return Exceptions.createHandled()
                          .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
-                         .hint(ProcessContext.HINT_MESSAGE_TYPE, "$VirtualFile.loadFromUrlFailed")
-                         .hint(ProcessContext.HINT_MESSAGE_COUNT, 250)
+                         .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                         .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                          .set("url", url)
                          .handle();
     }

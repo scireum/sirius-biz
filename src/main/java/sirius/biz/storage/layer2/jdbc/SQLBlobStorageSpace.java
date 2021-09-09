@@ -214,7 +214,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the objects referenced to '%s' as deleted: %s (%s)",
+                              "Layer 2/SQL: An error occurred, when marking the objects referenced to '%s' as deleted: %s (%s)",
                               referencingEntity)
                       .handle();
         }
@@ -248,7 +248,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the objects referenced to '%s' via '%s' as deleted: %s (%s)",
+                              "Layer 2/SQL: An error occurred, when marking the objects referenced to '%s' via '%s' as deleted: %s (%s)",
                               referencingEntity,
                               referenceDesignator)
                       .handle();
@@ -298,7 +298,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 throw Exceptions.handle()
                                 .to(StorageUtils.LOG)
                                 .withSystemErrorMessage(
-                                        "Layer 2/SQL: An error occured, cannot reference '%s' from '%s' ('%s'): The blob is either deleted, temporary or already in use.",
+                                        "Layer 2/SQL: An error occurred, cannot reference '%s' from '%s' ('%s'): The blob is either deleted, temporary or already in use.",
                                         objectKey,
                                         referencingEntity,
                                         referenceDesignator)
@@ -309,7 +309,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                             .to(StorageUtils.LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Layer 2/SQL: An error occured, when referencing '%s' from '%s' ('%s'): %s (%s)",
+                                    "Layer 2/SQL: An error occurred, when referencing '%s' from '%s' ('%s'): %s (%s)",
                                     objectKey,
                                     referencingEntity,
                                     referenceDesignator)
@@ -356,7 +356,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the object '%s' as used: %s (%s)",
+                              "Layer 2/SQL: An error occurred, when marking the object '%s' as used: %s (%s)",
                               objectKey)
                       .handle();
         }
@@ -380,7 +380,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the object '%s' as used: %s (%s)",
+                              "Layer 2/SQL: An error occurred, when marking the object '%s' as used: %s (%s)",
                               blob.getBlobKey())
                       .handle();
         }
@@ -398,7 +398,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the blob '%s' as deleted: %s (%s)",
+                              "Layer 2/SQL: An error occurred, when marking the blob '%s' as deleted: %s (%s)",
                               blob.getBlobKey())
                       .handle();
         }
@@ -428,7 +428,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the directory '%s' as deleted: %s (%s)",
+                              "Layer 2/SQL: An error occurred, when marking the directory '%s' as deleted: %s (%s)",
                               directory.getId())
                       .handle();
         }
@@ -757,20 +757,47 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected void markConversionFailure(SQLVariant variant) {
-        variant.setQueuedForConversion(false);
-        oma.update(variant);
+    protected void markConversionFailure(SQLVariant variant, ConversionProcess conversionProcess) {
+        try {
+            oma.updateStatement(SQLVariant.class)
+               .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
+               .set(SQLVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+               .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+               .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+               .where(SQLVariant.ID, variant.getId())
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as failed: %s (%s)",
+                              variant.getIdAsString(), variant.getSourceBlob().getIdAsString())
+                      .handle();
+        }
     }
 
     @Override
     protected void markConversionSuccess(SQLVariant variant, String physicalKey, ConversionProcess conversionProcess) {
-        variant.setQueuedForConversion(false);
-        variant.setSize(conversionProcess.getResultFileHandle().getFile().length());
-        variant.setPhysicalObjectKey(physicalKey);
-        variant.setConversionDuration(conversionProcess.getConversionDuration());
-        variant.setQueueDuration(conversionProcess.getQueueDuration());
-        variant.setTransferDuration(conversionProcess.getTransferDuration());
-        oma.update(variant);
+        try {
+            oma.updateStatement(SQLVariant.class)
+               .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
+               .set(SQLVariant.PHYSICAL_OBJECT_KEY, physicalKey)
+               .set(SQLVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
+               .set(SQLVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+               .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+               .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+               .where(SQLVariant.ID, variant.getId())
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as converted: %s (%s)",
+                              variant.getIdAsString(), variant.getSourceBlob().getIdAsString())
+                      .handle();
+        }
     }
 
     @Override

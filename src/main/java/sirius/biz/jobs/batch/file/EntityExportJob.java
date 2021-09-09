@@ -239,7 +239,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         dictionary.determineMappingFromHeadings(row, false);
         process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
         setupExtractors();
-        errorContext.perform(() -> export.addRow(row.asList()));
+        errorContext.handle(() -> export.addRow(row.asList()));
     }
 
     /**
@@ -278,7 +278,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     private void handleTemplateRow(Values row) {
         Watch w = Watch.start();
 
-        errorContext.perform(() -> {
+        errorContext.handle(() -> {
             Context data = dictionary.load(row, false);
 
             if (contextExtender != null) {

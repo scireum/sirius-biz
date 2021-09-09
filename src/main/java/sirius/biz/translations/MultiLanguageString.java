@@ -13,16 +13,16 @@ import sirius.db.mixing.types.SafeMap;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
+import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +40,9 @@ public class MultiLanguageString extends SafeMap<String, String> {
      */
     public static final String FALLBACK_KEY = "fallback";
 
-    private List<String> validLanguages = Collections.emptyList();
+    private Collection<String> validLanguages = null;
+    private Supplier<Collection<String>> validLanguagesSupplier = null;
+    private String targetScope;
     private String i18nCondition;
     private String i18nPermission;
     private boolean withFallback;
@@ -65,11 +67,25 @@ public class MultiLanguageString extends SafeMap<String, String> {
     /**
      * Sets the given set of valid languages.
      *
-     * @param validLanguages the list of language codes to validate against
+     * @param validLanguagesSupplier a supplier which provides the set of valid languages once needed
      * @return the object itself for fluent method calls
      */
-    public MultiLanguageString withValidLanguages(@Nonnull Collection<String> validLanguages) {
-        this.validLanguages = new ArrayList<>(validLanguages);
+    public MultiLanguageString withValidLanguages(@Nonnull Supplier<Collection<String>> validLanguagesSupplier) {
+        this.validLanguagesSupplier = validLanguagesSupplier;
+        return this;
+    }
+
+    /**
+     * Sets the given set of valid languages by specifying the target scope type.
+     * <p>
+     * If set (and if no specific {@link #withValidLanguages(Supplier) valid languages supplier} is present, we
+     * use the {@link ScopeInfo#getDisplayLanguages()} of the specified scope.
+     *
+     * @param scopeType the <tt>scopeType</tt> used to lookup the valid languages.
+     * @return the object itself for fluent method calls
+     */
+    public MultiLanguageString forTargetScope(@Nonnull String scopeType) {
+        this.targetScope = scopeType;
         return this;
     }
 
@@ -91,7 +107,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * this can be enabled or disabled using the system config <tt>i18n.CONDITION-NAME</tt>.
      * <p>
      * If the condition is set to <tt>false</tt>, this will behave like a normal string field operating only on
-     * 'fallback'. Otherwise, full multi language support is enabled, which also means, that even if a
+     * 'fallback'. Otherwise, full multi-language support is enabled, which also means, that even if a
      * {@link sirius.db.mixing.annotations.Length} is present, this value will always be stored in a <tt>TEXT</tt>.
      *
      * @param conditionName the name of the flag required to be set to <tt>true</tt> for full i18n support
@@ -124,8 +140,23 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     @Nonnull
-    public List<String> getValidLanguages() {
-        return Collections.unmodifiableList(validLanguages);
+    public Collection<String> getValidLanguages() {
+        if (validLanguages == null) {
+            validLanguages = determineValidLanguages();
+        }
+
+        return validLanguages;
+    }
+
+    private Collection<String> determineValidLanguages() {
+        if (validLanguagesSupplier != null) {
+            return validLanguagesSupplier.get();
+        }
+        if (Strings.isFilled(targetScope)) {
+            return Collections.unmodifiableCollection(ScopeInfo.getDisplayLanguagesForScopeType(targetScope));
+        } else {
+            return ScopeInfo.DEFAULT_SCOPE.getDisplayLanguages();
+        }
     }
 
     @Override

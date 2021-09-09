@@ -59,6 +59,12 @@ public class BlobSoftRef extends BlobHardRef {
     }
 
     @Override
+    public BlobSoftRef withFallbackUri(String fallbackUri) {
+         super.withFallbackUri(fallbackUri);
+         return this;
+    }
+
+    @Override
     @Nullable
     public String getFilename() {
         if (isURL()) {

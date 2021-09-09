@@ -20,6 +20,8 @@ import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -106,7 +108,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * Using this approach, several find queries based on different field combinations can be used to execute
      * find.
      * <p>
-     * Additional queries can also added by providing an {@link SQLEntityImportHandlerExtender} if extending
+     * Additional queries can also be added by providing an {@link SQLEntityImportHandlerExtender} if extending
      * the importer class itself isn't a viable option.
      *
      * @param queryConsumer the consumer to be supplied with queries
@@ -158,7 +160,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     }
 
     /**
-     * Loads all {@link #mappingsToLoadForFind} and may perform some cleanups if necessarry.
+     * Loads all {@link #mappingsToLoadForFind} and may perform some cleanups if necessary.
      * <p>
      * Some fields are normalized within {@link sirius.db.mixing.annotations.BeforeSave} handlers. This method
      * can be overwritten to perform the same operations so that the values properly match within the
@@ -227,16 +229,24 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return the updated or created entity or, if batch updates are active, the given entity
      */
     protected E createOrUpdate(E entity, boolean batch) {
-        enforcePreSaveConstraints(entity);
+        try {
+            enforcePreSaveConstraints(entity);
 
-        // Invoke the beforeSave checks so that the change-detection below works for
-        // computed properties...
-        descriptor.beforeSave(entity);
+            // Invoke the beforeSave checks so that the change-detection below works for
+            // computed properties...
+            descriptor.beforeSave(entity);
 
-        if (entity.isNew()) {
-            return createIfChanged(entity, batch);
-        } else {
-            return updateIfChanged(entity, batch);
+            if (entity.isNew()) {
+                return createIfChanged(entity, batch);
+            } else {
+                return updateIfChanged(entity, batch);
+            }
+        } catch (HandledException exception) {
+            HandledException handledException = Exceptions.createHandled()
+                                                          .withDirectMessage(entity.getDescriptor()
+                                                                                   .createCannotSaveMessage(exception.getMessage()))
+                                                          .handle();
+            throw enhanceExceptionWithHints(handledException, entity);
         }
     }
 
@@ -327,7 +337,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     /**
      * Creates the prepared statement as {@link DeleteQuery} used to delete entities.
      *
-     * @return the delete query to use
+     * @return the deletion query to use
      */
     @SuppressWarnings("unchecked")
     protected DeleteQuery<E> getDeleteQuery() {

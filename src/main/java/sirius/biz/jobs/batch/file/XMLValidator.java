@@ -78,7 +78,7 @@ public class XMLValidator {
     }
 
     /**
-     * Logs errors to a {@link ProcessContext} and keeps track if any error occured during validation.
+     * Logs errors to a {@link ProcessContext} and keeps track if any error occurred during validation.
      */
     private static class XMLValidatorErrorHandler implements ErrorHandler {
 
@@ -114,7 +114,9 @@ public class XMLValidator {
         private void log(SAXParseException exception, ProcessLog processLog) {
             process.log(processLog.withNLSKey("XMLValidatorErrorHandler.error")
                                   .withContext("line", exception.getLineNumber())
-                                  .withContext("message", exception.getMessage()));
+                                  .withContext("message", exception.getMessage())
+                                  .withLimitedMessageType("$XMLValidatorErrorHandler.error.messageType",
+                                                          ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM));
         }
 
         /**

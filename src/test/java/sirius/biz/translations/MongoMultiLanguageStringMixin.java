@@ -18,13 +18,11 @@ import sirius.db.mixing.annotations.NullAllowed;
  */
 @Mixin(MongoMultiLanguageStringEntityWithMixin.class)
 public class MongoMultiLanguageStringMixin extends Mixable {
-    public static final Mapping MIXIN_MULTILANGTEXT_WITH_VALID_LANGUAGES =
-            Mapping.named("mixinMultiLangTextWithValidLanguages");
+    public static final Mapping MIXIN_MULTILANGTEXT = Mapping.named("mixinMultiLangText");
     @NullAllowed
-    private final MultiLanguageString mixinMultiLangTextWithValidLanguages =
-            new MultiLanguageString().withValidLanguages(MongoMultiLanguageStringEntity.validLanguages);
+    private final MultiLanguageString mixinMultiLangText = new MultiLanguageString();
 
-    public MultiLanguageString getMixinMultiLangTextWithValidLanguages() {
-        return mixinMultiLangTextWithValidLanguages;
+    public MultiLanguageString getMixinMultiLangText() {
+        return mixinMultiLangText;
     }
 }

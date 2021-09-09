@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2.mongo;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
@@ -25,7 +26,7 @@ import java.util.Optional;
 /**
  * Stores the metadata of a {@link BlobVariant} in the underlying MongoDB.
  * <p>
- * Note that all non trivial methods delegate to the associated {@link MongoBlobStorage}.
+ * Note that all non-trivial methods delegate to the associated {@link MongoBlobStorage}.
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 public class MongoVariant extends MongoEntity implements BlobVariant {
@@ -88,13 +89,13 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
     private long conversionDuration;
 
     /**
-     * Stores how long the the conversion waited in the queue (in millis).
+     * Stores how long the conversion waited in the queue (in millis).
      */
     public static final Mapping QUEUE_DURATION = Mapping.named("queueDuration");
     private long queueDuration;
 
     /**
-     * Stores how long the the download and upload from and to the storage took (in millis).
+     * Stores how long the download and upload from and to the storage took (in millis).
      */
     public static final Mapping TRANSFER_DURATION = Mapping.named("transferDuration");
     private long transferDuration;
@@ -116,6 +117,11 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
     @Override
     public Optional<FileHandle> download() {
         return Optional.empty();
+    }
+
+    @Override
+    public boolean isFailed() {
+        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
     }
 
     @Override
@@ -184,6 +190,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
         this.physicalObjectKey = physicalObjectKey;
     }
 
+    @Override
     public long getConversionDuration() {
         return conversionDuration;
     }
@@ -192,6 +199,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
         this.conversionDuration = conversionDuration;
     }
 
+    @Override
     public long getQueueDuration() {
         return queueDuration;
     }
@@ -200,6 +208,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
         this.queueDuration = queueDuration;
     }
 
+    @Override
     public long getTransferDuration() {
         return transferDuration;
     }

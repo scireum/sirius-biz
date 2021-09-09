@@ -32,7 +32,9 @@
             });
         });
     </i:block>
-    <option value="@value.getValue()" selected>
-        @value.resolveDisplayString()
-    </option>
+    <i:if test="Strings.isFilled(value.getValue())">
+        <option value="@value.getValue()" selected>
+            @value.resolveDisplayString()
+        </option>
+    </i:if>
 </t:singleSelect>
