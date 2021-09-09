@@ -35,7 +35,7 @@ public class AuditLogController extends BizController {
     /**
      * Names the permissions required to view the audit log page.
      */
-    private static final String PERMISSION_VIEW_AUDIT_LOGS = "permissions-view-audit-log";
+    private static final String PERMISSION_VIEW_AUDIT_LOGS = "permission-view-audit-log";
 
     /**
      * Renders some metrics to determine system growth.
