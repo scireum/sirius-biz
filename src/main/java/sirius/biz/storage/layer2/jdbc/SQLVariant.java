@@ -15,6 +15,7 @@ import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.BaseEntityRef;
@@ -30,6 +31,7 @@ import java.util.Optional;
  * Note that all non-trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
+@Index(name = "physical_key_lookup", columns = {"sourceBlob", "variantName"})
 public class SQLVariant extends SQLEntity implements BlobVariant {
 
     /**
