@@ -766,7 +766,7 @@ public class Processes {
                     ProcessLog.warn()
                               .withMessageType(entry.getKey())
                               .withNLSKey("Processes.messageLimitReached")
-                              .withContext("type", type)
+                              .withContext("type", NLS.smartGet(type))
                               .withContext("limit", limit)
                               .withContext("count", count));
             }

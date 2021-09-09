@@ -13,8 +13,10 @@ import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
@@ -29,6 +31,9 @@ import java.util.Optional;
  * Note that all non-trivial methods delegate to the associated {@link MongoBlobStorage}.
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
+@Index(name = "physical_key_lookup",
+        columns = {"blob", "variantName"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoVariant extends MongoEntity implements BlobVariant {
 
     /**
