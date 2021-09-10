@@ -57,7 +57,7 @@ public class WatchableOutputStream extends OutputStream {
             delegate.close();
 
             // Close might be invoked several times (e.g. by some ZIP implementations).
-            // Therefore we filter this to only fulfill the future once.
+            // Therefore, we filter this to only fulfill the future once.
             if (!completionFuture.isCompleted()) {
                 completionFuture.success();
             }
