@@ -189,7 +189,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected static ConversionEngine conversionEngine;
 
     @Part
-    private EventRecorder eventRecorder;
+    private static EventRecorder eventRecorder;
 
     @Part
     protected static Tasks tasks;
