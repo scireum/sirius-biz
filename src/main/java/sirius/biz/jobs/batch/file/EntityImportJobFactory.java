@@ -46,7 +46,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     /**
-     * Permits to transfer parameters into the import context.
+     * Permits transferring parameters into the import context.
      *
      * @param context        the context to enrich. This will be transferred to the underlying {@link Importer} and
      *                       {@link sirius.biz.importer.ImportHandler import handlers}
@@ -90,7 +90,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     protected abstract Class<? extends BaseEntity<?>> getImportType();
 
     /**
-     * Adds the possibility to enhance a dicitonary during the setup of the job
+     * Adds the possibility to enhance a dictionary during the setup of the job
      *
      * @param importer   the current importer which can be asked to provide a dictionary for an entity
      * @param dictionary the dictionary to enhance
