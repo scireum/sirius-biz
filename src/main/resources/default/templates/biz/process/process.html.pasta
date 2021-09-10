@@ -66,7 +66,7 @@
                              data-cycle="@process.getStartedAsString() - @process.getCompletedAsString()">
                             @toSpokenDate(process.getStarted())
                             <i:if test="isFilled(process.getRuntimeAsString())">
-                            (@process.getRuntimeAsString())
+                                (@process.getRuntimeAsString())
                             </i:if>
                         </div>
                     </t:iconInlineInfo>
