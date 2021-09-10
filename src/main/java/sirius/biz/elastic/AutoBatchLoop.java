@@ -109,6 +109,7 @@ public class AutoBatchLoop extends BackgroundLoop {
     @Override
     protected String doWork() throws Exception {
         if (entities.isEmpty()) {
+            signalBatchRun();
             return null;
         }
 
@@ -143,6 +144,12 @@ public class AutoBatchLoop extends BackgroundLoop {
             frozenUntil = LocalDateTime.now().plusSeconds(10);
         }
 
+        signalBatchRun();
+
+        return entitiesProcessed;
+    }
+
+    private void signalBatchRun() {
         // Signal all waiting threads, that all entities from within the queue have been flushed...
         signalLock.lock();
         try {
@@ -150,7 +157,5 @@ public class AutoBatchLoop extends BackgroundLoop {
         } finally {
             signalLock.unlock();
         }
-
-        return entitiesProcessed;
     }
 }
