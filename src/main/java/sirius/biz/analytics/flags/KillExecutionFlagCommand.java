@@ -29,7 +29,7 @@ public class KillExecutionFlagCommand implements Command {
     @Override
     public void execute(Output output, String... args) throws Exception {
         if (executionFlags == null) {
-            output.line("No ExecutionFlags provide enabled...");
+            output.line("No ExecutionFlags enabled...");
             return;
         }
 
