@@ -72,6 +72,17 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     /**
+     * Returns the standard version of the {@link EntityImportJob#IMPORT_MODE_PARAMETER}.
+     * <p>
+     * Override this method if this parameter must be customized for specific imports.
+     *
+     * @return the parameter used to control {@link ImportMode import modes}
+     */
+    protected Parameter<ImportMode> createImportModeParameter() {
+        return EntityImportJob.IMPORT_MODE_PARAMETER;
+    }
+
+    /**
      * Returns the main type being imported by this job.
      *
      * @return the type of entities being imported
@@ -99,6 +110,6 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
-        parameterCollector.accept(EntityImportJob.IMPORT_MODE_PARAMETER);
+        parameterCollector.accept(createImportModeParameter());
     }
 }
