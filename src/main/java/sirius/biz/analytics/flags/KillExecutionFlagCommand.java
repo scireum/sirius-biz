@@ -9,6 +9,7 @@
 package sirius.biz.analytics.flags;
 
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Register;
 import sirius.kernel.health.console.Command;
 
 import javax.annotation.Nonnull;
@@ -18,6 +19,7 @@ import java.time.Period;
 /**
  * Permits to kill an execution flag manually.
  */
+@Register
 public class KillExecutionFlagCommand implements Command {
 
     @Part
@@ -37,6 +39,7 @@ public class KillExecutionFlagCommand implements Command {
         }
 
         executionFlags.storeExecutionFlag(args[0], args[1], null, Period.ZERO);
+        output.line("The flag has been removed successfully.");
     }
 
     @Override
