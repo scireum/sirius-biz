@@ -53,9 +53,7 @@
             <t:iconInlineInfo icon="fa fa-user">
                 <t:smartValue type="user-account" payload="@process.getUserId()" label="@process.getUserName()"/>
                 <i:if test="isFilled(process.getTenantId()) && user().getTenantId() != process.getTenantId()">
-                    (
-                    <t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()"/>
-                    )
+                    (<t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()"/>)
                 </i:if>
             </t:iconInlineInfo>
             <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
@@ -66,7 +64,10 @@
                     <t:iconInlineInfo icon="fa fa-clock">
                         <div class="cycle-js link"
                              data-cycle="@process.getStartedAsString() - @process.getCompletedAsString()">
-                            @toSpokenDate(process.getStarted()) (@process.getRuntimeAsString())
+                            @toSpokenDate(process.getStarted())
+                            <i:if test="isFilled(process.getRuntimeAsString())">
+                            (@process.getRuntimeAsString())
+                            </i:if>
                         </div>
                     </t:iconInlineInfo>
                 </i:else>
