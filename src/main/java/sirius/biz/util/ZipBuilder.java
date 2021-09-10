@@ -26,7 +26,7 @@ import java.util.zip.ZipOutputStream;
  * Provides a helper class which generates one or more ZIP archives for the given files.
  * <p>
  * Multiple files are generated if {@link #withMaxZipFileSize(long)} is used to specify an upper file size limit. The
- * supllier is provided which each generated file and must {@link FileHandle#close()} each received data so that
+ * supplier is provided which each generated file and must {@link FileHandle#close()} each received data so that
  * temporary data is released.
  * <p>
  * Also {@link #close()} has to be invoked to ensure that a valid and complete zip file is generated and sent
@@ -114,7 +114,7 @@ public class ZipBuilder implements Closeable {
      * @param path      the path to use when creating the ZIP entry
      * @param fileToAdd the file to add. Note that {@link FileHandle#close()} will not be invoked for the given
      *                  handle.
-     * @throws IOException in case of an IO error while reading or writing data. Note that once an IO error ocurrend,
+     * @throws IOException in case of an IO error while reading or writing data. Note that once an IO error occurred,
      *                     all subsequently emitted ZIP archives might be broken and should not be used. Still,
      *                     {@link FileHandle#close()} and {@link #close()} must be invoked to release all temporary
      *                     data.

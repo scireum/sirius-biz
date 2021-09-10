@@ -10,6 +10,7 @@ package sirius.biz.analytics.flags;
 
 import sirius.db.mixing.BaseEntity;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -85,7 +86,7 @@ public abstract class ExecutionFlags {
      */
     public void storeExecutionFlag(BaseEntity<?> reference,
                                    String flag,
-                                   LocalDateTime executionTimestamp,
+                                   @Nullable LocalDateTime executionTimestamp,
                                    Period storageDuration) {
         storeExecutionFlag(reference.getUniqueName(), flag, executionTimestamp, storageDuration);
     }
@@ -100,7 +101,7 @@ public abstract class ExecutionFlags {
      */
     public abstract void storeExecutionFlag(String reference,
                                             String flag,
-                                            LocalDateTime executionTimestamp,
+                                            @Nullable LocalDateTime executionTimestamp,
                                             Period storageDuration);
 
     /**

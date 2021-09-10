@@ -139,7 +139,7 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     private LineBasedExport createExport(ProcessContext processContext, ExportFileType type, String name)
             throws IOException {
-        String filename = Files.toSaneFileName(name) + "." + type.name().toLowerCase();
+        String filename = Files.toSaneFileName(name).orElse("export") + "." + type.name().toLowerCase();
         OutputStream outputStream = processContext.addFile(filename);
 
         processContext.log(ProcessLog.info()

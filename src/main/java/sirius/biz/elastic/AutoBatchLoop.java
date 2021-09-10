@@ -65,7 +65,7 @@ public class AutoBatchLoop extends BackgroundLoop {
      * Collects and bulk-inserts the entity in a separate thread.
      * <p>
      * Note that in a heavily overloaded system, the entity might be dropped in favor of not crashing the system.
-     * Therefore this must not be used for critical data or the return value of this call has to be observed
+     * Therefore, this must not be used for critical data or the return value of this call has to be observed
      * carefully.
      *
      * @param entity the entity to bulk-insert into Elasticsearch
@@ -109,6 +109,7 @@ public class AutoBatchLoop extends BackgroundLoop {
     @Override
     protected String doWork() throws Exception {
         if (entities.isEmpty()) {
+            signalBatchRun();
             return null;
         }
 
@@ -143,6 +144,12 @@ public class AutoBatchLoop extends BackgroundLoop {
             frozenUntil = LocalDateTime.now().plusSeconds(10);
         }
 
+        signalBatchRun();
+
+        return entitiesProcessed;
+    }
+
+    private void signalBatchRun() {
         // Signal all waiting threads, that all entities from within the queue have been flushed...
         signalLock.lock();
         try {
@@ -150,7 +157,5 @@ public class AutoBatchLoop extends BackgroundLoop {
         } finally {
             signalLock.unlock();
         }
-
-        return entitiesProcessed;
     }
 }
