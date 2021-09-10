@@ -1433,6 +1433,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
             if (Strings.isEmpty(path) && !url.getPath().equals(lastConnectedURL.getPath())) {
                 // We don't have a path yet but we followed redirects so we check the new URL
+                if (headRequest.getResponseCode() == 404 && lastConnectedURL.toString().contains("Ã")) {
+                    // the redirect header contained UTF-8 das was interpreted as ISO-8859-1, try to fix this
+                    lastConnectedURL =
+                            new URL(new String(lastConnectedURL.toString().getBytes(StandardCharsets.ISO_8859_1),
+                                               StandardCharsets.UTF_8));
+                }
                 path = parsePathFromUrl(lastConnectedURL, fileExtensionVerifier);
             }
 
