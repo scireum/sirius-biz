@@ -300,6 +300,16 @@ public interface ProcessContext extends TaskContextAdapter {
     OutputStream addFile(String filename) throws IOException;
 
     /**
+     * Adds a file to the process, which contains a ZIP archive with the data written into the {@link OutputStream}.
+     *
+     * @param zipArchiveName the name of the created ZIP archive
+     * @param filename       the name of the file within the archive
+     * @return an output stream to be supplied with the contents of the file
+     * @throws IOException in case of a local IO error
+     */
+    OutputStream addZipFile(String zipArchiveName, String filename) throws IOException;
+
+    /**
      * Executes the given task in parallel to the main thread of this process.
      * <p>
      * If no "work stealing" threads are available the main thread is blocked and the task is executed there.
