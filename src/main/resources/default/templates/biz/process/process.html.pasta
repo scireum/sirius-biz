@@ -141,7 +141,7 @@
 
         <i:render name="body"/>
     </t:sidebar>
-    ´
+
     <i:if test="process.shouldAutorefresh()">
         <script type="text/javascript">
             sirius.ready(function () {
