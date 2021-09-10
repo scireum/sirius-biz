@@ -65,7 +65,7 @@ public class AutoBatchLoop extends BackgroundLoop {
      * Collects and bulk-inserts the entity in a separate thread.
      * <p>
      * Note that in a heavily overloaded system, the entity might be dropped in favor of not crashing the system.
-     * Therefore this must not be used for critical data or the return value of this call has to be observed
+     * Therefore, this must not be used for critical data or the return value of this call has to be observed
      * carefully.
      *
      * @param entity the entity to bulk-insert into Elasticsearch
