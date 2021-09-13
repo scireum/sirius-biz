@@ -28,7 +28,7 @@ import sirius.web.security.UserContext;
 public class AuditLogController extends BizController {
 
     /**
-     * Names the permissions required to view the protocol.
+     * Names the permissions required to view the protocols of all users of the current tenant (not only those of the current user)
      */
     public static final String PERMISSION_AUDIT_LOGS = "permission-audit-logs";
 
