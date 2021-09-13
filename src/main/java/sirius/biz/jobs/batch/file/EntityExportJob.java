@@ -18,7 +18,6 @@ import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
-import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
@@ -340,12 +339,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     @SuppressWarnings("unchecked")
     private void fullExportWithGivenMapping() {
         process.log(ProcessLog.info().withNLSKey("EntityExport.fullExport"));
-        Q query = createFullExportQuery();
-        if (query instanceof SmartQuery) {
-            ((SmartQuery<?>) query).iterateBlockwiseAll(entity -> exportEntity((E) entity));
-        } else {
-            query.iterateAll(this::exportEntity);
-        }
+        createFullExportQuery().streamBlockwise().forEach(this::exportEntity);
     }
 
     protected void exportEntity(E entity) {
