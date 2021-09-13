@@ -244,11 +244,11 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             }
 
             entry.getRelatesTo().forEach(crossReference -> {
-                boolean rerefenceExists = elastic.select(KnowledgeBaseEntry.class)
+                boolean referenceExists = elastic.select(KnowledgeBaseEntry.class)
                                                  .eq(KnowledgeBaseEntry.ARTICLE_ID, crossReference)
                                                  .exists();
-                if (!rerefenceExists) {
-                    KnowledgeBase.LOG.WARN("The article %s (%s) contains a non-existent cross reference to: %s",
+                if (!referenceExists) {
+                    KnowledgeBase.LOG.WARN("The article %s (%s) contains a non-existent cross-reference to: %s",
                                            entry.getArticleId(),
                                            entry.getTitle(),
                                            crossReference);
