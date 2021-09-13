@@ -130,6 +130,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             entry.setTitle(context.getExtraBlock(BLOCK_TITLE));
             entry.setDescription(context.getExtraBlock(BLOCK_DESCRIPTION));
             entry.setRequiredPermissions(context.getExtraBlock(BLOCK_REQUIRED_PERMISSIONS));
+            entry.getRelatesTo().clear();
             Arrays.stream(context.getExtraBlock(BLOCK_CROSS_REFERENCES).split(","))
                   .map(String::trim)
                   .map(String::toUpperCase)
