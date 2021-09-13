@@ -66,6 +66,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
 
             return this;
         }
+
     }
 
     private boolean replaceOnImport;
@@ -84,10 +85,10 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Creates a new value builder which replaces all values currently present in the multi language string field.
+     * Creates a new value builder which replaces all values currently present in the multi-language string field.
      *
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
-     * a multi language string field.
+     * a multi-language string field.
      */
     public static MultiLanguageStringValue createReplacement() {
         return new MultiLanguageStringValue(true);
@@ -98,14 +99,14 @@ public class MultiLanguageStringHelper extends ImportHelper {
      *
      * @param fallbackValue the new fallback value to set
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
-     * a multi language string field.
+     * a multi-language string field.
      */
     public static MultiLanguageStringValue createReplacement(String fallbackValue) {
         return new MultiLanguageStringValue(true).withFallback(fallbackValue);
     }
 
     /**
-     * Creates a new value builder which enhances the underlying multi language string field.
+     * Creates a new value builder which enhances the underlying multi-language string field.
      *
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
      * a multi language string field.
@@ -119,7 +120,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
      *
      * @param fallbackValue the new fallback value to set
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
-     * a multi language string field.
+     * a multi-language string field.
      */
     public static MultiLanguageStringValue createUpdate(String fallbackValue) {
         return new MultiLanguageStringValue(false).withFallback(fallbackValue);
@@ -132,7 +133,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
      * @param lang  the language to store the text for
      * @param value the text value to store
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
-     * a multi language string field.
+     * a multi-language string field.
      */
     public static MultiLanguageStringValue createUpdate(String lang, String value) {
         return new MultiLanguageStringValue(false).withText(lang, value);
@@ -144,7 +145,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
      *
      * @param multiLanguageString the new {@link MultiLanguageString} to set
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
-     * a multi language string field.
+     * a multi-language string field.
      */
     public static MultiLanguageStringValue createUpdate(MultiLanguageString multiLanguageString) {
         MultiLanguageStringValue value = new MultiLanguageStringValue(false);
@@ -163,7 +164,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Keeps previous translations in multi language strings and only adds new ones during an import.
+     * Keeps previous translations in multi-language strings and only adds new ones during an import.
      *
      * @return the object itself for fluent calls
      */
@@ -173,7 +174,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Specifies the target language to use <b>for all fields</b> when importing or exporting strings from or to multi
+     * Specifies the target language to use <b>for all fields</b> when importing or exporting strings from or to multi-
      * language fields.
      * <p>
      * Note, if this is set, it will be used for all fields, even if these would have a <b>fallback</b> value to
@@ -189,7 +190,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
     /**
      * Specifies the target language to use <b>for fields without a fallback value</b>.
      * <p>
-     * Note that this language is only used, if multi language string field doesn't support default values. If no
+     * Note that this language is only used, if multi-language string field doesn't support default values. If no
      * explicit default language is specified, we use the current language of the user.
      *
      * @param defaultLanguage the language used for fields which do not accept a fallback value

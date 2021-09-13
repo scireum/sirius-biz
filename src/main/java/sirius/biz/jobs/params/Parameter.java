@@ -174,4 +174,12 @@ public class Parameter<V> extends Composable {
     public Class<? extends ParameterBuilder<?, ?>> getBuilderType() {
         return (Class<? extends ParameterBuilder<?, ?>>) delegate.getClass();
     }
+
+    /**
+     * Provides access to the underlying builder of this parameter.
+     * @return the builder which was used for this parameter
+     */
+    public ParameterBuilder<?, ?> getBuilder() {
+        return delegate;
+    }
 }
