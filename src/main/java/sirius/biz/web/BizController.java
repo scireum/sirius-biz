@@ -336,7 +336,13 @@ public class BizController extends BasicController {
                 // If the parameter is not present in the request we just skip it to prevent resetting the field to null
                 return true;
             }
-            Value parameterValue = webContext.get(propertyName);
+            Value parameterValue = webContext.get(propertyName).replaceIfEmpty(() -> {
+                if (webContext.hasParameter(propertyName + CHECKBOX_PRESENCE_MARKER)) {
+                    // If there is no value but a checkbox presence marker we have a unchecked checkbox - set value to false
+                    return "false";
+                }
+                return "";
+            });
             try {
                 property.parseValues(entity,
                                      Values.of(parameterValue.get(List.class,
