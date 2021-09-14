@@ -331,9 +331,17 @@ public class BizController extends BasicController {
             return ((ComplexLoadProperty) property).loadFromWebContext(webContext, entity);
         } else {
             String propertyName = property.getName();
-            if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
-                                                                                   + CHECKBOX_PRESENCE_MARKER)) {
-                // If the parameter is not present in the request we just skip it to prevent resetting the field to null
+            if (!webContext.hasParameter(propertyName)) {
+                // If the parameter is not present, it might just be an unchecked marker.
+                if (webContext.hasParameter(propertyName + CHECKBOX_PRESENCE_MARKER)) {
+                    // If it _is_ an unchecked marker, we set the property to false.
+                    // In theory, it would make more sense to handle this in BooleanProperty#parseValue,
+                    // but over there we cannot check easily whether the marker is present or not.
+                    property.setValue(entity, false);
+                }
+                // In any case, this property was now sufficiently handled. If the property is simply not present in
+                // this request, we really want to avoid setting the property back to its default, because it might
+                // already have a meaningful value
                 return true;
             }
             Value parameterValue = webContext.get(propertyName);
