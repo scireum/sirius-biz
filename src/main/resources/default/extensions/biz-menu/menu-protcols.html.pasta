@@ -4,7 +4,7 @@
 <i:switch test="@point">
     <i:block name="user">
         <w:menuSection>
-            <w:menuItem titleKey="AuditLogEntry.plural" url="/audit-log" framework="biz.protocols"/>
+            <w:menuItem titleKey="AuditLogEntry.plural" url="/audit-log" permission="permission-view-audit-log" framework="biz.protocols"/>
         </w:menuSection>
     </i:block>
     <i:block name="system">

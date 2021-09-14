@@ -25,7 +25,8 @@
                              icon="/images/icons/ps.png"
                              activeIcon="/images/icons/ps-notif.png"
                              active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
-                             link="/ps"/>
+                             link="/ps"
+                             permission="permission-view-processes"/>
 
             <w:menuImageDropdownItem
                     icon="@user().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/user_avatar_d.png')"

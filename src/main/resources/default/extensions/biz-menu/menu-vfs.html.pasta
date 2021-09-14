@@ -4,7 +4,7 @@
 <i:switch test="@point">
     <i:block name="settings">
         <w:menuSection>
-            <w:menuItem titleKey="VFSController.root" url="/fs"/>
+            <w:menuItem titleKey="VFSController.root" url="/fs" permission="permission-view-files"/>
         </w:menuSection>
     </i:block>
 </i:switch>
