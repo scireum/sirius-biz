@@ -24,6 +24,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.health.Exceptions;
@@ -1345,7 +1346,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @param url                   the url to fetch
      * @param mode                  determines under which conditions the data from the given URL should be fetched
      * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
-     *                              ".php" or the like as effective file name.
+     *                              ".php" or the like as effective file name. When in doubt, use
+     *                              {@link #notServerSidedScripting(String)} to at least exclude common server-sided
+     *                              scripting languages like PHP.
      * @return the file which has been resolved (and downloaded if necessary) along with a flag which indicates if an
      * update (download) has been performed
      * @throws HandledException in case of an any error during the download (or if the effective file path cannot be
@@ -1525,6 +1528,27 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             Streams.exhaust(request.getInput());
             return Tuple.create(file, false);
         }
+    }
+
+    @ConfigValue("storage.layer3.serverSidedScriptingExtensions")
+    private static List<String> serverSidedScriptingExtensions;
+
+    /**
+     * Ensures that the given file-extension is present, but doesn't belong to a list of known scripting languages
+     * like e.g. PHP.
+     *
+     * @param fileExtension the file extension to check
+     * @return <tt>true</tt> if a file extension is present which doesn't belong to a known server sided scripting
+     * language, <tt>false otherwise</tt>
+     */
+    public static boolean notServerSidedScripting(String fileExtension) {
+        if (Strings.isEmpty(fileExtension)) {
+            return false;
+        }
+
+        String effectiveExtension = fileExtension.toLowerCase();
+
+        return !serverSidedScriptingExtensions.contains(effectiveExtension);
     }
 
     @Override
