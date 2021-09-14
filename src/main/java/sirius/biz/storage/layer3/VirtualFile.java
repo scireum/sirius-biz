@@ -1539,7 +1539,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      *
      * @param fileExtension the file extension to check
      * @return <tt>true</tt> if a file extension is present which doesn't belong to a known server sided scripting
-     * language, <tt>false otherwise</tt>
+     * language, <tt>false</tt> otherwise.
      */
     public static boolean notServerSidedScripting(String fileExtension) {
         if (Strings.isEmpty(fileExtension)) {
