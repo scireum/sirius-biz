@@ -130,6 +130,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             entry.setTitle(context.getExtraBlock(BLOCK_TITLE));
             entry.setDescription(context.getExtraBlock(BLOCK_DESCRIPTION));
             entry.setRequiredPermissions(context.getExtraBlock(BLOCK_REQUIRED_PERMISSIONS));
+            entry.getRelatesTo().clear();
             Arrays.stream(context.getExtraBlock(BLOCK_CROSS_REFERENCES).split(","))
                   .map(String::trim)
                   .map(String::toUpperCase)
@@ -243,11 +244,11 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             }
 
             entry.getRelatesTo().forEach(crossReference -> {
-                boolean rerefenceExists = elastic.select(KnowledgeBaseEntry.class)
+                boolean referenceExists = elastic.select(KnowledgeBaseEntry.class)
                                                  .eq(KnowledgeBaseEntry.ARTICLE_ID, crossReference)
                                                  .exists();
-                if (!rerefenceExists) {
-                    KnowledgeBase.LOG.WARN("The article %s (%s) contains a non-existent cross reference to: %s",
+                if (!referenceExists) {
+                    KnowledgeBase.LOG.WARN("The article %s (%s) contains a non-existent cross-reference to: %s",
                                            entry.getArticleId(),
                                            entry.getTitle(),
                                            crossReference);

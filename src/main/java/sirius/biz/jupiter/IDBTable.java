@@ -307,7 +307,7 @@ public class IDBTable {
 
         @Override
         public int characteristics() {
-            return Spliterator.NONNULL & Spliterator.IMMUTABLE;
+            return Spliterator.NONNULL | Spliterator.IMMUTABLE;
         }
 
         @Override

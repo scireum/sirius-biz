@@ -10,7 +10,6 @@ package sirius.biz.jobs.batch.entity;
 
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.process.ProcessContext;
-import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
@@ -45,15 +44,9 @@ public abstract class EntityBatchJob<E extends BaseEntity<?>, Q extends Query<Q,
         this.descriptor = mixing.getDescriptor(type);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void execute() throws Exception {
-        Q query = createQuery();
-        if (query instanceof SmartQuery) {
-            ((SmartQuery<?>) query).iterateBlockwiseAll(entity -> handleEntity((E) entity));
-        } else {
-            query.iterateAll(this::handleEntity);
-        }
+        createQuery().streamBlockwise().forEach(this::handleEntity);
     }
 
     private void handleEntity(E entity) {
