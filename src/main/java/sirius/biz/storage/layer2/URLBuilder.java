@@ -526,7 +526,7 @@ public class URLBuilder {
         String effectiveFileName = determineFilename();
         String effectiveFileExtension = determineVariantFileExtension().orElse(null);
         if (Strings.isFilled(effectiveFileExtension)) {
-            return Files.getFilenameWithoutExtension(effectiveFileName) + effectiveFileExtension;
+            return Files.getFilenameWithoutExtension(effectiveFileName) + "." + effectiveFileExtension;
         } else {
             return effectiveFileName;
         }
