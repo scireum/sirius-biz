@@ -1250,9 +1250,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found. We also return an indicator
      * if the key was read from the internal cache or if a lookup was required.
+     * @throws HandledException         if a requested variant cannot be computed
+     * @throws IllegalArgumentException if an unknown variant is requested
      */
-    @Nullable
-    protected Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
+    private Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
         String cacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
         if (Strings.isFilled(cachedPhysicalKey)) {
@@ -1284,6 +1285,28 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     protected String buildCacheLookupKey(String blobKey, String variantName) {
         return spaceName + "-" + blobKey + "-" + variantName;
+    }
+
+    /**
+     * Tries to resolve the physical key for the given blob and variant.
+     *
+     * @param blobKey     the blob for which the variant is to be resolved
+     * @param variantName the variant of the blob to find
+     * @return the physical key wrapped as optional or an empty optional if the appropriate variant wasn't found
+     * @see #resolvePhysicalKey(String, String, boolean)
+     */
+    protected Optional<String> tryResolvePhysicalKey(String blobKey, String variantName) {
+        try {
+            Tuple<String, Boolean> keyAndCacheFlag = resolvePhysicalKey(blobKey, variantName, true);
+            if (keyAndCacheFlag == null) {
+                return Optional.empty();
+            } else {
+                return Optional.ofNullable(keyAndCacheFlag.getFirst());
+            }
+        } catch (Exception e) {
+            handleFailedConversion(blobKey, variantName, e);
+            return Optional.empty();
+        }
     }
 
     /**

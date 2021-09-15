@@ -19,11 +19,14 @@ import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 
 /**
- * Provides a default route for "/", "/admin" and "/dashboard" as these are the common entry points of the
+ * Provides a default route for "/admin" and "/system/dashboard" as these are the common entry points of the
  * "backend" which is based on the Tycho UI.
  * <p>
  * Note that we provide low priorities for each route, so that the application can easily overwrite each route if
- * needed.
+ * needed. Also note, that sirius-web will redirect "/" and "/dashboard" to "/system/dashboard" if no other
+ * controller or dispatcher handles these. We use this sort of complex approach here, to let the applications
+ * decide which URIs are handled by themselves (and used for other purposes) and which are used for the main
+ * entrypoint of the backed.
  */
 @Register
 public class DashboardController extends BizController {
@@ -45,12 +48,12 @@ public class DashboardController extends BizController {
     }
 
     /**
-     * Provides an alternative entry point via "/dashboard".
+     * Provides an alternative entry point via "/system/dashboard".
      *
      * @param webContext the request to respond to
      */
     @LoginRequired
-    @Routed(value = "/dashboard", priority = 999)
+    @Routed(value = "/system/dashboard", priority = 999)
     public void dashboard(WebContext webContext) {
         admin(webContext);
     }
