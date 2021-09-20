@@ -1375,7 +1375,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             String path = parsePathFromUrl(url, fileExtensionVerifier);
             if (Strings.isFilled(path)) {
                 VirtualFile file = resolve(path);
-                return Tuple.create(file, file.loadFromUrl(url, mode));
+                return Tuple.create(file, file.performLoadFromUrl(url, mode));
             }
 
             if (mode == FetchFromUrlMode.NEVER_FETCH) {
@@ -1456,7 +1456,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                     || !file.exists()
                     || mode == FetchFromUrlMode.ALWAYS_FETCH
                     || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-                    return Tuple.create(file, file.loadFromUrl(lastConnectedURL, mode));
+                    return Tuple.create(file, file.performLoadFromUrl(lastConnectedURL, mode));
                 } else {
                     return Tuple.create(file, false);
                 }
