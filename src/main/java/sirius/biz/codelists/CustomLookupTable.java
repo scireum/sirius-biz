@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists;
 
+import com.rometools.utils.Strings;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Value;
 import sirius.kernel.settings.Extension;
@@ -117,5 +118,15 @@ class CustomLookupTable extends LookupTable {
     protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
         return Stream.concat(customTable.performQuery(lang, lookupPath, lookupValue),
                              baseTable.performQuery(lang, lookupPath, lookupValue));
+    }
+
+    @Override
+    public String getTitle() {
+        return extension.getId().equals(super.getTitle()) ? baseTable.getTitle() : super.getTitle();
+    }
+
+    @Override
+    public String getDescription() {
+        return Strings.isEmpty(super.getDescription()) ? baseTable.getDescription() : super.getDescription();
     }
 }
