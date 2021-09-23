@@ -15,6 +15,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
@@ -153,7 +154,11 @@ class IDBFilteredLookupTable extends LookupTable {
 
     @Override
     public String getTitle() {
-        return extension.getId().equals(super.getTitle()) ? baseTable.getTitle() : super.getTitle();
+        String title = super.getTitle();
+        if (extension.getId().equals(title)) {
+            return NLS.getIfExists("LookupTable." + baseTable.extension.getId(), null).orElse(extension.getId());
+        }
+        return title;
     }
 
     @Override
