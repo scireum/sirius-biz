@@ -8,10 +8,10 @@
 
 package sirius.biz.codelists;
 
-import com.rometools.utils.Strings;
 import sirius.biz.jupiter.IDBSet;
 import sirius.biz.jupiter.Jupiter;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
