@@ -695,7 +695,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected List<? extends BlobVariant> fetchVariants(SQLBlob blob) {
         return oma.select(SQLVariant.class)
                   .eq(SQLVariant.SOURCE_BLOB, blob)
-                  .ne(SQLVariant.PHYSICAL_OBJECT_KEY, null)
                   .orderAsc(SQLVariant.VARIANT_NAME)
                   .queryList();
     }
