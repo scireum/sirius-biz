@@ -56,7 +56,7 @@
                     <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="logs.getItems()">
                         <tr>
                             <td class="left-border border-sirius-@log.getRowColor()">
-                                <div class="overflow-hidden text-monospace text-small text-break">
+                                <div class="overflow-hidden text-monospace text-small text-break whitespace-pre-line">
                                     @log.getMessage()
                                 </div>
                                 <div class="text-small text-muted mt-2">
