@@ -624,7 +624,6 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     protected List<? extends BlobVariant> fetchVariants(MongoBlob blob) {
         return mango.select(MongoVariant.class)
                     .eq(MongoVariant.BLOB, blob)
-                    .ne(MongoVariant.PHYSICAL_OBJECT_KEY, null)
                     .orderAsc(MongoVariant.VARIANT_NAME)
                     .queryList();
     }
