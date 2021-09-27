@@ -21,6 +21,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
+import sirius.db.mixing.properties.BooleanProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.db.util.BaseEntityCache;
@@ -337,7 +338,8 @@ public class BizController extends BasicController {
                 return true;
             }
             Value parameterValue = webContext.get(propertyName).replaceIfEmpty(() -> {
-                if (webContext.hasParameter(propertyName + CHECKBOX_PRESENCE_MARKER)) {
+                if (property instanceof BooleanProperty && webContext.hasParameter(propertyName
+                                                                                   + CHECKBOX_PRESENCE_MARKER)) {
                     // If there is no value but a checkbox presence marker we have a unchecked checkbox - set value to false
                     return "false";
                 }
