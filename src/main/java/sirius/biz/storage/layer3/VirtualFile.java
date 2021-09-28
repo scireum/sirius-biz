@@ -23,6 +23,7 @@ import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.health.Exceptions;
@@ -1345,7 +1346,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @param url                   the url to fetch
      * @param mode                  determines under which conditions the data from the given URL should be fetched
      * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
-     *                              ".php" or the like as effective file name.
+     *                              ".php" or the like as effective file name. When in doubt, use
+     *                              {@link #notServerSidedScripting(String)} to at least exclude common server-sided
+     *                              scripting languages like PHP.
      * @return the file which has been resolved (and downloaded if necessary) along with a flag which indicates if an
      * update (download) has been performed
      * @throws HandledException in case of an any error during the download (or if the effective file path cannot be
@@ -1372,7 +1375,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             String path = parsePathFromUrl(url, fileExtensionVerifier);
             if (Strings.isFilled(path)) {
                 VirtualFile file = resolve(path);
-                return Tuple.create(file, file.loadFromUrl(url, mode));
+                return Tuple.create(file, file.performLoadFromUrl(url, mode));
             }
 
             if (mode == FetchFromUrlMode.NEVER_FETCH) {
@@ -1434,6 +1437,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
             if (Strings.isEmpty(path) && !url.getPath().equals(lastConnectedURL.getPath())) {
                 // We don't have a path yet but we followed redirects so we check the new URL
+                if (headRequest.getResponseCode() == HttpResponseStatus.NOT_FOUND.code() && lastConnectedURL.toString()
+                                                                                                            .contains(
+                                                                                                                    "Ã")) {
+                    // We followed a redirect header in UTF-8 that was interpreted as ISO-8859-1, indicated by 'Ã' in the url
+                    // as the starting byte of two byte characters in UTF-8 will always be interpreted as 'Ã' in ISO-8859-1
+                    lastConnectedURL =
+                            new URL(new String(lastConnectedURL.toString().getBytes(StandardCharsets.ISO_8859_1),
+                                               StandardCharsets.UTF_8));
+                }
                 path = parsePathFromUrl(lastConnectedURL, fileExtensionVerifier);
             }
 
@@ -1445,7 +1457,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                     || !file.exists()
                     || mode == FetchFromUrlMode.ALWAYS_FETCH
                     || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-                    return Tuple.create(file, file.loadFromUrl(lastConnectedURL, mode));
+                    return Tuple.create(file, file.performLoadFromUrl(lastConnectedURL, mode));
                 } else {
                     return Tuple.create(file, false);
                 }
@@ -1521,6 +1533,27 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             Streams.exhaust(request.getInput());
             return Tuple.create(file, false);
         }
+    }
+
+    @ConfigValue("storage.layer3.serverSidedScriptingExtensions")
+    private static List<String> serverSidedScriptingExtensions;
+
+    /**
+     * Ensures that the given file-extension is present, but doesn't belong to a list of known scripting languages
+     * like e.g. PHP.
+     *
+     * @param fileExtension the file extension to check
+     * @return <tt>true</tt> if a file extension is present which doesn't belong to a known server sided scripting
+     * language, <tt>false</tt> otherwise.
+     */
+    public static boolean notServerSidedScripting(String fileExtension) {
+        if (Strings.isEmpty(fileExtension)) {
+            return false;
+        }
+
+        String effectiveExtension = fileExtension.toLowerCase();
+
+        return !serverSidedScriptingExtensions.contains(effectiveExtension);
     }
 
     @Override

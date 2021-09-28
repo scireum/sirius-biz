@@ -624,7 +624,6 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     protected List<? extends BlobVariant> fetchVariants(MongoBlob blob) {
         return mango.select(MongoVariant.class)
                     .eq(MongoVariant.BLOB, blob)
-                    .ne(MongoVariant.PHYSICAL_OBJECT_KEY, null)
                     .orderAsc(MongoVariant.VARIANT_NAME)
                     .queryList();
     }
@@ -688,23 +687,29 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected void markConversionFailure(MongoVariant variant) {
-        variant.setQueuedForConversion(false);
-        mango.update(variant);
+    protected void markConversionFailure(MongoVariant variant, ConversionProcess conversionProcess) {
+        mongo.update()
+             .set(MongoVariant.QUEUED_FOR_CONVERSION, false)
+             .set(MongoVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+             .set(MongoVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+             .set(MongoVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+             .where(MongoVariant.ID, variant.getId())
+             .executeForOne(MongoVariant.class);
     }
 
     @Override
     protected void markConversionSuccess(MongoVariant variant,
                                          String physicalKey,
                                          ConversionProcess conversionProcess) {
-        variant.setQueuedForConversion(false);
-        variant.setSize(conversionProcess.getResultFileHandle().getFile().length());
-        variant.setPhysicalObjectKey(physicalKey);
-        variant.setConversionDuration(conversionProcess.getConversionDuration());
-        variant.setQueueDuration(conversionProcess.getQueueDuration());
-        variant.setTransferDuration(conversionProcess.getTransferDuration());
-
-        mango.update(variant);
+        mongo.update()
+             .set(MongoVariant.PHYSICAL_OBJECT_KEY, physicalKey)
+             .set(MongoVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
+             .set(MongoVariant.QUEUED_FOR_CONVERSION, false)
+             .set(MongoVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+             .set(MongoVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+             .set(MongoVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+             .where(MongoVariant.ID, variant.getId())
+             .executeForOne(MongoVariant.class);
     }
 
     @Override

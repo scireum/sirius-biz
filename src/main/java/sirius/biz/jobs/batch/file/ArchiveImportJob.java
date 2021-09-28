@@ -119,10 +119,10 @@ public abstract class ArchiveImportJob extends FileImportJob {
                             .set("fileName", fileName)
                             .handle();
         } else {
-            process.log(ProcessLog.warn()
+            process.log(ProcessLog.info()
                                   .withNLSKey("ArchiveImportJob.errorMsg.optionalFileMissing")
                                   .withContext("fileName", fileName)
-                                  .withMessageType(fileName));
+                                  .withMessageType("$ArchiveImportJob.errorMsg.optionalFileMissing.messageType"));
         }
     }
 

@@ -11,9 +11,11 @@ package sirius.biz.codelists;
 import sirius.biz.jupiter.IDBSet;
 import sirius.biz.jupiter.Jupiter;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
@@ -148,5 +150,19 @@ class IDBFilteredLookupTable extends LookupTable {
                       .handle();
             return 0;
         }
+    }
+
+    @Override
+    public String getTitle() {
+        String title = super.getTitle();
+        if (extension.getId().equals(title)) {
+            return NLS.getIfExists("LookupTable." + baseTable.extension.getId(), null).orElse(extension.getId());
+        }
+        return title;
+    }
+
+    @Override
+    public String getDescription() {
+        return Strings.isEmpty(super.getDescription()) ? baseTable.getDescription() : super.getDescription();
     }
 }

@@ -7,7 +7,7 @@
             <t:dropdownItem labelKey="JobsController.jobs" url="/jobs"
                             permission="permission-execute-jobs"
                             framework="biz.jobs"/>
-            <t:dropdownItem labelKey="Process.plural" url="/ps"
+            <t:dropdownItem labelKey="Process.plural" url="/ps" permission="permission-view-processes"
                             framework="biz.processes"/>
         </t:dropdownSection>
     </i:block>

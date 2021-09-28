@@ -9,11 +9,13 @@
 package sirius.biz.storage.layer2.jdbc;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.BaseEntityRef;
@@ -29,6 +31,7 @@ import java.util.Optional;
  * Note that all non-trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
+@Index(name = "physical_key_lookup", columns = {"sourceBlob", "variantName"})
 public class SQLVariant extends SQLEntity implements BlobVariant {
 
     /**
@@ -106,11 +109,11 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     @AfterDelete
     protected void onDelete() {
+        SQLBlob sqlBlob = sourceBlob.fetchValue();
         if (Strings.isFilled(physicalObjectKey)) {
-            SQLBlob sqlBlob = sourceBlob.fetchValue();
             sqlBlob.getStorageSpace().getPhysicalSpace().delete(physicalObjectKey);
-            sqlBlob.getStorageSpace().purgeVariantFromCache(sqlBlob, variantName);
         }
+        sqlBlob.getStorageSpace().purgeVariantFromCache(sqlBlob, variantName);
     }
 
     @Override
@@ -121,6 +124,11 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
     @Override
     public Optional<FileHandle> download() {
         return Optional.empty();
+    }
+
+    @Override
+    public boolean isFailed() {
+        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
     }
 
     @Override
@@ -189,6 +197,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
         this.physicalObjectKey = physicalObjectKey;
     }
 
+    @Override
     public long getConversionDuration() {
         return conversionDuration;
     }
@@ -197,6 +206,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
         this.conversionDuration = conversionDuration;
     }
 
+    @Override
     public long getQueueDuration() {
         return queueDuration;
     }
@@ -205,6 +215,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
         this.queueDuration = queueDuration;
     }
 
+    @Override
     public long getTransferDuration() {
         return transferDuration;
     }

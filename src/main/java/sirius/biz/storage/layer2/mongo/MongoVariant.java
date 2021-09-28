@@ -9,11 +9,14 @@
 package sirius.biz.storage.layer2.mongo;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
@@ -28,6 +31,9 @@ import java.util.Optional;
  * Note that all non-trivial methods delegate to the associated {@link MongoBlobStorage}.
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
+@Index(name = "physical_key_lookup",
+        columns = {"blob", "variantName"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoVariant extends MongoEntity implements BlobVariant {
 
     /**
@@ -101,11 +107,11 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     @AfterDelete
     protected void onDelete() {
+        MongoBlob mongoBlob = blob.fetchValue();
         if (Strings.isFilled(physicalObjectKey)) {
-            MongoBlob mongoBlob = blob.fetchValue();
             mongoBlob.getStorageSpace().getPhysicalSpace().delete(physicalObjectKey);
-            mongoBlob.getStorageSpace().purgeVariantFromCache(mongoBlob, variantName);
         }
+        mongoBlob.getStorageSpace().purgeVariantFromCache(mongoBlob, variantName);
     }
 
     @Override
@@ -116,6 +122,11 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
     @Override
     public Optional<FileHandle> download() {
         return Optional.empty();
+    }
+
+    @Override
+    public boolean isFailed() {
+        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
     }
 
     @Override
@@ -184,6 +195,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
         this.physicalObjectKey = physicalObjectKey;
     }
 
+    @Override
     public long getConversionDuration() {
         return conversionDuration;
     }
@@ -192,6 +204,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
         this.conversionDuration = conversionDuration;
     }
 
+    @Override
     public long getQueueDuration() {
         return queueDuration;
     }
@@ -200,6 +213,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
         this.queueDuration = queueDuration;
     }
 
+    @Override
     public long getTransferDuration() {
         return transferDuration;
     }

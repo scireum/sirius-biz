@@ -46,7 +46,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     /**
-     * Permits to transfer parameters into the import context.
+     * Permits transferring parameters into the import context.
      *
      * @param context        the context to enrich. This will be transferred to the underlying {@link Importer} and
      *                       {@link sirius.biz.importer.ImportHandler import handlers}
@@ -72,6 +72,17 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     /**
+     * Returns the standard version of the {@link EntityImportJob#IMPORT_MODE_PARAMETER}.
+     * <p>
+     * Override this method if this parameter must be customized for specific imports.
+     *
+     * @return the parameter used to control {@link ImportMode import modes}
+     */
+    protected Parameter<ImportMode> createImportModeParameter() {
+        return EntityImportJob.IMPORT_MODE_PARAMETER;
+    }
+
+    /**
      * Returns the main type being imported by this job.
      *
      * @return the type of entities being imported
@@ -79,7 +90,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     protected abstract Class<? extends BaseEntity<?>> getImportType();
 
     /**
-     * Adds the possibility to enhance a dicitonary during the setup of the job
+     * Adds the possibility to enhance a dictionary during the setup of the job
      *
      * @param importer   the current importer which can be asked to provide a dictionary for an entity
      * @param dictionary the dictionary to enhance
@@ -99,6 +110,6 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
-        parameterCollector.accept(EntityImportJob.IMPORT_MODE_PARAMETER);
+        parameterCollector.accept(createImportModeParameter());
     }
 }

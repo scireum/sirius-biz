@@ -1,0 +1,29 @@
+<i:arg type="sirius.biz.storage.layer2.URLBuilder" name="urlBuilder"/>
+<i:arg type="String" name="style" default=""
+       description="Determines the additional styles to apply. Most probably a height should be set here."/>
+<i:arg type="String" name="class" default="" description="Contains additional classes to apply."/>
+<i:arg type="boolean" name="skipEmpty" default="false"
+       description="If set to true, an empty blob will be skipped entirely, instead of rendering the fallback image."/>
+
+<i:pragma name="description">
+    Renders a BlobVariant image using the given URLBuilder. This will support waiting for conversions
+    (and show a spinner while waiting) and also handles missing images and errors gracefully.
+</i:pragma>
+
+<i:if test="!skipEmpty || urlBuilder.isFilled()">
+    <div class="d-flex flex-column align-items-center justify-content-center display-4 text-black-75 @class"
+         style="@style">
+        <i:if test="urlBuilder.isConversionExpected()">
+            <img class="lazy-image-js"
+                 style="max-width: 100%; max-height: 100%"
+                 src="@urlBuilder.getFallbackUri().orElse(sirius.biz.storage.layer2.URLBuilder.IMAGE_FALLBACK_URI)"
+                 data-src="@urlBuilder.buildImageURL()"/>
+            <i:else>
+                <img class="safe-image-js"
+                     style="max-width: 100%; max-height: 100%"
+                     data-fallback="@urlBuilder.getFallbackUri().orElse(sirius.biz.storage.layer2.URLBuilder.IMAGE_FALLBACK_URI)"
+                     src="@urlBuilder.buildImageURL()"/>
+            </i:else>
+        </i:if>
+    </div>
+</i:if>

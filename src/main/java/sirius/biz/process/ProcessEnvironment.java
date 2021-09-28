@@ -16,16 +16,19 @@ import sirius.biz.process.output.LogsProcessOutputType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
 import sirius.biz.process.output.TableProcessOutputType;
+import sirius.biz.storage.util.WatchableOutputStream;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.async.CombinedFuture;
 import sirius.kernel.async.Future;
 import sirius.kernel.async.Promise;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.UncloseableOutputStream;
 import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -37,8 +40,10 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -47,8 +52,12 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Provides the implementation for {@link ProcessContext}.
@@ -413,6 +422,30 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
+    @SuppressWarnings("java:S2095")
+    @Explain("The stream is closed in a finally-block within the callback")
+    public OutputStream addZipFile(String zipArchiveName, String filename) throws IOException {
+        File zipFile = Files.createTempFile("ZipBuilder", ".zip").toFile();
+        ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipFile));
+        zipOutputStream.putNextEntry(new ZipEntry(filename));
+
+        WatchableOutputStream outputStream = new WatchableOutputStream(new UncloseableOutputStream(zipOutputStream));
+        outputStream.getCompletionFuture().onSuccess(() -> {
+            try {
+                zipOutputStream.closeEntry();
+                zipOutputStream.close();
+                addFile(zipArchiveName, zipFile);
+            } catch (Exception e) {
+                throw Exceptions.handle(Log.BACKGROUND, e);
+            } finally {
+                sirius.kernel.commons.Files.delete(zipFile);
+            }
+        });
+
+        return outputStream;
+    }
+
+    @Override
     public TableOutput.ColumnBuilder addTable(String name, String label) {
         return new TableOutput.ColumnBuilder(this, name, label);
     }
@@ -452,5 +485,22 @@ class ProcessEnvironment implements ProcessContext {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean awaitFlushedLogs() {
+        return processes.awaitFlushedLogs(processId);
+    }
+
+    @Override
+    public Optional<ProcessOutput> fetchOutput(String outputName) {
+        return processes.fetchOutput(processId, outputName);
+    }
+
+    @Override
+    public void fetchOutputEntries(@Nullable String outputName,
+                                   BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
+                                   BiPredicate<List<String>, List<String>> columnsAndValues) {
+        processes.fetchOutputEntries(processId, outputName, columnsAndLabelsConsumer, columnsAndValues);
     }
 }

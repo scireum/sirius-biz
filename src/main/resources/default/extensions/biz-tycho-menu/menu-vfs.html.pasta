@@ -4,7 +4,7 @@
 <i:switch test="@point">
     <i:block name="settings">
         <t:dropdownSection>
-            <t:dropdownItem labelKey="VFSController.root" url="/fs"/>
+            <t:dropdownItem labelKey="VFSController.root" url="/fs" permission="permission-view-files"/>
         </t:dropdownSection>
     </i:block>
 </i:switch>
