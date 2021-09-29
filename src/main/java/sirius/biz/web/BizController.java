@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 /**
  * Base class for all controllers which operate on entities.
  * <p>
- * Provides glue logic for filling entites from {@link WebContext}s and for resolving entities for a given id.
+ * Provides glue logic for filling entities from {@link WebContext web contexts} and for resolving entities for a given id.
  */
 public class BizController extends BasicController {
 
