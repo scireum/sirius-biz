@@ -14,7 +14,7 @@ services:
     hostname: redis-jupiter
 
   mongo:
-    image: mongo:4.4.3
+    image: mongo:4.4.8
     ports:
       - "27017"
     hostname: mongo
