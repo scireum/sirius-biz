@@ -66,7 +66,7 @@ LookupTableInfo.prototype.ENTRY_TEMPLATE = '<td>' +
     '       {{#showCode}} ({{code}}){{/showCode}}' +
     '   </div>' +
     '   {{#source}}' +
-    '   <div class="text-small cursor-pointer toggle-source-link-js d-none"><span class="icon-js"><i class="fa fa-plus"></i></span> <a class="toggle-source" href="#"> Source</a></div>' +
+    '   <div class="text-small cursor-pointer toggle-source-link-js d-none"><span class="icon-js"><i class="fa fa-plus"></i></span> <a class="toggle-source-js" href="#"> Source</a></div>' +
     '   {{/source}}' +
     '</div>' +
     '{{#description}}<div class="text-small text-muted mt-2">{{description}}</div>{{/description}}' +
