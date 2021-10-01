@@ -665,8 +665,7 @@ public abstract class LookupTable {
                                              .stream()
                                              .filter(entry -> entry.getValue() instanceof JSONArray)
                                              .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((JSONArray) entry
-                                                                               .getValue())));
+                                                                       entry -> transformArrayToStringList((JSONArray) entry.getValue())));
         } else {
             return Collections.emptyMap();
         }
@@ -842,6 +841,7 @@ public abstract class LookupTable {
 
     public String getTitle() {
         return extension.get("title")
+                        .translate()
                         .asOptionalString()
                         .or(() -> NLS.getIfExists("LookupTable." + extension.getId(), null))
                         .orElse(extension.getId());
@@ -849,6 +849,7 @@ public abstract class LookupTable {
 
     public String getDescription() {
         return extension.get("description")
+                        .translate()
                         .asOptionalString()
                         .or(() -> NLS.getIfExists("LookupTable." + extension.getId() + ".description", null))
                         .orElse("");
