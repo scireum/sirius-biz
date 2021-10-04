@@ -32,6 +32,7 @@ import sirius.db.mixing.annotations.OnValidate;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
+import sirius.db.mongo.SortValue;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -100,6 +101,7 @@ public class TenantData extends Composite implements Journaled {
     @Autoloaded
     @AutoImport
     @PrefixSearchContent
+    @SortValue(order = 100)
     @Length(255)
     private String name;
 

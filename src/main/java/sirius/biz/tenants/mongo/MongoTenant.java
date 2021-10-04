@@ -22,6 +22,7 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
+import sirius.db.mongo.SortField;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
@@ -33,11 +34,12 @@ import java.util.TreeSet;
 import java.util.function.Consumer;
 
 /**
- * Reprensents the MongoDB implementation of {@link Tenant}.
+ * Represents the MongoDB implementation of {@link Tenant}.
  */
 @Framework(MongoTenants.FRAMEWORK_TENANTS_MONGO)
 @TranslationSource(Tenant.class)
 @Index(name = "index_prefixes", columns = "searchPrefixes", columnSettings = Mango.INDEX_ASCENDING)
+@Index(name = "index_sort", columns = "sortField_sortField", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoTenant extends MongoBizEntity implements Tenant<String> {
 
     /**
@@ -51,6 +53,9 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     private final TenantData tenantData = new TenantData(this);
 
     private final MongoPerformanceData performanceData = new MongoPerformanceData(this);
+
+    public static final Mapping SORT_FIELD = Mapping.named("sortField");
+    private final SortField sortField = new SortField(this);
 
     /**
      * Contains the effectively enabled features / permissions for this tenant.
@@ -120,5 +125,9 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     @Override
     public MongoPerformanceData getPerformanceData() {
         return performanceData;
+    }
+
+    public SortField getSortField() {
+        return sortField;
     }
 }
