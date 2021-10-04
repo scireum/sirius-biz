@@ -31,7 +31,6 @@ import sirius.web.controller.Message;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -78,14 +77,14 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     }
 
     @Override
-    public void emitSortValues(BiConsumer<Integer, String> sortValueConsumer) {
+    public void emitSortValues(Consumer<Object> sortValueConsumer) {
         tenants.fetchCachedTenant(getTenant()).ifPresent(tenant -> {
-            sortValueConsumer.accept(50, tenant.getTenantData().getName());
+            sortValueConsumer.accept(tenant.getTenantData().getName());
         });
 
-        sortValueConsumer.accept(100, getUserAccountData().getPerson().getLastname());
-        sortValueConsumer.accept(200, getUserAccountData().getPerson().getFirstname());
-        sortValueConsumer.accept(300, getUserAccountData().getLogin().getUsername());
+        sortValueConsumer.accept(getUserAccountData().getPerson().getLastname());
+        sortValueConsumer.accept(getUserAccountData().getPerson().getFirstname());
+        sortValueConsumer.accept(getUserAccountData().getLogin().getUsername());
     }
 
     @Override
