@@ -15,10 +15,13 @@ import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tycho.academy.OnboardingData;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
+import sirius.db.mongo.CustomSortValues;
 import sirius.db.mongo.Mango;
+import sirius.db.mongo.SortField;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.ValueHolder;
@@ -28,12 +31,13 @@ import sirius.web.controller.Message;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
  * Represents a user account which can log into the system.
  * <p>
- * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
+ * Several users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 @Framework(MongoTenants.FRAMEWORK_TENANTS_MONGO)
 @Index(name = "index_username",
@@ -42,7 +46,8 @@ import java.util.function.Consumer;
         unique = true)
 @TranslationSource(UserAccount.class)
 @Index(name = "index_prefixes", columns = "searchPrefixes", columnSettings = Mango.INDEX_ASCENDING)
-public class MongoUserAccount extends MongoTenantAware implements UserAccount<String, MongoTenant> {
+@Index(name = "index_sort", columns = "sortField_sortField", columnSettings = Mango.INDEX_ASCENDING)
+public class MongoUserAccount extends MongoTenantAware implements UserAccount<String, MongoTenant>, CustomSortValues {
 
     @Part
     @Nullable
@@ -52,6 +57,9 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     private final JournalData journal = new JournalData(this);
     private final MongoPerformanceData performanceData = new MongoPerformanceData(this);
     private final OnboardingData onboardingData = new OnboardingData(this);
+
+    public static final Mapping SORT_FIELD = Mapping.named("sortField");
+    private final SortField sortField = new SortField(this);
 
     @Transient
     private ValueHolder<String> userIcon;
@@ -67,6 +75,17 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
             tokenizer.accept(tenant.getTenantData().getName());
             tokenizer.accept(tenant.getTenantData().getAccountNumber());
         });
+    }
+
+    @Override
+    public void emitSortValues(BiConsumer<Integer, String> sortValueConsumer) {
+        tenants.fetchCachedTenant(getTenant()).ifPresent(tenant -> {
+            sortValueConsumer.accept(50, tenant.getTenantData().getName());
+        });
+
+        sortValueConsumer.accept(100, getUserAccountData().getPerson().getLastname());
+        sortValueConsumer.accept(200, getUserAccountData().getPerson().getFirstname());
+        sortValueConsumer.accept(300, getUserAccountData().getLogin().getUsername());
     }
 
     @Override
@@ -139,5 +158,9 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     @Override
     public OnboardingData getOnboardingData() {
         return onboardingData;
+    }
+
+    public SortField getSortField() {
+        return sortField;
     }
 }
