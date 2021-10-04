@@ -20,7 +20,7 @@ import java.util.List;
  * Invokes the provided method to tokenize words for the items in a {@link StringListProperty}.
  */
 @Register
-public class StringListPropertyTransformer implements Transformer<StringListProperty, PrefixSearchableContentConsumer> {
+public class StringListPropertyTransformer implements Transformer<StringListProperty, PrefixSearchableContentComputer> {
 
     @Override
     public Class<StringListProperty> getSourceClass() {
@@ -28,14 +28,14 @@ public class StringListPropertyTransformer implements Transformer<StringListProp
     }
 
     @Override
-    public Class<PrefixSearchableContentConsumer> getTargetClass() {
-        return PrefixSearchableContentConsumer.class;
+    public Class<PrefixSearchableContentComputer> getTargetClass() {
+        return PrefixSearchableContentComputer.class;
     }
 
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public PrefixSearchableContentConsumer make(@Nonnull StringListProperty source) {
+    public PrefixSearchableContentComputer make(@Nonnull StringListProperty source) {
         return (entity, consumer) -> {
             ((List<String>) source.getValue(entity)).forEach(consumer);
         };
