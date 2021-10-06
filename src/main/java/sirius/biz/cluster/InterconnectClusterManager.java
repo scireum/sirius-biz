@@ -26,6 +26,7 @@ import sirius.web.services.JSONCall;
 
 import javax.annotation.Nonnull;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -168,7 +169,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     private JSONObject callNode(String nodeName, String endpoint, String uri) {
         try {
-            JSONCall call = JSONCall.to(new URL(endpoint + uri));
+            JSONCall call = JSONCall.to(new URI(endpoint + uri));
 
             // Set short-lived timeouts as we do not want to block a cluster wide query if one node is down...
             call.getOutcall().setConnectTimeout(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS);
