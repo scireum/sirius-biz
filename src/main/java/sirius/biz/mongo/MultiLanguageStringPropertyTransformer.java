@@ -21,7 +21,7 @@ import java.util.Map;
  */
 @Register
 public class MultiLanguageStringPropertyTransformer
-        implements Transformer<MultiLanguageStringProperty, PrefixSearchableContentConsumer> {
+        implements Transformer<MultiLanguageStringProperty, PrefixSearchableContentComputer> {
 
     @Override
     public Class<MultiLanguageStringProperty> getSourceClass() {
@@ -29,14 +29,14 @@ public class MultiLanguageStringPropertyTransformer
     }
 
     @Override
-    public Class<PrefixSearchableContentConsumer> getTargetClass() {
-        return PrefixSearchableContentConsumer.class;
+    public Class<PrefixSearchableContentComputer> getTargetClass() {
+        return PrefixSearchableContentComputer.class;
     }
 
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public PrefixSearchableContentConsumer make(@Nonnull MultiLanguageStringProperty source) {
+    public PrefixSearchableContentComputer make(@Nonnull MultiLanguageStringProperty source) {
         return (entity, consumer) -> {
             ((Map<String, String>) source.getValue(entity)).forEach((key, value) -> {
                 consumer.accept(value);

@@ -20,6 +20,7 @@ import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
+import sirius.db.mongo.SortField;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
@@ -40,8 +41,8 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
     protected BasePageHelper<MongoTenant, ?, ?, ?> getTenantsAsPage(WebContext ctx) {
         MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(ctx,
                                                                          mango.select(MongoTenant.class)
-                                                                              .orderAsc(Tenant.TENANT_DATA.inner(
-                                                                                      TenantData.NAME)));
+                                                                              .orderAsc(MongoTenant.SORT_FIELD.inner(
+                                                                                      SortField.SORT_FIELD)));
         pageHelper.applyExtenders("/tenants");
         return pageHelper;
     }
@@ -86,8 +87,8 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
         if (currentTenant.getTenantData().isCanAccessParent()) {
             return baseQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT,
                                                                                                             currentTenant),
-                                                                                    QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA
-                                                                                                                    .inner(TenantData.PARENT_CAN_ACCESS),
+                                                                                    QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA.inner(
+                                                                                                                    TenantData.PARENT_CAN_ACCESS),
                                                                                                             true)),
                                                            QueryBuilder.FILTERS.eq(MongoTenant.ID,
                                                                                    currentTenant.getParent().getId())));

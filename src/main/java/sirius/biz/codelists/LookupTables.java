@@ -80,7 +80,8 @@ public class LookupTables {
                                                                         baseTable);
         // 3. return the (filtered) (custom) lookup table
         return filteredLookupTable.or(() -> customLookupTable)
-                                  .orElse(new IDBLookupTable(extension, jupiter.getDefault().idb().table(baseTable)));
+                                  .orElseGet(() -> new IDBLookupTable(extension,
+                                                                      jupiter.getDefault().idb().table(baseTable)));
     }
 
     private Optional<LookupTable> loadAsCustomTable(Extension extension, String customTable, String baseTable) {
