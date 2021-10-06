@@ -1292,7 +1292,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     private boolean loadFromOutcall(Outcall outcall) throws IOException {
-        HttpResponse<InputStream> response = outcall.callForInputStream();
+        HttpResponse<InputStream> response = outcall.getResponse();
 
         if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
             return false;
@@ -1421,15 +1421,13 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             headRequest.markAsHeadRequest();
             headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
 
-            HttpResponse<Void> response = headRequest.doCall(HttpResponse.BodyHandlers.discarding());
-
             String path = headRequest.parseFileNameFromContentDisposition()
                                      .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
                                      .orElse(null);
 
-            URI lastConnectedURL = response.request().uri();
-            if (response.statusCode() == 404 && !lastConnectedURL.equals(url) && lastConnectedURL.toString()
-                                                                                                 .contains("Ã")) {
+            URI lastConnectedURL = headRequest.getResponse().request().uri();
+            if (headRequest.getResponseCode() == 404 && !lastConnectedURL.equals(url) && lastConnectedURL.toString()
+                                                                                                         .contains("Ã")) {
                 // the redirect header contained UTF-8 das was interpreted as ISO-8859-1 , try to fix this
                 lastConnectedURL = new URI(new String(lastConnectedURL.toString().getBytes(StandardCharsets.ISO_8859_1),
                                                       StandardCharsets.UTF_8));
@@ -1443,7 +1441,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                     // We followed a redirect header in UTF-8 that was interpreted as ISO-8859-1, indicated by 'Ã' in the url
                     // as the starting byte of two byte characters in UTF-8 will always be interpreted as 'Ã' in ISO-8859-1
                     lastConnectedURL =
-                            new URL(new String(lastConnectedURL.toString().getBytes(StandardCharsets.ISO_8859_1),
+                            new URI(new String(lastConnectedURL.toString().getBytes(StandardCharsets.ISO_8859_1),
                                                StandardCharsets.UTF_8));
                 }
                 path = parsePathFromUrl(lastConnectedURL, fileExtensionVerifier);
@@ -1463,7 +1461,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 }
             }
 
-            if (!shouldRetryWithGet(response)) {
+            if (!shouldRetryWithGet(headRequest.getResponse())) {
                 throw createInvalidPathError(url);
             }
         } catch (HttpTimeoutException | URISyntaxException ex) {
@@ -1507,7 +1505,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         String path = request.parseFileNameFromContentDisposition().orElse(null);
         if (Strings.isEmpty(path)) {
             // Drain any content, the server sent, as we have no way of processing it...
-            Streams.exhaust(request.getInput());
+            Streams.exhaust(request.getResponse().body());
             throw createInvalidPathError(url);
         }
 
@@ -1515,7 +1513,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         if (exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
             // Drain any content, as the mode dictates not to update the file (which might require another upload,
             // so discarding the data is faster).
-            Streams.exhaust(request.getInput());
+            Streams.exhaust(request.getResponse().body());
             return Tuple.create(file, false);
         }
 
@@ -1530,7 +1528,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } else {
             // Drain any content, as the mode dictates not to update the file (which might require another upload,
             // so discarding the data is faster).
-            Streams.exhaust(request.getInput());
+            Streams.exhaust(request.getResponse().body());
             return Tuple.create(file, false);
         }
     }

@@ -32,7 +32,7 @@ public class RssFeedHelper {
     public SyndFeed processFeed(String feedUrl) {
         try {
             Outcall outcall = new Outcall(new URI(feedUrl));
-            return new SyndFeedInput().build(new StringReader(outcall.callForString().body()));
+            return new SyndFeedInput().build(new StringReader(outcall.getData()));
         } catch (Exception e) {
             Exceptions.handle(Log.APPLICATION, e);
             return new SyndFeedImpl();
