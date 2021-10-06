@@ -20,7 +20,7 @@ import java.util.Map;
  * Invokes the provided method to tokenize words for the key+value pairs in a {@link StringMapProperty}.
  */
 @Register
-public class StringMapPropertyTransformer implements Transformer<StringMapProperty, PrefixSearchableContentConsumer> {
+public class StringMapPropertyTransformer implements Transformer<StringMapProperty, PrefixSearchableContentComputer> {
 
     @Override
     public Class<StringMapProperty> getSourceClass() {
@@ -28,14 +28,14 @@ public class StringMapPropertyTransformer implements Transformer<StringMapProper
     }
 
     @Override
-    public Class<PrefixSearchableContentConsumer> getTargetClass() {
-        return PrefixSearchableContentConsumer.class;
+    public Class<PrefixSearchableContentComputer> getTargetClass() {
+        return PrefixSearchableContentComputer.class;
     }
 
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public PrefixSearchableContentConsumer make(@Nonnull StringMapProperty source) {
+    public PrefixSearchableContentComputer make(@Nonnull StringMapProperty source) {
         return (entity, consumer) -> {
             ((Map<String, String>) source.getValue(entity)).forEach((key, value) -> {
                 consumer.accept(key);
