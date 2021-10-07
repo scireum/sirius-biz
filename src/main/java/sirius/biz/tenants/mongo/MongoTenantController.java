@@ -9,6 +9,7 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
+import sirius.biz.mongo.SortField;
 import sirius.biz.packages.PackageData;
 import sirius.biz.packages.Packages;
 import sirius.biz.tenants.Tenant;
@@ -20,7 +21,6 @@ import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
-import sirius.db.mongo.SortField;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
@@ -87,8 +87,8 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
         if (currentTenant.getTenantData().isCanAccessParent()) {
             return baseQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT,
                                                                                                             currentTenant),
-                                                                                    QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA.inner(
-                                                                                                                    TenantData.PARENT_CAN_ACCESS),
+                                                                                    QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA
+                                                                                                                    .inner(TenantData.PARENT_CAN_ACCESS),
                                                                                                             true)),
                                                            QueryBuilder.FILTERS.eq(MongoTenant.ID,
                                                                                    currentTenant.getParent().getId())));
