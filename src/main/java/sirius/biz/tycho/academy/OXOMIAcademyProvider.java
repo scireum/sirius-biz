@@ -57,7 +57,7 @@ public class OXOMIAcademyProvider implements AcademyProvider {
                   .addParameter(PARAM_USER, getUserName(config))
                   .addParameter(PARAM_ACCESS_TOKEN, computeAccessToken(config))
                   .addParameter(PARAM_ACADEMY_ID, config.getString(PARAM_ACADEMY_ID));
-        XMLCall call = XMLCall.to(urlBuilder.asURL());
+        XMLCall call = XMLCall.to(urlBuilder.asURI());
         for (StructuredNode node : call.getInput().getNode(".").queryNodeList(RESPONSE_ENTRIES)) {
             AcademyVideoData video = new AcademyVideoData();
             video.setVideoId(node.queryString(RESPONSE_ID));

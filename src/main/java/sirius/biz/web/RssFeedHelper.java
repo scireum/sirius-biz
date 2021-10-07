@@ -16,7 +16,7 @@ import sirius.kernel.health.Log;
 import sirius.kernel.xml.Outcall;
 
 import java.io.StringReader;
-import java.net.URL;
+import java.net.URI;
 
 /**
  * Helps to read RSS feeds and provides access to their content wrapped into {@link SyndFeed} objects
@@ -31,7 +31,7 @@ public class RssFeedHelper {
      */
     public SyndFeed processFeed(String feedUrl) {
         try {
-            Outcall outcall = new Outcall(new URL(feedUrl));
+            Outcall outcall = new Outcall(new URI(feedUrl));
             return new SyndFeedInput().build(new StringReader(outcall.getData()));
         } catch (Exception e) {
             Exceptions.handle(Log.APPLICATION, e);

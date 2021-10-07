@@ -10,6 +10,8 @@ package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.codelists.LookupValue;
+import sirius.biz.mongo.CustomSortValues;
+import sirius.biz.mongo.SortField;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
@@ -19,9 +21,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
-import sirius.db.mongo.CustomSortValues;
 import sirius.db.mongo.Mango;
-import sirius.db.mongo.SortField;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.ValueHolder;

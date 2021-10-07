@@ -10,6 +10,7 @@ package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.model.PersonData;
+import sirius.biz.mongo.SortField;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountController;
@@ -18,7 +19,6 @@ import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.MongoQuery;
-import sirius.db.mongo.SortField;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.http.WebContext;

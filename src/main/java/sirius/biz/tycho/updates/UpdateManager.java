@@ -23,7 +23,8 @@ import sirius.kernel.xml.XMLCall;
 import sirius.web.security.UserInfo;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -98,7 +99,7 @@ public class UpdateManager {
         try {
             this.lastAttempt = LocalDateTime.now();
             List<UpdateInfo> nextUpdates = new ArrayList<>();
-            XMLCall call = XMLCall.to(new URL(feedUrl));
+            XMLCall call = XMLCall.to(new URI(feedUrl));
             Limit limit = new Limit(0, MAX_FEED_ITEMS_TO_FETCH);
             for (StructuredNode node : call.getInput().getNode(ATOM_FEED_CHANNEL).queryNodeList(ATOM_FEED_ITEM)) {
                 List<String> categories = node.queryNodeList(ATOM_ITEM_CATEGORY)
@@ -112,7 +113,7 @@ public class UpdateManager {
             }
             this.globalUpdates = nextUpdates;
             this.lastFetch = LocalDateTime.now();
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             Exceptions.handle()
                       .error(e)
                       .to(Log.BACKGROUND)

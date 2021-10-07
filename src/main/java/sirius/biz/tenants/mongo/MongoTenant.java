@@ -10,6 +10,7 @@ package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.mongo.MongoBizEntity;
+import sirius.biz.mongo.SortField;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
@@ -22,7 +23,6 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
-import sirius.db.mongo.SortField;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
