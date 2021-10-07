@@ -21,6 +21,7 @@ import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Traced;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.web.BizController;
 import sirius.db.es.ElasticEntity;
 import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.BaseEntity;
@@ -29,6 +30,8 @@ import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -126,12 +129,13 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
                 }
                 process.addTiming("Success", watch.elapsedMillis());
             } catch (Exception e) {
+                HandledException handledException = Exceptions.handle(BizController.LOG, e);
                 process.addTiming("Failure", watch.elapsedMillis());
                 process.log(ProcessLog.error()
                                       .withFormattedMessage("Failed to save entity %s with id: %s - %s",
                                                             entity.toString(),
                                                             entity.getIdAsString(),
-                                                            e.getMessage()));
+                                                            handledException.getMessage()));
             }
         }
     }
