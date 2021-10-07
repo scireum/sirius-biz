@@ -198,4 +198,28 @@ public class TraceData extends Composite {
     public String getChangedOn() {
         return changedOn;
     }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setCreatedIn(String createdIn) {
+        this.createdIn = createdIn;
+    }
+
+    public void setChangedBy(String changedBy) {
+        this.changedBy = changedBy;
+    }
+
+    public void setChangedAt(LocalDateTime changedAt) {
+        this.changedAt = changedAt;
+    }
+
+    public void setChangedIn(String changedIn) {
+        this.changedIn = changedIn;
+    }
 }
