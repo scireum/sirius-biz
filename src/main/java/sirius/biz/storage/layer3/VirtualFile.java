@@ -1428,7 +1428,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             URI lastConnectedURL = headRequest.getResponse().request().uri();
             if (headRequest.getResponseCode() == 404 && !lastConnectedURL.equals(url) && lastConnectedURL.toString()
                                                                                                          .contains("Ã")) {
-                // the redirect header contained UTF-8 das was interpreted as ISO-8859-1 , try to fix this
+                // the redirect header contained UTF-8 that was interpreted as ISO-8859-1 , try to fix this
                 lastConnectedURL = new URI(new String(lastConnectedURL.toString().getBytes(StandardCharsets.ISO_8859_1),
                                                       StandardCharsets.UTF_8));
             }
