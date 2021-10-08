@@ -9,17 +9,18 @@
 package sirius.biz.cluster.work
 
 import com.alibaba.fastjson.JSONObject
+import org.junit.jupiter.api.Tag
 import sirius.biz.cluster.work.DistributedTaskExecutor
 import sirius.biz.cluster.work.DistributedTasks
 import sirius.kernel.BaseSpecification
-import sirius.kernel.Scope
+import sirius.kernel.Tags
 import sirius.kernel.async.Future
 import sirius.kernel.commons.Wait
 import sirius.kernel.di.std.Part
 
 import java.time.Duration
 
-@Scope(Scope.SCOPE_NIGHTLY)
+@Tag(Tags.NIGHTLY)
 class DistributedTasksSpec extends BaseSpecification {
 
     @Part
@@ -28,7 +29,7 @@ class DistributedTasksSpec extends BaseSpecification {
     private static Future fifoSynchronizer
     private static List<Integer> prioritizedValues
 
-    static class FifoTestExecutor extends DistributedTaskExecutor {
+    static class FifoTestExecutor implements DistributedTaskExecutor {
 
         @Override
         String queueName() {
@@ -43,7 +44,7 @@ class DistributedTasksSpec extends BaseSpecification {
         }
     }
 
-    static class PrioritizedTestExecutor extends DistributedTaskExecutor {
+    static class PrioritizedTestExecutor implements DistributedTaskExecutor {
 
         @Override
         String queueName() {
