@@ -79,10 +79,10 @@ public class MultiLanguageString extends SafeMap<String, String> {
     /**
      * Sets the given set of valid languages by specifying the target scope type.
      * <p>
-     * If set (and if no specific {@link #withValidLanguages(Supplier) valid languages supplier} is present, we
+     * If set and if no specific {@link #withValidLanguages(Supplier) valid languages supplier} is present, we
      * use the {@link ScopeInfo#getDisplayLanguages()} of the specified scope.
      *
-     * @param scopeType the <tt>scopeType</tt> used to lookup the valid languages.
+     * @param scopeType the <tt>scopeType</tt> used to look up the valid languages.
      * @return the object itself for fluent method calls
      */
     public MultiLanguageString forTargetScope(@Nonnull String scopeType) {
@@ -120,13 +120,13 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Determines if this field is in "multi language" mode.
+     * Determines if this field is in "multi-language" mode.
      * <p>
      * This can be suppressed by two methods: {@link #withConditionName(String)} can be used to disable i18n support
      * for the whole system and {@link #withI18nPermission(String)} can be used to enable or disable i18n support
      * per tenant.
      *
-     * @return <tt>true</tt> if multi language mode is enabled, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if multi-language mode is enabled, <tt>false</tt> otherwise
      */
     public boolean isEnabled() {
         return isEnabledForCurrentUser() && isConditionEnabled();
@@ -326,7 +326,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Returns the text associated with with the current language defined by {@link NLS#getCurrentLang()}, falling back to the saved fallback.
+     * Returns the text associated with the current language defined by {@link NLS#getCurrentLang()}, falling back to the saved fallback.
      *
      * @return the text found under <tt>language</tt>, if none found the one from {@link #FALLBACK_KEY} is returned
      */
@@ -407,7 +407,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Direct modifications of the underlying map are not allowed. Therefore upon calling a {@link UnsupportedOperationException} will be thrown.
+     * Direct modifications of the underlying map are not allowed, therefore an {@link UnsupportedOperationException} will be thrown upon calling.
      * <br>
      * Please use one of the other methods to modify the underlying map:
      * <ul>
@@ -446,9 +446,9 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Transforms the multilanguage map into an JSON object.
+     * Transforms the multi-language map into an JSON object.
      *
-     * @return Multilanguage map as a JSON object
+     * @return multi-language map as a JSON object
      */
     public String getAsJSON() {
         JSONObject jsonObject = new JSONObject();
