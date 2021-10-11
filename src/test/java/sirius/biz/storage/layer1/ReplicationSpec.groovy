@@ -10,14 +10,15 @@ package sirius.biz.storage.layer1
 
 import sirius.biz.storage.layer1.replication.ReplicationBackgroundLoop
 import sirius.kernel.BaseSpecification
-import sirius.kernel.Scope
+import sirius.kernel.Tags
+import org.junit.jupiter.api.Tag
 import sirius.kernel.async.BackgroundLoop
 import sirius.kernel.di.std.Part
 
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 
-@Scope(Scope.SCOPE_NIGHTLY)
+@Tag(Tags.NIGHTLY)
 class ReplicationSpec extends BaseSpecification {
 
     @Part
