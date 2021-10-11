@@ -146,7 +146,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
             validLanguages = determineValidLanguages();
         }
 
-        return validLanguages;
+        return Collections.unmodifiableCollection(validLanguages);
     }
 
     private Collection<String> determineValidLanguages() {
