@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -157,6 +158,28 @@ public class MultiLanguageString extends SafeMap<String, String> {
         } else {
             return ScopeInfo.DEFAULT_SCOPE.getDisplayLanguages();
         }
+    }
+
+    /**
+     * Validates that a fallback text exists when other translations are available.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.OnValidate} handler.
+     *
+     * @param fieldLabel                the field label which will be {@link NLS#smartGet(String) translated}
+     * @param validationMessageConsumer the consumer which is used to collect validation messages. This is normally
+     *                                  passed into the on validate method and can simply be forwarded here.
+     */
+    public void validateEmptyFallback(String fieldLabel, Consumer<String> validationMessageConsumer) {
+        if (!withFallback || data().isEmpty()) {
+            return;
+        }
+        if (Strings.isFilled(data().get(FALLBACK_KEY))) {
+            return;
+        }
+
+        validationMessageConsumer.accept(NLS.fmtr("MultiLanguageString.emptyFallback")
+                                            .set("field", NLS.smartGet(fieldLabel))
+                                            .format());
     }
 
     @Override
