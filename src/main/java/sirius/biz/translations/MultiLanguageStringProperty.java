@@ -32,6 +32,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 
 import java.lang.reflect.Field;
@@ -153,6 +154,21 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                                    .set(PARAM_FIELD, getFullLabel())
                                                    .handle();
                                });
+        }
+    }
+
+    @Override
+    protected void onValidate(Object entity, Consumer<String> validationConsumer) {
+        MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
+
+        if (!multiLanguageString.isWithFallback() || multiLanguageString.data().isEmpty()) {
+            return;
+        }
+
+        if (Strings.isEmpty(multiLanguageString.fetchText(MultiLanguageString.FALLBACK_KEY))) {
+            validationConsumer.accept(NLS.fmtr("MultiLanguageStringProperty.fallbackNotSet")
+                                         .set(PARAM_FIELD, getFullLabel())
+                                         .format());
         }
     }
 
