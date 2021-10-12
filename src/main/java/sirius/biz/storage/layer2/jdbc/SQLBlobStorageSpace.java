@@ -497,12 +497,16 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                                       UPDATE_BLOB_RETRIES));
     }
 
-    protected boolean hasExistingChild(SQLDirectory parent, String childName) {
+    protected boolean hasExistingChild(SQLDirectory parent, String childName, Blob exemptedBlob) {
         if (childDirectoryQuery(parent, childName).exists()) {
             return true;
         }
 
-        return childBlobQuery(parent, childName).exists();
+        SmartQuery<SQLBlob> childBlobQuery = childBlobQuery(parent, childName);
+        if (exemptedBlob != null) {
+            childBlobQuery.ne(SQLBlob.BLOB_KEY, exemptedBlob.getBlobKey());
+        }
+        return childBlobQuery.exists();
     }
 
     private SmartQuery<SQLDirectory> childDirectoryQuery(SQLDirectory parent, String childName) {
@@ -771,7 +775,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .error(e)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as failed: %s (%s)",
-                              variant.getIdAsString(), variant.getSourceBlob().getIdAsString())
+                              variant.getIdAsString(),
+                              variant.getSourceBlob().getIdAsString())
                       .handle();
         }
     }
@@ -794,7 +799,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .error(e)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as converted: %s (%s)",
-                              variant.getIdAsString(), variant.getSourceBlob().getIdAsString())
+                              variant.getIdAsString(),
+                              variant.getSourceBlob().getIdAsString())
                       .handle();
         }
     }

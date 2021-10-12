@@ -163,7 +163,12 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
 
     @Override
     public boolean hasChildNamed(String name) {
-        return getStorageSpace().hasExistingChild(this, name);
+        return hasChildNamed(name, null);
+    }
+
+    @Override
+    public boolean hasChildNamed(String name, @Nullable Blob exemptedBlob) {
+        return getStorageSpace().hasExistingChild(this, name, exemptedBlob);
     }
 
     @Override
