@@ -26,6 +26,7 @@
                         </a>
                     </i:else>
                 </i:if>
+                <t:kbBtn code="V7FGJ" />
             </i:block>
         </t:pageHeader>
     </i:block>
