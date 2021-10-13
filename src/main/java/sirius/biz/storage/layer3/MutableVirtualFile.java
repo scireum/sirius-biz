@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
@@ -35,12 +36,12 @@ public class MutableVirtualFile extends VirtualFile {
     private static StorageUtils storageUtils;
 
     /**
-     * Provides a prediacte which is always <tt>true</tt>.
+     * Provides a predicate which is always <tt>true</tt>.
      */
     public static final Predicate<VirtualFile> CONSTANT_TRUE = ignored -> true;
 
     /**
-     * Provides a prediacte which is always <tt>false</tt>.
+     * Provides a predicate which is always <tt>false</tt>.
      */
     public static final Predicate<VirtualFile> CONSTANT_FALSE = ignored -> false;
 
@@ -204,7 +205,7 @@ public class MutableVirtualFile extends VirtualFile {
     /**
      * Determines if a file can be created as directory.
      *
-     * @param canCreateDirectoryHandler the prediacte which determines if the given file can be created as directory
+     * @param canCreateDirectoryHandler the predicate which determines if the given file can be created as directory
      * @return the file itself for fluent method calls
      */
     public MutableVirtualFile withCanCreateDirectoryHandler(Predicate<VirtualFile> canCreateDirectoryHandler) {
@@ -415,6 +416,19 @@ public class MutableVirtualFile extends VirtualFile {
      */
     public MutableVirtualFile withRenameHandler(BiPredicate<VirtualFile, String> renameHandler) {
         this.renameHandler = renameHandler;
+        return this;
+    }
+
+    /**
+     * Touches a file.
+     * <p>
+     * This will bump the {@link VirtualFile#lastModified()} to <tt>now</tt>.
+     *
+     * @param touchHandler the handler which "touches" the given file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withTouchHandler(Consumer<VirtualFile> touchHandler) {
+        this.touchHandler = touchHandler;
         return this;
     }
 }

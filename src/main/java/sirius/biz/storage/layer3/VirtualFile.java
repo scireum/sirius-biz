@@ -59,6 +59,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
@@ -108,6 +109,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected BiPredicate<VirtualFile, VirtualFile> fastMoveHandler;
     protected Predicate<VirtualFile> canRenameHandler;
     protected BiPredicate<VirtualFile, String> renameHandler;
+    protected Consumer<VirtualFile> touchHandler;
 
     @Part
     private static StorageUtils utils;
@@ -418,6 +420,22 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
         if (!tryRename(newName)) {
             throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotRename").set("file", path()).handle();
+        }
+    }
+
+    /**
+     * Tries to "touch" this file.
+     * <p>
+     * This will attempt to set the {@link #lastModified() last modified date} to <tt>now</tt>. Note however, that
+     * only some underlying providers will support this. If the call is not supported, nothing will happen.
+     */
+    public void tryTouch() {
+        try {
+            if (touchHandler != null) {
+                touchHandler.accept(this);
+            }
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "touchHandler");
         }
     }
 

@@ -176,10 +176,10 @@ public class L3Uplink implements VFSRoot {
         }
 
         /**
-         * Uses the given lookup and returns the first non empty optional.
+         * Uses the given lookup and returns the first non-empty optional.
          *
          * @param lookups the lookup to apply
-         * @return the first non empty optional produced by the lookups or an empty optional if all lokkups failed
+         * @return the first non-empty optional produced by the lookups or an empty optional if all lookups failed
          */
         @SafeVarargs
         private VirtualFile priorizedLookup(Supplier<VirtualFile>... lookups) {
@@ -357,7 +357,12 @@ public class L3Uplink implements VFSRoot {
             file.withConsumeStreamHandler(this::consumeStreamHandler);
             file.withCanConsumeFile(this::isWriteable);
             file.withConsumeFileHandler(this::consumeFileHandler);
+            file.withTouchHandler(this::touchHandler);
         }
+    }
+
+    private void touchHandler(VirtualFile file) {
+        file.tryAs(Blob.class).ifPresent(Blob::touch);
     }
 
     private long sizeSupplier(VirtualFile file) {
