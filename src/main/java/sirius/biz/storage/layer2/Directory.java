@@ -79,6 +79,15 @@ public interface Directory {
     boolean hasChildNamed(String name);
 
     /**
+     * Determines if there is a child with the given name, except for the given blob.
+     *
+     * @param name the name to check
+     * @param exemptedBlob the blob to ignore when searching for children
+     * @return <tt>true</tt> if either a directory or a blob with the given name exists as child
+     */
+    boolean hasChildNamed(String name, @Nullable Blob exemptedBlob);
+
+    /**
      * Tries to find the sub directory with the given name.
      *
      * @param name the name of the sub directory to resolve

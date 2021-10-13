@@ -923,7 +923,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param newName the new name to use
      */
     public void rename(B blob, String newName) {
-        if (blob.getParent().hasChildNamed(newName)) {
+        if (blob.getParent().hasChildNamed(newName, blob)) {
             throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotRenameDuplicateName").handle();
         }
 

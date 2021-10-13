@@ -426,12 +426,17 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                                       UPDATE_BLOB_RETRIES));
     }
 
-    protected boolean hasExistingChild(MongoDirectory parent, String childName) {
+    protected boolean hasExistingChild(MongoDirectory parent, String childName, Blob exemptedBlob) {
         if (childDirectoryQuery(parent, childName).exists()) {
             return true;
         }
 
-        return childBlobQuery(parent, childName).exists();
+        MongoQuery<MongoBlob> childBlobQuery = childBlobQuery(parent, childName);
+        if (exemptedBlob != null) {
+            childBlobQuery.ne(MongoBlob.BLOB_KEY, exemptedBlob.getBlobKey());
+        }
+
+        return childBlobQuery.exists();
     }
 
     private MongoQuery<MongoDirectory> childDirectoryQuery(MongoDirectory parent, String childName) {
