@@ -13,6 +13,7 @@ import sirius.biz.cluster.Interconnect;
 import sirius.biz.cluster.InterconnectHandler;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
@@ -71,6 +72,9 @@ public class Scripting implements InterconnectHandler {
     public static final String ALL_NODES = "*";
 
     private final List<TranscriptMessage> messages = new ArrayList<>();
+
+    @Part
+    private Tasks tasks;
 
     @Part
     private Interconnect interconnect;
@@ -148,7 +152,7 @@ public class Scripting implements InterconnectHandler {
         if (TASK_TYPE_MSG.equals(event.getString(TASK_TYPE))) {
             handleMessageTask(event);
         } else if (TASK_TYPE_EXEC.equals(event.getString(TASK_TYPE))) {
-            handleExecTask(event);
+            tasks.defaultExecutor().start(() -> handleExecTask(event));
         }
     }
 
@@ -183,7 +187,11 @@ public class Scripting implements InterconnectHandler {
         }
 
         Watch watch = Watch.start();
-        logInTranscript(jobNumber, Strings.apply("Starting execution on %s", CallContext.getNodeName()));
+        logInTranscript(jobNumber,
+                        Strings.apply("Starting execution on %s (Thread Id: %s / Thread Name: %s)",
+                                      CallContext.getNodeName(),
+                                      Thread.currentThread().getId(),
+                                      Thread.currentThread().getName()));
         try {
             Callable callable = compileScript(event);
 

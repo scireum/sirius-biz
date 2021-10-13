@@ -9,7 +9,11 @@
     </i:block>
 
     <i:block name="page-header">
-        <t:pageHeader title="Scripting Console"/>
+        <t:pageHeader title="Scripting Console">
+            <i:block name="actions">
+                <t:kbBtn code="P399F" />
+            </i:block>
+        </t:pageHeader>
     </i:block>
     <div style="height:350px">
         <t:codeEditor id="editor" mode="text">log('Good Morning Dave');</t:codeEditor>
