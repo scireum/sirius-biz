@@ -88,7 +88,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         this.overwriteExistingFilesParameter = new EnumParameter<>(OVERWRITE_EXISTING_FILES_PARAMETER_NAME,
                                                                    "$ExtractArchiveJob.overwriteExistingFilesParameter",
                                                                    ArchiveExtractor.OverrideMode.class).withDescription(
-                "$ExtractArchiveJob.overwriteExistingFilesParameter.help")
+                                                                                                               "$ExtractArchiveJob.overwriteExistingFilesParameter.help")
                                                                                                        .withDefault(
                                                                                                                ArchiveExtractor.OverrideMode.ON_CHANGE)
                                                                                                        .build();
@@ -105,7 +105,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         if (sourceParameter == null) {
             sourceParameter = new FileParameter("source",
                                                 "$ExtractArchiveJob.sourceParameter").withAcceptedExtensionsList(new ArrayList<>(
-                    extractor.getSupportedFileExtensions()))
+                                                                                             extractor.getSupportedFileExtensions()))
                                                                                      .withDescription(
                                                                                              "$ExtractArchiveJob.sourceParameter.help")
                                                                                      .markRequired()

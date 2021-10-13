@@ -73,13 +73,14 @@ import java.util.stream.Collectors;
  * its mutable counterpart {@link MutableVirtualFile}) can be supplied with the appropriate callbacks to handle the
  * requested functionality.
  * <p>
- * As in most cases nearly all of the functions will be delegated to other classes, this class uses callbacks instead of
+ * As in most cases nearly all the functions will be delegated to other classes, this class uses callbacks instead of
  * a proper class hierarchy.
  */
 public abstract class VirtualFile extends Composable implements Comparable<VirtualFile> {
 
     private static final String HANDLER_OUTPUT_STREAM_SUPPLIER = "outputStreamSupplier";
     private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
+    private static final String MESSAGE_KEY_LOAD_FROM_URL_FAILED = "$VirtualFile.loadFromUrlFailed";
 
     protected String name;
     protected String description;
@@ -1305,7 +1306,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
-                            .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                             .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
@@ -1408,7 +1409,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
-                            .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                             .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
@@ -1491,7 +1492,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private HandledException createInvalidPathError(URI url) {
         return Exceptions.createHandled()
                          .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
-                         .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                         .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                          .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                          .set("url", url.toString())
                          .handle();
