@@ -51,6 +51,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -1290,7 +1291,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             if (mode == FetchFromUrlMode.NEVER_FETCH) {
                 return false;
             }
-            if (exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
+            if (exists() && shouldSkipDownloadForExistingFile(mode)) {
                 return false;
             }
 
@@ -1312,10 +1313,19 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
     }
 
+    private boolean shouldSkipDownloadForExistingFile(FetchFromUrlMode mode) {
+        // If the mode is set to non-existent files only, we perform no download if the file exists.
+        // We also perform no download, if the file has already been modified (downloaded) at the same day
+        // (unless the mode is set to ALWAYS_FETCH...)
+        return mode == FetchFromUrlMode.NON_EXISTENT || (mode == FetchFromUrlMode.NON_EXISTENT_OR_MODIFIED
+                                                         && lastModifiedDate().isAfter(LocalDate.now().atStartOfDay()));
+    }
+
     private boolean loadFromOutcall(Outcall outcall) throws IOException {
         HttpResponse<InputStream> response = outcall.getResponse();
 
         if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
+            tryTouch();
             return false;
         }
 
