@@ -57,6 +57,7 @@ import java.util.Optional;
 @Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed")
 @Index(name = "blob_deleted_loop", columns = "deleted")
 @Index(name = "blob_parent_changed_loop", columns = "parentChanged")
+@Index(name = "blob_delete_old_temporary_loop", columns = {"spaceName", "deleted", "lastModified", "temporary"})
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Transient
