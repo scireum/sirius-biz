@@ -100,6 +100,10 @@ public class JupiterSync implements Startable, EndOfDayTask {
     @ConfigValue("jupiter.repository.uplink.bucket")
     private String uplinkBucket;
 
+    @ConfigValue("jupiter.repository.uplink.test-bucket")
+    @Nullable
+    private String uplinkTestBucket;
+
     @ConfigValue("jupiter.repository.uplink.ignoredPaths")
     private List<String> uplinkIgnoredPaths;
 
@@ -362,7 +366,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                       JupiterConnector connection,
                                       List<RepositoryFile> repositoryFiles,
                                       Set<String> filesToDelete) {
-        if (Strings.isEmpty(uplinkStore) || Strings.isEmpty(uplinkBucket)) {
+        if (Strings.isEmpty(uplinkStore) || Strings.isEmpty(getEffectiveUplinkBucket())) {
             processContext.debug(ProcessLog.info()
                                            .withFormattedMessage(
                                                    "Skipping uplink checks for %s as no repository or bucket is configured.",
@@ -372,13 +376,13 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
         processContext.debug(ProcessLog.info()
                                        .withFormattedMessage("Checking uplink repository (%s in %s) for %s...",
-                                                             uplinkBucket,
+                                                             getEffectiveUplinkBucket(),
                                                              uplinkStore,
                                                              connection.getName()));
 
         try {
             ObjectStore store = objectStores.getStore(uplinkStore);
-            BucketName uplinkBucketName = store.getBucketName(uplinkBucket);
+            BucketName uplinkBucketName = store.getBucketName(getEffectiveUplinkBucket());
             store.listObjects(uplinkBucketName, null, object -> {
                 if (uplinkIgnoredPaths.stream().noneMatch(ignoredPath -> object.getKey().startsWith(ignoredPath))) {
                     handleUplinkFile(processContext,
@@ -401,6 +405,14 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                                     connection.getName())
                                             .handle());
         }
+    }
+
+    private String getEffectiveUplinkBucket() {
+        if (!Sirius.isProd() && Strings.isFilled(uplinkTestBucket)) {
+            return uplinkTestBucket;
+        }
+
+        return uplinkBucket;
     }
 
     private void handleUplinkFile(ProcessContext processContext,

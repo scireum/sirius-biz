@@ -51,6 +51,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
@@ -72,13 +74,14 @@ import java.util.stream.Collectors;
  * its mutable counterpart {@link MutableVirtualFile}) can be supplied with the appropriate callbacks to handle the
  * requested functionality.
  * <p>
- * As in most cases nearly all of the functions will be delegated to other classes, this class uses callbacks instead of
+ * As in most cases nearly all the functions will be delegated to other classes, this class uses callbacks instead of
  * a proper class hierarchy.
  */
 public abstract class VirtualFile extends Composable implements Comparable<VirtualFile> {
 
     private static final String HANDLER_OUTPUT_STREAM_SUPPLIER = "outputStreamSupplier";
     private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
+    private static final String MESSAGE_KEY_LOAD_FROM_URL_FAILED = "$VirtualFile.loadFromUrlFailed";
 
     protected String name;
     protected String description;
@@ -108,6 +111,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected BiPredicate<VirtualFile, VirtualFile> fastMoveHandler;
     protected Predicate<VirtualFile> canRenameHandler;
     protected BiPredicate<VirtualFile, String> renameHandler;
+    protected Consumer<VirtualFile> touchHandler;
 
     @Part
     private static StorageUtils utils;
@@ -418,6 +422,22 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
         if (!tryRename(newName)) {
             throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotRename").set("file", path()).handle();
+        }
+    }
+
+    /**
+     * Tries to "touch" this file.
+     * <p>
+     * This will attempt to set the {@link #lastModified() last modified date} to <tt>now</tt>. Note however, that
+     * only some underlying providers will support this. If the call is not supported, nothing will happen.
+     */
+    public void tryTouch() {
+        try {
+            if (touchHandler != null) {
+                touchHandler.accept(this);
+            }
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "touchHandler");
         }
     }
 
@@ -1271,7 +1291,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             if (mode == FetchFromUrlMode.NEVER_FETCH) {
                 return false;
             }
-            if (exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
+            if (exists() && shouldSkipDownloadForExistingFile(mode)) {
                 return false;
             }
 
@@ -1287,16 +1307,25 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
-                            .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                             .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
+    }
+
+    private boolean shouldSkipDownloadForExistingFile(FetchFromUrlMode mode) {
+        // If the mode is set to non-existent files only, we perform no download if the file exists.
+        // We also perform no download, if the file has already been modified (downloaded) at the same day
+        // (unless the mode is set to ALWAYS_FETCH...)
+        return mode == FetchFromUrlMode.NON_EXISTENT || (mode == FetchFromUrlMode.NON_EXISTENT_OR_MODIFIED
+                                                         && lastModifiedDate().isAfter(LocalDate.now().atStartOfDay()));
     }
 
     private boolean loadFromOutcall(Outcall outcall) throws IOException {
         HttpResponse<InputStream> response = outcall.getResponse();
 
         if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
+            tryTouch();
             return false;
         }
 
@@ -1390,7 +1419,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .error(e)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
-                            .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                             .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
@@ -1473,7 +1502,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private HandledException createInvalidPathError(URI url) {
         return Exceptions.createHandled()
                          .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
-                         .hint(ProcessLog.HINT_MESSAGE_KEY, "$VirtualFile.loadFromUrlFailed")
+                         .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                          .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                          .set("url", url.toString())
                          .handle();
