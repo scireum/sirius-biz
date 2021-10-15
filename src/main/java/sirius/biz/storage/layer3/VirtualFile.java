@@ -1425,7 +1425,23 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
     }
 
-    private String parsePathFromUrl(URI url, Predicate<String> fileExtensionVerifier) {
+    /**
+     * Tries to parse the effective filename from the given URL.
+     * <p>
+     * This will check the path and if this isn't applicable, it will check every parameter of the query string. Note
+     * that this will not perform a HEAD request or the like, to fetch the <tt>Content-Disposition</tt> header.
+     *
+     * @param url                   the URL to check
+     * @param fileExtensionVerifier the verifier used to check if the path or any query string parameter contains a
+     *                              valid file name
+     * @return the extracted filename (with path) or <tt>null</tt> if none could be extracted
+     */
+    @Nullable
+    public static String parsePathFromUrl(URI url, Predicate<String> fileExtensionVerifier) {
+        if (fileExtensionVerifier.test(Files.getFileExtension(url.getPath()))) {
+            return url.getPath();
+        }
+
         // If the URL has a querystring, we check every parameter and determine if there is one with a valid
         // filename. Otherwise, we use the filename as provided by the URL path itself...
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(url.toString(), StandardCharsets.UTF_8);
@@ -1435,12 +1451,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                  .flatMap(List::stream)
                                  .filter(path -> fileExtensionVerifier.test(Files.getFileExtension(path)))
                                  .findFirst()
-                                 .orElseGet(() -> {
-                                     if (fileExtensionVerifier.test(Files.getFileExtension(url.getPath()))) {
-                                         return url.getPath();
-                                     }
-                                     return null;
-                                 });
+                                 .orElse(null);
     }
 
     private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URI url,
