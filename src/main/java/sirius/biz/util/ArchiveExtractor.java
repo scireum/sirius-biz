@@ -15,6 +15,7 @@ import net.sf.sevenzipjbinding.SevenZipException;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.Sirius;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Explain;
@@ -237,12 +238,21 @@ public class ArchiveExtractor {
         try (ZipFile zipFile = new ZipFile(archiveFile)) {
             extractZipEntriesFromZipFile(filter, extractedFileConsumer, zipFile);
         } catch (ZipException zipException) {
-            // This is most probably an error indicating an inconsistent ZIP archive. We therefore directly throw
-            // a handled exception to avoid jamming the syslog...
-            throw Exceptions.createHandled()
-                            .error(zipException)
-                            .withSystemErrorMessage("Failed to unzip the given archive: %s (%s)")
-                            .handle();
+            if (!isSevenZipEnabled()) {
+                // This is most probably an error indicating an inconsistent ZIP archive. We therefore directly throw
+                // a handled exception to avoid jamming the syslog...
+                throw Exceptions.createHandled()
+                                .error(zipException)
+                                .withSystemErrorMessage("Failed to unzip the given archive: %s (%s)")
+                                .handle();
+            }
+            // Retry extraction using 7zip
+            TaskContext.get()
+                       .log("Cannot unzip the given archive: "
+                            + zipException.getMessage()
+                            + ".\nFalling back to 7zip...");
+            Exceptions.ignore(zipException);
+            extract7z(archiveFile, filter, extractedFileConsumer);
         }
     }
 
