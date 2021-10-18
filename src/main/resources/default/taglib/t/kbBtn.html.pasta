@@ -4,16 +4,18 @@
 
 <i:pragma name="description">Provides a help button which links to the given knowledge base article.</i:pragma>
 
-<i:local name="referencedArticle"
-         value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(NLS.getCurrentLang(), code, true).orElse(null)"/>
-<i:if test="referencedArticle != null">
-    <a class="btn btn-info ml-2 @class"
-       target="_blank"
-       href="/kba/@referencedArticle.getLanguage()/@code#@anchor"
-       data-toggle="tooltip"
-       data-placement="top"
-       title="@referencedArticle.getTitle()">
-        <i class="fa fa-lightbulb"></i>
-        <span class="d-none d-xl-inline"> @i18n('KnowledgeBase.helpBtn')</span>
-    </a>
+<i:local name="kb" value="Injector.context().getPart(sirius.biz.tycho.kb.KnowledgeBase.class)"/>
+<i:if test="kb != null">
+    <i:local name="referencedArticle" value="kb.resolve(NLS.getCurrentLang(), code, true).orElse(null)"/>
+    <i:if test="referencedArticle != null">
+        <a class="btn btn-info ml-2 @class"
+           target="_blank"
+           href="/kba/@referencedArticle.getLanguage()/@code#@anchor"
+           data-toggle="tooltip"
+           data-placement="top"
+           title="@referencedArticle.getTitle()">
+            <i class="fa fa-lightbulb"></i>
+            <span class="d-none d-xl-inline"> @i18n('KnowledgeBase.helpBtn')</span>
+        </a>
+    </i:if>
 </i:if>
