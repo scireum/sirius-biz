@@ -2,7 +2,7 @@
 <i:arg name="fieldName" type="String" default="@name"/>
 <i:arg name="value" type="String"/>
 <i:arg name="basePath" type="String" default=""
-       description="Provides the base path which is first opened in the modal when no value is presentl"/>
+       description="Provides the base path which is first opened in the modal when no value is present."/>
 <i:arg name="labelKey" type="String" default=""/>
 <i:arg name="label" type="String" default="@i18n(labelKey)"/>
 <i:arg name="helpKey" type="String" default=""/>
