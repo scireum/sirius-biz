@@ -47,7 +47,7 @@
     <script type="text/javascript">
         sirius.ready(function () {
             document.querySelector('#___localId .select-btn').addEventListener('click', function() {
-                var value = $('.@localId input').val();
+                let value = document.querySelector('#___localId input').value;
                 if (value == null || value === '') {
                     value = '@basePath';
                 }
