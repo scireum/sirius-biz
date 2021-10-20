@@ -59,13 +59,13 @@
                     createRow: function (child, _modal, resolve, changeDirectory) {
                         const self = this;
 
-                        const _tr = document.createElement("tr");
-                        _tr.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}'>" +
+                        const _directoryTableRow = document.createElement("tr");
+                        _directoryTableRow.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}'>" +
                             "<i class='fa fa-folder-open'></i>&nbsp;{{name}}</a></td>", child);
-                        _tr.querySelector(".file-link").addEventListener("click", function () {
+                        _directoryTableRow.querySelector(".file-link").addEventListener("click", function () {
                             changeDirectory(this.dataset.path);
                         });
-                        return _tr;
+                        return _directoryTableRow;
                     }
                 });
             }
@@ -84,13 +84,13 @@
                         const _self = this;
                         child.icon = child.directory ? "fa-folder-open" : "fa-file";
 
-                        const _tr = document.createElement("tr");
-                        _tr.innerHTML = Mustache.render(
+                        const _fileTableRow = document.createElement("tr");
+                        _fileTableRow.innerHTML = Mustache.render(
                             '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa {{icon}}"></i>&nbsp;{{name}}</a></td>' +
                             '<td class="text-right">{{sizeString}}</td>' +
                             '<td class="text-right">{{lastModifiedString}}</td>', child);
 
-                        _tr.querySelector(".file-link").addEventListener("click", function () {
+                        _fileTableRow.querySelector(".file-link").addEventListener("click", function () {
                             if (this.dataset.dir === "true") {
                                 changeDirectory(this.dataset.path);
                             } else {
@@ -98,7 +98,7 @@
                                 resolve(this.dataset.path);
                             }
                         });
-                        return _tr;
+                        return _fileTableRow;
                     }
                 });
             }
@@ -160,16 +160,16 @@
                                 if (!config.filter(element)) {
                                     continue;
                                 }
-                                const _li = document.createElement("li");
-                                _li.innerHTML = Mustache.render('<a class="file-link" href="#" data-path={{path}}>{{{name}}}</a>', {
+                                const _folderBreadcrumb = document.createElement("li");
+                                _folderBreadcrumb.innerHTML = Mustache.render('<a class="file-link" href="#" data-path={{path}}>{{{name}}}</a>', {
                                     path: element.path,
                                     name: element.name === "/" ? "<i class='fa fa-folder-open'></i>" : element.name
                                 });
-                                _li.querySelector('.file-link').addEventListener("click", function () {
+                                _folderBreadcrumb.querySelector('.file-link').addEventListener("click", function () {
                                     config.path = this.dataset.path;
                                     pagination.reset();
                                 });
-                                _breadcrumbs.appendChild(_li);
+                                _breadcrumbs.appendChild(_folderBreadcrumb);
                             }
                             const _uploadBox = _modal.querySelector('.upload-box-js');
                             if (config.allowUpload && json.canCreateChildren) {

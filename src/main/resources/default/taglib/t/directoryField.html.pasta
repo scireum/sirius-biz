@@ -2,7 +2,7 @@
 <i:arg name="fieldName" type="String" default="@name"/>
 <i:arg name="value" type="String"/>
 <i:arg name="basePath" type="String" default=""
-       description="Provides a default value which is used to the select box"/>
+       description="Provides the base path which is first opened in the modal when no value is presentl"/>
 <i:arg name="labelKey" type="String" default=""/>
 <i:arg name="label" type="String" default="@i18n(labelKey)"/>
 <i:arg name="helpKey" type="String" default=""/>
@@ -12,8 +12,8 @@
 <i:arg name="id" type="String" default=""/>
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
-<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
-<i:arg name="fieldClass" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the form group."/>
+<i:arg name="fieldClass" type="String" default="" description="Lists additional CSS classes to apply to the input field."/>
 
 <i:local name="localId" value="@generateId('filefield-%s')"/>
 
