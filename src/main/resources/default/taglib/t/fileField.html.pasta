@@ -1,0 +1,73 @@
+<i:arg name="name" type="String" default=""/>
+<i:arg name="fieldName" type="String" default="@name"/>
+<i:arg name="value" type="String"/>
+<i:arg name="basePath" type="String" default=""
+       description="Provides the base path which is first opened in the modal when no value is present."/>
+<i:arg name="labelKey" type="String" default=""/>
+<i:arg name="label" type="String" default="@i18n(labelKey)"/>
+<i:arg name="helpKey" type="String" default=""/>
+<i:arg name="help" type="String" default="@i18n(helpKey)"/>
+<i:arg name="readonly" type="boolean" default="false"/>
+<i:arg name="autofocus" type="boolean" default="false"/>
+<i:arg name="id" type="String" default=""/>
+<i:arg name="placeholder" type="String" default=""/>
+<i:arg name="tabIndex" type="String" default=""/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the form group."/>
+<i:arg name="fieldClass" type="String" default="" description="Lists additional CSS classes to apply to the input field."/>
+
+<i:local name="localId" value="@generateId('filefield-%s')"/>
+
+<i:pragma name="description"
+          value="Renders a text input field along with a select file button within a Wondergem template"/>
+
+<div class="form-group @UserContext.get().signalFieldError(name) @class">
+    <i:if test="isFilled(label)">
+        <label>
+        <span>
+            @label
+        </span>
+        </label>
+    </i:if>
+    <div id="@localId" class="input-group">
+        <input @if(isFilled(fieldName)) { name="@fieldName" }
+               @if(isFilled(id)) { id="@id" }
+               type="text"
+               value="@UserContext.get().getFieldValue(name, value)"
+               class="form-control input-block-level @fieldClass"
+               @if (isFilled(placeholder)) { placeholder="@placeholder" }
+               @if (readonly) { readonly } @if (autofocus) { autofocus }
+               @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
+        <div class="input-group-append select-btn">
+            <span class="input-group-text">
+                <span class="fa fa-upload"></span>
+            </span>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        sirius.ready(function () {
+            document.querySelector('#___localId .select-btn').addEventListener('click', function () {
+                let value = document.querySelector('#___localId input').value;
+
+                if (value == null || value === '') {
+                    value = '@basePath';
+                } else {
+                    value = value.substr(0, value.lastIndexOf("/"))
+                }
+
+                selectVFSFile(value).then(function (selectedValue) {
+                    document.querySelector('#___localId input').value = selectedValue;
+                });
+            });
+        });
+    </script>
+
+    <i:if test="isFilled(help)">
+        <small class="form-text text-muted">
+            <i:raw>@expandMessage(help)</i:raw>
+        </small>
+    </i:if>
+    <i:if test="UserContext.get().hasError(name)">
+        <small class="error-block form-text">@UserContext.get().getFieldErrorMessage(name)</small>
+    </i:if>
+</div>

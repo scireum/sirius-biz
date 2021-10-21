@@ -9,3 +9,8 @@
 .tracing-info .text-right {
   font-size: 0.9rem;
 }
+
+#select-file-modal .select-file-table {
+  max-height: 400px;
+  overflow-y: auto;
+}
