@@ -1,4 +1,6 @@
 <i:arg name="name" type="String" default=""/>
+<i:arg name="allowFiles" type="boolean"/>
+<i:arg name="allowDirectories" type="boolean"/>
 <i:arg name="fieldName" type="String" default="@name"/>
 <i:arg name="value" type="String"/>
 <i:arg name="basePath" type="String" default=""
@@ -13,7 +15,8 @@
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the form group."/>
-<i:arg name="fieldClass" type="String" default="" description="Lists additional CSS classes to apply to the input field."/>
+<i:arg name="fieldClass" type="String" default=""
+       description="Lists additional CSS classes to apply to the input field."/>
 
 <i:local name="localId" value="@generateId('filefield-%s')"/>
 
@@ -54,8 +57,12 @@
                 } else {
                     value = value.substr(0, value.lastIndexOf("/"))
                 }
-
-                selectVFSFile(value).then(function (selectedValue) {
+                selectVFSFile({
+                    path: value,
+                    allowDirectories: ___allowDirectories,
+                    allowFiles: ___allowFiles,
+                    modalTitle: ___allowDirectories ? (___allowFiles ? '___i18n("VFSController.selectFileOrDirectory")' : '___i18n("VFSController.selectDirectory")') : '___i18n("VFSController.selectFile")'
+                }).then(function (selectedValue) {
                     document.querySelector('#___localId input').value = selectedValue;
                 });
             });

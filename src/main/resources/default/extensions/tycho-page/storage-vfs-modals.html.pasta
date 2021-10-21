@@ -46,39 +46,16 @@
         </t:modal>
 
         <script type="text/javascript">
-            function selectVFSDirectory(path) {
-                document.querySelector("#select-file-modal .modal-title").textContent = "___i18n('VFSController.selectDirectory')";
+            function selectVFSFile(config) {
+                document.querySelector("#select-file-modal .modal-title").textContent = config.modalTitle;
                 return selectFileOrDirectoryModal({
-                    path: path,
-                    onlyDirectories: true,
-                    pathRestriction: undefined,
-                    allowUpload: false,
-                    filter: function (child) {
-                        return true;
-                    },
-                    createRow: function (child, _modal, resolve, changeDirectory) {
-                        const self = this;
-
-                        const _directoryTableRow = document.createElement("tr");
-                        _directoryTableRow.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}'>" +
-                            "<i class='fa fa-folder-open'></i>&nbsp;{{name}}</a></td>", child);
-                        _directoryTableRow.querySelector(".file-link").addEventListener("click", function () {
-                            changeDirectory(this.dataset.path);
-                        });
-                        return _directoryTableRow;
-                    }
-                });
-            }
-
-            function selectVFSFile(path, pathRestriction) {
-                document.querySelector("#select-file-modal .modal-title").textContent = "___i18n('VFSController.selectFile')";
-                return selectFileOrDirectoryModal({
-                    path: path,
-                    onlyDirectories: false,
-                    pathRestriction: pathRestriction,
+                    path: config.path,
+                    allowDirectories: config.allowDirectories,
+                    allowFiles: config.allowFiles,
+                    pathRestriction: config.pathRestriction,
                     allowUpload: true,
                     filter: function (child) {
-                        return pathRestriction === undefined || child.path.startsWith(pathRestriction);
+                        return config.pathRestriction === undefined || child.path.startsWith(config.pathRestriction);
                     },
                     createRow: function (child, _modal, resolve, changeDirectory) {
                         const _self = this;
@@ -120,7 +97,7 @@
                         }
                         const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}", {
                             path: encodeURIComponent(config.path),
-                            onlyDirectories: config.onlyDirectories,
+                            onlyDirectories: config.allowDirectories && !config.allowFiles,
                             skip: page * pageSize,
                             maxItems: pageSize + 1,
                             filter: encodeURIComponent(_searchForm.value)
@@ -255,7 +232,7 @@
                         resolve(config.path);
                     });
 
-                    _modal.querySelector(".ok-btn-js").parentElement.style.display = config.onlyDirectories ? "inline-block" : "none";
+                    _modal.querySelector(".ok-btn-js").parentElement.style.display = config.allowDirectories ? "inline-block" : "none";
 
                     $(_modal).modal('show');
                 });
