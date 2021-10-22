@@ -154,7 +154,10 @@
                                     _uploadBox.classList.add('dropzone');
                                     _uploadBox.innerHTML = '<a class="dropzone-select w-100 btn btn-primary">@i18n("FileUpload.uploadBtn")</a><div class="dropzone-items mt-2"></div>';
                                     new Dropzone("#select-file-modal .upload-box-js", {
-                                        url: '/fs/uploadFromPost',
+                                        url: function (files) {
+                                            return '/fs/upload?filename=' + files[0].name + '&path=' + config.path;
+                                        },
+                                        sendFileAsBody: true,
                                         parallelUploads: 1,
                                         maxFilesize: 4096,
                                         previewTemplate: '' +

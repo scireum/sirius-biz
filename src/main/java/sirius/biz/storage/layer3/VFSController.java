@@ -157,48 +157,6 @@ public class VFSController extends BizController {
     }
 
     /**
-     * Uploads a new file or replaces the contents of an existing one.
-     *
-     * @param ctx the request to handle
-     * @param out the JSON response
-     * @throws Exception in case of an error
-     */
-    @LoginRequired
-    @Routed(value = "/fs/uploadFromPost")
-    @InternalService
-    @Permission(PERMISSION_VIEW_FILES)
-    public void uploadFromPost(WebContext ctx, JSONStructuredOutput out) throws Exception {
-        //TODO OX-7664 temporary endpoint until we support pre-dispatchable again
-        VirtualFile parent = vfs.resolve(ctx.get("path").asString());
-        parent.assertExistingDirectory();
-
-        String filename = ctx.get("filename").asString(ctx.get("qqfile").asString());
-        VirtualFile file = parent.resolve(filename);
-
-        boolean exists = file.exists();
-        if (exists) {
-            file.assertExistingFile();
-        }
-
-        try {
-            ctx.markAsLongCall();
-            file.consumeFile(ctx.getFile("file"));
-            out.property("file", file.path());
-            out.property("refresh", true);
-        } catch (Exception e) {
-            if (!exists) {
-                try {
-                    file.delete();
-                } catch (Exception ex) {
-                    Exceptions.ignore(ex);
-                }
-            }
-
-            throw Exceptions.createHandled().error(e).handle();
-        }
-    }
-
-    /**
      * Deletes the given file or directory.
      *
      * @param ctx the request to handle
