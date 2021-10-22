@@ -23,7 +23,7 @@
             <t:searchHeader page="children" baseUrl="@apply('/fs?path=%s', dir.path())">
                 <i:if test="dir.canCreateChildren()">
                     <a class="btn btn-primary mr-2" href="javascript:createDirectory()">@i18n("VFSController.createDirectory")</a>
-                    <t:fileUpload uploadUrl="/fs/uploadFromPost" path="@dir.path()"
+                    <t:fileUpload uploadUrl="@apply('/fs/upload?path=%s', dir.path())"
                                   previewsContainer="#sirius-upload-progress"/>
                 </i:if>
             </t:searchHeader>
@@ -84,7 +84,7 @@
                                 </i:if>
                             </td>
                             <td class="text-right">
-                                <t:smartFormatTemporal date="@child.lastModifiedDate()" />
+                                <t:smartFormatTemporal date="@child.lastModifiedDate()"/>
                             </td>
                             <td class="text-right">
                                 <t:additionalActions labelKey="template.html.additionalActions"
