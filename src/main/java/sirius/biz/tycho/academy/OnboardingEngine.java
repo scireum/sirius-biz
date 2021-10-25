@@ -60,6 +60,7 @@ public abstract class OnboardingEngine {
      *
      * @param academy the academy to fetch videos for
      * @return the list of videos in the given academy
+     * @throws sirius.kernel.health.HandledException in case the list of videos cannot be obtained
      */
     protected List<? extends AcademyVideo> fetchAcademyVideos(String academy) {
         String executionFlag = "_ONBOARDING-" + academy;
@@ -72,7 +73,7 @@ public abstract class OnboardingEngine {
                                                   LocalDateTime.now(),
                                                   Period.ofDays(2));
             } catch (Exception e) {
-                Exceptions.handle(Log.BACKGROUND, e);
+                throw Exceptions.handle(Log.BACKGROUND, e);
             }
         }
 
@@ -167,7 +168,7 @@ public abstract class OnboardingEngine {
      * @param academy           the academy to filter on
      * @param owner             the owner to filter on
      * @param syncTokenToIgnore the token which is considered valid, all videos with other tokens are considered
-     *                          outdated and will me marked as deleted
+     *                          outdated and will be marked as deleted
      */
     protected abstract void markOutdatedOnboardingVideosAsDeleted(String academy,
                                                                   String owner,
