@@ -41,12 +41,22 @@ public class SQLTenantAutoSetup extends BaseTenantAutoSetup {
 
         AutoSetup.LOG.INFO("Creating system tenant....");
         SQLTenant tenant = new SQLTenant();
-        if (tenants != null) {
-            tenant.setId(Long.parseLong(tenants.getSystemTenantId()));
-        }
         setupTenantData(tenant);
-
         oma.update(tenant);
+
+        if (tenants != null) {
+            try {
+                oma.updateStatement(SQLTenant.class)
+                   .set(SQLTenant.ID, Long.parseLong(tenants.getSystemTenantId()))
+                   .where(SQLTenant.ID, tenant.getId())
+                   .executeUpdate();
+            } catch (Exception e) {
+                AutoSetup.LOG.WARN("Failed to update ID of system tenant from %s to %s: %s",
+                                   tenant.getId(),
+                                   tenants.getSystemTenantId(),
+                                   e.getMessage());
+            }
+        }
 
         // We only create the system user, if no SAML settings are present...
         if (Strings.isEmpty(tenant.getTenantData().getSamlRequestIssuerName())) {

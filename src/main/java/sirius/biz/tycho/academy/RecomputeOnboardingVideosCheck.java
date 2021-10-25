@@ -13,6 +13,8 @@ import sirius.biz.protocol.Traced;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
@@ -87,22 +89,26 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
         }
 
         protected void perform() {
-            onboardingEngine.fetchAcademyVideos(academy)
-                            .stream()
-                            .filter(video -> checkPermission(entity,
-                                                             video.getAcademyVideoData().getRequiredPermission()))
-                            .filter(video -> checkPermission(entity, video.getAcademyVideoData().getRequiredFeature()))
-                            .forEach(video -> {
-                                OnboardingVideo onboardingVideo =
-                                        onboardingEngine.createOrUpdateOnboardingVideo(entity.getUniqueName(),
-                                                                                       video,
-                                                                                       syncToken);
-                                updateCounters(video, onboardingVideo.getOnboardingVideoData());
-                            });
+            try {
+                onboardingEngine.fetchAcademyVideos(academy)
+                                .stream()
+                                .filter(video -> checkPermission(entity,
+                                                                 video.getAcademyVideoData().getRequiredPermission()))
+                                .filter(video -> checkPermission(entity, video.getAcademyVideoData().getRequiredFeature()))
+                                .forEach(video -> {
+                                    OnboardingVideo onboardingVideo =
+                                            onboardingEngine.createOrUpdateOnboardingVideo(entity.getUniqueName(),
+                                                                                           video,
+                                                                                           syncToken);
+                                    updateCounters(video, onboardingVideo.getOnboardingVideoData());
+                                });
 
-            onboardingEngine.markOutdatedOnboardingVideosAsDeleted(academy, entity.getUniqueName(), syncToken);
-            updateStatistics();
-            persistStatistics();
+                onboardingEngine.markOutdatedOnboardingVideosAsDeleted(academy, entity.getUniqueName(), syncToken);
+                updateStatistics();
+                persistStatistics();
+            } catch (Exception e) {
+                Exceptions.handle(Log.BACKGROUND, e);
+            }
         }
 
         private void updateCounters(AcademyVideo video, OnboardingVideoData videoData) {
