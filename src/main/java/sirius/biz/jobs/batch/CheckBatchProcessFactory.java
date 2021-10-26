@@ -41,7 +41,7 @@ public abstract class CheckBatchProcessFactory extends BatchProcessJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-check-square-o";
+        return "fa-check-square";
     }
 
 
