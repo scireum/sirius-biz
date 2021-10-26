@@ -1,67 +1,46 @@
 <i:arg type="Page" name="jobs"/>
 
-<w:page titleKey="JobFactory.plural">
-    <i:block name="head">
-        <style>
-            h4 span {
-                padding-left: 8px;
-            }
-
-            div.job {
-                padding-top: 8px;
-            }
-        </style>
-    </i:block>
-
+<t:page titleKey="JobFactory.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader>
-        <div class="row">
-            <div class="col-md-8">
-                @i18n("JobFactory.plural")
-            </div>
-            <div class="col-md-4 align-right">
-                <i:if test="isFrameworkEnabled('biz.scheduler-jdbc') || isFrameworkEnabled('biz.scheduler-mongo')">
-                    <w:permission permission="permission-manage-scheduler">
-                        <a class="btn btn-default" href="/jobs/scheduler">@i18n("SchedulerEntry.plural")</a>
-                    </w:permission>
-                </i:if>
-            </div>
-        </div>
-    </w:pageHeader>
+    <t:pageHeader titleKey="JobFactory.plural">
+       <i:block name="actions">
+            <i:if test="isFrameworkEnabled('biz.scheduler-jdbc') || isFrameworkEnabled('biz.scheduler-mongo')">
+                <t:permission permission="permission-manage-scheduler">
+                    <a class="btn btn-link" href="/jobs/scheduler">@i18n("SchedulerEntry.plural")</a>
+                </t:permission>
+            </i:if>
+       </i:block>
+    </t:pageHeader>
 
-    <w:tableSearchHeader page="jobs" baseUrl="/jobs"/>
+    <t:searchHeader page="jobs" baseUrl="/jobs"/>
 
-    <i:for type="List" var="blocks" items="blockwise(jobs.getItems(), 2)">
-        <div class="row">
-            <i:for type="Tuple" var="categoryAndJobs" items="blocks">
-                <div class="col-md-6 col-xs-12">
-                    <div class="well">
-                        <i:local name="category"
-                                 value="categoryAndJobs.getFirst().as(sirius.biz.jobs.JobCategory.class)"/>
-                        <h4>
-                            <i class="fa @category.getIcon()"></i>
-                            <span>@category.getLabel()</span>
-                        </h4>
+    <t:datacards size="large">
+            <i:for type="Tuple" var="categoryAndJobs" items="jobs.getItems()">
+                <i:local name="category"
+                         value="categoryAndJobs.getFirst().as(sirius.biz.jobs.JobCategory.class)"/>
+                <t:datacard>
+                      <i:block name="title">
+                        <i class="fa @category.getIcon()"></i>
+                        <span>@category.getLabel()</span>
+                    </i:block>
 
-                        <i:for type="sirius.biz.jobs.JobFactory"
-                               var="job"
-                               items="categoryAndJobs.getSecond().as(java.util.Collection.class)">
-                            <div class="job">
-                                <a class="link" href="/job/@job.getName()">
-                                    <i class="fa @job.getIcon()"></i>
-                                    @job.getLabel()
-                                </a><br>
-                                <small class="muted">@job.getDescription()</small>
-                            </div>
-                        </i:for>
-                    </div>
-                </div>
+                    <i:for type="sirius.biz.jobs.JobFactory"
+                           var="job"
+                           items="categoryAndJobs.getSecond().as(java.util.Collection.class)">
+                        <div class="job">
+                            <a class="link" href="/job/@job.getName()">
+                                <i class="fa @job.getIcon()"></i>
+                                @job.getLabel()
+                            </a><br>
+                            <small class="muted">@job.getDescription()</small>
+                        </div>
+                    </i:for>
+                </t:datacard>
             </i:for>
-        </div>
-    </i:for>
-</w:page>
+    </t:datacards>
+</t:page>
