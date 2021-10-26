@@ -18,6 +18,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.Future;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -30,6 +31,7 @@ import sirius.kernel.settings.Extension;
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -108,16 +110,10 @@ public class ConversionEngine {
         fileExtensionPerVariant = Sirius.getSettings()
                                         .getExtensions(CONFIG_KEY_VARIANTS)
                                         .stream()
-                                        .collect(Collectors.toMap(Extension::getId,
-                                                                  ext -> ext.get(CONFIG_KEY_FILE_EXTENSION)
-                                                                            .asOptionalString()
-                                                                            .orElseGet(() -> Sirius.getSettings()
-                                                                                                   .getExtension(
-                                                                                                           CONFIG_KEY_CONVERTERS,
-                                                                                                           ext.getString(
-                                                                                                                   CONFIG_KEY_CONVERTER))
-                                                                                                   .getString(
-                                                                                                           CONFIG_KEY_FILE_EXTENSION))));
+                                        .map(Extension::getId)
+                                        .collect(Collectors.toMap(x -> x,
+                                                                  variant -> getVariantConfig(variant).apply(
+                                                                          CONFIG_KEY_FILE_EXTENSION).asString()));
     }
 
     /**
@@ -156,24 +152,16 @@ public class ConversionEngine {
      */
     @Nullable
     private Converter createConverter(String variant) {
-        Extension variantConfig = Sirius.getSettings().getExtension(CONFIG_KEY_VARIANTS, variant);
-
-        if (variantConfig == null || variantConfig.isDefault()) {
-            throw new IllegalArgumentException("Unknown variant: " + variant);
-        }
-
-        String converter = variantConfig.get(CONFIG_KEY_CONVERTER).asString();
-        Extension converterConfig = Sirius.getSettings().getExtension(CONFIG_KEY_CONVERTERS, converter);
+        Function<String, Value> variantConfigSupplier = getVariantConfig(variant);
         try {
-            return globalContext.findPart(variantConfig.get(CONFIG_KEY_TYPE)
-                                                       .asString(converterConfig.get(CONFIG_KEY_TYPE).asString()),
-                                          ConverterFactory.class).createConverter(variantConfig, converterConfig);
+            return globalContext.findPart(variantConfigSupplier.apply(CONFIG_KEY_TYPE).asString(),
+                                          ConverterFactory.class).createConverter(variantConfigSupplier);
         } catch (Exception e) {
             Exceptions.handle()
                       .error(e)
                       .to(StorageUtils.LOG)
                       .withSystemErrorMessage("Failed to create a converter of type %s for %s: %s (%s)",
-                                              converter,
+                                              variantConfigSupplier.apply(CONFIG_KEY_CONVERTER),
                                               variant)
                       .handle();
 
@@ -265,5 +253,24 @@ public class ConversionEngine {
      */
     public Average getConversionDuration() {
         return conversionDuration;
+    }
+
+    /**
+     * Creates a config supplier for a variant which combines its config with the converter config.
+     *
+     * @param variant the variant for which a config supplier should be returned
+     * @return a function which takes a key and returns the config value for this variant and key.
+     */
+    public Function<String, Value> getVariantConfig(String variant) {
+        Extension variantConfig = Sirius.getSettings().getExtension(CONFIG_KEY_VARIANTS, variant);
+
+        if (variantConfig == null || variantConfig.isDefault()) {
+            throw new IllegalArgumentException("Unknown variant: " + variant);
+        }
+
+        String converter = variantConfig.get(CONFIG_KEY_CONVERTER).asString();
+        Extension converterConfig = Sirius.getSettings().getExtension(CONFIG_KEY_CONVERTERS, converter);
+
+        return configKey -> variantConfig.get(configKey).replaceIfEmpty(() -> converterConfig.get(configKey).get());
     }
 }

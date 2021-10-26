@@ -9,10 +9,11 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import java.util.function.Function;
 
 /**
  * Provides a simple NOOP converter.
@@ -30,7 +31,7 @@ public class IdentityConverter implements Converter {
     public static class Factory implements ConverterFactory {
 
         @Override
-        public Converter createConverter(Extension variantConfig, Extension converterConfig) {
+        public Converter createConverter(Function<String, Value> configSupplier) {
             return new IdentityConverter();
         }
 
