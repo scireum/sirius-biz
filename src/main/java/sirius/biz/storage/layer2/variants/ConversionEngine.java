@@ -109,7 +109,15 @@ public class ConversionEngine {
                                         .getExtensions(CONFIG_KEY_VARIANTS)
                                         .stream()
                                         .collect(Collectors.toMap(Extension::getId,
-                                                                  ext -> ext.getString(CONFIG_KEY_FILE_EXTENSION)));
+                                                                  ext -> ext.get(CONFIG_KEY_FILE_EXTENSION)
+                                                                            .asOptionalString()
+                                                                            .orElseGet(() -> Sirius.getSettings()
+                                                                                                   .getExtension(
+                                                                                                           CONFIG_KEY_CONVERTERS,
+                                                                                                           ext.getString(
+                                                                                                                   CONFIG_KEY_CONVERTER))
+                                                                                                   .getString(
+                                                                                                           CONFIG_KEY_FILE_EXTENSION))));
     }
 
     /**
@@ -225,7 +233,6 @@ public class ConversionEngine {
         }
     }
 
-
     private void recordErrorInStandbyProcess(ConversionProcess conversionProcess, Exception exception) {
         if (processes != null && tenants != null) {
             processes.executeInStandbyProcess("conversion",
@@ -239,7 +246,9 @@ public class ConversionEngine {
         }
     }
 
-    private void createStandbyProcessLogEntry(ConversionProcess conversionProcess, ProcessContext processContext, String message) {
+    private void createStandbyProcessLogEntry(ConversionProcess conversionProcess,
+                                              ProcessContext processContext,
+                                              String message) {
         processContext.log(ProcessLog.error()
                                      .withNLSKey("ConversionEngine.conversionError")
                                      .withContext("variantName", conversionProcess.getVariantName())
