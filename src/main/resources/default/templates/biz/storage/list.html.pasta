@@ -104,7 +104,7 @@
                                         <i:local name="job"
                                                  value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
                                         <t:dropdownItem url="@linkAndJob.getFirst().toString()"
-                                                        icon="@apply('fa %s', 'fa-file-archive-o')" label="@job.getLabel()"/>
+                                                        icon="@apply('fa %s', job.getIcon())" label="@job.getLabel()"/>
                                     </i:for>
 
                                     <i:if test="!child.isDirectory()">
