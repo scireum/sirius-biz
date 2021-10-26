@@ -17,7 +17,6 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -405,9 +404,10 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     @LoginRequired
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext webContext, String tenantId) {
-        Value goToParameter = webContext.get("goto");
+        boolean isSwitchToMain = "main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId);
+        String redirectTarget = webContext.get("goto").asString(isSwitchToMain ? "/tenants/select" : wondergemRoot);
 
-        if ("main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId)) {
+        if (isSwitchToMain) {
             if (isCurrentlySpying(webContext)) {
                 String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
                 UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
@@ -422,12 +422,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                 webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
                                            + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
             }
-
-            if ("main".equals(tenantId) && goToParameter.isEmptyString()) {
-                webContext.respondWith().redirectTemporarily("/tenants/select");
-            } else {
-                webContext.respondWith().redirectTemporarily(goToParameter.asString(wondergemRoot));
-            }
+            webContext.respondWith().redirectTemporarily(redirectTarget);
             return;
         }
 
@@ -451,8 +446,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
 
         webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                                    effectiveTenant.getIdAsString());
-
-        webContext.respondWith().redirectTemporarily(goToParameter.asString(wondergemRoot));
+        webContext.respondWith().redirectTemporarily(redirectTarget);
     }
 
     /**
