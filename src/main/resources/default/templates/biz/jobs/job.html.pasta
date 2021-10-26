@@ -132,7 +132,7 @@
                         addError(response.message);
                     } else {
                         $('#updateOnly').val('true');
-                        $('#editForm').submit();
+                        sirius.requestSubmit($('#editForm'));
                     }
                 }
             });
@@ -148,7 +148,7 @@
                     $field.val(response.params[i].value);
                     $form.append($field);
                 }
-                $form.submit();
+                sirius.requestSubmit($form);
             });
         }
 
@@ -156,7 +156,7 @@
             $.post('/jobs/preset/delete', {preset: id, csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'},
                 function (response) {
                     $('#updateOnly').val('true');
-                    $('#editForm').submit();
+                    sirius.requestSubmit($('#editForm'));
                 }, 'json');
         }
 

@@ -11,7 +11,7 @@
                 </label>
                 <div class="input-group">
                     <input type="text" name="query" class="form-control" value="@query" autofocus/>
-                    <span class="input-group-addon" onclick="$('#editForm').submit()">
+                    <span class="input-group-addon" onclick="sirius.requestSubmit($('#editForm'))">
                             <i class="fa fa-search"></i>
                         </span>
                 </div>
@@ -34,7 +34,7 @@
     $(document).ready(function () {
         $('#editForm').keydown(function (e) {
             if (e.keyCode === sirius.keys.KEY_ENTER) {
-                $('#editForm').submit();
+                sirius.requestSubmit($('#editForm'));
                 return false;
             }
         });
