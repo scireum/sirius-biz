@@ -111,7 +111,7 @@ public class ConversionEngine {
                                         .getExtensions(CONFIG_KEY_VARIANTS)
                                         .stream()
                                         .map(Extension::getId)
-                                        .collect(Collectors.toMap(x -> x,
+                                        .collect(Collectors.toMap(Function.identity(),
                                                                   variant -> getVariantConfig(variant).apply(
                                                                           CONFIG_KEY_FILE_EXTENSION).asString()));
     }
