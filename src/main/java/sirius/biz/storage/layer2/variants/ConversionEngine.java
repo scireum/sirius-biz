@@ -271,6 +271,12 @@ public class ConversionEngine {
         String converter = variantConfig.get(CONFIG_KEY_CONVERTER).asString();
         Extension converterConfig = Sirius.getSettings().getExtension(CONFIG_KEY_CONVERTERS, converter);
 
-        return configKey -> variantConfig.get(configKey).replaceIfEmpty(() -> converterConfig.get(configKey).get());
+        return configKey -> {
+            Value variantValue = variantConfig.get(configKey);
+            if (variantValue.isNull()) {
+                return converterConfig.get(configKey);
+            }
+            return variantValue;
+        };
     }
 }
