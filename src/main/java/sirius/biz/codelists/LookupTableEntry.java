@@ -11,7 +11,10 @@ package sirius.biz.codelists;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Strings;
 import sirius.web.controller.AutocompleteHelper;
+
+import javax.annotation.Nullable;
 
 /**
  * Represents an entry within a {@link LookupTable}.
@@ -36,8 +39,8 @@ public class LookupTableEntry {
      */
     public LookupTableEntry(String code, String name, String description) {
         this.code = code;
-        this.name = name;
-        this.description = description;
+        this.name = Strings.isEmpty(name) ? null : name;
+        this.description = Strings.isEmpty(description) ? null : description;
     }
 
     public LookupTableEntry markDeprecated() {
@@ -59,10 +62,12 @@ public class LookupTableEntry {
         return code;
     }
 
+    @Nullable
     public String getName() {
         return name;
     }
 
+    @Nullable
     public String getDescription() {
         return description;
     }

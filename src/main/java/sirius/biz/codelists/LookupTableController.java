@@ -11,7 +11,6 @@ package sirius.biz.codelists;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -120,7 +119,7 @@ public class LookupTableController extends BizController {
             output.property("showCode", true);
             output.property("label", labelDisplay.makeDisplayString(entry));
             output.property("name", entry.getName());
-            output.property("description", Strings.isEmpty(entry.getDescription()) ? null : entry.getDescription());
+            output.property("description", entry.getDescription());
             output.property("deprecated", entry.isDeprecated());
             if (showSource) {
                 output.property("source", entry.getSource());
