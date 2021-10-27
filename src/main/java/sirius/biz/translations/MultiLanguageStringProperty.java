@@ -165,7 +165,12 @@ public class MultiLanguageStringProperty extends BaseMapProperty
             return;
         }
 
-        if (Strings.isEmpty(multiLanguageString.fetchText(MultiLanguageString.FALLBACK_KEY))) {
+        if (Strings.isEmpty(multiLanguageString.fetchText(MultiLanguageString.FALLBACK_KEY))
+            && multiLanguageString.data()
+                                  .entrySet()
+                                  .stream()
+                                  .filter(entry -> !entry.getKey().equals(MultiLanguageString.FALLBACK_KEY))
+                                  .anyMatch(entry -> Strings.isFilled(entry.getValue()))) {
             validationConsumer.accept(NLS.fmtr("MultiLanguageStringProperty.fallbackNotSet")
                                          .set(PARAM_FIELD, getFullLabel())
                                          .format());
