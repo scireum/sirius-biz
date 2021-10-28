@@ -11,6 +11,7 @@ package sirius.biz.analytics.reports;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONValidator;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.commons.Strings;
@@ -321,7 +322,7 @@ public class Cells {
             return "";
         }
 
-        if (JSON.isValidObject(cellValue)) {
+        if (JSONValidator.from(cellValue).validate()) {
             try {
                 JSONObject data = JSON.parseObject(cellValue);
                 return renderJSON(data);
@@ -344,7 +345,7 @@ public class Cells {
             return "";
         }
 
-        if (JSON.isValidObject(cellValue)) {
+        if (JSONValidator.from(cellValue).validate()) {
             try {
                 JSONObject data = JSON.parseObject(cellValue);
                 return renderRaw(data);
