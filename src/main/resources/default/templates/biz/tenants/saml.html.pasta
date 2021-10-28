@@ -27,8 +27,7 @@
                                value="@part(sirius.web.security.SAMLHelper.class).generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
                     </form>
 
-                    <a class="link"
-                       href="javascript:sirius.requestSubmit($('#@id'))">@tenant.getTenantData().getName()</a>
+                    <a class="link" href="javascript:$('#@id').submit()">@tenant.getTenantData().getName()</a>
                 </td>
             </tr>
         </i:for>
@@ -38,7 +37,7 @@
     <i:if test="tenants.size() == 1 && !user().isLoggedIn()">
         <script type="text/javascript">
             $(document).ready(function() {
-                sirius.requestSubmit($('form.samlForm'));
+                $('form.samlForm').submit();
             });
         </script>
     </i:if>

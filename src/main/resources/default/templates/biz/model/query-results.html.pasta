@@ -56,7 +56,7 @@
     $(document).ready(function () {
         $('#editForm').keydown(function (e) {
             if (e.keyCode === sirius.keys.KEY_ENTER) {
-                sirius.requestSubmit($('#editForm'));
+                $('#editForm').submit();
                 return false;
             }
         });

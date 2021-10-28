@@ -114,7 +114,7 @@
                     }
                 }
                 updateOutput();
-                sirius.requestSubmit($('#search'));
+                $('#search').submit();
                 return;
             }
 
