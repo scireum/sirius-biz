@@ -181,7 +181,7 @@
             selectVFSDirectory('@dir.path()').then(function (newParent) {
                 $form.find("input[name='path']").val(filePath);
                 $form.find("input[name='newParent']").val(newParent);
-                sirius.requestSubmit($form);
+                $form.submit();
             });
         }
 
