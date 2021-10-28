@@ -159,6 +159,7 @@
                                         },
                                         sendFileAsBody: true,
                                         parallelUploads: 1,
+                                        maxFilesize: null,
                                         previewTemplate: '' +
                                             '<div class="dropzone-item">\n' +
                                             '   <div class="dropzone-file">\n' +
