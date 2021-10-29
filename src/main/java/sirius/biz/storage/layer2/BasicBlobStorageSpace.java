@@ -389,7 +389,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Nonnull
     private String determinePathCacheKey(String tenantId, String path) {
-        return spaceName + "-" + tenantId + "-" + path;
+        return spaceName + "-" + tenantId + "-" + (useNormalizedNames ? path.toLowerCase() : path);
     }
 
     protected Blob fetchByPath(String tenantId, @Nonnull String path) {
