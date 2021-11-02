@@ -89,7 +89,7 @@
                 </i:for>
             </t:infobox>
 
-            <i:if test="@!process.getOutputs().isEmpty()">
+            <i:if test="@process.hasVisibleOutputs()">
                 <t:navbox labelKey="Process.outputs">
                     <t:navboxLink icon="fa fa-bars" labelKey="ProcessLog.plural"
                                   url="@apply('/ps/%s', process.getId())"

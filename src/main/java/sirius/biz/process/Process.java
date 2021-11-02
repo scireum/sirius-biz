@@ -489,6 +489,19 @@ public class Process extends SearchableEntity {
         adminTimings.put(name, (int) average.getAvg());
     }
 
+    /**
+     * Checks if there are more visible outputs than the standard one.
+     *
+     * @return true, if there are more than the standard output visible to the current user
+     */
+    public boolean hasVisibleOutputs() {
+        if (getOutputs().isEmpty()) {
+            return false;
+        }
+        return getOutputs().data().stream().filter(output -> !output.isSystemOutput()).count() > 1
+               || UserContext.getCurrentUser().hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES);
+    }
+
     public String getTitle() {
         return title;
     }
