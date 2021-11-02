@@ -96,9 +96,11 @@
                                   active="page == 'logs'"/>
 
                     <i:for type="sirius.biz.process.output.ProcessOutput" var="output" items="@process.getOutputs()">
-                        <t:navboxLink icon="@output.getIcon()" label="@output.getLabel()"
-                                      url="@apply('/ps/%s/output/%s', process.getId(), output.getName())"
-                                      active="page == 'output-' + output.getName()"/>
+                        <i:if test="@!output.isSystemOutput() || user().hasPermission('permission-manage-all-processes')">
+                            <t:navboxLink icon="@output.getIcon()" label="@output.getLabel()"
+                                          url="@apply('/ps/%s/output/%s', process.getId(), output.getName())"
+                                          active="page == 'output-' + output.getName()"/>
+                        </i:if>
                     </i:for>
 
                     <i:extensions target="process" point="sidebar-menu" process="@process"/>
