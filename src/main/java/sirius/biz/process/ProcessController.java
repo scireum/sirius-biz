@@ -319,6 +319,10 @@ public class ProcessController extends BizController {
         try {
             for (ProcessOutput output : process.getOutputs()) {
                 if (Strings.areEqual(output.getName(), name)) {
+                    if (output.isSystemOutput()) {
+                        UserContext.getCurrentUser()
+                                   .assertPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES);
+                    }
                     ProcessOutputType outputType = context.findPart(output.getType(), ProcessOutputType.class);
                     outputType.render(webContext, process, output);
                     return;
