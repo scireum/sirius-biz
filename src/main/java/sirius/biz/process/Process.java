@@ -498,8 +498,9 @@ public class Process extends SearchableEntity {
         if (getOutputs().isEmpty()) {
             return false;
         }
-        return getOutputs().data().stream().filter(output -> !output.isSystemOutput()).count() > 1
-               || UserContext.getCurrentUser().hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES);
+        return getOutputs().data().stream().anyMatch(output -> !output.isSystemOutput()) || UserContext.getCurrentUser()
+                                                                                                       .hasPermission(
+                                                                                                               ProcessController.PERMISSION_MANAGE_ALL_PROCESSES);
     }
 
     public String getTitle() {
