@@ -317,12 +317,8 @@ public class ProcessController extends BizController {
         Process process = findAccessibleProcess(processId);
 
         try {
-            for (ProcessOutput output : process.getOutputs()) {
-                if (Strings.areEqual(output.getName(), name)) {
-                    ProcessOutputType outputType = context.findPart(output.getType(), ProcessOutputType.class);
-                    outputType.render(webContext, process, output);
-                    return;
-                }
+            if (findAndRenderOutput(webContext, process, name)) {
+                return;
             }
 
             UserContext.message(Message.error()
@@ -333,6 +329,20 @@ public class ProcessController extends BizController {
             UserContext.handle(e);
             webContext.respondWith().redirectToGet("/ps/" + processId);
         }
+    }
+
+    private boolean findAndRenderOutput(WebContext webContext, Process process, String name) {
+        for (ProcessOutput output : process.getOutputs()) {
+            if (Strings.areEqual(output.getName(), name)) {
+                if (output.isSystemOutput()) {
+                    UserContext.getCurrentUser().assertPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES);
+                }
+                ProcessOutputType outputType = context.findPart(output.getType(), ProcessOutputType.class);
+                outputType.render(webContext, process, output);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

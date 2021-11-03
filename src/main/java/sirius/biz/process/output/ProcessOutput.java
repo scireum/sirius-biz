@@ -45,6 +45,12 @@ public class ProcessOutput extends Nested {
     private String type;
 
     /**
+     * Determines if this is a system output which is not shown to "normal" users (ones which don't have
+     * {@link sirius.biz.process.ProcessController#PERMISSION_MANAGE_ALL_PROCESSES}).
+     */
+    private boolean systemOutput = false;
+
+    /**
      * Contains additional metadata used by the {@link ProcessOutputType} to render the output.
      */
     private final StringMap context = new StringMap();
@@ -58,6 +64,9 @@ public class ProcessOutput extends Nested {
     private static final Map<String, String> typeToIcons = new ConcurrentHashMap<>();
 
     public String getIcon() {
+        if (isSystemOutput()) {
+            return "fa fa-lock";
+        }
         return typeToIcons.computeIfAbsent(type, this::computeIcon);
     }
 
@@ -100,6 +109,17 @@ public class ProcessOutput extends Nested {
         return this;
     }
 
+    /**
+     * Marks this ProcessOutput as system output which is not shown to "normal" users (ones which don't have
+     * {@link sirius.biz.process.ProcessController#PERMISSION_MANAGE_ALL_PROCESSES}).
+     *
+     * @return the output itself for fluent method calls
+     */
+    public ProcessOutput asSystemOutput() {
+        this.systemOutput = true;
+        return this;
+    }
+
     public StringMap getContext() {
         return context;
     }
@@ -114,5 +134,9 @@ public class ProcessOutput extends Nested {
 
     public String getLabel() {
         return NLS.smartGet(label);
+    }
+
+    public boolean isSystemOutput() {
+        return systemOutput;
     }
 }
