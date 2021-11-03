@@ -64,6 +64,9 @@ public class ProcessOutput extends Nested {
     private static final Map<String, String> typeToIcons = new ConcurrentHashMap<>();
 
     public String getIcon() {
+        if (isSystemOutput()) {
+            return "fa fa-lock";
+        }
         return typeToIcons.computeIfAbsent(type, this::computeIcon);
     }
 
