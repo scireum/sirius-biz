@@ -67,6 +67,7 @@ public class KnowledgeBaseController extends BizController {
      * @param lang       the language to render the article in
      * @param articleId  the id or code of the article to render
      */
+    @LoginRequired
     @Routed("/kba/:1/:2")
     public void langArticle(WebContext webContext, String lang, String articleId) {
         KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, false).orElse(null);
@@ -87,7 +88,6 @@ public class KnowledgeBaseController extends BizController {
      * @param authKey    the authentication signature to verify
      */
     @Routed("/kba/:1/:2/:3")
-    @LoginRequired
     public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
         KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, true).orElse(null);
         if (article != null && (article.getEntry().checkPermissions()
