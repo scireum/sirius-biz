@@ -67,7 +67,6 @@ public class KnowledgeBaseController extends BizController {
      * @param lang       the language to render the article in
      * @param articleId  the id or code of the article to render
      */
-    @LoginRequired
     @Routed("/kba/:1/:2")
     public void langArticle(WebContext webContext, String lang, String articleId) {
         KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, false).orElse(null);
