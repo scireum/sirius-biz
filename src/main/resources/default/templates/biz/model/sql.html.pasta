@@ -150,7 +150,7 @@
             if (sirius.isEmpty(document.getElementById('exportQuery').value)) {
                 addErrorMessage("Cannot export empty query");
             } else {
-                sirius.requestSubmit(document.getElementById('exportForm'));
+                sirius.requestSubmitForm(document.getElementById('exportForm'));
             }
         }
 
