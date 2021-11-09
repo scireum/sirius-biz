@@ -13,6 +13,7 @@ import sirius.db.es.Bucket;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.query.QueryField;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -72,6 +73,9 @@ public class KnowledgeBase {
         if (Strings.isEmpty(articleId)) {
             return Optional.empty();
         }
+        if (!Sirius.isFrameworkEnabled(FRAMEWORK_KNOWLEDGE_BASE)) {
+            return Optional.empty();
+        }
 
         Optional<KnowledgeBaseEntry> candidate = elastic.select(KnowledgeBaseEntry.class)
                                                         .eq(KnowledgeBaseEntry.LANG, language)
@@ -105,16 +109,20 @@ public class KnowledgeBase {
      */
     public List<String> queryLanguages() {
         if (languages == null) {
-            ElasticQuery<KnowledgeBaseEntry> query = elastic.select(KnowledgeBaseEntry.class)
-                                                            .addAggregation(AggregationBuilder.createTerms(
-                                                                    KnowledgeBaseEntry.LANG));
-            query.computeAggregations();
-            languages = query.getAggregation(KnowledgeBaseEntry.LANG.getName())
-                             .getBuckets()
-                             .stream()
-                             .map(Bucket::getKey)
-                             .sorted()
-                             .collect(Collectors.toList());
+            if (Sirius.isFrameworkEnabled(FRAMEWORK_KNOWLEDGE_BASE)) {
+                ElasticQuery<KnowledgeBaseEntry> query = elastic.select(KnowledgeBaseEntry.class)
+                                                                .addAggregation(AggregationBuilder.createTerms(
+                                                                        KnowledgeBaseEntry.LANG));
+                query.computeAggregations();
+                languages = query.getAggregation(KnowledgeBaseEntry.LANG.getName())
+                                 .getBuckets()
+                                 .stream()
+                                 .map(Bucket::getKey)
+                                 .sorted()
+                                 .collect(Collectors.toList());
+            } else {
+                languages = Collections.emptyList();
+            }
         }
 
         return Collections.unmodifiableList(languages);
@@ -131,6 +139,10 @@ public class KnowledgeBase {
      * @return the list of two-letter ISO codes in which this article is available
      */
     public List<String> queryLanguageVersions(String articleId) {
+        if (!Sirius.isFrameworkEnabled(FRAMEWORK_KNOWLEDGE_BASE)) {
+            return Collections.emptyList();
+        }
+
         return elastic.select(KnowledgeBaseEntry.class)
                       .eq(KnowledgeBaseEntry.ARTICLE_ID, articleId.toUpperCase())
                       .orderAsc(KnowledgeBaseEntry.LANG)
@@ -230,6 +242,10 @@ public class KnowledgeBase {
      * @return a list of matching articles
      */
     public List<KnowledgeBaseArticle> query(String language, String query, int maxResults) {
+        if (!Sirius.isFrameworkEnabled(FRAMEWORK_KNOWLEDGE_BASE)) {
+            return Collections.emptyList();
+        }
+
         List<KnowledgeBaseArticle> result = new ArrayList<>();
         elastic.select(KnowledgeBaseEntry.class)
                .eq(KnowledgeBaseEntry.LANG, language)
