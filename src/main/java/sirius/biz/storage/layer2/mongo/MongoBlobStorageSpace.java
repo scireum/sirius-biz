@@ -285,6 +285,55 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    public Optional<? extends Blob> findAttachedBlobByKey(String referencingEntity, String blobKey) {
+        if (Strings.isEmpty(referencingEntity)) {
+            return Optional.empty();
+        }
+
+        return mango.select(MongoBlob.class)
+                    .eq(MongoBlob.SPACE_NAME, spaceName)
+                    .eq(MongoBlob.BLOB_KEY, blobKey)
+                    .eq(MongoBlob.REFERENCE, referencingEntity)
+                    .eq(MongoBlob.REFERENCE_DESIGNATOR, null)
+                    .eq(MongoBlob.DELETED, false)
+                    .eq(MongoBlob.COMMITTED, true)
+                    .first();
+    }
+
+    @Override
+    public void attachTemporaryBlob(String objectKey, String referencingEntity) {
+        if (Strings.isEmpty(referencingEntity)) {
+            return;
+        }
+
+        if (Strings.isEmpty(objectKey)) {
+            return;
+        }
+
+        long numChanges = mongo.update()
+                               .set(MongoBlob.REFERENCE, referencingEntity)
+                               .set(MongoBlob.TEMPORARY, false)
+                               .where(MongoBlob.SPACE_NAME, spaceName)
+                               .where(MongoBlob.BLOB_KEY, objectKey)
+                               .where(MongoBlob.REFERENCE, null)
+                               .where(MongoBlob.REFERENCE_DESIGNATOR, null)
+                               .where(MongoBlob.TEMPORARY, true)
+                               .where(MongoBlob.COMMITTED, true)
+                               .where(MongoBlob.DELETED, false)
+                               .executeForOne(MongoBlob.class)
+                               .getModifiedCount();
+        if (numChanges == 0) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage(
+                                    "Layer 2/Mongo: An error occurred, cannot reference '%s' from '%s': The blob is either deleted, not temporary or already in use.",
+                                    objectKey,
+                                    referencingEntity)
+                            .handle();
+        }
+    }
+
+    @Override
     public Optional<? extends Blob> findAttachedBlobByType(String referencingEntity, String referenceDesignator) {
         return mango.select(MongoBlob.class)
                     .eq(MongoBlob.SPACE_NAME, spaceName)

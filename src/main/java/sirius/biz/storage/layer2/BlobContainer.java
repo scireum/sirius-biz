@@ -38,6 +38,10 @@ public class BlobContainer extends BaseBlobContainer {
 
     /**
      * Tries to resolve the blob with the given filename which has been attached to the referencing entity.
+     * <p>
+     * Note that this is mainly intended to be used in conjunction with {@link #findOrCreateAttachedBlobByName(String)}.
+     * If multiple blobs with the same name are attached using {@link #attachTemporaryBlob(String)}, this might
+     * match one of the blob, with no guarantees which of the files is matched.
      *
      * @param filename the file to lookup
      * @return the blob with the given name wrapped as optional or an empty optional if no matching blob was found
@@ -67,6 +71,48 @@ public class BlobContainer extends BaseBlobContainer {
                             .handle();
         }
         return getSpace().findOrCreateAttachedBlobByName(owner.getUniqueName(), filename);
+    }
+
+    /**
+     * Resolves a blob which has been attached to the owning entity.
+     *
+     * @param blobKey the blob key to lookup
+     * @return the matching blob or an empty optional if none is found
+     */
+    public Optional<? extends Blob> findAttachedBlobByKey(String blobKey) {
+        if (owner.isNew() || objectStorage == null) {
+            return Optional.empty();
+        }
+
+        return getSpace().findAttachedBlobByKey(owner.getUniqueName(), blobKey);
+    }
+
+    /**
+     * Attaches a temporary blob to this container.
+     *
+     * @param temporaryBlob the temporary blob which has been created using
+     *                      {@link BlobStorageSpace#createTemporaryBlob()}
+     */
+    public void attachTemporaryBlob(Blob temporaryBlob) {
+        attachTemporaryBlob(temporaryBlob.getBlobKey());
+    }
+
+    /**
+     * Attaches a temporary blob to this container.
+     *
+     * @param blobKey the blob key of the temporary blob to attach
+     */
+    public void attachTemporaryBlob(String blobKey) {
+        if (owner.isNew()) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage(
+                                    "Layer 2: Cannot attach an object for a non-persistent entity of type %s",
+                                    owner.getClass().getName())
+                            .handle();
+        }
+
+        getSpace().attachTemporaryBlob(blobKey, owner.getUniqueName());
     }
 
     /**
