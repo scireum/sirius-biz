@@ -126,7 +126,7 @@ public class DatabaseController extends BasicController {
                     throw Exceptions.createHandled()
                                     .withSystemErrorMessage(
                                             "Cannot execute a DDL statement against this database. This can be only done for '%s'",
-                                            database)
+                                            defaultDatabase)
                                     .handle();
                 }
 
