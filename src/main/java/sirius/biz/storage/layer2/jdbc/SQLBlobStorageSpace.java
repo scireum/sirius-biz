@@ -318,6 +318,60 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
+    public void attachTemporaryBlob(String objectKey, String referencingEntity) {
+        if (Strings.isEmpty(referencingEntity)) {
+            return;
+        }
+
+        if (Strings.isEmpty(objectKey)) {
+            return;
+        }
+
+        try {
+            int numChanges = oma.updateStatement(SQLBlob.class)
+                                .set(SQLBlob.REFERENCE, referencingEntity)
+                                .set(SQLBlob.TEMPORARY, false)
+                                .where(SQLBlob.SPACE_NAME, spaceName)
+                                .where(SQLBlob.BLOB_KEY, objectKey)
+                                .where(SQLBlob.REFERENCE, null)
+                                .where(SQLBlob.REFERENCE_DESIGNATOR, null)
+                                .where(SQLBlob.TEMPORARY, true)
+                                .where(SQLBlob.COMMITTED, true)
+                                .where(SQLBlob.DELETED, false)
+                                .executeUpdate();
+            if (numChanges == 0) {
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .withSystemErrorMessage(
+                                        "Layer 2/SQL: An error occurred, cannot reference '%s' from '%s: The blob is either deleted, not temporary or already in use.",
+                                        objectKey,
+                                        referencingEntity)
+                                .handle();
+            }
+        } catch (SQLException e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage(
+                                    "Layer 2/SQL: An error occurred, when referencing '%s' from '%s: %s (%s)",
+                                    objectKey,
+                                    referencingEntity)
+                            .handle();
+        }
+    }
+
+    @Override
+    public Optional<? extends Blob> findAttachedBlobByKey(String referencingEntity, String blobKey) {
+        return oma.select(SQLBlob.class)
+                  .eq(SQLBlob.SPACE_NAME, spaceName)
+                  .eq(SQLBlob.BLOB_KEY, blobKey)
+                  .eq(SQLBlob.REFERENCE, referencingEntity)
+                  .eq(SQLBlob.COMMITTED, true)
+                  .eq(SQLBlob.DELETED, false)
+                  .first();
+    }
+
+    @Override
     public Optional<? extends Blob> findAttachedBlobByType(String referencingEntity, String referenceDesignator) {
         return oma.select(SQLBlob.class)
                   .eq(SQLBlob.SPACE_NAME, spaceName)
