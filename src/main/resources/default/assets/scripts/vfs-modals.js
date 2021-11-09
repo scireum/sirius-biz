@@ -7,45 +7,49 @@
  */
 
 function selectVFSFile(config) {
-    document.querySelector("#select-file-modal .modal-title").textContent = config.modalTitle;
-    return selectVFSFileOrDirectoryModal({
-        path: config.path,
-        allowDirectories: config.allowDirectories,
-        allowFiles: config.allowFiles,
-        pathRestriction: config.pathRestriction,
-        allowUpload: true,
-        filter: function (child) {
-            return config.pathRestriction === undefined || child.path.startsWith(config.pathRestriction);
-        },
-        createRow: function (child, _modal, resolve, changeDirectory) {
-            const _self = this;
-            child.icon = child.directory ? "fa-folder-open" : "fa-file";
 
-            const _fileTableRow = document.createElement("tr");
-            _fileTableRow.innerHTML = Mustache.render(
-                '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa {{icon}}"></i>&nbsp;{{name}}</a></td>' +
-                '<td class="text-right">{{sizeString}}</td>' +
-                '<td class="text-right">{{lastModifiedString}}</td>', child);
+    function filter(child) {
+        return config.pathRestriction === undefined || child.path.startsWith(config.pathRestriction);
+    }
 
-            _fileTableRow.querySelector(".file-link").addEventListener("click", function () {
-                if (this.dataset.dir === "true") {
-                    changeDirectory(this.dataset.path);
-                } else {
-                    $(_modal).modal("hide");
-                    resolve(this.dataset.path);
-                }
-            });
-            return _fileTableRow;
+    function createRow(child, _modal, resolve, changeDirectory) {
+        const _self = this;
+        child.icon = child.directory ? "fa-folder-open" : "fa-file";
+
+        const _fileTableRow = document.createElement("tr");
+        _fileTableRow.innerHTML = Mustache.render(
+            '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa {{icon}}"></i>&nbsp;{{name}}</a></td>' +
+            '<td class="text-right">{{sizeString}}</td>' +
+            '<td class="text-right">{{lastModifiedString}}</td>', child);
+
+        _fileTableRow.querySelector(".file-link").addEventListener("click", function () {
+            if (this.dataset.dir === "true") {
+                changeDirectory(this.dataset.path);
+            } else {
+                $(_modal).modal("hide");
+                resolve(this.dataset.path);
+            }
+        });
+        return _fileTableRow;
+    }
+
+    function replaceEventHandlers(_elem, eventName, handler) {
+        const _clonedElem = _elem.cloneNode(false);
+        while (_elem.hasChildNodes()) {
+            _clonedElem.appendChild(_elem.firstChild);
         }
-    });
-}
+        _elem.parentNode.replaceChild(_clonedElem, _elem);
+        _clonedElem.addEventListener(eventName, handler);
+        return _clonedElem;
+    }
 
-function selectVFSFileOrDirectoryModal(config) {
     return new Promise(function (resolve, reject) {
         const _modal = document.getElementById("select-file-modal");
         const _table = _modal.querySelector('.select-file-table-js');
         const _searchForm = _modal.querySelector('.search-form-js input');
         const pageSize = 25;
+
+        document.querySelector("#select-file-modal .modal-title").textContent = config.modalTitle;
 
         _searchForm.value = "";
 
@@ -72,8 +76,8 @@ function selectVFSFileOrDirectoryModal(config) {
                 let numItems = Math.min(json.children.length, pageSize);
                 for (let i = 0; i < numItems; i++) {
                     let child = json.children[i];
-                    if (config.filter(child)) {
-                        _table.appendChild(config.createRow(child, _modal, resolve, function (newPath) {
+                    if (filter(child)) {
+                        _table.appendChild(createRow(child, _modal, resolve, function (newPath) {
                             config.path = newPath;
                             _searchForm.value = "";
                             pagination.reset();
@@ -94,7 +98,7 @@ function selectVFSFileOrDirectoryModal(config) {
                 _breadcrumbs.textContent = '';
                 for (let i = 0; i < json.path.length; i++) {
                     const element = json.path[i];
-                    if (!config.filter(element)) {
+                    if (!filter(element)) {
                         continue;
                     }
                     const _folderBreadcrumb = document.createElement("li");
@@ -112,7 +116,7 @@ function selectVFSFileOrDirectoryModal(config) {
                 if (config.allowUpload && json.canCreateChildren) {
                     if (!_uploadBox.classList.contains('dropzone')) {
                         _uploadBox.classList.add('dropzone');
-                        _uploadBox.innerHTML = '<a class="dropzone-select w-100 btn btn-primary">@i18n("FileUpload.uploadBtn")</a><div class="dropzone-items mt-2"></div>';
+                        _uploadBox.innerHTML = '<a class="dropzone-select w-100 btn btn-primary">___i18n("FileUpload.uploadBtn")</a><div class="dropzone-items mt-2"></div>';
                         new Dropzone("#select-file-modal .upload-box-js", {
                             url: function (files) {
                                 return '/fs/upload?filename=' + files[0].name + '&path=' + config.path;
@@ -182,16 +186,6 @@ function selectVFSFileOrDirectoryModal(config) {
             });
 
         });
-
-        function replaceEventHandlers(_elem, eventName, handler) {
-            const _clonedElem = _elem.cloneNode(false);
-            while (_elem.hasChildNodes()) {
-                _clonedElem.appendChild(_elem.firstChild);
-            }
-            _elem.parentNode.replaceChild(_clonedElem, _elem);
-            _clonedElem.addEventListener(eventName, handler);
-            return _clonedElem;
-        }
 
         replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), "click", function () {
             pagination.reset();
