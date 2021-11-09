@@ -115,7 +115,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
 
     private void updateArticle(String templatePath, String syncId) {
         try {
-            Template template = tagliatelle.resolve(templatePath).orElseThrow(() -> new IllegalArgumentException(""));
+            Template template = tagliatelle.resolve(templatePath).orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: " + templatePath));
             GlobalRenderContext context = tagliatelle.createRenderContext();
             template.render(context);
 
