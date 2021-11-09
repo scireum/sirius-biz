@@ -87,7 +87,6 @@ public class KnowledgeBaseController extends BizController {
      * @param authKey    the authentication signature to verify
      */
     @Routed("/kba/:1/:2/:3")
-    @LoginRequired
     public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
         KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, true).orElse(null);
         if (article != null && (article.getEntry().checkPermissions()
