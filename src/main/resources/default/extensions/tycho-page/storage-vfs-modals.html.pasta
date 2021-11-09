@@ -12,6 +12,8 @@
             <div class="row mt-4 mb-4 upload-container-js">
                 <div class="col">
                     <div class="upload-box-js sirius-fileupload mb-lg-0 mb-2">
+                        <a class="dropzone-select w-100 btn btn-primary">@i18n("FileUpload.uploadBtn")</a>
+                        <div class="dropzone-items mt-2"></div>
                     </div>
                 </div>
             </div>

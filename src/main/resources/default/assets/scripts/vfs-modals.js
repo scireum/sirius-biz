@@ -115,8 +115,8 @@ function selectVFSFile(config) {
                 const _uploadBox = _modal.querySelector('.upload-box-js');
                 if (config.allowUpload && json.canCreateChildren) {
                     if (!_uploadBox.classList.contains('dropzone')) {
+                        _uploadBox.style.display = '';
                         _uploadBox.classList.add('dropzone');
-                        _uploadBox.innerHTML = '<a class="dropzone-select w-100 btn btn-primary">___i18n("FileUpload.uploadBtn")</a><div class="dropzone-items mt-2"></div>';
                         new Dropzone("#select-file-modal .upload-box-js", {
                             url: function (files) {
                                 return '/fs/upload?filename=' + files[0].name + '&path=' + config.path;
@@ -180,7 +180,7 @@ function selectVFSFile(config) {
                         })
                     }
                 } else {
-                    _uploadBox.textContent = '';
+                    _uploadBox.style.display = 'none';
                     _uploadBox.classList.remove('dropzone');
                 }
             });
