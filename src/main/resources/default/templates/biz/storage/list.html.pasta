@@ -28,104 +28,105 @@
                 </i:if>
             </t:searchHeader>
             <div id="sirius-upload-progress" class="mt-3 mb-3 dropzone-items"></div>
-            <t:datacard>
-                <table class="table table-hover">
-                    <thead>
-                    <tr>
-                        <th>
-                            @i18n("Model.name")<br>
-                            <small class="muted">@i18n("Model.description")</small>
-                        </th>
-                        <th class="text-right">
-                            @i18n("VirtualFile.size")
-                        </th>
-                        <th class="text-right">
-                            @i18n("VirtualFile.lastModified")
-                        </th>
-                        <th>
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <i:if test="dir.parent() != null">
+            <div class="row">
+                <t:datacard>
+                    <table class="table table-hover">
+                        <thead>
                         <tr>
-                            <td>
-                                <a class="link" href="/fs?path=@urlEncode(dir.parent().path())">
-                                    <i class="fa fa-folder-open"></i>
-                                    ..
-                                </a>
-                            </td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <th>
+                                @i18n("Model.name")<br>
+                                <small class="muted">@i18n("Model.description")</small>
+                            </th>
+                            <th class="text-right">
+                                @i18n("VirtualFile.size")
+                            </th>
+                            <th class="text-right">
+                                @i18n("VirtualFile.lastModified")
+                            </th>
+                            <th>
+                            </th>
                         </tr>
-                    </i:if>
-                    <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child" items="children.getItems()">
-                        <tr>
-                            <td>
-                                <div>
-                                    <a class="link" href="/fs?path=@urlEncode(child.path())">
-                                        <i:if test="child.isDirectory()">
-                                            <i class="fa fa-folder-open"></i>
-                                            <i:else>
-                                                <i class="fa fa-file"></i>
-                                            </i:else>
-                                        </i:if>
-                                        @child.name()
+                        </thead>
+                        <tbody>
+                        <i:if test="dir.parent() != null">
+                            <tr>
+                                <td>
+                                    <a class="link" href="/fs?path=@urlEncode(dir.parent().path())">
+                                        <i class="fa fa-folder-open"></i>
+                                        ..
                                     </a>
-                                </div>
-                                <div>
-                                    <small class="muted">@child.description()</small>
-                                </div>
-                            </td>
-                            <td class="text-right">
-                                <i:if test="!child.isDirectory()">
-                                    @formatSize(child.size())
-                                </i:if>
-                            </td>
-                            <td class="text-right">
-                                <t:smartFormatTemporal date="@child.lastModifiedDate()"/>
-                            </td>
-                            <td class="text-right">
-                                <t:additionalActions labelKey="template.html.additionalActions"
-                                                     labelClass="d-none d-xl-inline-block">
-                                    <i:local name="jobs"
-                                             value="@part(Jobs.class).getMatchingInteractiveJobs(CallContext.getCurrent().get(WebContext.class).getRequest().uri(), child)"/>
-                                    <i:if test="child.canRename()">
-                                        <t:dropdownItem
-                                                url="@apply('javascript:renameFile(\'%s\', \'%s\')', child.path(), child.name())"
-                                                icon="fa fa-tag" labelKey="VFSController.rename"/>
-                                    </i:if>
-                                    <i:if test="child.canMove()">
-                                        <t:dropdownItem url="@apply('javascript:moveFile(\'%s\')', child.path())"
-                                                        icon="fa fa-arrow-right" labelKey="VFSController.move"/>
-                                    </i:if>
-                                    <i:for type="Tuple" var="linkAndJob" items="jobs">
-                                        <i:local name="job"
-                                                 value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
-                                        <t:dropdownItem url="@linkAndJob.getFirst().toString()"
-                                                        icon="fa fa-cogs" label="@job.getLabel()"/>
-                                    </i:for>
-
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </i:if>
+                        <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child" items="children.getItems()">
+                            <tr>
+                                <td>
+                                    <div>
+                                        <a class="link" href="/fs?path=@urlEncode(child.path())">
+                                            <i:if test="child.isDirectory()">
+                                                <i class="fa fa-folder-open"></i>
+                                                <i:else>
+                                                    <i class="fa fa-file"></i>
+                                                </i:else>
+                                            </i:if>
+                                            @child.name()
+                                        </a>
+                                    </div>
+                                    <div>
+                                        <small class="muted">@child.description()</small>
+                                    </div>
+                                </td>
+                                <td class="text-right">
                                     <i:if test="!child.isDirectory()">
-                                        <t:dropdownItem url="@apply('javascript:copyToClipboard(\'%s\')', child.path())"
-                                                        icon="fa fa-copy" labelKey="VFSController.copyPath"/>
+                                        @formatSize(child.size())
                                     </i:if>
-                                    <i:if test="child.canDelete()">
-                                        <t:dropdownDeleteItem
-                                                url="@apply('/fs/delete?path=%s', urlEncode(child.path()))"
-                                                page="children"/>
-                                    </i:if>
-                                </t:additionalActions>
-                            </td>
-                        </tr>
-                    </i:for>
-                    </tbody>
-                </table>
-                <i:block name="footer">
-                    <t:pagination page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
-                </i:block>
-            </t:datacard>
+                                </td>
+                                <td class="text-right">
+                                    <t:smartFormatTemporal date="@child.lastModifiedDate()"/>
+                                </td>
+                                <td class="text-right">
+                                    <t:additionalActions labelKey="template.html.additionalActions"
+                                                         labelClass="d-none d-xl-inline-block">
+                                        <i:local name="jobs"
+                                                 value="@part(Jobs.class).getMatchingInteractiveJobs(CallContext.getCurrent().get(WebContext.class).getRequest().uri(), child)"/>
+                                        <i:if test="child.canRename()">
+                                            <t:dropdownItem
+                                                    url="@apply('javascript:renameFile(\'%s\', \'%s\')', child.path(), child.name())"
+                                                    icon="fa fa-tag" labelKey="VFSController.rename"/>
+                                        </i:if>
+                                        <i:if test="child.canMove()">
+                                            <t:dropdownItem url="@apply('javascript:moveFile(\'%s\')', child.path())"
+                                                            icon="fa fa-arrow-right" labelKey="VFSController.move"/>
+                                        </i:if>
+                                        <i:for type="Tuple" var="linkAndJob" items="jobs">
+                                            <i:local name="job"
+                                                     value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
+                                            <t:dropdownItem url="@linkAndJob.getFirst().toString()"
+                                                            icon="fa fa-cogs" label="@job.getLabel()"/>
+                                        </i:for>
+                                        <i:if test="!child.isDirectory()">
+                                            <t:dropdownItem url="@apply('javascript:copyToClipboard(\'%s\')', child.path())"
+                                                            icon="fa fa-copy" labelKey="VFSController.copyPath"/>
+                                        </i:if>
+                                        <i:if test="child.canDelete()">
+                                            <t:dropdownDeleteItem
+                                                    url="@apply('/fs/delete?path=%s', urlEncode(child.path()))"
+                                                    page="children"/>
+                                        </i:if>
+                                    </t:additionalActions>
+                                </td>
+                            </tr>
+                        </i:for>
+                        </tbody>
+                    </table>
+                    <i:block name="footer">
+                        <t:pagination page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
+                    </i:block>
+                </t:datacard>
+            </div>
         </div>
     </div>
     <form id="rename-form" method="post" action="/fs/rename">
