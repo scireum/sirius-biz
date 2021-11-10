@@ -82,6 +82,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private static final String HANDLER_OUTPUT_STREAM_SUPPLIER = "outputStreamSupplier";
     private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
     private static final String MESSAGE_KEY_LOAD_FROM_URL_FAILED = "$VirtualFile.loadFromUrlFailed";
+    private static final String MESSAGE_KEY_LOAD_FROM_URL_DISABLED = "$VirtualFile.loadFromUrlDisabled";
 
     protected String name;
     protected String description;
@@ -1410,7 +1411,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             }
 
             if (mode == FetchFromUrlMode.NEVER_FETCH) {
-                throw createInvalidPathError(url);
+                throw Exceptions.createHandled()
+                                .withNLSKey("VirtualFile.loadFromUrl.noValidPathWithoutDownload")
+                                .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_DISABLED)
+                                .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_VERY_LOW)
+                                .set("url", url.toString())
+                                .handle();
             }
 
             return resolveViaHeadRequest(url, mode, fileExtensionVerifier);
