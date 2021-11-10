@@ -17,6 +17,8 @@
 <i:arg name="id" type="String" default=""/>
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
+<i:arg type="String" name="allowedExtensions" default=""
+       description="This is a comma separated list allowed file extensions. Eg.: mp4,mpeg"/>
 <i:local name="localId" value="@generateId('filefield-%s')"/>
 
 <i:pragma name="description"
@@ -53,7 +55,7 @@
                     value = value.substr(0, value.lastIndexOf("/"))
                 }
 
-                selectVFSFile(value).then(function (selectedValue) {
+                selectVFSFile(value, null, '___allowedExtensions').then(function (selectedValue) {
                     $('.___localId input').val(selectedValue);
                 });
             });
