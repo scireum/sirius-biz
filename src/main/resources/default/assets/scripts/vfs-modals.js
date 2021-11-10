@@ -59,12 +59,13 @@ function selectVFSFile(config) {
             } else {
                 pagination._previousBtn.classList.remove("disabled");
             }
-            const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}", {
+            const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}&extensions={{extensions}}", {
                 path: encodeURIComponent(config.path),
                 onlyDirectories: config.allowDirectories && !config.allowFiles,
                 skip: page * pageSize,
                 maxItems: pageSize + 1,
-                filter: encodeURIComponent(_searchForm.value)
+                filter: encodeURIComponent(_searchForm.value),
+                extensions: encodeURIComponent(config.allowedExtensions)
             });
             fetch(url).then(function (response) {
                 if (!response.ok) {
@@ -124,6 +125,7 @@ function selectVFSFile(config) {
                             sendFileAsBody: true,
                             parallelUploads: 1,
                             maxFilesize: null,
+                            acceptedFiles: config.allowedExtensions,
                             previewTemplate: '' +
                                 '<div class="dropzone-item">\n' +
                                 '   <div class="dropzone-file">\n' +

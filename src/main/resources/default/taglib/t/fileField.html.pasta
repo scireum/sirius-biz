@@ -5,6 +5,8 @@
 <i:arg name="value" type="String"/>
 <i:arg name="basePath" type="String" default=""
        description="Provides the base path which is first opened in the modal when no value is present."/>
+<i:arg type="String" name="allowedExtensions" default=""
+       description="This is a comma separated list allowed file extensions. Eg.: .mp4,.mpeg"/>
 <i:arg name="labelKey" type="String" default=""/>
 <i:arg name="label" type="String" default="@i18n(labelKey)"/>
 <i:arg name="helpKey" type="String" default=""/>
@@ -62,6 +64,7 @@
                     allowUpload: true,
                     allowDirectories: ___allowDirectories,
                     allowFiles: ___allowFiles,
+                    allowedExtensions: '___allowedExtensions',
                     modalTitle: ___allowDirectories ? (___allowFiles ? '___i18n("VFSController.selectFileOrDirectory")' : '___i18n("VFSController.selectDirectory")') : '___i18n("VFSController.selectFile")'
                 }).then(function (selectedValue) {
                     document.querySelector('#___localId input').value = selectedValue;

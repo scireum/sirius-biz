@@ -31,6 +31,7 @@ import sirius.web.util.LinkBuilder;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -304,6 +305,13 @@ public class VFSController extends BizController {
             search.withOnlyDirectories();
         }
         search.withPrefixFilter(webContext.get("filter").asString());
+        webContext.get("extensions").ifFilled(extensionString -> {
+            Arrays.stream(extensionString.asString().split(","))
+                  .map(Strings::trim)
+                  .filter(Strings::isFilled)
+                  .map(string -> string.startsWith(".") ? string.substring(1) : string)
+                  .forEach(search::withFileExtension);
+        });
 
         // because of the additional ".."-entry for the parent, we need to adjust the pagination skip/limit
         boolean hasParent = parent.parent() != null;
