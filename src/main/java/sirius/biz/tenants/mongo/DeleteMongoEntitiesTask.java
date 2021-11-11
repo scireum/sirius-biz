@@ -20,8 +20,10 @@ import sirius.kernel.di.std.Part;
 
 /**
  * Deletes all entities of a given subclass of {@link MongoTenantAware} which belong to the given tenant.
+ *
+ * @param <E> the generic type of the entities being deleted
  */
-public abstract class DeleteMongoEntitiesTask extends DeleteEntitiesTask {
+public abstract class DeleteMongoEntitiesTask<E extends MongoTenantAware> extends DeleteEntitiesTask {
 
     @Part
     protected Mango mango;
@@ -43,7 +45,7 @@ public abstract class DeleteMongoEntitiesTask extends DeleteEntitiesTask {
      *
      * @param entityToDelete the entity that will be deleted
      */
-    protected void beforeDelete(MongoTenantAware entityToDelete) {
+    protected void beforeDelete(E entityToDelete) {
         // No work to do by default here.
     }
 
@@ -53,12 +55,12 @@ public abstract class DeleteMongoEntitiesTask extends DeleteEntitiesTask {
      *
      * @param entityToDelete the entity that was deleted
      */
-    protected void afterDelete(MongoTenantAware entityToDelete) {
+    protected void afterDelete(E entityToDelete) {
         // No work to do by default here.
     }
 
     @Override
-    protected MongoQuery<? extends MongoTenantAware> getQuery(Tenant<?> tenant) {
+    protected MongoQuery<E> getQuery(Tenant<?> tenant) {
         return mango.select(getEntityClass()).eq(TenantAware.TENANT, tenant);
     }
 
@@ -68,5 +70,5 @@ public abstract class DeleteMongoEntitiesTask extends DeleteEntitiesTask {
      * @return the class of the entities to be deleted
      */
     @Override
-    protected abstract Class<? extends MongoTenantAware> getEntityClass();
+    protected abstract Class<E> getEntityClass();
 }

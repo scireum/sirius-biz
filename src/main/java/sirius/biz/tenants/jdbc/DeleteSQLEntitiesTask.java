@@ -20,8 +20,10 @@ import sirius.kernel.di.std.Part;
 
 /**
  * Deletes all entities of a given subclass of {@link SQLTenantAware} which belong to the given tenant.
+ *
+ * @param <E> the generic type of the entities being deleted
  */
-public abstract class DeleteSQLEntitiesTask extends DeleteEntitiesTask {
+public abstract class DeleteSQLEntitiesTask<E extends SQLTenantAware> extends DeleteEntitiesTask {
 
     @Part
     protected OMA oma;
@@ -43,7 +45,7 @@ public abstract class DeleteSQLEntitiesTask extends DeleteEntitiesTask {
      *
      * @param entityToDelete the entity that will be deleted
      */
-    protected void beforeDelete(SQLTenantAware entityToDelete) {
+    protected void beforeDelete(E entityToDelete) {
         // No work to do by default here.
     }
 
@@ -53,12 +55,12 @@ public abstract class DeleteSQLEntitiesTask extends DeleteEntitiesTask {
      *
      * @param entityToDelete the entity that was deleted
      */
-    protected void afterDelete(SQLTenantAware entityToDelete) {
+    protected void afterDelete(E entityToDelete) {
         // No work to do by default here.
     }
 
     @Override
-    protected SmartQuery<? extends SQLTenantAware> getQuery(Tenant<?> tenant) {
+    protected SmartQuery<E> getQuery(Tenant<?> tenant) {
         return oma.select(getEntityClass()).eq(TenantAware.TENANT, tenant);
     }
 
@@ -68,5 +70,5 @@ public abstract class DeleteSQLEntitiesTask extends DeleteEntitiesTask {
      * @return the class of the entities to be deleted
      */
     @Override
-    protected abstract Class<? extends SQLTenantAware> getEntityClass();
+    protected abstract Class<E> getEntityClass();
 }

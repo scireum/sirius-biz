@@ -9,19 +9,18 @@
 package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeList;
-import sirius.biz.tenants.mongo.DeleteMongoEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
-import sirius.biz.tenants.mongo.MongoTenantAware;
+import sirius.biz.tenants.mongo.DeleteMongoEntitiesTask;
 import sirius.kernel.di.std.Register;
 
 /**
  * Deletes all {@link CodeList code lists} of the given tenant.
  */
 @Register(classes = DeleteTenantTask.class, framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
-public class DeleteMongoCodeListsTask extends DeleteMongoEntitiesTask {
+public class DeleteMongoCodeListsTask extends DeleteMongoEntitiesTask<MongoCodeList> {
 
     @Override
-    protected Class<? extends MongoTenantAware> getEntityClass() {
+    protected Class<MongoCodeList> getEntityClass() {
         return MongoCodeList.class;
     }
 

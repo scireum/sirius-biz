@@ -16,10 +16,10 @@ import sirius.kernel.di.std.Register;
  * Deletes all {@link UserAccount user accounts} of the given tenant.
  */
 @Register(classes = DeleteTenantTask.class, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
-public class DeleteMongoUserAccountTask extends DeleteMongoEntitiesTask {
+public class DeleteMongoUserAccountTask extends DeleteMongoEntitiesTask<MongoUserAccount> {
 
     @Override
-    protected Class<? extends MongoTenantAware> getEntityClass() {
+    protected Class<MongoUserAccount> getEntityClass() {
         return MongoUserAccount.class;
     }
 

@@ -10,17 +10,16 @@ package sirius.biz.jobs.presets.mongo;
 
 import sirius.biz.tenants.deletion.DeleteTenantTask;
 import sirius.biz.tenants.mongo.DeleteMongoEntitiesTask;
-import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.kernel.di.std.Register;
 
 /**
  * Deletes all {@link sirius.biz.jobs.presets.JobPreset job presets} of the given tenant.
  */
 @Register(classes = DeleteTenantTask.class, framework = MongoJobPresets.FRAMEWORK_PRESETS_MONGO)
-public class DeleteMongoJobPresetsTask extends DeleteMongoEntitiesTask {
+public class DeleteMongoJobPresetsTask extends DeleteMongoEntitiesTask<MongoJobPreset> {
 
     @Override
-    protected Class<? extends MongoTenantAware> getEntityClass() {
+    protected Class<MongoJobPreset> getEntityClass() {
         return MongoJobPreset.class;
     }
 
