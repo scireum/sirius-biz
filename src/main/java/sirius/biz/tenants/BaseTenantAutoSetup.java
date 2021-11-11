@@ -55,6 +55,7 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
     protected void setupTenantData(Tenant<?> tenant) {
         updateSamlData(tenant);
         tenant.getTenantData().setName("System Tenant");
+        tenant.getTenantData().setFullName("System Tenant");
 
         extenders.forEach(extender -> extender.enhanceTenant(tenant));
     }
