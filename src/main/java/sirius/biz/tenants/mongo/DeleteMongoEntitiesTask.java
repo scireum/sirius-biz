@@ -30,9 +30,31 @@ public abstract class DeleteMongoEntitiesTask extends DeleteEntitiesTask {
     public void execute(ProcessContext processContext, Tenant<?> tenant) {
         getQuery(tenant).iterateAll(entity -> {
             Watch watch = Watch.start();
+            beforeDelete(entity);
             mango.delete(entity);
+            afterDelete(entity);
             processContext.addTiming(DeleteTenantJobFactory.TIMING_DELETED_ITEMS, watch.elapsedMillis());
         });
+    }
+
+    /**
+     * Allows intercepting before an entity is deleted in the {@link #execute(ProcessContext, Tenant)} loop by
+     * overwriting this method.
+     *
+     * @param entityToDelete the entity that will be deleted
+     */
+    protected void beforeDelete(MongoTenantAware entityToDelete) {
+        // No work to do by default here.
+    }
+
+    /**
+     * Allows intercepting after an entity is deleted in the {@link #execute(ProcessContext, Tenant)} loop by
+     * overwriting this method.
+     *
+     * @param entityToDelete the entity that was deleted
+     */
+    protected void afterDelete(MongoTenantAware entityToDelete) {
+        // No work to do by default here.
     }
 
     @Override
