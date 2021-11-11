@@ -14,3 +14,8 @@
   max-height: 400px;
   overflow-y: auto;
 }
+
+#schemaList > thead > tr > th {
+  font-size: 1rem;
+  vertical-align: top;
+}

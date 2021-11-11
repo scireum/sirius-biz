@@ -1,0 +1,19 @@
+<k:article code="S1Q2L"
+           lang="en"
+           parent="DJELK"
+           title="Database Schema"
+           permissions="flag-system-tenant">
+    <i:block name="description">Describes the functionality of the database schema.</i:block>
+    <k:section>
+        The <a href="/system/schema" target="_blank">Database Schema</a> can be used to view all schema changes
+        of the databases used in the system and execute them via the system.
+    </k:section>
+    <k:section>
+        <p>The listed changes to the database schema are recommended so that the application can be executed.</p>
+        <p>Please note that manually created tables may also be proposed for deletion.
+            Here you should check whether these tables should really be deleted.</p>
+        <p>In any case, it is recommended to perform a <b>database backup</b> before making changes.</p>
+        <p>Some changes, such as deleting a column, may only be executed after dependent changes
+            (e.g. deleting <b>FOREIGN KEYs</b>) have been made.</p>
+    </k:section>
+</k:article>
