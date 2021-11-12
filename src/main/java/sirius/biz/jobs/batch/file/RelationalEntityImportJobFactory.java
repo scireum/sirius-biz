@@ -17,6 +17,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.Query;
+import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -50,10 +51,24 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
                                                    process,
                                                    getName()).withDeleteQueryTuner(this::tuneDeleteQuery)
                                                              .withContextExtender(context -> context.putAll(
-                                                                     parameterContext));
+                                                                     parameterContext))
+                                                             .withAfterSaveHandler(this::afterSaveHandler);
     }
 
     protected void tuneDeleteQuery(ProcessContext processContext, Q query) {
+    }
+
+    /**
+     * Executes post-processing actions on a saved entity.
+     * <p>
+     * This method executes nothing by default and can be overridden whenever post-processing
+     * tasks should be executed after an entity is saved.
+     *
+     * @param entity  the entity saved
+     * @param context the original context used to create or update the entity
+     */
+    protected void afterSaveHandler(E entity, Context context) {
+        // nothing to execute by default
     }
 
     /**

@@ -15,6 +15,7 @@ import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -42,7 +43,8 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
         return new EntityImportJob<>(getImportType(),
                                      getDictionary(),
                                      process,
-                                     getName()).withContextExtender(context -> context.putAll(parameterContext));
+                                     getName()).withContextExtender(context -> context.putAll(parameterContext))
+                                               .withAfterSaveHandler(this::afterSaveHandler);
     }
 
     /**
@@ -54,6 +56,19 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
      */
     protected void transferParameters(ImportContext context, ProcessContext processContext) {
         // nothing to transfer by default
+    }
+
+    /**
+     * Executes post-processing actions on a saved entity.
+     * <p>
+     * This method executes nothing by default and can be overridden whenever post-processing
+     * tasks should be executed after an entity is saved.
+     *
+     * @param entity  the entity saved
+     * @param context the original context used to create or update the entity
+     */
+    protected void afterSaveHandler(BaseEntity<?> entity, Context context) {
+        // nothing to execute by default
     }
 
     /**
