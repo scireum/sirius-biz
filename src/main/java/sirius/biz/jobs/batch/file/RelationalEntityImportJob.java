@@ -77,6 +77,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     protected Class<E> type;
     protected SyncMode mode;
     protected BiConsumer<ProcessContext, Q> queryTuner;
+    protected BiConsumer<E, Context> afterSaveHandler;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -119,6 +120,17 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
      */
     public RelationalEntityImportJob<E, Q> withDeleteQueryTuner(BiConsumer<ProcessContext, Q> queryTuner) {
         this.queryTuner = queryTuner;
+        return this;
+    }
+
+    /**
+     * Specifies a handler to be called after saving an entity.
+     *
+     * @param afterSaveHandler a consumer that receives the created or updated entity and the original context used
+     * @return the job itself for fluent method calls
+     */
+    public RelationalEntityImportJob<E, Q> withAfterSaveHandler(BiConsumer<E, Context> afterSaveHandler) {
+        this.afterSaveHandler = afterSaveHandler;
         return this;
     }
 
@@ -260,6 +272,13 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
      * @see sirius.biz.importer.Importer#createOrUpdateNow(BaseEntity)
      */
     protected void createOrUpdate(E entity, Context context) {
-        importer.createOrUpdateNow(entity);
+        E savedEntity = importer.createOrUpdateNow(entity);
+        callAfterSaveHandler(savedEntity, context);
+    }
+
+    private void callAfterSaveHandler(E entity, Context context) {
+        if (afterSaveHandler != null) {
+            afterSaveHandler.accept(entity, context);
+        }
     }
 }

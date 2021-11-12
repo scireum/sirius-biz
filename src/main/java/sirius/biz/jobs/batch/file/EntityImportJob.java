@@ -23,6 +23,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -42,7 +43,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      */
     public static final Parameter<ImportMode> IMPORT_MODE_PARAMETER =
             new EnumParameter<>("importMode", "$EntityImportJobFactory.importMode", ImportMode.class).withDefault(
-                    ImportMode.NEW_AND_UPDATES)
+                                                                                                             ImportMode.NEW_AND_UPDATES)
                                                                                                      .markRequired()
                                                                                                      .withDescription(
                                                                                                              "$EntityImportJobFactory.importMode.help")
@@ -59,6 +60,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     protected Consumer<Context> contextExtender;
     protected Class<E> type;
     protected ImportMode mode;
+    protected BiConsumer<E, Context> afterSaveHandler;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -84,6 +86,17 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      */
     public EntityImportJob<E> withContextExtender(Consumer<Context> contextExtender) {
         this.contextExtender = contextExtender;
+        return this;
+    }
+
+    /**
+     * Specifies a handler to be called after saving an entity.
+     *
+     * @param afterSaveHandler a consumer that receives the created or updated entity and the original context used
+     * @return the job itself for fluent method calls
+     */
+    public EntityImportJob<E> withAfterSaveHandler(BiConsumer<E, Context> afterSaveHandler) {
+        this.afterSaveHandler = afterSaveHandler;
         return this;
     }
 
@@ -183,6 +196,13 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * @see sirius.biz.importer.Importer#createOrUpdateNow(BaseEntity)
      */
     protected void createOrUpdate(E entity, Context context) {
-        importer.createOrUpdateNow(entity);
+        E savedEntity = importer.createOrUpdateNow(entity);
+        callAfterSaveHandler(savedEntity, context);
+    }
+
+    private void callAfterSaveHandler(E entity, Context context) {
+        if (afterSaveHandler != null) {
+            afterSaveHandler.accept(entity, context);
+        }
     }
 }
