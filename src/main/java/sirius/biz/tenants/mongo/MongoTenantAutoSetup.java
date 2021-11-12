@@ -82,12 +82,11 @@ public class MongoTenantAutoSetup extends BaseTenantAutoSetup {
         MongoTenant tenant = mango.find(MongoTenant.class, tenants.getSystemTenantId()).orElse(null);
         if (tenant != null) {
             updateSamlData(tenant);
-        }
-
-        if (tenant.isAnyMappingChanged()) {
-            AutoSetup.LOG.INFO(
-                    "Updating the SAML settings of the system tenant using the data from the system config...");
-            mango.update(tenant);
+            if (tenant.isAnyMappingChanged()) {
+                AutoSetup.LOG.INFO(
+                        "Updating the SAML settings of the system tenant using the data from the system config...");
+                mango.update(tenant);
+            }
         }
     }
 }
