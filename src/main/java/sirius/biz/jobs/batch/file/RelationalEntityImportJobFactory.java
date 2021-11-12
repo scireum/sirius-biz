@@ -25,11 +25,11 @@ import sirius.kernel.health.Log;
 import java.util.function.Consumer;
 
 /**
- * Provides a base implementation for batch jobs which synchronize a set of entities based on line based files using a
+ * Provides a base implementation for batch jobs which synchronize a set of entities based on line-based files using a
  * {@link sirius.biz.importer.ImportHandler}.
  *
  * @param <E> the type of entities being imported by this job
- * @param <Q> the generic type of queries for the entities being procesed
+ * @param <Q> the generic type of queries for the entities being processed
  */
 public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJobFactory {
@@ -55,7 +55,16 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
                                                              .withAfterSaveHandler(this::afterSaveHandler);
     }
 
+    /**
+     * Enhances the deletion query.
+     * <p>
+     * This permits to control which entities will be deleted if they remain unmarked during an import.
+     *
+     * @param processContext the process context
+     * @param query          the query to enhance
+     */
     protected void tuneDeleteQuery(ProcessContext processContext, Q query) {
+        // nothing to execute by default
     }
 
     /**
@@ -72,7 +81,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     }
 
     /**
-     * Permits to transfer parameters into the import context.
+     * Permits transferring parameters into the import context.
      *
      * @param context        the context to enrich. This will be transferred to the underlying {@link Importer} and
      *                       {@link sirius.biz.importer.ImportHandler import handlers}
@@ -105,7 +114,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     protected abstract Class<E> getImportType();
 
     /**
-     * Adds the possibility to enhance a dicitonary during the setup of the job
+     * Adds the possibility to enhance a dictionary during the setup of the job.
      *
      * @param importer   the current importer which can be asked to provide a dictionary for an entity
      * @param dictionary the dictionary to enhance

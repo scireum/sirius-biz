@@ -157,7 +157,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * Overwrite this method do add additional parameters to the <tt>context</tt>.
      *
      * @param context the context containing all relevant data
-     * @return the entity which was either found in he database or create using the given data
+     * @return the entity which was either found in the database or create using the given data
      */
     protected E findAndLoad(Context context) {
         return importer.findAndLoad(type, context);
@@ -184,7 +184,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     /**
      * Creates or updates the given entity.
      * <p>
-     * This can be overwritten to use a custom way of persisting data. Also this can be used to perfrom
+     * This can be overwritten to use a custom way of persisting data. Also, this can be used to perform
      * post-save activities.
      * <p>
      * By default we instantly create or update the entity. Note that if this is set to batch updates,
