@@ -157,7 +157,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
         Watch watch = Watch.start();
 
-        if (extractedFile.size() == 0) {
+        if (extractedFile == null || extractedFile.size() == 0) {
             process.log(ProcessLog.warn()
                                   .withNLSKey("ExtractArchiveJob.emptyFile")
                                   .withContext("filename", extractedFile.getFilePath()));

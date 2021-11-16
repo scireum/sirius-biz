@@ -137,8 +137,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                     throw Exceptions.createHandled()
                                     .withSystemErrorMessage("7-ZIP failed to extract file %s from archive: %s",
                                                             currentFilePath,
-                                                            extractOperationResult.name())
-                                    .handle();
+                                                            extractOperationResult.name()).handle();
                 }
 
                 // Notify our callback about the current result.
@@ -146,10 +145,14 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                 // is then checked in getStream() as well...
                 Amount progress = Amount.of(filesExtracted).divideBy(Amount.of(totalFiles));
                 LocalDateTime lastModified = LocalDateTime.ofInstant(currentLastModified, ZoneId.systemDefault());
-                stop = !extractCallback.apply(new Extracted7ZFile(currentBuffer,
-                                                                  currentFilePath,
-                                                                  lastModified,
-                                                                  progress));
+
+                Extracted7ZFile extracted7ZFile = currentBuffer == null ?
+                                                  null :
+                                                  new Extracted7ZFile(currentBuffer,
+                                                                      currentFilePath,
+                                                                      lastModified,
+                                                                      progress);
+                stop = !extractCallback.apply(extracted7ZFile);
             } catch (Exception e) {
                 throw Exceptions.handle()
                                 .to(Log.SYSTEM)
