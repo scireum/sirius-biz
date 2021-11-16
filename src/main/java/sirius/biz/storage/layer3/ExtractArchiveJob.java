@@ -75,7 +75,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     private final Parameter<Boolean> flattenDirectoriesParameter;
     private final Parameter<Boolean> deleteArchiveParameter;
 
-    private static final String FILE_SKIPPED_MESSAGE = NLS.get("ExtractArchiveJob.fileSkipped");
+    private static final String FILE_SKIPPED_MESSAGE = "ExtractArchiveJob.fileSkipped";
 
     /**
      * Creates the job factory so that it can be invoked by the framework.
@@ -176,8 +176,8 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         VirtualFile targetFile = targetDirectory.resolve(targetPath);
         ArchiveExtractor.UpdateResult result = extractor.updateFile(extractedFile, targetFile, overrideMode);
         switch (result) {
-            case CREATED -> process.addTiming(NLS.get("ExtractArchiveJob.fileCreated"), watch.elapsedMillis());
-            case UPDATED -> process.addTiming(NLS.get("ExtractArchiveJob.fileOverwritten"), watch.elapsedMillis());
+            case CREATED -> process.addTiming("ExtractArchiveJob.fileCreated", watch.elapsedMillis());
+            case UPDATED -> process.addTiming("ExtractArchiveJob.fileOverwritten", watch.elapsedMillis());
             case SKIPPED -> process.addTiming(FILE_SKIPPED_MESSAGE, watch.elapsedMillis());
             default -> throw new IllegalArgumentException(result.name());
         }
