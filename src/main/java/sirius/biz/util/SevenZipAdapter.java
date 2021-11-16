@@ -66,6 +66,11 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
         currentFilePath = null;
 
+        currentLastModified = Optional.ofNullable((Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME))
+                                      .map(Date::getTime)
+                                      .map(Instant::ofEpochMilli)
+                                      .orElse(Instant.now());
+
         // An abort has been requested...
         if (stop || !taskContext.isActive()) {
             return null;
@@ -89,11 +94,6 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         if (!filter.test(currentFilePath)) {
             return null;
         }
-
-        currentLastModified = Optional.ofNullable((Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME))
-                                      .map(Date::getTime)
-                                      .map(Instant::ofEpochMilli)
-                                      .orElse(Instant.now());
 
         // We actually want to extract this file - setup the shared buffer properly.
         // Note that this might (sooner or later) create a temporary file. Therefore it is essential that this stream
