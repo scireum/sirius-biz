@@ -137,7 +137,8 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                     throw Exceptions.createHandled()
                                     .withSystemErrorMessage("7-ZIP failed to extract file %s from archive: %s",
                                                             currentFilePath,
-                                                            extractOperationResult.name()).handle();
+                                                            extractOperationResult.name())
+                                    .handle();
                 }
 
                 // Notify our callback about the current result.
@@ -165,7 +166,9 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
 
         // We need to always close the buffer (if it is open) as it might drag a temporary file along...
-        currentBuffer.cleanup();
+        if (currentBuffer != null) {
+            currentBuffer.cleanup();
+        }
     }
 
     @Override
