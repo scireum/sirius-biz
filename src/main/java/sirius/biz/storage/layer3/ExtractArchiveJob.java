@@ -151,13 +151,18 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                      ArchiveExtractor.OverrideMode overrideMode,
                                      VirtualFile targetDirectory,
                                      boolean flattenDirectory) throws Exception {
+        Watch watch = Watch.start();
+
+        if (extractedFile == null) {
+            process.addTiming(NLS.get("ExtractArchiveJob.fileSkipped"), watch.elapsedMillis());
+            return;
+        }
+
         process.tryUpdateState(NLS.fmtr("ExtractArchiveJob.progress")
                                   .set("progress", extractedFile.getProgressInPercent().toPercentString())
                                   .format());
 
-        Watch watch = Watch.start();
-
-        if (extractedFile == null || extractedFile.size() == 0) {
+        if (extractedFile.size() == 0) {
             process.log(ProcessLog.warn()
                                   .withNLSKey("ExtractArchiveJob.emptyFile")
                                   .withContext("filename", extractedFile.getFilePath()));
