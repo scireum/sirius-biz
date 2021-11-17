@@ -22,9 +22,11 @@ import java.util.function.Supplier;
 public class LRUCache {
 
     private static final JupiterCommand CMD_PUT = new JupiterCommand("LRU.PUT");
+    private static final JupiterCommand CMD_PUTS = new JupiterCommand("LRU.PUTS");
     private static final JupiterCommand CMD_GET = new JupiterCommand("LRU.GET");
     private static final JupiterCommand CMD_EXTENDED_GET = new JupiterCommand("LRU.XGET");
     private static final JupiterCommand CMD_REMOVE = new JupiterCommand("LRU.REMOVE");
+    private static final JupiterCommand CMD_REMOVES = new JupiterCommand("LRU.REMOVES");
     private static final JupiterCommand CMD_FLUSH = new JupiterCommand("LRU.FLUSH");
 
     private final JupiterConnector connection;
@@ -65,8 +67,8 @@ public class LRUCache {
     /**
      * Returns the cached value associated with the given key.
      *
-     * @param key the key used to lookup the value
-     * @return the value or an empty optional if no value is presnet
+     * @param key the key used to look up the value
+     * @return the value or an empty optional if no value is present
      */
     public Optional<String> get(String key) {
         return connection.query(() -> Strings.apply("LRU.GET %s", cache), jupiter -> {
@@ -168,6 +170,26 @@ public class LRUCache {
     }
 
     /**
+     * Stores the given value for the given key.
+     *
+     * @param key           the key to store the value for
+     * @param value         the value to store
+     * @param secondaryKeys additional secondary keys which can be used to purge the entry via
+     *                      {@link #removeBySecondary}.
+     */
+    public void put(String key, String value, String... secondaryKeys) {
+        connection.exec(() -> Strings.apply("LRU.PUTS %s", cache), jupiter -> {
+            String[] args = new String[secondaryKeys.length + 3];
+            args[0] = cache;
+            args[1] = key;
+            args[2] = value;
+            System.arraycopy(secondaryKeys, 0, args, 3, secondaryKeys.length);
+            jupiter.sendCommand(CMD_PUTS, args);
+            jupiter.getStatusCodeReply();
+        });
+    }
+
+    /**
      * Removes the given value from the cache.
      *
      * @param key the key of the value to remove
@@ -175,6 +197,19 @@ public class LRUCache {
     public void remove(String key) {
         connection.exec(() -> Strings.apply("LRU.REMOVE %s", cache), jupiter -> {
             jupiter.sendCommand(CMD_REMOVE, cache, key);
+            jupiter.getStatusCodeReply();
+        });
+    }
+
+    /**
+     * Removes one or more values from the cache using the given secondary key.
+     *
+     * @param secondaryKey the secondary key of the value to remove as passed in using
+     *                     {@link #put(String, String, String...)}
+     */
+    public void removeBySecondary(String secondaryKey) {
+        connection.exec(() -> Strings.apply("LRU.REMOVES %s", cache), jupiter -> {
+            jupiter.sendCommand(CMD_REMOVES, cache, secondaryKey);
             jupiter.getStatusCodeReply();
         });
     }
