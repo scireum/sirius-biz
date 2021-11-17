@@ -727,7 +727,7 @@ public class Processes {
 
             logEntry.setNode(CallContext.getNodeName());
             logEntry.setTimestamp(LocalDateTime.now());
-            logEntry.setSortKey(System.currentTimeMillis());
+            logEntry.setSortKey(computeSortKey());
             logEntry.getProcess().setId(processId);
             logEntry.getDescriptor().beforeSave(logEntry);
 
@@ -745,6 +745,31 @@ public class Processes {
                       .to(Log.BACKGROUND)
                       .handle();
         }
+    }
+
+    /**
+     * Tries to compute a monotonically increasing message number for each {@link ProcessLog} being recorded.
+     * <p>
+     * We cannot simply use the {@code System.currentTimeMillis()} call here, as in tight loops, we might
+     * insert several logs within one millisecond (as these inserts are lazily batched, this will work out).
+     * <p>
+     * Therefore, we try to combine {@link System#currentTimeMillis()} with {@link System#nanoTime()}. The former
+     * is a "realtime" clock, but only updated each couple of milliseconds, the latter is a system timer which is
+     * increased constantly, but its absolute value is somewhat random. Therefore, we use the "whole second" part
+     * of the {@link System#currentTimeMillis()} call, to get a stable offset, turn this into microseconds and then
+     * add the microsecond offset of {@link System#nanoTime()} to it. This should yield a strictly monotonically
+     * increasing counter if it isn't called more than once per microsecond (which is sort of unlikely in Java).
+     */
+    private Long computeSortKey() {
+        //              ┌───────────────────────────────┐              ┌────────────────────────────────┐
+        //          ┌──▶│Current system time in seconds │          ┌──▶│System timing counter in micros │
+        //          │   └───────────────────────────────┘          │   └────────────────────────────────┘
+        //     ─────┴────────────────────────────               ───┴───────────────────────
+        return System.currentTimeMillis() / 1_000 * 1_000_000 + (System.nanoTime() / 1_000) % 1_000_000;
+        //     ──────────┬───────────────────────────────────   ──┬─────────────────────────────────────
+        //               │    ┌──────────────────────────────┐    │   ┌────────────────────────────────────────┐
+        //               └───▶│Current system time in micros │    └──▶│ System timing counter offset in micros │
+        //                    └──────────────────────────────┘        └────────────────────────────────────────┘
     }
 
     protected long countMessagesForType(String processId, String messageType) {
