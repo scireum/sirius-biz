@@ -75,6 +75,8 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     private final Parameter<Boolean> flattenDirectoriesParameter;
     private final Parameter<Boolean> deleteArchiveParameter;
 
+    private static final String FILE_SKIPPED_MESSAGE = "ExtractArchiveJob.fileSkipped";
+
     /**
      * Creates the job factory so that it can be invoked by the framework.
      * <p>
@@ -151,17 +153,22 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                      ArchiveExtractor.OverrideMode overrideMode,
                                      VirtualFile targetDirectory,
                                      boolean flattenDirectory) throws Exception {
+        Watch watch = Watch.start();
+
+        if (extractedFile == null) {
+            process.addTiming(FILE_SKIPPED_MESSAGE, watch.elapsedMillis());
+            return;
+        }
+
         process.tryUpdateState(NLS.fmtr("ExtractArchiveJob.progress")
                                   .set("progress", extractedFile.getProgressInPercent().toPercentString())
                                   .format());
-
-        Watch watch = Watch.start();
 
         if (extractedFile.size() == 0) {
             process.log(ProcessLog.warn()
                                   .withNLSKey("ExtractArchiveJob.emptyFile")
                                   .withContext("filename", extractedFile.getFilePath()));
-            process.addTiming(NLS.get("ExtractArchiveJob.fileSkipped"), watch.elapsedMillis());
+            process.addTiming(FILE_SKIPPED_MESSAGE, watch.elapsedMillis());
             return;
         }
 
@@ -169,9 +176,9 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         VirtualFile targetFile = targetDirectory.resolve(targetPath);
         ArchiveExtractor.UpdateResult result = extractor.updateFile(extractedFile, targetFile, overrideMode);
         switch (result) {
-            case CREATED -> process.addTiming(NLS.get("ExtractArchiveJob.fileCreated"), watch.elapsedMillis());
-            case UPDATED -> process.addTiming(NLS.get("ExtractArchiveJob.fileOverwritten"), watch.elapsedMillis());
-            case SKIPPED -> process.addTiming(NLS.get("ExtractArchiveJob.fileSkipped"), watch.elapsedMillis());
+            case CREATED -> process.addTiming("ExtractArchiveJob.fileCreated", watch.elapsedMillis());
+            case UPDATED -> process.addTiming("ExtractArchiveJob.fileOverwritten", watch.elapsedMillis());
+            case SKIPPED -> process.addTiming(FILE_SKIPPED_MESSAGE, watch.elapsedMillis());
             default -> throw new IllegalArgumentException(result.name());
         }
 

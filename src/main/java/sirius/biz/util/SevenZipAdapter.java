@@ -66,6 +66,11 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
         currentFilePath = null;
 
+        currentLastModified = Optional.ofNullable((Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME))
+                                      .map(Date::getTime)
+                                      .map(Instant::ofEpochMilli)
+                                      .orElse(Instant.now());
+
         // An abort has been requested...
         if (stop || !taskContext.isActive()) {
             return null;
@@ -89,11 +94,6 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         if (!filter.test(currentFilePath)) {
             return null;
         }
-
-        currentLastModified = Optional.ofNullable((Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME))
-                                      .map(Date::getTime)
-                                      .map(Instant::ofEpochMilli)
-                                      .orElse(Instant.now());
 
         // We actually want to extract this file - setup the shared buffer properly.
         // Note that this might (sooner or later) create a temporary file. Therefore it is essential that this stream
@@ -146,10 +146,14 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                 // is then checked in getStream() as well...
                 Amount progress = Amount.of(filesExtracted).divideBy(Amount.of(totalFiles));
                 LocalDateTime lastModified = LocalDateTime.ofInstant(currentLastModified, ZoneId.systemDefault());
-                stop = !extractCallback.apply(new Extracted7ZFile(currentBuffer,
-                                                                  currentFilePath,
-                                                                  lastModified,
-                                                                  progress));
+
+                Extracted7ZFile extracted7ZFile = currentBuffer == null ?
+                                                  null :
+                                                  new Extracted7ZFile(currentBuffer,
+                                                                      currentFilePath,
+                                                                      lastModified,
+                                                                      progress);
+                stop = !extractCallback.apply(extracted7ZFile);
             } catch (Exception e) {
                 throw Exceptions.handle()
                                 .to(Log.SYSTEM)
@@ -162,7 +166,9 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
 
         // We need to always close the buffer (if it is open) as it might drag a temporary file along...
-        currentBuffer.cleanup();
+        if (currentBuffer != null) {
+            currentBuffer.cleanup();
+        }
     }
 
     @Override
