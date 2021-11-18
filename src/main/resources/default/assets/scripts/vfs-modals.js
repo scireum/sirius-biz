@@ -124,6 +124,7 @@ function selectVFSFile(config) {
                             },
                             sendFileAsBody: true,
                             parallelUploads: 1,
+                            maxFiles: 1,
                             maxFilesize: null,
                             acceptedFiles: config.allowedExtensions,
                             previewTemplate: '' +
