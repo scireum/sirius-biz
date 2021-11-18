@@ -149,6 +149,25 @@ function selectVFSFile(config) {
                                 '</div>',
                             previewsContainer: '#select-file-modal .upload-box-js .dropzone-items',
                             clickable: '#select-file-modal .upload-box-js .dropzone-select',
+                            error: function (file, message) {
+                                if (file.previewElement) {
+                                    file.previewElement.classList.add('dz-error');
+
+                                    if (typeof message !== 'string' && message.message) {
+                                        message = message.message;
+                                    }
+
+                                    file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
+
+                                    clearMessages();
+                                    addErrorMessage(message);
+                                    setTimeout(function () {
+                                        $(_modal).modal('hide');
+                                        file.previewElement.remove();
+                                    }, 500);
+
+                                }
+                            },
                             init: function () {
                                 this.on('sending', function (file, xhr, formData) {
                                     formData.append('filename', file.name);
@@ -162,21 +181,13 @@ function selectVFSFile(config) {
                                         }, 500);
                                     }
                                     if (response.error) {
+                                        file.previewElement.classList.add('dz-error');
+                                        file.previewElement.classList.remove('dz-success');
                                         clearMessages();
                                         addErrorMessage(response.message);
                                     } else {
                                         resolve(response.file);
                                     }
-                                });
-                                this.on('error', function (file, response) {
-                                    if (file.previewElement) {
-                                        setTimeout(function () {
-                                            $(_modal).modal('hide');
-                                            file.previewElement.remove();
-                                        }, 500);
-                                    }
-                                    clearMessages();
-                                    addErrorMessage(response.message);
                                 });
                             }
                         })
@@ -189,7 +200,7 @@ function selectVFSFile(config) {
 
         });
 
-        replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), "click", function () {
+        replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), 'click', function () {
             pagination.reset();
         });
         replaceEventHandlers(_modal.querySelector('.search-form-js'), 'submit', function (event) {
@@ -201,7 +212,7 @@ function selectVFSFile(config) {
             resolve(config.path);
         });
 
-        _modal.querySelector(".ok-btn-js").parentElement.style.display = config.allowDirectories ? "inline-block" : "none";
+        _modal.querySelector('.ok-btn-js').parentElement.style.display = config.allowDirectories ? 'inline-block' : 'none';
 
         $(_modal).modal('show');
     });
