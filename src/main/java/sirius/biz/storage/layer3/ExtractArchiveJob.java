@@ -157,7 +157,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         Watch watch = Watch.start();
 
         if (extractedFile == null) {
-            // if this happens we don't know the the file name of this entry, we just log with an empty name
+            // if this happens we don't know the file name of this entry, we just log with an empty name
             process.log(ProcessLog.warn().withNLSKey("ExtractArchiveJob.emptyFile").withContext("filename", ""));
             process.addTiming(FILE_EMPTY_COUNTER, watch.elapsedMillis());
             return;
