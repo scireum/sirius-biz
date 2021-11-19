@@ -124,6 +124,7 @@ function selectVFSFile(config) {
                             },
                             sendFileAsBody: true,
                             parallelUploads: 1,
+                            maxFiles: 1,
                             maxFilesize: null,
                             acceptedFiles: config.allowedExtensions,
                             previewTemplate: '' +
@@ -150,6 +151,10 @@ function selectVFSFile(config) {
                             previewsContainer: '#select-file-modal .upload-box-js .dropzone-items',
                             clickable: '#select-file-modal .upload-box-js .dropzone-select',
                             error: function (file, message) {
+                                if (file.status === Dropzone.CANCELED) {
+                                    // no need to show error to the user
+                                    return;
+                                }
                                 if (file.previewElement) {
                                     file.previewElement.classList.add('dz-error');
 
