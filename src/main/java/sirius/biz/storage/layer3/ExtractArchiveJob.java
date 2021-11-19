@@ -75,7 +75,8 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     private final Parameter<Boolean> flattenDirectoriesParameter;
     private final Parameter<Boolean> deleteArchiveParameter;
 
-    private static final String FILE_SKIPPED_MESSAGE = "ExtractArchiveJob.fileSkipped";
+    private static final String FILE_SKIPPED_COUNTER = "ExtractArchiveJob.fileSkipped";
+    private static final String FILE_EMPTY_COUNTER = "ExtractArchiveJob.fileEmpty";
 
     /**
      * Creates the job factory so that it can be invoked by the framework.
@@ -90,7 +91,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         this.overwriteExistingFilesParameter = new EnumParameter<>(OVERWRITE_EXISTING_FILES_PARAMETER_NAME,
                                                                    "$ExtractArchiveJob.overwriteExistingFilesParameter",
                                                                    ArchiveExtractor.OverrideMode.class).withDescription(
-                                                                                                               "$ExtractArchiveJob.overwriteExistingFilesParameter.help")
+                "$ExtractArchiveJob.overwriteExistingFilesParameter.help")
                                                                                                        .withDefault(
                                                                                                                ArchiveExtractor.OverrideMode.ON_CHANGE)
                                                                                                        .build();
@@ -107,7 +108,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         if (sourceParameter == null) {
             sourceParameter = new FileParameter("source",
                                                 "$ExtractArchiveJob.sourceParameter").withAcceptedExtensionsList(new ArrayList<>(
-                                                                                             extractor.getSupportedFileExtensions()))
+                    extractor.getSupportedFileExtensions()))
                                                                                      .withDescription(
                                                                                              "$ExtractArchiveJob.sourceParameter.help")
                                                                                      .markRequired()
@@ -156,7 +157,9 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         Watch watch = Watch.start();
 
         if (extractedFile == null) {
-            process.addTiming(FILE_SKIPPED_MESSAGE, watch.elapsedMillis());
+            // if this happens we don't know the file name of this entry, we just log with an empty name
+            process.log(ProcessLog.warn().withNLSKey("ExtractArchiveJob.emptyFile").withContext("filename", ""));
+            process.addTiming(FILE_EMPTY_COUNTER, watch.elapsedMillis());
             return;
         }
 
@@ -168,7 +171,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
             process.log(ProcessLog.warn()
                                   .withNLSKey("ExtractArchiveJob.emptyFile")
                                   .withContext("filename", extractedFile.getFilePath()));
-            process.addTiming(FILE_SKIPPED_MESSAGE, watch.elapsedMillis());
+            process.addTiming(FILE_EMPTY_COUNTER, watch.elapsedMillis());
             return;
         }
 
@@ -178,7 +181,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         switch (result) {
             case CREATED -> process.addTiming("ExtractArchiveJob.fileCreated", watch.elapsedMillis());
             case UPDATED -> process.addTiming("ExtractArchiveJob.fileOverwritten", watch.elapsedMillis());
-            case SKIPPED -> process.addTiming(FILE_SKIPPED_MESSAGE, watch.elapsedMillis());
+            case SKIPPED -> process.addTiming(FILE_SKIPPED_COUNTER, watch.elapsedMillis());
             default -> throw new IllegalArgumentException(result.name());
         }
 
