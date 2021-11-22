@@ -111,9 +111,13 @@ public class ErrorContext implements SubContext {
         try {
             return producer.create();
         } catch (HandledException exception) {
-            throw Exceptions.createHandled()
-                            .withDirectMessage(failureDescription.apply(exception.getMessage()))
-                            .handle();
+            Exceptions.ErrorHandler forwarded =
+                    Exceptions.createHandled().withDirectMessage(failureDescription.apply(exception.getMessage()));
+            exception.getHint(ProcessLog.HINT_MESSAGE_KEY)
+                     .ifFilled(key -> forwarded.hint(ProcessLog.HINT_MESSAGE_KEY, key));
+            exception.getHint(ProcessLog.HINT_MESSAGE_COUNT)
+                     .ifFilled(count -> forwarded.hint(ProcessLog.HINT_MESSAGE_COUNT, count));
+            throw forwarded.handle();
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(Log.BACKGROUND)
