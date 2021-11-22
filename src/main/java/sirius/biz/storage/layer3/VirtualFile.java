@@ -1277,6 +1277,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @throws HandledException in case of any error while downloading the contents
      */
     public boolean loadFromUrl(URI url, FetchFromUrlMode mode) {
+
         Watch watch = Watch.start();
         if (performLoadFromUrl(url, mode)) {
             TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
@@ -1306,6 +1307,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } catch (IOException e) {
             throw Exceptions.createHandled()
                             .error(e)
+                            .withNLSKey("VirtualFile.downloadFailed")
+                            .set("url", url)
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
+                            .handle();
+        } catch (IllegalArgumentException illegalArgumentException) {
+            // currently non-rfc-conforming URLs (e.g. containing unescaped spaces) in the location header when redirecting
+            // will break the http client and abort with an IllegalArgumentException
+            // we need to find a better solution for this, but temporarily we just catch it here and handle the exception
+            // TODO SIRI-479
+            throw Exceptions.createHandled()
+                            .error(illegalArgumentException)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
                             .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
@@ -1423,6 +1436,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } catch (IOException e) {
             throw Exceptions.createHandled()
                             .error(e)
+                            .withNLSKey("VirtualFile.downloadFailed")
+                            .set("url", url)
+                            .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
+                            .handle();
+        } catch (IllegalArgumentException illegalArgumentException) {
+            // currently non-rfc-conforming URLs (e.g. containing unescaped spaces) in the location header when redirecting
+            // will break the http client and abort with an IllegalArgumentException
+            // we need to find a better solution for this, but temporarily we just catch it here and handle the exception
+            // TODO SIRI-479
+            throw Exceptions.createHandled()
+                            .error(illegalArgumentException)
                             .withNLSKey("VirtualFile.downloadFailed")
                             .set("url", url)
                             .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
