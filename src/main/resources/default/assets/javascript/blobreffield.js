@@ -111,7 +111,7 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
 
         const currentPath = element.dataset.path || blobStorageSpacePath;
 
-        selectVFSFile(currentPath, blobStorageSpacePath).then(function (selectedValue) {
+        selectVFSFile(currentPath, blobStorageSpacePath, '').then(function (selectedValue) {
             $.getJSON('/dasd/blob-info-for-path/' + blobStorageSpace, {
                 path: selectedValue.substring(blobStorageSpacePath.length)
             }, function (json) {
