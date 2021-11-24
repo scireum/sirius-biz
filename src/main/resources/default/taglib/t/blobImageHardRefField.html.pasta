@@ -29,6 +29,17 @@
 <script type="text/javascript">
     let outerDiv = document.querySelector('#___id');
 
+    let _img = outerDiv.querySelector('.img-preview img');
+    sirius.ready(function () {
+        if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
+            return;
+        }
+        // if we have a variant preview, set up lazyloading...
+        _img.dataset.src = _img.src;
+        _img.src = '___defaultPreview';
+        loadImageLazily(_img);
+    });
+
     Dropzone.options[sirius.camelize('@id')].url = function (files) {
         const uploadUrl = '@raw {@uploadUrl}';
         let parameterIndicator = '?';
@@ -47,10 +58,14 @@
                 file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
                 addErrorMessage(message);
             } else if (sirius.isFilled(response.imageUrl)) {
-                let _img = outerDiv.querySelector('.img-preview img');
-                _img.src = '___defaultPreview';
-                _img.dataset.src = response.imageUrl;
-                loadImageLazily(_img);
+                _img = outerDiv.querySelector('.img-preview img');
+                if ('___previewVariant' === 'raw') {
+                    _img.src = response.imageUrl;
+                } else {
+                    _img.src = '___defaultPreview';
+                    _img.dataset.src = response.imageUrl;
+                    loadImageLazily(_img);
+                }
                 if (sirius.isFilled(response.fileId)) {
                     outerDiv.querySelector('[name=___name]').value = response.fileId;
                     outerDiv.querySelector('.btn-reset-js').classList.remove('d-none');
