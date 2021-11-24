@@ -10,41 +10,11 @@
 <i:arg type="String" name="acceptedFiles" default=""/>
 <i:arg type="String" name="uploadUrl" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
-<i:arg type="boolean" name="urlAllowed" default="false" description=""/>
-
 
 <i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
 
 <t:imageUpload class="@class" id="@id" uploadUrl="@uploadUrl" acceptedFiles="@acceptedFiles"
                currentImage="@currentImage" btnClass="@btnClass">
-    <i:if test="@urlAllowed">
-        <button type="button" class="btn btn-block" data-placement="top" data-toggle="popover">
-            @i18n("StoredObject.specifyURL")
-        </button>
-
-        <div class="popover-content d-none">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label>@i18n("StoredObject.URL")</label>
-                        <input type="text" class="form-control">
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <button type="button" class="btn btn-block btn-primary button-apply">
-                        @i18n("NLS.ok") <i class="fa fa-check"></i>
-                    </button>
-                </div>
-
-                <div class="col-md-6">
-                    <button type="button" class="btn btn-block button-close">
-                        @i18n("NLS.cancel") <i class="fa fa-close"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </i:if>
 
     <button type="button" class="btn btn-block btn-reset-js @if(!showResetButton) { d-none }">
         @i18n("StoredObject.resetBtn")
@@ -59,11 +29,6 @@
 <script type="text/javascript">
     let outerDiv = document.querySelector('#___id');
 
-    $('#___id').find('[data-toggle=popover]').popover({
-        html: true, trigger: 'manual', content: function () {
-            return element.querySelector('.popover-content').innerHTML;
-        }
-    });
     Dropzone.options[sirius.camelize('@id')].url = function (files) {
         const uploadUrl = '@raw {@uploadUrl}';
         let parameterIndicator = '?';
