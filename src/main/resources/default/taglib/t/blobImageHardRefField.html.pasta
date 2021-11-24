@@ -1,0 +1,104 @@
+<i:arg type="sirius.biz.storage.layer2.BlobHardRef" name="objectRef"/>
+<i:arg type="String" name="name"/>
+<i:arg type="String" name="value" default="@objectRef.getKey()"/>
+<i:arg type="String" name="id" default="@generateId('image-upload-%s')"/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
+<i:arg name="btnClass" type="String" default=""
+       description="Lists additional CSS classes to apply to the upload button."/>
+<i:arg type="String" name="defaultPreview" default=""/>
+<i:arg type="String" name="previewVariant" default="raw"/>
+<i:arg type="String" name="acceptedFiles" default=""/>
+<i:arg type="String" name="uploadUrl" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
+<i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
+<i:arg type="boolean" name="urlAllowed" default="false" description=""/>
+
+
+<i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
+
+<t:imageUpload class="@class" id="@id" uploadUrl="@uploadUrl" acceptedFiles="@acceptedFiles"
+               currentImage="@currentImage" btnClass="@btnClass">
+    <i:if test="@urlAllowed">
+        <button type="button" class="btn btn-block" data-placement="top" data-toggle="popover">
+            @i18n("StoredObject.specifyURL")
+        </button>
+
+        <div class="popover-content d-none">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>@i18n("StoredObject.URL")</label>
+                        <input type="text" class="form-control">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block btn-primary button-apply">
+                        @i18n("NLS.ok") <i class="fa fa-check"></i>
+                    </button>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block button-close">
+                        @i18n("NLS.cancel") <i class="fa fa-close"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </i:if>
+
+    <button type="button" class="btn btn-block btn-reset-js @if(!showResetButton) { d-none }">
+        @i18n("StoredObject.resetBtn")
+    </button>
+
+
+    <input type="hidden" name="@name" value="@value"/>
+
+</t:imageUpload>
+
+
+<script type="text/javascript">
+    let outerDiv = document.querySelector('#___id');
+
+    $('#___id').find('[data-toggle=popover]').popover({
+        html: true, trigger: 'manual', content: function () {
+            return element.querySelector('.popover-content').innerHTML;
+        }
+    });
+    Dropzone.options[sirius.camelize('@id')].url = function (files) {
+        const uploadUrl = '@raw {@uploadUrl}';
+        let parameterIndicator = '?';
+        if (uploadUrl.indexOf('?') >= 0) {
+            parameterIndicator = '&';
+        }
+        return uploadUrl + parameterIndicator + 'filename=' + files[0].name + '&variant=___previewVariant';
+    }
+    Dropzone.options[sirius.camelize('@id')].init = function () {
+        const dropzone = this;
+        dropzone.on('success', function (file, response) {
+            if (response.error) {
+                file.previewElement.classList.add('dz-error');
+                file.previewElement.classList.remove('dz-success');
+                const message = response.message || '___i18n("template.html.uploadFailed")';
+                file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
+                addErrorMessage(message);
+            } else if (sirius.isFilled(response.imageUrl)) {
+                let _img = outerDiv.querySelector('.img-preview img');
+                _img.src = '___defaultPreview';
+                _img.dataset.src = response.imageUrl;
+                loadImageLazily(_img);
+                if (sirius.isFilled(response.fileId)) {
+                    outerDiv.querySelector('[name=___name]').value = response.fileId;
+                    outerDiv.querySelector('.btn-reset-js').classList.remove('d-none');
+                }
+                setTimeout(function () {
+                    dropzone.removeFile(file);
+                }, 800);
+            }
+        });
+    }
+    outerDiv.querySelector('.btn-reset-js').onclick = function () {
+        outerDiv.querySelector('[name=___name]').value = '';
+        outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
+        outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
+    }
+</script>
