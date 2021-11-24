@@ -22,10 +22,10 @@ import java.time.LocalDateTime;
  * Represents a replication task as MongoDB entity.
  */
 @Framework(MongoReplicationTaskStorage.FRAMEWORK_MONGO_REPLICATION)
-@Index(name = "replication_notify_index",
+@Index(name = "replication_notify_lookup",
         columns = {"primarySpace", "objectKey"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
-@Index(name = "replication_task_index",
+@Index(name = "replication_task_lookup",
         columns = {"failed", "transactionId", "earliestExecution"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoReplicationTask extends MongoEntity {

@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
  * Represents a replication task as SQL entity.
  */
 @Framework(SQLReplicationTaskStorage.FRAMEWORK_JDBC_REPLICATION)
-@Index(name = "replication_notify_index", columns = {"primarySpace", "objectKey"})
-@Index(name = "replication_task_index", columns = {"failed", "transactionId", "earliestExecution"})
+@Index(name = "replication_notify_lookup", columns = {"primarySpace", "objectKey"})
+@Index(name = "replication_task_lookup", columns = {"failed", "transactionId", "earliestExecution"})
 public class SQLReplicationTask extends SQLEntity {
 
     /**
