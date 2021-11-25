@@ -15,7 +15,7 @@ import sirius.web.controller.Message
 import sirius.web.controller.MessageLevel
 import sirius.web.http.DistributedUserMessageCache
 
-class RedisUserMessageCacheTest extends BaseSpecification {
+class RedisUserMessageCacheSpec extends BaseSpecification {
 
     @Part
     private static DistributedUserMessageCache cache
