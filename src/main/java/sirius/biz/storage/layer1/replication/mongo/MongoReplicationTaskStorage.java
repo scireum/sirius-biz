@@ -96,7 +96,7 @@ public class MongoReplicationTaskStorage
                  .where(MongoReplicationTask.SCHEDULED, null)
                  .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                  .where(MongoReplicationTask.ID, task.getId())
-                 .executeForMany(MongoReplicationTask.class);
+                 .executeForOne(MongoReplicationTask.class);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
