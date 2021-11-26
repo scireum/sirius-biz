@@ -1555,7 +1555,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
 
         VirtualFile file = resolve(path);
-        if (exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
+        if (file.exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
             // Drain any content, as the mode dictates not to update the file (which might require another upload,
             // so discarding the data is faster).
             Streams.exhaust(request.getResponse().body());
@@ -1568,7 +1568,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             || !file.exists()
             || mode == FetchFromUrlMode.ALWAYS_FETCH
             || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-            loadFromOutcall(request);
+            file.loadFromOutcall(request);
             return Tuple.create(file, true);
         } else {
             // Drain any content, as the mode dictates not to update the file (which might require another upload,
