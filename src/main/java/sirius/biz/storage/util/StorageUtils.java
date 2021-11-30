@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.Normalizer;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -166,9 +167,10 @@ public class StorageUtils {
     /**
      * Sanitizes the given path.
      * <p>
-     * This will replace backslashes with forward slashes, and remove successive slashes. Trailing slashes are removed
-     * from directory paths, and absolute paths are made relative by removing leading slashes. Also replaces chars that
-     * may be illegal in file systems with {@code _}.
+     * Normalizes the text to {@link Normalizer.Form#NFC combined unicode}, replaces backslashes with forward slashes,
+     * and removes successive slashes. Trailing slashes are removed from directory paths,
+     * and absolute paths are made relative by removing leading slashes.
+     * Also replaces chars that may be illegal in file systems with {@code _}.
      *
      * @param path the path to cleanup
      * @return the sanitized path without illegal characters
@@ -182,6 +184,8 @@ public class StorageUtils {
         }
 
         path = replaceIllegalFileChars(path, false);
+
+        path = Normalizer.normalize(path, Normalizer.Form.NFC);
 
         if (path.startsWith("/")) {
             path = path.substring(1);
