@@ -45,7 +45,7 @@ import java.util.function.Predicate;
 public class SQLDirectory extends SQLEntity implements Directory, OptimisticCreate {
 
     @Part
-    private StorageUtils storageUtils;
+    private static StorageUtils storageUtils;
 
     /**
      * Contains the tenant which owns this directory.

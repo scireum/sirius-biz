@@ -61,11 +61,11 @@ import java.util.Optional;
 @Index(name = "blob_delete_old_temporary_loop", columns = {"spaceName", "deleted", "lastModified", "temporary"})
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
+    @Part
+    private static StorageUtils storageUtils;
+
     @Transient
     private SQLBlobStorageSpace space;
-
-    @Part
-    private StorageUtils storageUtils;
 
     /**
      * Contains the name of the space this blob resides in.

@@ -50,7 +50,7 @@ import java.util.function.Predicate;
 public class MongoDirectory extends MongoEntity implements Directory, OptimisticCreate {
 
     @Part
-    private StorageUtils storageUtils;
+    private static StorageUtils storageUtils;
 
     /**
      * Contains the tenant which owns this directory.

@@ -78,11 +78,11 @@ import java.util.Optional;
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
+    @Part
+    private static StorageUtils storageUtils;
+
     @Transient
     private MongoBlobStorageSpace space;
-
-    @Part
-    private StorageUtils storageUtils;
 
     /**
      * Contains the name of the space this blob resides in.
