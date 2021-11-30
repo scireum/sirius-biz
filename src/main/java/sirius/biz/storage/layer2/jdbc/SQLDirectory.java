@@ -12,6 +12,7 @@ import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
@@ -42,6 +43,9 @@ import java.util.function.Predicate;
         columns = {"spaceName", "parent", "deleted", "normalizedDirectoryName"})
 @Index(name = "directory_renamed_loop", columns = "renamed")
 public class SQLDirectory extends SQLEntity implements Directory, OptimisticCreate {
+
+    @Part
+    private StorageUtils storageUtils;
 
     /**
      * Contains the tenant which owns this directory.
@@ -123,7 +127,7 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
     @BeforeSave
     protected void beforeSave() {
         if (Strings.isFilled(directoryName)) {
-            this.directoryName = directoryName.trim();
+            this.directoryName = storageUtils.sanitizePath(directoryName);
             if (Strings.isFilled(directoryName)) {
                 this.normalizedDirectoryName = directoryName.toLowerCase();
             } else {

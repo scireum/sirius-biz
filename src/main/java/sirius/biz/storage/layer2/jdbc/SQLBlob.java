@@ -15,6 +15,7 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
 import sirius.biz.storage.layer2.URLBuilder;
 import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
@@ -62,6 +63,9 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Transient
     private SQLBlobStorageSpace space;
+
+    @Part
+    private StorageUtils storageUtils;
 
     /**
      * Contains the name of the space this blob resides in.
@@ -239,7 +243,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     protected void updateFilenameFields() {
         if (Strings.isFilled(filename)) {
-            this.filename = filename.trim();
+            this.filename = storageUtils.sanitizePath(filename);
             if (Strings.isFilled(filename)) {
                 this.normalizedFilename = filename.toLowerCase();
                 this.fileExtension = Files.getFileExtension(normalizedFilename);

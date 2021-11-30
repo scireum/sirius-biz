@@ -15,6 +15,7 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
 import sirius.biz.storage.layer2.URLBuilder;
 import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
@@ -79,6 +80,9 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Transient
     private MongoBlobStorageSpace space;
+
+    @Part
+    private StorageUtils storageUtils;
 
     /**
      * Contains the name of the space this blob resides in.
@@ -246,7 +250,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     protected void updateFilenameFields() {
         if (Strings.isFilled(filename)) {
-            this.filename = filename.trim();
+            this.filename = storageUtils.sanitizePath(filename);
             if (Strings.isFilled(filename)) {
                 this.normalizedFilename = filename.toLowerCase();
                 this.fileExtension = Files.getFileExtension(normalizedFilename);

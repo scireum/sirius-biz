@@ -12,6 +12,7 @@ import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
@@ -47,6 +48,9 @@ import java.util.function.Predicate;
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 @Index(name = "directory_renamed_loop", columns = "renamed", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoDirectory extends MongoEntity implements Directory, OptimisticCreate {
+
+    @Part
+    private StorageUtils storageUtils;
 
     /**
      * Contains the tenant which owns this directory.
@@ -123,7 +127,7 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
     @BeforeSave
     protected void beforeSave() {
         if (Strings.isFilled(directoryName)) {
-            this.directoryName = directoryName.trim();
+            this.directoryName = storageUtils.sanitizePath(directoryName);
             if (Strings.isFilled(directoryName)) {
                 this.normalizedDirectoryName = directoryName.toLowerCase();
             } else {
