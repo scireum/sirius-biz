@@ -50,12 +50,12 @@ public class DictionaryBasedImport {
     protected String rowCounterName = "$LineBasedJob.row";
 
     /**
-     * Creates a new job for the given factory, name and process.
+     * Creates a new import helper with the given file, dictionary and rowHandler for the given process.
      *
      * @param filename   the name of the file to import
      * @param dictionary the import dictionary to use
-     * @param rowHandler a callback that handles the number and context of the imported row
      * @param process    the process context itself
+     * @param rowHandler a callback that handles the number and context of the imported row
      */
     public DictionaryBasedImport(String filename,
                                  ImportDictionary dictionary,
