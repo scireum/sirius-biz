@@ -51,6 +51,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.Normalizer;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -125,6 +126,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * <p>
      * Setting this to true makes the file system effectively case-insensitive. Whereas using false
      * makes it case-sensitive.
+     * Note that this only determines case sensitivity:
+     * Unicode normalization is not configured with this key, its always applied -
+     * all directory and blob names are normalized to Unicode {@link Normalizer.Form#NFC combined form}.
      */
     private static final String CONFIG_KEY_USE_NORMALIZED_NAMES = "useNormalizedNames";
 
