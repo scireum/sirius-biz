@@ -49,7 +49,7 @@ public class UserData extends Composite {
         if (ctx.getScope() != ScopeInfo.DEFAULT_SCOPE && Strings.isEmpty(scopeId)) {
             scopeId = ctx.getScope().getScopeId();
         }
-        if (ctx.getUser().isLoggedIn() && Strings.isEmpty(userId)) {
+        if (ctx.isUserPresent() && ctx.getUser().isLoggedIn() && Strings.isEmpty(userId)) {
             userId = ctx.getUser().getUserId();
             tenantId = ctx.getUser().getTenantId();
         }
