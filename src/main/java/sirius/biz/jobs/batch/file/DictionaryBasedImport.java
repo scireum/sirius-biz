@@ -50,15 +50,17 @@ public class DictionaryBasedImport {
     protected String rowCounterName = "$LineBasedJob.row";
 
     /**
-     * Creates a new job for the given factory, name and process.
+     * Creates a new import helper with the given file, dictionary and rowHandler for the given process.
      *
+     * @param filename   the name of the file to import
      * @param dictionary the import dictionary to use
      * @param process    the process context itself
+     * @param rowHandler a callback that handles the number and context of the imported row
      */
-    protected DictionaryBasedImport(String filename,
-                                    ImportDictionary dictionary,
-                                    ProcessContext process,
-                                    Callback<Tuple<Integer, Context>> rowHandler) {
+    public DictionaryBasedImport(String filename,
+                                 ImportDictionary dictionary,
+                                 ProcessContext process,
+                                 Callback<Tuple<Integer, Context>> rowHandler) {
         this.filename = filename;
         this.dictionary = dictionary;
         this.process = process;
@@ -66,14 +68,26 @@ public class DictionaryBasedImport {
         this.errorContext = ErrorContext.get();
     }
 
-    protected DictionaryBasedImport withRowCounterName(@Nullable String rowCounterName) {
+    /**
+     * Sets the name to use when counting rows.
+     *
+     * @param rowCounterName the name to use when counting rows
+     * @return the import itself for fluent method calls
+     */
+    public DictionaryBasedImport withRowCounterName(@Nullable String rowCounterName) {
         if (Strings.isFilled(rowCounterName)) {
             this.rowCounterName = rowCounterName;
         }
         return this;
     }
 
-    protected DictionaryBasedImport withIgnoreEmptyValues(boolean ignoreEmptyValues) {
+    /**
+     * Tells the import to ignore empty values.
+     *
+     * @param ignoreEmptyValues true, if empty values should be ignored, false otherwise
+     * @return the import itself for fluent method calls
+     */
+    public DictionaryBasedImport withIgnoreEmptyValues(boolean ignoreEmptyValues) {
         this.ignoreEmptyValues = ignoreEmptyValues;
         return this;
     }
