@@ -59,6 +59,7 @@
     <form id="exportForm" action="/system/sql/export" method="post">
         <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
                type="hidden"/>
+        <input type="hidden" id="exportDatabase" name="exportDatabase"/>
         <input type="hidden" id="exportQuery" name="exportQuery"/>
     </form>
 
@@ -90,6 +91,7 @@
                     }
                     if (data.rows.length > 0) {
                         document.getElementById('exportQuery').value = document.getElementById('query').value;
+                        document.getElementById('exportDatabase').value = document.getElementById("db").tokenAutocomplete.val()[0];
                         _exportBtn.classList.remove("d-none");
                         _exportBtn.classList.add("d-inline");
                     }

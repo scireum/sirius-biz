@@ -28,6 +28,7 @@ import sirius.kernel.settings.Extension;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -217,7 +218,7 @@ public class DistributedTasks implements MetricProvider {
                                          .collect(Collectors.toMap(DistributedQueueInfo::getName, Function.identity()));
         }
 
-        return sortedTaskQueues;
+        return Collections.unmodifiableList(sortedTaskQueues);
     }
 
     /**
@@ -385,7 +386,7 @@ public class DistributedTasks implements MetricProvider {
      * This is used to compute the penalty time for a prioritized task.
      *
      * @param queue        the queue to acquire the token for
-     * @param penaltyToken the token to aqcuire
+     * @param penaltyToken the token to acquire
      * @return the new counter value (current active acquisitions for this token)
      */
     private long acquirePenaltyToken(@Nonnull String queue, @Nonnull String penaltyToken) {
@@ -504,6 +505,7 @@ public class DistributedTasks implements MetricProvider {
             Exceptions.handle(LOG, e);
         }
 
+        // Release the concurrency token acquired above, as we didn't yield any task...
         releaseConcurrencyToken(queue.getConcurrencyToken());
         return null;
     }
@@ -564,7 +566,7 @@ public class DistributedTasks implements MetricProvider {
      * This method assumes that a <tt>concurrencyToken</tt> (if required by the queue) has already been acquired.
      *
      * @param queue the queue to fetch a task description from
-     * @return a JSON object representing a descpription of an executable task or <tt>null</tt> to indicate that there
+     * @return a JSON object representing a description of an executable task or <tt>null</tt> to indicate that there
      * is no work available
      */
     @Nullable
