@@ -273,6 +273,16 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
+     * Indicates if the root directory is considered the working directory.
+     *
+     * @return <tt>true</tt> when the root is the working directory, <tt>false</tt> otherwise
+     * @see ObjectStorage#WORK_SPACE_NAME
+     */
+    public boolean isRootWorkDirectory() {
+        return objectStorage.isWorkDirectory(root().name());
+    }
+
+    /**
      * Returns the name of this file.
      *
      * @return the name of this file
