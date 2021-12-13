@@ -52,6 +52,10 @@ public class ObjectStorage {
      * to use for a space.
      */
     public static final String CONFIG_KEY_LAYER1_CIPHER = "cipher";
+    /**
+     * Contains the name of the storage space used for "work files".
+     */
+    public static final String WORK_SPACE_NAME = "work";
 
     @Part
     private StorageUtils utils;
