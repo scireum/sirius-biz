@@ -117,10 +117,10 @@ public class L3Uplink implements VFSRoot {
          * Creates a placeholder for the given parent and name.
          *
          * @param parentDirectory the directory which (if present) is used to determine if the underlying storage space
-         *                        is readonly. In this case an empty optional is returned
+         *                        is readonly. In this case null is returned
          * @param parent          the parent to pass on
          * @param name            the name of the placeholder
-         * @return a placeholder representing a non existent file or directory
+         * @return a placeholder representing a non-existent file or directory
          */
         @Nullable
         protected VirtualFile createPlaceholder(@Nullable Directory parentDirectory, VirtualFile parent, String name) {
@@ -131,6 +131,14 @@ public class L3Uplink implements VFSRoot {
             MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, name);
             file.attach(new Placeholder(parent, name));
             attachHandlers(file, false);
+
+            if (parentDirectory != null) {
+                file.withStorageSpaceSupplier(parentDirectory::getStorageSpace);
+            } else {
+                // when the parentDirectory is null, we likely started from a real space, but have non-existent
+                // sub-folders, so we supply the space from the direct parent
+                file.withStorageSpaceSupplier(() -> parent.getStorageSpace().orElse(null));
+            }
 
             return file;
         }

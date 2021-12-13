@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer3;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -25,6 +26,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.function.ToLongFunction;
 
 /**
@@ -429,6 +431,17 @@ public class MutableVirtualFile extends VirtualFile {
      */
     public MutableVirtualFile withTouchHandler(Consumer<VirtualFile> touchHandler) {
         this.touchHandler = touchHandler;
+        return this;
+    }
+
+    /**
+     * Sets the supplier responsible to deliver the storage space sitting on top of the file.
+     *
+     * @param storageSpaceSupplier the supplier for a {@link BlobStorageSpace}
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withStorageSpaceSupplier(Supplier<BlobStorageSpace> storageSpaceSupplier) {
+        this.storageSpaceSupplier = storageSpaceSupplier;
         return this;
     }
 }
