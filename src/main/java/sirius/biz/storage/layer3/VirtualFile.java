@@ -15,6 +15,7 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.async.TaskContext;
@@ -63,6 +64,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
@@ -113,6 +115,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected Predicate<VirtualFile> canRenameHandler;
     protected BiPredicate<VirtualFile, String> renameHandler;
     protected Consumer<VirtualFile> touchHandler;
+    protected Supplier<BlobStorageSpace> storageSpaceSupplier;
 
     @Part
     private static StorageUtils utils;
@@ -439,6 +442,24 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "touchHandler");
+        }
+    }
+
+    /**
+     * Returns the blob storage space on top of the virtual file.
+     *
+     * @return the {@link BlobStorageSpace} encapsulated by an optional or empty if this virtual file or directory does
+     * not derive from a storage space
+     */
+    public Optional<BlobStorageSpace> getStorageSpace() {
+        if (storageSpaceSupplier == null) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.ofNullable(storageSpaceSupplier.get());
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "storageSpaceSupplier");
         }
     }
 
