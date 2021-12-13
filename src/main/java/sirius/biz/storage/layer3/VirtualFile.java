@@ -14,6 +14,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
@@ -116,6 +117,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     @Part
     private static StorageUtils utils;
+
+    @Part
+    private static ObjectStorage objectStorage;
 
     /**
      * Internal constructor to create the "/" directory.
@@ -245,6 +249,27 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             current = current.parent();
         }
         return result;
+    }
+
+    /**
+     * Returns the root directory path of the current virtual file.
+     * <p>
+     * If the virtual file belongs to a known space, it is used as root, otherwise <tt>/</tt> is returned.
+     *
+     * @return the root directory path
+     */
+    @Nullable
+    public VirtualFile root() {
+        List<VirtualFile> fileList = pathList();
+        if (fileList.isEmpty()) {
+            return null;
+        }
+
+        if (fileList.size() > 1 && objectStorage.isKnown(fileList.get(1).name())) {
+            return fileList.get(1);
+        }
+
+        return fileList.get(0);
     }
 
     /**
