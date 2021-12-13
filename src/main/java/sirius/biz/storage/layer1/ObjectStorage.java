@@ -19,6 +19,7 @@ import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -73,7 +74,7 @@ public class ObjectStorage {
             spaceMap = initializeSpaceMap();
         }
 
-        return spaceMap;
+        return Collections.unmodifiableMap(spaceMap);
     }
 
     private Map<String, ObjectStorageSpace> initializeSpaceMap() {
