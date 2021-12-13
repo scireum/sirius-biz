@@ -157,6 +157,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_SORT_BY_LAST_MODIFIED = "sortByLastModified";
 
     /**
+     * Determines if the space is considered a work-directory, where its contents are considered of temporary character.
+     */
+    private static final String CONFIG_KEY_WORK_DIRECTORY = "workDirectory";
+
+    /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
      * a separator one is used.
@@ -243,6 +248,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected boolean touchTracking;
     protected boolean sortByLastModified;
     protected ObjectStorageSpace objectStorageSpace;
+    protected boolean workDirectory;
 
     /**
      * Creates a new instance by loading all settings from the given config section.
@@ -261,6 +267,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
         this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
+        this.workDirectory = config.get(CONFIG_KEY_WORK_DIRECTORY).asBoolean();
     }
 
     @Override

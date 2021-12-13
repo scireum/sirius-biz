@@ -926,6 +926,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
+    public boolean isWorkDirectory() {
+        return workDirectory;
+    }
+
+    @Override
     protected void purgeVariantFromCache(SQLBlob blob, String variantName) {
         blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), variantName));
     }

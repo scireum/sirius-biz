@@ -822,6 +822,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    public boolean isWorkDirectory() {
+        return workDirectory;
+    }
+
+    @Override
     protected void purgeVariantFromCache(MongoBlob blob, String variantName) {
         blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), variantName));
     }
