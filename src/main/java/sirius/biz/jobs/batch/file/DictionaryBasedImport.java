@@ -38,7 +38,7 @@ public class DictionaryBasedImport {
      */
     public static final Parameter<Boolean> IGNORE_EMPTY_PARAMETER =
             new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty").withDescription(
-                    "$DictionaryBasedImportJobFactory.ignoreEmpty.help").build();
+                    "$DictionaryBasedImportJobFactory.ignoreEmpty.help").withDefaultTrue().build();
 
     protected final ProcessContext process;
     protected final ImportDictionary dictionary;
