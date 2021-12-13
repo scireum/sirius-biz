@@ -124,6 +124,19 @@ public class ObjectStorage {
     }
 
     /**
+     * Determines if the storage space with the work-directory space.
+     *
+     * @param space the name of the space to check
+     * @return <tt>true</tt> if the space is known, <tt>false</tt> otherwise
+     */
+    public boolean isWorkDirectory(String space) {
+        if (!isKnown(space)) {
+            return false;
+        }
+        return WORK_SPACE_NAME.equals(getSpaceMap().get(space).getName());
+    }
+
+    /**
      * Returns all known layer 1 spaces.
      *
      * @return all known storage spaces of the layer 1
