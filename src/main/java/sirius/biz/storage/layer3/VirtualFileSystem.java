@@ -8,6 +8,9 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.storage.layer2.BasicBlobStorageSpace;
+import sirius.biz.storage.layer2.jdbc.SQLBlobStorageSpace;
+import sirius.biz.storage.layer2.mongo.MongoBlobStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -17,6 +20,7 @@ import sirius.kernel.di.std.Register;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Provides the main entrypoint into the <b>Virtual File System</b>.
@@ -119,5 +123,22 @@ public class VirtualFileSystem {
         // Note that this is currently a very simple implementation but might be enhanced with additional
         // checks or cleanups...
         return "/" + Strings.join("/", parts);
+    }
+
+    /**
+     * Returns the storage space associated with the given file.
+     *
+     * @param virtualFile the virtual file to obtain the storage space
+     * @return the {@link BasicBlobStorageSpace} sitting on top of the virtual file
+     */
+    public Optional<? extends BasicBlobStorageSpace<?, ?, ?>> fetchBlobStorageSpace(VirtualFile virtualFile) {
+        Optional<? extends BasicBlobStorageSpace<?, ?, ?>> blobStorageSpace =
+                virtualFile.tryAs(MongoBlobStorageSpace.class);
+
+        if (blobStorageSpace.isEmpty()) {
+            blobStorageSpace = virtualFile.tryAs(SQLBlobStorageSpace.class);
+        }
+
+        return blobStorageSpace;
     }
 }
