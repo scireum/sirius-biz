@@ -15,6 +15,7 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
@@ -45,6 +46,9 @@ public class L3Uplink implements VFSRoot {
 
     @Part
     private BlobStorage storage;
+
+    @Part
+    private VirtualFileSystem vfs;
 
     /**
      * Represents a non-existent file or directory which might be created by
@@ -130,6 +134,7 @@ public class L3Uplink implements VFSRoot {
 
             MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, name);
             file.attach(new Placeholder(parent, name));
+            vfs.fetchBlobStorageSpace(parent).ifPresent(file::attach);
             attachHandlers(file, false);
 
             return file;
