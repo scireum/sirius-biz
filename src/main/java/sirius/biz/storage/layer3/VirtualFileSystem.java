@@ -141,4 +141,20 @@ public class VirtualFileSystem {
 
         return blobStorageSpace;
     }
+
+    /**
+     * Checks if the file belongs to a work directory, dictated by storage spaces with retention days greater than zero.
+     *
+     * @param virtualFile the virtual file to check
+     * @return <tt>true</tt> when the owner space specifies retention days greater than zero, <tt>false</tt> otherwise
+     */
+    public boolean isWorkFile(VirtualFile virtualFile) {
+        Optional<? extends BasicBlobStorageSpace<?, ?, ?>> blobStorageSpace = fetchBlobStorageSpace(virtualFile);
+
+        if (blobStorageSpace.isEmpty()) {
+            return false;
+        }
+
+        return blobStorageSpace.get().getRetentionDays() > 0;
+    }
 }
