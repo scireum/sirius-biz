@@ -124,7 +124,7 @@ public class L3Uplink implements VFSRoot {
          *                        is readonly. In this case an empty optional is returned
          * @param parent          the parent to pass on
          * @param name            the name of the placeholder
-         * @return a placeholder representing a non existent file or directory
+         * @return a placeholder representing a non-existent file or directory
          */
         @Nullable
         protected VirtualFile createPlaceholder(@Nullable Directory parentDirectory, VirtualFile parent, String name) {
@@ -158,7 +158,7 @@ public class L3Uplink implements VFSRoot {
         }
 
         private VirtualFile findChildInDirectory(VirtualFile parent, Directory parentDir, String name) {
-            // If there is a file extension, this is most probably a file / blob. Therefore we first
+            // If there is a file extension, this is most probably a file / blob. Therefore, we first
             // try to resolve it as such and then fallback to resolving as directory...
             if (Strings.isFilled(Files.getFileExtension(name))) {
                 return priorizedLookup(() -> parentDir.findChildBlob(name)
@@ -225,7 +225,7 @@ public class L3Uplink implements VFSRoot {
      * @param parent        the parent file to use
      * @param directory     the directory to wrap
      * @param forceReadonly determines if the directory should be forcefully set to readonly (independent of
-     *                      {@link BlobStorageSpace#isReadonly()}. Note that setting this to <tt>false</tt> will not
+     *                      {@link BlobStorageSpace#isReadonly()}). Note that setting this to <tt>false</tt> will not
      *                      make the directory writable if <tt>BlobStorageSpace#isReadonly()</tt> returns <tt>true</tt>
      * @return the resulting mutable virtual file
      */
@@ -244,7 +244,7 @@ public class L3Uplink implements VFSRoot {
      * @param parent        the parent file to use
      * @param blob          the blob to wrap
      * @param forceReadonly determines if the blob should be forcefully set to readonly (independent of
-     *                      {@link BlobStorageSpace#isReadonly()}. Note that setting this to <tt>false</tt> will not
+     *                      {@link BlobStorageSpace#isReadonly()}). Note that setting this to <tt>false</tt> will not
      *                      make the blob writable if <tt>BlobStorageSpace#isReadonly()</tt> returns <tt>true</tt>
      * @return the resulting mutable virtual file
      */
