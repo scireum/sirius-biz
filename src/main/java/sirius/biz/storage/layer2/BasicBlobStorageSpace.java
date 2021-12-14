@@ -297,6 +297,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         return touchTracking;
     }
 
+    @Override
+    public int getRetentionDays() {
+        return retentionDays;
+    }
+
     /**
      * Provides the skeleton of most of the optimistic locking algorithms used by this class.
      * <p>
