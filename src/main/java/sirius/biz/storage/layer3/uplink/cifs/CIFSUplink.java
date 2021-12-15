@@ -19,12 +19,12 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
-import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
+import sirius.biz.storage.layer3.uplink.UplinkFactory;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,6 +33,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.function.Function;
 
 /**
  * Provides an uplink which maps into a given CIFS mount point.
@@ -43,14 +44,14 @@ public class CIFSUplink extends ConfigBasedUplink {
      * Creates a new uplink for config sections which use "cifs" as type.
      */
     @Register
-    public static class Factory implements ConfigBasedUplinkFactory {
+    public static class Factory implements UplinkFactory {
 
         @Override
-        public ConfigBasedUplink make(Extension config) {
-            String url = config.get("url").asString();
-            String domain = config.get("domain").asString();
-            String user = config.get("user").asString();
-            String password = config.get("password").asString();
+        public ConfigBasedUplink make(String id, Function<String, Value> config) {
+            String url = config.apply("url").asString();
+            String domain = config.apply("domain").asString();
+            String user = config.apply("user").asString();
+            String password = config.apply("password").asString();
 
             try {
                 if (Strings.isFilled(user)) {
@@ -62,10 +63,10 @@ public class CIFSUplink extends ConfigBasedUplink {
                                     domain,
                                     user,
                                     password));
-                    return new CIFSUplink(config, context, new SmbFile(url, context));
+                    return new CIFSUplink(id, config, context, new SmbFile(url, context));
                 } else {
                     CIFSContext context = new BaseContext(new BaseConfiguration(true));
-                    return new CIFSUplink(config, context, new SmbFile(url, context));
+                    return new CIFSUplink(id, config, context, new SmbFile(url, context));
                 }
             } catch (CIFSException e) {
                 throw new IllegalArgumentException(Strings.apply(
@@ -104,8 +105,8 @@ public class CIFSUplink extends ConfigBasedUplink {
     protected SmbFile smbRoot;
     protected CIFSContext context;
 
-    protected CIFSUplink(Extension config, CIFSContext context, SmbFile smbRoot) {
-        super(config);
+    protected CIFSUplink(String id, Function<String, Value> config, CIFSContext context, SmbFile smbRoot) {
+        super(id, config);
         this.context = context;
         this.smbRoot = smbRoot;
     }
@@ -173,8 +174,8 @@ public class CIFSUplink extends ConfigBasedUplink {
     }
 
     private boolean canFastMoveHandler(VirtualFile file, VirtualFile newParent) {
-        return !readonly  && this.equals(file.tryAs(CIFSUplink.class).orElse(null)) && this.equals(
-                newParent.tryAs(CIFSUplink.class).orElse(null));
+        return !readonly && this.equals(file.tryAs(CIFSUplink.class).orElse(null)) && this.equals(newParent.tryAs(
+                CIFSUplink.class).orElse(null));
     }
 
     private boolean renameHandler(VirtualFile file, String name) {

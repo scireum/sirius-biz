@@ -15,7 +15,7 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
-import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
+import sirius.biz.storage.layer3.uplink.UplinkFactory;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
@@ -25,11 +25,11 @@ import sirius.biz.storage.util.WatchableInputStream;
 import sirius.biz.storage.util.WatchableOutputStream;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -38,6 +38,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Provides an uplink which connects to a remote FTP server.
@@ -45,14 +46,19 @@ import java.util.Optional;
 public class FTPUplink extends ConfigBasedUplink {
 
     /**
+     * Specifies the base path on the remote server to map to "/".
+     */
+    public static final String CONFIG_BASE_PATH = "basePath";
+
+    /**
      * Creates a new uplink for config sections which use "ftp" as type.
      */
     @Register
-    public static class Factory implements ConfigBasedUplinkFactory {
+    public static class Factory implements UplinkFactory {
 
         @Override
-        public ConfigBasedUplink make(Extension config) {
-            return new FTPUplink(config);
+        public ConfigBasedUplink make(String id, Function<String, Value> config) {
+            return new FTPUplink(id, config);
         }
 
         @Nonnull
@@ -71,10 +77,10 @@ public class FTPUplink extends ConfigBasedUplink {
     @Part
     private static UplinkConnectorPool connectorPool;
 
-    private FTPUplink(Extension config) {
-        super(config);
-        this.ftpConfig = new FTPUplinkConnectorConfig(config);
-        this.basePath = new RemotePath(config.get("basePath").asString("/"));
+    protected FTPUplink(String id, Function<String, Value> config) {
+        super(id, config);
+        this.ftpConfig = new FTPUplinkConnectorConfig(id, config);
+        this.basePath = new RemotePath(config.apply(CONFIG_BASE_PATH).asString("/"));
     }
 
     private boolean checkForMLSD(FTPClient client) {

@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 /**
  * Encapsulates a pooled connector.
  * <p>
- * This is mainly used for book keeping by the {@link UplinkConnectorPool}.
+ * This is mainly used for bookkeeping by the {@link UplinkConnectorPool}.
  *
  * @param <C> the effective connector being wrapped
  */
@@ -52,7 +52,7 @@ public class UplinkConnector<C> implements Closeable {
     }
 
     /**
-     * Forcefully closes the connector so that it will be destroyed once it is returnd via {@link #safeClose()} or
+     * Forcefully closes the connector so that it will be destroyed once it is returned via {@link #safeClose()} or
      * {@link #close()}.
      * <p>
      * Note that one of the close methods must still be called so that the connection pool remains in a consistent

@@ -13,13 +13,14 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.settings.Extension;
+import sirius.kernel.commons.Value;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -32,7 +33,7 @@ public abstract class ConfigBasedUplink {
     protected String description;
     protected String permission;
     protected String name;
-    protected Extension config;
+    protected Function<String, Value> config;
     protected boolean readonly;
     protected VirtualFile file;
 
@@ -54,11 +55,11 @@ public abstract class ConfigBasedUplink {
      *
      * @param config the configuration of this uplink
      */
-    protected ConfigBasedUplink(Extension config) {
-        this.readonly = config.get("readonly").asBoolean();
-        this.description = config.get("description").asString();
-        this.permission = config.get("permission").asString();
-        this.name = config.get("name").asString(config.getId());
+    protected ConfigBasedUplink(String name, Function<String, Value> config) {
+        this.readonly = config.apply("readonly").asBoolean();
+        this.description = config.apply("description").asString();
+        this.permission = config.apply("permission").asString();
+        this.name = name;
         this.config = config;
     }
 
@@ -132,7 +133,7 @@ public abstract class ConfigBasedUplink {
      * @param parent the parent directory
      * @param name   the name of the child
      * @return the resolved child (existing or not) or <tt>null</tt> if the file cannot be resolved and a plain
-     * non existing and unmodifyable placeholder should be used.
+     * non-existing and unmodifiable placeholder should be used.
      */
     @Nullable
     protected abstract VirtualFile findChildInDirectory(VirtualFile parent, String name);
