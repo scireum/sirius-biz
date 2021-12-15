@@ -380,31 +380,21 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                                              uplinkStore,
                                                              connection.getName()));
 
-        try {
-            ObjectStore store = objectStores.getStore(uplinkStore);
-            BucketName uplinkBucketName = store.getBucketName(getEffectiveUplinkBucket());
-            store.listObjects(uplinkBucketName, null, object -> {
-                if (uplinkIgnoredPaths.stream().noneMatch(ignoredPath -> object.getKey().startsWith(ignoredPath))) {
-                    handleUplinkFile(processContext,
-                                     connection,
-                                     repositoryFiles,
-                                     filesToDelete,
-                                     store,
-                                     uplinkBucketName,
-                                     object);
-                }
+        ObjectStore store = objectStores.getStore(uplinkStore);
+        BucketName uplinkBucketName = store.getBucketName(getEffectiveUplinkBucket());
+        store.listObjects(uplinkBucketName, null, object -> {
+            if (uplinkIgnoredPaths.stream().noneMatch(ignoredPath -> object.getKey().startsWith(ignoredPath))) {
+                handleUplinkFile(processContext,
+                                 connection,
+                                 repositoryFiles,
+                                 filesToDelete,
+                                 store,
+                                 uplinkBucketName,
+                                 object);
+            }
 
-                return true;
-            });
-        } catch (Exception e) {
-            processContext.handle(Exceptions.handle()
-                                            .error(e)
-                                            .withSystemErrorMessage(
-                                                    "Failed to check the uplink repository %s for %s: %s (%s)",
-                                                    uplinkStore,
-                                                    connection.getName())
-                                            .handle());
-        }
+            return true;
+        });
     }
 
     private String getEffectiveUplinkBucket() {
@@ -554,7 +544,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
         while (processContext.isActive() && attempts-- > 0 && !connector.repository().isEpochInSync()) {
             if (stateUpdate.firstCall()) {
                 processContext.forceUpdateState(Strings.apply("Waiting for the repository of %s to be synced...",
-                                                                    connector.getName()));
+                                                              connector.getName()));
             }
             Wait.seconds(SYNC_AWAIT_PAUSE_SECONDS);
         }
