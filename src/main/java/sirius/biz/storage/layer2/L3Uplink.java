@@ -134,7 +134,8 @@ public class L3Uplink implements VFSRoot {
 
             MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, name);
             file.attach(new Placeholder(parent, name));
-            vfs.fetchBlobStorageSpace(parent).ifPresent(file::attach);
+            vfs.fetchBlobStorageSpace(parent)
+               .ifPresent(blobStorageSpace -> file.attach(BlobStorageSpace.class, blobStorageSpace));
             attachHandlers(file, false);
 
             return file;
@@ -232,7 +233,7 @@ public class L3Uplink implements VFSRoot {
     public MutableVirtualFile wrapDirectory(VirtualFile parent, Directory directory, boolean forceReadonly) {
         MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, directory.getName());
         file.attach(Directory.class, directory);
-        file.attach(directory.getStorageSpace());
+        file.attach(BlobStorageSpace.class, directory.getStorageSpace());
         attachHandlers(file, forceReadonly);
 
         return file;
@@ -251,7 +252,7 @@ public class L3Uplink implements VFSRoot {
     public MutableVirtualFile wrapBlob(VirtualFile parent, Blob blob, boolean forceReadonly) {
         MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, blob.getFilename());
         file.attach(Blob.class, blob);
-        file.attach(blob.getStorageSpace());
+        file.attach(BlobStorageSpace.class, blob.getStorageSpace());
         attachHandlers(file, forceReadonly);
 
         return file;
