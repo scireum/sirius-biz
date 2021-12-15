@@ -57,7 +57,7 @@ public class DictionaryBasedImport {
      * @param process    the process context itself
      * @param rowHandler a callback that handles the number and context of the imported row
      */
-    public DictionaryBasedImport(String filename,
+    protected DictionaryBasedImport(String filename,
                                  ImportDictionary dictionary,
                                  ProcessContext process,
                                  Callback<Tuple<Integer, Context>> rowHandler) {
@@ -74,7 +74,7 @@ public class DictionaryBasedImport {
      * @param rowCounterName the name to use when counting rows
      * @return the import itself for fluent method calls
      */
-    public DictionaryBasedImport withRowCounterName(@Nullable String rowCounterName) {
+    protected DictionaryBasedImport withRowCounterName(@Nullable String rowCounterName) {
         if (Strings.isFilled(rowCounterName)) {
             this.rowCounterName = rowCounterName;
         }
@@ -87,7 +87,7 @@ public class DictionaryBasedImport {
      * @param ignoreEmptyValues true, if empty values should be ignored, false otherwise
      * @return the import itself for fluent method calls
      */
-    public DictionaryBasedImport withIgnoreEmptyValues(boolean ignoreEmptyValues) {
+    protected DictionaryBasedImport withIgnoreEmptyValues(boolean ignoreEmptyValues) {
         this.ignoreEmptyValues = ignoreEmptyValues;
         return this;
     }
