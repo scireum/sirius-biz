@@ -18,7 +18,7 @@ import sirius.kernel.commons.Values;
 import javax.annotation.Nullable;
 
 /**
- * Provides a job for importing line based files (CSV, Excel) which utilizes a {@link ImportDictionary} to map colums
+ * Provides a job for importing line based files (CSV, Excel) which utilizes a {@link ImportDictionary} to map columns
  * to fields.
  */
 public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
@@ -46,7 +46,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
                                                                process,
                                                                indexAndRow -> handleRow(indexAndRow.getFirst(),
                                                                                         indexAndRow.getSecond())).withIgnoreEmptyValues(
-                process.getParameter(DictionaryBasedImport.IGNORE_EMPTY_PARAMETER).orElse(false));
+                process.getParameter(DictionaryBasedImport.IGNORE_EMPTY_PARAMETER).orElse(true));
         super.execute();
     }
 
