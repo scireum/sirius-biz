@@ -8,9 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
-import sirius.biz.storage.layer2.BasicBlobStorageSpace;
-import sirius.biz.storage.layer2.jdbc.SQLBlobStorageSpace;
-import sirius.biz.storage.layer2.mongo.MongoBlobStorageSpace;
+import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -126,30 +124,13 @@ public class VirtualFileSystem {
     }
 
     /**
-     * Returns the storage space associated with the given file.
-     *
-     * @param virtualFile the virtual file to obtain the storage space
-     * @return the {@link BasicBlobStorageSpace} sitting on top of the virtual file
-     */
-    public Optional<? extends BasicBlobStorageSpace<?, ?, ?>> fetchBlobStorageSpace(VirtualFile virtualFile) {
-        Optional<? extends BasicBlobStorageSpace<?, ?, ?>> blobStorageSpace =
-                virtualFile.tryAs(MongoBlobStorageSpace.class);
-
-        if (blobStorageSpace.isEmpty()) {
-            blobStorageSpace = virtualFile.tryAs(SQLBlobStorageSpace.class);
-        }
-
-        return blobStorageSpace;
-    }
-
-    /**
      * Checks if the file belongs to a work directory, dictated by storage spaces with retention days greater than zero.
      *
      * @param virtualFile the virtual file to check
      * @return <tt>true</tt> when the owner space specifies retention days greater than zero, <tt>false</tt> otherwise
      */
     public boolean isWorkFile(VirtualFile virtualFile) {
-        Optional<? extends BasicBlobStorageSpace<?, ?, ?>> blobStorageSpace = fetchBlobStorageSpace(virtualFile);
+        Optional<BlobStorageSpace> blobStorageSpace = virtualFile.tryAs(BlobStorageSpace.class);
 
         if (blobStorageSpace.isEmpty()) {
             return false;

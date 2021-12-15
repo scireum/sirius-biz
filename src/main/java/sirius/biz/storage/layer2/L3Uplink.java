@@ -134,8 +134,8 @@ public class L3Uplink implements VFSRoot {
 
             MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, name);
             file.attach(new Placeholder(parent, name));
-            vfs.fetchBlobStorageSpace(parent)
-               .ifPresent(blobStorageSpace -> file.attach(BlobStorageSpace.class, blobStorageSpace));
+            parent.tryAs(BlobStorageSpace.class)
+                  .ifPresent(blobStorageSpace -> file.attach(BlobStorageSpace.class, blobStorageSpace));
             attachHandlers(file, false);
 
             return file;
