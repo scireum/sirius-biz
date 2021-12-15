@@ -124,12 +124,15 @@ public class VirtualFileSystem {
     }
 
     /**
-     * Checks if the file belongs to a work directory, dictated by storage spaces with retention days greater than zero.
+     * Checks if the file belongs to a storage space configured with retention days greater than zero.
+     * <p>
+     * This represents a file with a temporary character so the caller can use this information to decide
+     * if a file can be deleted after being processed.
      *
      * @param virtualFile the virtual file to check
      * @return <tt>true</tt> when the owner space specifies retention days greater than zero, <tt>false</tt> otherwise
      */
-    public boolean isWorkFile(VirtualFile virtualFile) {
+    public boolean isAutoCleanupBlob(VirtualFile virtualFile) {
         Optional<BlobStorageSpace> blobStorageSpace = virtualFile.tryAs(BlobStorageSpace.class);
 
         if (blobStorageSpace.isEmpty()) {
