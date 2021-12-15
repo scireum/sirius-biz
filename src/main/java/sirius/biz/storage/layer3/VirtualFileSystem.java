@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -17,6 +18,7 @@ import sirius.kernel.di.std.Register;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Provides the main entrypoint into the <b>Virtual File System</b>.
@@ -119,5 +121,24 @@ public class VirtualFileSystem {
         // Note that this is currently a very simple implementation but might be enhanced with additional
         // checks or cleanups...
         return "/" + Strings.join("/", parts);
+    }
+
+    /**
+     * Checks if the file belongs to a storage space configured with retention days greater than zero.
+     * <p>
+     * This represents a file with a temporary character so the caller can use this information to decide
+     * if a file can be deleted after being processed.
+     *
+     * @param virtualFile the virtual file to check
+     * @return <tt>true</tt> when the owner space specifies retention days greater than zero, <tt>false</tt> otherwise
+     */
+    public boolean isAutoCleanupBlob(VirtualFile virtualFile) {
+        Optional<BlobStorageSpace> blobStorageSpace = virtualFile.tryAs(BlobStorageSpace.class);
+
+        if (blobStorageSpace.isEmpty()) {
+            return false;
+        }
+
+        return blobStorageSpace.get().getRetentionDays() > 0;
     }
 }
