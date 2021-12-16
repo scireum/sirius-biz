@@ -336,4 +336,11 @@ public interface BlobStorageSpace {
      * @param blobKeys the set of keys to mark as accessed
      */
     void markTouched(Set<String> blobKeys);
+
+    /**
+     * Returns how many days files are kept in the storage space before being deleted.
+     *
+     * @return the amount of days, 0 when indefinite
+     */
+    int getRetentionDays();
 }
