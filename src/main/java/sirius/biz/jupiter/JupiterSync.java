@@ -159,27 +159,27 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
     @Override
     public void started() {
-        if (automaticUpdate) {
-            // As we run in the "readiness callback" of elastic, we rather fork a thread here, as synchronizing the
-            // repository might take a while.
-            // We await the readiness of elastic in the first place, as we use the Process framework to log what we
-            // do...
-            elastic.getReadyFuture()
-                   .onSuccess(() -> tasks.defaultExecutor()
-                                         .start(() -> runInStandbyProcess(processContext -> performSyncInProcess(
-                                                 processContext,
-                                                 true,
-                                                 true,
-                                                 false))));
-        }
+        // As we run in the "readiness callback" of elastic, we rather fork a thread here, as synchronizing the
+        // repository might take a while.
+        // We await the readiness of elastic in the first place, as we use the Process framework to log what we
+        // do...
+        elastic.getReadyFuture()
+               .onSuccess(() -> tasks.defaultExecutor()
+                                     .start(() -> runInStandbyProcess(processContext -> performSyncInProcess(
+                                             processContext,
+                                             true,
+                                             true,
+                                             false))));
     }
 
     protected void runInStandbyProcess(Consumer<ProcessContext> processContextConsumer) {
-        processes.executeInStandbyProcess("jupiter-sync",
-                                          () -> "Jupiter Synchronization",
-                                          tenants.getSystemTenantId(),
-                                          tenants::getSystemTenantName,
-                                          processContextConsumer);
+        if (automaticUpdate) {
+            processes.executeInStandbyProcess("jupiter-sync",
+                                              () -> "Jupiter Synchronization",
+                                              tenants.getSystemTenantId(),
+                                              tenants::getSystemTenantName,
+                                              processContextConsumer);
+        }
     }
 
     /**
