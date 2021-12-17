@@ -44,7 +44,7 @@ public class ExtractedZipFile implements ExtractedFile {
     @Override
     public InputStream openInputStream() throws IOException {
         try {
-            return new CloseShieldInputStream(inputStreamSupplier.create());
+            return CloseShieldInputStream.wrap(inputStreamSupplier.create());
         } catch (IOException ioException) {
             throw ioException;
         } catch (Exception e) {
