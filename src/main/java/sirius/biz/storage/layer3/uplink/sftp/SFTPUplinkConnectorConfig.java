@@ -18,11 +18,12 @@ import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.impl.DefaultSftpClientFactory;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.settings.Extension;
 
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.util.function.Function;
 
 /**
  * Keeps the configuration used to build a SFTP connector using the
@@ -33,8 +34,8 @@ class SFTPUplinkConnectorConfig extends UplinkConnectorConfig<SftpClient> {
     private static final int DEFAULT_SFTP_PORT = 22;
     private SshClient sshClient;
 
-    protected SFTPUplinkConnectorConfig(Extension config) {
-        super(config);
+    protected SFTPUplinkConnectorConfig(String id, Function<String, Value> config) {
+        super(id, config);
     }
 
     @Override

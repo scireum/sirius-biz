@@ -15,7 +15,7 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
-import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
+import sirius.biz.storage.layer3.uplink.UplinkFactory;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
@@ -23,10 +23,10 @@ import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.storage.util.WatchableInputStream;
 import sirius.biz.storage.util.WatchableOutputStream;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.attribute.FileTime;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Provides an uplink which connects to a remote SFTP server.
@@ -42,14 +43,19 @@ import java.util.Optional;
 public class SFTPUplink extends ConfigBasedUplink {
 
     /**
-     * Creates a new uplink for config sections which use "ftp" as type.
+     * Specifies the base path on the remote server to map to "/".
+     */
+    public static final String CONFIG_BASE_PATH = "basePath";
+
+    /**
+     * Creates a new uplink for config sections which use "sftp" as type.
      */
     @Register
-    public static class Factory implements ConfigBasedUplinkFactory {
+    public static class Factory implements UplinkFactory {
 
         @Override
-        public ConfigBasedUplink make(Extension config) {
-            return new SFTPUplink(config);
+        public ConfigBasedUplink make(String id, Function<String, Value> config) {
+            return new SFTPUplink(id, config);
         }
 
         @Nonnull
@@ -65,10 +71,10 @@ public class SFTPUplink extends ConfigBasedUplink {
     private final SFTPUplinkConnectorConfig sftpConfig;
     private final RemotePath basePath;
 
-    private SFTPUplink(Extension config) {
-        super(config);
-        this.sftpConfig = new SFTPUplinkConnectorConfig(config);
-        this.basePath = new RemotePath(config.get("basePath").asString("/"));
+    protected SFTPUplink(String id, Function<String, Value> config) {
+        super(id, config);
+        this.sftpConfig = new SFTPUplinkConnectorConfig(id, config);
+        this.basePath = new RemotePath(config.apply(CONFIG_BASE_PATH).asString("/"));
     }
 
     @Override
