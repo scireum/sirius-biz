@@ -60,6 +60,7 @@ public class LookupTableController extends BizController {
                 Value.of(extendedDisplay).getEnum(LookupValue.Display.class).orElse(LookupValue.Display.NAME);
         AutocompleteHelper.handle(webContext, (query, result) -> {
             lookupTable.suggest(query)
+                       .filter(entry -> !entry.isDeprecated())
                        .limit(MAX_SUGGESTIONS_ITEMS)
                        .map(entry -> entry.toAutocompletion(fieldDisplayMode, completionDisplayMode))
                        .forEach(result);

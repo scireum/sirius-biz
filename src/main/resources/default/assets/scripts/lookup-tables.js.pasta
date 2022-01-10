@@ -71,8 +71,11 @@ LookupTableInfo.prototype.ENTRY_TEMPLATE = '<td>' +
     '</div>' +
     '{{#description}}<div class="text-small text-muted mt-2">{{description}}</div>{{/description}}' +
     '{{#source}}' +
-    '   <div class="whitespace-pre text-monospace text-small left-border border-sirius-blue-dark pl-2 pr-2 mt-1 source-js d-none">{{source}}</div>' +
+    '   <div class="whitespace-pre-wrap text-monospace text-small left-border border-sirius-blue-dark pl-2 pr-2 mt-1 source-js d-none">{{source}}</div>' +
     '{{/source}}' +
+    '{{#deprecated}}' +
+    '   <div class="text-small left-border border-sirius-yellow pl-2 pr-2 mt-2">@i18n("LookupTableController.deprecated")</div>' +
+    '{{/deprecated}}' +
     '</td>';
 
 LookupTableInfo.prototype.reload = function () {

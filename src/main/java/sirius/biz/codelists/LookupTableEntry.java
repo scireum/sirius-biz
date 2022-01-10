@@ -43,12 +43,12 @@ public class LookupTableEntry {
         this.description = Strings.isEmpty(description) ? null : description;
     }
 
-    public LookupTableEntry markDeprecated() {
+    protected LookupTableEntry markDeprecated() {
         this.deprecated = true;
         return this;
     }
 
-    public LookupTableEntry withSource(Object source) {
+    protected LookupTableEntry withSource(Object source) {
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setPrettyFlow(true);
