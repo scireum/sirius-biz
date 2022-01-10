@@ -14,6 +14,7 @@ import sirius.kernel.commons.RateLimit;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Register(classes = UplinkConnectorPool.class)
 public class UplinkConnectorPool {
 
-    private static final int TIME_BETWEEN_EVICTION_RUNS_MILLIS = 30_000;
+    private static final Duration TIME_BETWEEN_EVICTION_RUNS = Duration.ofSeconds(30);
     private static final int NUM_TESTS_PER_EVICTION_RUN = 4;
 
     private final Map<UplinkConnectorConfig<?>, GenericObjectPool<UplinkConnector<?>>> pools =
@@ -92,7 +93,7 @@ public class UplinkConnectorPool {
         uplinkConnectorFactory.linkToPool(pool);
         pool.setMaxIdle(uplinkConnectorConfig.maxIdle);
         pool.setMaxTotal(uplinkConnectorConfig.maxActive);
-        pool.setTimeBetweenEvictionRunsMillis(TIME_BETWEEN_EVICTION_RUNS_MILLIS);
+        pool.setTimeBetweenEvictionRuns(TIME_BETWEEN_EVICTION_RUNS);
         pool.setNumTestsPerEvictionRun(NUM_TESTS_PER_EVICTION_RUN);
         pool.setTestOnBorrow(true);
         pool.setTestWhileIdle(true);

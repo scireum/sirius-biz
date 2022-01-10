@@ -8,8 +8,6 @@
 
 package sirius.biz.elastic;
 
-import sirius.biz.cluster.work.DistributedTaskExecutor;
-import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -20,16 +18,16 @@ import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
 import sirius.db.es.IndexMappings;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Timeout;
 import sirius.kernel.commons.Wait;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.Duration;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -68,11 +66,6 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected Class<? extends DistributedTaskExecutor> getExecutor() {
-        return DefaultBatchProcessFactory.DefaultPartialBatchProcessTaskExecutor.class;
-    }
-
-    @Override
     protected void execute(ProcessContext process) throws Exception {
         EntityDescriptor ed = process.require(entityDescriptorParameter);
         String nextIndex = mappings.determineNextIndexName(ed);
@@ -81,38 +74,26 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
         mappings.createMapping(ed, nextIndex, IndexMappings.DynamicMapping.FALSE);
         process.log("Created index: " + nextIndex);
 
-        Timeout firstStepCompleted = new Timeout(Duration.ofSeconds(3));
         String currentIndex = elastic.determineEffectiveIndex(ed);
-        elastic.getLowLevelClient()
-               .reindex(currentIndex,
-                        nextIndex,
-                        response -> handleSuccess(process.getProcessId(), firstStepCompleted),
-                        exception -> handleFailure(exception, process.getProcessId(), firstStepCompleted));
-        process.log("Started a reindex job in elasticsearch, check the task API to see the progress ...");
-    }
+        String taskId = elastic.getLowLevelClient().startReindex(currentIndex, nextIndex);
+        process.log("Started a reindex job in elasticsearch: " + taskId);
 
-    private void handleSuccess(String processId, Timeout firstStepCompleted) {
-        // If the re-index was super quick (took less than 3 seconds), we
-        // rather wait some seconds, as the process API is not meant to handle
-        // fully concurrent updates...
-        if (firstStepCompleted.notReached()) {
-            Wait.seconds(3);
+        Watch watch = Watch.start();
+        while (TaskContext.get().isActive() && elastic.getLowLevelClient().checkTaskActivity(taskId)) {
+            process.tryUpdateState("Reindex is still active (Runtime: " + watch.duration() + ")");
+            Wait.seconds(5);
         }
-        processes.execute(processId, processContext -> {
-            processContext.log(ProcessLog.success().withMessage("Reindex completed!"));
-        });
-    }
 
-    private void handleFailure(Exception exception, String processId, Timeout firstStepCompleted) {
-        // If the re-index was super quick (took less than 3 seconds), we
-        // rather wait some seconds, as the process API is not meant to handle
-        // fully concurrent updates...
-        if (firstStepCompleted.notReached()) {
-            Wait.seconds(3);
+        process.forceUpdateState("");
+
+        if (!elastic.getLowLevelClient().checkTaskActivity(taskId)) {
+            process.log(ProcessLog.success().withMessage("Reindex is complete! Runtime: " + watch.duration()));
+        } else {
+            process.log(ProcessLog.warn()
+                                  .withFormattedMessage(
+                                          "The task %s is still active in Elasticsearch. Use the Task API to kill manually!",
+                                          taskId));
         }
-        processes.execute(processId, processContext -> {
-            processContext.handle(exception);
-        });
     }
 
     @Override
