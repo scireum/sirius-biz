@@ -75,7 +75,7 @@ public class RedisLimiter implements Limiter {
         return getDB().query(() -> "Update rate limit: " + effectiveKey, db -> {
             long value = db.incr(effectiveKey);
             if (value == 1) {
-                db.expire(effectiveKey, intervalInSeconds);
+                db.expire(effectiveKey, (long) intervalInSeconds);
             } else if (value == limit) {
                 limitReachedOnce.run();
             }
