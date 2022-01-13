@@ -16,10 +16,10 @@ import sirius.kernel.di.std.Register;
  * Deletes all {@link UserAccount user accounts} of the given tenant.
  */
 @Register(classes = DeleteTenantTask.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
-public class DeleteSQLUserAccountsTask extends DeleteSQLEntitiesTask {
+public class DeleteSQLUserAccountsTask extends DeleteSQLEntitiesTask<SQLUserAccount> {
 
     @Override
-    protected Class<? extends SQLTenantAware> getEntityClass() {
+    protected Class<SQLUserAccount> getEntityClass() {
         return SQLUserAccount.class;
     }
 

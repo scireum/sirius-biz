@@ -67,15 +67,16 @@
                 });
             }
 
-            function selectVFSFile(path, pathRestriction) {
+            function selectVFSFile(path, pathRestriction, extensions) {
                 document.querySelector("#select-file-modal .modal-title").textContent = "___i18n('VFSController.selectFile')";
                 return selectFileOrDirectoryModal({
                     path: path,
                     onlyDirectories: false,
                     pathRestriction: pathRestriction,
                     allowUpload: true,
+                    extensions: extensions,
                     filter: function (child) {
-                        return pathRestriction === undefined || child.path.startsWith(pathRestriction);
+                        return !pathRestriction || child.path.startsWith(pathRestriction);
                     },
                     createRow: function (child, _modal, resolve, changeDirectory) {
                         const _self = this;
@@ -115,12 +116,13 @@
                         } else {
                             pagination._previousBtn.classList.remove("disabled");
                         }
-                        const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}", {
+                        const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}&extensions={{extensions}}", {
                             path: encodeURIComponent(config.path),
                             onlyDirectories: config.onlyDirectories,
                             skip: page * pageSize,
                             maxItems: pageSize + 1,
-                            filter: encodeURIComponent(_searchForm.value)
+                            filter: encodeURIComponent(_searchForm.value),
+                            extensions: encodeURIComponent(config.extensions)
                         });
                         fetch(url).then(function (response) {
                             if (!response.ok) {

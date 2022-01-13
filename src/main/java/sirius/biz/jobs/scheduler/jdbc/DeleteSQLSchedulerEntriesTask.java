@@ -11,17 +11,16 @@ package sirius.biz.jobs.scheduler.jdbc;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
 import sirius.biz.tenants.jdbc.DeleteSQLEntitiesTask;
-import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.kernel.di.std.Register;
 
 /**
  * Deletes all {@link SchedulerEntry scheduler entries} of the given tenant.
  */
 @Register(classes = DeleteTenantTask.class, framework = SQLSchedulerController.FRAMEWORK_SCHEDULER_JDBC)
-public class DeleteSQLSchedulerEntriesTask extends DeleteSQLEntitiesTask {
+public class DeleteSQLSchedulerEntriesTask extends DeleteSQLEntitiesTask<SQLSchedulerEntry> {
 
     @Override
-    protected Class<? extends SQLTenantAware> getEntityClass() {
+    protected Class<SQLSchedulerEntry> getEntityClass() {
         return SQLSchedulerEntry.class;
     }
 

@@ -10,8 +10,10 @@ package sirius.biz.tenants;
 
 import sirius.kernel.AutoSetupRule;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Priorized;
 
 /**
@@ -22,6 +24,9 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
 
     @Part
     protected Tenants<?, ?, ?> tenants;
+
+    @Parts(TenantAutoSetupExtender.class)
+    protected PartCollection<TenantAutoSetupExtender> extenders;
 
     @ConfigValue("security.system-saml.requestIssuerName")
     private String samlRequestIssuerName;
@@ -43,11 +48,16 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
         userAccount.getUserAccountData().getPermissions().getPermissions().add("administrator");
         userAccount.getUserAccountData().getPermissions().getPermissions().add("user-administrator");
         userAccount.getUserAccountData().getPermissions().getPermissions().add("system-administrator");
+
+        extenders.forEach(extender -> extender.enhanceUser(userAccount));
     }
 
     protected void setupTenantData(Tenant<?> tenant) {
         updateSamlData(tenant);
         tenant.getTenantData().setName("System Tenant");
+        tenant.getTenantData().setFullName("System Tenant");
+
+        extenders.forEach(extender -> extender.enhanceTenant(tenant));
     }
 
     protected void updateSamlData(Tenant<?> tenant) {

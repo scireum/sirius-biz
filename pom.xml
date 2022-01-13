@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-27.1.0</sirius.kernel>
-        <sirius.web>dev-43.9.0</sirius.web>
-        <sirius.db>dev-32.4.0</sirius.db>
+        <sirius.kernel>ga-4.0.0</sirius.kernel>
+        <sirius.web>ga-5.0.0</sirius.web>
+        <sirius.db>ga-5.0.0</sirius.db>
     </properties>
 
     <repositories>
@@ -87,7 +87,7 @@
         <dependency>
             <groupId>org.codelibs</groupId>
             <artifactId>jcifs</artifactId>
-            <version>2.1.11</version>
+            <version>2.1.27</version>
         </dependency>
 
         <dependency>

@@ -59,12 +59,13 @@ function selectVFSFile(config) {
             } else {
                 pagination._previousBtn.classList.remove("disabled");
             }
-            const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}", {
+            const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}&extensions={{extensions}}", {
                 path: encodeURIComponent(config.path),
                 onlyDirectories: config.allowDirectories && !config.allowFiles,
                 skip: page * pageSize,
                 maxItems: pageSize + 1,
-                filter: encodeURIComponent(_searchForm.value)
+                filter: encodeURIComponent(_searchForm.value),
+                extensions: encodeURIComponent(config.allowedExtensions)
             });
             fetch(url).then(function (response) {
                 if (!response.ok) {
@@ -123,7 +124,9 @@ function selectVFSFile(config) {
                             },
                             sendFileAsBody: true,
                             parallelUploads: 1,
+                            maxFiles: 1,
                             maxFilesize: null,
+                            acceptedFiles: config.allowedExtensions,
                             previewTemplate: '' +
                                 '<div class="dropzone-item">\n' +
                                 '   <div class="dropzone-file">\n' +
@@ -147,6 +150,29 @@ function selectVFSFile(config) {
                                 '</div>',
                             previewsContainer: '#select-file-modal .upload-box-js .dropzone-items',
                             clickable: '#select-file-modal .upload-box-js .dropzone-select',
+                            error: function (file, message) {
+                                if (file.status === Dropzone.CANCELED) {
+                                    // no need to show error to the user
+                                    return;
+                                }
+                                if (file.previewElement) {
+                                    file.previewElement.classList.add('dz-error');
+
+                                    if (typeof message !== 'string' && message.message) {
+                                        message = message.message;
+                                    }
+
+                                    file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
+
+                                    clearMessages();
+                                    addErrorMessage(message);
+                                    setTimeout(function () {
+                                        $(_modal).modal('hide');
+                                        file.previewElement.remove();
+                                    }, 500);
+
+                                }
+                            },
                             init: function () {
                                 this.on('sending', function (file, xhr, formData) {
                                     formData.append('filename', file.name);
@@ -160,21 +186,13 @@ function selectVFSFile(config) {
                                         }, 500);
                                     }
                                     if (response.error) {
+                                        file.previewElement.classList.add('dz-error');
+                                        file.previewElement.classList.remove('dz-success');
                                         clearMessages();
                                         addErrorMessage(response.message);
                                     } else {
                                         resolve(response.file);
                                     }
-                                });
-                                this.on('error', function (file, response) {
-                                    if (file.previewElement) {
-                                        setTimeout(function () {
-                                            $(_modal).modal('hide');
-                                            file.previewElement.remove();
-                                        }, 500);
-                                    }
-                                    clearMessages();
-                                    addErrorMessage(response.message);
                                 });
                             }
                         })
@@ -187,7 +205,7 @@ function selectVFSFile(config) {
 
         });
 
-        replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), "click", function () {
+        replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), 'click', function () {
             pagination.reset();
         });
         replaceEventHandlers(_modal.querySelector('.search-form-js'), 'submit', function (event) {
@@ -199,7 +217,7 @@ function selectVFSFile(config) {
             resolve(config.path);
         });
 
-        _modal.querySelector(".ok-btn-js").parentElement.style.display = config.allowDirectories ? "inline-block" : "none";
+        _modal.querySelector('.ok-btn-js').parentElement.style.display = config.allowDirectories ? 'inline-block' : 'none';
 
         $(_modal).modal('show');
     });
