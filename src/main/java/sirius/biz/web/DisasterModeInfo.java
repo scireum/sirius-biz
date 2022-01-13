@@ -45,7 +45,7 @@ import java.time.LocalTime;
  * a timestamp.
  * <p>
  * If {@link Redis} is configured and available, the settings will be shared across the whole cluster
- * and will also be retained across restarts. Otherwise the settings are only stored in memory and
+ * and will also be retained across restarts. Otherwise, the settings are only stored in memory and
  * will be lost during a restart.
  * <p>
  * Note that any change to the settings in here, might be delayed up to 10 seconds as an internal

@@ -15,6 +15,7 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
@@ -45,6 +46,9 @@ public class L3Uplink implements VFSRoot {
 
     @Part
     private BlobStorage storage;
+
+    @Part
+    private VirtualFileSystem vfs;
 
     /**
      * Represents a non-existent file or directory which might be created by
@@ -120,7 +124,7 @@ public class L3Uplink implements VFSRoot {
          *                        is readonly. In this case an empty optional is returned
          * @param parent          the parent to pass on
          * @param name            the name of the placeholder
-         * @return a placeholder representing a non existent file or directory
+         * @return a placeholder representing a non-existent file or directory
          */
         @Nullable
         protected VirtualFile createPlaceholder(@Nullable Directory parentDirectory, VirtualFile parent, String name) {
@@ -130,6 +134,8 @@ public class L3Uplink implements VFSRoot {
 
             MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, name);
             file.attach(new Placeholder(parent, name));
+            parent.tryAs(BlobStorageSpace.class)
+                  .ifPresent(blobStorageSpace -> file.attach(BlobStorageSpace.class, blobStorageSpace));
             attachHandlers(file, false);
 
             return file;
@@ -153,7 +159,7 @@ public class L3Uplink implements VFSRoot {
         }
 
         private VirtualFile findChildInDirectory(VirtualFile parent, Directory parentDir, String name) {
-            // If there is a file extension, this is most probably a file / blob. Therefore we first
+            // If there is a file extension, this is most probably a file / blob. Therefore, we first
             // try to resolve it as such and then fallback to resolving as directory...
             if (Strings.isFilled(Files.getFileExtension(name))) {
                 return priorizedLookup(() -> parentDir.findChildBlob(name)
@@ -220,13 +226,14 @@ public class L3Uplink implements VFSRoot {
      * @param parent        the parent file to use
      * @param directory     the directory to wrap
      * @param forceReadonly determines if the directory should be forcefully set to readonly (independent of
-     *                      {@link BlobStorageSpace#isReadonly()}. Note that setting this to <tt>false</tt> will not
+     *                      {@link BlobStorageSpace#isReadonly()}). Note that setting this to <tt>false</tt> will not
      *                      make the directory writable if <tt>BlobStorageSpace#isReadonly()</tt> returns <tt>true</tt>
      * @return the resulting mutable virtual file
      */
     public MutableVirtualFile wrapDirectory(VirtualFile parent, Directory directory, boolean forceReadonly) {
         MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, directory.getName());
         file.attach(Directory.class, directory);
+        file.attach(BlobStorageSpace.class, directory.getStorageSpace());
         attachHandlers(file, forceReadonly);
 
         return file;
@@ -238,13 +245,14 @@ public class L3Uplink implements VFSRoot {
      * @param parent        the parent file to use
      * @param blob          the blob to wrap
      * @param forceReadonly determines if the blob should be forcefully set to readonly (independent of
-     *                      {@link BlobStorageSpace#isReadonly()}. Note that setting this to <tt>false</tt> will not
+     *                      {@link BlobStorageSpace#isReadonly()}). Note that setting this to <tt>false</tt> will not
      *                      make the blob writable if <tt>BlobStorageSpace#isReadonly()</tt> returns <tt>true</tt>
      * @return the resulting mutable virtual file
      */
     public MutableVirtualFile wrapBlob(VirtualFile parent, Blob blob, boolean forceReadonly) {
         MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, blob.getFilename());
         file.attach(Blob.class, blob);
+        file.attach(BlobStorageSpace.class, blob.getStorageSpace());
         attachHandlers(file, forceReadonly);
 
         return file;

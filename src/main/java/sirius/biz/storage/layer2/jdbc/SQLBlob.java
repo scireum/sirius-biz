@@ -15,6 +15,7 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
 import sirius.biz.storage.layer2.URLBuilder;
 import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
@@ -59,6 +60,9 @@ import java.util.Optional;
 @Index(name = "blob_parent_changed_loop", columns = "parentChanged")
 @Index(name = "blob_delete_old_temporary_loop", columns = {"spaceName", "deleted", "lastModified", "temporary"})
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
+
+    @Part
+    private static StorageUtils storageUtils;
 
     @Transient
     private SQLBlobStorageSpace space;
@@ -239,7 +243,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     protected void updateFilenameFields() {
         if (Strings.isFilled(filename)) {
-            this.filename = filename.trim();
+            this.filename = storageUtils.sanitizePath(filename);
             if (Strings.isFilled(filename)) {
                 this.normalizedFilename = filename.toLowerCase();
                 this.fileExtension = Files.getFileExtension(normalizedFilename);

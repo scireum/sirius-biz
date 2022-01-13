@@ -330,7 +330,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                         db.setnx(syncName + EXECUTION_TIMESTAMP_SUFFIX, String.valueOf(System.currentTimeMillis()));
                 if (update == 1L) {
                     db.expire(syncName + EXECUTION_TIMESTAMP_SUFFIX,
-                              (int) TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS));
+                              (long) TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS));
                     return true;
                 } else {
                     return false;

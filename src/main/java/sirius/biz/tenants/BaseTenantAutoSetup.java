@@ -16,6 +16,8 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Priorized;
 
+import java.util.function.Consumer;
+
 /**
  * Contains the common base functionality of {@link sirius.biz.tenants.jdbc.SQLTenantAutoSetup} and
  * {@link sirius.biz.tenants.mongo.MongoTenantAutoSetup}.
@@ -61,17 +63,16 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
     }
 
     protected void updateSamlData(Tenant<?> tenant) {
-        if (Strings.isFilled(samlRequestIssuerName)) {
-            tenant.getTenantData().setSamlRequestIssuerName(samlRequestIssuerName);
-        }
-        if (Strings.isFilled(samlIssuerUrl)) {
-            tenant.getTenantData().setSamlIssuerUrl(samlIssuerUrl);
-        }
-        if (Strings.isFilled(samlIssuerIndex)) {
-            tenant.getTenantData().setSamlIssuerIndex(samlIssuerIndex);
-        }
-        if (Strings.isFilled(samlFingerprint)) {
-            tenant.getTenantData().setSamlFingerprint(samlFingerprint);
+        acceptIfFilled(samlIssuerName, tenant.getTenantData()::setSamlIssuerName);
+        acceptIfFilled(samlRequestIssuerName, tenant.getTenantData()::setSamlRequestIssuerName);
+        acceptIfFilled(samlIssuerUrl, tenant.getTenantData()::setSamlIssuerUrl);
+        acceptIfFilled(samlIssuerIndex, tenant.getTenantData()::setSamlIssuerIndex);
+        acceptIfFilled(samlFingerprint, tenant.getTenantData()::setSamlFingerprint);
+    }
+
+    private void acceptIfFilled(String value, Consumer<String> filler) {
+        if (Strings.isFilled(value)) {
+            filler.accept(value);
         }
     }
 

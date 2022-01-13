@@ -13,12 +13,12 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
-import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
+import sirius.biz.storage.layer3.uplink.UplinkFactory;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.function.Function;
 
 /**
  * Provides an uplink which maps into a given directory in the file system.
@@ -37,14 +38,19 @@ import java.util.Comparator;
 public class LocalDirectoryUplink extends ConfigBasedUplink {
 
     /**
+     * Specifies the base path on the remote server to map to "/".
+     */
+    public static final String CONFIG_BASE_PATH = "basePath";
+
+    /**
      * Creates a new uplink for config sections which use "fs" as type.
      */
     @Register
-    public static class Factory implements ConfigBasedUplinkFactory {
+    public static class Factory implements UplinkFactory {
 
         @Override
-        public ConfigBasedUplink make(Extension config) {
-            return new LocalDirectoryUplink(config, new File(config.get("basePath").asString()));
+        public ConfigBasedUplink make(String id, Function<String, Value> config) {
+            return new LocalDirectoryUplink(id, config, new File(config.apply(CONFIG_BASE_PATH).asString()));
         }
 
         @Nonnull
@@ -59,8 +65,8 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
 
     private final File root;
 
-    protected LocalDirectoryUplink(Extension extension, File root) {
-        super(extension);
+    protected LocalDirectoryUplink(String id, Function<String, Value> extension, File root) {
+        super(id, extension);
         this.root = root;
         if (!root.exists() || !root.isDirectory()) {
             throw new IllegalArgumentException(Strings.apply("The given baseDir '%s' isn't an existing directory!",

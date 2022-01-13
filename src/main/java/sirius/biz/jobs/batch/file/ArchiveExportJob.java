@@ -57,7 +57,7 @@ public abstract class ArchiveExportJob extends FileExportJob {
         ZipEntry zipEntry = new ZipEntry(fileName);
         zipOutputStream.putNextEntry(zipEntry);
 
-        return new CloseShieldOutputStream(zipOutputStream);
+        return CloseShieldOutputStream.wrap(zipOutputStream);
     }
 
     @Override
@@ -98,7 +98,7 @@ public abstract class ArchiveExportJob extends FileExportJob {
         try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
             ZipEntry entry = zipInputStream.getNextEntry();
             while (entry != null) {
-                digester.accept(entry.getName(), new CloseShieldInputStream(zipInputStream));
+                digester.accept(entry.getName(), CloseShieldInputStream.wrap(zipInputStream));
                 entry = zipInputStream.getNextEntry();
             }
         } catch (IOException e) {

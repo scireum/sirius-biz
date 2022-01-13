@@ -1,0 +1,84 @@
+<i:arg type="sirius.biz.storage.layer2.BlobHardRef" name="objectRef"/>
+<i:arg type="String" name="name"/>
+<i:arg type="String" name="value" default="@objectRef.getKey()"/>
+<i:arg type="String" name="id" default="@generateId('image-upload-%s')"/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
+<i:arg name="btnClass" type="String" default=""
+       description="Lists additional CSS classes to apply to the upload button."/>
+<i:arg type="String" name="defaultPreview" default=""/>
+<i:arg type="String" name="previewVariant" default="raw"/>
+<i:arg type="String" name="acceptedFiles" default=""/>
+<i:arg type="String" name="uploadUrl" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
+<i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
+
+<i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
+
+<t:imageUpload class="@class" id="@id" uploadUrl="@uploadUrl" acceptedFiles="@acceptedFiles"
+               currentImage="@currentImage" btnClass="@btnClass">
+
+    <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
+        @i18n("StoredObject.resetBtn")
+    </button>
+
+
+    <input type="hidden" name="@name" value="@value"/>
+
+</t:imageUpload>
+
+
+<script type="text/javascript">
+    let outerDiv = document.querySelector('#___id');
+
+    let _img = outerDiv.querySelector('.img-preview img');
+    sirius.ready(function () {
+        if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
+            return;
+        }
+        // if we have a variant preview, set up lazyloading...
+        _img.dataset.src = _img.src;
+        _img.src = '___defaultPreview';
+        loadImageLazily(_img);
+    });
+
+    Dropzone.options[sirius.camelize('@id')].url = function (files) {
+        const uploadUrl = '@raw {@uploadUrl}';
+        let parameterIndicator = '?';
+        if (uploadUrl.indexOf('?') >= 0) {
+            parameterIndicator = '&';
+        }
+        return uploadUrl + parameterIndicator + 'filename=' + files[0].name + '&variant=___previewVariant';
+    }
+    Dropzone.options[sirius.camelize('@id')].init = function () {
+        const dropzone = this;
+        dropzone.on('success', function (file, response) {
+            if (response.error) {
+                file.previewElement.classList.add('dz-error');
+                file.previewElement.classList.remove('dz-success');
+                const message = response.message || '___i18n("template.html.uploadFailed")';
+                file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
+                addErrorMessage(message);
+            } else if (sirius.isFilled(response.imageUrl)) {
+                _img = outerDiv.querySelector('.img-preview img');
+                if ('___previewVariant' === 'raw') {
+                    _img.src = response.imageUrl;
+                } else {
+                    _img.src = '___defaultPreview';
+                    _img.dataset.src = response.imageUrl;
+                    loadImageLazily(_img);
+                }
+                if (sirius.isFilled(response.fileId)) {
+                    outerDiv.querySelector('[name=___name]').value = response.fileId;
+                    outerDiv.querySelector('.btn-reset-js').classList.remove('d-none');
+                }
+                setTimeout(function () {
+                    dropzone.removeFile(file);
+                }, 800);
+            }
+        });
+    }
+    outerDiv.querySelector('.btn-reset-js').onclick = function () {
+        outerDiv.querySelector('[name=___name]').value = '';
+        outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
+        outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
+    }
+</script>

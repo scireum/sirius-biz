@@ -276,7 +276,7 @@ class IDBLookupTable extends LookupTable {
                         .searchValue(searchTerm)
                         .translate(lang)
                         .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED)
-                        .filter(row -> !row.at(3).asBoolean())
+                        .filter(row -> row.at(3).asLong(0) != 1L)
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
                                                          row.at(1).asString(),
                                                          row.at(2).getString()));
@@ -332,7 +332,7 @@ class IDBLookupTable extends LookupTable {
     private LookupTableEntry processSearchOrScanRow(Values row) {
         LookupTableEntry entry =
                 new LookupTableEntry(row.at(0).asString(), row.at(1).asString(), row.at(2).getString());
-        if (row.at(3).asBoolean()) {
+        if (row.at(3).asLong(0) == 1L) {
             entry.markDeprecated();
         }
         if (row.at(4).isFilled()) {
@@ -368,7 +368,7 @@ class IDBLookupTable extends LookupTable {
                         .lookupPaths(lookupPath)
                         .searchValue(lookupValue)
                         .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
-                        .filter(row -> !row.at(3).asBoolean())
+                        .filter(row -> row.at(3).asLong(0) != 1L)
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
                                                          row.at(1).asString(),
                                                          row.at(2).getString()));

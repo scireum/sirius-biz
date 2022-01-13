@@ -90,7 +90,8 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
                                               + " sum(rows) as rows,"
                                               + " sum(bytes_on_disk) as diskSize"
                                               + " FROM system.parts"
-                                              + "[ WHERE table = ${table}]"
+                                              + " WHERE database <> 'system'"
+                                              + " [AND table = ${table}]"
                                               + " GROUP BY toYear(max_date), toMonth(max_date)"
                                               + " ORDER BY toYear(max_date), toMonth(max_date)");
 

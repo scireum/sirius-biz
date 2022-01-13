@@ -58,6 +58,7 @@ public class DatabaseController extends BasicController {
     private static final String PARAM_DATABASE = "database";
     private static final String PARAM_QUERY = "query";
     private static final String PARAM_EXPORT_QUERY = "exportQuery";
+    private static final String PARAM_EXPORT_DATABASE = "exportDatabase";
     private static final String KEYWORD_UPDATE = "update";
     private static final String KEYWORD_INSERT = "insert";
     private static final String KEYWORD_ALTER = "alter";
@@ -161,7 +162,7 @@ public class DatabaseController extends BasicController {
             throw Exceptions.createHandled().withSystemErrorMessage("Unsafe or missing POST detected!").handle();
         }
 
-        String database = webContext.get(PARAM_DATABASE).asString(defaultDatabase);
+        String database = webContext.get(PARAM_EXPORT_DATABASE).asString(defaultDatabase);
         String sqlStatement = webContext.get(PARAM_EXPORT_QUERY).asString();
 
         if (isDDLStatement(sqlStatement)) {

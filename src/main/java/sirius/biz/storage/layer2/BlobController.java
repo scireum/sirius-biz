@@ -37,6 +37,7 @@ public class BlobController extends BizController {
     private static final String KEY_FILE = "qqfile";
     private static final String KEY_FILE_ID = "fileId";
     private static final String KEY_PREVIEW_URL = "previewUrl";
+    private static final String KEY_IMAGE_URL = "imageUrl";
     private static final String KEY_DOWNLOAD_URL = "downloadUrl";
     private static final String KEY_SIZE = "size";
     private static final String KEY_FORMATTED_SIZE = "formattedSize";
@@ -76,6 +77,7 @@ public class BlobController extends BizController {
 
                 // TODO SIRI-96 remove once the blobHardRefField has been refactored
                 out.property(KEY_PREVIEW_URL, blob.url().asDownload().buildURL().orElse(""));
+                out.property(KEY_IMAGE_URL, blob.url().withVariant(ctx.get("variant").asString("raw")).buildURL().orElse(""));
 
                 out.property(KEY_DOWNLOAD_URL, blob.url().asDownload().buildURL().orElse(""));
                 out.property(KEY_FILENAME, blob.getFilename());

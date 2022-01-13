@@ -805,6 +805,7 @@ public abstract class LookupTable {
      * will be populated.
      *
      * @param searchTerm the term used to filter the suggestions
+     * @param limit      the limit to apply to fetch a sane number of entries
      * @param lang       the language to translate the name and description to
      * @return a stream of matches for the given term
      */

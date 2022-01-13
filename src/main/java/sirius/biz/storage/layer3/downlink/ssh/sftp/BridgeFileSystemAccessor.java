@@ -35,8 +35,7 @@ import java.util.Set;
 class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
 
     @Override
-    public SeekableByteChannel openFile(ServerSession session,
-                                        SftpSubsystemProxy subsystem,
+    public SeekableByteChannel openFile(SftpSubsystemProxy subsystem,
                                         FileHandle fileHandle,
                                         Path file,
                                         String handle,
@@ -53,8 +52,7 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
     }
 
     @Override
-    public FileLock tryLock(ServerSession session,
-                            SftpSubsystemProxy subsystem,
+    public FileLock tryLock(SftpSubsystemProxy subsystem,
                             FileHandle fileHandle,
                             Path file,
                             String handle,
@@ -66,8 +64,7 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
     }
 
     @Override
-    public void syncFileData(ServerSession session,
-                             SftpSubsystemProxy subsystem,
+    public void syncFileData(SftpSubsystemProxy subsystem,
                              FileHandle fileHandle,
                              Path file,
                              String handle,
@@ -76,8 +73,7 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
     }
 
     @Override
-    public DirectoryStream<Path> openDirectory(ServerSession session,
-                                               SftpSubsystemProxy subsystem,
+    public DirectoryStream<Path> openDirectory(SftpSubsystemProxy subsystem,
                                                DirectoryHandle dirHandle,
                                                Path dir,
                                                String handle) throws IOException {
