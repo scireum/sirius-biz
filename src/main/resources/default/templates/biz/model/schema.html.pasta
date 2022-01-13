@@ -1,108 +1,135 @@
-<w:page titleKey="DatabaseController.schema">
+<t:page titleKey="DatabaseController.schema">
+
     <i:block name="breadcrumbs">
         <li>
             <a href="/system/schema">@i18n("DatabaseController.schema")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="DatabaseController.schema"/>
+    <t:pageHeader titleKey="DatabaseController.schema">
+        <i:block name="actions">
+            <a class="btn btn-link mr-2 d-none d-md-inline-block" href="#" onclick="refreshChanges()">
+                <i class="fa fa-sync"></i>
+            </a>
+            <t:kbBtn code="S1Q2L"/>
+        </i:block>
+    </t:pageHeader>
 
     <div class="row">
-        <div class="col-md-3">
-            <w:helpbox helpKey="DatabaseController.help"/>
-        </div>
-        <div class="col-md-9">
-            <table class="table table-striped table-colorized">
-                <thead>
-                <tr>
-                    <th/>
-                    <th>
-                        @i18n("DatabaseController.reason")<br>
-                        <small class="muted">@i18n("DatabaseController.sql")</small>
-                    </th>
-                    <th>@i18n("DatabaseController.realm")</th>
-                    <th class="col-md-2 align-right">
-                        <a class="btn btn-default" href="#" onclick="refreshChanges()"><i class="fa fa-refresh"></i></a>
-                    </th>
-                </tr>
-                </thead>
-                <tbody id="schemaList">
-                </tbody>
-            </table>
+        <div class="col">
+            <div class="card">
+                <div class="card-body" id="schemaChanges">
+                    <span><i class="fa fa-spin fa-spinner"></i></span>
+                </div>
+            </div>
         </div>
     </div>
-
     <script type="text/javascript">
 
-        function executeChange() {
-            var $row = $(this).parent().parent();
-            $row.addClass("info");
+        const schemaTemplate = '' +
+            '{{#hasChanges}}' +
+            '<table class="table" id="schemaTable">' +
+            '<thead>' +
+            '   <tr>' +
+            '       <th>@i18n("DatabaseController.reason")<br>' +
+            '           <small class="muted">@i18n("DatabaseController.sql")</small>' +
+            '       </th>' +
+            '       <th>@i18n("DatabaseController.realm")</th>' +
+            '       <th></th>' +
+            '   </tr>' +
+            '</thead>' +
+            '<tbody id="schemaList">' +
+            '   {{#changes}}' +
+            '       <tr id="{{id}}">' +
+            '       <td class="left-border ' +
+            '{{#executed}}' +
+            '{{#failed}}' +
+            'border-sirius-red ' +
+            '{{/failed}}' +
+            '{{^failed}}' +
+            'border-sirius-green ' +
+            '{{/failed}}' +
+            '{{/executed}}' +
+            '{{#dataLossPossible}}' +
+            'border-sirius-yellow ' +
+            '{{/dataLossPossible}}' +
+            '">' +
+            '       <div class="overflow-hidden text-small text-break whitespace-pre-line">' +
+            '       {{reason}}' +
+            '           <br><small class="muted whitespace-pre-line">{{sql}}</small>' +
+            '           <div class="card full-border border-sirius-red-dark error" style="display: none">' +
+            '               <div class="card-body error-text">' +
+            '               {{error}}' +
+            '               </div>' +
+            '           </div>' +
+            '       </div>' +
+            '       </td>' +
+            '       <td>{{realm}}</td>' +
+            '       {{^executed}}' +
+            '       <td class="text-right"><a href="javascript: executeChange(\'{{id}}\')" class="btn ' +
+            '{{#dataLossPossible}}' +
+            'btn-outline-danger ' +
+            '{{/dataLossPossible}}' +
+            '{{^dataLossPossible}}' +
+            'btn-outline-link ' +
+            '{{/dataLossPossible}}' +
+            '">@i18n("DatabaseController.execute")</a></td>' +
+            '{{/executed}}' +
+            '</tr>' +
+            '{{/changes}}' +
+            '</tbody>' +
+            '</table>' +
+            '{{/hasChanges}}' +
+            '{{^hasChanges}}' +
+            '<div class="card full-border border-sirius-green-dark">' +
+            '<b>@i18n("DatabaseController.noChanges")</b>' +
+            '</div>' +
+            '{{/hasChanges}}';
 
-            $.getJSON('/system/schema/api/execute',
-                {id: $row.data('id')},
-                function (data) {
-                    $row.removeClass("info");
-                    $('.error', $row).text('').hide();
-                    if (data.errorMessage) {
-                        $('.error', $row).text(data.errorMessage).show();
-                    } else {
-                        $row.removeClass("warning").removeClass("danger").addClass("success");
-                        $('a', $row).hide();
-                    }
-                }
-            );
-
-            return false;
-        }
-
-        function refreshChanges() {
-            $('#schemaList').html('<tr><td></td><td colspan="2" class="align-center"><i class="fa fa-spin fa-spinner"></i></td></tr>');
-            $.getJSON('/system/schema/api/list',
-                {},
-                function (data) {
-                    $('#schemaList').html('');
-                    if (data.changes != null) {
-                        for (i = 0; i < data.changes.length; i++) {
-                            var change = data.changes[i];
-                            var row = $('<tr data-id="' + change.id + '"><td /></tr>');
-                            row.append($('<td></td>').html(
-                                change.reason
-                                + '<br><small class="muted" style="white-space: pre">'
-                                + change.sql
-                                + '</small>'
-                                + '<div class="alert alert-danger error"></div>'));
-                            if (change.error == '') {
-                                $('.error', row).hide();
-                            } else {
-                                $('.error', row).text(change.error);
-                            }
-
-                            row.append($('<td>' + change.realm + '</td>'));
-
-                            if (change.executed) {
-                                row.append($('<td></td>'));
-                                if (change.failed) {
-                                    row.addClass("danger");
-                                } else {
-                                    row.addClass("success");
-                                }
-                            } else if (change.lossless) {
-                                row.append($('<td class="align-right"><a href="#" class="link">@i18n("DatabaseController.execute")</a></td>'));
-                            } else {
-                                row.addClass("warning");
-                                row.append($('<td class="align-right"><a href="#" class="link link-danger">@i18n("DatabaseController.execute")</a></td>'));
-                            }
-                            $('a', row).click(executeChange);
-                            row.appendTo($('#schemaList'));
-                        }
-                    }
-                }
-            );
-        }
-
-
-        $(document).ready(function () {
+        sirius.ready(function () {
             refreshChanges();
         });
+
+        function refreshChanges() {
+            let _dom = document.getElementById('schemaChanges');
+            sirius.getJSON('/system/schema/api/list', {}).then(
+                function (schemaChanges) {
+                    let hasChanges = false;
+                    if (schemaChanges.changes != null && schemaChanges.changes.length > 0) {
+                        hasChanges = true;
+                    }
+                    _dom.innerHTML = Mustache.render(schemaTemplate, {
+                        hasChanges: hasChanges,
+                        changes: schemaChanges.changes
+                    });
+                }
+            );
+        }
+
+        function executeChange(id) {
+            let _row = document.getElementById(id);
+            _row.firstElementChild.classList.remove("border-sirius-yellow");
+            _row.firstElementChild.classList.add("border-sirius-blue");
+
+            sirius.getJSON('/system/schema/api/execute',
+                {id: id}).then(
+                function (data) {
+                    _row.firstElementChild.classList.remove("border-sirius-blue");
+                    _row.getElementsByClassName('error-text').item(0).textContent = '';
+                    _row.getElementsByClassName('error').item(0).style.display = 'none';
+                    if (data.errorMessage) {
+                        _row.firstElementChild.classList.add("border-sirius-red-dark");
+                        _row.getElementsByClassName('error-text').item(0).textContent = data.errorMessage;
+                        _row.getElementsByClassName('error').item(0).style.display = 'block';
+                    } else {
+                        _row.firstElementChild.classList.remove("border-sirius-gray", "border-sirius-blue"
+                            , "border-sirius-red-dark", "border-sirius-yellow");
+                        _row.firstElementChild.classList.add("border-sirius-green");
+                        _row.getElementsByTagName('a').item(0).style.display = 'none';
+                    }
+                }
+            );
+            return false;
+        }
     </script>
-</w:page>
+</t:page>

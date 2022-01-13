@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Permis a login via SAML.
+ * Permits a login via SAML.
  *
  * @param <I> specifies the effective type of database IDs used by the concrete implementation
  * @param <T> specifies the effective entity type used to represent Tenants
@@ -47,9 +47,6 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
 
     @Part
     private SAMLHelper saml;
-
-    @ConfigValue("product.wondergemRoot")
-    private String wondergemRoot;
 
     @ConfigValue("security.roles")
     private List<String> roles;
@@ -68,7 +65,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
     /**
      * Returns the actual entity class used to represent tenants.
      *
-     * @return the entity class represeting tenants
+     * @return the entity class representing tenants
      */
     @SuppressWarnings("unchecked")
     protected Class<T> getTenantClass() {

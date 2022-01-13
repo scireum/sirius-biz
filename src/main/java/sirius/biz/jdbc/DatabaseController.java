@@ -90,7 +90,7 @@ public class DatabaseController extends BasicController {
     @Routed("/system/sql")
     @DefaultRoute
     public void sql(WebContext ctx) {
-        // Only display selectable databases which are properly configured..
+        // Only display selectable databases which are properly configured...
         List<String> availableDatabases = selectableDatabases.stream()
                                                              .filter(name -> databases.getDatabases().contains(name))
                                                              .collect(Collectors.toList());
@@ -275,7 +275,7 @@ public class DatabaseController extends BasicController {
             out.property("executed", action.isExecuted());
             out.property("failed", action.isFailed());
             out.property("error", Value.of(action.getError()).asString());
-            out.property("datalossPossible", action.isDataLossPossible());
+            out.property("dataLossPossible", action.isDataLossPossible());
             out.endObject();
         }
         out.endArray();

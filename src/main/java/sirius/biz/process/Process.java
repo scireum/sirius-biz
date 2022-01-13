@@ -47,7 +47,7 @@ import java.util.stream.Stream;
  * <p>
  * There are two types of processes. Simple processes are started, executed (on one or many nodes) and then completed.
  * Standby processes are created when first used (e.g. by an API call) and then remain in their standby state. These
- * are used to record logs and outputs of API calls or other re-occuring background events which need to communicate
+ * are used to record logs and outputs of API calls or other re-occurring background events which need to communicate
  * with or report to their user / tenant.
  */
 @Framework(Processes.FRAMEWORK_PROCESSES)
@@ -59,12 +59,6 @@ public class Process extends SearchableEntity {
      * Contains the duration after which auto-refreshing of the details page stops once a process has completed.
      */
     private static final Duration MIN_COMPLETION_TIME_TO_DISABLE_AUTO_REFRESH = Duration.ofSeconds(20);
-
-    /**
-     * Contains the duration in which a standby process is marked as "active" within the UI after if was last
-     * invoked / utilized.
-     */
-    private static final Duration ACTIVE_INTERVAL = Duration.ofMinutes(5);
 
     /**
      * Contains the name of the {@link sirius.biz.storage.layer2.BlobStorageSpace} which stores the blobs / files
@@ -205,7 +199,7 @@ public class Process extends SearchableEntity {
     /**
      * Contains the timestamp when the process was started.
      * <p>
-     * Note, for standby processes, this contains the timestamp of the last invokation.
+     * Note, for standby processes, this contains the timestamp of the last invocation.
      */
     public static final Mapping STARTED = Mapping.named("started");
     @NullAllowed
