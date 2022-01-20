@@ -57,6 +57,9 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     @Part
     private static Mixing mixing;
 
+    @Part
+    private static StorageUtils storageUtils;
+
     protected MongoBlobStorageSpace(String spaceName, Extension config) {
         super(spaceName, config);
     }
@@ -168,10 +171,10 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
     private String effectiveFilename(String filename) {
         if (useNormalizedNames && filename != null) {
-            return filename.toLowerCase();
+            return storageUtils.sanitizePath(filename).toLowerCase();
         }
 
-        return filename;
+        return storageUtils.sanitizePath(filename);
     }
 
     private Mapping effectiveFilenameMapping() {
