@@ -46,6 +46,9 @@ import java.util.function.Predicate;
  */
 public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirectory, SQLVariant> {
 
+    @Part
+    private static StorageUtils storageUtils;
+
     /**
      * Determines the number of attempts when updating the contents of a blob.
      */
@@ -171,10 +174,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
     private String effectiveFilename(String filename) {
         if (useNormalizedNames && filename != null) {
-            return filename.toLowerCase();
+            return storageUtils.sanitizePath(filename).toLowerCase();
         }
 
-        return filename;
+        return storageUtils.sanitizePath(filename);
     }
 
     private Mapping effectiveFilenameMapping() {
