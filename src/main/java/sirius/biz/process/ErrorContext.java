@@ -9,6 +9,7 @@
 package sirius.biz.process;
 
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.process.logs.ProcessLogType;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.SubContext;
 import sirius.kernel.async.TaskContext;
@@ -165,9 +166,9 @@ public class ErrorContext implements SubContext {
     private void logException(HandledException exception, ProcessLogType processLogType) {
         TaskContext taskContext = TaskContext.get();
         if (taskContext.getAdapter() instanceof ProcessContext processContext) {
-            processContext.log(ProcessLog.error()
-                                         .withHandledException(exception)
-                                         .withMessage(enhanceMessage(exception.getMessage())));
+            processContext.log(new ProcessLog().withType(processLogType)
+                                               .withHandledException(exception)
+                                               .withMessage(enhanceMessage(exception.getMessage())));
         } else {
             taskContext.log(enhanceMessage(exception.getMessage()));
         }
@@ -282,10 +283,11 @@ public class ErrorContext implements SubContext {
         try {
             return Optional.ofNullable(producer.create());
         } catch (HandledException exception) {
-            logException(exception);
+            logException(exception, ProcessLogType.ERROR);
         } catch (Exception exception) {
             String message = exception.getMessage() + " (" + exception.getClass().getName() + ")";
-            logException(Exceptions.handle().to(Log.BACKGROUND).error(exception).withDirectMessage(message).handle());
+            logException(Exceptions.handle().to(Log.BACKGROUND).error(exception).withDirectMessage(message).handle(),
+                         ProcessLogType.ERROR);
         } finally {
             removeContext(label);
         }
