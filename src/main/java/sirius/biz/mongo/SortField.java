@@ -60,6 +60,10 @@ public class SortField extends Composite {
      * @return the normalized text in lower-case
      */
     public static String normalizeText(String text) {
+        if (Strings.isEmpty(text)) {
+            return null;
+        }
+
         return Strings.reduceCharacters(text).toLowerCase();
     }
 
