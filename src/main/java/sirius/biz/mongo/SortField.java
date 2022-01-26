@@ -61,7 +61,7 @@ public class SortField extends Composite {
      */
     public static String normalizeText(String text) {
         if (Strings.isEmpty(text)) {
-            return null;
+            return text;
         }
 
         return Strings.reduceCharacters(text).toLowerCase();
