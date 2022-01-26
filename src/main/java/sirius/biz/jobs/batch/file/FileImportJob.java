@@ -12,6 +12,7 @@ import sirius.biz.jobs.batch.ImportJob;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
@@ -58,18 +59,23 @@ public abstract class FileImportJob extends ImportJob {
      */
     public static final Parameter<AuxiliaryFileMode> AUX_FILE_MODE_PARAMETER = new EnumParameter<>("auxFileMode",
                                                                                                    "$FileImportJobFactory.auxFileMode",
-                                                                                                   AuxiliaryFileMode.class)
-            .withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE)
-            .markRequired()
-            .build();
+                                                                                                   AuxiliaryFileMode.class).withDefault(
+            AuxiliaryFileMode.UPDATE_ON_CHANGE).markRequired().build();
 
     /**
      * Determines if auxiliary files are extracted including directories (if this job supports it).
      */
     public static final Parameter<Boolean> AUX_FILE_FLATTEN_DIRS_PARAMETER = new BooleanParameter("auxFileFlattenDirs",
-                                                                                                  "$FileImportJobFactory.auxFileFlattenDirectoriesParameter")
-            .withDescription("$FileImportJobFactory.auxFileFlattenDirectoriesParameter.help")
-            .build();
+                                                                                                  "$FileImportJobFactory.auxFileFlattenDirectoriesParameter").withDescription(
+            "$FileImportJobFactory.auxFileFlattenDirectoriesParameter.help").build();
+
+    /**
+     * Defines a parent directory path where auxiliary files will be uploaded (if this job supports it).
+     */
+    public static final Parameter<String> AUX_FILE_PARENT_DIRECTORY_PARAMETER = new StringParameter(
+            "auxFileParentDirectory",
+            "$FileImportJobFactory.auxFileParentDirectory").withDescription(
+            "$FileImportJobFactory.auxFileParentDirectory.help").build();
 
     @Part
     private static VirtualFileSystem virtualFileSystem;
