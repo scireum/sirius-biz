@@ -152,7 +152,7 @@ public class ErrorContext implements SubContext {
     }
 
     /**
-     * Logs an {@link ProcessLogType#WARNING warning} including the current context.
+     * Logs a {@link ProcessLogType#WARNING warning} including the current context.
      * <p>
      * This will obey hints provided with the exception, such as the ones used to limit the amount
      * of entries logged for a specific type.
