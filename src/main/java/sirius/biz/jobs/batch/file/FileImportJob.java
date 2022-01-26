@@ -300,9 +300,17 @@ public abstract class FileImportJob extends ImportJob {
         String targetPath = extractedFile.getFilePath();
         if (flattenAuxiliaryFileDirs) {
             return Files.getFilenameAndExtension(targetPath);
-        } else {
-            return targetPath;
         }
+
+        // Drops the parent directory from the path if we match it with the beginning:
+        // parent -> /foo/bar
+        // path obtained from archive -> /foo/bar/zoo/file
+        // result -> /zoo/file
+        if (targetPath.toLowerCase().startsWith(auxFilesParentDirectory.toLowerCase())) {
+            return targetPath.substring(auxFilesParentDirectory.length());
+        }
+
+        return targetPath;
     }
 
     @Nullable
