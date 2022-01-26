@@ -138,7 +138,31 @@ public class ErrorContext implements SubContext {
                       .collect(Collectors.joining(", "));
     }
 
-    private void logException(HandledException exception) {
+    /**
+     * Logs an {@link ProcessLogType#ERROR error} including the current context.
+     * <p>
+     * This will obey hints provided with the exception, such as the ones used to limit the amount
+     * of entries logged for a specific type.
+     *
+     * @param exception the exception to log
+     */
+    public void logError(HandledException exception) {
+        logException(exception, ProcessLogType.ERROR);
+    }
+
+    /**
+     * Logs an {@link ProcessLogType#WARNING warning} including the current context.
+     * <p>
+     * This will obey hints provided with the exception, such as the ones used to limit the amount
+     * of entries logged for a specific type.
+     *
+     * @param exception the exception to log
+     */
+    public void logWarning(HandledException exception) {
+        logException(exception, ProcessLogType.WARNING);
+    }
+
+    private void logException(HandledException exception, ProcessLogType processLogType) {
         TaskContext taskContext = TaskContext.get();
         if (taskContext.getAdapter() instanceof ProcessContext processContext) {
             processContext.log(ProcessLog.error()
