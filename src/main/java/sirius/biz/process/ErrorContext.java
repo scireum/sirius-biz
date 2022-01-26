@@ -147,7 +147,7 @@ public class ErrorContext implements SubContext {
      *
      * @param exception the exception to log
      */
-    public void logError(HandledException exception) {
+    public void logExceptionAsError(HandledException exception) {
         logException(exception, ProcessLogType.ERROR);
     }
 
@@ -159,7 +159,7 @@ public class ErrorContext implements SubContext {
      *
      * @param exception the exception to log
      */
-    public void logWarning(HandledException exception) {
+    public void logExceptionAsWarning(HandledException exception) {
         logException(exception, ProcessLogType.WARNING);
     }
 
