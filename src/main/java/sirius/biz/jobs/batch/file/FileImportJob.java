@@ -19,6 +19,7 @@ import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.util.ArchiveExtractor;
 import sirius.biz.util.ExtractedFile;
 import sirius.kernel.commons.Files;
@@ -81,6 +82,9 @@ public abstract class FileImportJob extends ImportJob {
     private static VirtualFileSystem virtualFileSystem;
 
     @Part
+    private static StorageUtils storageUtils;
+
+    @Part
     private static ArchiveExtractor extractor;
 
     protected FileParameter fileParameter;
@@ -88,6 +92,7 @@ public abstract class FileImportJob extends ImportJob {
     protected AuxiliaryFileMode auxiliaryFileMode;
     protected boolean flattenAuxiliaryFileDirs;
     protected boolean suppressFileNameInContext;
+    protected String auxFilesParentDirectory;
 
     /**
      * Defines the modes in which an auxiliary file in an archive can be handled.
@@ -163,6 +168,8 @@ public abstract class FileImportJob extends ImportJob {
         VirtualFile file = process.require(FILE_PARAMETER);
         auxiliaryFileMode = process.getParameter(AUX_FILE_MODE_PARAMETER).orElse(AuxiliaryFileMode.IGNORE);
         flattenAuxiliaryFileDirs = process.getParameter(AUX_FILE_FLATTEN_DIRS_PARAMETER).orElse(false);
+        process.getParameter(AUX_FILE_PARENT_DIRECTORY_PARAMETER)
+               .ifPresent(parentDirs -> auxFilesParentDirectory = storageUtils.sanitizePath(parentDirs));
 
         if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
             process.log(ProcessLog.info()
@@ -306,15 +313,23 @@ public abstract class FileImportJob extends ImportJob {
                 auxFilesDestination = ValueHolder.of(null);
             } else {
                 VirtualFile destination = virtualFileSystem.resolve(unusedFilesPath);
-                if (destination.exists() && destination.isDirectory()) {
-                    auxFilesDestination = ValueHolder.of(destination);
-                } else {
-                    auxFilesDestination = ValueHolder.of(null);
-                }
+                auxFilesDestination = ValueHolder.of(computeAuxFilesDestination(destination));
             }
         }
 
         return auxFilesDestination.get();
+    }
+
+    private VirtualFile computeAuxFilesDestination(VirtualFile rootPath) {
+        if (!rootPath.exists() || !rootPath.isDirectory()) {
+            return null;
+        }
+
+        if (Strings.isEmpty(auxFilesParentDirectory)) {
+            return rootPath;
+        }
+
+        return virtualFileSystem.resolve(rootPath + "/" + auxFilesParentDirectory);
     }
 
     /**
