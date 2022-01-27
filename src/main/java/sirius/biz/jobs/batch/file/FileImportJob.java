@@ -50,7 +50,7 @@ public abstract class FileImportJob extends ImportJob {
      * Contains the parameter which selects the file to import.
      * <p>
      * Note that even if another instance is used in {@link FileImportJobFactory#collectParameters(Consumer)}, this
-     * will still work out as long as the parameter names are the same. Therefore both parameters should be
+     * will still work out as long as the parameter names are the same. Therefore, both parameters should be
      * created using {@link #createFileParameter(List)}.
      */
     public static final Parameter<VirtualFile> FILE_PARAMETER = createFileParameter(null);
@@ -203,8 +203,8 @@ public abstract class FileImportJob extends ImportJob {
      * <p>
      * This can be suppressed by overwriting this method.
      *
-     * @param filename the name of the file to backup
-     * @param input    the input file to backup
+     * @param filename the name of the file to back up
+     * @param input    the input file to back up
      */
     protected void backupInputFile(String filename, FileHandle input) {
         attachFile(filename, input);
@@ -259,11 +259,11 @@ public abstract class FileImportJob extends ImportJob {
     /**
      * Gets invoked for every entry in a given ZIP archive which cannot be processed by this job itself.
      * <p>
-     * This might be used e.g. if an XML file is being processed which is accompanied with some media files to
+     * This might be used e.g. if an XML file is being processed which is accompanied by some media files to
      * move them into the proper directory in the {@link sirius.biz.storage.layer3.VirtualFileSystem}.
      * <p>
      * By default this is attempted if the {@link #determineAuxiliaryFilesDirectory()} returns a non-null result.
-     * Otherwise these files are simply ignored.
+     * Otherwise, these files are simply ignored.
      *
      * @param extractedFile the extracted file which cannot be handled by the job itself
      */
