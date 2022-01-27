@@ -12,12 +12,14 @@ import sirius.biz.jobs.batch.ImportJob;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.util.ArchiveExtractor;
 import sirius.biz.util.ExtractedFile;
 import sirius.kernel.commons.Files;
@@ -48,7 +50,7 @@ public abstract class FileImportJob extends ImportJob {
      * Contains the parameter which selects the file to import.
      * <p>
      * Note that even if another instance is used in {@link FileImportJobFactory#collectParameters(Consumer)}, this
-     * will still work out as long as the parameter names are the same. Therefore both parameters should be
+     * will still work out as long as the parameter names are the same. Therefore, both parameters should be
      * created using {@link #createFileParameter(List)}.
      */
     public static final Parameter<VirtualFile> FILE_PARAMETER = createFileParameter(null);
@@ -58,21 +60,29 @@ public abstract class FileImportJob extends ImportJob {
      */
     public static final Parameter<AuxiliaryFileMode> AUX_FILE_MODE_PARAMETER = new EnumParameter<>("auxFileMode",
                                                                                                    "$FileImportJobFactory.auxFileMode",
-                                                                                                   AuxiliaryFileMode.class)
-            .withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE)
-            .markRequired()
-            .build();
+                                                                                                   AuxiliaryFileMode.class).withDefault(
+            AuxiliaryFileMode.UPDATE_ON_CHANGE).markRequired().build();
 
     /**
      * Determines if auxiliary files are extracted including directories (if this job supports it).
      */
     public static final Parameter<Boolean> AUX_FILE_FLATTEN_DIRS_PARAMETER = new BooleanParameter("auxFileFlattenDirs",
-                                                                                                  "$FileImportJobFactory.auxFileFlattenDirectoriesParameter")
-            .withDescription("$FileImportJobFactory.auxFileFlattenDirectoriesParameter.help")
-            .build();
+                                                                                                  "$FileImportJobFactory.auxFileFlattenDirectoriesParameter").withDescription(
+            "$FileImportJobFactory.auxFileFlattenDirectoriesParameter.help").build();
+
+    /**
+     * Defines a parent directory path where auxiliary files will be uploaded (if this job supports it).
+     */
+    public static final Parameter<String> AUX_FILE_PARENT_DIRECTORY_PARAMETER = new StringParameter(
+            "auxFileParentDirectory",
+            "$FileImportJobFactory.auxFileParentDirectory").withDescription(
+            "$FileImportJobFactory.auxFileParentDirectory.help").build();
 
     @Part
     private static VirtualFileSystem virtualFileSystem;
+
+    @Part
+    private static StorageUtils storageUtils;
 
     @Part
     private static ArchiveExtractor extractor;
@@ -82,6 +92,7 @@ public abstract class FileImportJob extends ImportJob {
     protected AuxiliaryFileMode auxiliaryFileMode;
     protected boolean flattenAuxiliaryFileDirs;
     protected boolean suppressFileNameInContext;
+    protected String auxFilesParentDirectory;
 
     /**
      * Defines the modes in which an auxiliary file in an archive can be handled.
@@ -157,6 +168,8 @@ public abstract class FileImportJob extends ImportJob {
         VirtualFile file = process.require(FILE_PARAMETER);
         auxiliaryFileMode = process.getParameter(AUX_FILE_MODE_PARAMETER).orElse(AuxiliaryFileMode.IGNORE);
         flattenAuxiliaryFileDirs = process.getParameter(AUX_FILE_FLATTEN_DIRS_PARAMETER).orElse(false);
+        process.getParameter(AUX_FILE_PARENT_DIRECTORY_PARAMETER)
+               .ifPresent(parentDirs -> auxFilesParentDirectory = storageUtils.sanitizePath(parentDirs));
 
         if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
             process.log(ProcessLog.info()
@@ -190,8 +203,8 @@ public abstract class FileImportJob extends ImportJob {
      * <p>
      * This can be suppressed by overwriting this method.
      *
-     * @param filename the name of the file to backup
-     * @param input    the input file to backup
+     * @param filename the name of the file to back up
+     * @param input    the input file to back up
      */
     protected void backupInputFile(String filename, FileHandle input) {
         attachFile(filename, input);
@@ -246,11 +259,11 @@ public abstract class FileImportJob extends ImportJob {
     /**
      * Gets invoked for every entry in a given ZIP archive which cannot be processed by this job itself.
      * <p>
-     * This might be used e.g. if an XML file is being processed which is accompanied with some media files to
+     * This might be used e.g. if an XML file is being processed which is accompanied by some media files to
      * move them into the proper directory in the {@link sirius.biz.storage.layer3.VirtualFileSystem}.
      * <p>
      * By default this is attempted if the {@link #determineAuxiliaryFilesDirectory()} returns a non-null result.
-     * Otherwise these files are simply ignored.
+     * Otherwise, these files are simply ignored.
      *
      * @param extractedFile the extracted file which cannot be handled by the job itself
      */
@@ -287,9 +300,20 @@ public abstract class FileImportJob extends ImportJob {
         String targetPath = extractedFile.getFilePath();
         if (flattenAuxiliaryFileDirs) {
             return Files.getFilenameAndExtension(targetPath);
-        } else {
-            return targetPath;
         }
+
+        // Drops the parent directory from the path if we match it with the beginning:
+        // parent -> /foo/bar
+        // path obtained from archive -> /foo/bar/zoo/file
+        // result -> /zoo/file
+        // Note that the final upload location contains the defined job root and the parent folder if given,
+        // so the final path would look /root/foo/bar/zoo/file
+        if (Strings.isFilled(auxFilesParentDirectory) && targetPath.toLowerCase()
+                                                                   .startsWith(auxFilesParentDirectory.toLowerCase())) {
+            return targetPath.substring(auxFilesParentDirectory.length());
+        }
+
+        return targetPath;
     }
 
     @Nullable
@@ -300,15 +324,23 @@ public abstract class FileImportJob extends ImportJob {
                 auxFilesDestination = ValueHolder.of(null);
             } else {
                 VirtualFile destination = virtualFileSystem.resolve(unusedFilesPath);
-                if (destination.exists() && destination.isDirectory()) {
-                    auxFilesDestination = ValueHolder.of(destination);
-                } else {
-                    auxFilesDestination = ValueHolder.of(null);
-                }
+                auxFilesDestination = ValueHolder.of(computeAuxFilesDestination(destination));
             }
         }
 
         return auxFilesDestination.get();
+    }
+
+    private VirtualFile computeAuxFilesDestination(VirtualFile rootPath) {
+        if (!rootPath.exists() || !rootPath.isDirectory()) {
+            return null;
+        }
+
+        if (Strings.isEmpty(auxFilesParentDirectory)) {
+            return rootPath;
+        }
+
+        return virtualFileSystem.resolve(rootPath + "/" + auxFilesParentDirectory);
     }
 
     /**
