@@ -9,6 +9,7 @@
 package sirius.biz.process;
 
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.process.logs.ProcessLogType;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.SubContext;
 import sirius.kernel.async.TaskContext;
@@ -138,12 +139,36 @@ public class ErrorContext implements SubContext {
                       .collect(Collectors.joining(", "));
     }
 
-    private void logException(HandledException exception) {
+    /**
+     * Logs an {@link ProcessLogType#ERROR error} including the current context.
+     * <p>
+     * This will obey hints provided with the exception, such as the ones used to limit the amount
+     * of entries logged for a specific type.
+     *
+     * @param exception the exception to log
+     */
+    public void logExceptionAsError(HandledException exception) {
+        logException(exception, ProcessLogType.ERROR);
+    }
+
+    /**
+     * Logs a {@link ProcessLogType#WARNING warning} including the current context.
+     * <p>
+     * This will obey hints provided with the exception, such as the ones used to limit the amount
+     * of entries logged for a specific type.
+     *
+     * @param exception the exception to log
+     */
+    public void logExceptionAsWarning(HandledException exception) {
+        logException(exception, ProcessLogType.WARNING);
+    }
+
+    private void logException(HandledException exception, ProcessLogType processLogType) {
         TaskContext taskContext = TaskContext.get();
         if (taskContext.getAdapter() instanceof ProcessContext processContext) {
-            processContext.log(ProcessLog.error()
-                                         .withHandledException(exception)
-                                         .withMessage(enhanceMessage(exception.getMessage())));
+            processContext.log(new ProcessLog().withType(processLogType)
+                                               .withHandledException(exception)
+                                               .withMessage(enhanceMessage(exception.getMessage())));
         } else {
             taskContext.log(enhanceMessage(exception.getMessage()));
         }
@@ -258,10 +283,11 @@ public class ErrorContext implements SubContext {
         try {
             return Optional.ofNullable(producer.create());
         } catch (HandledException exception) {
-            logException(exception);
+            logException(exception, ProcessLogType.ERROR);
         } catch (Exception exception) {
             String message = exception.getMessage() + " (" + exception.getClass().getName() + ")";
-            logException(Exceptions.handle().to(Log.BACKGROUND).error(exception).withDirectMessage(message).handle());
+            logException(Exceptions.handle().to(Log.BACKGROUND).error(exception).withDirectMessage(message).handle(),
+                         ProcessLogType.ERROR);
         } finally {
             removeContext(label);
         }
