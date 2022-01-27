@@ -108,8 +108,9 @@
                                                             icon="fa fa-cogs" label="@job.getLabel()"/>
                                         </i:for>
                                         <i:if test="!child.isDirectory()">
-                                            <t:dropdownItem url="@apply('javascript:copyToClipboard(\'%s\')', child.path())"
-                                                            icon="fa fa-copy" labelKey="VFSController.copyPath"/>
+                                            <t:dropdownItem
+                                                    url="@apply('javascript:copyToClipboard(\'%s\')', child.path())"
+                                                    icon="fa fa-copy" labelKey="VFSController.copyPath"/>
                                         </i:if>
                                         <i:if test="child.canDelete()">
                                             <t:dropdownDeleteItem
@@ -179,7 +180,12 @@
         function moveFile(filePath) {
             $form = $('#move-file-form');
 
-            selectVFSDirectory('@dir.path()').then(function (newParent) {
+            selectVFSFile({
+                path: '@dir.path()',
+                allowDirectories: true,
+                allowFiles: false,
+                modalTitle: '___i18n("VFSController.selectDirectory")'
+            }).then(function (newParent) {
                 $form.find("input[name='path']").val(filePath);
                 $form.find("input[name='newParent']").val(newParent);
                 $form.submit();
