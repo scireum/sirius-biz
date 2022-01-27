@@ -306,6 +306,8 @@ public abstract class FileImportJob extends ImportJob {
         // parent -> /foo/bar
         // path obtained from archive -> /foo/bar/zoo/file
         // result -> /zoo/file
+        // Note that the final upload location contains the defined job root and the parent folder if given,
+        // so the final path would look /root/foo/bar/zoo/file
         if (targetPath.toLowerCase().startsWith(auxFilesParentDirectory.toLowerCase())) {
             return targetPath.substring(auxFilesParentDirectory.length());
         }
