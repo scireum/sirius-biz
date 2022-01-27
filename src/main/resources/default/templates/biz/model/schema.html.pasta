@@ -122,8 +122,10 @@
                         _row.getElementsByClassName('error-text').item(0).textContent = data.errorMessage;
                         _row.getElementsByClassName('error').item(0).style.display = 'block';
                     } else {
-                        _row.firstElementChild.classList.remove("border-sirius-gray", "border-sirius-blue"
-                            , "border-sirius-red-dark", "border-sirius-yellow");
+                        _row.firstElementChild.classList.remove("border-sirius-gray");
+                        _row.firstElementChild.classList.remove("border-sirius-blue");
+                        _row.firstElementChild.classList.remove("border-sirius-red-dark");
+                        _row.firstElementChild.classList.remove("border-sirius-yellow");
                         _row.firstElementChild.classList.add("border-sirius-green");
                         _row.getElementsByTagName('a').item(0).style.display = 'none';
                     }
