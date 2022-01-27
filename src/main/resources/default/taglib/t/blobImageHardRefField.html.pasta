@@ -1,29 +1,55 @@
 <i:arg type="sirius.biz.storage.layer2.BlobHardRef" name="objectRef"/>
 <i:arg type="String" name="name"/>
+<i:arg name="labelKey" type="String" default=""/>
+<i:arg name="label" type="String" default="@i18n(labelKey)"/>
+<i:arg name="helpKey" type="String" default=""/>
+<i:arg name="help" type="String" default="@i18n(helpKey)"/>
 <i:arg type="String" name="value" default="@objectRef.getKey()"/>
 <i:arg type="String" name="id" default="@generateId('image-upload-%s')"/>
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
 <i:arg name="btnClass" type="String" default=""
        description="Lists additional CSS classes to apply to the upload button."/>
-<i:arg type="String" name="defaultPreview" default=""/>
+<i:arg type="String" name="defaultPreview" default="/assets/images/placeholder.png"/>
 <i:arg type="String" name="previewVariant" default="raw"/>
-<i:arg type="String" name="acceptedFiles" default=""/>
+<i:arg type="String" name="acceptedFiles" default="image/*,application/pdf,svg"/>
 <i:arg type="String" name="uploadUrl" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
+<i:arg type="String" name="height" default="350px"/>
 
 <i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
 
-<t:imageUpload class="@class" id="@id" uploadUrl="@uploadUrl" acceptedFiles="@acceptedFiles"
-               currentImage="@currentImage" btnClass="@btnClass">
+<div class="form-group @UserContext.get().signalFieldError(name) @class">
+    <i:if test="isFilled(label)">
+        <div>
+            <label><span>@label</span></label>
+        </div>
+    </i:if>
+    <div @if (isFilled(height)) { style="height: @height" }>
+        <t:imageUpload class="h-100" id="@id" uploadUrl="@uploadUrl" acceptedFiles="@acceptedFiles"
+                       currentImage="@currentImage" btnClass="@btnClass">
 
-    <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
-        @i18n("StoredObject.resetBtn")
-    </button>
+            <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
+                @i18n("StoredObject.resetBtn")
+            </button>
 
 
-    <input type="hidden" name="@name" value="@value"/>
+            <input type="hidden" name="@name" value="@value"/>
 
-</t:imageUpload>
+        </t:imageUpload>
+    </div>
+    <i:if test="isFilled(help)">
+        <div>
+            <small class="form-text text-muted">
+                <i:raw>@expandMessage(help)</i:raw>
+            </small>
+        </div>
+    </i:if>
+    <i:if test="UserContext.get().hasError(name)">
+        <div>
+            <small class="error-block form-text">@UserContext.get().getFieldErrorMessage(name)</small>
+        </div>
+    </i:if>
+</div>
 
 
 <script type="text/javascript">
