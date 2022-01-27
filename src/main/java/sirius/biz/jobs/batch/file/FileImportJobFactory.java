@@ -38,7 +38,9 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
         if (supportsAuxiliaryFiles()) {
             parameterCollector.accept(FileImportJob.AUX_FILE_MODE_PARAMETER);
             parameterCollector.accept(FileImportJob.AUX_FILE_FLATTEN_DIRS_PARAMETER);
-            parameterCollector.accept(FileImportJob.AUX_FILE_PARENT_DIRECTORY_PARAMETER);
+            if (supportsParentDirectories()) {
+                parameterCollector.accept(FileImportJob.AUX_FILE_PARENT_DIRECTORY_PARAMETER);
+            }
         }
     }
 
@@ -66,9 +68,9 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
     protected abstract void collectAcceptedFileExtensions(Consumer<String> fileExtensionConsumer);
 
     /**
-     * Determines if jobs created by this factor support handling auxiliary files.
+     * Determines if jobs created by this factory support handling auxiliary files.
      * <p>
-     * These are files which reside an an archive processed by this job which cannot be handled directly.
+     * These are files which reside in an archive processed by this job which cannot be handled directly.
      * This might be an image attachment which cannot be processed by a <tt>LineBasedImportJob</tt>.
      * <p>
      * These files are handled by {@link FileImportJob#handleAuxiliaryFile(sirius.biz.util.ExtractedFile)}.
@@ -76,6 +78,26 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
      * @return <tt>true</tt> if this job supports processing auxiliary files, <tt>false</tt> otherwise
      */
     protected boolean supportsAuxiliaryFiles() {
+        return false;
+    }
+
+    /**
+     * Determines if jobs created by this factory support parent directories.
+     * <p>
+     * If enabled, the provided parent directory(ies) will be used between the upload root and final destination.
+     * Note that we automatically detect if the archive content's path starts with the given directory and drop it.
+     * Example:<br>
+     * Upload Root: <tt>/work</tt><br>
+     * Parent Directory: <tt>/foo/bar</tt><br>
+     * Archive Contents: <tt>[file1, dir1/file2, foo/bar/file3]</tt><br>
+     * Final Destination: <tt>[/work/foo/bar/file1, /work/foo/bar/dir1/file2, /work/foo/bar/file3]</tt><br>
+     * <p>
+     * This setting is only effective if auxiliary files are supported.
+     *
+     * @return <tt>true</tt> if this job supports parent directories, <tt>false</tt> otherwise
+     * @see #supportsAuxiliaryFiles()
+     */
+    protected boolean supportsParentDirectories() {
         return false;
     }
 }
