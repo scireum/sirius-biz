@@ -129,7 +129,6 @@
                     }
                 }
             );
-            return false;
         }
     </script>
 </t:page>
