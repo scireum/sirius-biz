@@ -1047,13 +1047,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         try (FileOutputStream out = new FileOutputStream(temporaryFile); InputStream in = connection.getInputStream()) {
             Streams.transfer(in, out);
-        } catch (ConnectException ignored) {
+        } catch (ConnectException connectException) {
             // The current conversion host cannot be accessed...
             if (conversionHosts.size() > 1 && remainingAttempts >= 1) {
                 // but we have several to pick from, so lets try again
+                Exceptions.ignore(connectException);
                 conversionHostLastConnectivityIssue.put(url.get().getHost(), LocalDateTime.now());
                 StorageUtils.LOG.WARN("Layer 2: Detected a connectivity issue for conversion host %s!",
                                       url.get().getHost());
+            } else {
+                throw connectException;
             }
         }
 
