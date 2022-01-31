@@ -48,6 +48,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -55,8 +56,10 @@ import java.text.Normalizer;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -169,12 +172,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Connect timeout for delegated blob downloads
      */
-    private static final int CONNECT_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(15, TimeUnit.SECONDS);
+    private static final int CONNECT_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(5, TimeUnit.SECONDS);
 
     /**
      * Read timeout for delegated blob downloads
      */
     private static final int READ_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(15, TimeUnit.SECONDS);
+
+    /**
+     * Determines the blacklisting interval if a conversion host is unreachable.
+     */
+    private static final Duration MAX_CONVERSION_HOST_BLACKLISTING = Duration.ofMinutes(5);
+
+    /**
+     * Determines how many times a conversion via an external host is attempted.
+     * <p>
+     * We might need several attempts if a delegate host is down due to maintenance
+     */
+    private static final int MAX_CONVERSION_DELEGATE_ATTEMPTS = 3;
 
     @Part
     protected static ObjectStorage objectStorage;
@@ -207,6 +222,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @ConfigValue("storage.layer2.conversion.hosts")
     protected static List<String> conversionHosts;
+
+    /**
+     * Keeps a timestamp when the last connectivity issue ({@link  java.net.ConnectException}) for a host was received.
+     * <p>
+     * If we detect a connectivity issue, we skip a host for up to {@link #MAX_CONVERSION_HOST_BLACKLISTING}.
+     */
+    protected Map<String, LocalDateTime> conversionHostLastConnectivityIssue = new ConcurrentHashMap<>();
 
     /**
      * Caches the {@link Directory directories} that belong to certain id
@@ -985,7 +1007,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
 
             if (physicalKey == null) {
-                return tryDelegateDownload(blobKey, variant);
+                return tryDelegateDownload(blobKey, variant, MAX_CONVERSION_DELEGATE_ATTEMPTS);
             }
 
             return getPhysicalSpace().download(physicalKey.getFirst());
@@ -1001,13 +1023,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * <p>
      * In this case, we attempt to download the variant from one of our known conversion servers.
      *
-     * @param blobKey the blob key of the blob to download
-     * @param variant the variant of the blob to download
+     * @param blobKey           the blob key of the blob to download
+     * @param variant           the variant of the blob to download
+     * @param remainingAttempts the max number of attempts to re-try in case of a connectivity problem
      * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
      * be converted
      * @throws IOException in case of an IO error
      */
-    private Optional<FileHandle> tryDelegateDownload(String blobKey, String variant) throws IOException {
+    private Optional<FileHandle> tryDelegateDownload(String blobKey, String variant, int remainingAttempts)
+            throws IOException {
         Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
 
         if (url.isEmpty()) {
@@ -1023,6 +1047,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         try (FileOutputStream out = new FileOutputStream(temporaryFile); InputStream in = connection.getInputStream()) {
             Streams.transfer(in, out);
+        } catch (ConnectException ignored) {
+            // The current conversion host cannot be accessed...
+            if (conversionHosts.size() > 1 && remainingAttempts >= 1) {
+                // but we have several to pick from, so lets try again
+                conversionHostLastConnectivityIssue.put(url.get().getHost(), LocalDateTime.now());
+                StorageUtils.LOG.WARN("Layer 2: Detected a connectivity issue for conversion host %s!",
+                                      url.get().getHost());
+            }
         }
 
         return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
@@ -1691,7 +1723,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                          response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                      }
                  } else {
-                     delegateConversion(blobKey, variant, response);
+                     delegateConversion(blobKey, variant, response, MAX_CONVERSION_DELEGATE_ATTEMPTS);
                  }
              });
     }
@@ -1706,7 +1738,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant  the variant of the blob to deliver
      * @param response the response to populate
      */
-    private void delegateConversion(String blobKey, String variant, Response response) {
+    private void delegateConversion(String blobKey, String variant, Response response, int maxAttempts) {
         Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
 
         if (url.isEmpty()) {
@@ -1716,7 +1748,18 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         response.addHeader(HEADER_VARIANT_SOURCE, "delegated");
         response.addHeader(HEADER_VARIANT_COMPUTER, url.get().getHost());
-        response.tunnel(url.get().toString());
+        if (maxAttempts > 1) {
+            response.tunnel(url.get().toString(), errorCode -> {
+                if (errorCode == HttpResponseStatus.INTERNAL_SERVER_ERROR.code() && conversionHosts.size() > 1) {
+                    // Re-try conversion as the uplink conversion host might be down, but another is alive...
+                    delegateConversion(blobKey, variant, response, maxAttempts - 1);
+                } else {
+                    response.error(HttpResponseStatus.valueOf(errorCode));
+                }
+            });
+        } else {
+            response.tunnel(url.get().toString());
+        }
     }
 
     /**
@@ -1737,8 +1780,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return Optional.empty();
         }
 
+        String randomHost = pickRandomConversionHost(MAX_CONVERSION_DELEGATE_ATTEMPTS);
+
         String conversionUrl = "http://"
-                               + conversionHosts.get(ThreadLocalRandom.current().nextInt(conversionHosts.size()))
+                               + randomHost
                                + BlobDispatcher.URI_PREFIX
                                + "/"
                                + BlobDispatcher.FLAG_VIRTUAL
@@ -1756,6 +1801,30 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         } catch (MalformedURLException e) {
             throw Exceptions.handle(e);
         }
+    }
+
+    private String pickRandomConversionHost(int remainingAttempts) {
+        String host = conversionHosts.get(ThreadLocalRandom.current().nextInt(conversionHosts.size()));
+        if (remainingAttempts <= 0) {
+            return host;
+        }
+        if (conversionHosts.size() == 1) {
+            return host;
+        }
+
+        LocalDateTime lastConnectivityError = conversionHostLastConnectivityIssue.get(host);
+        if (lastConnectivityError == null) {
+            return host;
+        }
+        Duration durationSinceLastConnectivityIssue = Duration.between(lastConnectivityError, LocalDateTime.now());
+        if (durationSinceLastConnectivityIssue.compareTo(MAX_CONVERSION_HOST_BLACKLISTING) > 0) {
+            conversionHostLastConnectivityIssue.remove(host);
+            StorageUtils.LOG.INFO("Layer 2: Connectivity issue for conversion host %s expired", host);
+
+            return host;
+        }
+
+        return pickRandomConversionHost(remainingAttempts - 1);
     }
 
     /**
