@@ -1056,8 +1056,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 StorageUtils.LOG.WARN("Layer 2: Detected a connectivity issue for conversion host %s!",
                                       url.get().getHost());
             } else {
+                Files.delete(temporaryFile);
                 throw connectException;
             }
+        } catch (IOException ex) {
+            Files.delete(temporaryFile);
+            throw ex;
         }
 
         return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
