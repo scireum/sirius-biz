@@ -86,7 +86,7 @@ public class FileSearch {
      * Adds a file extension to filter on.
      * <p>
      * Once added, only files with the given extension will be accepted. Note that this method can be invoked multiple
-     * time to accept several different file extensions.
+     * time to accept several file extensions.
      * <p>
      * Note that this filter doesn't apply to directories.
      *
@@ -200,7 +200,7 @@ public class FileSearch {
         }
 
         // We only apply the extension filter on files not on directory so that one can still browse
-        // through a directory structure when lookin for a file of a specific type.
+        // through a directory structure when looking for a file of a specific type.
         if (fileExtensionFilters != null && !file.isDirectory()) {
             String fileExtension = file.fileExtension();
             if (Strings.isEmpty(fileExtension)) {

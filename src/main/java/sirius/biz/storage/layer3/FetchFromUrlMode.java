@@ -12,12 +12,12 @@ import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.nls.NLS;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.function.Predicate;
 
 /**
- * Determines the behavior of {@link VirtualFile#loadFromUrl(URL, FetchFromUrlMode)} or
- * {@link VirtualFile#resolveOrLoadChildFromURL(URL, FetchFromUrlMode, Predicate)}.
+ * Determines the behavior of {@link VirtualFile#loadFromUrl(URI, FetchFromUrlMode)} or
+ * {@link VirtualFile#resolveOrLoadChildFromURL(URI, FetchFromUrlMode, Predicate)}.
  */
 public enum FetchFromUrlMode {
     /**

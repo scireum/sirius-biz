@@ -101,7 +101,7 @@ public class Transfer {
     }
 
     /**
-     * Notifies the transfer that a batch/proces context is available.
+     * Notifies the transfer that a batch/process context is available.
      * <p>
      * As soon as a process context is available no limits are enforced anymore (e.g. {@link #canMoveInteractive()}.
      * Also, we provide some metrics and debug messages.
@@ -131,7 +131,7 @@ public class Transfer {
      * Enables smart transfers for copy operations.
      * <p>
      * Using this approach a copy will only happen if the source and destination sizes don't match or if the source
-     * if newer than the destination. Otherwise the operation is skipped.
+     * is newer than the destination. Otherwise, the operation is skipped.
      *
      * @return the transfer helper itself for fluent method calls
      */
@@ -146,7 +146,7 @@ public class Transfer {
      * <p>
      * Note that most probably calling {@link #move()} and letting the framework handle everything else is wiser.
      *
-     * @return <tt>true</tt> if the fast move succeded, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if the fast move succeeded, <tt>false</tt> otherwise
      */
     public boolean tryFastMove() {
         return source.tryFastMoveTo(destination);
@@ -350,6 +350,9 @@ public class Transfer {
                 child.delete();
             }
         });
+        if (delete) {
+            sourceDirectory.delete();
+        }
     }
 
     protected void transferFileTo(VirtualFile sourceFile, VirtualFile destinationFile, boolean forceTransfer) {
@@ -367,7 +370,7 @@ public class Transfer {
                                     .to(StorageUtils.LOG)
                                     .error(e)
                                     .withSystemErrorMessage(
-                                            "Layer 3/VFS: An error occurred when transfering '%s' to '%s': %s (%s)",
+                                            "Layer 3/VFS: An error occurred when transferring '%s' to '%s': %s (%s)",
                                             sourceFile.path(),
                                             destinationFile.path())
                                     .handle();

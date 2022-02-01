@@ -200,7 +200,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * Returns the relative path to the given root parent.
      * <p>
      * If this would be <tt>/foo/bar/baz</tt> and the given root parent is <tt>/foo</tt> then this would
-     * return <tt>bar/baz</tt>. Therefore this is the inverse of {@link #resolve(String)}.
+     * return <tt>bar/baz</tt>. Therefore, this is the inverse of {@link #resolve(String)}.
      *
      * @param rootParent one of the parent directories of <tt>this</tt>
      * @return the relative path from the given root parent to <tt>this</tt>
@@ -574,7 +574,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * Tries to resolve the relative path within this directory.
      *
      * @param relativePath the path to resolve
-     * @return the relative path wrapped as optional or an  empty optional if the given relaive path cannot be
+     * @return the relative path wrapped as optional or an  empty optional if the given relative path cannot be
      * resolved into a file.
      */
     @Nonnull
@@ -1038,7 +1038,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Determines if the content can be provided as {@link FileHandle}.
      *
-     * @return <tt>true</tt> if a the contents of this file can be provided as file handle, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if the contents of this file can be provided as file handle, <tt>false</tt> otherwise
      */
     public boolean canDownload() {
         try {
@@ -1052,12 +1052,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return true;
             }
         } catch (Exception e) {
-            throw handleErrorInCallback(e, "canProvidFileHandle");
+            throw handleErrorInCallback(e, "canProvideFileHandle");
         }
     }
 
     /**
-     * Tries to provides the contents of this file as {@link FileHandle}.
+     * Tries to provide the contents of this file as {@link FileHandle}.
      *
      * @return a <tt>FileHandle</tt> with the contents of the file or an empty optional if no handle can be obtained
      */
@@ -1104,7 +1104,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
-     * Determines if this file can (probably) be move in an efficient way.
+     * Determines if this file can (probably) be moved in an efficient way.
      *
      * @param newParent the new parent directory
      * @return <tt>true</tt> if this file can be efficiently moved or <tt>false</tt> otherwise
@@ -1141,7 +1141,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Tries to efficiently move the file in the given directory.
      * <p>
-     * This is only an interal API as the public API is accessible via {@link #transferTo(VirtualFile)}.
+     * This is only an internal API as the public API is accessible via {@link #transferTo(VirtualFile)}.
      *
      * @param newParent the new parent directory
      * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
@@ -1161,7 +1161,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Provides various ways of copying or moving the contents of this file to the given destination.
      *
-     * @param destination the desntiantion to transer the contents to
+     * @param destination the destination to transfer the contents to
      * @return a helper which permits to transfer the contents of this file to the given destination
      */
     @CheckReturnValue
@@ -1200,7 +1200,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                     .to(StorageUtils.LOG)
                                     .error(e)
                                     .withSystemErrorMessage(
-                                            "Layer 3/VFS: An error occurred when transferting '%s' to %s in '%s': %s (%s)",
+                                            "Layer 3/VFS: An error occurred when transferring '%s' to %s in '%s': %s (%s)",
                                             path(),
                                             destination.getStorageSpace().getName(),
                                             destination.getBlobKey())
@@ -1478,7 +1478,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             URI lastConnectedURL = headRequest.getResponse().request().uri();
 
             if (Strings.isEmpty(path) && !url.getPath().equals(lastConnectedURL.getPath())) {
-                // We don't have a path yet but we followed redirects so we check the new URL
+                // We don't have a path yet, but we followed redirects, so we check the new URL
                 if (headRequest.getResponseCode() == HttpResponseStatus.NOT_FOUND.code() && lastConnectedURL.toString()
                                                                                                             .contains(
                                                                                                                     "Ã")) {

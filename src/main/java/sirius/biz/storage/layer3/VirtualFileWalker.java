@@ -15,7 +15,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 /**
- * Implements a spliterator which is used to stream through sub trees of the VFS via {@link VirtualFile#tree()} etc.
+ * Implements a spliterator which is used to stream through sub-trees of the VFS via {@link VirtualFile#tree()} etc.
  */
 class VirtualFileWalker implements Spliterator<VirtualFile> {
 
@@ -82,7 +82,7 @@ class VirtualFileWalker implements Spliterator<VirtualFile> {
     }
 
     private boolean shouldEnterDirectory() {
-        return settings.maxDepth < 0 || stack.size() < settings.maxDepth;
+        return (settings.maxDepth < 0 || stack.size() < settings.maxDepth) && children.hasNext();
     }
 
     private boolean shouldProcessAsDirectory() {

@@ -21,7 +21,7 @@ public interface ChildProvider {
      * @param parent the directory to resolve the child in
      * @param name   the name of the child to resolve
      * @return resolved file (which may or may not exist) or <tt>null</tt> which will make the framework use a
-     * plain non-exisiting and unmodifyable placeholder
+     * plain non-existing and unmodifiable placeholder
      */
     @Nullable
     VirtualFile findChild(VirtualFile parent, String name);

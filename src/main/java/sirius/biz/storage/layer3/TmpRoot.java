@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 /**
  * Provides a stealth directory to store temporary files.
  * <p>
- * Neither this directory itself nor its files are listed / enumerated in the VFS. However the directory as well
+ * Neither this directory itself nor its files are listed / enumerated in the VFS. However, the directory as well
  * as each blob in the <b>tmp</b> {@link sirius.biz.storage.layer2.BlobStorageSpace} can be resolved and therefore
  * be accessed.
  * <p>
@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
  * Note that these blobs will be deleted after a given period (usually 10 days).
  * <p>
  * One user of this framework is the {@link sirius.biz.jobs.JobsRoot} which accepts incoming files, stores them
- * in the <tt>tmp</tt> space and then uses the VFS path as noted above to pass these files on to the jobs framework.
+ * in the <tt>tmp</tt> space and then uses the VFS path as noted above to pass these files on to the jobs-framework.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class TmpRoot implements VFSRoot {

@@ -20,7 +20,7 @@ The main entry point is [BlobStorage](layer2/BlobStorage.java) which provides ac
 [BlobStorageSpace](layer2/BlobStorageSpace.java).
 
 This layer is the central part of the storage framework as it provides utilities to reference blobs in entities,
-a HTTP dispatcher for efficient access and delivery as well as a conversion engine which provides variants
+an HTTP dispatcher for efficient access and delivery as well as a conversion engine which provides variants
 of the stored blobs (e.g. a properly resized JPG image of a given EPS file).
 
 More details can be found in the [Layer 2 documentation](layer2/).
@@ -29,10 +29,10 @@ More details can be found in the [Layer 2 documentation](layer2/).
 
 The virtual file system (VFS) provides a unified interface for all parts of the system which either provide or
 consume files or file systems. Having a built-in **FTP** and **SSH** server, it supports external applications
-access via familiar protocols such as **FTP, FTPS, SFTP, SCP**. Besides it can mount external file systems via
+access via familiar protocols such as **FTP, FTPS, SFTP, SCP**. Besides, it can mount external file systems via
 **FTP, FTPS, SFTP, SCP** and **CIFS** to make external files available to internal sub systems.
 
-Being a virtual file system, neither folders nor files have to exists anywhere physically. A [VFSRoot](layer3/VFSRoot.java)
+Being a virtual file system, neither folders nor files have to exist anywhere physically. A [VFSRoot](layer3/VFSRoot.java)
 can provide artificial folders and files and directly process the provided data.
 
 A central root which is automatically provided is the [L3Uplink](layer2/L3Uplink.java) of layer 2 which makes
@@ -45,7 +45,7 @@ More details can be found in the [Layer 3 documentation](layer3/).
 ## Utilities
 
 The [util](util/) package provides some helper classes which are mainly used by the framework itself and
-in most cases shoudln't be accessed externally.
+in most cases shouldn't be accessed externally.
 
 ## S3 API
 

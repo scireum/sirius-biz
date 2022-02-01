@@ -32,7 +32,7 @@ public interface ImportHandlerFactory extends Priorized {
      * class, the method shouldn't be overloaded, as the default priority is appropriate for this case.
      * <p>
      * If a customization needs to change the behaviour of a default importer, a lower value must be selected,
-     * so that it is perferred over the standard.
+     * so that it is preferred over the standard.
      *
      * @return the priority used to sort the available factories (ascending)
      */
