@@ -19,7 +19,7 @@ import java.util.NoSuchElementException;
  * Iterates over the children of a <tt>VirtualFile</tt> in a blockwise manner.
  * <p>
  * This permits to safely process even very large directories with the downside that a file might
- * be skipped or processed twice if a concurrent iteration happens (which shoud almost never be the case).
+ * be skipped or processed twice if a concurrent iteration happens (which should almost never be the case).
  */
 class BlockwiseIterator implements Iterator<VirtualFile> {
 

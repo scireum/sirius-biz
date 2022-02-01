@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 /**
  * Provides a job able to extract archives from the {@link VirtualFileSystem}.
  * <p>
- * This uses the {@link ArchiveExtractor} so depending if 7-ZIP is enabled this supports either a whole bunch
+ * This uses the {@link ArchiveExtractor} so depending on if 7-ZIP is enabled this supports either a bunch
  * of formats (rar, 7z, tar etc.) or "just" ZIP files using the Java API.
  */
 @Register(classes = {JobFactory.class, ExtractArchiveJob.class}, framework = StorageUtils.FRAMEWORK_STORAGE)

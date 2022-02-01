@@ -101,7 +101,7 @@ public class TreeVisitorBuilder {
     /**
      * Determines if a directory should be visited.
      * <p>
-     * This this returns <tt>false</tt>, the directory will be neither traversed, nor reported by the iterator.
+     * This returns <tt>false</tt>, the directory will be neither traversed, nor reported by the iterator.
      *
      * @param directoryFilter the filter which returns <tt>true</tt> to signal that the directory should be visited
      *                        or <tt>false</tt> otherwise
@@ -139,7 +139,7 @@ public class TreeVisitorBuilder {
     /**
      * Provides a stream over all matching  <tt>VirtualFiles</tt> for the filters specified by this builder.
      *
-     * @return a stream which perfroms a DFS (depth first search) directory traveral of the files matching the given
+     * @return a stream which performs a DFS (depth first search) directory traversal of the files matching the given
      * filters
      */
     public Stream<VirtualFile> stream() {

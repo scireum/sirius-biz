@@ -158,7 +158,7 @@ public class VirtualFileSystem {
      * Injects a default handling which sets a shorter idle timeout for temporary uplinks.
      * <p>
      * If we're done using a temporary uplink, we can probably discard the connection pretty quickly and don't need
-     * it to hang around for 10 mins.
+     * it to hang around for 10 minutes.
      *
      * @param config the original config provider
      * @return an enhanced config provider which sets {@link UplinkConnectorConfig#CONFIG_IDLE_TIMEOUT_MILLIS} to
