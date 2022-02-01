@@ -350,6 +350,9 @@ public class Transfer {
                 child.delete();
             }
         });
+        if (delete) {
+            sourceDirectory.delete();
+        }
     }
 
     protected void transferFileTo(VirtualFile sourceFile, VirtualFile destinationFile, boolean forceTransfer) {
