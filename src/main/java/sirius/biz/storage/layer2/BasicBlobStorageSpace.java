@@ -1759,6 +1759,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             response.tunnel(url.get().toString(), errorCode -> {
                 if (errorCode == HttpResponseStatus.INTERNAL_SERVER_ERROR.code() && conversionHosts.size() > 1) {
                     // Re-try conversion as the uplink conversion host might be down, but another is alive...
+                    conversionHostLastConnectivityIssue.put(url.get().getHost(), LocalDateTime.now());
+                    StorageUtils.LOG.WARN("Layer 2: Detected a connectivity issue for conversion host %s!",
+                                          url.get().getHost());
                     delegateConversion(blobKey, variant, response, maxAttempts - 1);
                 } else {
                     response.error(HttpResponseStatus.valueOf(errorCode));
