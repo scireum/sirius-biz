@@ -1049,10 +1049,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             Streams.transfer(in, out);
         } catch (ConnectException connectException) {
             // The current conversion host cannot be accessed...
-            if (conversionHosts.size() > 1 && remainingAttempts >= 1) {
+            if (conversionHosts.size() > 1 && remainingAttempts > 1) {
                 // but we have several to pick from, so lets try again
                 Exceptions.ignore(connectException);
                 recordHostConnectivityIssue(url.get().getHost());
+                Files.delete(temporaryFile);
+                tryDelegateDownload(blobKey, variant, remainingAttempts - 1);
             } else {
                 Files.delete(temporaryFile);
                 throw connectException;
