@@ -191,6 +191,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private static final int MAX_CONVERSION_DELEGATE_ATTEMPTS = 3;
 
+    /**
+     * Determines how many times we try to pick a random host for delegation.
+     * <p>
+     * Essentially, we pick a random delegate host and check if we have connectivity issues.
+     * If we picked this many times, and every host has connectivity issues, we give up and just try this host anyway.
+     */
+    private static final int MAX_CONVERSION_DELEGATE_HOST_PICK_ATTEMPTS = 3;
+
     @Part
     protected static ObjectStorage objectStorage;
 
@@ -1793,7 +1801,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return Optional.empty();
         }
 
-        String randomHost = pickRandomConversionHost(MAX_CONVERSION_DELEGATE_ATTEMPTS);
+        String randomHost = pickRandomConversionHost(MAX_CONVERSION_DELEGATE_HOST_PICK_ATTEMPTS);
 
         String conversionUrl = "http://"
                                + randomHost
