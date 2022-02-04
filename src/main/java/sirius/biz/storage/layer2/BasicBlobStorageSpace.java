@@ -191,6 +191,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private static final int MAX_CONVERSION_DELEGATE_ATTEMPTS = 3;
 
+    /**
+     * Determines how many times we try to pick a random host for delegation.
+     * <p>
+     * Essentially, we pick a random delegate host and check if we have connectivity issues.
+     * If we picked this many times, and every host has connectivity issues, we give up and just try this host anyway.
+     */
+    private static final int MAX_CONVERSION_DELEGATE_HOST_PICK_ATTEMPTS = 3;
+
     @Part
     protected static ObjectStorage objectStorage;
 
@@ -1048,13 +1056,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         try (FileOutputStream out = new FileOutputStream(temporaryFile); InputStream in = connection.getInputStream()) {
             Streams.transfer(in, out);
         } catch (ConnectException connectException) {
+            Files.delete(temporaryFile);
             // The current conversion host cannot be accessed...
-            if (conversionHosts.size() > 1 && remainingAttempts >= 1) {
+            if (conversionHosts.size() > 1 && remainingAttempts > 1) {
                 // but we have several to pick from, so lets try again
                 Exceptions.ignore(connectException);
                 recordHostConnectivityIssue(url.get().getHost());
+                return tryDelegateDownload(blobKey, variant, remainingAttempts - 1);
             } else {
-                Files.delete(temporaryFile);
                 throw connectException;
             }
         } catch (IOException ex) {
@@ -1791,7 +1800,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return Optional.empty();
         }
 
-        String randomHost = pickRandomConversionHost(MAX_CONVERSION_DELEGATE_ATTEMPTS);
+        String randomHost = pickRandomConversionHost(MAX_CONVERSION_DELEGATE_HOST_PICK_ATTEMPTS);
 
         String conversionUrl = "http://"
                                + randomHost
