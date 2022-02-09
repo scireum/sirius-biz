@@ -66,6 +66,9 @@ public class FTPServer implements Startable, Stoppable {
     @ConfigValue("storage.layer3.downlink.ftp.forceSSL")
     private boolean forceSSL;
 
+    @ConfigValue("storage.layer3.downlink.ftp.tlsProtocol")
+    private String tlsProtocol;
+
     @Override
     public int getPriority() {
         return Priorized.DEFAULT_PRIORITY + 100;
@@ -169,6 +172,7 @@ public class FTPServer implements Startable, Stoppable {
         ssl.setKeystoreFile(new File(keystore));
         ssl.setKeystorePassword(keystorePassword);
         ssl.setKeyAlias(keyAlias);
+        ssl.setSslProtocol(tlsProtocol);
         factory.setSslConfiguration(ssl.createSslConfiguration());
         factory.setImplicitSsl(forceSSL);
     }
