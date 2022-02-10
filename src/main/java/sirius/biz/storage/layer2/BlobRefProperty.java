@@ -57,7 +57,7 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
      * @param entity The entity to get the reference from
      * @return a {@link BlobHardRef} or a subclass of it
      */
-    protected BlobHardRef getRef(Object entity) {
+    public BlobHardRef getRef(Object entity) {
         try {
             return (BlobHardRef) super.getValueFromField(this.accessPath.apply(entity));
         } catch (Exception e) {
