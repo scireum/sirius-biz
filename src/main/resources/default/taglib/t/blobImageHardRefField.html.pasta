@@ -72,7 +72,7 @@
         if (uploadUrl.indexOf('?') >= 0) {
             parameterIndicator = '&';
         }
-        return uploadUrl + parameterIndicator + 'filename=' + files[0].name + '&variant=___previewVariant';
+        return uploadUrl + parameterIndicator + 'filename=' + encodeURIComponent(files[0].name) + '&variant=___previewVariant';
     }
     Dropzone.options[sirius.camelize('@id')].init = function () {
         const dropzone = this;
