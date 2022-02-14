@@ -14,6 +14,9 @@ import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Period;
 
 /**
  * Provides a base class for all metric computers which are invoked on a daily basis to compute a metric for each of
@@ -40,4 +43,31 @@ public abstract class DailyMetricComputer<E extends BaseEntity<?>> implements An
     public int getLevel() {
         return AnalyticalTask.DEFAULT_LEVEL;
     }
+
+    @Override
+    public final void compute(LocalDate date, E entity) throws Exception {
+        compute(date,
+                date.atStartOfDay(),
+                date.plusDays(1).atStartOfDay().minusSeconds(1),
+                Period.between(LocalDate.now(), date).getDays() >= 2,
+                entity);
+    }
+
+    /**
+     * Performs the computation for the given date.
+     *
+     * @param date          the date for which the computation should be performed
+     * @param startOfPeriod the start of the day as <tt>LocalDateTime</tt>
+     * @param endOfPeriod   the end of the day as <tt>LocalDateTime</tt>
+     * @param pastDate      <tt>true</tt> if the computation is performed for a past date (via the analytics command) or
+     *                      <tt>false</tt> if the computation is performed for this day (or yesterday if metrics ran over
+     *                      midnight).
+     * @param entity        the entity to perform the computation for
+     * @throws Exception in case of any problem while performing the computation
+     */
+    public abstract void compute(LocalDate date,
+                                 LocalDateTime startOfPeriod,
+                                 LocalDateTime endOfPeriod,
+                                 boolean pastDate,
+                                 E entity) throws Exception;
 }
