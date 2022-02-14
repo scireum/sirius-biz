@@ -90,7 +90,7 @@ public class AnalyticalEngine implements EveryDay {
     /**
      * Contains the implementation which stores which scheduler was executed when.
      * <p>
-     * This is permitted to remain empty as long as the whole framework is unused. Otherwise we report a custom error.
+     * This is permitted to remain empty as long as the whole framework is unused. Otherwise, we report a custom error.
      */
     @Part
     @Nullable

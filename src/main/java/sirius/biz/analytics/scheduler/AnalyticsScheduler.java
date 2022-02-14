@@ -20,7 +20,7 @@ import java.util.function.Consumer;
  * them.
  * <p>
  * As most {@link AnalyticalTask tasks} are execute rather quickly, scheduling each single one of them provides
- * quite an overhead for the distributed tasks framework. Therefore each scheduler computes batches of entities which
+ * quite an overhead for the distributed tasks framework. Therefore, each scheduler computes batches of entities which
  * are then scheduled and executed at once.
  * <p>
  * This is a two stage process, {@link #scheduleBatches(Consumer)} emits a list of JSON specification which can
