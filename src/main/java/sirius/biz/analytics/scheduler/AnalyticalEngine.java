@@ -49,6 +49,11 @@ import java.util.stream.Collectors;
 public class AnalyticalEngine implements EveryDay {
 
     /**
+     * Contains the microtiming category used by the analytics system.
+     */
+    public static final String MICROTIMING_KEY_ANALYTICS = "anayltics";
+
+    /**
      * Contains the log used by the analytical scheduler and all its related classes.
      */
     public static final Log LOG = Log.get("analytics");
@@ -63,6 +68,8 @@ public class AnalyticalEngine implements EveryDay {
      * should be executed.
      */
     public static final String CONTEXT_DATE = "date";
+    public static final String CONTEXT_LEVEL = "level";
+    public static final String CONTEXT_LAST = "last";
 
     /**
      * Contains the prefix added to the scheduler name to use it as a reference in {@link ExecutionFlags}.
@@ -188,27 +195,31 @@ public class AnalyticalEngine implements EveryDay {
             return;
         }
 
-        Class<? extends DistributedTaskExecutor> executor = scheduler.getExecutorForScheduling();
-        if (LOG.isFINE()) {
-            LOG.FINE("Scheduling '%s' (%s) via '%s'...",
-                     scheduler.getName(),
-                     scheduler.getClass().getSimpleName(),
-                     executor.getSimpleName());
-        }
-        cluster.submitFIFOTask(executor,
-                               new JSONObject().fluentPut(CONTEXT_SCHEDULER_NAME, scheduler.getName())
-                                               .fluentPut(CONTEXT_DATE,
-                                                          contextDate == null ? LocalDate.now() : contextDate));
+        queueScheduler(scheduler, contextDate == null ? LocalDate.now() : contextDate, AnalyticalTask.DEFAULT_LEVEL);
 
         if (scheduler.getInterval() != ScheduleInterval.DAILY && (contextDate == null || LocalDate.now()
                                                                                                   .equals(contextDate))) {
             flags.storeExecutionFlag(computeExecutionFlagName(scheduler),
                                      EXECUTION_FLAG,
                                      LocalDateTime.now(),
-                                     scheduler.getInterval() == ScheduleInterval.DAILY ?
-                                     Period.ofDays(3) :
                                      Period.ofDays(35));
         }
+    }
+
+    protected void queueScheduler(AnalyticsScheduler scheduler, LocalDate contextDate, int level) {
+        Class<? extends DistributedTaskExecutor> executor = scheduler.getExecutorForScheduling();
+        if (LOG.isFINE()) {
+            LOG.FINE("Scheduling '%s' (%s) - Level %s via '%s'",
+                     scheduler.getName(),
+                     scheduler.getClass().getSimpleName(),
+                     level,
+                     executor.getSimpleName());
+        }
+
+        cluster.submitFIFOTask(executor,
+                               new JSONObject().fluentPut(CONTEXT_SCHEDULER_NAME, scheduler.getName())
+                                               .fluentPut(CONTEXT_LEVEL, level)
+                                               .fluentPut(CONTEXT_DATE, contextDate));
     }
 
     /**

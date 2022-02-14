@@ -40,4 +40,9 @@ public abstract class ChangeCheck<E extends BaseEntity<?> & Traced> implements A
      * @param entity the entity to check
      */
     protected abstract void execute(E entity);
+
+    @Override
+    public int getLevel() {
+        return AnalyticalTask.DEFAULT_LEVEL;
+    }
 }

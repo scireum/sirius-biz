@@ -60,7 +60,7 @@ public class MongoGuaranteedDailyMetricScheduler extends MongoAnalyticalTaskSche
     }
 
     @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date) {
-        super.executeBatch(batchDescription, date.minusDays(1));
+    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
+        super.executeBatch(batchDescription, date.minusDays(1), level);
     }
 }

@@ -28,17 +28,20 @@ import java.util.function.Consumer;
  */
 abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements AnalyticsScheduler {
 
-    private static final String MICROTIMING_KEY_ANALYTICS = "ANALYTICS";
-
     @Part
     protected GlobalContext context;
 
     @Part
     protected Mixing mixing;
 
+    @Part
+    protected AnalyticalEngine analyticalEngine;
+
     protected MultiMap<Class<?>, AnalyticalTask<?>> tasks;
 
     private Boolean active;
+
+    private Integer maxLevel;
 
     /**
      * Specifies the type of analytical tasks processed by this scheduler.
@@ -57,6 +60,15 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
         }
 
         return active.booleanValue();
+    }
+
+    @Override
+    public int getMaxLevel() {
+        if (maxLevel == null) {
+            maxLevel = getTasks().values().stream().mapToInt(AnalyticalTask::getLevel).max().orElse(0);
+        }
+
+        return maxLevel;
     }
 
     @SuppressWarnings("unchecked")
@@ -78,7 +90,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
                                       watch.duration());
         }
         if (Microtiming.isEnabled()) {
-            watch.submitMicroTiming(MICROTIMING_KEY_ANALYTICS,
+            watch.submitMicroTiming(AnalyticalEngine.MICROTIMING_KEY_ANALYTICS,
                                     Strings.apply("Scheduled batches for type '%s' in '%s'",
                                                   type.getSimpleName(),
                                                   getName()));
@@ -120,10 +132,12 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
      */
     protected abstract boolean isMatchingEntityType(AnalyticalTask<?> task);
 
-    protected void executeEntity(B entity, LocalDate date) {
+    protected void executeEntity(B entity, LocalDate date, int level) {
         Watch watch = Watch.start();
         for (AnalyticalTask<?> task : getTasks().get(entity.getClass())) {
-            executeTaskForEntity(entity, date, task);
+            if (task.getLevel() == level) {
+                executeTaskForEntity(entity, date, task);
+            }
         }
         if (AnalyticalEngine.LOG.isFINE()) {
             AnalyticalEngine.LOG.FINE("Executing tasks for '%s' ('%s') in '%s' took: %s",
@@ -133,7 +147,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
                                       watch.duration());
         }
         if (Microtiming.isEnabled()) {
-            watch.submitMicroTiming(MICROTIMING_KEY_ANALYTICS,
+            watch.submitMicroTiming(AnalyticalEngine.MICROTIMING_KEY_ANALYTICS,
                                     Strings.apply("Executed tasks for '%s'", entity.getClass().getSimpleName()));
         }
     }
@@ -162,7 +176,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
                                       watch.duration());
         }
         if (Microtiming.isEnabled()) {
-            watch.submitMicroTiming(MICROTIMING_KEY_ANALYTICS,
+            watch.submitMicroTiming(AnalyticalEngine.MICROTIMING_KEY_ANALYTICS,
                                     Strings.apply("Executed task '%s' for '%s'",
                                                   task.getClass().getName(),
                                                   entity.getClass().getSimpleName()));

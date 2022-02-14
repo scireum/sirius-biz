@@ -35,4 +35,9 @@ public abstract class DailyMetricComputer<E extends BaseEntity<?>> implements An
     public boolean isEnabled() {
         return true;
     }
+
+    @Override
+    public int getLevel() {
+        return AnalyticalTask.DEFAULT_LEVEL;
+    }
 }

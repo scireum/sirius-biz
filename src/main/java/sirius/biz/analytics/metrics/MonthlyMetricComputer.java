@@ -35,6 +35,11 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
     protected Metrics metrics;
 
     @Override
+    public int getLevel() {
+        return AnalyticalTask.DEFAULT_LEVEL;
+    }
+
+    @Override
     public boolean isEnabled() {
         return true;
     }

@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.metrics;
 
+import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
@@ -34,4 +35,14 @@ public abstract class MonthlyGlobalMetricComputer {
      * @param date the date for which the computation should be performed
      */
     public abstract void compute(LocalDate date);
+
+    /**
+     * Returns the level of this computer.
+     *
+     * @return the priority level of this computer
+     * @see AnalyticalTask#getLevel() for an in-depth description
+     */
+    public int getLevel() {
+        return AnalyticalTask.DEFAULT_LEVEL;
+    }
 }

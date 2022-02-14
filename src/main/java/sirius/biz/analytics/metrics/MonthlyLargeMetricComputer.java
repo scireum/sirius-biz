@@ -37,4 +37,9 @@ public abstract class MonthlyLargeMetricComputer<E extends BaseEntity<?>> implem
     public boolean isEnabled() {
         return true;
     }
+
+    @Override
+    public int getLevel() {
+        return AnalyticalTask.DEFAULT_LEVEL;
+    }
 }

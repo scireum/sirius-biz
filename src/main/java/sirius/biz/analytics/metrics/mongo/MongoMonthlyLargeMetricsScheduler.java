@@ -65,7 +65,7 @@ public class MongoMonthlyLargeMetricsScheduler extends MongoAnalyticalTaskSchedu
     }
 
     @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date) {
-        super.executeBatch(batchDescription, date.minusMonths(1));
+    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
+        super.executeBatch(batchDescription, date.minusMonths(1), level);
     }
 }

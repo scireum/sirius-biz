@@ -69,7 +69,7 @@ public abstract class MongoAnalyticalTaskScheduler extends BaseAnalyticalTaskSch
     }
 
     @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date) {
-        batchEmitter.evaluateBatch(batchDescription, this::extendBatchQuery, e -> executeEntity(e, date));
+    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
+        batchEmitter.evaluateBatch(batchDescription, this::extendBatchQuery, e -> executeEntity(e, date, level));
     }
 }
