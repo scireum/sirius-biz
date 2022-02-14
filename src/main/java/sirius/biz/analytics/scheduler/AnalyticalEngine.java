@@ -51,7 +51,7 @@ public class AnalyticalEngine implements EveryDay {
     /**
      * Contains the microtiming category used by the analytics system.
      */
-    public static final String MICROTIMING_KEY_ANALYTICS = "anayltics";
+    public static final String MICROTIMING_KEY_ANALYTICS = "analytics";
 
     /**
      * Contains the log used by the analytical scheduler and all its related classes.
