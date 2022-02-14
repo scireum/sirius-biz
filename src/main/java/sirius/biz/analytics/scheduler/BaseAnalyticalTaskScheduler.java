@@ -50,13 +50,15 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
      */
     protected abstract Class<?> getAnalyticalTaskType();
 
+    protected abstract Class<?> getMinimalTargetType();
+
     @Override
     public boolean isActive() {
         if (active == null) {
             active = getTasks().values()
                                .stream()
                                .map(AnalyticalTask::getType)
-                               .anyMatch(entityType -> mixing.findDescriptor(entityType).isPresent());
+                               .anyMatch(type -> getMinimalTargetType().isAssignableFrom(type));
         }
 
         return active.booleanValue();
@@ -74,7 +76,10 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
     @SuppressWarnings("unchecked")
     @Override
     public void scheduleBatches(Consumer<JSONObject> batchConsumer) {
-        getTasks().keySet().forEach(type -> scheduleBatchesForType(batchConsumer, (Class<? extends B>) type));
+        getTasks().keySet()
+                  .stream()
+                  .filter(type -> getMinimalTargetType().isAssignableFrom(type))
+                  .forEach(type -> scheduleBatchesForType(batchConsumer, (Class<? extends B>) type));
     }
 
     private void scheduleBatchesForType(Consumer<JSONObject> batchConsumer, Class<? extends B> type) {

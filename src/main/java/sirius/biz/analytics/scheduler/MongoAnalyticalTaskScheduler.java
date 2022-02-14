@@ -31,6 +31,11 @@ public abstract class MongoAnalyticalTaskScheduler extends BaseAnalyticalTaskSch
     private MongoEntityBatchEmitter batchEmitter;
 
     @Override
+    protected Class<?> getMinimalTargetType() {
+        return MongoEntity.class;
+    }
+
+    @Override
     protected void scheduleBatches(Class<? extends MongoEntity> type, Consumer<JSONObject> batchConsumer) {
         try {
             batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batch -> {
