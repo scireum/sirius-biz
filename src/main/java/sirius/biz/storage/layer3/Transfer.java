@@ -331,26 +331,29 @@ public class Transfer {
                 destination.createAsDirectory();
             }
 
-            transferDirectory(source, destination.findChild(source.name()), delete);
+            transferDirectory(source, destination.findChild(source.name()), delete, delete);
         }
     }
 
-    private void transferDirectory(VirtualFile sourceDirectory, VirtualFile destinationDirectory, boolean delete) {
+    private void transferDirectory(VirtualFile sourceDirectory,
+                                   VirtualFile destinationDirectory,
+                                   boolean deleteContent,
+                                   boolean deleteSourceDirectory) {
         if (!destinationDirectory.isDirectory()) {
             destinationDirectory.createAsDirectory();
         }
 
         sourceDirectory.allChildren().stream().forEach(child -> {
             if (child.isFile()) {
-                transferFileTo(child, destinationDirectory.findChild(child.name()), delete);
+                transferFileTo(child, destinationDirectory.findChild(child.name()), deleteContent);
             } else {
-                transferDirectory(child, destinationDirectory.findChild(child.name()), delete);
+                transferDirectory(child, destinationDirectory.findChild(child.name()), deleteContent, deleteContent);
             }
-            if (delete) {
+            if (deleteContent) {
                 child.delete();
             }
         });
-        if (delete) {
+        if (deleteSourceDirectory) {
             sourceDirectory.delete();
         }
     }
@@ -416,6 +419,6 @@ public class Transfer {
                             .handle();
         }
 
-        transferDirectory(source, destination, delete);
+        transferDirectory(source, destination, delete, false);
     }
 }
