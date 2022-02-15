@@ -19,7 +19,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -84,9 +83,10 @@ public class JobSchedulerLoop extends BackgroundLoop {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
                           .error(e)
-                          .withSystemErrorMessage("An error occurred while checking a scheduled task of %s: %s - %s (%s)",
-                                                  provider.getClass().getSimpleName(),
-                                                  entry)
+                          .withSystemErrorMessage(
+                                  "An error occurred while checking a scheduled task of %s: %s - %s (%s)",
+                                  provider.getClass().getSimpleName(),
+                                  entry)
                           .handle();
             }
         }
@@ -146,7 +146,7 @@ public class JobSchedulerLoop extends BackgroundLoop {
             }
 
             provider.markExecuted(entry, now);
-        } catch (HandledException exception) {
+        } catch (Exception exception) {
             ctx.log(ProcessLog.error()
                               .withFormattedMessage("Failed to start scheduled job %s (%s) for user %s: %s",
                                                     entry,

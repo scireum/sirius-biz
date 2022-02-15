@@ -31,7 +31,7 @@ public interface SchedulerEntry extends Entity {
     Mapping JOB_CONFIG_DATA = Mapping.named("jobConfigData");
 
     /**
-     * Provides access to the schedulder data stored in the underlying entity.
+     * Provides access to the scheduler data stored in the underlying entity.
      *
      * @return the scheduler data of this entry.
      */
