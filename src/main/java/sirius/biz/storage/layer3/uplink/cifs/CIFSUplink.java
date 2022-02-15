@@ -300,7 +300,7 @@ public class CIFSUplink extends ConfigBasedUplink {
     protected void enumerateDirectoryChildren(@Nonnull VirtualFile parent, FileSearch search) {
         SmbFile parentFile = parent.tryAs(SmbFile.class)
                                    .orElseThrow(() -> new IllegalArgumentException(Strings.apply(
-                                           "Invalid parent: %s! Expecte a SmbFile!",
+                                           "Invalid parent: %s! Expected a SmbFile!",
                                            parent)));
         try {
             SmbFile[] children = parentFile.listFiles();

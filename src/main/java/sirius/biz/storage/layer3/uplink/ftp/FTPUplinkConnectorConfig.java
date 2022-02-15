@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 /**
- * Keeps the configuration used to build a FTP connector using the
+ * Keeps the configuration used to build an FTP connector using the
  * {@link sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool}.
  */
 class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
