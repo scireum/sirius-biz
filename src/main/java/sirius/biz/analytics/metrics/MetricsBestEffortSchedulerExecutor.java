@@ -11,7 +11,7 @@ package sirius.biz.analytics.metrics;
 import sirius.biz.analytics.scheduler.AnalyticsSchedulerExecutor;
 
 /**
- * Represents the executor used to schedule batches of best effort tasks used to compute metrics.
+ * Represents the executor used to schedule batches of "best effort" tasks used to compute metrics.
  */
 public class MetricsBestEffortSchedulerExecutor extends AnalyticsSchedulerExecutor {
 

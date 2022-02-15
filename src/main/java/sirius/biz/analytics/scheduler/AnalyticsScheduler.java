@@ -20,12 +20,12 @@ import java.util.function.Consumer;
  * them.
  * <p>
  * As most {@link AnalyticalTask tasks} are execute rather quickly, scheduling each single one of them provides
- * quite an overhead for the distributed tasks framework. Therefore each scheduler computes batches of entities which
+ * quite an overhead for the distributed tasks framework. Therefore, each scheduler computes batches of entities which
  * are then scheduled and executed at once.
  * <p>
  * This is a two stage process, {@link #scheduleBatches(Consumer)} emits a list of JSON specification which can
  * be used as descriptions in {@link sirius.biz.cluster.work.DistributedTasks}. Once being executed, the description
- * is forwarded to {@link #executeBatch(JSONObject, LocalDate)} which collects all entities of the specified
+ * is forwarded to {@link #executeBatch(JSONObject, LocalDate, int)} which collects all entities of the specified
  * batch. In most implementations the scheduler will then pick all matching {@link AnalyticalTask analytical tasks} and
  * executes them on the entity.
  */
@@ -40,7 +40,7 @@ public interface AnalyticsScheduler extends Named {
     Class<? extends AnalyticsSchedulerExecutor> getExecutorForScheduling();
 
     /**
-     * Determines the executor to be used to invoke {@link #executeBatch(JSONObject, LocalDate)}.
+     * Determines the executor to be used to invoke {@link #executeBatch(JSONObject, LocalDate, int)}.
      *
      * @return the executor which is in charge of executing the scheduled batches
      */
@@ -66,7 +66,7 @@ public interface AnalyticsScheduler extends Named {
 
     /**
      * Emits several JSON objects which each describe a batch of appropriate size to be resolved by
-     * {@link #executeBatch(JSONObject, LocalDate))}.
+     * {@link #executeBatch(JSONObject, LocalDate, int))}.
      * <p>
      * Note that the emitted JSON should be small - i.e. not contain a list or IDs but rather a start and end filter.
      *
@@ -80,8 +80,9 @@ public interface AnalyticsScheduler extends Named {
      *
      * @param batchDescription the description which specifies which entities are in the batch
      * @param date             the date for which the execution was scheduled
+     * @param level            the level ({@link AnalyticalTask#getLevel()}) to execute
      */
-    void executeBatch(JSONObject batchDescription, LocalDate date);
+    void executeBatch(JSONObject batchDescription, LocalDate date, int level);
 
     /**
      * Determines if this scheduler is active.
@@ -91,4 +92,11 @@ public interface AnalyticsScheduler extends Named {
      * @return <tt>true</tt> if the scheduler should be actively scheduled or <tt>false</tt> if it can be ignored
      */
     boolean isActive();
+
+    /**
+     * Computes the highest level defined by any task managed by this scheduler.
+     *
+     * @return the highest {@link AnalyticalTask#getLevel()} of any task managed by this scheduler
+     */
+    int getMaxLevel();
 }

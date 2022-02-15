@@ -16,6 +16,7 @@ import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Base class to compute the user activity metric and performance flags for user accounts.
@@ -68,7 +69,11 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
     private EventRecorder eventRecorder;
 
     @Override
-    public void compute(LocalDate date, U entity) throws Exception {
+    public void compute(LocalDate date,
+                        LocalDateTime startOfPeriod,
+                        LocalDateTime endOfPeriod,
+                        boolean pastDate,
+                        U entity) throws Exception {
         LocalDate lowerLimit = date.minusDays(observationPeriodDays);
 
         int numberOfActiveDays = eventRecorder.getDatabase()
@@ -88,7 +93,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
         int activityRateInPercent = numberOfActiveDays * 100 / observationPeriodDays;
         metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, date, activityRateInPercent);
 
-        if (date.getMonthValue() == LocalDate.now().getMonthValue()) {
+        if (!pastDate) {
             entity.getPerformanceData()
                   .modify()
                   .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)

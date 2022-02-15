@@ -23,6 +23,13 @@ import java.time.LocalDate;
 public interface AnalyticalTask<E extends BaseEntity<?>> {
 
     /**
+     * Contains the default value to use for {@link #getLevel()}.
+     *
+     * @see #getLevel()
+     */
+    int DEFAULT_LEVEL = 0;
+
+    /**
      * Returns the class of entities to be processed by this task.
      *
      * @return the class of entities to be processed by this task
@@ -40,6 +47,18 @@ public interface AnalyticalTask<E extends BaseEntity<?>> {
      * of the system
      */
     boolean isEnabled();
+
+    /**
+     * Returns the priority level of this task.
+     * <p>
+     * As sometimes e.g. metrics depend on each other, we need a method of ensuring that a metric computer is executed
+     * before another. This is achieved by the level returned here. The schedulers will guarantee, that first,
+     * all tasks of the level <b>0</b> will be executed. Then, once <b>all</b> tasks have been fully performed,
+     * all tasks for the level <b>1</b> will be performed and so on.
+     *
+     * @return the priority level of this task. Use {@link #DEFAULT_LEVEL} is this task doesn't depend on any other task
+     */
+    int getLevel();
 
     /**
      * Executes the analytical task for the given entity and reference date.

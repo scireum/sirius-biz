@@ -269,7 +269,6 @@ public class MetricQuery {
             case MONTHLY -> MAX_MONTHLY_METRICS;
             case YEARLY -> MAX_YEARLY_METRICS;
             case FACT -> 1;
-            default -> throw new IllegalStateException("No interval is specified!");
         };
     }
 
