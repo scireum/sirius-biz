@@ -107,7 +107,7 @@ public class GlobalGuaranteedDailyMetricScheduler implements AnalyticsScheduler 
         }
         if (Microtiming.isEnabled()) {
             watch.submitMicroTiming(AnalyticalEngine.MICROTIMING_KEY_ANALYTICS,
-                                    Strings.apply("Executed global dail computer '%s'",
+                                    Strings.apply("Executed global daily computer '%s'",
                                                   computer.getClass().getName()));
         }
     }
