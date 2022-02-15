@@ -64,6 +64,17 @@ public class Dataset {
     }
 
     /**
+     * Adds the given values to the dataset
+     *
+     * @param values the values to add
+     * @return the dataset itself for fluent method calls
+     */
+    public Dataset addValues(List<Integer> values) {
+        this.values.addAll(values);
+        return this;
+    }
+
+    /**
      * Returns the label of the dataset.
      *
      * @return the label of the dataset

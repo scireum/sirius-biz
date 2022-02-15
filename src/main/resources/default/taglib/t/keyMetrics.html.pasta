@@ -1,0 +1,30 @@
+<i:arg type="java.lang.Object" name="target"/>
+
+<i:pragma name="description">Renders some key metrics for the given target as supplied by "MetricDashboard"</i:pragma>
+
+<i:local name="metrics"
+         value="@part(sirius.biz.tycho.dashboards.MetricsDashboard.class).fetchImportantKeyMetrics(target, 4)"/>
+<i:if test="!metrics.isEmpty()">
+    <div class="mb-4 row">
+        <i:for type="sirius.biz.tycho.dashboards.MetricDescription"
+               var="metric"
+               items="metrics">
+            <div class="mb-2 col-md-6 col-lg-4 col-xl-3">
+                <div class="lazy-metric-js card h-100"
+                     data-type="KeyMetric"
+                     data-provider="@metric.getProviderName()"
+                     data-metric="@metric.getMetricName()"
+                     data-target="@metric.getTargetName()">
+                    <div class="card-body">
+                        <div class="text-uppercase text-muted text-center">@metric.getLabel()</div>
+                        <div class="mt-2 display-6 text-center metric-value-js"></div>
+                        <div class="mt-2">
+                            <canvas class="ml-auto mr-auto" style="width: 100%; max-width: 200px" height="32"></canvas>
+                        </div>
+                        <div class="mt-3 text-small text-muted text-center">@metric.getDescription()</div>
+                    </div>
+                </div>
+            </div>
+        </i:for>
+    </div>
+</i:if>
