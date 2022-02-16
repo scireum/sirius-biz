@@ -86,9 +86,7 @@ public class JobConfigData extends Composite {
 
     @BeforeSave
     protected void updateConfig() {
-        if (configMap == null) {
-            configuration = null;
-        } else {
+        if (configMap != null) {
             configuration = JSON.toJSONString(configMap);
         }
 
