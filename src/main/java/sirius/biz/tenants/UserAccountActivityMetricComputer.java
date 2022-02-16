@@ -40,7 +40,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
      * This metric contains the percentage of the last {@link #observationPeriodDays} days in which the user
      * was seen.
      */
-    private static final String METRIC_USER_ACTIVITY = "user-activity";
+    public static final String METRIC_USER_ACTIVITY = "user-activity";
 
     /**
      * Contains the number of days used to compute the user activity metric.
