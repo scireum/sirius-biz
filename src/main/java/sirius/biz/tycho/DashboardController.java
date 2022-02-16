@@ -22,8 +22,7 @@ import sirius.web.security.LoginRequired;
  * Provides a default route for "/admin" and "/system/dashboard" as these are the common entry points of the
  * "backend" which is based on the Tycho UI.
  * <p>
- * Note that we provide low priorities for each route, so that the application can easily overwrite each route if
- * needed. Also note, that sirius-web will redirect "/" and "/dashboard" to "/system/dashboard" if no other
+ * Note, that sirius-web will redirect "/" and "/dashboard" to "/system/dashboard" if no other
  * controller or dispatcher handles these. We use this sort of complex approach here, to let the applications
  * decide which URIs are handled by themselves (and used for other purposes) and which are used for the main
  * entrypoint of the backed.
@@ -35,7 +34,7 @@ public class DashboardController extends BizController {
     private EventRecorder eventRecorder;
 
     /**
-     * Provides an alternative entry point via "/admin".
+     * Provides an entry point via "/admin".
      *
      * @param webContext the request to respond to
      */
@@ -44,7 +43,7 @@ public class DashboardController extends BizController {
     public void admin(WebContext webContext) {
         String path = new QueryStringDecoder(webContext.getRequest().uri()).path();
         eventRecorder.record(new PageImpressionEvent().withAggregationUrl(path));
-        webContext.respondWith().template("/templates/biz/tycho/dashboard.html.pasta",path);
+        webContext.respondWith().template("/templates/biz/tycho/dashboard.html.pasta", path);
     }
 
     /**

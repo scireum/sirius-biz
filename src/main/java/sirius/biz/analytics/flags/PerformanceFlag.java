@@ -54,9 +54,9 @@ public class PerformanceFlag {
      * @param targetType the target type for which this flag can be toggled
      * @param name       the name of the flag
      * @param bitIndex   the bit index to use. This has to be a unique index per type with a value ranging form 0 to 63.
-     *                   Note that 0 to 15 are reseverd for sirius libraries, therefore an application can define up to
+     *                   Note that 0 to 15 are reserved for sirius libraries, therefore an application can define up to
      *                   48 custom flags per entity type
-     * @return the performance flag which can be used for toggeling and filtering
+     * @return the performance flag which can be used for toggling and filtering
      */
     public static PerformanceFlag register(Class<?> targetType, String name, int bitIndex) {
         PerformanceFlag result = new PerformanceFlag();
@@ -132,8 +132,8 @@ public class PerformanceFlag {
     /**
      * Makes this performance flag visible in the UI.
      * <p>
-     * By default a performance flag is hidden from the user and only used internally. However, there are good reasons
-     * to make a lot of perfromance flags visible.
+     * By default, a performance flag is hidden from the user and only used internally. However, there are good reasons
+     * to make a lot of performance flags visible.
      *
      * @return the flag itself for fluent method calls
      */

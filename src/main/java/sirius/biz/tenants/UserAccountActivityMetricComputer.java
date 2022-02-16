@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
  * {@link UserAccountActivityMetricComputer#observationPeriodDays N days} in which the user was seen by the
  * {@link TenantUserManager}.
  * <p>
- * Also two performance flags are maintained: <tt>active-user</tt> for users which are seen at least
+ * Also, two performance flags are maintained: <tt>active-user</tt> for users which are seen at least
  * {@link UserAccountActivityMetricComputer#minDaysForActiveUsers} times and <tt>frequent-user</tt>
  * for users which are seen at least {@link UserAccountActivityMetricComputer#minDaysForFrequentUsers} times.
  *
@@ -45,7 +45,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
     /**
      * Contains the number of days used to compute the user activity metric.
      * <p>
-     * If the computation would be interpreted as sliding window approach, this would define the size / length of
+     * If the computation might be interpreted as sliding window approach, this would define the size / length of
      * the window.
      */
     @ConfigValue("analytics.user-accounts.observationPeriodDays")
