@@ -331,6 +331,8 @@ public class Transfer {
                 destination.createAsDirectory();
             }
 
+            // Transfer directory and delete all files and directories including the source directory at the source
+            // location if the action is a move.
             transferDirectory(source, destination.findChild(source.name()), delete, delete);
         }
     }
@@ -347,6 +349,7 @@ public class Transfer {
             if (child.isFile()) {
                 transferFileTo(child, destinationDirectory.findChild(child.name()), deleteContent);
             } else {
+                // Transfer and delete the child directory in case content should be deleted.
                 transferDirectory(child, destinationDirectory.findChild(child.name()), deleteContent, deleteContent);
             }
             if (deleteContent) {
@@ -419,6 +422,7 @@ public class Transfer {
                             .handle();
         }
 
+        // Transfer content of the directory but don't delete the source directory.
         transferDirectory(source, destination, delete, false);
     }
 }
