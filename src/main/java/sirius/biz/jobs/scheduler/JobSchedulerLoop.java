@@ -19,6 +19,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -146,7 +147,7 @@ public class JobSchedulerLoop extends BackgroundLoop {
             }
 
             provider.markExecuted(entry, now);
-        } catch (Exception exception) {
+        } catch (HandledException exception) {
             ctx.log(ProcessLog.error()
                               .withFormattedMessage("Failed to start scheduled job %s (%s) for user %s: %s",
                                                     entry,
