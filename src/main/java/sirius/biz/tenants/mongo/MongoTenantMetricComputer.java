@@ -20,7 +20,7 @@ import sirius.kernel.di.std.Register;
 import java.util.function.Consumer;
 
 /**
- * Provides some metrics for {@link MongoTenant}.
+ * Provides some metrics for {@link MongoTenant MongoDB based tenants}.
  */
 @Register
 public class MongoTenantMetricComputer extends TenantMetricComputer<MongoTenant> {
@@ -48,6 +48,16 @@ public class MongoTenantMetricComputer extends TenantMetricComputer<MongoTenant>
     @Override
     protected PerformanceFlag getActiveUsersFlag() {
         return ACTIVE_USERS;
+    }
+
+    @Override
+    protected PerformanceFlag getActiveUserFlag() {
+        return MongoUserAccountActivityMetricComputer.ACTIVE_USER;
+    }
+
+    @Override
+    protected PerformanceFlag getAcademyUserFlag() {
+        return MongoUserAccountAcademyMetricComputer.VIDEO_ACADEMY_USER;
     }
 
     @Override

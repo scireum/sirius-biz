@@ -9,11 +9,10 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
-import sirius.biz.analytics.metrics.MonthlyGlobalMetricComputer;
+import sirius.biz.analytics.metrics.jdbc.SQLMonthlyGlobalMetricComputer;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.jdbc.OMA;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
@@ -23,9 +22,8 @@ import java.time.LocalDateTime;
 /**
  * Provides some global metrics for {@link SQLTenant JDBC based tenants}.
  */
-@Register
-@Framework(SQLTenants.FRAMEWORK_TENANTS_JDBC)
-public class SQLGlobalMetricComputer extends MonthlyGlobalMetricComputer {
+@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+public class SQLTenantGlobalMetricComputer extends SQLMonthlyGlobalMetricComputer {
 
     /**
      * Contains the total number of tenants.

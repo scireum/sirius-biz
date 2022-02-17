@@ -20,7 +20,7 @@ import sirius.kernel.di.std.Register;
 import java.util.function.Consumer;
 
 /**
- * Provides some metrics for {@link SQLTenant}.
+ * Provides some metrics for {@link SQLTenant SQL based tenants}.
  */
 @Register
 public class SQLTenantMetricComputer extends TenantMetricComputer<SQLTenant> {
@@ -32,10 +32,10 @@ public class SQLTenantMetricComputer extends TenantMetricComputer<SQLTenant> {
             PerformanceFlag.register(SQLTenant.class, "active-users", 0).makeVisible().markAsFilter();
 
     /**
-     * Marks tenants which hase users that use the video academy.
+     * Marks tenants which have users that use the video academy.
      */
     public static final PerformanceFlag ACADEMY_USERS =
-            PerformanceFlag.register(SQLUserAccount.class, "academy-users", 1).makeVisible().markAsFilter();
+            PerformanceFlag.register(SQLTenant.class, "academy-users", 1).makeVisible().markAsFilter();
 
     @Part
     private OMA oma;
@@ -48,6 +48,16 @@ public class SQLTenantMetricComputer extends TenantMetricComputer<SQLTenant> {
     @Override
     protected PerformanceFlag getActiveUsersFlag() {
         return ACTIVE_USERS;
+    }
+
+    @Override
+    protected PerformanceFlag getActiveUserFlag() {
+        return SQLUserAccountActivityMetricComputer.ACTIVE_USER;
+    }
+
+    @Override
+    protected PerformanceFlag getAcademyUserFlag() {
+        return SQLUserAccountAcademyMetricComputer.VIDEO_ACADEMY_USER;
     }
 
     @Override

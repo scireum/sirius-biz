@@ -10,8 +10,6 @@ package sirius.biz.tenants;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
-import sirius.biz.tenants.jdbc.SQLUserAccountAcademyMetricComputer;
-import sirius.biz.tenants.jdbc.SQLUserAccountActivityMetricComputer;
 import sirius.db.mixing.BaseEntity;
 
 import java.time.LocalDate;
@@ -21,15 +19,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
- * Base class to aggregate the user activity metrics and performance flags for tenants.
+ * Aggregates the user activity metrics and performance flags for each {@link Tenant}.
  * <p>
  * This computes the metrics:
- *     <ul>
- *         <li><tt>num-users</tt>: Total number of users.</li>
- *         <li><tt>num-active-users</tt>: Total number of <tt>active</tt> users.</li>
- *         <li><tt>avg-activity</tt>: Average activity level of all active users.</li>
- *         <li><tt>avg-education-level</tt>: Average education level level of all active users.</li>
- *     </ul>
+ * <ul>
+ *  <li><tt>num-users</tt>: Total number of users.</li>
+ *  <li><tt>num-active-users</tt>: Total number of <tt>active</tt> users.</li>
+ *  <li><tt>avg-activity</tt>: Average activity level of all active users.</li>
+ *  <li><tt>avg-education-level</tt>: Average education level level of all active users.</li>
+ * </ul>
  * <p>
  * Also, two performance flags are maintained: <tt>active-users</tt> for tenants which have at least one active user.
  * and <tt>academy-users</tt> for tenants which have at least one academy user.
@@ -71,7 +69,7 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
                         LocalDateTime startOfPeriod,
                         LocalDateTime endOfPeriod,
                         boolean pastDate,
-                        T entity) throws Exception {
+                        T tenant) throws Exception {
         if (pastDate) {
             // This is an actual observation and not calculated from recorded data. Therefore, we cannot compute this
             // for past dates...
@@ -84,16 +82,16 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
         AtomicInteger sumEducationLevel = new AtomicInteger(0);
         AtomicBoolean hasAcademyUsers = new AtomicBoolean(false);
 
-        callForEachUser(entity, user -> {
+        callForEachUser(tenant, user -> {
             totalUsers.incrementAndGet();
 
-            if (user.getPerformanceData().isSet(SQLUserAccountActivityMetricComputer.ACTIVE_USER)) {
+            if (user.getPerformanceData().isSet(getActiveUserFlag())) {
                 activeUsers.incrementAndGet();
                 sumActivity.addAndGet(metrics.query()
                                              .monthly(UserAccountActivityMetricComputer.METRIC_USER_ACTIVITY)
                                              .of(user.getTypeName(), user.getIdAsString())
                                              .lastValue());
-                if (user.getPerformanceData().isSet(SQLUserAccountAcademyMetricComputer.VIDEO_ACADEMY_USER)) {
+                if (user.getPerformanceData().isSet(getAcademyUserFlag())) {
                     sumEducationLevel.addAndGet(metrics.query()
                                                        .monthly(UserAccountAcademyMetricComputer.METRIC_USER_EDUCATION_LEVEL)
                                                        .of(user.getTypeName(), user.getIdAsString())
@@ -103,24 +101,29 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
             }
         });
 
-        metrics.updateMonthlyMetric(entity, METRIC_NUM_USERS, date, totalUsers.get());
-        entity.getPerformanceData().modify().set(getAcademyUsersFlag(), hasAcademyUsers.get());
+        metrics.updateMonthlyMetric(tenant, METRIC_NUM_USERS, date, totalUsers.get());
+        tenant.getPerformanceData().modify().set(getAcademyUsersFlag(), hasAcademyUsers.get());
 
         if (activeUsers.get() > 0) {
-            metrics.updateMonthlyMetric(entity, METRIC_NUM_ACTIVE_USERS, date, activeUsers.get());
-            metrics.updateMonthlyMetric(entity, METRIC_AVG_ACTIVITY, date, sumActivity.get() / activeUsers.get());
-            metrics.updateMonthlyMetric(entity,
+            metrics.updateMonthlyMetric(tenant, METRIC_NUM_ACTIVE_USERS, date, activeUsers.get());
+            metrics.updateMonthlyMetric(tenant, METRIC_AVG_ACTIVITY, date, sumActivity.get() / activeUsers.get());
+            metrics.updateMonthlyMetric(tenant,
                                         METRIC_AVG_EDUCATION_LEVEL,
                                         date,
                                         sumEducationLevel.get() / activeUsers.get());
 
-            entity.getPerformanceData().modify().set(getActiveUsersFlag(), activeUsers.get() > 0);
+            tenant.getPerformanceData().modify().set(getActiveUsersFlag(), activeUsers.get() > 0).commit();
         }
     }
 
-    protected abstract PerformanceFlag getAcademyUsersFlag();
+
+    protected abstract PerformanceFlag getActiveUserFlag();
+
+    protected abstract PerformanceFlag getAcademyUserFlag();
 
     protected abstract PerformanceFlag getActiveUsersFlag();
+
+    protected abstract PerformanceFlag getAcademyUsersFlag();
 
     protected abstract void callForEachUser(T tenant, Consumer<UserAccount<?, T>> user);
 }

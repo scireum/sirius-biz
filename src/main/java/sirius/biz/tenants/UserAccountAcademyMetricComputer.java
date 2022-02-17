@@ -54,41 +54,43 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
                         LocalDateTime endOfPeriod,
                         boolean pastDate,
                         E userAccount) throws Exception {
-        long totalVideos = getMapper().select(getType())
+        long totalVideos = getMapper().select(getOnboardingVideoEntity())
                                       .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER),
                                           userAccount.getUniqueName())
                                       .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED),
                                           false)
                                       .count();
 
-        if (totalVideos > 0) {
-            long watchedVideos = getMapper().select(getType())
-                                            .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER),
-                                                userAccount.getUniqueName())
-                                            .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED),
-                                                false)
-                                            .where(getMapper().filters()
-                                                              .or(getMapper().filters()
-                                                                             .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
-                                                                                         OnboardingVideoData.WATCHED),
-                                                                                 true),
-                                                                  getMapper().filters()
-                                                                             .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
-                                                                                         OnboardingVideoData.SKIPPED),
-                                                                                 true)))
-                                            .count();
+        if (totalVideos == 0) {
+            return;
+        }
 
-            int educationLevel = (int) (watchedVideos * 100 / totalVideos);
-            metrics.updateMonthlyMetric(userAccount, METRIC_USER_EDUCATION_LEVEL, date, educationLevel);
+        long watchedVideos = getMapper().select(getOnboardingVideoEntity())
+                                        .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER),
+                                            userAccount.getUniqueName())
+                                        .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED),
+                                            false)
+                                        .where(getMapper().filters()
+                                                          .or(getMapper().filters()
+                                                                         .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
+                                                                                 OnboardingVideoData.WATCHED), true),
+                                                              getMapper().filters()
+                                                                         .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
+                                                                                 OnboardingVideoData.SKIPPED), true)))
+                                        .count();
 
-            if (!pastDate) {
-                userAccount.getPerformanceData()
-                           .modify()
-                           .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
-                           .commit();
-            }
+        int educationLevel = (int) (watchedVideos * 100 / totalVideos);
+        metrics.updateMonthlyMetric(userAccount, METRIC_USER_EDUCATION_LEVEL, date, educationLevel);
+
+        if (!pastDate) {
+            userAccount.getPerformanceData()
+                       .modify()
+                       .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
+                       .commit();
         }
     }
+
+    protected abstract Class<? extends BaseEntity<?>> getOnboardingVideoEntity();
 
     protected abstract PerformanceFlag getAcademyUserFlag();
 

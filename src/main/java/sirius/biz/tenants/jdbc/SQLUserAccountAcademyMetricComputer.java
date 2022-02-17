@@ -11,6 +11,7 @@ package sirius.biz.tenants.jdbc;
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.tenants.UserAccountAcademyMetricComputer;
 import sirius.biz.tycho.academy.jdbc.SQLOnboardingEngine;
+import sirius.biz.tycho.academy.jdbc.SQLOnboardingVideo;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.BaseMapper;
@@ -39,6 +40,11 @@ public class SQLUserAccountAcademyMetricComputer extends UserAccountAcademyMetri
         return SQLUserAccount.class;
     }
 
+    @Override
+    protected Class<? extends BaseEntity<?>> getOnboardingVideoEntity() {
+        return SQLOnboardingVideo.class;
+    }
+
     @Part
     private OMA oma;
 
@@ -52,5 +58,4 @@ public class SQLUserAccountAcademyMetricComputer extends UserAccountAcademyMetri
     protected <B extends BaseEntity<?>, C extends Constraint, Q extends Query<Q, B, C>> BaseMapper<B, C, Q> getMapper() {
         return (BaseMapper<B, C, Q>) oma;
     }
-
 }

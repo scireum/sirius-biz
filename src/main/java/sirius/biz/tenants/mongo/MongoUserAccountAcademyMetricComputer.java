@@ -11,6 +11,7 @@ package sirius.biz.tenants.mongo;
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.tenants.UserAccountAcademyMetricComputer;
 import sirius.biz.tycho.academy.mongo.MongoOnboardingEngine;
+import sirius.biz.tycho.academy.mongo.MongoOnboardingVideo;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.query.Query;
@@ -37,6 +38,11 @@ public class MongoUserAccountAcademyMetricComputer extends UserAccountAcademyMet
     @Override
     public Class<MongoUserAccount> getType() {
         return MongoUserAccount.class;
+    }
+
+    @Override
+    protected Class<? extends BaseEntity<?>> getOnboardingVideoEntity() {
+        return MongoOnboardingVideo.class;
     }
 
     @Part

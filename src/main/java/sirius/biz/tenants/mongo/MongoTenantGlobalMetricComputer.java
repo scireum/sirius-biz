@@ -9,13 +9,11 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
-import sirius.biz.analytics.metrics.MonthlyGlobalMetricComputer;
+import sirius.biz.analytics.metrics.mongo.MongoMonthlyGlobalMetricComputer;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tenants.jdbc.SQLTenants;
-import sirius.biz.tenants.jdbc.SQLUserAccount;
 import sirius.db.mongo.Mango;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
@@ -25,9 +23,8 @@ import java.time.LocalDateTime;
 /**
  * Provides some global metrics for {@link MongoTenant MongoDB based tenants}.
  */
-@Register
-@Framework(SQLTenants.FRAMEWORK_TENANTS_JDBC)
-public class MongoGlobalMetricComputer extends MonthlyGlobalMetricComputer {
+@Register(framework=SQLTenants.FRAMEWORK_TENANTS_JDBC)
+public class MongoTenantGlobalMetricComputer extends MongoMonthlyGlobalMetricComputer {
 
     /**
      * Contains the total number of tenants.
@@ -78,14 +75,14 @@ public class MongoGlobalMetricComputer extends MonthlyGlobalMetricComputer {
         metrics.updateGlobalMonthlyMetric(METRIC_NUM_USERS,
                                           date,
                                           (int) mango.selectFromSecondary(MongoTenant.class)
-                                                     .eq(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                     .eq(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                          .inner(LoginData.ACCOUNT_LOCKED),
                                                          false)
                                                      .count());
         metrics.updateGlobalMonthlyMetric(METRIC_NUM_ACTIVE_USERS,
                                           date,
                                           (int) mango.selectFromSecondary(MongoTenant.class)
-                                                     .eq(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                     .eq(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                          .inner(LoginData.ACCOUNT_LOCKED),
                                                          false)
                                                      .where(MongoPerformanceData.filterFlagSet(
