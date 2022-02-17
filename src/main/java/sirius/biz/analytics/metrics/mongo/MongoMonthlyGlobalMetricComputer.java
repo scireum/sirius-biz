@@ -6,15 +6,14 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.analytics.metrics;
+package sirius.biz.analytics.metrics.mongo;
 
+import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
-import sirius.kernel.di.std.Part;
+import sirius.db.mongo.MongoEntity;
 
-import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
 
 /**
  * Provides a base class for all metric computers which are invoked on a monthly basis to compute a global metric.
@@ -25,23 +24,25 @@ import java.time.Period;
  * Note that these computers are also invoked on a daily basis for the current month to update its value
  * (if possible - as best effort scheduling is used).
  */
-public abstract class MonthlyGlobalMetricComputer {
+public abstract class MongoMonthlyGlobalMetricComputer extends MonthlyMetricComputer<MongoEntity> {
 
-    @Part
-    @Nullable
-    protected Metrics metrics;
+    @Override
+    public Class<MongoEntity> getType() {
+        return MongoEntity.class;
+    }
 
-    /**
-     * Performs the computation for the given date.
-     *
-     * @param date the date for which the computation should be performed
-     * @throws Exception in case of any problem while performing the computation
-     */
-    public final void compute(LocalDate date) throws Exception {
-        compute(date,
-                date.withDayOfMonth(1).atStartOfDay(),
-                date.withDayOfMonth(date.lengthOfMonth()).plusDays(1).atStartOfDay().minusSeconds(1),
-                Period.between(LocalDate.now(), date).getMonths() >= 2);
+    @Override
+    public int getLevel() {
+        return AnalyticalTask.DEFAULT_LEVEL + 1;
+    }
+
+    @Override
+    public final void compute(LocalDate date,
+                              LocalDateTime startOfPeriod,
+                              LocalDateTime endOfPeriod,
+                              boolean pastDate,
+                              MongoEntity entity) throws Exception {
+        compute(date, startOfPeriod, endOfPeriod, pastDate);
     }
 
     /**
@@ -54,18 +55,8 @@ public abstract class MonthlyGlobalMetricComputer {
      *                      <tt>false</tt> if the computation is performed for the current month.
      * @throws Exception in case of any problem while performing the computation
      */
-    public abstract void compute(LocalDate date,
-                                 LocalDateTime startOfPeriod,
-                                 LocalDateTime endOfPeriod,
-                                 boolean pastDate) throws Exception;
-
-    /**
-     * Returns the level of this computer.
-     *
-     * @return the priority level of this computer
-     * @see AnalyticalTask#getLevel() for an in-depth description
-     */
-    public int getLevel() {
-        return AnalyticalTask.DEFAULT_LEVEL;
-    }
+    protected abstract void compute(LocalDate date,
+                                    LocalDateTime startOfPeriod,
+                                    LocalDateTime endOfPeriod,
+                                    boolean pastDate) throws Exception;
 }

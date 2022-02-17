@@ -16,6 +16,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
+import java.lang.reflect.Modifier;
 import java.time.LocalDate;
 import java.util.function.Consumer;
 
@@ -38,10 +39,14 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
     @Override
     protected void scheduleBatches(Class<? extends SQLEntity> type, Consumer<JSONObject> batchConsumer) {
         try {
-            batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batch -> {
-                batchConsumer.accept(batch);
-                return true;
-            });
+            if (Modifier.isAbstract(type.getModifiers())) {
+                batchConsumer.accept(new JSONObject());
+            } else {
+                batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batch -> {
+                    batchConsumer.accept(batch);
+                    return true;
+                });
+            }
         } catch (Exception e) {
             Exceptions.handle(Log.BACKGROUND, e);
         }
@@ -75,6 +80,10 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
 
     @Override
     public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
-        batchEmitter.evaluateBatch(batchDescription, this::extendBatchQuery, e -> executeEntity(e, date, level));
+        if (!batchDescription.containsKey(BaseEntityBatchEmitter.TYPE)) {
+            executeEntity(null, SQLEntity.class, date, level);
+        } else {
+            batchEmitter.evaluateBatch(batchDescription, this::extendBatchQuery, e -> executeEntity(e,e.getClass(), date, level));
+        }
     }
 }

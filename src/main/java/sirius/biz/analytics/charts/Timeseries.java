@@ -125,7 +125,6 @@ public class Timeseries {
             case WEEK -> timestamp.plusWeeks(1);
             case MONTH -> timestamp.plusMonths(1);
             case YEAR -> timestamp.plusYears(1);
-            default -> throw new IllegalStateException("unreachable");
         };
     }
 
@@ -210,7 +209,6 @@ public class Timeseries {
             case PREVIOUS_WEEK -> copy(date -> date.minusWeeks(1));
             case PREVIOUS_MONTH -> copy(date -> date.minusMonths(1));
             case PREVIOUS_YEAR -> copy(date -> date.minusYears(1));
-            default -> throw new IllegalStateException("unreachable");
         };
     }
 

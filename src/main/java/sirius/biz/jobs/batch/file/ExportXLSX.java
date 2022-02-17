@@ -38,13 +38,13 @@ public class ExportXLSX implements LineBasedExport {
     }
 
     @Override
-    public void addRow(List<?> row) throws IOException {
-        export.addRowAsList(row);
+    public void addListRow(List<?> row) throws IOException {
+        export.addListRow(row);
     }
 
     @Override
     public void addArrayRow(Object... row) throws IOException {
-        export.addRow(row);
+        export.addArrayRow(row);
     }
 
     @Override

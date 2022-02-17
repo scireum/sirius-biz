@@ -139,7 +139,7 @@ public class OnboardingVideoData extends Composite {
     /**
      * Determines if this video is recommended for watching.
      * <p>
-     * This is a computed field which speeds of common queries.
+     * This is a computed field which speeds up common queries.
      */
     public static final Mapping RECOMMENDED = Mapping.named("recommended");
     private boolean recommended;

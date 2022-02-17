@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
  * {@link UserAccountActivityMetricComputer#observationPeriodDays N days} in which the user was seen by the
  * {@link TenantUserManager}.
  * <p>
- * Also two performance flags are maintained: <tt>active-user</tt> for users which are seen at least
+ * Also, two performance flags are maintained: <tt>active-user</tt> for users which are seen at least
  * {@link UserAccountActivityMetricComputer#minDaysForActiveUsers} times and <tt>frequent-user</tt>
  * for users which are seen at least {@link UserAccountActivityMetricComputer#minDaysForFrequentUsers} times.
  *
@@ -40,12 +40,12 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
      * This metric contains the percentage of the last {@link #observationPeriodDays} days in which the user
      * was seen.
      */
-    private static final String METRIC_USER_ACTIVITY = "user-activity";
+    public static final String METRIC_USER_ACTIVITY = "user-activity";
 
     /**
      * Contains the number of days used to compute the user activity metric.
      * <p>
-     * If the computation would be interpreted as sliding window approach, this would define the size / length of
+     * If the computation might be interpreted as sliding window approach, this would define the size / length of
      * the window.
      */
     @ConfigValue("analytics.user-accounts.observationPeriodDays")
@@ -76,16 +76,17 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                         U entity) throws Exception {
         LocalDate lowerLimit = date.minusDays(observationPeriodDays);
 
-        int numberOfActiveDays = eventRecorder.getDatabase()
-                                              .createQuery("SELECT COUNT(DISTINCT eventDate) AS numberOfDays"
-                                                           + " FROM useractivityevent"
-                                                           + " WHERE userData_userId = ${userId}"
-                                                           + "   AND eventDate > ${lowerLimit}"
-                                                           + "   AND eventDate <= ${upperLimit}")
+        int numberOfActiveDays = eventRecorder.createQuery(
+                                                      //language=SQL
+                                                      """
+                                                              SELECT COUNT(DISTINCT eventDate) AS numberOfDays
+                                                              FROM useractivityevent
+                                                              WHERE userData_userId = ${userId}
+                                                                AND eventDate > ${lowerLimit}
+                                                                AND eventDate <= ${upperLimit}""")
                                               .set("userId", entity.getUniqueName())
                                               .set("lowerLimit", lowerLimit)
                                               .set("upperLimit", date)
-                                              .markAsLongRunning()
                                               .first()
                                               .flatMap(row -> row.getValue("numberOfDays").asOptionalInt())
                                               .orElse(0);
