@@ -4,136 +4,148 @@
 <i:arg type="List" name="entities"/>
 <i:arg type="List" name="properties"/>
 
-<w:page title="Query Tool">
+<t:page title="Query Tool">
     <i:block name="breadcrumbs">
         <li><a href="/system/query">Query Tool</a></li>
     </i:block>
 
-    <w:pageHeader title="Query Tool"/>
+    <t:pageHeader title="Query Tool"/>
 
     <i:invoke template="/templates/biz/model/query-header.html.pasta" query="@query" limit="@limit" type="type"/>
 
-    <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
-        <div class="well">
-            <table class="table table-bordered table-striped">
-                <tr>
-                    <td colspan="2" class="align-center"><b>@type.getType().getSimpleName(): @entity.getIdAsString()</b>
-                    </td>
-                </tr>
-                <i:for type="sirius.db.mixing.Property" var="property" items="properties">
-                    <tr>
-                        <td clas="col-md-3">@property.getName()</td>
-                        <td clas="col-md-9">
-                            <i:if test="property.is(sirius.db.mixing.properties.BaseEntityRefProperty.class)">
-                                <i:local name="reference"
-                                         value="property.as(sirius.db.mixing.properties.BaseEntityRefProperty.class)"/>
-                                <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
-                                   target="_blank">
-                                    <b>@reference.getValue(entity)</b>
-                                </a>
-                                <i:else>
-                                    <i:if test="property.is(sirius.db.mixing.properties.NestedListProperty.class)">
-                                        <i:local name="nestedEntities"
-                                                 value="property.getValue(entity).as(List.class)"/>
-
-                                        <i:if test="nestedEntities.size() > 0">
-                                            <i:local name="nestedDescriptor"
-                                                     value="property.as(sirius.db.mixing.properties.NestedListProperty.class).getNestedDescriptor()"/>
-                                            <i:local name="nestedCollapseId" value="@generateId('nested-%s')"/>
-
-                                            <button class="btn btn-secondary" type="button"
-                                                    data-toggle="collapse"
-                                                    data-target="#@nestedCollapseId" aria-expanded="false"
-                                                    aria-controls="@nestedCollapseId">
-                                                Show / Hide @nestedEntities.size() Nested Entities
-                                            </button>
-
-                                            <div class="collapse" id="@nestedCollapseId">
-                                                <i:for type="sirius.db.mixing.Nested" var="nestedEntity"
-                                                       items="nestedEntities" state="loopState">
-                                                    <table class="table table-bordered table-striped">
-                                                        <tr>
-                                                            <td colspan="2" class="align-center">
-                                                                <b>
-                                                                    @nestedEntity.getClass().getSimpleName():
-                                                                    @loopState.getRowIndex()
-                                                                </b>
-                                                            </td>
-                                                        </tr>
-                                                        <i:for type="sirius.db.mixing.Property"
-                                                               var="nestedProperty"
-                                                               items="nestedDescriptor.getProperties()">
-                                                            <tr>
-                                                                <td clas="col-md-3">@nestedProperty.getName()
-                                                                </td>
-                                                                <td clas="col-md-9">
-                                                                    @toUserString(nestedProperty.getValue(nestedEntity))
-                                                                </td>
-                                                            </tr>
-                                                        </i:for>
-                                                    </table>
-                                                </i:for>
-                                            </div>
-                                        </i:if>
-
+    <t:emptyCheck data="@entities">
+        <t:datacards size="x-large">
+            <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
+                <t:datacard>
+                    <table class="table table-bordered table-hover text-small">
+                        <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>ID</td>
+                            <td>@entity.getIdAsString()</td>
+                        </tr>
+                        <i:for type="sirius.db.mixing.Property" var="property" items="properties">
+                            <tr>
+                                <td>@property.getName()</td>
+                                <td>
+                                    <i:if test="property.is(sirius.db.mixing.properties.BaseEntityRefProperty.class)">
+                                        <i:local name="reference"
+                                                 value="property.as(sirius.db.mixing.properties.BaseEntityRefProperty.class)"/>
+                                        <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
+                                           target="_blank">
+                                            <b>@reference.getValue(entity)</b>
+                                        </a>
                                         <i:else>
-                                            <i:if test="property.is(sirius.db.mixing.properties.BaseMapProperty.class)">
-                                                <i:local name="mapEntries"
-                                                         value="@property.getValue(entity).as(Map.class).entrySet()"/>
+                                            <i:if test="property.is(sirius.db.mixing.properties.NestedListProperty.class)">
+                                                <i:local name="nestedEntities"
+                                                         value="property.getValue(entity).as(List.class)"/>
 
-                                                <i:if test="mapEntries.size() > 0">
-                                                    <table class="table table-bordered table-striped">
-                                                        <tr>
-                                                            <td>Key</td>
-                                                            <td>Value</td>
-                                                        </tr>
-                                                        <i:for type="java.util.Map$Entry"
-                                                               var="mapEntry"
-                                                               items="mapEntries">
-                                                            <tr>
-                                                                <td>@mapEntry.getKey()</td>
-                                                                <td>@mapEntry.getValue()</td>
-                                                            </tr>
+                                                <i:if test="nestedEntities.size() > 0">
+                                                    <i:local name="nestedDescriptor"
+                                                             value="property.as(sirius.db.mixing.properties.NestedListProperty.class).getNestedDescriptor()"/>
+                                                    <i:local name="nestedCollapseId" value="@generateId('nested-%s')"/>
+
+                                                    <button class="btn btn-secondary" type="button"
+                                                            data-toggle="collapse"
+                                                            data-target="#@nestedCollapseId" aria-expanded="false"
+                                                            aria-controls="@nestedCollapseId">
+                                                        Show / Hide @nestedEntities.size() Nested Entities
+                                                    </button>
+
+                                                    <div class="collapse" id="@nestedCollapseId">
+                                                        <i:for type="sirius.db.mixing.Nested" var="nestedEntity"
+                                                               items="nestedEntities" state="loopState">
+                                                            <table class="table table-bordered table-striped">
+                                                                <tr>
+                                                                    <td colspan="2" class="align-center">
+                                                                        <b>
+                                                                            @nestedEntity.getClass().getSimpleName():
+                                                                            @loopState.getRowIndex()
+                                                                        </b>
+                                                                    </td>
+                                                                </tr>
+                                                                <i:for type="sirius.db.mixing.Property"
+                                                                       var="nestedProperty"
+                                                                       items="nestedDescriptor.getProperties()">
+                                                                    <tr>
+                                                                        <td clas="col-md-3">@nestedProperty.getName()
+                                                                        </td>
+                                                                        <td clas="col-md-9">
+                                                                            @toUserString(nestedProperty.getValue(nestedEntity))
+                                                                        </td>
+                                                                    </tr>
+                                                                </i:for>
+                                                            </table>
                                                         </i:for>
-                                                    </table>
+                                                    </div>
                                                 </i:if>
 
                                                 <i:else>
-                                                    <i:if test="property.is(sirius.db.mixing.properties.EnumProperty.class)">
-                                                        <i:local name="enumValue"
-                                                                 value="@property.getValue(entity)"/>
+                                                    <i:if test="property.is(sirius.db.mixing.properties.BaseMapProperty.class)">
+                                                        <i:local name="mapEntries"
+                                                                 value="@property.getValue(entity).as(Map.class).entrySet()"/>
 
-                                                        @toUserString(enumValue)
-                                                        <span class="badge badge-secondary">
+                                                        <i:if test="mapEntries.size() > 0">
+                                                            <table class="table table-bordered table-striped">
+                                                                <tr>
+                                                                    <td>Key</td>
+                                                                    <td>Value</td>
+                                                                </tr>
+                                                                <i:for type="java.util.Map$Entry"
+                                                                       var="mapEntry"
+                                                                       items="mapEntries">
+                                                                    <tr>
+                                                                        <td>@mapEntry.getKey()</td>
+                                                                        <td>@mapEntry.getValue()</td>
+                                                                    </tr>
+                                                                </i:for>
+                                                            </table>
+                                                        </i:if>
+
+                                                        <i:else>
+                                                            <i:if test="property.is(sirius.db.mixing.properties.EnumProperty.class)">
+                                                                <i:local name="enumValue"
+                                                                         value="@property.getValue(entity)"/>
+
+                                                                @toUserString(enumValue)
+                                                                <span class="badge badge-secondary">
                                                             @enumValue.as(java.lang.Enum.class).name()
                                                         </span>
 
-                                                        <i:else>
-                                                            @toUserString(property.getValue(entity))
+                                                                <i:else>
+                                                                    @toUserString(property.getValue(entity))
+                                                                </i:else>
+                                                            </i:if>
                                                         </i:else>
                                                     </i:if>
                                                 </i:else>
                                             </i:if>
                                         </i:else>
                                     </i:if>
-                                </i:else>
-                            </i:if>
-                        </td>
-                    </tr>
-                </i:for>
-            </table>
-        </div>
-    </i:for>
-
-</w:page>
+                                </td>
+                            </tr>
+                        </i:for>
+                        </tbody>
+                    </table>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
+    </t:emptyCheck>
+</t:page>
 
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('#editForm').keydown(function (e) {
-            if (e.keyCode === sirius.keys.KEY_ENTER) {
-                $('#editForm').submit();
+    sirius.ready(function () {
+        const _editForm = document.querySelector('form.edit-form');
+        document.querySelector('form.edit-form').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                _editForm.submit();
                 return false;
             }
         });
-    });
+    })
 </script>
