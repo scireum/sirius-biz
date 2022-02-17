@@ -102,7 +102,7 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
             AtomicInteger rowCount = new AtomicInteger(0);
             processContext.fetchOutputEntries(outputName, (columns, labels) -> {
                 try {
-                    export.addRow(labels);
+                    export.addListRow(labels);
                 } catch (IOException e) {
                     throw Exceptions.handle()
                                     .to(Log.BACKGROUND)
@@ -115,7 +115,7 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
                     processContext.tryUpdateState(NLS.fmtr("Process.rowsExported")
                                                      .set("rows", rowCount.incrementAndGet())
                                                      .format());
-                    export.addRow(values);
+                    export.addListRow(values);
                     return true;
                 } catch (IOException e) {
                     throw Exceptions.handle()

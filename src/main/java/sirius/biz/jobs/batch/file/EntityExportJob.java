@@ -238,7 +238,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         dictionary.determineMappingFromHeadings(row, false);
         process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
         setupExtractors();
-        errorContext.handle(() -> export.addRow(row.asList()));
+        errorContext.handle(() -> export.addListRow(row.asList()));
     }
 
     /**
@@ -286,9 +286,9 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
 
             Optional<E> entity = importer.tryFind(type, data);
             if (entity.isPresent()) {
-                export.addRow(exportAsRow(row, entity.get()));
+                export.addListRow(exportAsRow(row, entity.get()));
             } else {
-                export.addRow(row.asList());
+                export.addListRow(row.asList());
             }
         });
 
@@ -325,7 +325,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         process.log(ProcessLog.info().withNLSKey("EntityExportJob.exportWithDefaultMapping"));
         dictionary.useMapping(defaultMapping);
         setupExtractors();
-        export.addRow(dictionary.getMappings().stream().map(dictionary::expandToLabel).collect(Collectors.toList()));
+        export.addListRow(dictionary.getMappings().stream().map(dictionary::expandToLabel).collect(Collectors.toList()));
 
         fullExportWithGivenMapping();
     }
@@ -336,7 +336,6 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      * The mapping was either determined by {@link #templateBasedExport()} or by using the default mapping in
      * {@link #fullExportWithoutTemplate()}.
      */
-    @SuppressWarnings("unchecked")
     private void fullExportWithGivenMapping() {
         process.log(ProcessLog.info().withNLSKey("EntityExport.fullExport"));
         createFullExportQuery().streamBlockwise().forEach(this::exportEntity);
@@ -345,7 +344,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected void exportEntity(E entity) {
         Watch watch = Watch.start();
         try {
-            export.addRow(exportAsRow(null, entity));
+            export.addListRow(exportAsRow(null, entity));
         } catch (IOException e) {
             throw process.handle(e);
         } finally {
