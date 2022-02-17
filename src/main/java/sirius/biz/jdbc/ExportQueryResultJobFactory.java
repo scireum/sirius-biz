@@ -77,9 +77,9 @@ public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
         private void exportRow(Row row, Monoflop monoflop) {
             try {
                 if (monoflop.firstCall()) {
-                    export.addRow(Tuple.firsts(row.getFieldsList()));
+                    export.addListRow(Tuple.firsts(row.getFieldsList()));
                 }
-                export.addRow(Tuple.seconds(row.getFieldsList()));
+                export.addListRow(Tuple.seconds(row.getFieldsList()));
                 process.incCounter("Row");
             } catch (IOException e) {
                 throw process.handle(e);

@@ -32,7 +32,7 @@ public class ExportCSV implements LineBasedExport {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void addRow(List<?> row) throws IOException {
+    public void addListRow(List<?> row) throws IOException {
         writer.writeList((List<Object>)row);
     }
 
