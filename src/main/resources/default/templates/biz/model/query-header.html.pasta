@@ -33,10 +33,11 @@
 </div>
 
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('#editForm').keydown(function (e) {
-            if (e.keyCode === sirius.keys.KEY_ENTER) {
-                $('#editForm').submit();
+    sirius.ready(function () {
+        const _editForm = document.querySelector('form.edit-form');
+        document.querySelector('form.edit-form').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                _editForm.submit();
                 return false;
             }
         });
