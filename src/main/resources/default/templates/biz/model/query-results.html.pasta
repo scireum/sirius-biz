@@ -37,9 +37,9 @@
                                         <i:local name="reference"
                                                  value="property.as(sirius.db.mixing.properties.BaseEntityRefProperty.class)"/>
                                         <i:if test="@isFilled(reference.getValue(entity))">
+                                            <u>@reference.getValue(entity)</u>
                                             <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
                                                target="_blank">
-                                                <b>@reference.getValue(entity)</b>
                                                 <i class="fa fa-external-link-alt"></i>
                                             </a>           
                                         </i:if>
