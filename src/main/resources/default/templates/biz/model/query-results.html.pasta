@@ -124,9 +124,9 @@
                                                                          value="@property.getValue(entity)"/>
 
                                                                 @toUserString(enumValue)
-                                                                <t:tag color="gray">
+                                                                <span class="border-sirius-gray tycho-tag d-inline-block">
                                                                     @enumValue.as(java.lang.Enum.class).name()
-                                                                </t:tag>
+                                                                </span>
 
                                                                 <i:else>
                                                                     @toUserString(property.getValue(entity))
