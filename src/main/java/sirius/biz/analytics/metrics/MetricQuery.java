@@ -344,7 +344,7 @@ public class MetricQuery {
     }
 
     /**
-     * Determines  the default limit (e.g. for {@link #valuesUntil(LocalDate, int)}.
+     * Determines the default limit (e.g. for {@link #valuesUntil(LocalDate, int)}.
      *
      * @return the recommended number of metric values to query, based on its <tt>interval</tt>
      */

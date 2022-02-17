@@ -18,11 +18,11 @@ sirius.ready(function () {
             body: JSON.stringify({tasks: tasks})
         }).then(function (response) {
             return response.json();
-        }).then(function (response) {
-            for (let i = 0; i < response.tasks.length; i++) {
+        }).then(function (json) {
+            for (let i = 0; i < json.tasks.length; i++) {
                 const _element = elements[i];
                 const task = tasks[i];
-                const data = response.tasks[i];
+                const data = json.tasks[i];
 
                 if (task.type === 'KeyMetric') {
                     _element.querySelector('.metric-value-js').textContent = data.value;

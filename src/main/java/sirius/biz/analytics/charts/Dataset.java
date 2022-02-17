@@ -64,7 +64,7 @@ public class Dataset {
     }
 
     /**
-     * Adds the given values to the dataset
+     * Adds the given values to the dataset.
      *
      * @param values the values to add
      * @return the dataset itself for fluent method calls
