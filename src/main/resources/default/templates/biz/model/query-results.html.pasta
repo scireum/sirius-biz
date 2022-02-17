@@ -17,7 +17,8 @@
         <div class="well">
             <table class="table table-bordered table-striped">
                 <tr>
-                    <td colspan="2" class="align-center"><b>@type.getType().getSimpleName(): @entity.getIdAsString()</b></td>
+                    <td colspan="2" class="align-center"><b>@type.getType().getSimpleName(): @entity.getIdAsString()</b>
+                    </td>
                 </tr>
                 <i:for type="sirius.db.mixing.Property" var="property" items="properties">
                     <tr>
@@ -41,28 +42,45 @@
                                             <i:if test="property.is(sirius.db.mixing.properties.NestedListProperty.class)">
                                                 <i:local name="nestedEntities"
                                                          value="property.getValue(entity).as(List.class)"/>
-                                                <i:local name="nestedDescriptor"
-                                                         value="property.as(sirius.db.mixing.properties.NestedListProperty.class).getNestedDescriptor()"/>
 
-                                                <i:for type="sirius.db.mixing.Nested" var="nestedEntity"
-                                                       items="nestedEntities" state="loopState">
-                                                    <table class="table table-bordered table-striped">
-                                                        <tr>
-                                                            <td colspan="2" class="align-center"><b>@nestedEntity.getClass().getSimpleName():
-                                                                @loopState.getRowIndex()</b>
-                                                            </td>
-                                                        </tr>
-                                                        <i:for type="sirius.db.mixing.Property" var="nestedProperty"
-                                                               items="nestedDescriptor.getProperties()">
-                                                            <tr>
-                                                                <td clas="col-md-3">@nestedProperty.getName()</td>
-                                                                <td clas="col-md-9">
-                                                                    @toUserString(nestedProperty.getValue(nestedEntity))
-                                                                </td>
-                                                            </tr>
+                                                <i:if test="nestedEntities.size() > 0">
+                                                    <i:local name="nestedDescriptor"
+                                                             value="property.as(sirius.db.mixing.properties.NestedListProperty.class).getNestedDescriptor()"/>
+                                                    <i:local name="nestedCollapseId" value="@generateId('nested-%s')"/>
+
+                                                    <button class="btn btn-secondary" type="button" data-toggle="collapse"
+                                                            data-target="#@nestedCollapseId" aria-expanded="false"
+                                                            aria-controls="@nestedCollapseId">
+                                                        Show / Hide @nestedEntities.size() Nested Entities
+                                                    </button>
+
+                                                    <div class="collapse" id="@nestedCollapseId">
+                                                        <i:for type="sirius.db.mixing.Nested" var="nestedEntity"
+                                                               items="nestedEntities" state="loopState">
+                                                            <table class="table table-bordered table-striped">
+                                                                <tr>
+                                                                    <td colspan="2" class="align-center">
+                                                                        <b>
+                                                                            @nestedEntity.getClass().getSimpleName():
+                                                                            @loopState.getRowIndex()
+                                                                        </b>
+                                                                    </td>
+                                                                </tr>
+                                                                <i:for type="sirius.db.mixing.Property"
+                                                                       var="nestedProperty"
+                                                                       items="nestedDescriptor.getProperties()">
+                                                                    <tr>
+                                                                        <td clas="col-md-3">@nestedProperty.getName()
+                                                                        </td>
+                                                                        <td clas="col-md-9">
+                                                                            @toUserString(nestedProperty.getValue(nestedEntity))
+                                                                        </td>
+                                                                    </tr>
+                                                                </i:for>
+                                                            </table>
                                                         </i:for>
-                                                    </table>
-                                                </i:for>
+                                                    </div>
+                                                </i:if>
 
                                                 <i:else>
                                                     @toUserString(property.getValue(entity))
