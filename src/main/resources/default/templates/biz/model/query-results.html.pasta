@@ -83,7 +83,18 @@
                                                 </i:if>
 
                                                 <i:else>
-                                                    @toUserString(property.getValue(entity))
+                                                    <i:if test="property.is(sirius.db.mixing.properties.EnumProperty.class)">
+                                                        <i:local name="enumValue" value="@property.getValue(entity)" />
+                                                        
+                                                        @toUserString(enumValue)
+                                                        <span class="badge badge-secondary">
+                                                            @enumValue.as(java.lang.Enum.class).name()
+                                                        </span>
+                                                        
+                                                        <i:else>
+                                                            @toUserString(property.getValue(entity))
+                                                        </i:else>
+                                                    </i:if>
                                                 </i:else>
                                             </i:if>
                                         </i:else>
