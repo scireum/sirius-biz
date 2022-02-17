@@ -137,28 +137,28 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
      */
     protected abstract boolean isMatchingEntityType(AnalyticalTask<?> task);
 
-    protected void executeEntity(B entity, LocalDate date, int level) {
+    protected void executeEntity(B entity, Class<?> type, LocalDate date, int level) {
         Watch watch = Watch.start();
-        for (AnalyticalTask<?> task : getTasks().get(entity.getClass())) {
+        for (AnalyticalTask<?> task : getTasks().get(type)) {
             if (task.getLevel() == level) {
-                executeTaskForEntity(entity, date, task);
+                executeTaskForEntity(entity, type, date, task);
             }
         }
         if (AnalyticalEngine.LOG.isFINE()) {
             AnalyticalEngine.LOG.FINE("Executing tasks for '%s' ('%s') in '%s' took: %s",
-                                      entity.getIdAsString(),
-                                      entity.getClass().getSimpleName(),
+                                      entity == null ? "-" : entity.getIdAsString(),
+                                      type.getSimpleName(),
                                       getName(),
                                       watch.duration());
         }
         if (Microtiming.isEnabled()) {
             watch.submitMicroTiming(AnalyticalEngine.MICROTIMING_KEY_ANALYTICS,
-                                    Strings.apply("Executed tasks for '%s'", entity.getClass().getSimpleName()));
+                                    Strings.apply("Executed tasks for '%s'", type.getSimpleName()));
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void executeTaskForEntity(B entity, LocalDate date, AnalyticalTask<?> task) {
+    private void executeTaskForEntity(B entity, Class<?> type, LocalDate date, AnalyticalTask<?> task) {
         Watch watch = Watch.start();
         try {
             ((AnalyticalTask<B>) task).compute(date, entity);
@@ -168,15 +168,15 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
                       .error(ex)
                       .withSystemErrorMessage("The analytical task %s for entity %s (%s) failed: %s (%s)",
                                               task.getClass().getName(),
-                                              entity.toString(),
-                                              entity.getClass().getName())
+                                              entity == null ? "-" : entity.getIdAsString(),
+                                              type.getName())
                       .handle();
         }
         if (AnalyticalEngine.LOG.isFINE()) {
             AnalyticalEngine.LOG.FINE("Executing task '%s' for '%s' ('%s') in '%s' took: %s",
                                       task.getClass().getSimpleName(),
-                                      entity.getIdAsString(),
-                                      entity.getClass().getSimpleName(),
+                                      entity == null ? "-" : entity.getIdAsString(),
+                                      type.getSimpleName(),
                                       getName(),
                                       watch.duration());
         }
@@ -184,7 +184,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
             watch.submitMicroTiming(AnalyticalEngine.MICROTIMING_KEY_ANALYTICS,
                                     Strings.apply("Executed task '%s' for '%s'",
                                                   task.getClass().getName(),
-                                                  entity.getClass().getSimpleName()));
+                                                  type.getSimpleName()));
         }
     }
 }

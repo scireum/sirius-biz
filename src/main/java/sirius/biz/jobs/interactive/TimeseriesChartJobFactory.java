@@ -52,7 +52,7 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
             new EnumParameter<>("unit", "$TimeseriesDataProvider.unit", Unit.class).build();
 
     /**
-     * Determines the desirec compariso period for the timeseries.
+     * Determines the desired comparison period for the timeseries.
      */
     public static final Parameter<ComparisonPeriod> PARAM_COMPARISON_PERIOD = new EnumParameter<>("comparisonPeriod",
                                                                                                   "$TimeseriesChartJobFactory.comparisonPeriod",
