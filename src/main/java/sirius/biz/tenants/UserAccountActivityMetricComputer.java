@@ -76,16 +76,17 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                         U entity) throws Exception {
         LocalDate lowerLimit = date.minusDays(observationPeriodDays);
 
-        int numberOfActiveDays = eventRecorder.getDatabase()
-                                              .createQuery("SELECT COUNT(DISTINCT eventDate) AS numberOfDays"
-                                                           + " FROM useractivityevent"
-                                                           + " WHERE userData_userId = ${userId}"
-                                                           + "   AND eventDate > ${lowerLimit}"
-                                                           + "   AND eventDate <= ${upperLimit}")
+        int numberOfActiveDays = eventRecorder.createQuery(
+                                                      //language=SQL
+                                                      """
+                                                              SELECT COUNT(DISTINCT eventDate) AS numberOfDays
+                                                              FROM useractivityevent
+                                                              WHERE userData_userId = ${userId}
+                                                                AND eventDate > ${lowerLimit}
+                                                                AND eventDate <= ${upperLimit}""")
                                               .set("userId", entity.getUniqueName())
                                               .set("lowerLimit", lowerLimit)
                                               .set("upperLimit", date)
-                                              .markAsLongRunning()
                                               .first()
                                               .flatMap(row -> row.getValue("numberOfDays").asOptionalInt())
                                               .orElse(0);

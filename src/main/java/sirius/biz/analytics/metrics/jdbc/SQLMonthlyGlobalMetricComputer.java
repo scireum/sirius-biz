@@ -45,6 +45,16 @@ public abstract class SQLMonthlyGlobalMetricComputer extends MonthlyMetricComput
         compute(date, startOfPeriod, endOfPeriod, pastDate);
     }
 
+    /**
+     * Performs the computation for the given date.
+     *
+     * @param date          the date for which the computation should be performed
+     * @param startOfPeriod the start of the month as <tt>LocalDateTime</tt>
+     * @param endOfPeriod   the end of the month as <tt>LocalDateTime</tt>
+     * @param pastDate      <tt>true</tt> if the computation is performed for a past date (via the analytics command) or
+     *                      <tt>false</tt> if the computation is performed for the current month.
+     * @throws Exception in case of any problem while performing the computation
+     */
     protected abstract void compute(LocalDate date,
                                     LocalDateTime startOfPeriod,
                                     LocalDateTime endOfPeriod,
