@@ -18,7 +18,7 @@
             <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
                 <t:datacard>
                     <table class="table table-bordered table-hover text-small">
-                        <thead>
+                        <thead class="table-dark">
                         <tr>
                             <th>Field</th>
                             <th>Value</th>
