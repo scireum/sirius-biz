@@ -23,13 +23,13 @@ public class MetricDescription {
 
     /**
      * Contains the {@link KeyMetricProvider#getName()} or {@link ChartProvider#getName()}. Note that this field
-     * if filled internally.
+     * if filled internally by {@link MetricsDashboard}.
      */
     protected String providerName;
 
     /**
      * Contains the name of the target element for which this description was created.  Note that this field
-     * if filled internally.
+     * if filled internally by {@link MetricsDashboard}.
      */
     protected String targetName;
 
