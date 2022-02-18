@@ -20,6 +20,9 @@ import java.util.List;
 
 /**
  * Represents a key metric to be shown on a metric dashboard.
+ * <p>
+ * A key metric is a number shown on the metrics dashboard, which might be accompanied with a history, shown as
+ * graph below. A key metric for a user might be "number of logins" or "activity in %".
  */
 public class KeyMetric {
 
@@ -73,12 +76,10 @@ public class KeyMetric {
      *
      * @param output the output to write the JSON to
      */
-    public void writeJSON(JSONStructuredOutput output) {
+    public void writeJson(JSONStructuredOutput output) {
         output.beginObject("metric");
         output.property("value", value);
-        output.beginArray("history");
-        this.history.forEach(historyValue -> output.property("value", historyValue));
-        output.endArray();
+        output.array("history", "value", this.history);
         output.endObject();
     }
 }

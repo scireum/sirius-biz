@@ -20,6 +20,8 @@ import java.util.function.Consumer;
  * that subclasses like {@link GlobalKeyMetricProvider}, {@link EntityKeyMetricProvider} or
  * {@link EntitiesKeyMetricProvider} provide some helper methods and also implement access control based on
  * {@link sirius.web.security.Permission}.
+ *
+ * @see KeyMetric
  */
 @AutoRegister
 public interface KeyMetricProvider extends Named {
@@ -43,7 +45,7 @@ public interface KeyMetricProvider extends Named {
     void collectKeyMetrics(String target, Consumer<MetricDescription> descriptionConsumer);
 
     /**
-     * Actually emits the key metric data for the given target and metric name.
+     * Actually emits the {@link KeyMetric} for the given target and metric name.
      *
      * @param target     the target to compute the key metric for
      * @param metricName the key metric to compute (as indicated by {@link MetricDescription#withMetricName(String)}).

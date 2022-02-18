@@ -24,7 +24,7 @@ import java.util.List;
 public abstract class BaseTimeseriesChart implements Chart {
 
     private List<String> labels = Collections.emptyList();
-    private List<Dataset> datasets = new ArrayList<>();
+    private final List<Dataset> datasets = new ArrayList<>();
 
     /**
      * Adds a list of labels to be added as X axis.
@@ -79,7 +79,7 @@ public abstract class BaseTimeseriesChart implements Chart {
     }
 
     @Override
-    public void writeJSON(JSONStructuredOutput output) {
+    public void writeJson(JSONStructuredOutput output) {
         output.beginObject("metric");
         output.property("type", getChartType());
         output.array("labels", "label", labels);

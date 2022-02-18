@@ -68,7 +68,7 @@ public class MetricsApiController extends BizController {
             KeyMetric metric = dashboards.resolveKeyMetric(obj.getString("provider"),
                                                            obj.getString("target"),
                                                            obj.getString("metric"));
-            metric.writeJSON(output);
+            metric.writeJson(output);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(Log.APPLICATION)
@@ -83,7 +83,7 @@ public class MetricsApiController extends BizController {
             Chart chart = dashboards.resolveChart(obj.getString("provider"),
                                                   obj.getString("target"),
                                                   obj.getString("metric"));
-            chart.writeJSON(output);
+            chart.writeJson(output);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(Log.APPLICATION)

@@ -15,6 +15,8 @@ import java.util.function.Consumer;
 
 /**
  * Provides a base implementation which provides key metrics for an entity class.
+ *
+ * @see KeyMetric
  */
 public abstract class EntitiesKeyMetricProvider extends BasicKeyMetricProvider {
 
@@ -45,7 +47,7 @@ public abstract class EntitiesKeyMetricProvider extends BasicKeyMetricProvider {
     }
 
     /**
-     * Resolves the given key metric.
+     * Actually emits the {@link KeyMetric} for the metric name.
      *
      * @param metricName the name of the key metric to resolve
      * @return the requested metric

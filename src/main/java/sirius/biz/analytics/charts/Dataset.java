@@ -69,7 +69,7 @@ public class Dataset {
      * @param values the values to add
      * @return the dataset itself for fluent method calls
      */
-    public Dataset addValues(List<Integer> values) {
+    public Dataset addValues(List<? extends Number> values) {
         this.values.addAll(values);
         return this;
     }

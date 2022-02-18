@@ -15,6 +15,8 @@ import java.util.function.Consumer;
 
 /**
  * Provides a base implementation which provides charts for an entity class.
+ *
+ * @see Chart
  */
 public abstract class EntitiesChartProvider extends BasicChartProvider {
 
@@ -43,7 +45,7 @@ public abstract class EntitiesChartProvider extends BasicChartProvider {
     }
 
     /**
-     * Resolves the given chart.
+     * Actually emits the {@link Chart} data for the given target and chart name.
      *
      * @param chartName the name of the chart to resolve
      * @return the requested chart

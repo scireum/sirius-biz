@@ -20,6 +20,7 @@ import java.util.function.Consumer;
  * Provides a base implementation which provides key metrics for an entity of a given type.
  *
  * @param <E> the generic entity target type
+ * @see KeyMetric
  */
 public abstract class EntityKeyMetricProvider<E extends Entity> extends BasicKeyMetricProvider {
 
@@ -65,7 +66,7 @@ public abstract class EntityKeyMetricProvider<E extends Entity> extends BasicKey
     }
 
     /**
-     * Actually emits the key metric data for the given entity and metric name.
+     * Actually emits the {@link KeyMetric} for the given entity and metric name.
      *
      * @param entity     the target to compute the metric for
      * @param metricName the metric to compute (as indicated by {@link MetricDescription#withMetricName(String)}).

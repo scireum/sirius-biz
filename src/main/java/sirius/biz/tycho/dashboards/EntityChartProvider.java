@@ -20,6 +20,7 @@ import java.util.function.Consumer;
  * Provides a base implementation which provides charts for an entity of a given type.
  *
  * @param <E> the generic entity target type
+ * @see Chart
  */
 public abstract class EntityChartProvider<E extends Entity> extends BasicChartProvider {
 
@@ -65,7 +66,7 @@ public abstract class EntityChartProvider<E extends Entity> extends BasicChartPr
     }
 
     /**
-     * Actually emits the chart data for the given entity and chart name.
+     * Actually emits the {@link Chart} data for the given entity and chart name.
      *
      * @param entity    the target to compute the chart for
      * @param chartName the chart to compute (as indicated by {@link MetricDescription#withMetricName(String)}).

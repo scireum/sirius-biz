@@ -12,6 +12,8 @@ import java.util.function.Consumer;
 
 /**
  * Provides charts which are shown on the main statistics dashboard as well as the main dashboard of Tycho.
+ *
+ * @see KeyMetric
  */
 public abstract class GlobalKeyMetricProvider extends BasicKeyMetricProvider {
 
@@ -35,7 +37,7 @@ public abstract class GlobalKeyMetricProvider extends BasicKeyMetricProvider {
     }
 
     /**
-     * Resolves the given key metric.
+     * Actually emits the {@link KeyMetric} for the metric name.
      *
      * @param metricName the name of the metric to resolve
      * @return the requested metric

@@ -12,6 +12,8 @@ import java.util.function.Consumer;
 
 /**
  * Provides charts which are shown on the main statistics dashboard of Tycho.
+ *
+ * @see Chart
  */
 public abstract class GlobalChartProvider extends BasicChartProvider {
 
@@ -37,7 +39,7 @@ public abstract class GlobalChartProvider extends BasicChartProvider {
     }
 
     /**
-     * Resolves the given chart.
+     * Actually emits the {@link Chart} data for the given chart name.
      *
      * @param chartName the name of the chart to resolve
      * @return the requested chart
