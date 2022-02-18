@@ -41,82 +41,23 @@
                                             <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
                                                target="_blank">
                                                 <i class="fa fa-external-link-alt"></i>
-                                            </a>           
+                                            </a>
                                         </i:if>
                                         <i:else>
                                             <i:if test="property.is(sirius.db.mixing.properties.NestedListProperty.class)">
-                                                <i:local name="nestedEntities"
-                                                         value="property.getValue(entity).as(List.class)"/>
 
-                                                <i:if test="nestedEntities.size() > 0">
-                                                    <i:local name="nestedDescriptor"
-                                                             value="property.as(sirius.db.mixing.properties.NestedListProperty.class).getNestedDescriptor()"/>
-                                                    <i:local name="nestedCollapseId" value="@generateId('nested-%s')"/>
-
-                                                    <button class="btn btn-outline-primary" type="button"
-                                                            data-toggle="collapse"
-                                                            data-target="#@nestedCollapseId" aria-expanded="false"
-                                                            aria-controls="@nestedCollapseId">
-                                                        Show / Hide @nestedEntities.size() Nested Entities
-                                                    </button>
-
-                                                    <div class="collapse" id="@nestedCollapseId">
-                                                        <i:for type="sirius.db.mixing.Nested" var="nestedEntity"
-                                                               items="nestedEntities" state="loopState">
-                                                            <table class="table table-hover mt-4 mb-0">
-                                                                <thead>
-                                                                <tr>
-                                                                    <td colspan="2" class="align-center">
-                                                                        <b>
-                                                                            @nestedEntity.getClass().getSimpleName():
-                                                                            @loopState.getRowIndex()
-                                                                        </b>
-                                                                    </td>
-                                                                </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                <i:for type="sirius.db.mixing.Property"
-                                                                       var="nestedProperty"
-                                                                       items="nestedDescriptor.getProperties()">
-                                                                    <tr>
-                                                                        <td clas="col-md-3">@nestedProperty.getName()
-                                                                        </td>
-                                                                        <td clas="col-md-9">
-                                                                            @toUserString(nestedProperty.getValue(nestedEntity))
-                                                                        </td>
-                                                                    </tr>
-                                                                </i:for>
-                                                                </tbody>
-                                                            </table>
-                                                        </i:for>
-                                                    </div>
-                                                </i:if>
+                                                <i:invoke
+                                                        template="/templates/biz/model/query-nested-property.html.pasta"
+                                                        property="property.as(sirius.db.mixing.properties.NestedListProperty.class)"
+                                                        entity="@entity"/>
 
                                                 <i:else>
                                                     <i:if test="property.is(sirius.db.mixing.properties.BaseMapProperty.class)">
-                                                        <i:local name="mapEntries"
-                                                                 value="@property.getValue(entity).as(Map.class).entrySet()"/>
 
-                                                        <i:if test="mapEntries.size() > 0">
-                                                            <table class="table table-hover mb-0">
-                                                                <thead>
-                                                                <tr>
-                                                                    <td><strong>Key</strong></td>
-                                                                    <td><strong>Value</strong></td>
-                                                                </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                <i:for type="java.util.Map$Entry"
-                                                                       var="mapEntry"
-                                                                       items="mapEntries">
-                                                                    <tr>
-                                                                        <td>@mapEntry.getKey()</td>
-                                                                        <td>@mapEntry.getValue()</td>
-                                                                    </tr>
-                                                                </i:for>
-                                                                </tbody>
-                                                            </table>
-                                                        </i:if>
+                                                        <i:invoke
+                                                                template="/templates/biz/model/query-map-property.html.pasta"
+                                                                property="property.as(sirius.db.mixing.properties.BaseMapProperty.class)"
+                                                                entity="@entity"/>
 
                                                         <i:else>
                                                             <i:if test="property.is(sirius.db.mixing.properties.EnumProperty.class)">
