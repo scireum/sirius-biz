@@ -60,17 +60,26 @@
                                                                 entity="@entity"/>
 
                                                         <i:else>
-                                                            <i:if test="property.is(sirius.db.mixing.properties.EnumProperty.class)">
-                                                                <i:local name="enumValue"
-                                                                         value="@property.getValue(entity)"/>
+                                                            <i:if test="property.is(sirius.db.mixing.properties.BaseEntityRefListProperty.class)">
+                                                                <i:invoke
+                                                                        template="/templates/biz/model/query-ref-list-property.html.pasta"
+                                                                        property="property.as(sirius.db.mixing.properties.BaseEntityRefListProperty.class)"
+                                                                        entity="@entity"/>
 
-                                                                @toUserString(enumValue)
-                                                                <span class="border-sirius-gray tycho-tag d-inline-block">
+                                                                <i:else>
+                                                                    <i:if test="property.is(sirius.db.mixing.properties.EnumProperty.class)">
+                                                                        <i:local name="enumValue"
+                                                                                 value="@property.getValue(entity)"/>
+
+                                                                        @toUserString(enumValue)
+                                                                        <span class="border-sirius-gray tycho-tag d-inline-block">
                                                                     @enumValue.as(java.lang.Enum.class).name()
                                                                 </span>
 
-                                                                <i:else>
-                                                                    @toUserString(property.getValue(entity))
+                                                                        <i:else>
+                                                                            @toUserString(property.getValue(entity))
+                                                                        </i:else>
+                                                                    </i:if>
                                                                 </i:else>
                                                             </i:if>
                                                         </i:else>

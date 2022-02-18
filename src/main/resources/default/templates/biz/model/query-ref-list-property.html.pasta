@@ -1,0 +1,18 @@
+<i:arg name="entity" type="sirius.db.mixing.BaseEntity"/>
+<i:arg name="property" type="sirius.db.mixing.properties.BaseEntityRefListProperty"/>
+
+<i:local name="references" value="property.getValue(entity).as(List.class)"/>
+
+<i:if test="references.size() > 0">
+    <ol class="mb-0 pl-3">
+        <i:for type="String" var="reference" items="references">
+            <li>
+                <u>@reference</u>
+                <a href="/system/query?class=@property.getReferencedDescriptor().getName()&query=id:@reference"
+                   target="_blank">
+                    <i class="fa fa-external-link-alt"></i>
+                </a>
+            </li>
+        </i:for>
+    </ol>
+</i:if>
