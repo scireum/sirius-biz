@@ -15,7 +15,6 @@ import sirius.web.services.JSONStructuredOutput;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,17 +22,20 @@ import java.util.List;
  */
 public abstract class BaseTimeseriesChart implements Chart {
 
-    private List<String> labels = Collections.emptyList();
+    private final List<String> labels = new ArrayList<>();
     private final List<Dataset> datasets = new ArrayList<>();
 
     /**
      * Adds a list of labels to be added as X axis.
+     * <p>
+     * Note that and previously added labels will be removed and replaced by the given list.
      *
      * @param labels the labels to use for the chart
      * @return the chart itself for fluent method calls
      */
     public BaseTimeseriesChart withLabels(List<String> labels) {
-        this.labels = new ArrayList<>(labels);
+        this.labels.clear();
+        this.labels.addAll(labels);
         return this;
     }
 
