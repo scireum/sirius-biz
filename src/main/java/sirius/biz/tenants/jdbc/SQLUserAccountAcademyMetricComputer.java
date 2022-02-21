@@ -17,15 +17,13 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 /**
  * Computes the education level of each {@link SQLUserAccount} if {@link SQLOnboardingEngine} is enabled.
  */
-@Register
-@Framework(SQLOnboardingEngine.FRAMEWORK_TYCHO_JDBC_ACADEMIES)
+@Register(framework = SQLOnboardingEngine.FRAMEWORK_TYCHO_JDBC_ACADEMIES)
 public class SQLUserAccountAcademyMetricComputer extends UserAccountAcademyMetricComputer<SQLUserAccount> {
 
     /**

@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Reprensents the JDBC/SQL implementation of {@link Tenant}.
+ * Represents the JDBC/SQL implementation of {@link Tenant}.
  */
 @Framework(SQLTenants.FRAMEWORK_TENANTS_JDBC)
 @TranslationSource(Tenant.class)
