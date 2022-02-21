@@ -76,7 +76,7 @@ import java.util.stream.Collectors;
  * <p>
  * The other type of processes are "standby" processes which are created on demand and then "run" forever.
  * These can be used for regular background activity (like a web service interface which needs to report
- * an error every once in a while). From time to time the system will cleanup these processes and remove old logs
+ * an error every once in a while). From time to time the system will clean up these processes and remove old logs
  * so that the system doesn't overload itself. A standby process can be fetched via
  * {@link Processes#executeInStandbyProcess(String, Supplier, String, Supplier, Consumer)}.
  * <p>
@@ -111,10 +111,10 @@ public class Processes {
     private TableProcessOutputType tableProcessOutputType;
 
     /**
-     * Due to some shortcomings in Elasticsearch (1 second delay until writes are visible), we need a layered cache
+     * Due to some shortcomings in Elasticsearch (1-second delay until writes are visible), we need a layered cache
      * architecture here.
      * <p>
-     * This cache is very short lived and only used to provides instances which can directly be modified
+     * This cache is very short-lived and only used to provide instances which can directly be modified
      * (most probably without even waiting for the "1 second" delay, as long as only one node concurrently modifies
      * a process - which should be quite common).
      */
@@ -128,7 +128,7 @@ public class Processes {
             CacheManager.createCoherentCache("processes-second-level");
 
     /**
-     * Due to the write delay in Elasticsearch, we need to cache processes of type {@link ProcessState#STANDBY} separately.
+     * Due to the write-delay in Elasticsearch, we need to cache processes of type {@link ProcessState#STANDBY} separately.
      * <p>
      * We don't provide a layered cache structure in this case as standby processes are long living and a limited set.
      */
@@ -273,7 +273,8 @@ public class Processes {
      *
      * @param type     the type of the standby process
      * @param tenantId the tenant for which the process should be fetched
-     * @return the process with the given type for the given tenant wrapped as optional or an empty optional if no such process exists
+     * @return the process with the given type for the given tenant wrapped as optional or an empty optional if no such
+     * process exists
      */
     @Nullable
     private Process fetchStandbyProcess(String type, String tenantId) {
@@ -337,7 +338,8 @@ public class Processes {
     }
 
     /**
-     * Effectively creates a new standby process after we ensured, that it doesn't exist yet (and also isn't created elswhere in parallel).
+     * Effectively creates a new standby process after we ensured, that it doesn't exist yet (and also isn't created
+     * elsewhere in parallel).
      *
      * @param type       the type of the standby process to find or create
      * @param title      the title of the process
@@ -474,7 +476,7 @@ public class Processes {
     }
 
     /**
-     * Marks a process as errorneous.
+     * Marks a process as erroneous.
      *
      * @param processId the process to update
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
@@ -853,14 +855,14 @@ public class Processes {
     }
 
     /**
-     * Await until the process really exists.
+     * Waits until the process really exists.
      * <p>
-     * As {@link #createProcess(String, String, String, UserInfo, PersistencePeriod, Map)} performs an insert into ES without any
-     * delay, the same process might not yet be visible on another node (due to the 1s insert delay of ES). Therefore
-     * we check the existence of the process and wait a certain amount of time if it doesn't exist.
+     * As {@link #createProcess(String, String, String, UserInfo, PersistencePeriod, Map)} performs an insert into ES
+     * without any delay, the same process might not yet be visible on another node (due to the 1s insert delay of ES).
+     * Therefore, we check the existence of the process and wait a certain amount of time if it doesn't exist.
      * <p>
      * Note that this isn't necessary on the same node and therefore actually bypassed, as the 1st level
-     * cache will be properly populated and therefore this check will immediatelly succeed.
+     * cache will be properly populated and therefore this check will immediately succeed.
      *
      * @param processId the process to check
      */

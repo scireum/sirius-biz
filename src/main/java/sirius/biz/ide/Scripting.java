@@ -108,7 +108,7 @@ public class Scripting implements InterconnectHandler {
      * Submits a script for execution.
      * <p>
      * The given node can be any node name of a cluster machine. It can also be left empty to run on the
-     * current machine or it can be set to "*" to run on all machines simultaneously.
+     * current machine, or it can be set to "*" to run on all machines simultaneously.
      *
      * @param script     the script to run
      * @param targetNode the target node to run on
