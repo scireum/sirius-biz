@@ -12,7 +12,7 @@
                 <div class="input-group">
                     <input type="text" name="query" placeholder="Enter query here" class="form-control" value="@query"
                            autofocus/>
-                    <div class="input-group-append" onclick="$('#editForm').submit()">
+                    <div class="input-group-append" onclick="document.querySelector('form.edit-form').submit()">
                     <span class="btn btn-outline-secondary">
                     <i class="fa fa-search"></i>
                     </span>
