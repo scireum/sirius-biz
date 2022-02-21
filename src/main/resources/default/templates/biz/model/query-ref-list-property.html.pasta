@@ -7,11 +7,14 @@
     <ol class="mb-0 pl-3">
         <i:for type="String" var="reference" items="references">
             <li>
-                <u>@reference</u>
+                @reference
+                <span class="pl-2 pr-2">-</span>
+                <span class="text-small">
                 <a href="/system/query?class=@property.getReferencedDescriptor().getName()&query=id:@reference"
                    target="_blank">
-                    <i class="fa fa-external-link-alt"></i>
+                    <i class="fa fa-external-link-alt"></i> Query
                 </a>
+                </span>
             </li>
         </i:for>
     </ol>

@@ -231,4 +231,26 @@ public class QueryController extends BizController {
             return "";
         }
     }
+
+    /**
+     * Computes (or rather guesses) a color to use for an enum value in <tt>/system/query</tt>.
+     * <p>
+     * Note that this is more of a visual cue, than a truly computed value. The idea is, that the first enum
+     * value is (in most cases) a special / default one. Therefore, we use distinct colors for the first two
+     * constants and color all others in the same (third).
+     *
+     * @param enumValue the enum to color
+     * @return a color to use for the enum value
+     */
+    public static String determineEnumTagColor(Enum<?> enumValue) {
+        if (enumValue == null) {
+            return "gray";
+        }
+
+        return switch (enumValue.ordinal()) {
+            case 0 -> "blue";
+            case 1 -> "green";
+            default -> "violet-light";
+        };
+    }
 }
