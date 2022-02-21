@@ -13,6 +13,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogType;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -134,6 +135,15 @@ public class TableOutput {
         public RowBuilder withCell(Cell cell) {
             this.cells.add(cell);
             return this;
+        }
+
+        /**
+         * Adds a plain value to a row.
+         * @param data the plain value to add.
+         * @return the row builder itself for fluent method calls
+         */
+        public RowBuilder withPlainCell(Object data) {
+            return withCell(new Cell(NLS.toUserString(data)));
         }
 
         /**
