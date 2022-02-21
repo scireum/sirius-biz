@@ -8,6 +8,9 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.process.PersistencePeriod;
+import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
@@ -16,6 +19,7 @@ import sirius.db.mixing.query.Query;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
@@ -31,6 +35,7 @@ import sirius.web.security.UserInfo;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -53,6 +58,10 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
 
     @Part
     protected Mixing mixing;
+
+    @Part
+    @Nullable
+    private Processes processes;
 
     protected Cache<String, Boolean> tenantsWithChildren = CacheManager.createCoherentCache("tenants-children");
 
@@ -471,6 +480,37 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
             task.execute();
             return null;
         });
+    }
+
+    /**
+     * Runs the given <tt>task</tt> as a {@link sirius.biz.process.Process} as {@link #asAdmin(Producer) admin user}.
+     *
+     * @param processName the name/label of the created process
+     * @param task        the task which actually uses {@link ProcessContext} to communicate with the outside world
+     */
+    public void runAsAdminProcess(String processName, Callback<ProcessContext> task) {
+        if (processes == null) {
+            throw new IllegalStateException("Cannot run an admin process, as the 'processes' framework isn't active.");
+        }
+
+        try {
+            runAsAdmin(() -> {
+                String processId = processes.createProcessForCurrentUser(null,
+                                                                         processName,
+                                                                         "fa-cogs",
+                                                                         PersistencePeriod.THREE_DAYS,
+                                                                         Collections.emptyMap());
+                processes.execute(processId, processContext -> {
+                    try {
+                        task.invoke(processContext);
+                    } catch (Exception ex) {
+                        processContext.handle(ex);
+                    }
+                });
+            });
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     /**
