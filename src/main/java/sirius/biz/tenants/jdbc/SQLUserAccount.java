@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 /**
  * Represents a user account which can log into the system.
  * <p>
- * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
+ * Several users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 @Framework(SQLTenants.FRAMEWORK_TENANTS_JDBC)
 @Index(name = "index_username", columns = "userAccountData_login_username", unique = true)

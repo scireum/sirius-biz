@@ -17,15 +17,13 @@ import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
 import sirius.db.mongo.Mango;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 /**
  * Computes the education level of each {@link MongoUserAccount} if {@link MongoOnboardingEngine} is enabled.
  */
-@Register
-@Framework(MongoOnboardingEngine.FRAMEWORK_TYCHO_MONGO_ACADEMIES)
+@Register(framework = MongoOnboardingEngine.FRAMEWORK_TYCHO_MONGO_ACADEMIES)
 public class MongoUserAccountAcademyMetricComputer extends UserAccountAcademyMetricComputer<MongoUserAccount> {
 
     /**
