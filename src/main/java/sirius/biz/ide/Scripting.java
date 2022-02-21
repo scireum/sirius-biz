@@ -11,6 +11,7 @@ package sirius.biz.ide;
 import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.Interconnect;
 import sirius.biz.cluster.InterconnectHandler;
+import sirius.biz.tenants.Tenants;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
@@ -21,6 +22,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
+import sirius.kernel.health.Log;
 import sirius.pasta.Pasta;
 import sirius.pasta.noodle.Callable;
 import sirius.pasta.noodle.ScriptingException;
@@ -78,6 +80,10 @@ public class Scripting implements InterconnectHandler {
 
     @Part
     private Interconnect interconnect;
+
+    @Part
+    @Nullable
+    private Tenants<?, ?, ?> tenants;
 
     /**
      * Logs a message in the transcript.
@@ -186,6 +192,24 @@ public class Scripting implements InterconnectHandler {
             return;
         }
 
+        // Run as System Tenant if possible...
+        if (tenants != null) {
+            try {
+                tenants.runAsAdmin(() -> handleTaskForNode(event, jobNumber));
+            } catch (Exception e) {
+                Exceptions.handle()
+                          .to(Log.SYSTEM)
+                          .error(e)
+                          .withSystemErrorMessage("A fatal error occurred in task %s: %s (%s)", jobNumber)
+                          .handle();
+            }
+        } else {
+            // or without any special user, if the tenants framework isn't available...
+            handleTaskForNode(event, jobNumber);
+        }
+    }
+
+    private void handleTaskForNode(JSONObject event, String jobNumber) {
         Watch watch = Watch.start();
         logInTranscript(jobNumber,
                         Strings.apply("Starting execution on %s (Thread Id: %s / Thread Name: %s)",
