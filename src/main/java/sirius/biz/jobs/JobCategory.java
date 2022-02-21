@@ -85,7 +85,7 @@ public class JobCategory {
     }
 
     /**
-     * Returns the icon used to visalize the category.
+     * Returns the icon used to visualize the category.
      *
      * @return the icon of this category
      */

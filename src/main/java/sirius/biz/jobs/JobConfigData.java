@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Represents a composite which can be embedded into a {@link sirius.db.mixing.BaseEntity} and contain all relevent
+ * Represents a composite which can be embedded into a {@link sirius.db.mixing.BaseEntity} and contain all relevant
  * data to describe a job and its start parameters.
  */
 public class JobConfigData extends Composite {
@@ -86,9 +86,7 @@ public class JobConfigData extends Composite {
 
     @BeforeSave
     protected void updateConfig() {
-        if (configMap == null) {
-            configuration = null;
-        } else {
+        if (configMap != null) {
             configuration = JSON.toJSONString(configMap);
         }
 
@@ -118,7 +116,7 @@ public class JobConfigData extends Composite {
     /**
      * Returns the configuration as raw string map.
      *
-     * @return the configuation as mutable map
+     * @return the configuration as mutable map
      */
     @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
     @Explain("This is intentionally mutable.")
@@ -164,7 +162,7 @@ public class JobConfigData extends Composite {
         });
 
         // ...however, store the original user input here as JobFactory.startInBackground will
-        // beform another check and transform itself...
+        // perform another check and transform itself...
         getConfigMap().clear();
         data.keySet().forEach(key -> getConfigMap().put(key, ctx.getParameter(key)));
 

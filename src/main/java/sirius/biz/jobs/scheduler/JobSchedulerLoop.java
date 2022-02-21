@@ -84,9 +84,10 @@ public class JobSchedulerLoop extends BackgroundLoop {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
                           .error(e)
-                          .withSystemErrorMessage("An error occurred while checking a scheduled task of %s: %s - %s (%s)",
-                                                  provider.getClass().getSimpleName(),
-                                                  entry)
+                          .withSystemErrorMessage(
+                                  "An error occurred while checking a scheduled task of %s: %s - %s (%s)",
+                                  provider.getClass().getSimpleName(),
+                                  entry)
                           .handle();
             }
         }

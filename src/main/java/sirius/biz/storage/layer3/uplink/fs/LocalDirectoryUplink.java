@@ -80,7 +80,7 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
         try {
             File parentFile = parent.tryAs(File.class)
                                     .orElseThrow(() -> new IllegalArgumentException(Strings.apply(
-                                            "Invalid parent: %s! Expecte a File!",
+                                            "Invalid parent: %s! Expected a File!",
                                             parent)));
             File child = new File(parentFile, name);
             return wrapFile(parent, child);

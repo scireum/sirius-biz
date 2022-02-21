@@ -44,15 +44,15 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     @Override
     protected EntityExportJob<E, Q> createJob(ProcessContext process) {
         // We only resolve the parameters once and keep the final values around in a local context...
-        ImportContext paramterContext = new ImportContext();
-        transferParameters(paramterContext, process);
+        ImportContext parameterContext = new ImportContext();
+        transferParameters(parameterContext, process);
 
         return new EntityExportJob<E, Q>(getExportType(),
                                          getDictionary(),
                                          getDefaultMapping(),
                                          process,
                                          getName()).withQueryExtender(query -> extendSelectQuery(query, process))
-                                                   .withContextExtender(context -> context.putAll(paramterContext))
+                                                   .withContextExtender(context -> context.putAll(parameterContext))
                                                    .withFileName(getCustomFileName());
     }
 
@@ -125,7 +125,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     protected abstract Class<E> getExportType();
 
     /**
-     * Adds the possibility to enhance a dicitonary during the setup of the job
+     * Adds the possibility to enhance a dictionary during the setup of the job
      *
      * @param dictionary the dictionary to enhance
      */
