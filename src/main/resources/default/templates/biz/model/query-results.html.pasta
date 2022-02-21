@@ -68,13 +68,11 @@
 
                                                                 <i:else>
                                                                     <i:if test="property.is(sirius.db.mixing.properties.EnumProperty.class)">
-                                                                        <i:local name="enumValue"
-                                                                                 value="@property.getValue(entity)"/>
-
-                                                                        @toUserString(enumValue)
-                                                                        <span class="border-sirius-gray tycho-tag d-inline-block">
-                                                                    @enumValue.as(java.lang.Enum.class).name()
-                                                                </span>
+                                                                      <i:local name="enumValue" value="@property.getValue(entity)"/>
+                                                                      @toUserString(enumValue)
+                                                                      <span class="pl-2 border-sirius-gray tycho-tag d-inline-block">
+                                                                         @enumValue.as(java.lang.Enum.class).name()
+                                                                      </span>
 
                                                                         <i:else>
                                                                             @toUserString(property.getValue(entity))
