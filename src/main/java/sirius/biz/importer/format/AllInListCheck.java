@@ -51,7 +51,7 @@ public class AllInListCheck extends ValueInListCheck {
 
         Stream<String> items = Arrays.stream(value.getRawString().split(separator));
         if (trim) {
-            items.map(String::trim);
+            items = items.map(String::trim);
         }
         List<String> invalidItems = items.filter(item -> !values.contains(item)).toList();
 
