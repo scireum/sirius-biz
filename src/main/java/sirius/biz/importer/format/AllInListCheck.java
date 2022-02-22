@@ -11,9 +11,11 @@ package sirius.biz.importer.format;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Ensures that all values in the associated field are contained in the given list.
@@ -47,16 +49,11 @@ public class AllInListCheck extends ValueInListCheck {
             return;
         }
 
-        String[] items = value.getRawString().split(separator);
-        ArrayList<String> invalidItems = new ArrayList<>();
-
-        for (String item : items) {
-            String effectiveValue = trim ? item.trim() : item;
-
-            if (!values.contains(effectiveValue)) {
-                invalidItems.add(effectiveValue);
-            }
+        Stream<String> items = Arrays.stream(value.getRawString().split(separator));
+        if (trim) {
+            items.map(String::trim);
         }
+        List<String> invalidItems = items.filter(item -> !values.contains(item)).toList();
 
         if (invalidItems.isEmpty()) {
             return;
