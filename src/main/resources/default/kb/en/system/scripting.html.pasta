@@ -17,9 +17,22 @@
         </p>
         <p>
             If a script mis-behaves, it can be killed via another script using the thread ID which is logged when
-            the execution starts:
-            <k:inlineCode>sirius.kernel.async.CallContext.getContext(THREAD_ID).get().get(sirius.kernel.async.TaskContext.class).cancel()</k:inlineCode>
-            will stop the execution - note however, that this script has to run on the same node as the offending one.
+            the execution starts. Note however, that this script has to run on the same node as the offending one.
+            <k:code>
+                sirius.kernel.async.CallContext.getContext(THREAD_ID).get().get(sirius.kernel.async.TaskContext.class).cancel()
+            </k:code>
+        </p>
+        <p>
+            Note, if the <b>tenants</b> and the <b>processes</b> framework are both enabled, the script can be run
+            as process, which permits communicating with the outside world via <b>/ps</b>:
+            <k:code>
+                part(Tenants.class).runAsAdminProcess('My Process', | ps | {
+                    log('Hello From the Other Side');
+                });
+            </k:code>
+        </p>
+        <p>
+            Also note, that these scripts can be stopped via the processes UI (just like any other process).
         </p>
     </k:section>
 </k:article>
