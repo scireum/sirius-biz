@@ -3,25 +3,27 @@
 <i:arg type="String" name="query"/>
 <i:arg type="int" name="limit"/>
 
-<w:page title="Query Tool">
+<t:page title="Query Tool">
     <i:block name="breadcrumbs">
         <li><a href="/system/query">Query Tool</a></li>
     </i:block>
 
-    <w:pageHeader title="Query Tool"/>
+    <t:pageHeader title="Query Tool"/>
 
     <i:invoke template="/templates/biz/model/query-header.html.pasta" query="@query" limit="@limit" type="type"/>
 
-    <div class="row">
+    <t:datacards size="small">
         <i:for type="sirius.db.mixing.EntityDescriptor" var="descriptor" items="descriptors">
-            <div class="col-md-4">
-                <div class="well">
-                    <a href="/system/query?class=@descriptor.getName()">
-                        @descriptor.getType().getSimpleName()
-                    </a>
-                </div>
-            </div>
+            <t:datacard title="@descriptor.getType().getSimpleName()"
+                        subTitle="@descriptor.getRealm()"
+                        link="@apply('/system/query?class=%s', descriptor.getName())">
+                <i:block name="footer">
+                    <t:dot color="@sirius.biz.model.QueryController.determineEntityColor(descriptor)">
+                        @sirius.biz.model.QueryController.determineEntityType(descriptor)
+                    </t:dot>
+                </i:block>
+            </t:datacard>
         </i:for>
-    </div>
+    </t:datacards>
 
-</w:page>
+</t:page>

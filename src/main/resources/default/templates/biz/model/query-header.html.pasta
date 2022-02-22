@@ -2,39 +2,42 @@
 <i:arg type="String" name="query"/>
 <i:arg type="int" name="limit"/>
 
-<div class="well">
-    <div class="row">
-        <w:editForm url="/system/query">
-            <div class="col-md-7">
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <t:editForm url="/system/query" class="row">
+            <div class="form-group col-9">
                 <label>
                     Query
                 </label>
                 <div class="input-group">
-                    <input type="text" name="query" class="form-control" value="@query" autofocus/>
-                    <span class="input-group-addon" onclick="$('#editForm').submit()">
-                            <i class="fa fa-search"></i>
-                        </span>
+                    <input type="text" name="query" placeholder="Enter query here" class="form-control" value="@query"
+                           autofocus/>
+                    <div class="input-group-append" onclick="document.querySelector('form.edit-form').submit()">
+                    <span class="btn btn-outline-secondary">
+                    <i class="fa fa-search"></i>
+                    </span>
+                    </div>
                 </div>
             </div>
-            <w:autocompleteSingleSelect span="3" name="class" label="Entity Type"
-                                        serviceUri="/system/query/autocomplete"
-                                        required="false" optional="true" strict="true">
+            <t:singleSelect class="col-2" name="class" label="Entity Type" suggestionUri="/system/query/autocomplete"
+                            optional="true">
                 <i:if test="type != null">
                     <option value="@type.getName()" selected="selected">
                         @type.getType().getSimpleName()
                     </option>
                 </i:if>
-            </w:autocompleteSingleSelect>
-            <w:textfield label="Limit" name="limit" value="@toUserString(limit)" span="2"/>
-        </w:editForm>
+            </t:singleSelect>
+            <t:textfield label="Limit" name="limit" value="@toUserString(limit)" class="col-1"/>
+        </t:editForm>
     </div>
 </div>
 
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('#editForm').keydown(function (e) {
-            if (e.keyCode === sirius.keys.KEY_ENTER) {
-                $('#editForm').submit();
+    sirius.ready(function () {
+        const _editForm = document.querySelector('form.edit-form');
+        document.querySelector('form.edit-form').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                _editForm.submit();
                 return false;
             }
         });

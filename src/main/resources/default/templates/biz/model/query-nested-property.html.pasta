@@ -1,0 +1,48 @@
+<i:arg name="entity" type="sirius.db.mixing.BaseEntity"/>
+<i:arg name="property" type="sirius.db.mixing.properties.NestedListProperty"/>
+
+<i:local name="nestedEntities" value="property.getValue(entity).as(List.class)"/>
+
+<i:if test="nestedEntities.size() > 0">
+    <i:local name="nestedDescriptor"
+             value="property.getNestedDescriptor()"/>
+    <i:local name="nestedCollapseId" value="@generateId('nested-%s')"/>
+
+    <button class="btn btn-outline-primary" type="button"
+            data-toggle="collapse"
+            data-target="#@nestedCollapseId" aria-expanded="false"
+            aria-controls="@nestedCollapseId">
+        Show / Hide @nestedEntities.size() Nested Entities
+    </button>
+
+    <div class="collapse" id="@nestedCollapseId">
+        <i:for type="sirius.db.mixing.Nested" var="nestedEntity"
+               items="nestedEntities" state="loopState">
+            <table class="table table-hover mt-4 mb-0">
+                <thead>
+                <tr>
+                    <td colspan="2" class="align-center">
+                        <b>
+                            @nestedEntity.getClass().getSimpleName():
+                            @loopState.getRowIndex()
+                        </b>
+                    </td>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.db.mixing.Property"
+                       var="nestedProperty"
+                       items="nestedDescriptor.getProperties()">
+                    <tr>
+                        <td clas="col-md-3">@nestedProperty.getName()
+                        </td>
+                        <td clas="col-md-9">
+                            @toUserString(nestedProperty.getValue(nestedEntity))
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </table>
+        </i:for>
+    </div>
+</i:if>

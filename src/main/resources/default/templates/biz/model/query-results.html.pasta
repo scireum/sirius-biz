@@ -4,61 +4,100 @@
 <i:arg type="List" name="entities"/>
 <i:arg type="List" name="properties"/>
 
-<w:page title="Query Tool">
+<t:page title="Query Tool">
     <i:block name="breadcrumbs">
         <li><a href="/system/query">Query Tool</a></li>
     </i:block>
 
-    <w:pageHeader title="Query Tool"/>
+    <t:pageHeader title="Query Tool"/>
 
     <i:invoke template="/templates/biz/model/query-header.html.pasta" query="@query" limit="@limit" type="type"/>
 
-    <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
-        <div class="well">
-            <table class="table table-bordered table-striped">
-                <tr>
-                    <td colspan="2" class="align-center"><b>@type.getType().getSimpleName(): @entity.getIdAsString()</b></td>
-                </tr>
-                <i:for type="sirius.db.mixing.Property" var="property" items="properties">
-                    <tr>
-                        <td clas="col-md-3">@property.getName()</td>
-                        <td clas="col-md-9">
-                            <i:if test="property.is(sirius.db.mixing.properties.LocalDateTimeProperty.class)
-                                 || property.is(sirius.db.mixing.properties.LocalDateProperty.class)
-                                 || property.is(sirius.db.mixing.properties.IntegerProperty.class)
-                                 || property.is(sirius.db.mixing.properties.LongProperty.class)
-                                 || property.is(sirius.db.mixing.properties.BooleanProperty.class)">
-                                <div class="align-right">@toUserString(property.getValue(entity))</div>
-                                <i:else>
+    <t:emptyCheck data="@entities">
+        <t:datacards size="x-large">
+            <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
+                <t:datacard title="@entity.getIdAsString()" subTitle="@entity.getClass().getName()">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td><b>Id</b></td>
+                            <td>@entity.getId()</td>
+                        </tr>
+                        <i:for type="sirius.db.mixing.Property" var="property" items="properties">
+                            <tr>
+                                <td><b>@property.getName()</b></td>
+                                <td>
                                     <i:if test="property.is(sirius.db.mixing.properties.BaseEntityRefProperty.class)">
                                         <i:local name="reference"
                                                  value="property.as(sirius.db.mixing.properties.BaseEntityRefProperty.class)"/>
-                                        <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
-                                           target="_blank">
-                                            <b>@reference.getValue(entity)</b>
-                                        </a>
+                                        <i:if test="@isFilled(reference.getValue(entity))">
+                                            @reference.getValue(entity)
+                                            <span class="text-muted">(@reference.getReferencedDescriptor().getType().getName())</span>
+                                            <span class="pl-2 pr-2">-</span>
+                                            <span class="text-small">
+                                            <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
+                                               target="_blank">
+                                                <i class="fa fa-external-link-alt"></i> Query
+                                            </a>
+                                            </span>
+                                        </i:if>
                                         <i:else>
-                                            @toUserString(property.getValue(entity))
+                                            <i:if test="property.is(sirius.db.mixing.properties.NestedListProperty.class)">
+
+                                                <i:invoke
+                                                        template="/templates/biz/model/query-nested-property.html.pasta"
+                                                        property="property.as(sirius.db.mixing.properties.NestedListProperty.class)"
+                                                        entity="@entity"/>
+
+                                                <i:else>
+                                                    <i:if test="property.is(sirius.db.mixing.properties.BaseMapProperty.class)">
+
+                                                        <i:invoke
+                                                                template="/templates/biz/model/query-map-property.html.pasta"
+                                                                property="property.as(sirius.db.mixing.properties.BaseMapProperty.class)"
+                                                                entity="@entity"/>
+
+                                                        <i:else>
+                                                            <i:if test="property.is(sirius.db.mixing.properties.BaseEntityRefListProperty.class)">
+                                                                <i:invoke
+                                                                        template="/templates/biz/model/query-ref-list-property.html.pasta"
+                                                                        property="property.as(sirius.db.mixing.properties.BaseEntityRefListProperty.class)"
+                                                                        entity="@entity"/>
+
+                                                                <i:else>
+                                                                    <i:if test="property.is(sirius.db.mixing.properties.EnumProperty.class) && property.getValue(entity) != null">
+                                                                        <i:local name="enumValue"
+                                                                                 value="@property.getValue(entity)"/>
+
+                                                                        <span class="pr-2">@toUserString(enumValue)</span>
+                                                                        <t:tag color="@sirius.biz.model.QueryController.determineEnumTagColor(enumValue.as(java.lang.Enum.class))">
+                                                                            @enumValue.as(java.lang.Enum.class).name()
+                                                                        </t:tag>
+                                                                        <i:else>
+                                                                            @toUserString(property.getValue(entity))
+                                                                        </i:else>
+                                                                    </i:if>
+                                                                </i:else>
+                                                            </i:if>
+                                                        </i:else>
+                                                    </i:if>
+                                                </i:else>
+                                            </i:if>
                                         </i:else>
                                     </i:if>
-                                </i:else>
-                            </i:if>
-                        </td>
-                    </tr>
-                </i:for>
-            </table>
-        </div>
-    </i:for>
-
-</w:page>
-
-<script type="text/javascript">
-    $(document).ready(function () {
-        $('#editForm').keydown(function (e) {
-            if (e.keyCode === sirius.keys.KEY_ENTER) {
-                $('#editForm').submit();
-                return false;
-            }
-        });
-    });
-</script>
+                                </td>
+                            </tr>
+                        </i:for>
+                        </tbody>
+                    </table>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
+    </t:emptyCheck>
+</t:page>

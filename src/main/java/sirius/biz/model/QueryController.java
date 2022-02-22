@@ -10,13 +10,16 @@ package sirius.biz.model;
 
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
+import sirius.db.es.ElasticEntity;
 import sirius.db.es.ElasticQuery;
 import sirius.db.es.annotations.IndexMode;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
+import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -188,7 +191,66 @@ public class QueryController extends BizController {
     }
 
     private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
-        return AutocompleteHelper.suggest(descriptor.getName())
-                                 .withFieldLabel(descriptor.getType().getSimpleName());
+        return AutocompleteHelper.suggest(descriptor.getName()).withFieldLabel(descriptor.getType().getSimpleName());
+    }
+
+    /**
+     * Determines the type name to use for an entity in <tt>/system/query</tt>.
+     *
+     * @param descriptor the entity descriptor
+     * @return a representative name for the database technology being used
+     */
+    public static String determineEntityType(EntityDescriptor descriptor) {
+        if (SQLEntity.class.isAssignableFrom(descriptor.getType())) {
+            return "SQL";
+        } else if (MongoEntity.class.isAssignableFrom(descriptor.getType())) {
+            return "MongoDB";
+        } else if (ElasticEntity.class.isAssignableFrom(descriptor.getType())) {
+            return "Elastic";
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Determines a color to use for the entity type tag <tt>/system/query</tt>.
+     * <p>
+     * Note that this is just a visual cue and not a truly computed value
+     *
+     * @param descriptor the entity descriptor
+     * @return a color to use for the database type tag/dot
+     */
+    public static String determineEntityColor(EntityDescriptor descriptor) {
+        if (SQLEntity.class.isAssignableFrom(descriptor.getType())) {
+            return "blue";
+        } else if (MongoEntity.class.isAssignableFrom(descriptor.getType())) {
+            return "green";
+        } else if (ElasticEntity.class.isAssignableFrom(descriptor.getType())) {
+            return "yellow-dark";
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Computes (or rather guesses) a color to use for an enum value in <tt>/system/query</tt>.
+     * <p>
+     * Note that this is more of a visual cue, than a truly computed value. The idea is, that the first enum
+     * value is (in most cases) a special / default one. Therefore, we use distinct colors for the first two
+     * constants and color all others in the same (third).
+     *
+     * @param enumValue the enum to color
+     * @return a color to use for the enum value
+     */
+    public static String determineEnumTagColor(Enum<?> enumValue) {
+        if (enumValue == null) {
+            return "gray";
+        }
+
+        return switch (enumValue.ordinal()) {
+            case 0 -> "blue";
+            case 1 -> "green";
+            default -> "violet-light";
+        };
     }
 }
