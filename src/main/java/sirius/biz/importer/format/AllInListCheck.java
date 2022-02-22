@@ -8,7 +8,6 @@
 
 package sirius.biz.importer.format;
 
-import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
@@ -70,10 +69,9 @@ public class AllInListCheck extends ValueInListCheck {
         } else {
             throw new IllegalArgumentException(NLS.fmtr("AllInListCheck.errorMsg")
                                                   .setDirect("values",
-                                                             Strings.join(invalidItems.stream()
-                                                                                      .map(item -> "'" + item + "'")
-                                                                                      .collect(Collectors.toList()),
-                                                                          ", "))
+                                                             invalidItems.stream()
+                                                                         .map(item -> "'" + item + "'")
+                                                                         .collect(Collectors.joining(", ")))
                                                   .format());
         }
     }
