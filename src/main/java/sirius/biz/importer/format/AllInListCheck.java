@@ -34,10 +34,10 @@ public class AllInListCheck extends ValueInListCheck {
      * <p>
      * Note that all values are {@link NLS#smartGet(String) smart translated}.
      *
-     * @param validValues the list of permitted values
      * @param separator   the separator used to split the values to check
+     * @param validValues the list of permitted values
      */
-    public AllInListCheck(Collection<String> validValues, String separator) {
+    public AllInListCheck(String separator, Collection<String> validValues) {
         super(validValues);
         this.separator = separator;
     }
