@@ -139,7 +139,8 @@ public class TableOutput {
 
         /**
          * Adds a plain value to a row.
-         * @param data the plain value to add.
+         *
+         * @param data the plain value to add
          * @return the row builder itself for fluent method calls
          */
         public RowBuilder withPlainCell(Object data) {
