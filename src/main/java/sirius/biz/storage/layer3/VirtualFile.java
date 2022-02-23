@@ -45,7 +45,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
@@ -1468,8 +1467,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             Outcall headRequest = new Outcall(url);
             headRequest.markAsHeadRequest();
             headRequest.alwaysFollowRedirects();
-            headRequest.modifyClient()
-                       .connectTimeout(Duration.ofSeconds(10));
+            headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
 
             String path = headRequest.parseFileNameFromContentDisposition()
                                      .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
