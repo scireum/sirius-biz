@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  */
 public class ValueInListCheck extends StringCheck {
 
-    private final Set<String> values;
+    protected final Set<String> values;
 
     /**
      * Creates a new check for the given list of permitted values.
