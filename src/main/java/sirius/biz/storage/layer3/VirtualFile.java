@@ -1297,7 +1297,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             }
 
             Outcall outcall = new Outcall(url);
-            outcall.modifyClient().followRedirects(HttpClient.Redirect.ALWAYS);
+            outcall.alwaysFollowRedirects();
             if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
                 outcall.setIfModifiedSince(lastModifiedDate());
             }
@@ -1467,8 +1467,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         try {
             Outcall headRequest = new Outcall(url);
             headRequest.markAsHeadRequest();
+            headRequest.alwaysFollowRedirects();
             headRequest.modifyClient()
-                       .followRedirects(HttpClient.Redirect.ALWAYS)
                        .connectTimeout(Duration.ofSeconds(10));
 
             String path = headRequest.parseFileNameFromContentDisposition()
@@ -1546,7 +1546,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     private Tuple<VirtualFile, Boolean> resolveViaGetRequest(URI url, FetchFromUrlMode mode) throws IOException {
         Outcall request = new Outcall(url);
-        request.modifyClient().followRedirects(HttpClient.Redirect.ALWAYS);
+        request.alwaysFollowRedirects();
         String path = request.parseFileNameFromContentDisposition().orElse(null);
         if (Strings.isEmpty(path)) {
             // Drain any content, the server sent, as we have no way of processing it...
