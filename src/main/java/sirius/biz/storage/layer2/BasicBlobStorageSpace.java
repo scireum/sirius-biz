@@ -1618,6 +1618,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
             throw Exceptions.handle()
                             .error(conversionException)
+                            .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
                                                     variant.getVariantName(),
                                                     variant.getIdAsString(),
