@@ -1593,7 +1593,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract boolean markConversionAttempt(V variant) throws Exception;
 
     /**
-     * Spawns a thread which will actually  the appropriate conversion pipeline.
+     * Spawns a thread which will actually invoke the appropriate conversion pipeline.
      *
      * @param blob    the blob for which the variant is to be created
      * @param variant the variant to generate
