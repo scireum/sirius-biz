@@ -1593,7 +1593,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract boolean markConversionAttempt(V variant) throws Exception;
 
     /**
-     * Spawns a thread which will actually invoke the appropriate conversion pipeline.
+     * Spawns a thread which will actually  the appropriate conversion pipeline.
      *
      * @param blob    the blob for which the variant is to be created
      * @param variant the variant to generate
@@ -1616,7 +1616,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                           .withConversionError(conversionException));
 
-            throw Exceptions.createHandled()
+            throw Exceptions.handle()
                             .error(conversionException)
                             .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
                                                     variant.getVariantName(),

@@ -206,11 +206,13 @@ public class ConversionEngine {
                     resultFileHandle.close();
                 }
 
-                throw new IllegalArgumentException(Strings.apply(
-                        "The conversion engine created an empty result for variant %s of %s (%s)",
-                        conversionProcess.getVariantName(),
-                        conversionProcess.getBlobToConvert().getFilename(),
-                        conversionProcess.getBlobToConvert().getBlobKey()));
+                throw Exceptions.createHandled()
+                                .withSystemErrorMessage(Strings.apply(
+                                        "The conversion engine created an empty result for variant %s of %s (%s)",
+                                        conversionProcess.getVariantName(),
+                                        conversionProcess.getBlobToConvert().getFilename(),
+                                        conversionProcess.getBlobToConvert().getBlobKey()))
+                                .handle();
             }
 
             conversionDuration.addValue(conversionProcess.getConversionDuration());
