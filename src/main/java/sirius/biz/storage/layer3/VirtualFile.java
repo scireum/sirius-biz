@@ -45,7 +45,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
@@ -1297,7 +1296,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             }
 
             Outcall outcall = new Outcall(url);
-            outcall.modifyClient().followRedirects(HttpClient.Redirect.ALWAYS);
+            outcall.alwaysFollowRedirects();
             if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
                 outcall.setIfModifiedSince(lastModifiedDate());
             }
@@ -1467,9 +1466,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         try {
             Outcall headRequest = new Outcall(url);
             headRequest.markAsHeadRequest();
-            headRequest.modifyClient()
-                       .followRedirects(HttpClient.Redirect.ALWAYS)
-                       .connectTimeout(Duration.ofSeconds(10));
+            headRequest.alwaysFollowRedirects();
+            headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
 
             String path = headRequest.parseFileNameFromContentDisposition()
                                      .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
@@ -1546,7 +1544,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     private Tuple<VirtualFile, Boolean> resolveViaGetRequest(URI url, FetchFromUrlMode mode) throws IOException {
         Outcall request = new Outcall(url);
-        request.modifyClient().followRedirects(HttpClient.Redirect.ALWAYS);
+        request.alwaysFollowRedirects();
         String path = request.parseFileNameFromContentDisposition().orElse(null);
         if (Strings.isEmpty(path)) {
             // Drain any content, the server sent, as we have no way of processing it...
