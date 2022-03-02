@@ -7,7 +7,7 @@ To learn more about what SIRIUS is please refer to documentation of the [kernel 
 # SIRIUS Business Module
 
 Provides a foundation for creating web based SaaS solutions. This module contains frameworks which permit to create
-rock solid business applications that can easily be clustered to achieve high avilability. Also a lot of common
+rock solid business applications that can easily be clustered to achieve high availability. Also a lot of common
 data objects and frameworks (multi tenancy, code lists, background jobs, storage, data import) are provided.
 
 ## Important files of this module: 
@@ -51,7 +51,7 @@ are not supported by Elasticsearch directly.
 Provides an interconnect facility which is used to discover and to communicate with other cluster nodes.
 Also provides an orchestration layer for caches, cluster health and distributed cluster tasks.
 * [Isenguard](src/main/java/sirius/biz/isenguard)\
-Provides a clusterwide firewall and reate limiting facility based on **Redis**.
+Provides a clusterwide firewall and rate limiting facility based on **Redis**.
 * [Global Locks](src/main/java/sirius/biz/locks)\
 Contains a framework to manage cluster wide locks. Various strategies are provided to best match
 the system topology.
