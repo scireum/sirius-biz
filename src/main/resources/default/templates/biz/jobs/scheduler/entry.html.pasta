@@ -71,7 +71,7 @@
             </w:singleSelect>
         </div>
 
-        <w:subHeading labelKey="SchedulderController.planning"/>
+        <w:subHeading labelKey="SchedulerController.planning"/>
         <div class="row">
             <w:textfield name="schedulerData_year"
                          labelKey="SchedulerData.year"
@@ -102,7 +102,7 @@
                          helpKey="SchedulerData.minute.help"
                          value="@entry.getSchedulerData().getMinute()"/>
         </div>
-        <w:subHeading labelKey="SchedulderController.parameters"/>
+        <w:subHeading labelKey="SchedulerController.parameters"/>
         <div class="row">
             <i:for type="sirius.biz.jobs.params.Parameter" var="param"
                    items="entry.getJobConfigData().getJobFactory().getParameters()">
