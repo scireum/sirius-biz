@@ -367,7 +367,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
      * malicious data in a WebContext. We therefore check if we know the given code either as it is a known
      * language of the system or if it occurs in the list of all known languages. We perform both checks as
      * the latter requires a properly populated lookup table, which might not be available on all systems. The
-     * know languages however are maintained via the system config and are always populated.
+     * known languages however are maintained via the system config and are always populated.
      *
      * @param multiLanguageString the property to check for valid languages
      * @param code                the language code to check

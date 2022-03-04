@@ -119,13 +119,13 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Determines if this field is in "multi language" mode.
+     * Determines if this field is in "multi-language" mode.
      * <p>
      * This can be suppressed by two methods: {@link #withConditionName(String)} can be used to disable i18n support
      * for the whole system and {@link #withI18nPermission(String)} can be used to enable or disable i18n support
      * per tenant.
      *
-     * @return <tt>true</tt> if multi language mode is enabled, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if multi-language mode is enabled, <tt>false</tt> otherwise
      */
     public boolean isEnabled() {
         return isEnabledForCurrentUser() && isConditionEnabled();
