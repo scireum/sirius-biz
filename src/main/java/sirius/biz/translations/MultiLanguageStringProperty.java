@@ -316,6 +316,29 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     }
 
     @Override
+    protected Object transformValueFromImport(Value value) {
+        MultiLanguageString multiLanguageString = (MultiLanguageString) super.transformValueFromImport(value);
+        if (i18nEnabled && multiLanguageString.isEnabledForCurrentUser() && multiLanguageString.data()
+                                                                                               .keySet()
+                                                                                               .stream()
+                                                                                               .anyMatch(key -> !isValidLanguageCode(
+                                                                                                       multiLanguageString,
+                                                                                                       key))) {
+            MultiLanguageString onlyValidEntries = new MultiLanguageString();
+            multiLanguageString.data()
+                               .entrySet()
+                               .stream()
+                               .filter(entry -> isValidLanguageCode(multiLanguageString, entry.getKey()))
+                               .forEach(entry -> onlyValidEntries.addText(entry.getKey(), entry.getValue()));
+            if (onlyValidEntries.isEmpty()) {
+                throw illegalFieldValue(value);
+            }
+            return onlyValidEntries;
+        }
+        return multiLanguageString;
+    }
+
+    @Override
     public boolean loadFromWebContext(WebContext webContext, BaseEntity<?> entity) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
         if (multiLanguageString.isWithFallback() && webContext.hasParameter(getPropertyName())) {
