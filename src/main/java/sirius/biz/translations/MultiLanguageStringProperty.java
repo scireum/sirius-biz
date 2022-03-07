@@ -325,6 +325,10 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                                                                                        multiLanguageString,
                                                                                                        key))) {
             MultiLanguageString onlyValidEntries = new MultiLanguageString();
+            if (multiLanguageString.isWithFallback()) {
+                onlyValidEntries.withFallback();
+                onlyValidEntries.setFallback(multiLanguageString.getFallback());
+            }
             multiLanguageString.data()
                                .entrySet()
                                .stream()
