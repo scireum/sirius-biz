@@ -334,7 +334,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                .stream()
                                .filter(entry -> isValidLanguageCode(multiLanguageString, entry.getKey()))
                                .forEach(entry -> onlyValidEntries.addText(entry.getKey(), entry.getValue()));
-            if (onlyValidEntries.isEmpty()) {
+            if (onlyValidEntries.isEmpty() && multiLanguageString.isFilled()) {
                 throw illegalFieldValue(value);
             }
             return onlyValidEntries;
