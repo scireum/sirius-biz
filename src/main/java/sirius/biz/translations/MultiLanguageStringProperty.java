@@ -316,6 +316,33 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     }
 
     @Override
+    protected Object transformValueFromImport(Value value) {
+        MultiLanguageString multiLanguageString = (MultiLanguageString) super.transformValueFromImport(value);
+        if (i18nEnabled && multiLanguageString.isEnabledForCurrentUser() && multiLanguageString.data()
+                                                                                               .keySet()
+                                                                                               .stream()
+                                                                                               .anyMatch(key -> !isValidLanguageCode(
+                                                                                                       multiLanguageString,
+                                                                                                       key))) {
+            MultiLanguageString onlyValidEntries = new MultiLanguageString();
+            if (multiLanguageString.isWithFallback()) {
+                onlyValidEntries.withFallback();
+                onlyValidEntries.setFallback(multiLanguageString.getFallback());
+            }
+            multiLanguageString.data()
+                               .entrySet()
+                               .stream()
+                               .filter(entry -> isValidLanguageCode(multiLanguageString, entry.getKey()))
+                               .forEach(entry -> onlyValidEntries.addText(entry.getKey(), entry.getValue()));
+            if (onlyValidEntries.isEmpty() && multiLanguageString.isFilled()) {
+                throw illegalFieldValue(value);
+            }
+            return onlyValidEntries;
+        }
+        return multiLanguageString;
+    }
+
+    @Override
     public boolean loadFromWebContext(WebContext webContext, BaseEntity<?> entity) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
         if (multiLanguageString.isWithFallback() && webContext.hasParameter(getPropertyName())) {
@@ -344,7 +371,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
      * malicious data in a WebContext. We therefore check if we know the given code either as it is a known
      * language of the system or if it occurs in the list of all known languages. We perform both checks as
      * the latter requires a properly populated lookup table, which might not be available on all systems. The
-     * know languages however are maintained via the system config and are always populated.
+     * known languages however are maintained via the system config and are always populated.
      *
      * @param multiLanguageString the property to check for valid languages
      * @param code                the language code to check
