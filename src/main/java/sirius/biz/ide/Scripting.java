@@ -73,6 +73,14 @@ public class Scripting implements InterconnectHandler {
      */
     public static final String ALL_NODES = "*";
 
+    /**
+     * Imposes an upper limit on the message length for transcript messages.
+     * <p>
+     * As these are distributed across the cluster via redis, it would be fatal if a huge message would be sent
+     * to all nodes. Therefore, we limit to a bearable and sane size.
+     */
+    private static final int MAX_TRANSCRIPT_MESSAGE_LENGTH = 32 * 1024;
+
     private final List<TranscriptMessage> messages = new ArrayList<>();
 
     @Part
@@ -98,7 +106,8 @@ public class Scripting implements InterconnectHandler {
     public void logInTranscript(String jobNumber, String message) {
         interconnect.dispatch(getName(),
                               new JSONObject().fluentPut(TASK_TYPE, TASK_TYPE_MSG)
-                                              .fluentPut(TASK_MESSAGE, message)
+                                              .fluentPut(TASK_MESSAGE,
+                                                         Strings.limit(message, MAX_TRANSCRIPT_MESSAGE_LENGTH, true))
                                               .fluentPut(TASK_TIMESTAMP, System.currentTimeMillis())
                                               .fluentPut(TASK_NODE, CallContext.getNodeName())
                                               .fluentPut(TASK_JOB, jobNumber));
