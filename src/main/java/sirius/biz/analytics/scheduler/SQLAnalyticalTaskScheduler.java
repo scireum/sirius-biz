@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 /**
  * Provides a base implementation which schedules all JDBC entities matching a given set of tasks (defined by a
- * subclass of {@link AnalyticalTask}) using a specified batch size (utilizing {@link SQLEntityBatchEmitter}.
+ * subclass of {@link AnalyticalTask}) using a specified batch size (utilizing {@link SQLEntityBatchEmitter}).
  * <p>
  * Use {@code @Register(classes = AnalyticsScheduler.class)} to make this scheduler visible to the framework.
  */

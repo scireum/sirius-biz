@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 /**
  * Provides a base implementation which schedules all MongoDB entities matching a given set of tasks (defined by a
- * subclass of {@link AnalyticalTask}) using a specified batch size (utilizing {@link MongoEntityBatchEmitter}.
+ * subclass of {@link AnalyticalTask}) using a specified batch size (utilizing {@link MongoEntityBatchEmitter}).
  * <p>
  * Use {@code @Register(classes = AnalyticsScheduler.class)} to make this scheduler visible to the framework.
  */
