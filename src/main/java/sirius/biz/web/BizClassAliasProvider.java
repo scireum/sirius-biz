@@ -18,6 +18,7 @@ import sirius.db.es.Elastic;
 import sirius.db.jdbc.Databases;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.annotations.Mixin;
 import sirius.db.mongo.Mango;
@@ -53,6 +54,7 @@ public class BizClassAliasProvider implements ClassAliasProvider {
         consumer.accept("Elastic", Elastic.class);
         consumer.accept("Redis", Redis.class);
         consumer.accept("Mixing", Mixing.class);
+        consumer.accept("Mapping", Mapping.class);
 
         consumer.accept("CodeLists", CodeLists.class);
         consumer.accept("VirtualFileSystem", VirtualFileSystem.class);

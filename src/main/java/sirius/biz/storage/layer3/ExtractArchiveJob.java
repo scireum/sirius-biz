@@ -86,12 +86,12 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     public ExtractArchiveJob() {
         this.destinationParameter = new DirectoryParameter(DESTINATION_PARAMETER_NAME,
                                                            "$ExtractArchiveJob.destinationParameter").withDescription(
-                "$ExtractArchiveJob.destinationParameter.help").markRequired().build();
+                "$ExtractArchiveJob.destinationParameter.help").build();
 
         this.overwriteExistingFilesParameter = new EnumParameter<>(OVERWRITE_EXISTING_FILES_PARAMETER_NAME,
                                                                    "$ExtractArchiveJob.overwriteExistingFilesParameter",
                                                                    ArchiveExtractor.OverrideMode.class).withDescription(
-                "$ExtractArchiveJob.overwriteExistingFilesParameter.help")
+                                                                                                               "$ExtractArchiveJob.overwriteExistingFilesParameter.help")
                                                                                                        .withDefault(
                                                                                                                ArchiveExtractor.OverrideMode.ON_CHANGE)
                                                                                                        .build();
@@ -108,7 +108,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         if (sourceParameter == null) {
             sourceParameter = new FileParameter("source",
                                                 "$ExtractArchiveJob.sourceParameter").withAcceptedExtensionsList(new ArrayList<>(
-                    extractor.getSupportedFileExtensions()))
+                                                                                             extractor.getSupportedFileExtensions()))
                                                                                      .withDescription(
                                                                                              "$ExtractArchiveJob.sourceParameter.help")
                                                                                      .markRequired()
@@ -121,7 +121,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     @Override
     protected void execute(ProcessContext process) throws Exception {
         VirtualFile sourceFile = process.require(fetchOrCreateSourceParameter());
-        VirtualFile targetDirectory = process.require(destinationParameter);
+        VirtualFile targetDirectory = process.getParameter(destinationParameter).orElseGet(sourceFile::parent);
         boolean flattenDirs = process.getParameter(flattenDirectoriesParameter).orElse(false);
         ArchiveExtractor.OverrideMode overrideMode = process.require(overwriteExistingFilesParameter);
 
