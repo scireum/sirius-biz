@@ -76,7 +76,7 @@ public class Scripting implements InterconnectHandler {
     /**
      * Imposes an upper limit on the message length for transcript messages.
      * <p>
-     * As these are distributed across the cluster via redis, it would be fatal if a huge message would be sent
+     * As these are distributed across the cluster via redis, it would be fatal if a huge message were to be sent
      * to all nodes. Therefore, we limit to a bearable and sane size.
      */
     private static final int MAX_TRANSCRIPT_MESSAGE_LENGTH = 32 * 1024;
