@@ -6,7 +6,7 @@
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
 <i:arg name="optional" type="boolean" default="false"/>
 <i:arg name="readonly" type="boolean" default="false"/>
-<i:arg name="showAddon" type="boolean" default="true"/>
+<i:arg name="showSelectionButton" type="boolean" default="true"/>
 <i:arg name="table" type="String" default="@value.getTableName()"/>
 <i:arg name="id" type="String" default="@generateId('singleselect-%s')"/>
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
@@ -19,12 +19,12 @@
                 allowCustomEntries="@value.acceptsCustomValues()" class="@class"
                 suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s', table, value.getDisplay(), value.getExtendedDisplay())">
         <i:block name="addon">
-            <i:if test="showAddon">
+            <i:if test="showSelectionButton">
                 <a class="btn btn-outline-secondary" id="@id-addon"><i class="fa fa-bolt"></i></a>
             </i:if>
         </i:block>
         <i:block name="script">
-            <i:if test="showAddon">
+            <i:if test="showSelectionButton">
                 const helper = document.getElementById('___id-addon');
                 helper.addEventListener('click', function () {
                     new LookupTableInfo({
