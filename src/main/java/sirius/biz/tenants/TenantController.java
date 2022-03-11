@@ -223,7 +223,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
      * @return the effective entity class for tenants
      */
     @SuppressWarnings("unchecked")
-    protected Class<T> getTenantClass() {
+    protected static <T> Class<T> getTenantClass() {
         return (Class<T>) tenants.getTenantClass();
     }
 
@@ -342,7 +342,13 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                   .template("/templates/biz/tenants/select-tenant.html.pasta", tenants, isCurrentlySpying(webContext));
     }
 
-    private boolean isCurrentlySpying(WebContext webContext) {
+    /**
+     * Indicates if the current user is spying another tenant.
+     *
+     * @param webContext the current request context
+     * @return <tt>true</tt> if the current user is spying another tenant, <tt>false</tt> otherwise.
+     */
+    public static boolean isCurrentlySpying(WebContext webContext) {
         return webContext.getSessionValue(UserContext.getCurrentScope().getScopeId()
                                           + TenantUserManager.TENANT_SPY_ID_SUFFIX).isFilled();
     }
@@ -350,24 +356,24 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     /**
      * Determines the currently active tenant.
      * <p>
-     * If "spying" is active, this will still return the underlying original tenant.
+     * If {@link #isCurrentlySpying(WebContext) "spying"} is active, this will return the underlying original tenant.
      *
      * @param webContext the request to load the session data from
      * @return the original tenant which is logged in
      */
-    public T determineCurrentTenant(WebContext webContext) {
+    @SuppressWarnings("unchecked")
+    public static <T> T determineCurrentTenant(WebContext webContext) {
         String tenantId = determineOriginalTenantId(webContext);
-        return mixing.getDescriptor(getTenantClass())
-                     .getMapper()
-                     .find(getTenantClass(), tenantId)
-                     .orElseThrow(() -> Exceptions.createHandled()
-                                                  .withSystemErrorMessage("Cannot determine current tenant!")
-                                                  .handle());
+        return (T) mixing.getDescriptor(getTenantClass())
+                         .getMapper()
+                         .find(getTenantClass(), tenantId)
+                         .orElseThrow(() -> Exceptions.createHandled()
+                                                      .withSystemErrorMessage("Cannot determine current tenant!")
+                                                      .handle());
     }
 
-    @SuppressWarnings("unchecked")
-    private String determineOriginalTenantId(WebContext webContext) {
-        return ((TenantUserManager<I, T, U>) UserContext.get().getUserManager()).getOriginalTenantId(webContext);
+    private static String determineOriginalTenantId(WebContext webContext) {
+        return ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getOriginalTenantId(webContext);
     }
 
     /**
@@ -404,7 +410,8 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     @LoginRequired
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext webContext, String tenantId) {
-        boolean isSwitchToMain = "main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId);
+        boolean isSwitchToMain =
+                "main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId);
         String redirectTarget = webContext.get("goto").asString(isSwitchToMain ? "/tenants/select" : wondergemRoot);
 
         if (isSwitchToMain) {

@@ -11,6 +11,8 @@ package sirius.biz.jobs.interactive;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.analytics.reports.Cells;
 import sirius.biz.jobs.BasicJobFactory;
+import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantController;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -79,6 +81,12 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
             UserContext.message(Message.error(error));
             submit.set(false);
         });
+
+        if (TenantController.isCurrentlySpying(request) && shouldExecuteInAdminTenant()) {
+            Tenant<?> adminTenant = TenantController.determineCurrentTenant(request);
+            context.put(ADMIN_TENANT_ID_KEY, adminTenant.getIdAsString());
+            context.put(ADMIN_TENANT_NAME_KEY, adminTenant.getTenantData().getName());
+        }
 
         tasks.executor(INTERACTIVE_JOBS_EXECUTOR).fork(() -> {
             try {

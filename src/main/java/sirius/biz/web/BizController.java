@@ -69,7 +69,7 @@ public class BizController extends BasicController {
     private static final String CHECKBOX_PRESENCE_MARKER = "_marker";
 
     @Part
-    protected Mixing mixing;
+    protected static Mixing mixing;
 
     @Part
     protected OMA oma;
@@ -95,7 +95,7 @@ public class BizController extends BasicController {
      */
     @Part
     @Nullable
-    protected Tenants<?, ?, ?> tenants;
+    protected static Tenants<?, ?, ?> tenants;
 
     @ConfigValue("product.baseUrl")
     @Nullable

@@ -12,6 +12,9 @@ import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.presets.JobPresets;
+import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantController;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
@@ -61,6 +64,18 @@ public abstract class BasicJobFactory implements JobFactory {
      * rendered nicely.
      */
     private static final String PARAM_UPDATE_ONLY = "updateOnly";
+
+    /**
+     * Contains the name of the key used to pass along the {@link Tenant admin tenant} ID,
+     * when a spying user starts an {@link #shouldExecuteInAdminTenant() admin-only} job.
+     */
+    public static final String ADMIN_TENANT_ID_KEY = "adminTenantId";
+
+    /**
+     * Contains the name of the key used to pass along the {@link Tenant admin tenant} name,
+     * when a spying user starts an {@link #shouldExecuteInAdminTenant() admin-only} job.
+     */
+    public static final String ADMIN_TENANT_NAME_KEY = "adminTenantName";
 
     @Part
     @Nullable
@@ -210,6 +225,11 @@ public abstract class BasicJobFactory implements JobFactory {
         });
 
         if (submit.get()) {
+            if (TenantController.isCurrentlySpying(request) && shouldExecuteInAdminTenant()) {
+                Tenant<?> adminTenant = TenantController.determineCurrentTenant(request);
+                context.put(ADMIN_TENANT_ID_KEY, adminTenant.getIdAsString());
+                context.put(ADMIN_TENANT_NAME_KEY, adminTenant.getTenantData().getName());
+            }
             executeInteractive(request, context);
             return;
         }
@@ -262,13 +282,26 @@ public abstract class BasicJobFactory implements JobFactory {
 
     /**
      * Enforces the permissions specified by this job.
-     *
+     * <p>
      * You cannot override this method, because it should behave consistently with {@link #getRequiredPermissions()}.
      * Please add all required permissions there.
      */
     protected final void checkPermissions() {
         UserInfo currentUser = UserContext.getCurrentUser();
         getRequiredPermissions().forEach(currentUser::assertPermission);
+    }
+
+    /**
+     * Indicates if this job should only be executed in an admin tenant.
+     * <p>
+     * This helps prevent executing jobs in the wrong tenant, when the user that starts the job
+     * {@link TenantController#isCurrentlySpying(WebContext) is currently spying} another tenant.
+     *
+     * @return <tt>true</tt> if the system administrator permission is required, <tt>false</tt> otherwise. Override this
+     * and make it return <tt>true</tt> whenever it should be ensured that this job is only executed in an admin tenant
+     */
+    protected boolean shouldExecuteInAdminTenant() {
+        return getRequiredPermissions().contains(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR);
     }
 
     @Override
