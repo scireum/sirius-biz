@@ -96,12 +96,17 @@ public class SSHServer implements Startable, Stoppable, Killable {
             installPasswordAuthenticator();
             installFileSystemFactory();
             installSFTPSubsystem();
+            installNoopShell();
 
             server.start();
             StorageUtils.LOG.INFO("Layer 3/SSH: Successfully started the SSH server on port %s", port);
         } catch (IOException e) {
             StorageUtils.LOG.WARN("Layer 3/SSH: Failed to start the SSH server: %s", e.getMessage());
         }
+    }
+
+    private void installNoopShell() {
+        server.setShellFactory(NoopShell::new);
     }
 
     private void disableLogging() {
