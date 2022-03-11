@@ -27,17 +27,16 @@ import java.io.OutputStream;
  * <p>
  * This is required by some SFTP clients, which first initiate SSH and then switch over to SFTP.
  */
-public class NoopShell implements AsyncCommand {
+class NoopShell implements AsyncCommand {
 
     private ExitCallback exitCallback;
     private IoInputStream inputStream;
     private IoOutputStream outputStream;
 
     private final ByteArrayBuffer readBuffer = new ByteArrayBuffer(1);
-    private final ChannelSession session;
 
-    public NoopShell(ChannelSession channelSession) {
-        this.session = channelSession;
+    NoopShell(ChannelSession channelSession) {
+        // The given session isn't needed...
     }
 
     @Override
