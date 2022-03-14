@@ -112,7 +112,12 @@
                         <i:if test="node.isBleeding()">
                             <t:dot color="red">Bleeding</t:dot>
                             <i:else>
-                                <t:dot color="green">Norminal</t:dot>
+                                <i:if test="node.hasUptime()">
+                                    <t:dot color="green">Normal</t:dot>
+                                    <i:else>
+                                        <t:dot color="red">Offline</t:dot>
+                                    </i:else>
+                                </i:if>
                             </i:else>
                         </i:if>
                     </i:block>
@@ -154,7 +159,12 @@
                         <i:if test="node.isBleeding()">
                             <t:dot color="red">Bleeding</t:dot>
                             <i:else>
-                                <t:dot color="green">Norminal</t:dot>
+                                <i:if test="node.hasUptime()">
+                                    <t:dot color="green">Normal</t:dot>
+                                    <i:else>
+                                        <t:dot color="red">Offline</t:dot>
+                                    </i:else>
+                                </i:if>
                             </i:else>
                         </i:if>
                     </i:block>

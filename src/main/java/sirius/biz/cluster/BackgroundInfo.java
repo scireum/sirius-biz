@@ -81,4 +81,13 @@ public class BackgroundInfo {
     public Map<String, BackgroundJobInfo> getJobs() {
         return Collections.unmodifiableMap(jobs);
     }
+
+    /**
+     * Checks if there is a valid value for the uptime.
+     *
+     * @return true if the value is not null and set to something different of "-"
+     */
+    public boolean hasUptime() {
+        return uptime != null && !"-".equals(uptime);
+    }
 }
