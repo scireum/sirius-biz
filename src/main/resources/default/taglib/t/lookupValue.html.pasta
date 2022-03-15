@@ -9,6 +9,7 @@
 <i:arg name="showSelectionButton" type="boolean" default="true"/>
 <i:arg name="table" type="String" default="@value.getTableName()"/>
 <i:arg name="id" type="String" default="@generateId('singleselect-%s')"/>
+<i:arg name="allowCustomEntries" type="boolean" default="true"/>
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
 
 <i:pragma name="inline" value="true"/>
@@ -16,7 +17,7 @@
 
 
 <t:singleSelect name="@name" label="@label" help="@help" optional="@optional" readonly="@readonly" id="@id"
-                allowCustomEntries="@value.acceptsCustomValues()" class="@class"
+                allowCustomEntries="@allowCustomEntries && value.acceptsCustomValues()" class="@class"
                 suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s', table, value.getDisplay(), value.getExtendedDisplay())">
         <i:block name="addon">
             <i:if test="showSelectionButton">
