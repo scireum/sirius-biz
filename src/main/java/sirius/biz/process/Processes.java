@@ -10,7 +10,6 @@ package sirius.biz.process;
 
 import sirius.biz.analytics.reports.Cells;
 import sirius.biz.elastic.AutoBatchLoop;
-import sirius.biz.jobs.BasicJobFactory;
 import sirius.biz.locks.Locks;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogState;
@@ -157,9 +156,8 @@ public class Processes {
         process.setIcon(icon);
         process.setUserId(user.getUserId());
         process.setUserName(user.getUserName());
-        process.setTenantId(Strings.firstFilled(context.get(BasicJobFactory.ADMIN_TENANT_ID_KEY), user.getTenantId()));
-        process.setTenantName(Strings.firstFilled(context.get(BasicJobFactory.ADMIN_TENANT_NAME_KEY),
-                                                  user.getTenantName()));
+        process.setTenantId(user.getTenantId());
+        process.setTenantName(user.getTenantName());
         process.setState(ProcessState.RUNNING);
         process.setProcessType(type);
         process.setStarted(LocalDateTime.now());
