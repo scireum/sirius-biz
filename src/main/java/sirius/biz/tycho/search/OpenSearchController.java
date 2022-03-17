@@ -8,10 +8,8 @@
 
 package sirius.biz.tycho.search;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import sirius.biz.tycho.QuickAction;
 import sirius.biz.web.BizController;
 import sirius.kernel.async.CombinedFuture;
 import sirius.kernel.async.Future;
@@ -104,9 +102,8 @@ public class OpenSearchController extends BizController {
     private static final String RESPONSE_CATEGORY_URL = "categoryUrl";
     private static final String RESPONSE_PRIORITY = "priority";
     private static final String RESPONSE_LABEL = "label";
-    private static final String RESPONSE_DESCRIPTION = "description";
+    private static final String RESPONSE_HTML_DESCRIPTION = "htmlDescription";
     private static final String RESPONSE_URL = "url";
-    private static final String RESPONSE_ACTIONS = "actions";
 
     @Parts(OpenSearchProvider.class)
     private PartCollection<OpenSearchProvider> providers;
@@ -227,11 +224,8 @@ public class OpenSearchController extends BizController {
         object.put(RESPONSE_CATEGORY_URL, provider.getUrl());
         object.put(RESPONSE_PRIORITY, provider.getPriority());
         object.put(RESPONSE_LABEL, result.getLabel());
-        object.put(RESPONSE_DESCRIPTION, result.getDescription());
+        object.put(RESPONSE_HTML_DESCRIPTION, result.getHtmlDescription());
         object.put(RESPONSE_URL, result.getUrl());
-        JSONArray actions = new JSONArray();
-        result.getActions().stream().map(QuickAction::toJson).forEach(actions::add);
-        object.put(RESPONSE_ACTIONS, actions);
         return object;
     }
 }
