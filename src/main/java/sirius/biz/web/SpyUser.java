@@ -8,7 +8,6 @@
 
 package sirius.biz.web;
 
-import sirius.kernel.di.transformers.Composable;
 import sirius.web.security.UserInfo;
 
 /**
