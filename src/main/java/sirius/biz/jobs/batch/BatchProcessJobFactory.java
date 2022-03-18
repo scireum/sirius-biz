@@ -136,7 +136,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
             return UserContext.getCurrentUser()
                               .tryAs(SpyUser.class)
                               .map(SpyUser::getRootUser)
-                              .orElse(UserContext.getCurrentUser());
+                              .orElseGet(UserContext::getCurrentUser);
         }
         return UserContext.getCurrentUser();
     }

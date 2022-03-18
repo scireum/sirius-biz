@@ -14,7 +14,7 @@ import sirius.web.security.UserInfo;
 /**
  * Holds a reference to the {@link UserInfo root user}, if currently spying another user or tenant.
  */
-public class SpyUser extends Composable {
+public class SpyUser {
     private final UserInfo rootUser;
 
     public SpyUser(UserInfo rootUser) {
