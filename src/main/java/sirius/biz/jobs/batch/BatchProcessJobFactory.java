@@ -203,6 +203,20 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     /**
+     * Indicates if the execution of this process should only be visible to the system tenant.
+     * <p>
+     * This helps prevent exposing system processes like database migrations or confidential evaluations to the wrong
+     * tenant, when such a process was started while spying another tenant.
+     *
+     * @return <tt>true</tt> if the {@link TenantUserManager#PERMISSION_SYSTEM_ADMINISTRATOR system administrator}
+     * permission is required, <tt>false</tt> otherwise. Override this and make it return <tt>true</tt> whenever
+     * the execution of a process should only be visible to the system tenant.
+     */
+    protected boolean isSystemProcess() {
+        return getRequiredPermissions().contains(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR);
+    }
+
+    /**
      * Executes the task on the target node and covered within the execution context of a {@link Process}.
      *
      * @param process the context of the previously generated process to communicate with the outside world
