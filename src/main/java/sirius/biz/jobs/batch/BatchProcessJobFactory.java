@@ -18,6 +18,8 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.web.SpyUser;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -25,6 +27,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -115,16 +118,27 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @return the id of the newly created process
      */
     protected String startWithContext(Map<String, String> context) {
-        String processId = processes.createProcessForCurrentUser(getClass().getSimpleName() + ".label",
-                                                                 createProcessTitle(context),
-                                                                 getIcon(),
-                                                                 determinePersistencePeriod(context),
-                                                                 context);
+        String processId = processes.createProcess(getClass().getSimpleName() + ".label",
+                                                   createProcessTitle(context),
+                                                   getIcon(),
+                                                   getCurrentOrRootUser(),
+                                                   determinePersistencePeriod(context),
+                                                   context);
         logScheduledMessage(processId);
         addLinkToJob(processId);
         createAndScheduleDistributedTask(processId);
 
         return processId;
+    }
+
+    private UserInfo getCurrentOrRootUser() {
+        if (isSystemProcess()) {
+            return UserContext.getCurrentUser()
+                              .tryAs(SpyUser.class)
+                              .map(SpyUser::getRootUser)
+                              .orElseGet(UserContext::getCurrentUser);
+        }
+        return UserContext.getCurrentUser();
     }
 
     private PersistencePeriod determinePersistencePeriod(Map<String, String> context) {
@@ -183,7 +197,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * Returns the executor which is responsible for resolving the created {@link sirius.biz.process.Process} and
      * then invoking {@link #executeTask(ProcessContext)}.
      * <p>
-     * Different executors can be used to run jobs in differen queues or with different priorization settings.
+     * Different executors can be used to run jobs in different queues or with different prioritization settings.
      *
      * @return the executor used to handle the queueing and eventually the execution of this job
      */
@@ -193,13 +207,30 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * If the queue in which the {@link #getExecutor() executor} places its tasks is <b>prioritized</b>,
      * we use this method to determine the penalty token.
      * <p>
-     * By default this is the tenant id. Therefore all tasks of the same tenant increase the penalty
+     * This is the tenant id by default. Therefore, all tasks of the same tenant increase the penalty
      * (and thus lowers the priority of newly scheduled tasks).
+     * <p>
+     * Note: {@link #isSystemProcess() System processes} count towards the system tenant even if they were started
+     * while spying another tenant.
      *
      * @return the penalty token to use
      */
     protected String getPenaltyToken() {
-        return UserContext.getCurrentUser().getTenantId();
+        return getCurrentOrRootUser().getTenantId();
+    }
+
+    /**
+     * Indicates if the execution of this process should only be visible to the system tenant.
+     * <p>
+     * This helps prevent exposing system processes like database migrations or confidential evaluations to the wrong
+     * tenant, when such a process was started while spying another tenant.
+     *
+     * @return <tt>true</tt> if the {@link TenantUserManager#PERMISSION_SYSTEM_ADMINISTRATOR system administrator}
+     * permission is required, <tt>false</tt> otherwise. Override this and make it return <tt>true</tt> whenever
+     * the execution of a process should only be visible to the system tenant.
+     */
+    protected boolean isSystemProcess() {
+        return getRequiredPermissions().contains(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR);
     }
 
     /**

@@ -13,6 +13,7 @@ import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.UserActivityEvent;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
+import sirius.biz.web.SpyUser;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
@@ -297,11 +298,14 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                 extraRoles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
             }
         }
-        return asUser(spyUser,
-                      extraRoles,
-                      () -> Strings.apply("%s - %s",
-                                          computeUsername(null, rootUser.getUserId()),
-                                          computeTenantname(null, rootUser.getTenantId())));
+
+        UserInfo spyUserInfo = asUser(spyUser,
+                                      extraRoles,
+                                      () -> Strings.apply("%s - %s",
+                                                          computeUsername(null, rootUser.getUserId()),
+                                                          computeTenantname(null, rootUser.getTenantId())));
+        spyUserInfo.attach(SpyUser.class, new SpyUser(rootUser));
+        return spyUserInfo;
     }
 
     @Override
@@ -337,7 +341,11 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                                          Strings.areEqual(systemTenant, String.valueOf(originalUser.getTenantId())));
         roles.add(PERMISSION_SPY_USER);
         roles.add(PERMISSION_SELECT_TENANT);
-        return asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUser.getTenantId()));
+
+        UserInfo userInOtherTenant =
+                asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUser.getTenantId()));
+        userInOtherTenant.attach(SpyUser.class, new SpyUser(originalUser));
+        return userInOtherTenant;
     }
 
     protected U cloneUser(UserInfo originalUser) {
