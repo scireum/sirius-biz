@@ -128,7 +128,7 @@ public class TraceData extends Composite {
                 createdIn = Strings.limit(TaskContext.get().getSystemString(), 150);
                 createdOn = Strings.limit(CallContext.getNodeName(), 50);
             }
-            changedBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
+            changedBy = Strings.limit(UserContext.getCurrentUser().getProtocolUsername(), 50);
             changedAt = LocalDateTime.now();
             changedIn = Strings.limit(TaskContext.get().getSystemString(), 150);
             changedOn = Strings.limit(CallContext.getNodeName(), 50);
