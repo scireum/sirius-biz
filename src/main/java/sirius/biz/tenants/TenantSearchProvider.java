@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants;
 
-import sirius.biz.tycho.QuickAction;
 import sirius.biz.tycho.search.OpenSearchProvider;
 import sirius.biz.tycho.search.OpenSearchResult;
 import sirius.db.mixing.BaseEntity;
@@ -69,10 +68,13 @@ public abstract class TenantSearchProvider<I extends Serializable, T extends Bas
             openSearchResult.withURL("/tenant/" + tenant.getIdAsString());
 
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_TENANT)) {
-                openSearchResult.withQuickAction(new QuickAction().withLabel(NLS.get("TenantController.select"))
-                                                                  .withIcon("fa fa-factory")
-                                                                  .withUrl("/tenants/select/"
-                                                                           + tenant.getIdAsString()));
+                openSearchResult.withTemplateFromCode("""
+                                                              <i:arg name="tenant" type="sirius.biz.tenants.Tenant"/>
+                                                                   
+                                                              @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity() 
+                                                              <br>                                                   
+                                                              <a href=/tenants/select/@tenant.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              """, tenant);
             }
             resultCollector.accept(openSearchResult);
         });

@@ -94,8 +94,7 @@
                             '   <div class="card card-border h-100">' +
                             '       <div class="card-body">' +
                             '           <h5 class="card-title">{{label}}</h5>' +
-                            '           <div class="mb-4">{{description}}</div>' +
-                            '           {{#actions}}<a href="{{url}}" class="card-link">{{label}}</a>{{/actions}}' +
+                            '           <div>{{{htmlDescription}}}</div>' +
                             '           <a href="{{url}}" class="stretched-link"></a>' +
                             '        </div>' +
                             '    </div>' +

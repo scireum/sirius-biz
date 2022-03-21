@@ -9,7 +9,6 @@
 package sirius.biz.tenants;
 
 import sirius.biz.tenants.jdbc.SQLUserAccount;
-import sirius.biz.tycho.QuickAction;
 import sirius.biz.tycho.search.OpenSearchProvider;
 import sirius.biz.tycho.search.OpenSearchResult;
 import sirius.db.mixing.BaseEntity;
@@ -86,19 +85,24 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                 openSearchResult.withDescription(userAccount.toString())
                                 .withURL("/user-account/" + userAccount.getIdAsString());
             } else {
-                openSearchResult.withDescription(userAccount + " (" + userAccount.getTenant()
-                                                                                 .fetchValue()
-                                                                                 .toString() + ")")
+                openSearchResult.withDescription(userAccount
+                                                 + " ("
+                                                 + userAccount.getTenant().fetchValue().toString()
+                                                 + ")")
                                 .withURL("/tenants/select/"
                                          + userAccount.getTenant().getIdAsString()
                                          + "?goto="
                                          + Strings.urlEncode("/user-account/" + userAccount.getIdAsString()));
             }
+
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)) {
-                openSearchResult.withQuickAction(new QuickAction().withLabel(NLS.get("TenantController.select"))
-                                                                  .withIcon("fa fa-user")
-                                                                  .withUrl("/user-accounts/select/"
-                                                                           + userAccount.getIdAsString()));
+                openSearchResult.withTemplateFromCode("""
+                                                              <i:arg name="user" type="sirius.biz.tenants.UserAccount"/>
+                                                                                                                            
+                                                              @user (@user.getTenant().fetchValue().toString())
+                                                              <br>
+                                                              <a href=/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              """, userAccount);
             }
             resultCollector.accept(openSearchResult);
         });
