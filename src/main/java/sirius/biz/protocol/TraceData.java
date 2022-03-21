@@ -128,11 +128,23 @@ public class TraceData extends Composite {
                 createdIn = Strings.limit(TaskContext.get().getSystemString(), 150);
                 createdOn = Strings.limit(CallContext.getNodeName(), 50);
             }
-            changedBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
-            changedAt = LocalDateTime.now();
-            changedIn = Strings.limit(TaskContext.get().getSystemString(), 150);
-            changedOn = Strings.limit(CallContext.getNodeName(), 50);
+            updateChangeFields();
         }
+    }
+
+    /**
+     * Recalculates and updates the change trace fields (changed {@link #CHANGED_BY by}, {@link #CHANGED_AT at},
+     * {@link #CHANGED_IN in} and {@link #CHANGED_ON on}).
+     * <p>
+     * This is automatically called in {@link #update()} when the entity using this composite is created/updated.
+     * It can now be called externally in special use-cases, for example when directly updating the trace fields with a
+     * MongoDB {@link sirius.db.mongo.Updater}.
+     */
+    public void updateChangeFields() {
+        changedBy = Strings.limit(UserContext.getCurrentUser().getProtocolUsername(), 50);
+        changedAt = LocalDateTime.now();
+        changedIn = Strings.limit(TaskContext.get().getSystemString(), 150);
+        changedOn = Strings.limit(CallContext.getNodeName(), 50);
     }
 
     /**
