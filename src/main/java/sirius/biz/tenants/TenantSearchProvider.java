@@ -71,7 +71,7 @@ public abstract class TenantSearchProvider<I extends Serializable, T extends Bas
                 openSearchResult.withTemplateFromCode("""
                                                               <i:arg name="tenant" type="sirius.biz.tenants.Tenant"/>
                                                                    
-                                                              @Formatter.create("[${zip}][ ${city}]").set("zip", tenant.getTenantData().getAddress().getZip()).set("city", tenant.getTenantData().getAddress().getCity()).smartFormat() 
+                                                              @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity() 
                                                               <br>                                                   
                                                               <a href=/tenants/select/@tenant.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
                                                               """, tenant);
