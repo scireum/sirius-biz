@@ -117,7 +117,7 @@ public abstract class LineBasedArchiveImportJob extends DictionaryBasedArchiveIm
 
         Context context = Context.create();
         for (int index = 0; index < row.length(); index++) {
-            context.put(columnNames.get(index), row.at(index).asString());
+            context.put(columnNames.get(index), row.at(index).getRawString());
         }
 
         importFile.rowHandler.invoke(Tuple.create(line, context));
