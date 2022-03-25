@@ -47,14 +47,7 @@ public abstract class LineBasedArchiveImportJob extends DictionaryBasedArchiveIm
             LineBasedProcessor.create(importFile.filename, stream, false).run((lineNumber, row) -> {
                 errorContext.handleInContext(ERROR_CONTEXT_ROW, lineNumber, () -> {
                     if (lineNumber == 1) {
-                        try {
-                            handleHeaderRow(row, columnNames);
-                        } catch (Exception exception) {
-                            if (importFile.required) {
-                                TaskContext.get().cancel();
-                            }
-                            throw exception;
-                        }
+                        handleHeaderRow(row, columnNames, importFile);
                     } else {
                         handleRow(row, lineNumber, columnNames, importFile);
                     }
@@ -87,11 +80,14 @@ public abstract class LineBasedArchiveImportJob extends DictionaryBasedArchiveIm
         return header;
     }
 
-    private void handleHeaderRow(Values row, Map<Integer, String> columnNames) {
+    private void handleHeaderRow(Values row, Map<Integer, String> columnNames, ImportFile importFile) {
         for (int index = 0; index < row.length(); index++) {
             String headerName = normalizeHeader(row.at(index).asString());
             if (columnNames.containsValue(headerName)) {
                 columnNames.clear();
+                if (importFile.required) {
+                    TaskContext.get().cancel();
+                }
                 throw Exceptions.createHandled()
                                 .withNLSKey("LineBasedArchiveImportJob.duplicateColumn")
                                 .set("column", headerName)
