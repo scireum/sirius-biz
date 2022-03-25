@@ -29,12 +29,12 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * Provides an import job which allows to import line based data from multiple archived files in a specific order.
+ * Provides an import job which allows importing dictionary-based data from multiple archived files in a specific order.
  */
 public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
 
-    private static final String ERROR_CONTEXT_FILE_PATH = "$DictionaryBasedArchiveImportJob.file";
-    private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
+    protected static final String ERROR_CONTEXT_FILE_PATH = "$DictionaryBasedArchiveImportJob.file";
+    protected static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
 
     /**
      * Describes a file to be imported from an archive.
@@ -58,6 +58,17 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         public ImportFile(String filename, ImportDictionary dictionary, Callback<Tuple<Integer, Context>> rowHandler) {
             this.filename = filename;
             this.dictionary = dictionary;
+            this.rowHandler = rowHandler;
+        }
+
+        /**
+         * Creates a new instance for the given name.
+         *
+         * @param filename   the name of the file to import
+         * @param rowHandler the row handler used to process each row
+         */
+        public ImportFile(String filename, Callback<Tuple<Integer, Context>> rowHandler) {
+            this.filename = filename;
             this.rowHandler = rowHandler;
         }
 
@@ -162,7 +173,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         });
     }
 
-    private void handleFile(ImportFile importFile, ExtractedFile extractedFile) throws Exception {
+    protected void handleFile(ImportFile importFile, ExtractedFile extractedFile) throws Exception {
         process.log(ProcessLog.info()
                               .withNLSKey("DictionaryBasedArchiveImportJob.msgImportFile")
                               .withContext("file", importFile.filename));
