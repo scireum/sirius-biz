@@ -15,7 +15,9 @@ import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Values;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.web.data.LineBasedProcessor;
 
 import java.io.InputStream;
@@ -104,6 +106,7 @@ public abstract class LineBasedArchiveImportJob extends DictionaryBasedArchiveIm
         }
 
         if (row.length() > columnNames.size()) {
+            process.incCounter("LineBasedJob.erroneousRow");
             throw Exceptions.createHandled()
                             .withNLSKey("ImportDictionary.tooManyColumns")
                             .set("count", row.length())
@@ -111,11 +114,18 @@ public abstract class LineBasedArchiveImportJob extends DictionaryBasedArchiveIm
                             .handle();
         }
 
+        Watch watch = Watch.start();
         Context context = Context.create();
         for (int index = 0; index < row.length(); index++) {
             context.put(columnNames.get(index), row.at(index).getRawString());
         }
 
-        importFile.rowHandler.invoke(Tuple.create(line, context));
+        try {
+            importFile.rowHandler.invoke(Tuple.create(line, context));
+        } catch (Exception exception) {
+            process.incCounter("LineBasedJob.erroneousRow");
+            throw exception;
+        }
+        process.addTiming(NLS.smartGet(importFile.rowCounterName), watch.elapsedMillis());
     }
 }
