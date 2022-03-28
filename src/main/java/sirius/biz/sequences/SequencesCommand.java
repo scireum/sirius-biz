@@ -13,7 +13,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.console.Command;
 
 import javax.annotation.Nonnull;
-import java.util.Locale;
 
 /**
  * Provides a console command to display all managed sequences.
@@ -28,42 +27,33 @@ public class SequencesCommand implements Command {
 
     @Override
     public void execute(Output output, String... params) throws Exception {
-        if (params.length == 0) {
-            listSequences(output);
-            return;
+        if (params.length == 2 || params.length == 3) {
+            specifyNextSequence(params[0], isForced(params), Long.parseLong(params[1]), output);
+        } else {
+            outputUsage(output);
         }
-        if (params.length == 3) {
-            setSequence(output, params);
-            return;
-        }
-        outputUsage(output);
+        listSequences(output);
+    }
+
+    private boolean isForced(String... params) {
+        return params.length == 3 && "force".equalsIgnoreCase(params[2]);
+    }
+
+    private void specifyNextSequence(String sequenceName, boolean force, long nextValue, Output output) {
+        sequences.setNextValue(sequenceName, nextValue, force);
+        output.apply("Sequence %s set to %d.", sequenceName, nextValue);
     }
 
     private void outputUsage(Output output) {
         output.apply("Usage:");
         output.apply("'sequences' to list all known sequences");
-        output.apply("'sequences set NAME NEXTVALUE' to set the next value for a sequence");
-        output.apply("'sequences force NAME NEXTVALUE' to force the next value for a sequence !DANGEROUS! as it can lead to duplicate ids");
-    }
-
-    private void setSequence(Output output, String... params) {
-        boolean force;
-        String forceParam = params[0].toLowerCase(Locale.ROOT);
-        if ("force".equals(forceParam)) {
-            force = true;
-        } else if ("set".equals(forceParam)) {
-            force = false;
-        } else {
-            outputUsage(output);
-            return;
-        }
-        String sequence = params[1];
-        long nextValue = Long.parseLong(params[2]);
-        sequences.setNextValue(sequence, nextValue, force);
-        output.apply("Sequence %s set to %d.", sequence, nextValue);
+        output.apply("'sequences NAME NEXTVALUE' to set the next value for a sequence");
+        output.apply(
+                "'sequences NAME NEXTVALUE force' to force the next value for a sequence !DANGEROUS! as it can lead to duplicate ids");
     }
 
     private void listSequences(Output output) {
+        output.separator();
         output.apply("%-40s %12s", "NAME", "NEXT VALUE");
         output.separator();
         sequences.getKnownSequences().forEach(sequence -> {
@@ -74,7 +64,7 @@ public class SequencesCommand implements Command {
 
     @Override
     public String getDescription() {
-        return "Lists all managed sequences.";
+        return "Lists or modifies managed sequences.";
     }
 
     @Nonnull
