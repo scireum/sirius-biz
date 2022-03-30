@@ -42,6 +42,7 @@ import sirius.kernel.async.Promise;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
@@ -51,6 +52,7 @@ import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -462,6 +464,38 @@ public class ObjectStore {
                                                  bucket,
                                                  objectId)
                          .handle();
+    }
+
+    /**
+     * Downloads the requested object in memory.
+     * <p>
+     * Note that this must be only called for small objects.
+     *
+     * @param bucket   the bucket within the object resides
+     * @param objectId the id of the object
+     * @return the contents of the object as byte array
+     * @throws FileNotFoundException in case of an unknown object
+     */
+    public byte[] downloadInMemory(BucketName bucket, String objectId) throws FileNotFoundException {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s",
+                                                                     objectId,
+                                                                     bucket), Duration.ofSeconds(90))) {
+            ensureBucketExists(bucket);
+            try (ByteArrayOutputStream output = new ByteArrayOutputStream();
+                 InputStream input = getClient().getObject(new GetObjectRequest(bucket.getName(), objectId))
+                                                .getObjectContent()) {
+                Streams.transfer(input, output);
+                return output.toByteArray();
+            }
+        } catch (AmazonS3Exception e) {
+            if (e.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+                throw new FileNotFoundException(objectId);
+            } else {
+                throw handleDownloadError(bucket, objectId, e);
+            }
+        } catch (Exception e) {
+            throw handleDownloadError(bucket, objectId, e);
+        }
     }
 
     /**
