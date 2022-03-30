@@ -1,8 +1,9 @@
 <i:arg type="String" name="lang" />
+<i:arg type="String" name="class" default="" />
 <i:arg type="boolean" name="short" default="false" />
 
 <i:local name="body" value="@renderToString('body')" />
-<span class="d-inline-flex flex-row overflow-hidden align-items-center"
+<span class="d-inline-flex flex-row overflow-hidden align-items-center @class"
     @if (short || isFilled(body)) { data-toggle="tooltip" title="@part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)" }>
     <t:langFlag lang="@lang" class="pr-1" />
     <span>
