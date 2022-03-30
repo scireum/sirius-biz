@@ -308,8 +308,8 @@ public class ObjectStore {
 
         do {
             try (Operation operation = new Operation(() -> Strings.apply("S3: Fetching objects from %s (prefix: %s)",
-                                                                  bucket.getName(),
-                                                                  prefix), Duration.ofSeconds(10))) {
+                                                                         bucket.getName(),
+                                                                         prefix), Duration.ofSeconds(10))) {
                 if (objectListing != null) {
                     objectListing = getClient().listNextBatchOfObjects(objectListing);
                 } else {
@@ -333,7 +333,7 @@ public class ObjectStore {
      */
     public void deleteObject(BucketName bucket, String objectId) {
         try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object % from %s", objectId, bucket),
-                                          Duration.ofMinutes(1))) {
+                                                 Duration.ofMinutes(1))) {
             getClient().deleteObject(bucket.getName(), objectId);
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -355,7 +355,7 @@ public class ObjectStore {
      */
     public void deleteBucket(BucketName bucket) {
         try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting bucket %s", bucket),
-                                          Duration.ofMinutes(1))) {
+                                                 Duration.ofMinutes(1))) {
             getClient().deleteBucket(bucket.getName());
             stores.bucketCache.remove(Tuple.create(name, bucket.getName()));
         } catch (Exception e) {
@@ -420,8 +420,9 @@ public class ObjectStore {
      */
     public File download(BucketName bucket, String objectId) throws FileNotFoundException {
         File dest = null;
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s", objectId, bucket),
-                                          Duration.ofHours(4))) {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s",
+                                                                     objectId,
+                                                                     bucket), Duration.ofHours(4))) {
             dest = File.createTempFile("AMZS3", null);
             ensureBucketExists(bucket);
             transferManager.download(new GetObjectRequest(bucket.getName(), objectId),
@@ -552,7 +553,7 @@ public class ObjectStore {
      */
     public void upload(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
         try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
-                                          Duration.ofHours(4))) {
+                                                 Duration.ofHours(4))) {
             uploadAsync(bucket, objectId, data, metadata).waitForUploadResult();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -645,8 +646,9 @@ public class ObjectStore {
         if (contentLength == 0 || contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
             upload(bucket, objectId, inputStream);
         } else {
-            try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
-                                              Duration.ofMinutes(30))) {
+            try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s",
+                                                                         objectId,
+                                                                         bucket), Duration.ofMinutes(30))) {
                 uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -678,8 +680,8 @@ public class ObjectStore {
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
         try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
-                                                              objectId,
-                                                              bucket), Duration.ofHours(4))) {
+                                                                     objectId,
+                                                                     bucket), Duration.ofHours(4))) {
             List<PartETag> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());
 
             if (ObjectStores.LOG.isFINE()) {
