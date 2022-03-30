@@ -467,7 +467,7 @@ public class ObjectStore {
     }
 
     /**
-     * Downloads the requested object in memory.
+     * Downloads the requested object into memory.
      * <p>
      * Note that this must be only called for small objects.
      *
