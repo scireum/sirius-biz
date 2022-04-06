@@ -9,6 +9,7 @@
 package sirius.biz.tycho.academy;
 
 import sirius.biz.analytics.flags.ExecutionFlags;
+import sirius.biz.web.BizController;
 import sirius.kernel.Sirius;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -44,6 +45,11 @@ public abstract class OnboardingEngine {
 
     protected static final int NUMBER_OF_VIDEOS_TO_RECOMMEND = 4;
     protected static final int MIN_PERCENT_TO_CONSIDER_VIDEO_WATCHED = 40;
+
+    /**
+     * Contains the prefix used when computing access tokens for the video academy.
+     */
+    public static final String AUTH_TOKEN_PREFIX = "/academy/";
 
     @Part
     private ExecutionFlags executionFlags;
@@ -324,4 +330,14 @@ public abstract class OnboardingEngine {
      * @param videoId the id of the video to mark as skipped
      */
     public abstract void markAsSkipped(String owner, String videoId);
+
+    /**
+     * Computes an access token to grant access to the UI provided by {@link OnboardingController}.
+     *
+     * @param owner the owner of the onboarding videos
+     * @return the access token which ensures that the current user is the given owner
+     */
+    public String computeAccessToken(String owner) {
+        return BizController.computeURISignature(AUTH_TOKEN_PREFIX + owner);
+    }
 }
