@@ -110,6 +110,7 @@ public class SQLOnboardingEngine extends OnboardingEngine {
         AcademyVideoData academyVideoData = academyVideo.getAcademyVideoData();
         OnboardingVideoData onboardingVideoData = onboardingVideo.getOnboardingVideoData();
         onboardingVideoData.setAcademy(academyVideoData.getAcademy());
+        onboardingVideo.setTrackId(academyVideoData.getTrackId());
         onboardingVideo.setVideoCode(academyVideoData.getVideoCode());
         onboardingVideoData.setPriority(academyVideoData.getPriority());
         onboardingVideoData.setLastUpdated(LocalDateTime.now());
@@ -170,8 +171,7 @@ public class SQLOnboardingEngine extends OnboardingEngine {
         return oma.select(SQLOnboardingVideo.class)
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
-                  .eq(SQLOnboardingVideo.ACADEMY_VIDEO.join(AcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.TRACK_ID)),
-                      trackId)
+                  .eq(SQLOnboardingVideo.TRACK_ID, trackId)
                   .orderAsc(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PRIORITY))
                   .queryList();
     }
