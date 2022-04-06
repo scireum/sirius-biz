@@ -29,7 +29,7 @@ public class LookupTableMessageExpander implements MessageExpander {
             String tableName = match.group(1);
             LookupTable table = lookupTables.fetchTable(tableName);
             return Strings.apply("""
-                                         <span class="text-small d-inline-flex flex-row align-items-baseline">
+                                         <span class="d-inline-flex flex-row align-items-baseline">
                                              <i class="fa fa-bolt"></i><a class="pl-1" href="javascript:openLookupTable('%s')">%s</a>
                                          </span>
                                          """, tableName, table.getTitle());
