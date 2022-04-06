@@ -14,6 +14,6 @@
        data-placement="top"
        title="@referencedArticle.getTitle()">
         <i class="fa fa-lightbulb"></i>
-        <span class="d-none d-xl-inline"> @i18n('KnowledgeBase.helpBtn')</span>
+        <span class="d-none d-xl-inline pl-2">@i18n('KnowledgeBase.helpBtn')</span>
     </a>
 </i:if>
