@@ -17,6 +17,8 @@ import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.di.std.Framework;
@@ -30,6 +32,7 @@ import javax.annotation.Nullable;
 @Framework(SQLOnboardingEngine.FRAMEWORK_TYCHO_JDBC_ACADEMIES)
 @Index(name = "owner_sync_lookup", columns = {"onboardingVideoData_owner", "onboardingVideoData_syncToken"})
 @Index(name = "owner_video_lookup", columns = {"onboardingVideoData_owner", "onboardingVideoData_recommended"})
+@Index(name = "owner_videoCode_lookup", columns = {"onboardingVideoData_owner", "videoCode"})
 public class SQLOnboardingVideo extends SQLEntity implements OnboardingVideo {
 
     @Part
@@ -39,6 +42,18 @@ public class SQLOnboardingVideo extends SQLEntity implements OnboardingVideo {
     public static final Mapping ACADEMY_VIDEO = Mapping.named("academyVideo");
     private final SQLEntityRef<SQLAcademyVideo> academyVideo =
             SQLEntityRef.on(SQLAcademyVideo.class, BaseEntityRef.OnDelete.IGNORE);
+
+
+    /**
+     * Contains the user-defined code of the video.
+     * <p>
+     * This is copied from {@link AcademyVideoData#VIDEO_CODE}as we require this for filtering and keeping a copy is
+     * cheaper than performing a JOIN.
+     */
+    public static final Mapping VIDEO_CODE = Mapping.named("videoCode");
+    @Length(50)
+    @NullAllowed
+    private String videoCode;
 
     private final OnboardingVideoData onboardingVideoData = new OnboardingVideoData();
 
@@ -62,5 +77,13 @@ public class SQLOnboardingVideo extends SQLEntity implements OnboardingVideo {
         }
 
         return academyVideoData;
+    }
+
+    public String getVideoCode() {
+        return videoCode;
+    }
+
+    public void setVideoCode(String videoCode) {
+        this.videoCode = videoCode;
     }
 }

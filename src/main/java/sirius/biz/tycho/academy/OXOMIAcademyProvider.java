@@ -33,6 +33,7 @@ public class OXOMIAcademyProvider implements AcademyProvider {
 
     private static final String RESPONSE_ENTRIES = "list/entry";
     private static final String RESPONSE_ID = "id";
+    private static final String RESPONSE_CODE = "code";
     private static final String RESPONSE_TITLE = "title";
     private static final String RESPONSE_DESCRIPTION = "description";
     private static final String RESPONSE_MANDATORY = "mandatory";
@@ -61,6 +62,9 @@ public class OXOMIAcademyProvider implements AcademyProvider {
         for (StructuredNode node : call.getInput().getNode(".").queryNodeList(RESPONSE_ENTRIES)) {
             AcademyVideoData video = new AcademyVideoData();
             video.setVideoId(node.queryString(RESPONSE_ID));
+            video.setVideoCode(node.queryValue(RESPONSE_CODE)
+                                   .replaceEmptyWith(node.queryString(RESPONSE_ID))
+                                   .asString());
             video.setTitle(node.queryString(RESPONSE_TITLE));
             video.setDescription(node.queryString(RESPONSE_DESCRIPTION));
             video.setMandatory(node.queryValue(RESPONSE_MANDATORY).asBoolean());
@@ -117,7 +121,7 @@ public class OXOMIAcademyProvider implements AcademyProvider {
      * Computes the OXOMI accessToken to perform an authentication.
      *
      * @param config the config of the provider
-     * @return the acessToken used to access the OXOMI portal
+     * @return the accessToken used to access the OXOMI portal
      */
     public String computeAccessToken(Extension config) {
         return Hasher.md5()

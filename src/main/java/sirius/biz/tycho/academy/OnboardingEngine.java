@@ -271,6 +271,16 @@ public abstract class OnboardingEngine {
     public abstract OnboardingVideo fetchVideo(String owner, String videoId);
 
     /**
+     * Tries to fetch the video with the given code for the currently active user.
+     *
+     * @param owner     the owner/participant to fetch the video for
+     * @param videoCode the code of the video
+     * @return the resolved video or <tt>null</tt> if no matching video was found
+     */
+    @Nullable
+    public abstract OnboardingVideo fetchVideoByCode(String owner, String videoCode);
+
+    /**
      * Fetches other recommendations to show next to the given video.
      *
      * @param owner   the owner/participant to fetch videos for

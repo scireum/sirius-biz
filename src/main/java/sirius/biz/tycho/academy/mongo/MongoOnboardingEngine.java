@@ -20,6 +20,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -114,6 +115,7 @@ public class MongoOnboardingEngine extends OnboardingEngine {
         OnboardingVideoData onboardingVideoData = onboardingVideo.getOnboardingVideoData();
         onboardingVideoData.setAcademy(academyVideoData.getAcademy());
         onboardingVideo.setTrackId(academyVideoData.getTrackId());
+        onboardingVideo.setVideoCode(academyVideoData.getVideoCode());
         onboardingVideoData.setPriority(academyVideoData.getPriority());
         onboardingVideoData.setLastUpdated(LocalDateTime.now());
         onboardingVideoData.setRandomPriority(ThreadLocalRandom.current().nextInt(99999));
@@ -184,6 +186,17 @@ public class MongoOnboardingEngine extends OnboardingEngine {
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
                     .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
                     .eq(MongoOnboardingVideo.ID, videoId)
+                    .queryFirst();
+    }
+
+    @Nullable
+    @Override
+    public OnboardingVideo fetchVideoByCode(String owner, String videoCode) {
+        return mango.select(MongoOnboardingVideo.class)
+                    .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
+                    .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
+                    .eq(MongoOnboardingVideo.VIDEO_CODE, videoCode)
+                    .orderDesc(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.LAST_UPDATED))
                     .queryFirst();
     }
 
