@@ -32,7 +32,7 @@
                         <i:for type="sirius.db.mixing.Property" var="property" items="properties">
                             <tr>
                                 <td><b>@property.getName()</b></td>
-                                <td>
+                                <td style="word-wrap: anywhere">
                                     <i:if test="property.is(sirius.db.mixing.properties.BaseEntityRefProperty.class)">
                                         <i:local name="reference"
                                                  value="property.as(sirius.db.mixing.properties.BaseEntityRefProperty.class)"/>
