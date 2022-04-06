@@ -27,5 +27,12 @@
             <w:menuItem titleKey="UserAccount.select" url="/user-accounts/select"
                         permission="permission-select-user-account"/>
         </w:menuSection>
+        <i:if test="sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
+            <w:menuSection>
+                <w:menuItem titleKey="OnboardingController.academy"
+                                url="/academy" />
+            </w:menuSection>
+        </i:if>
+
     </i:block>
 </i:switch>
