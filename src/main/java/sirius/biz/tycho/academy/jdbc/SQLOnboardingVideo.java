@@ -59,7 +59,7 @@ public class SQLOnboardingVideo extends SQLEntity implements OnboardingVideo {
     /**
      * Contains the user-defined code of the video.
      * <p>
-     * This is copied from {@link AcademyVideoData#VIDEO_CODE}as we require this for filtering and keeping a copy is
+     * This is copied from {@link AcademyVideoData#VIDEO_CODE} as we require this for filtering and keeping a copy is
      * cheaper than performing a JOIN.
      */
     public static final Mapping VIDEO_CODE = Mapping.named("videoCode");
