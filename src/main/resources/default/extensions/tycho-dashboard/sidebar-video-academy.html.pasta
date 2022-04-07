@@ -13,7 +13,7 @@
                         <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"
                                   video="@video"
                                   owner="@user().getUserId()"
-                                  accessToken="@computeAuthSignature(apply('/academy/%s', user().getUserId()))">
+                                  accessToken="@onboardingEngine.computeAccessToken(user().getUserId())">
                             <i:block name="footer-navbox">
                                 <t:navboxLink labelKey="OnboardingController.showAllVideos" url="/academy" icon="fa fa-video"/>
                             </i:block>

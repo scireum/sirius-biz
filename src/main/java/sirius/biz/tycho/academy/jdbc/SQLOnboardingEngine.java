@@ -19,6 +19,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -109,6 +110,8 @@ public class SQLOnboardingEngine extends OnboardingEngine {
         AcademyVideoData academyVideoData = academyVideo.getAcademyVideoData();
         OnboardingVideoData onboardingVideoData = onboardingVideo.getOnboardingVideoData();
         onboardingVideoData.setAcademy(academyVideoData.getAcademy());
+        onboardingVideo.setTrackId(academyVideoData.getTrackId());
+        onboardingVideo.setVideoCode(academyVideoData.getVideoCode());
         onboardingVideoData.setPriority(academyVideoData.getPriority());
         onboardingVideoData.setLastUpdated(LocalDateTime.now());
         onboardingVideoData.setRandomPriority(ThreadLocalRandom.current().nextInt(99999));
@@ -168,8 +171,7 @@ public class SQLOnboardingEngine extends OnboardingEngine {
         return oma.select(SQLOnboardingVideo.class)
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
-                  .eq(SQLOnboardingVideo.ACADEMY_VIDEO.join(AcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.TRACK_ID)),
-                      trackId)
+                  .eq(SQLOnboardingVideo.TRACK_ID, trackId)
                   .orderAsc(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PRIORITY))
                   .queryList();
     }
@@ -180,6 +182,17 @@ public class SQLOnboardingEngine extends OnboardingEngine {
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
                   .eq(SQLOnboardingVideo.ID, Long.parseLong(videoId))
+                  .queryFirst();
+    }
+
+    @Nullable
+    @Override
+    public OnboardingVideo fetchVideoByCode(String owner, String videoCode) {
+        return oma.select(SQLOnboardingVideo.class)
+                  .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
+                  .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
+                  .eq(SQLOnboardingVideo.VIDEO_CODE, videoCode)
+                  .orderDesc(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.LAST_UPDATED))
                   .queryFirst();
     }
 

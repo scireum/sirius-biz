@@ -37,6 +37,9 @@ import javax.annotation.Nullable;
 @Index(name = "owner_video_lookup",
         columns = {"onboardingVideoData_owner", "onboardingVideoData_recommended"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "owner_videoCode_lookup",
+        columns = {"onboardingVideoData_owner", "videoCode"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 @Index(name = "owner_video_track_lookup",
         columns = {"onboardingVideoData_owner", "onboardingVideoData_deleted", "trackId"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
@@ -60,6 +63,17 @@ public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo
     @Length(50)
     @NullAllowed
     private String trackId;
+
+    /**
+     * Contains the user-defined code of the video.
+     * <p>
+     * This is copied from {@link AcademyVideoData#VIDEO_CODE} as we require this for filtering and MongoDB has
+     * not efficient joins.
+     */
+    public static final Mapping VIDEO_CODE = Mapping.named("videoCode");
+    @Length(50)
+    @NullAllowed
+    private String videoCode;
 
     private final OnboardingVideoData onboardingVideoData = new OnboardingVideoData();
 
@@ -91,5 +105,13 @@ public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo
 
     public void setTrackId(String trackId) {
         this.trackId = trackId;
+    }
+
+    public String getVideoCode() {
+        return videoCode;
+    }
+
+    public void setVideoCode(String videoCode) {
+        this.videoCode = videoCode;
     }
 }

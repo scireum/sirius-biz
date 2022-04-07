@@ -28,7 +28,7 @@
                         permission="permission-select-user-account"/>
         </t:dropdownSection>
         <i:if test="sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
-            <t:dropdownSection framework="biz.tenants">
+            <t:dropdownSection>
                 <t:dropdownItem labelKey="OnboardingController.academy"
                                 url="/academy" />
             </t:dropdownSection>

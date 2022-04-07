@@ -1,0 +1,25 @@
+<i:arg type="String" name="code"/>
+<i:arg type="String" name="class" default=""/>
+<i:arg type="String" name="labelKey" default="OnboardingController.videoAcademyBtnLabel"/>
+<i:arg type="String" name="label" default="@i18n(labelKey)"/>
+
+<i:pragma name="description">
+    Provides a button linking to the onboarding video with the given code.
+    If no matching video is found, no button will be rendered. If the video is recommended to the user,
+    the button is rendered as "info" button, otherwise a gray outline button is shown.
+</i:pragma>
+
+<i:local name="engine" value="Injector.context().getPart(sirius.biz.tycho.academy.OnboardingEngine.class)" />
+<i:if test="engine != null">
+    <i:local name="video" value="@engine.fetchVideoByCode(user().getUserId(), code)"/>
+    <i:if test="video != null">
+        <a href="@apply('/academy/%s/%s/video/%s', user().getUserId(), engine.computeAccessToken(user().getUserId()), video.getIdAsString())"
+           target="_blank"
+           class="btn @if (video.getOnboardingVideoData().isRecommended()) { btn-info } else { btn-outline-secondary } @class"
+           data-toggle="tooltip"
+           data-placement="top"
+           title="@video.fetchAcademyVideoData().getTitle()">
+            <i class="fa fa-video"></i><span class="d-none d-xl-inline pl-2">@label</span>
+        </a>
+    </i:if>
+</i:if>

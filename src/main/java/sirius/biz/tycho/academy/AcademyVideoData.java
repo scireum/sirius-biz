@@ -45,6 +45,14 @@ public class AcademyVideoData extends Composite {
     private String videoId;
 
     /**
+     * Contains the user-defined code of the video.
+     */
+    public static final Mapping VIDEO_CODE = Mapping.named("videoCode");
+    @Length(50)
+    @NullAllowed
+    private String videoCode;
+
+    /**
      * Contains the track id, this video is part of.
      */
     public static final Mapping TRACK_ID = Mapping.named("trackId");
@@ -150,6 +158,7 @@ public class AcademyVideoData extends Composite {
     public void loadFrom(AcademyVideoData other) {
         this.academy = other.academy;
         this.videoId = other.videoId;
+        this.videoCode = other.videoCode;
         this.trackId = other.trackId;
         this.trackName = other.trackName;
         this.trackDescription = other.trackDescription;
@@ -191,6 +200,14 @@ public class AcademyVideoData extends Composite {
 
     public void setVideoId(String videoId) {
         this.videoId = videoId;
+    }
+
+    public String getVideoCode() {
+        return videoCode;
+    }
+
+    public void setVideoCode(String videoCode) {
+        this.videoCode = videoCode;
     }
 
     public String getTrackId() {

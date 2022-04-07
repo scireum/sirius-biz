@@ -1,0 +1,27 @@
+<i:arg type="String" name="trackId"/>
+<i:arg type="String" name="class" default=""/>
+<i:arg type="String" name="labelKey" default="OnboardingController.videoAcademyTrackBtnLabel"/>
+<i:arg type="String" name="label" default="@i18n(labelKey)"/>
+
+<i:pragma name="description">
+    Provides a button linking to the onboarding video track with the given id.
+    If any video in the track is recommended to the user, the button is rendered as "info" button,
+    otherwise a gray outline button is shown. If the track is unknown or contains no videos for
+    the current user, no button will be shown.
+</i:pragma>
+
+
+<i:local name="engine" value="Injector.context().getPart(sirius.biz.tycho.academy.OnboardingEngine.class)" />
+<i:if test="engine != null">
+    <i:local name="track" value="@engine.fetchTrack(user().getUserId(), trackId).orElse(null)"/>
+    <i:if test="track != null">
+        <a href="@apply('/academy/%s/%s/track/%s', user().getUserId(), engine.computeAccessToken(user().getUserId()), trackId)"
+           target="_blank"
+           class="ml-2 btn @if (track.getNumberOfRecommendedVideos() > 0) { btn-info } else { btn-outline-secondary } @class"
+           data-toggle="tooltip"
+           data-placement="top"
+           title="@track.getTrackName()">
+            <i class="far fa-play-circle"></i><span class="d-none d-xl-inline pl-2">@label</span>
+        </a>
+    </i:if>
+</i:if>

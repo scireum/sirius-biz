@@ -1,0 +1,26 @@
+<i:arg type="String" name="code"/>
+
+<i:pragma name="description">
+    Renders the onboarding video with the given code as card. If no matching video is found,
+    nothing will be rendered at all.
+</i:pragma>
+
+
+<i:local name="engine" value="Injector.context().getPart(sirius.biz.tycho.academy.OnboardingEngine.class)" />
+<i:if test="engine != null">
+    <i:local name="video" value="@engine.fetchVideoByCode(user().getUserId(), code)"/>
+    <i:if test="video != null">
+        <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"
+                  video="@video"
+                  owner="@user().getUserId()"
+                  accessToken="@engine.computeAccessToken(user().getUserId())">
+            <i:block name="footer-navbox">
+                <i:if test="isFilled(video.fetchAcademyVideoData().getTrackId())">
+                    <t:navboxLink labelKey="OnboardingController.showTrack"
+                                  url="@apply('/academy/%s/%s/track/%s', user().getUserId(), engine.computeAccessToken(user().getUserId()), video.fetchAcademyVideoData().getTrackId())"
+                                  icon="far fa-play-circle"/>
+                </i:if>
+            </i:block>
+        </i:invoke>
+    </i:if>
+</i:if>
