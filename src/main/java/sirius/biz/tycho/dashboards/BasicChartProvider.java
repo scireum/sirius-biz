@@ -8,6 +8,8 @@
 
 package sirius.biz.tycho.dashboards;
 
+import sirius.biz.analytics.metrics.Metrics;
+import sirius.kernel.di.std.Part;
 import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -21,6 +23,9 @@ import java.util.Set;
 public abstract class BasicChartProvider implements ChartProvider {
 
     private Set<String> permissions;
+
+    @Part
+    protected Metrics metrics;
 
     @Override
     public boolean isAccessible() {
