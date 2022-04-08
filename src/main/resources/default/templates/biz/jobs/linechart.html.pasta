@@ -17,9 +17,13 @@
             $(document).ready(function () {
                 var datasets = [];
                 @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
-                    datasets.push({ label: '@dataset.getLabel()',
-                                    data: [ @raw { @dataset.renderData() } ],
-                                    axis: @raw { @dataset.renderAxisName() }});
+                    const dataset = { label: '@dataset.getLabel()',
+                        data: [ @raw { @dataset.renderData() } ],
+                        axis: @raw { @dataset.renderAxisName() }};
+                    @if (dataset.isGray()) {
+                        dataset.color = '@sirius.biz.analytics.charts.Dataset.COLOR_GRAY';
+                    }
+                    datasets.push(dataset);
                 }
                 lineChart('#chart', [ @labels ], datasets);
             });

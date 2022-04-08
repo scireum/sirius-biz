@@ -27,10 +27,12 @@ public class Dataset {
      * Contains the id of the right Y axis.
      */
     public static final String AXIS_RIGHT = "right";
+    public static final String COLOR_GRAY = "#888888";
 
     private String axis;
     private final String label;
     private final List<Number> values = new ArrayList<>();
+    private boolean gray;
 
     /**
      * Creates a new dataset with the given label.
@@ -137,5 +139,19 @@ public class Dataset {
         }
 
         return "'" + axis + "'";
+    }
+
+    /**
+     * Enforces a gray color when showing this dataset.
+     *
+     * @return the dataset itself for fluent method calls
+     */
+    public Dataset markGray() {
+        this.gray = true;
+        return this;
+    }
+
+    public boolean isGray() {
+        return gray;
     }
 }

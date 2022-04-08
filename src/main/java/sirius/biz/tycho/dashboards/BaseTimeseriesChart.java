@@ -73,13 +73,23 @@ public abstract class BaseTimeseriesChart implements Chart {
                                                                                                 metricQuery.determineDefaultLimit()))
                                                              .scale(scaleFactor));
         if (compareToPreviousMonth) {
-            addDataset(new Dataset(ComparisonPeriod.PREVIOUS_MONTH.toString()).addValues(metricQuery.valuesUntil(now.minusMonths(
-                    1), metricQuery.determineDefaultLimit())).scale(scaleFactor));
+            Dataset previousMonth =
+                    new Dataset(ComparisonPeriod.PREVIOUS_MONTH.toString()).addValues(metricQuery.valuesUntil(now.minusMonths(
+                            1), metricQuery.determineDefaultLimit())).scale(scaleFactor);
+            if (!compareToPreviousYear) {
+                previousMonth.markGray();
+            }
+            addDataset(previousMonth);
         }
 
         if (compareToPreviousYear) {
-            addDataset(new Dataset(ComparisonPeriod.PREVIOUS_YEAR.toString()).addValues(metricQuery.valuesUntil(now.minusYears(
-                    1), metricQuery.determineDefaultLimit())).scale(scaleFactor));
+            Dataset previousYear =
+                    new Dataset(ComparisonPeriod.PREVIOUS_YEAR.toString()).addValues(metricQuery.valuesUntil(now.minusYears(
+                            1), metricQuery.determineDefaultLimit())).scale(scaleFactor);
+            if (!compareToPreviousMonth) {
+                previousYear.markGray();
+            }
+            addDataset(previousYear);
         }
 
         return this;
@@ -110,6 +120,9 @@ public abstract class BaseTimeseriesChart implements Chart {
             output.beginObject("dataset");
             output.property("label", dataset.getLabel());
             output.property("axis", dataset.getAxis());
+            if (dataset.isGray()) {
+                output.property("color", Dataset.COLOR_GRAY);
+            }
             output.array("data", "data", dataset.getValues());
             output.endObject();
         }
