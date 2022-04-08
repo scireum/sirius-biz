@@ -75,6 +75,21 @@ public class Dataset {
     }
 
     /**
+     * Scales all values of the dataset with the given factor.
+     *
+     * @param factor the scaling factor to apply. This can be used to output decimal data, which isn't
+     *               supported by {@link sirius.biz.analytics.metrics.Metrics} itself, which only stores
+     *               integer numbers.
+     * @return the dataset itself for fluent method calls
+     */
+    public Dataset scale(float factor) {
+        for (int i = 0; i < this.values.size(); i++) {
+            this.values.set(i, this.values.get(i).floatValue() * factor);
+        }
+        return this;
+    }
+
+    /**
      * Returns the label of the dataset.
      *
      * @return the label of the dataset

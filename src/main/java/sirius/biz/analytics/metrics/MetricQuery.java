@@ -303,7 +303,7 @@ public class MetricQuery {
         LocalDate date = endDate;
         AtomicInteger limit = new AtomicInteger(Math.min(numberOfValues, determineLimit(interval)));
         while (limit.decrementAndGet() > 0) {
-            result.add(formatDateToLabel(date));
+            result.add(0, formatDateToLabel(date));
             date = decrement(date, interval);
         }
 

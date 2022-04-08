@@ -1,29 +1,30 @@
 <i:arg type="java.lang.Object" name="target"/>
 
-<i:pragma name="description">Renders a sindebar view of some key metrics for the given target as supplied by "MetricDashboard"</i:pragma>
+<i:pragma name="description">Renders a sidebar view of some key metrics for the given target as supplied by
+    "MetricDashboard".
+</i:pragma>
 
 <i:local name="metrics"
-         value="@part(sirius.biz.tycho.dashboards.MetricsDashboard.class).fetchImportantKeyMetrics(target, 4)"/>
+         value="@part(sirius.biz.tycho.dashboards.MetricsDashboard.class).fetchImportantKeyMetrics(target, 5)"/>
 <i:if test="!metrics.isEmpty()">
-    <div>
-        <table class="mb-4">
-            <i:for type="sirius.biz.tycho.dashboards.MetricDescription"
-                   var="metric"
-                   items="metrics">
-                <tr>
-                    <td colspan="2" class="text-uppercase small text-muted">@metric.getLabel()</td>
-                </tr>
-                <tr class="lazy-metric-js"
-                    data-type="KeyMetric"
-                    data-provider="@metric.getProviderName()"
-                    data-metric="@metric.getMetricName()"
-                    data-target="@metric.getTargetName()">
-                    <td class="display-6 pr-2 text-xl-right metric-value-js"></td>
-                    <td class="d-none d-xl-table-cell" style="vertical-align: middle">
-                        <canvas style="width:100%;max-width: 120px" height="32"></canvas>
-                    </td>
-                </tr>
-            </i:for>
-        </table>
-    </div>
+    <t:infobox labelKey="Model.statistics" class="mb-3">
+        <i:for type="sirius.biz.tycho.dashboards.MetricDescription"
+               var="metric"
+               items="metrics">
+            <div class="lazy-metric-js d-flex flex-row pt-1 mb-1 border-top border-sirius-gray"
+                 data-type="KeyMetric"
+                 data-provider="@metric.getProviderName()"
+                 data-metric="@metric.getMetricName()"
+                 data-target="@metric.getTargetName()"
+                 data-toggle="tooltip"
+                 data-placement="top"
+                 title="@metric.getDescription()">
+                <div class="text-small text-ellipsis overflow-hidden flex-grow-0">@metric.getLabel()</div>
+                <div class="text-small font-weight-bold  text-right flex-grow-1 pl-2 pr-2 metric-value-js"></div>
+                <div>
+                    <canvas style="width:100%; max-width: 32px" height="16"></canvas>
+                </div>
+            </div>
+        </i:for>
+    </t:infobox>
 </i:if>

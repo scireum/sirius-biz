@@ -54,6 +54,41 @@ public abstract class BaseTimeseriesChart implements Chart {
      * Uses the given {@link MetricQuery} to add one (or more) datasets to the chart.
      *
      * @param metricQuery            the query used to fetch the data from
+     * @param scaleFactor            the scaling factor to apply. This can be used to output decimal data, which isn't
+     *                               supported by {@link sirius.biz.analytics.metrics.Metrics} itself, which only stores
+     *                               integer numbers.
+     * @param compareToPreviousYear  determines if a comparison dataset for the previous year should be added
+     * @param compareToPreviousMonth determines if a comparison dataset for the previous month should be added.
+     *                               Note that this is only feasible for daily metrics.
+     * @return the chart itself for fluent method calls
+     */
+    public BaseTimeseriesChart fromMetricQuery(MetricQuery metricQuery,
+                                               float scaleFactor,
+                                               boolean compareToPreviousYear,
+                                               boolean compareToPreviousMonth) {
+        LocalDate now = LocalDate.now();
+        withLabels(metricQuery.labelsUntil(now, metricQuery.determineDefaultLimit()));
+
+        addDataset(new Dataset(String.valueOf(now.getYear())).addValues(metricQuery.valuesUntil(now,
+                                                                                                metricQuery.determineDefaultLimit()))
+                                                             .scale(scaleFactor));
+        if (compareToPreviousMonth) {
+            addDataset(new Dataset(ComparisonPeriod.PREVIOUS_MONTH.toString()).addValues(metricQuery.valuesUntil(now.minusMonths(
+                    1), metricQuery.determineDefaultLimit())).scale(scaleFactor));
+        }
+
+        if (compareToPreviousYear) {
+            addDataset(new Dataset(ComparisonPeriod.PREVIOUS_YEAR.toString()).addValues(metricQuery.valuesUntil(now.minusYears(
+                    1), metricQuery.determineDefaultLimit())).scale(scaleFactor));
+        }
+
+        return this;
+    }
+
+    /**
+     * Uses the given {@link MetricQuery} to add one (or more) datasets to the chart.
+     *
+     * @param metricQuery            the query used to fetch the data from
      * @param compareToPreviousYear  determines if a comparison dataset for the previous year should be added
      * @param compareToPreviousMonth determines if a comparison dataset for the previous month should be added.
      *                               Note that this is only feasible for daily metrics.
@@ -62,22 +97,7 @@ public abstract class BaseTimeseriesChart implements Chart {
     public BaseTimeseriesChart fromMetricQuery(MetricQuery metricQuery,
                                                boolean compareToPreviousYear,
                                                boolean compareToPreviousMonth) {
-        LocalDate now = LocalDate.now();
-        withLabels(metricQuery.labelsUntil(now, metricQuery.determineDefaultLimit()));
-
-        addDataset(new Dataset(String.valueOf(now.getYear())).addValues(metricQuery.valuesUntil(now,
-                                                                                                metricQuery.determineDefaultLimit())));
-        if (compareToPreviousMonth) {
-            addDataset(new Dataset(ComparisonPeriod.PREVIOUS_MONTH.toString()).addValues(metricQuery.valuesUntil(now.minusMonths(
-                    1), metricQuery.determineDefaultLimit())));
-        }
-
-        if (compareToPreviousYear) {
-            addDataset(new Dataset(ComparisonPeriod.PREVIOUS_YEAR.toString()).addValues(metricQuery.valuesUntil(now.minusYears(
-                    1), metricQuery.determineDefaultLimit())));
-        }
-
-        return this;
+        return fromMetricQuery(metricQuery, 1, compareToPreviousYear, compareToPreviousMonth);
     }
 
     @Override
