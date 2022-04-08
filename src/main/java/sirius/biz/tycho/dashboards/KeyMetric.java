@@ -48,7 +48,7 @@ public class KeyMetric {
      * @param unit        the (optional) unit to append
      */
     public KeyMetric(MetricQuery query, float scaleFactor, @Nullable String unit) {
-        this(Amount.of(query.lastValue())
+        this(Amount.of(query.currentValue())
                    .times(Amount.of(scaleFactor))
                    .toSmartRoundedString(NumberFormat.TWO_DECIMAL_PLACES)
                    .tryAppend(" ", unit)
