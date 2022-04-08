@@ -1,7 +1,7 @@
 <i:arg type="java.lang.Object" name="target"/>
 
-<i:pragma name="description">Renders a sindebar view of some key metrics for the given target as supplied by
-    "MetricDashboard"
+<i:pragma name="description">Renders a sidebar view of some key metrics for the given target as supplied by
+    "MetricDashboard".
 </i:pragma>
 
 <i:local name="metrics"
