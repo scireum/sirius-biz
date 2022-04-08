@@ -75,6 +75,19 @@ public class Dataset {
     }
 
     /**
+     * Scales all values of the dataset with the given factor.
+     *
+     * @param factor the scaling factor to apply
+     * @return the dataset itself for fluent method calls
+     */
+    public Dataset scale(float factor) {
+        for (int i = 0; i < this.values.size(); i++) {
+            this.values.set(i, this.values.get(i).floatValue() * factor);
+        }
+        return this;
+    }
+
+    /**
      * Returns the label of the dataset.
      *
      * @return the label of the dataset

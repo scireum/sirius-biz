@@ -27,7 +27,7 @@ import java.util.List;
 public class KeyMetric {
 
     private final String value;
-    private List<Integer> history = Collections.emptyList();
+    private List<? extends Number> history = Collections.emptyList();
 
     /**
      * Creates a key metric with the given value.
@@ -41,12 +41,29 @@ public class KeyMetric {
     /**
      * Creates a key metric based on the given query.
      *
+     * @param query       the metric query used to load the actual value
+     * @param scaleFactor a factor to scale all values by. This can be used to output decimal data, which isn't
+     *                    supported by {@link sirius.biz.analytics.metrics.Metrics} itself, which only stores
+     *                    integer numbers.
+     * @param unit        the (optional) unit to append
+     */
+    public KeyMetric(MetricQuery query, float scaleFactor, @Nullable String unit) {
+        this(Amount.of(query.lastValue())
+                   .times(Amount.of(scaleFactor))
+                   .toSmartRoundedString(NumberFormat.TWO_DECIMAL_PLACES)
+                   .tryAppend(" ", unit)
+                   .asString());
+        withHistory(query, scaleFactor);
+    }
+
+    /**
+     * Creates a key metric based on the given query.
+     *
      * @param query the metric query used to load the actual value
      * @param unit  the (optional) unit to append
      */
     public KeyMetric(MetricQuery query, @Nullable String unit) {
-        this(Amount.of(query.lastValue()).toString(NumberFormat.NO_DECIMAL_PLACES).tryAppend(" ", unit).asString());
-        withHistory(query);
+        this(query, 1f, unit);
     }
 
     /**
@@ -63,12 +80,29 @@ public class KeyMetric {
     /**
      * Adds a history to be shown for the key metric, based on the given query.
      *
+     * @param query       the query used to load the historical values
+     * @param scaleFactor the scale factor to apply. This can be used to output decimal data, which isn't
+     *                    supported by {@link sirius.biz.analytics.metrics.Metrics} itself, which only stores
+     *                    integer numbers.
+     * @return the metric itself for fluent method calls
+     */
+    public KeyMetric withHistory(MetricQuery query, float scaleFactor) {
+        this.history = query.valuesUntil(LocalDate.now(), query.determineDefaultLimit())
+                            .stream()
+                            .map(historyValue -> historyValue * scaleFactor)
+                            .toList();
+
+        return this;
+    }
+
+    /**
+     * Adds a history to be shown for the key metric, based on the given query.
+     *
      * @param query the query used to load the historical values
      * @return the metric itself for fluent method calls
      */
     public KeyMetric withHistory(MetricQuery query) {
-        this.history = query.valuesUntil(LocalDate.now(), query.determineDefaultLimit());
-        return this;
+        return withHistory(query, 1f);
     }
 
     /**
