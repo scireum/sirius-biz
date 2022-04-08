@@ -10,6 +10,7 @@ package sirius.biz.analytics.metrics;
 
 import sirius.db.mixing.BaseEntity;
 
+import javax.annotation.Nullable;
 import java.time.LocalDate;
 
 /**
@@ -221,4 +222,15 @@ public interface Metrics {
      * @return the label of the metric in the current language
      */
     String fetchLabel(String name);
+
+    /**
+     * Fetches the description for the given metric.
+     * <p>
+     * This is boilerplate for {@code NLS.get('Metric.'+name+'.description')}
+     *
+     * @param name the name of the metric to fetch the description for
+     * @return the description of the metric in the current language or <tt>null</tt> if none is present
+     */
+    @Nullable
+    String fetchDescription(String name);
 }
