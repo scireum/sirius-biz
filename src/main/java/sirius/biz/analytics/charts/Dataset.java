@@ -77,7 +77,9 @@ public class Dataset {
     /**
      * Scales all values of the dataset with the given factor.
      *
-     * @param factor the scaling factor to apply
+     * @param factor the scaling factor to apply. This can be used to output decimal data, which isn't
+     *               supported by {@link sirius.biz.analytics.metrics.Metrics} itself, which only stores
+     *               integer numbers.
      * @return the dataset itself for fluent method calls
      */
     public Dataset scale(float factor) {
