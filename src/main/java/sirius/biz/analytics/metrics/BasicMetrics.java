@@ -34,6 +34,7 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
     protected static final String GLOBAL = "global";
 
     private static final String METRIC_NLS_PREFIX = "Metric.";
+    private static final String DESCRIPTION_NLS_SUFFIX = ".description";
 
     private final Cache<String, Integer> metricCache = CacheManager.createCoherentCache("metrics");
 
@@ -344,6 +345,11 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
     @Override
     public String fetchLabel(String name) {
         return NLS.get(METRIC_NLS_PREFIX + name);
+    }
+
+    @Override
+    public String fetchDescription(String name) {
+        return NLS.getIfExists(METRIC_NLS_PREFIX + name + DESCRIPTION_NLS_SUFFIX, null).orElse(null);
     }
 
     /**

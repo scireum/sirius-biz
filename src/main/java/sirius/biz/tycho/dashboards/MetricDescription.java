@@ -8,6 +8,9 @@
 
 package sirius.biz.tycho.dashboards;
 
+import sirius.biz.analytics.metrics.Metrics;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 
 /**
@@ -21,6 +24,9 @@ import sirius.kernel.di.std.Priorized;
  */
 public class MetricDescription {
 
+    @Part
+    private static Metrics metrics;
+
     /**
      * Contains the {@link KeyMetricProvider#getName()} or {@link ChartProvider#getName()}. Note that this field
      * if filled internally by {@link MetricsDashboard}.
@@ -33,7 +39,7 @@ public class MetricDescription {
      */
     protected String targetName;
 
-    private final String label;
+    private String label;
 
     private String metricName = "-";
     private int priority = Priorized.DEFAULT_PRIORITY;
@@ -48,6 +54,17 @@ public class MetricDescription {
     public MetricDescription(String label) {
         this.targetName = "-";
         this.label = label;
+    }
+
+    /**
+     * Creates a metric description without a label.
+     * <p>
+     *     In this case {@link #withMetricName(String)} must be used and the given metric name there will be used
+     *     to load a label (and tries to load a description) via {@link Metrics#fetchLabel(String)}.
+     */
+    public MetricDescription() {
+        this.targetName = "-";
+        this.label = null;
     }
 
     /**
@@ -86,6 +103,13 @@ public class MetricDescription {
      */
     public MetricDescription withMetricName(String metricName) {
         this.metricName = metricName;
+        if (Strings.isEmpty(label)) {
+            this.label = metrics.fetchLabel(metricName);
+        }
+        if (Strings.isEmpty(description)) {
+            this.description = metrics.fetchDescription(metricName);
+        }
+
         return this;
     }
 

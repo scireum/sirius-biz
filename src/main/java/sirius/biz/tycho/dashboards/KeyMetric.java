@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Represents a key metric to be shown on a metric dashboard.
  * <p>
- * A key metric is a number shown on the metrics dashboard, which might be accompanied with a history, shown as
+ * A key metric is a number shown on the metrics dashboard, which might be accompanied by a history, shown as
  * graph below. A key metric for a user might be "number of logins" or "activity in %".
  */
 public class KeyMetric {
@@ -48,7 +48,7 @@ public class KeyMetric {
      * @param unit        the (optional) unit to append
      */
     public KeyMetric(MetricQuery query, float scaleFactor, @Nullable String unit) {
-        this(Amount.of(query.lastValue())
+        this(Amount.of(query.currentValue())
                    .times(Amount.of(scaleFactor))
                    .toSmartRoundedString(NumberFormat.TWO_DECIMAL_PLACES)
                    .tryAppend(" ", unit)
