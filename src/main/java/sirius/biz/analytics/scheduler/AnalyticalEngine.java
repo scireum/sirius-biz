@@ -236,7 +236,7 @@ public class AnalyticalEngine implements EveryDay {
      * Determines if the given scheduler should be executed again.
      *
      * @param scheduler the scheduler to check
-     * @return <tt>true</tt> if the interval sepcified by the scheduler has passed since its last execution,
+     * @return <tt>true</tt> if the interval specified by the scheduler has passed since its last execution,
      * <tt>false</tt> otherwise
      */
     private boolean shouldExecuteAgain(AnalyticsScheduler scheduler) {
