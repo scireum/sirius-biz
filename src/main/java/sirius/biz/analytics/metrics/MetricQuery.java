@@ -158,7 +158,7 @@ public class MetricQuery {
         LocalDate date = startDate;
         LocalDate endDate = untilDate == null ? LocalDate.now() : untilDate;
         AtomicInteger limit = new AtomicInteger(determineLimit(interval));
-        while (!date.isAfter(endDate) && limit.decrementAndGet() > 0) {
+        while (!date.isAfter(endDate) && limit.decrementAndGet() >= 0) {
             result.add(metrics.executeQuery(interval,
                                             targetType,
                                             targetId,
@@ -227,7 +227,7 @@ public class MetricQuery {
         List<Integer> result = new ArrayList<>();
         LocalDate date = startDate;
         AtomicInteger limit = new AtomicInteger(Math.min(numberOfValues, determineLimit(interval)));
-        while (limit.decrementAndGet() > 0) {
+        while (limit.decrementAndGet() >= 0) {
             result.add(metrics.executeQuery(interval,
                                             targetType,
                                             targetId,
@@ -253,7 +253,7 @@ public class MetricQuery {
         List<String> result = new ArrayList<>();
         LocalDate date = startDate;
         AtomicInteger limit = new AtomicInteger(Math.min(numberOfValues, determineLimit(interval)));
-        while (limit.decrementAndGet() > 0) {
+        while (limit.decrementAndGet() >= 0) {
             result.add(formatDateToLabel(date));
             date = increment(date, interval);
         }
@@ -275,7 +275,7 @@ public class MetricQuery {
         List<Integer> result = new ArrayList<>();
         LocalDate date = endDate;
         AtomicInteger limit = new AtomicInteger(Math.min(numberOfValues, determineLimit(interval)));
-        while (limit.decrementAndGet() > 0) {
+        while (limit.decrementAndGet() >= 0) {
             result.add(0,
                        metrics.executeQuery(interval,
                                             targetType,
@@ -302,7 +302,7 @@ public class MetricQuery {
         List<String> result = new ArrayList<>();
         LocalDate date = endDate;
         AtomicInteger limit = new AtomicInteger(Math.min(numberOfValues, determineLimit(interval)));
-        while (limit.decrementAndGet() > 0) {
+        while (limit.decrementAndGet() >= 0) {
             result.add(0, formatDateToLabel(date));
             date = decrement(date, interval);
         }
