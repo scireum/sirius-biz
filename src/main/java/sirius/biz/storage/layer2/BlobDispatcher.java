@@ -157,7 +157,7 @@ public class BlobDispatcher implements WebDispatcher {
     @Override
     public DispatchDecision dispatch(WebContext request) throws Exception {
         String uri = request.getRequestedURI();
-        if (!uri.startsWith(URI_PREFIX)) {
+        if (!uri.startsWith(URI_PREFIX + "/")) {
             return DispatchDecision.CONTINUE;
         }
 
