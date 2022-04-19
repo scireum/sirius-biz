@@ -47,6 +47,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
@@ -1184,6 +1185,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 getPhysicalSpace().delete(nextPhysicalId);
             } catch (Exception ex) {
                 Exceptions.ignore(ex);
+            }
+            if (e.getCause() instanceof InterruptedIOException) {
+                Exceptions.ignore(e);
+                return;
             }
 
             throw Exceptions.handle()
