@@ -382,7 +382,6 @@ public class URLBuilder {
         }
 
         result.append(BlobDispatcher.URI_PREFIX);
-        result.append("/");
         if (largeFile) {
             result.append(BlobDispatcher.LARGE_FILE_MARKER);
         }
@@ -417,7 +416,6 @@ public class URLBuilder {
     private String createVirtualDeliveryUrl() {
         StringBuilder result = createBaseURL();
         result.append(BlobDispatcher.URI_PREFIX);
-        result.append("/");
         if (largeFile) {
             result.append(BlobDispatcher.LARGE_FILE_MARKER);
         }
