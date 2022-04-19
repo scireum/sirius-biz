@@ -54,14 +54,19 @@ public class BlobDispatcher implements WebDispatcher {
     public static final String URI_PREFIX = "/dasd";
 
     /**
-     * Contains the prefix length ("/dasd" + "/") to cut from an incoming URI
+     * Contains the {@link #URI_PREFIX} with a trailing slash.
      */
-    private static final int URI_PREFIX_LENGTH = URI_PREFIX.length() + 1;
+    protected static final String URI_PREFIX_TRAILED = URI_PREFIX + "/";
+
+    /**
+     * Contains the prefix length ("/dasd/") to cut from an incoming URI
+     */
+    private static final int URI_PREFIX_LENGTH = URI_PREFIX_TRAILED.length();
 
     /**
      * Contains a marker which can be placed in a URI to signal that the underlying file might be very large.
      * <p>
-     * The dispatcher itself simply ignores this marker, but upstream reverse-proxies like NGNIX or Varnish
+     * The dispatcher itself simply ignores this marker, but upstream reverse-proxies like NGINX or Varnish
      * can use this to optimize their cache utilization (e.g. by fully ignoring or piping this request/response).
      */
     public static final String LARGE_FILE_MARKER = "xxl/";
@@ -157,7 +162,7 @@ public class BlobDispatcher implements WebDispatcher {
     @Override
     public DispatchDecision dispatch(WebContext request) throws Exception {
         String uri = request.getRequestedURI();
-        if (!uri.startsWith(URI_PREFIX)) {
+        if (!uri.startsWith(URI_PREFIX_TRAILED)) {
             return DispatchDecision.CONTINUE;
         }
 
@@ -287,7 +292,7 @@ public class BlobDispatcher implements WebDispatcher {
      * Such an "enhanced" filename is generated when {@link URLBuilder#withAddonText(String)} was used.
      *
      * @param input the full filename with an optional SEO text as prefix
-     * @return the filename with the additionak text stripped of
+     * @return the filename with the additional text stripped of
      */
     private String stripAdditionalText(String input) {
         Tuple<String, String> additionalTextAndKey = Strings.splitAtLast(input, "--");
