@@ -1804,7 +1804,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         String conversionUrl = "http://"
                                + randomHost
-                               + BlobDispatcher.URI_PREFIX
+                               + BlobDispatcher.URI_PREFIX_TRAILED
                                + BlobDispatcher.FLAG_VIRTUAL
                                + "/"
                                + spaceName

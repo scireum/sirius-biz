@@ -51,12 +51,17 @@ public class BlobDispatcher implements WebDispatcher {
      * is nowadays simply called a hard disk. Yes, it doesn't match the purpose of the URI but its short, not a common
      * term and <b>fun</b>.
      */
-    public static final String URI_PREFIX = "/dasd/";
+    public static final String URI_PREFIX = "/dasd";
+
+    /**
+     * Contains the {@link #URI_PREFIX} with a trailing slash.
+     */
+    protected static final String URI_PREFIX_TRAILED = URI_PREFIX + "/";
 
     /**
      * Contains the prefix length ("/dasd/") to cut from an incoming URI
      */
-    private static final int URI_PREFIX_LENGTH = URI_PREFIX.length();
+    private static final int URI_PREFIX_LENGTH = URI_PREFIX_TRAILED.length();
 
     /**
      * Contains a marker which can be placed in a URI to signal that the underlying file might be very large.
@@ -157,7 +162,7 @@ public class BlobDispatcher implements WebDispatcher {
     @Override
     public DispatchDecision dispatch(WebContext request) throws Exception {
         String uri = request.getRequestedURI();
-        if (!uri.startsWith(URI_PREFIX)) {
+        if (!uri.startsWith(URI_PREFIX_TRAILED)) {
             return DispatchDecision.CONTINUE;
         }
 
