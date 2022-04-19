@@ -66,7 +66,7 @@ public class BlobDispatcher implements WebDispatcher {
     /**
      * Contains a marker which can be placed in a URI to signal that the underlying file might be very large.
      * <p>
-     * The dispatcher itself simply ignores this marker, but upstream reverse-proxies like NGNIX or Varnish
+     * The dispatcher itself simply ignores this marker, but upstream reverse-proxies like NGINX or Varnish
      * can use this to optimize their cache utilization (e.g. by fully ignoring or piping this request/response).
      */
     public static final String LARGE_FILE_MARKER = "xxl/";
@@ -292,7 +292,7 @@ public class BlobDispatcher implements WebDispatcher {
      * Such an "enhanced" filename is generated when {@link URLBuilder#withAddonText(String)} was used.
      *
      * @param input the full filename with an optional SEO text as prefix
-     * @return the filename with the additionak text stripped of
+     * @return the filename with the additional text stripped of
      */
     private String stripAdditionalText(String input) {
         Tuple<String, String> additionalTextAndKey = Strings.splitAtLast(input, "--");
