@@ -44,6 +44,9 @@ public class DelegateJournalData extends Composite {
     private volatile boolean silent;
 
     @Transient
+    private boolean logCreation;
+
+    @Transient
     private final BaseEntity<?> owner;
 
     @Transient
@@ -132,6 +135,16 @@ public class DelegateJournalData extends Composite {
     }
 
     /**
+     * Defines that a journal entry should be created when the entity is created.
+     *
+     * @return the object itself for fluent calls
+     */
+    public DelegateJournalData withEntryOnCreation() {
+        this.logCreation = true;
+        return this;
+    }
+
+    /**
      * Sets the skip flag.
      * <p>
      * Calling this with <tt>true</tt>, will skip all changes performed on the referenced entity instance.
@@ -182,7 +195,7 @@ public class DelegateJournalData extends Composite {
             return;
         }
 
-        if (owner.isNew() || owner.wasCreated()) {
+        if (owner.isNew() || (!logCreation && owner.wasCreated())) {
             return;
         }
 
