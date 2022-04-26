@@ -734,9 +734,13 @@ public class ObjectStore {
             getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
                                                                              objectId,
                                                                              multipartUpload.getUploadId()));
-            if (e.getCause() instanceof InterruptedIOException) {
-                Exceptions.ignore(e);
-                return;
+            if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
+                throw Exceptions.createHandled()
+                                .error(e)
+                                .withSystemErrorMessage("Interrupted multipart upload for %s (%s): %s (%s)",
+                                                        objectId,
+                                                        bucket.getName())
+                                .handle();
             }
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)

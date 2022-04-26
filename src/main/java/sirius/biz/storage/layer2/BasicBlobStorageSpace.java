@@ -1186,9 +1186,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             } catch (Exception ex) {
                 Exceptions.ignore(ex);
             }
-            if (e.getCause() instanceof InterruptedIOException) {
-                Exceptions.ignore(e);
-                return;
+            if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
+                throw Exceptions.createHandled()
+                                .error(e)
+                                .withSystemErrorMessage("Layer 2: Interrupted updating contents of %s in %s: %s (%s)",
+                                                        blob.getBlobKey(),
+                                                        spaceName)
+                                .handle();
             }
 
             throw Exceptions.handle()
