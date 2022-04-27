@@ -35,6 +35,16 @@
             <li>
                 <a href="/kb/@article.getLanguage()">@i18n('KnowledgeBase.kb')</a>
             </li>
+            <i:local name="parents" value="article.queryParents()"/>
+            <i:if test="!parents.isEmpty()">
+                <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="parent" items="parents">
+                    <i:if test="'00000' != parent.getArticleId()">
+                        <li>
+                            <a href="/kba/@parent.getLanguage()/@parent.getArticleId()">@parent.getTitle()</a>
+                        </li>
+                    </i:if>
+                </i:for>
+            </i:if>
             <i:if test="'00000' != article.getArticleId()">
                 <li>
                     <a href="/kba/@article.getLanguage()/@article.getArticleId()">@article.getTitle()</a>
@@ -67,13 +77,14 @@
                             <div class="dropdown-menu dropdown-menu-right p-4" style="width: 400px">
                                 <div class="mb-3">
                                     <label class="form-label">URL</label>
-                                    <input type="text" class="form-control" id="urlField" readonly value="@article.getPresignedUrl()">
+                                    <input type="text" class="form-control" id="urlField" readonly
+                                           value="@article.getPresignedUrl()">
                                     <small id="copy-msg" class="form-text text-muted text-sirius-green-dark"></small>
                                 </div>
                                 <div>@i18n('KnowledgeBase.urlCopyInfo')</div>
                             </div>
                             <script>
-                                sirius.ready(function() {
+                                sirius.ready(function () {
                                     $('#urlDropdown').on('shown.bs.dropdown', function () {
                                         const copyMsg = document.querySelector('#copy-msg');
                                         const copyTextarea = document.querySelector('#urlField');
