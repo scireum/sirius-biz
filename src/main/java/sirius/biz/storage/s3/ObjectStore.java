@@ -57,6 +57,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -733,6 +734,14 @@ public class ObjectStore {
             getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
                                                                              objectId,
                                                                              multipartUpload.getUploadId()));
+            if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
+                throw Exceptions.createHandled()
+                                .error(e)
+                                .withSystemErrorMessage("Interrupted multipart upload for %s (%s): %s (%s)",
+                                                        objectId,
+                                                        bucket.getName())
+                                .handle();
+            }
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
