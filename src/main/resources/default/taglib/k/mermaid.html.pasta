@@ -5,6 +5,6 @@
     Renders a diagram using the mermaid syntax.
 </i:pragma>
 
-<div class="mermaid kb-diagram">
+<div class="mermaid kb-diagram @class">
     <i:raw>@renderToString('body')</i:raw>
 </div>
