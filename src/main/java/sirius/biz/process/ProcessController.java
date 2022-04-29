@@ -292,7 +292,7 @@ public class ProcessController extends BizController {
 
     private ElasticQuery<ProcessLog> buildLogsQuery(Process process) {
         ElasticQuery<ProcessLog> query = elastic.select(ProcessLog.class)
-                                                .where(Elastic.FILTERS.notExists(ProcessLog.OUTPUT))
+                                                .where(Elastic.FILTERS.notFilled(ProcessLog.OUTPUT))
                                                 .eq(ProcessLog.PROCESS, process);
 
         UserInfo user = UserContext.getCurrentUser();
