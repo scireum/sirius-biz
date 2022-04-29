@@ -45,7 +45,7 @@
                         <tr>
                             <i:for type="String" var="column" items="columns">
                                 <i:raw>
-                                    <td class="cell">@cells.render(column, row.getContext().data())</td>
+                                    <td class="cell text-break overflow-hidden">@cells.render(column, row.getContext().data())</td>
                                 </i:raw>
                             </i:for>
                         </tr>
