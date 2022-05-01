@@ -46,6 +46,11 @@ public class MongoPerformanceData extends PerformanceData {
     }
 
     @Override
+    public void clear() {
+        flags.clear();
+    }
+
+    @Override
     public boolean isSet(PerformanceFlag flag) {
         return flags.contains(String.valueOf(flag.getBitIndex()));
     }
