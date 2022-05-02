@@ -47,7 +47,7 @@ public abstract class PerformanceData extends Composite {
     /**
      * Clears all performance flags on the entity.
      * <p>
-     * Note that the owner as to be {@link sirius.db.mixing.BaseMapper#update(BaseEntity) persisted} to actually
+     * Note that the owner has to be {@link sirius.db.mixing.BaseMapper#update(BaseEntity) persisted} to actually
      * perform the changes.
      */
     public abstract void clear();
