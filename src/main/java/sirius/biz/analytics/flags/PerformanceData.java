@@ -45,6 +45,14 @@ public abstract class PerformanceData extends Composite {
     public abstract PerformanceFlagModifier modify();
 
     /**
+     * Clears all performance flags on the entity.
+     * <p>
+     * Note that the owner has to be {@link sirius.db.mixing.BaseMapper#update(BaseEntity) persisted} to actually
+     * perform the changes.
+     */
+    public abstract void clear();
+
+    /**
      * Determines if a given performance flag is set.
      *
      * @param flag the flag  to check
