@@ -126,7 +126,10 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         importTransactionHelper.start();
         try (InputStream in = inputSupplier.create()) {
-            LineBasedProcessor.create(filename, in).run((rowNumber, row) -> {
+            LineBasedProcessor.create(filename,
+                                      in,
+                                      process.getParameter(LineBasedImportJob.IMPORT_ALL_SHEETS_PARAMETER)
+                                             .orElse(false)).run((rowNumber, row) -> {
                 errorContext.withContext(ERROR_CONTEXT_ROW, rowNumber);
                 this.handleRow(rowNumber, row);
                 errorContext.removeContext(ERROR_CONTEXT_ROW);
