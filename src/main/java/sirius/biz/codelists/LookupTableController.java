@@ -18,7 +18,6 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
-import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
@@ -47,7 +46,6 @@ public class LookupTableController extends BizController {
      * @param display         the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the field label
      * @param extendedDisplay the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the completion label
      */
-    @LoginRequired
     @Routed("/system/lookuptable/autocomplete/:1/:2/:3")
     public void suggestFromLookupTable(WebContext webContext,
                                        String tableName,
@@ -74,7 +72,6 @@ public class LookupTableController extends BizController {
      * @param output     the JSON output to generate
      * @param tableName  the name of the lookup table being queried
      */
-    @LoginRequired
     @Routed("/system/lookuptable/info/:1")
     @InternalService
     public void lookuptableInfo(WebContext webContext, JSONStructuredOutput output, String tableName) {
