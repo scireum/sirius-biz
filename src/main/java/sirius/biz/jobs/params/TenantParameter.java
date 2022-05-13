@@ -69,8 +69,8 @@ public class TenantParameter extends ParameterBuilder<Tenant<?>, TenantParameter
 
     @Override
     protected Optional<Tenant<?>> resolveFromString(Value input) {
-        Tenant<?> tenant = tenantController.resolveAccessibleTenant(input.asString(), tenants.getRequiredTenant()).orElse(null);
+        Tenant<?> tenant =
+                tenantController.resolveAccessibleTenant(input.asString(), tenants.getRequiredTenant()).orElse(null);
         return Optional.ofNullable(tenant);
     }
-
 }
