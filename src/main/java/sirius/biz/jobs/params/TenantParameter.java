@@ -13,6 +13,7 @@ import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.Tenants;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -40,6 +41,22 @@ public class TenantParameter extends ParameterBuilder<Tenant<?>, TenantParameter
         super(name, label);
     }
 
+    /**
+     * Creates a new parameter with the given name and a default label.
+     *
+     * @param name the name of the parameter
+     */
+    public TenantParameter(String name) {
+        this(name, NLS.get("Model.tenant"));
+    }
+
+    /**
+     * Creates a new parameter with the default name and label.
+     */
+    public TenantParameter() {
+        this("tenant");
+    }
+
     @Override
     public String getTemplateName() {
         return "/templates/biz/jobs/params/tenant.html.pasta";
@@ -52,8 +69,8 @@ public class TenantParameter extends ParameterBuilder<Tenant<?>, TenantParameter
 
     @Override
     protected Optional<Tenant<?>> resolveFromString(Value input) {
-        Tenant<?> tenant = tenantController.resolveAccessibleTenant(input.asString(), tenants.getRequiredTenant()).orElse(null);
+        Tenant<?> tenant =
+                tenantController.resolveAccessibleTenant(input.asString(), tenants.getRequiredTenant()).orElse(null);
         return Optional.ofNullable(tenant);
     }
-
 }
