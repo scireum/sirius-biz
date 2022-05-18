@@ -9,17 +9,22 @@
        name="description"
        default="@part(sirius.biz.codelists.LookupTables.class).fetchTable(table).getDescription()"
        description="Contains a short description of the lookup table. By default, we use the description as provided by the system (if available)."/>
+<i:arg type="String"
+       name="class"
+       default=""
+       description="Contains additional classes to apply."/>
 
 <i:pragma name="description">
     Renders a link to a LookupTable.
 </i:pragma>
 
-
-<div>
-    <a href="javascript:openLookupTable('@table', '@label')">@label</a>
-</div>
-<i:if test="isFilled(description)">
-    <div class="text-muted">
-        @description
+<div class="@class">
+    <div>
+        <a href="javascript:openLookupTable('@table', '@label')">@label</a>
     </div>
-</i:if>
+    <i:if test="isFilled(description)">
+        <div class="text-muted">
+            @description
+        </div>
+    </i:if>
+</div>
