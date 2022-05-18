@@ -16,7 +16,7 @@
 
 
 <div>
-    <a href="javascript:openLookupTable('@table')">@label</a>
+    <a href="javascript:openLookupTable('@table', '@label')">@label</a>
 </div>
 <i:if test="isFilled(description)">
     <div class="text-muted">
