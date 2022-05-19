@@ -78,22 +78,39 @@
         const dropzone = this;
         let _dropzoneIndicator = document.querySelector('#' + '@id' + ' .sirius-upload-hover');
         let _dropzoneContent = document.querySelector('#' + '@id' + ' .sirius-upload-content');
-        document.addEventListener('dragenter', function (event) {
-            let element = _dropzoneIndicator;
+
+        function showIndicator() {
             _dropzoneIndicator.classList.add('d-flex');
             _dropzoneIndicator.classList.remove('d-none');
             _dropzoneContent.classList.add('d-none');
             _dropzoneContent.classList.remove('d-flex');
-        }, false);
-        document.addEventListener('dragover', function (event) {
-            event.preventDefault();
-        });
-        document.addEventListener('drop', function (event) {
+        }
+
+        function hideIndicator() {
             _dropzoneIndicator.classList.remove('d-flex');
             _dropzoneIndicator.classList.add('d-none');
             _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
             _dropzoneContent.classList.remove('d-none');
             _dropzoneContent.classList.add('d-flex');
+        }
+
+        document.addEventListener('dragenter', function (event) {
+            showIndicator();
+        }, false);
+        document.addEventListener('dragend', function (event) {
+            hideIndicator();
+        }, false);
+        document.addEventListener('dragleave', function (event) {
+            if (event.relatedTarget === null) {
+                // left window
+                hideIndicator();
+            }
+        }, false);
+        document.addEventListener('dragover', function (event) {
+            event.preventDefault();
+        });
+        document.addEventListener('drop', function (event) {
+            hideIndicator();
         }, false);
         _dropzoneIndicator.addEventListener('dragenter', function (event) {
             _dropzoneIndicator.classList.add('sirius-upload-hover-active');
@@ -101,12 +118,11 @@
         _dropzoneIndicator.addEventListener('dragleave', function (event) {
             _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
         });
+        _dropzoneContent.addEventListener('dragenter', function (event) {
+            showIndicator();
+        });
         dropzone.on('drop', function () {
-            _dropzoneIndicator.classList.remove('d-flex');
-            _dropzoneIndicator.classList.add('d-none');
-            _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
-            _dropzoneContent.classList.remove('d-none');
-            _dropzoneContent.classList.add('d-flex');
+            hideIndicator();
         });
         sirius.warnOnUnload(function () {
             return dropzone.getUploadingFiles().length + dropzone.getQueuedFiles().length;
