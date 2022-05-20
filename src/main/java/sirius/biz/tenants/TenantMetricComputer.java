@@ -102,7 +102,7 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
         });
 
         metrics.updateMonthlyMetric(tenant, METRIC_NUM_USERS, date, totalUsers.get());
-        tenant.getPerformanceData().modify().set(getAcademyUsersFlag(), hasAcademyUsers.get());
+        tenant.getPerformanceData().modify().set(getAcademyUsersFlag(), hasAcademyUsers.get()).commit();
 
         if (activeUsers.get() > 0) {
             metrics.updateMonthlyMetric(tenant, METRIC_NUM_ACTIVE_USERS, date, activeUsers.get());
