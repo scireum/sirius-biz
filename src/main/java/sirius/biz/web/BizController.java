@@ -664,7 +664,7 @@ public class BizController extends BasicController {
         if (Strings.isEmpty(secret)) {
             if (!Sirius.isDev() && !Sirius.isTest()) {
                 LOG.WARN(
-                        "controller.secret is not defined in the system configuration. Pre-signed links will be invalidated on system restart! Please provide a proper value!");
+                        "Please provide a proper value for 'controller.secret' in the system configuration, otherwise pre-signed links will be invalidated on system restart!");
             }
             secret = Strings.generateCode(32);
         }
