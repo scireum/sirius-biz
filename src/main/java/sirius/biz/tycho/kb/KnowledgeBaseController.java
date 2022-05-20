@@ -9,6 +9,8 @@
 package sirius.biz.tycho.kb;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -28,6 +30,9 @@ public class KnowledgeBaseController extends BizController {
 
     @Part
     private KnowledgeBase knowledgeBase;
+
+    @Part
+    private EventRecorder eventRecorder;
 
     /**
      * Renders the entry point of the knowledge base in the current language.
@@ -78,6 +83,13 @@ public class KnowledgeBaseController extends BizController {
             KnowledgeBaseArticle article = articleOptional.get();
             UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
             webContext.respondWith().template(article.getTemplatePath());
+            eventRecorder.record(new PageImpressionEvent().withUri("/kba/"
+                                                                   + article.getLanguage()
+                                                                   + "/"
+                                                                   + article.getArticleId())
+                                                          .withAggregationUrl("/kba")
+                                                          .withAction(article.getArticleId())
+                                                          .withDataObject(article.getEntry().getUniqueName()));
         } else {
             webContext.respondWith().error(HttpResponseStatus.NOT_FOUND);
         }

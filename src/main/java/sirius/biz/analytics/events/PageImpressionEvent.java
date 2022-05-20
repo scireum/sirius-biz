@@ -115,6 +115,21 @@ public class PageImpressionEvent extends Event {
     }
 
     /**
+     * Overwrites the URI to use.
+     * <p>
+     * Note that most commonly, this will be filled from the available <tt>WebContext</tt> and there is no need to
+     * set it manually
+     *
+     * @param uri the URI to use
+     * @return the event itself for fluent method calls
+     * @see #uri
+     */
+    public PageImpressionEvent withUri(String uri) {
+        this.uri = uri;
+        return this;
+    }
+
+    /**
      * Specifies the aggregation URL to use.
      *
      * @param aggregationUri a shortened or generic URI
