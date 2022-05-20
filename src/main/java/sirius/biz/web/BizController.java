@@ -25,6 +25,7 @@ import sirius.db.mixing.properties.BooleanProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.db.util.BaseEntityCache;
+import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
@@ -661,6 +662,10 @@ public class BizController extends BasicController {
 
     private static String getSecret() {
         if (Strings.isEmpty(secret)) {
+            if (!Sirius.isDev() && !Sirius.isTest()) {
+                LOG.WARN(
+                        "controller.secret is not defined in the system configuration. Pre-signed links will be invalidated on system restart! Please provide a proper value!");
+            }
             secret = Strings.generateCode(32);
         }
 
