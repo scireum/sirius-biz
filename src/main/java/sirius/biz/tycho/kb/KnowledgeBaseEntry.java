@@ -27,7 +27,7 @@ import java.time.LocalDate;
 public class KnowledgeBaseEntry extends SearchableEntity {
 
     /**
-     * Contains the five-letter code if this article.
+     * Contains the five-letter code of this article.
      */
     public static final Mapping ARTICLE_ID = Mapping.named("articleId");
     private String articleId;
