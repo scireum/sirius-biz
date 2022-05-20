@@ -16,8 +16,9 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
-import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
+
+import java.util.Optional;
 
 /**
  * Provides the UI of the knowledge base.
@@ -69,8 +70,12 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kba/:1/:2")
     public void langArticle(WebContext webContext, String lang, String articleId) {
-        KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, false).orElse(null);
-        if (article != null) {
+        renderArticleIfPresent(webContext, knowledgeBase.resolve(lang, articleId, false));
+    }
+
+    private void renderArticleIfPresent(WebContext webContext, Optional<KnowledgeBaseArticle> articleOptional) {
+        if (articleOptional.isPresent()) {
+            KnowledgeBaseArticle article = articleOptional.get();
             UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
             webContext.respondWith().template(article.getTemplatePath());
         } else {
@@ -88,14 +93,15 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kba/:1/:2/:3")
     public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
-        KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, true).orElse(null);
-        if (article != null && (article.getEntry().checkPermissions()
-                                || Strings.areEqual(article.computeAuthenticationSignature(true), authKey)
-                                || Strings.areEqual(article.computeAuthenticationSignature(false), authKey))) {
-            UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
-            webContext.respondWith().template(article.getTemplatePath());
-        } else {
-            webContext.respondWith().error(HttpResponseStatus.FORBIDDEN);
-        }
+        renderArticleIfPresent(webContext,
+                               knowledgeBase.resolve(lang, articleId, false)
+                                            .filter(article -> checkArticlePermission(article, authKey)));
+    }
+
+    private boolean checkArticlePermission(KnowledgeBaseArticle article, String authKey) {
+        return article.getEntry().checkPermissions()
+               || Strings.areEqual(article.computeAuthenticationSignature(true),
+                                   authKey)
+               || Strings.areEqual(article.computeAuthenticationSignature(false), authKey);
     }
 }
