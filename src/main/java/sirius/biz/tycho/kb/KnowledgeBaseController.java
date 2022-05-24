@@ -106,7 +106,7 @@ public class KnowledgeBaseController extends BizController {
     @Routed("/kba/:1/:2/:3")
     public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
         renderArticleIfPresent(webContext,
-                               knowledgeBase.resolve(lang, articleId, false)
+                               knowledgeBase.resolve(lang, articleId, true)
                                             .filter(article -> checkArticlePermission(article, authKey)));
     }
 
