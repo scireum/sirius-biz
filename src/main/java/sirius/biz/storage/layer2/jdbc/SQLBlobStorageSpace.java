@@ -20,6 +20,7 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.UpdateStatement;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.jdbc.batch.UpdateQuery;
+import sirius.db.jdbc.constraints.SQLConstraint;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
@@ -730,16 +731,26 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                   Set<String> fileTypes,
                                   int maxResults,
                                   Predicate<? super Blob> childProcessor) {
+        boolean searchInExtension = true;
         SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
                                        .eq(SQLBlob.SPACE_NAME, spaceName)
                                        .eq(SQLBlob.PARENT, parent)
-                                       .eq(SQLBlob.DELETED, false)
-                                       .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
-                                                         .startsWith(prefixFilter)
-                                                         .ignoreEmpty()
-                                                         .build());
+                                       .eq(SQLBlob.DELETED, false);
         if (fileTypes != null && !fileTypes.isEmpty()) {
             query.where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build());
+            // search in extension not available if extension filter is set
+            searchInExtension = false;
+        }
+        if (Strings.isEmpty(prefixFilter)) {
+            searchInExtension = false;
+        }
+
+        SQLConstraint prefixConstraint =
+                OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME).startsWith(prefixFilter).ignoreEmpty().build();
+        if (searchInExtension) {
+            query.where(OMA.FILTERS.or(prefixConstraint, OMA.FILTERS.eq(SQLBlob.FILE_EXTENSION, prefixFilter)));
+        } else {
+            query.where(prefixConstraint);
         }
 
         query.limit(maxResults);

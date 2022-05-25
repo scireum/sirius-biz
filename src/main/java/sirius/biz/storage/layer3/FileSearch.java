@@ -68,6 +68,7 @@ public class FileSearch {
      * Adds a prefix filter so that only files which name start with the given prefix are accepted.
      * <p>
      * Note that the prefix is compared in a case insensitive manner.
+     * Also, if no file extension is given, the extension is also compared to the prefix to increase search hits.
      * </p>
      *
      * @param prefixFilter the prefix to filter by
@@ -105,6 +106,7 @@ public class FileSearch {
 
         return this;
     }
+
 
     /**
      * Returns the prefix filter.
@@ -196,6 +198,9 @@ public class FileSearch {
         }
 
         if (Strings.isFilled(prefixFilter) && !file.name().toLowerCase().startsWith(prefixFilter)) {
+            if (fileExtensionFilters == null && Strings.isFilled(file.fileExtension())) {
+                return Strings.equalIgnoreCase(prefixFilter, file.fileExtension());
+            }
             return false;
         }
 
