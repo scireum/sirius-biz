@@ -657,11 +657,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                   Set<String> fileTypes,
                                   int maxResults,
                                   Predicate<? super Blob> childProcessor) {
-        boolean searchInExtension = true;
         MongoQuery<MongoBlob> blobsQuery = mango.select(MongoBlob.class)
                                                 .eq(MongoBlob.SPACE_NAME, spaceName)
                                                 .eq(MongoBlob.PARENT, parent)
                                                 .eq(MongoBlob.DELETED, false);
+        boolean searchInExtension = true;
 
         if (fileTypes != null && !fileTypes.isEmpty()) {
             blobsQuery.where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build());
@@ -671,15 +671,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         if (Strings.isEmpty(prefixFilter)) {
             searchInExtension = false;
         }
+        MongoConstraint searchInExtensionFilter =
+                searchInExtension ? QueryBuilder.FILTERS.eq(MongoBlob.FILE_EXTENSION, prefixFilter) : null;
 
-        MongoConstraint prefixConstraint = QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME, prefixFilter);
-        if (searchInExtension) {
-            blobsQuery.where(QueryBuilder.FILTERS.or(prefixConstraint,
-                                                     QueryBuilder.FILTERS.eq(MongoBlob.FILE_EXTENSION, prefixFilter)));
-        } else {
-            blobsQuery.where(prefixConstraint);
-        }
-
+        blobsQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME,
+                                                                             prefixFilter), searchInExtensionFilter));
         blobsQuery.limit(maxResults);
 
         if (sortByLastModified) {

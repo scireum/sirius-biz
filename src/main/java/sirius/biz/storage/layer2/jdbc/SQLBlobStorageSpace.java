@@ -731,11 +731,12 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                   Set<String> fileTypes,
                                   int maxResults,
                                   Predicate<? super Blob> childProcessor) {
-        boolean searchInExtension = true;
         SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
                                        .eq(SQLBlob.SPACE_NAME, spaceName)
                                        .eq(SQLBlob.PARENT, parent)
                                        .eq(SQLBlob.DELETED, false);
+        boolean searchInExtension = true;
+
         if (fileTypes != null && !fileTypes.isEmpty()) {
             query.where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build());
             // search in extension not available if extension filter is set
@@ -745,14 +746,13 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
             searchInExtension = false;
         }
 
-        SQLConstraint prefixConstraint =
-                OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME).startsWith(prefixFilter).ignoreEmpty().build();
-        if (searchInExtension) {
-            query.where(OMA.FILTERS.or(prefixConstraint, OMA.FILTERS.eq(SQLBlob.FILE_EXTENSION, prefixFilter)));
-        } else {
-            query.where(prefixConstraint);
-        }
+        SQLConstraint searchInExtensionFilter =
+                searchInExtension ? OMA.FILTERS.eq(SQLBlob.FILE_EXTENSION, prefixFilter) : null;
 
+        query.where(OMA.FILTERS.or(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
+                                              .startsWith(prefixFilter)
+                                              .ignoreEmpty()
+                                              .build(), searchInExtensionFilter));
         query.limit(maxResults);
 
         if (sortByLastModified) {
