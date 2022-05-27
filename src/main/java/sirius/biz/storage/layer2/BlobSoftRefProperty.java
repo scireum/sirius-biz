@@ -210,7 +210,8 @@ public class BlobSoftRefProperty extends BlobRefProperty {
             return;
         }
 
-        if (ref.getBlob().isTemporary()) {
+        Blob blob = ref.getBlob();
+        if (blob != null && blob.isTemporary()) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
