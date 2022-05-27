@@ -661,21 +661,13 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                                 .eq(MongoBlob.SPACE_NAME, spaceName)
                                                 .eq(MongoBlob.PARENT, parent)
                                                 .eq(MongoBlob.DELETED, false);
-        boolean searchInExtension = true;
 
         if (fileTypes != null && !fileTypes.isEmpty()) {
             blobsQuery.where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build());
-            // search in extension not available if extension filter is set
-            searchInExtension = false;
         }
-        if (Strings.isEmpty(prefixFilter)) {
-            searchInExtension = false;
-        }
-        MongoConstraint searchInExtensionFilter =
-                searchInExtension ? QueryBuilder.FILTERS.eq(MongoBlob.FILE_EXTENSION, prefixFilter) : null;
-
         blobsQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME,
-                                                                             prefixFilter), searchInExtensionFilter));
+                                                                             prefixFilter),
+                                                 QueryBuilder.FILTERS.prefix(MongoBlob.FILE_EXTENSION, prefixFilter)));
         blobsQuery.limit(maxResults);
 
         if (sortByLastModified) {

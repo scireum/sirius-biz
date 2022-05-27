@@ -735,24 +735,19 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                        .eq(SQLBlob.SPACE_NAME, spaceName)
                                        .eq(SQLBlob.PARENT, parent)
                                        .eq(SQLBlob.DELETED, false);
-        boolean searchInExtension = true;
 
         if (fileTypes != null && !fileTypes.isEmpty()) {
             query.where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build());
-            // search in extension not available if extension filter is set
-            searchInExtension = false;
         }
-        if (Strings.isEmpty(prefixFilter)) {
-            searchInExtension = false;
-        }
-
-        SQLConstraint searchInExtensionFilter =
-                searchInExtension ? OMA.FILTERS.eq(SQLBlob.FILE_EXTENSION, prefixFilter) : null;
-
         query.where(OMA.FILTERS.or(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
                                               .startsWith(prefixFilter)
                                               .ignoreEmpty()
-                                              .build(), searchInExtensionFilter));
+                                              .build(),
+                                   OMA.FILTERS.like(SQLBlob.FILE_EXTENSION)
+                                              .startsWith(prefixFilter)
+                                              .ignoreEmpty()
+                                              .build()));
+
         query.limit(maxResults);
 
         if (sortByLastModified) {

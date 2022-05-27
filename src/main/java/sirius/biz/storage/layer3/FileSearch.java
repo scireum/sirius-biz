@@ -107,7 +107,6 @@ public class FileSearch {
         return this;
     }
 
-
     /**
      * Returns the prefix filter.
      * <p>
@@ -197,10 +196,8 @@ public class FileSearch {
             return false;
         }
 
-        if (Strings.isFilled(prefixFilter) && !file.name().toLowerCase().startsWith(prefixFilter)) {
-            if (fileExtensionFilters == null && Strings.isFilled(file.fileExtension())) {
-                return Strings.equalIgnoreCase(prefixFilter, file.fileExtension());
-            }
+        if (Strings.isFilled(prefixFilter) && !file.name().toLowerCase().startsWith(prefixFilter) && (Strings.isEmpty(
+                file.fileExtension()) || !file.fileExtension().toLowerCase().startsWith(prefixFilter))) {
             return false;
         }
 
