@@ -21,7 +21,6 @@ import sirius.db.mongo.Mongo;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
-import sirius.db.mongo.constraints.MongoConstraint;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;

@@ -20,7 +20,6 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.UpdateStatement;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.jdbc.batch.UpdateQuery;
-import sirius.db.jdbc.constraints.SQLConstraint;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
