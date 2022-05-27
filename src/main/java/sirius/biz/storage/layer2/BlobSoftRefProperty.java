@@ -206,7 +206,11 @@ public class BlobSoftRefProperty extends BlobRefProperty {
         }
 
         BlobSoftRef ref = (BlobSoftRef) getRef(entity);
-        if (ref.isFilled() && !ref.isURL() && ref.getBlob().isTemporary()) {
+        if (ref.isEmpty() || ref.isURL()) {
+            return;
+        }
+
+        if (ref.getBlob().isTemporary()) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
