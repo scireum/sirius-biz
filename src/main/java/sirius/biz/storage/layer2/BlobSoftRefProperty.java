@@ -201,8 +201,17 @@ public class BlobSoftRefProperty extends BlobRefProperty {
 
     @Override
     protected void onBeforeSaveChecks(Object entity) {
+        if (!isChanged(entity)) {
+            return;
+        }
+
         BlobSoftRef ref = (BlobSoftRef) getRef(entity);
-        if (isChanged(entity) && ref.isFilled() && !ref.isURL() && ref.getBlob().isTemporary()) {
+        if (ref.isEmpty() || ref.isURL()) {
+            return;
+        }
+
+        Blob blob = ref.getBlob();
+        if (blob != null && blob.isTemporary()) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
