@@ -81,7 +81,7 @@ public interface Directory {
     /**
      * Determines if there is a child with the given name, except for the given blob.
      *
-     * @param name the name to check
+     * @param name         the name to check
      * @param exemptedBlob the blob to ignore when searching for children
      * @return <tt>true</tt> if either a directory or a blob with the given name exists as child
      */
@@ -133,7 +133,7 @@ public interface Directory {
     /**
      * Lists all child blobs.
      *
-     * @param prefixFilter   the prefix filer to apply on the name
+     * @param prefixFilter   the prefix filter to apply on the name
      * @param fileTypes      the list of accepted file types
      * @param maxResults     the maximal number of results to return or 0 to indicate that there is no upper limit
      * @param childProcessor the processor which is used to iterate over the result

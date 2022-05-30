@@ -659,14 +659,14 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         MongoQuery<MongoBlob> blobsQuery = mango.select(MongoBlob.class)
                                                 .eq(MongoBlob.SPACE_NAME, spaceName)
                                                 .eq(MongoBlob.PARENT, parent)
-                                                .eq(MongoBlob.DELETED, false)
-                                                .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME,
-                                                                                   prefixFilter));
+                                                .eq(MongoBlob.DELETED, false);
 
         if (fileTypes != null && !fileTypes.isEmpty()) {
             blobsQuery.where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build());
         }
-
+        blobsQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME,
+                                                                             prefixFilter),
+                                                 QueryBuilder.FILTERS.prefix(MongoBlob.FILE_EXTENSION, prefixFilter)));
         blobsQuery.limit(maxResults);
 
         if (sortByLastModified) {

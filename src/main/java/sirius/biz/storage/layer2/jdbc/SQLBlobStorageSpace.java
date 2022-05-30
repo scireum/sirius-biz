@@ -733,14 +733,19 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
                                        .eq(SQLBlob.SPACE_NAME, spaceName)
                                        .eq(SQLBlob.PARENT, parent)
-                                       .eq(SQLBlob.DELETED, false)
-                                       .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
-                                                         .startsWith(prefixFilter)
-                                                         .ignoreEmpty()
-                                                         .build());
+                                       .eq(SQLBlob.DELETED, false);
+
         if (fileTypes != null && !fileTypes.isEmpty()) {
             query.where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build());
         }
+        query.where(OMA.FILTERS.or(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
+                                              .startsWith(prefixFilter)
+                                              .ignoreEmpty()
+                                              .build(),
+                                   OMA.FILTERS.like(SQLBlob.FILE_EXTENSION)
+                                              .startsWith(prefixFilter)
+                                              .ignoreEmpty()
+                                              .build()));
 
         query.limit(maxResults);
 
