@@ -58,7 +58,10 @@ public class FTPUplink extends ConfigBasedUplink {
 
         @Override
         public ConfigBasedUplink make(String id, Function<String, Value> config) {
-            return new FTPUplink(id, config);
+            return new FTPUplink(id,
+                                 config,
+                                 new FTPUplinkConnectorConfig(id, config),
+                                 new RemotePath(config.apply(CONFIG_BASE_PATH).asString("/")));
         }
 
         @Nonnull
@@ -70,17 +73,20 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private static final String FEATURE_MLSD = "MLSD";
 
-    private final FTPUplinkConnectorConfig ftpConfig;
+    protected final FTPUplinkConnectorConfig ftpConfig;
     private ValueHolder<Boolean> supportsMLSD;
-    private final RemotePath basePath;
+    protected final RemotePath basePath;
 
     @Part
     private static UplinkConnectorPool connectorPool;
 
-    protected FTPUplink(String id, Function<String, Value> config) {
+    protected FTPUplink(String id,
+                        Function<String, Value> config,
+                        FTPUplinkConnectorConfig connectorConfig,
+                        RemotePath basePath) {
         super(id, config);
-        this.ftpConfig = new FTPUplinkConnectorConfig(id, config);
-        this.basePath = new RemotePath(config.apply(CONFIG_BASE_PATH).asString("/"));
+        this.ftpConfig = connectorConfig;
+        this.basePath = basePath;
     }
 
     private boolean checkForMLSD(FTPClient client) {
@@ -94,10 +100,10 @@ public class FTPUplink extends ConfigBasedUplink {
     private ValueHolder<Boolean> performMLSDFeatureCheck(FTPClient client) {
         try {
             return ValueHolder.of(client.hasFeature(FEATURE_MLSD));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 3/FTP: Cannot determine MLSD support for uplink '%s' - %s (%s)",
                                               ftpConfig)
                       .handle();
@@ -119,12 +125,12 @@ public class FTPUplink extends ConfigBasedUplink {
             try {
                 processListing(parent, search, relativeParent, connector);
                 return;
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage(
                                             "Layer 3/FTP: Cannot iterate over children of '%s' in uplink '%s' - %s (%s)",
                                             parent,
@@ -226,12 +232,12 @@ public class FTPUplink extends ConfigBasedUplink {
                 } else {
                     return Optional.empty();
                 }
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage("Layer 3/FTP: Cannot resolve '%s' for uplink '%s' - %s (%s)",
                                                             file,
                                                             ftpConfig)
@@ -282,12 +288,12 @@ public class FTPUplink extends ConfigBasedUplink {
                          .rename(file.as(RemotePath.class).getPath(),
                                  newParent.as(RemotePath.class).child(file.name()).getPath());
                 return true;
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage(
                                             "Layer 3/FTP: Cannot move '%s' to '%s' in uplink '%s': %s (%s)",
                                             file,
@@ -311,12 +317,12 @@ public class FTPUplink extends ConfigBasedUplink {
                          .rename(file.as(RemotePath.class).getPath(),
                                  file.parent().as(RemotePath.class).child(newName).getPath());
                 return true;
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage(
                                             "Layer 3/FTP: Cannot rename '%s' to '%s' in uplink '%s': %s (%s)",
                                             file,
@@ -338,12 +344,12 @@ public class FTPUplink extends ConfigBasedUplink {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 return connector.connector().makeDirectory(relativePath);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage(
                                             "Layer 3/FTP: Failed to create a directory for '%s' in uplink '%s': %s (%s)",
                                             relativePath,
@@ -372,12 +378,12 @@ public class FTPUplink extends ConfigBasedUplink {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 return connector.connector().deleteFile(relativePath);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage("Layer 3/FTP: Failed to delete '%s' in uplink '%s': %s (%s)",
                                                             relativePath,
                                                             ftpConfig)
@@ -396,12 +402,12 @@ public class FTPUplink extends ConfigBasedUplink {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 return connector.connector().removeDirectory(relativePath);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage("Layer 3/FTP: Failed to delete '%s' in uplink '%s': %s (%s)",
                                                             relativePath,
                                                             ftpConfig)
@@ -429,13 +435,13 @@ public class FTPUplink extends ConfigBasedUplink {
                 watchableInputStream.getCompletionFuture()
                                     .then(() -> completePendingCommand(connector, path, "download"));
                 return watchableInputStream;
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
                 connector.safeClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage(
                                             "Layer 3/FTP: Failed to initiate a download for '%s' in uplink '%s': %s (%s)",
                                             path,
@@ -460,10 +466,10 @@ public class FTPUplink extends ConfigBasedUplink {
                           .handle();
                 connector.forceClose();
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 3/FTP: Failed to complete the %s for '%s' in uplink '%s': %s (%s)",
                                               command,
                                               path,
@@ -489,13 +495,13 @@ public class FTPUplink extends ConfigBasedUplink {
                 watchableOutputStream.getCompletionFuture()
                                      .then(() -> completePendingCommand(connector, path, "upload"));
                 return watchableOutputStream;
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 connector.forceClose();
                 connector.safeClose();
-                if (attempt.shouldThrow(e)) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage(
                                             "Layer 3/FTP: Failed to initiate an upload for '%s' in uplink '%s': %s (%s)",
                                             path,
