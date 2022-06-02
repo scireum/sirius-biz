@@ -60,10 +60,10 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
             client.enterLocalPassiveMode();
 
             return client;
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 3/FTP: An error occurred while connecting the uplink %s: %s (%s)",
                                     this)
@@ -80,10 +80,10 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
     protected void safeClose(FTPClient connector) {
         try {
             connector.disconnect();
-        } catch (IOException e) {
+        } catch (IOException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 3/FTP: An error occurred while disconnecting the uplink %s: %s (%s)",
                               this)
