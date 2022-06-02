@@ -58,7 +58,10 @@ public class FTPUplink extends ConfigBasedUplink {
 
         @Override
         public ConfigBasedUplink make(String id, Function<String, Value> config) {
-            return new FTPUplink(id, config);
+            return new FTPUplink(id,
+                                 config,
+                                 new FTPUplinkConnectorConfig(id, config),
+                                 new RemotePath(config.apply(CONFIG_BASE_PATH).asString("/")));
         }
 
         @Nonnull
@@ -70,17 +73,20 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private static final String FEATURE_MLSD = "MLSD";
 
-    private final FTPUplinkConnectorConfig ftpConfig;
+    protected final FTPUplinkConnectorConfig ftpConfig;
     private ValueHolder<Boolean> supportsMLSD;
-    private final RemotePath basePath;
+    protected final RemotePath basePath;
 
     @Part
     private static UplinkConnectorPool connectorPool;
 
-    protected FTPUplink(String id, Function<String, Value> config) {
+    protected FTPUplink(String id,
+                        Function<String, Value> config,
+                        FTPUplinkConnectorConfig connectorConfig,
+                        RemotePath basePath) {
         super(id, config);
-        this.ftpConfig = new FTPUplinkConnectorConfig(id, config);
-        this.basePath = new RemotePath(config.apply(CONFIG_BASE_PATH).asString("/"));
+        this.ftpConfig = connectorConfig;
+        this.basePath = basePath;
     }
 
     private boolean checkForMLSD(FTPClient client) {
