@@ -49,10 +49,10 @@ class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
             client.enterLocalPassiveMode();
 
             return client;
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 3/FTP: An error occurred while connecting the uplink %s: %s (%s)",
                                     this)
