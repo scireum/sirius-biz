@@ -10,53 +10,42 @@ package sirius.biz.storage.layer3.uplink.ftp;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
-import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
+import org.apache.commons.net.ftp.FTPSClient;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 /**
- * Keeps the configuration used to build an FTP connector using the
+ * Keeps the configuration used to build an FTPS connector using the
  * {@link sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool}.
  */
-class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
+class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
 
-    private static final int DEFAULT_FTP_PORT = 21;
-
-    /**
-     * Specifies the encoding to use.
-     */
-    public static final String CONFIG_ENCODING = "encoding";
-
-    protected final String encoding;
-
-    protected FTPUplinkConnectorConfig(String id, Function<String, Value> config) {
+    protected FTPSUplinkConnectorConfig(String id, Function<String, Value> config) {
         super(id, config);
-        this.encoding = config.apply(CONFIG_ENCODING).asString(StandardCharsets.UTF_8.name());
-    }
-
-    @Override
-    protected int getDefaultPort() {
-        return DEFAULT_FTP_PORT;
     }
 
     @Override
     protected FTPClient create() {
         try {
-            FTPClient client = new FTPClient();
+            FTPSClient client = new FTPSClient();
             client.setConnectTimeout(connectTimeoutMillis);
             client.setDataTimeout(readTimeoutMillis);
             client.setDefaultTimeout(readTimeoutMillis);
 
             client.setControlEncoding(encoding);
+            client.setDefaultPort(port);
 
             client.connect(host, port);
             client.login(user, password);
             client.setFileType(FTP.BINARY_FILE_TYPE);
+            // Set protection buffer size
+            client.execPBSZ(0);
+            // Set data channel protection to private
+            client.execPROT("P");
             client.enterLocalPassiveMode();
 
             return client;
@@ -68,26 +57,6 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
                                     "Layer 3/FTP: An error occurred while connecting the uplink %s: %s (%s)",
                                     this)
                             .handle();
-        }
-    }
-
-    @Override
-    protected boolean validate(FTPClient connector) {
-        return connector.isAvailable();
-    }
-
-    @Override
-    protected void safeClose(FTPClient connector) {
-        try {
-            connector.disconnect();
-        } catch (IOException e) {
-            Exceptions.handle()
-                      .to(StorageUtils.LOG)
-                      .error(e)
-                      .withSystemErrorMessage(
-                              "Layer 3/FTP: An error occurred while disconnecting the uplink %s: %s (%s)",
-                              this)
-                      .handle();
         }
     }
 }
