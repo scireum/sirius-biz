@@ -573,8 +573,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * Tries to resolve the relative path within this directory.
      *
      * @param relativePath the path to resolve
-     * @return the relative path wrapped as optional or an  empty optional if the given relative path cannot be
-     * resolved into a file.
+     * @return the relative path wrapped as a VirtualFile
+     * @throws IllegalArgumentException when the given path is empty after sanitization
      */
     @Nonnull
     public VirtualFile resolve(String relativePath) {
