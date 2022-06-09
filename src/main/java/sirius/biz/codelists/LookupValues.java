@@ -41,30 +41,6 @@ public class LookupValues extends StringList {
      * @param lookupTableName the lookup table used to draw metadata from
      * @param customValues    determines if custom values are supported
      * @param display         determines how values are rendered in the UI
-     * @param export          determines how values are rendered in exports
-     * @deprecated use the new constructor with all fields instead
-     */
-    @Deprecated(forRemoval = true)
-    public LookupValues(String lookupTableName,
-                        LookupValue.CustomValues customValues,
-                        LookupValue.Display display,
-                        LookupValue.Export export) {
-        this.lookupTableName = lookupTableName;
-        this.customValues = customValues;
-        this.display = display;
-        this.extendedDisplay = display;
-        this.export = export;
-    }
-
-    /**
-     * Creates a new list with the given settings.
-     * <p>
-     * Note that when using the list in database entities, the field has to be final, as the actual values
-     * is stored internally.
-     *
-     * @param lookupTableName the lookup table used to draw metadata from
-     * @param customValues    determines if custom values are supported
-     * @param display         determines how values are rendered in the UI
      * @param extendedDisplay determines how values are rendered in the UI in cases where we want to be more verbose
      * @param export          determines how values are rendered in exports
      */

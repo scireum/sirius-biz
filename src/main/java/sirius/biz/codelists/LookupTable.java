@@ -730,28 +730,6 @@ public abstract class LookupTable {
     protected abstract Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang);
 
     /**
-     * Determines if this list is short enough to properly support {@link #scan()} or {@link #scan(String)}.
-     *
-     * @return <tt>true</tt> if scanning (listing all entries) is supported, <tt>false</tt> otherwise
-     * @deprecated Unused as we now apply a limit to each scan call
-     */
-    @Deprecated(forRemoval = true)
-    public boolean canScan() {
-        return false;
-    }
-
-    /**
-     * Enumerates all entries in the table using the current language.
-     *
-     * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
-     * @deprecated Use {@link #scan(Limit)} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public Stream<LookupTableEntry> scan() {
-        return scan(NLS.getCurrentLang());
-    }
-
-    /**
      * Enumerates all entries in the table using the current language.
      *
      * @param limit the limit to apply to fetch a sane number of entries
@@ -759,18 +737,6 @@ public abstract class LookupTable {
      */
     public Stream<LookupTableEntry> scan(Limit limit) {
         return scan(NLS.getCurrentLang(), limit);
-    }
-
-    /**
-     * Enumerates all entries in the table using the given language.
-     *
-     * @param lang the language to translate the name and description to
-     * @return a stream of all entries in this table, or an empty stream if scanning isn't supported
-     * @deprecated Use {@link #scan(String, Limit)} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public Stream<LookupTableEntry> scan(String lang) {
-        return scan(lang, Limit.UNLIMITED);
     }
 
     /**
