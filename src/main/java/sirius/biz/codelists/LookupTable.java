@@ -841,18 +841,16 @@ public abstract class LookupTable {
     protected abstract Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue);
 
     public String getTitle() {
-        return extension.get("title")
-                        .translate()
-                        .asOptionalString()
-                        .or(() -> NLS.getIfExists("LookupTable." + extension.getId(), null))
-                        .orElse(extension.getId());
+        return Optional.of(extension.getTranslatedString("title"))
+                       .filter(Strings::isFilled)
+                       .or(() -> NLS.getIfExists("LookupTable." + extension.getId(), null))
+                       .orElse(extension.getId());
     }
 
     public String getDescription() {
-        return extension.get("description")
-                        .translate()
-                        .asOptionalString()
-                        .or(() -> NLS.getIfExists("LookupTable." + extension.getId() + ".description", null))
-                        .orElse("");
+        return Optional.of(extension.getTranslatedString("description"))
+                       .filter(Strings::isFilled)
+                       .or(() -> NLS.getIfExists("LookupTable." + extension.getId() + ".description", null))
+                       .orElse("");
     }
 }
