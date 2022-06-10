@@ -26,18 +26,6 @@ public interface LineBasedExport extends Closeable {
     void addListRow(List<?> row) throws IOException;
 
     /**
-     * Adds the list of fields as new row.
-     *
-     * @param row the list of fields to add
-     * @throws IOException in case of an IO error in the underlying storage
-     * @deprecated Use {@link #addListRow(List)}which does exactly the same but has a clarified naming scheme.
-     */
-    @Deprecated
-    default void addRow(List<?> row) throws IOException {
-        addListRow(row);
-    }
-
-    /**
      * Adds the array of fields as new row.
      *
      * @param row the array of fields to add
