@@ -13,18 +13,27 @@
        name="class"
        default=""
        description="Contains additional classes to apply."/>
+<i:arg type="boolean"
+       name="plainLink"
+       default="false"
+       description="Defines if only a plain link should be rendered. When true, the description is discarded."/>
 
 <i:pragma name="description">
     Renders a link to a LookupTable.
 </i:pragma>
 
-<div class="@class">
-    <div>
-        <a href="javascript:openLookupTable('@table', '@label')">@label</a>
-    </div>
-    <i:if test="isFilled(description)">
-        <div class="text-muted">
-            @description
+<i:if test="plainLink">
+    <a href="javascript:openLookupTable('@table', '@label')">@label</a>
+    <i:else>
+        <div class="@class">
+            <div>
+                <a href="javascript:openLookupTable('@table', '@label')">@label</a>
+            </div>
+            <i:if test="isFilled(description)">
+                <div class="text-muted">
+                    @description
+                </div>
+            </i:if>
         </div>
-    </i:if>
-</div>
+    </i:else>
+</i:if>
