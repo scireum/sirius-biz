@@ -17,7 +17,7 @@ import sirius.db.mixing.Mapping;
 public class IPBlockedEvent extends Event {
 
     /**
-     * Contains the IP addres which has been blocked.
+     * Contains the IP address which has been blocked.
      */
     public static final Mapping IP = Mapping.named("ip");
     private String ip;

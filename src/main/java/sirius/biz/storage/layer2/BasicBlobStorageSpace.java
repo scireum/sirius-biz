@@ -337,8 +337,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Provides the skeleton of most of the optimistic locking algorithms used by this class.
      * <p>
      * Some parts of this storage space need to fulfill some invariants (e.g. a filename is unique within a directory).
-     * However, most of the time, these won't be falsified, even in concurrent use. Therefore we use an optimistic
-     * locking approach. This is essentially a fastpath (create a data object) without any locking or other protection
+     * However, most of the time, these won't be falsified, even in concurrent use. Therefore, we use an optimistic
+     * locking approach. This is essentially a fast-path (create a data object) without any locking or other protection
      * and then check if an invariant holds. If so (which is expected) commit the change, otherwise, rollback and retry.
      *
      * @param lookup          provides the callback which performs the lookup to determine if the desired data

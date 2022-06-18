@@ -13,10 +13,10 @@ import sirius.kernel.health.Exceptions;
 import java.io.IOException;
 
 /**
- * Helps to distinguishes an initial first attempt from a rety.
+ * Helps to distinguish an initial first attempt from a retry.
  * <p>
  * It can be used by any kind of io operation which are essentially expected to fail sometime, but which might
- * benefit from attempting a retry. Therefore the helper method {@link #shouldThrow(Exception)}
+ * benefit from attempting a retry. Therefore, the helper method {@link #shouldThrow(Exception)}
  * can be used to determine if an <tt>IOException</tt> is swallowed if it occurs during a first attempt but
  * will be thrown during a retry.
  * <p>
@@ -35,7 +35,7 @@ import java.io.IOException;
  * }</pre>
  * <p>
  * This approach permits to perform inner returns and also enables some optimizations to the compiler (as opposed to
- * use lambdas).
+ * using lambdas).
  */
 public enum Attempt {
     FIRST_ATTEMPT, RETRY;
