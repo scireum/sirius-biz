@@ -489,10 +489,10 @@ public class JupiterSync implements Startable, EndOfDayTask {
                             child);
             return true;
         });
-        currentDirectory.listChildDirectories(null, 0, dirctory -> {
+        currentDirectory.listChildDirectories(null, 0, directory -> {
             visitLocalDirectory(processContext,
-                                effectivePrefix + "/" + dirctory.getName(),
-                                dirctory,
+                                effectivePrefix + "/" + directory.getName(),
+                                directory,
                                 connection,
                                 repositoryFiles,
                                 filesToDelete);
