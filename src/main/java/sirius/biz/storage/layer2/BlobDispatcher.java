@@ -178,7 +178,7 @@ public class BlobDispatcher implements WebDispatcher {
 
         Values uriParts = Values.of(uri.split("/"));
         String type = uriParts.at(0).asString();
-        if (Strings.areEqual(type, PHYSICAL_DELIVERY)) {
+        if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 5) {
             String filename = stripAdditionalText(uriParts.at(4).asString());
             physicalDelivery(request,
                              uriParts.at(1).asString(),
@@ -190,7 +190,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, PHYSICAL_DOWNLOAD)) {
+        if (Strings.areEqual(type, PHYSICAL_DOWNLOAD) && uriParts.length() == 6) {
             physicalDownload(request,
                              uriParts.at(1).asString(),
                              uriParts.at(2).asString(),
@@ -201,7 +201,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, VIRTUAL_DELIVERY)) {
+        if (Strings.areEqual(type, VIRTUAL_DELIVERY) && uriParts.length() == 5) {
             String filename = stripAdditionalText(uriParts.at(4).asString());
             virtualDelivery(request,
                             uriParts.at(1).asString(),
@@ -214,7 +214,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, VIRTUAL_DOWNLOAD)) {
+        if (Strings.areEqual(type, VIRTUAL_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
                             uriParts.at(1).asString(),
                             uriParts.at(2).asString(),
@@ -226,7 +226,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DELIVERY)) {
+        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DELIVERY) && uriParts.length() == 5) {
             String filename = stripAdditionalText(uriParts.at(4).asString());
             virtualDelivery(request,
                             uriParts.at(1).asString(),
@@ -239,7 +239,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DOWNLOAD)) {
+        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
                             uriParts.at(1).asString(),
                             uriParts.at(2).asString(),
