@@ -288,7 +288,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.writePermission = config.get(CONFIG_KEY_PERMISSION_WRITE).asString();
         this.baseUrl = config.get(CONFIG_KEY_BASE_URL).getString();
         this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
-        this.description = config.get(CONFIG_KEY_DESCRIPTION).getString();
+        this.description = config.getRaw(CONFIG_KEY_DESCRIPTION).asString();
         this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
         this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
