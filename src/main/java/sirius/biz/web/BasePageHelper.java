@@ -351,6 +351,18 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     }
 
     /**
+     * Permits to specify a custom start value of the page.
+     *
+     * @param start the start value to use (this will overwrite the parameter in the <tt>WebContext</tt>.
+     * @return the helper itself for fluent method calls
+     */
+    @SuppressWarnings("unchecked")
+    public B withStart(int start) {
+        this.customStart = start;
+        return (B) this;
+    }
+
+    /**
      * Wraps the given data into a {@link Page} which can be used to render a table, filterbox and support pagination.
      * <p>
      * This can only be done if a web context has been provided via {@link #withContext(WebContext)}.
@@ -362,6 +374,9 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         Watch w = Watch.start();
         Page<E> result = new Page<E>().withStart(1).withPageSize(pageSize);
         result.bindToRequest(webContext);
+        if (customStart > 0) {
+            result.withStart(customStart);
+        }
 
         applyQuery(result.getQuery());
 
