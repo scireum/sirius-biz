@@ -740,6 +740,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
                                        .eq(SQLBlob.SPACE_NAME, spaceName)
                                        .eq(SQLBlob.PARENT, parent)
+                                       .eq(SQLBlob.COMMITTED, true)
                                        .eq(SQLBlob.DELETED, false);
 
         if (fileTypes != null && !fileTypes.isEmpty()) {

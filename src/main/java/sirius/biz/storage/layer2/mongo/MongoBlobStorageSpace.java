@@ -665,6 +665,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         MongoQuery<MongoBlob> blobsQuery = mango.select(MongoBlob.class)
                                                 .eq(MongoBlob.SPACE_NAME, spaceName)
                                                 .eq(MongoBlob.PARENT, parent)
+                                                .eq(MongoBlob.COMMITTED, true)
                                                 .eq(MongoBlob.DELETED, false);
 
         if (fileTypes != null && !fileTypes.isEmpty()) {
