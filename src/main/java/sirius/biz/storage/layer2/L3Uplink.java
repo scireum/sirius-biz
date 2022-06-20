@@ -251,8 +251,6 @@ public class L3Uplink implements VFSRoot {
                 queryChildDirectories(parent, directory, result, limit, children);
             }
 
-            // We only output blobs, if we're still expecting more items in the result page after the
-            // directories have been enumerated (unless a filter was active..)
             queryChildBlobs(parent, result, limit, children, blobPageHelper);
 
             // We always query for a bit too many result so that we know that there is "more" to page to...
