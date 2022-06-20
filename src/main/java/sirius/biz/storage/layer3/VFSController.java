@@ -96,14 +96,16 @@ public class VFSController extends BizController {
     }
 
     private Page<VirtualFile> computeChildrenAsPage(WebContext ctx, VirtualFile file) {
-        Page<VirtualFile> page = new Page<VirtualFile>().withStart(1).bindToRequest(ctx);
-        page.withLimitedItemsSupplier(limit -> {
-            List<VirtualFile> childFiles = new ArrayList<>();
-            file.children(FileSearch.iterateAll(childFiles::add).withPrefixFilter(page.getQuery()).withLimit(limit));
-            return childFiles;
-        });
+        return file.tryAs(ChildPageProvider.class).map(provider -> provider.queryPage(file, ctx)).orElseGet(() -> {
+            Page<VirtualFile> page = new Page<VirtualFile>().withStart(1).bindToRequest(ctx);
+            page.withLimitedItemsSupplier(limit -> {
+                List<VirtualFile> childFiles = new ArrayList<>();
+                file.children(FileSearch.iterateAll(childFiles::add).withPrefixFilter(page.getQuery()).withLimit(limit));
+                return childFiles;
+            });
 
-        return page;
+            return page;
+        });
     }
 
     /**
