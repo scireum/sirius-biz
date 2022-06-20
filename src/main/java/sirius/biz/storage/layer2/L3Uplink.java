@@ -251,11 +251,9 @@ public class L3Uplink implements VFSRoot {
                 queryChildDirectories(parent, directory, result, limit, children);
             }
 
-            if (limit.shouldContinue()) {
-                // We only output blobs, if we're still expecting more items in the result page after the
-                // directories have been enumerated (unless a filter was active..)
-                queryChildBlobs(parent, result, limit, children, blobPageHelper);
-            }
+            // We only output blobs, if we're still expecting more items in the result page after the
+            // directories have been enumerated (unless a filter was active..)
+            queryChildBlobs(parent, result, limit, children, blobPageHelper);
 
             // We always query for a bit too many result so that we know that there is "more" to page to...
             while (children.size() > result.getPageSize()) {
@@ -283,10 +281,10 @@ public class L3Uplink implements VFSRoot {
         }
 
         private void queryChildBlobs(VirtualFile parent,
-                               Page<VirtualFile> result,
-                               Limit limit,
-                               List<VirtualFile> children,
-                               BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper) {
+                                     Page<VirtualFile> result,
+                                     Limit limit,
+                                     List<VirtualFile> children,
+                                     BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper) {
             Page<? extends Blob> blobPage = blobPageHelper.withStart(limit.getItemsToSkip())
                                                           .withPageSize(limit.getRemainingItems() != null ?
                                                                         limit.getRemainingItems() :
