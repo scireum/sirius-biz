@@ -14,8 +14,12 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.web.BasePageHelper;
+import sirius.biz.web.MongoPageHelper;
+import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
+import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
 import sirius.db.mongo.MongoQuery;
@@ -24,9 +28,11 @@ import sirius.db.mongo.Updater;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
+import sirius.web.http.WebContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -676,6 +682,62 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         }
 
         blobsQuery.iterate(childProcessor::test);
+    }
+
+    protected BasePageHelper<? extends Blob, ?, ?, ?> queryChildBlobsAsPage(MongoDirectory parent,
+                                                                            WebContext webContext) {
+        MongoQuery<MongoBlob> blobsQuery = mango.select(MongoBlob.class)
+                                                .eq(MongoBlob.SPACE_NAME, spaceName)
+                                                .eq(MongoBlob.PARENT, parent)
+                                                .eq(MongoBlob.COMMITTED, true)
+                                                .eq(MongoBlob.DELETED, false);
+
+        MongoPageHelper<MongoBlob> pageHelper = MongoPageHelper.withQuery(blobsQuery)
+                                                               .withContext(webContext)
+                                                               .withSearchFields(QueryField.startsWith(MongoBlob.NORMALIZED_FILENAME),
+                                                                                 QueryField.startsWith(MongoBlob.FILE_EXTENSION));
+
+        pageHelper.addTermAggregation(MongoBlob.FILE_EXTENSION);
+        pageHelper.addTimeAggregation(MongoBlob.LAST_MODIFIED,
+                                      false,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK,
+                                      DateRange.THIS_MONTH,
+                                      DateRange.LAST_MONTH,
+                                      DateRange.THIS_YEAR,
+                                      DateRange.LAST_YEAR);
+        if (touchTracking) {
+            pageHelper.addTimeAggregation(MongoBlob.LAST_TOUCHED,
+                                          false,
+                                          DateRange.LAST_FIFTEEN_MINUTES,
+                                          DateRange.LAST_TWO_HOURS,
+                                          DateRange.TODAY,
+                                          DateRange.YESTERDAY,
+                                          DateRange.THIS_WEEK,
+                                          DateRange.LAST_WEEK,
+                                          DateRange.THIS_MONTH,
+                                          DateRange.LAST_MONTH,
+                                          DateRange.THIS_YEAR,
+                                          DateRange.LAST_YEAR);
+        }
+
+        if (sortByLastModified) {
+            pageHelper.addSortFacet(Tuple.create("$BlobStorageSpace.sortByLastModified",
+                                                 qry -> qry.orderDesc(MongoBlob.LAST_MODIFIED)),
+                                    Tuple.create("$BlobStorageSpace.sortByFilename",
+                                                 qry -> qry.orderAsc(MongoBlob.NORMALIZED_FILENAME)));
+        } else {
+            pageHelper.addSortFacet(Tuple.create("$BlobStorageSpace.sortByFilename",
+                                                 qry -> qry.orderAsc(MongoBlob.NORMALIZED_FILENAME)),
+                                    Tuple.create("$BlobStorageSpace.sortByLastModified",
+                                                 qry -> qry.orderDesc(MongoBlob.LAST_MODIFIED)));
+        }
+
+        return pageHelper;
     }
 
     protected List<? extends BlobVariant> fetchVariants(MongoBlob blob) {

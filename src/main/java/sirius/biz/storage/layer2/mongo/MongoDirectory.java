@@ -13,6 +13,7 @@ import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.web.BasePageHelper;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
@@ -25,6 +26,7 @@ import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.web.http.WebContext;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -208,6 +210,11 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
                                int maxResults,
                                Predicate<? super Blob> childProcessor) {
         getStorageSpace().listChildBlobs(this, prefixFilter, fileTypes, maxResults, childProcessor);
+    }
+
+    @Override
+    public BasePageHelper<? extends Blob, ?, ?, ?> queryChildBlobsAsPage(WebContext webContext) {
+        return getStorageSpace().queryChildBlobsAsPage(this, webContext);
     }
 
     @Override
