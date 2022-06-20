@@ -51,12 +51,14 @@ import java.util.function.Function;
 public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constraint, Q extends Query<Q, E, C>, B extends BasePageHelper<E, C, Q, B>> {
 
     protected static final int DEFAULT_PAGE_SIZE = 25;
+    protected static final String SORT_FACET = "sort";
     protected WebContext webContext;
     protected Function<String, Value> parameterProvider;
     protected Q baseQuery;
     protected List<QueryField> searchFields = Collections.emptyList();
     protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
     protected int pageSize = DEFAULT_PAGE_SIZE;
+    protected int customStart = -1;
     protected boolean withTotalCount;
     protected boolean debugging;
 
@@ -157,6 +159,18 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         facets.add(Tuple.create(facet, itemsComputer));
 
         return (B) this;
+    }
+
+    /**
+     * Determines if any of the generated filter facets has a filter value set.
+     *
+     * @return <tt>true</tt> if a filter is active, <tt>false</tt> otherwise
+     */
+    public boolean hasFacetFilters() {
+        return facets.stream()
+                     .map(Tuple::getFirst)
+                     .filter(facet -> !SORT_FACET.equals(facet.getName()))
+                     .anyMatch(facet -> Strings.isFilled(facet.getValue()));
     }
 
     /**
@@ -278,9 +292,9 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     public B addSortFacet(@Nonnull List<String> sortOptions,
                           @Nullable ValueComputer<String, String> translator,
                           BiConsumer<String, Q> sortFunction) {
-        return addFacet(new Facet(NLS.get("BasePageHelper.sort"), "sort").withTranslator(translator == null ?
-                                                                                         NLS::smartGet :
-                                                                                         translator), (f, q) -> {
+        return addFacet(new Facet(NLS.get("BasePageHelper.sort"), SORT_FACET).withTranslator(translator == null ?
+                                                                                             NLS::smartGet :
+                                                                                             translator), (f, q) -> {
             if (f.getValue() != null) {
                 sortFunction.accept(f.getValue(), q);
             } else {
