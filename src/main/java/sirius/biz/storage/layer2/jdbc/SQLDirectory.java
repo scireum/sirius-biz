@@ -13,6 +13,7 @@ import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.web.BasePageHelper;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
@@ -25,6 +26,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.web.http.WebContext;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -208,6 +210,11 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
                                int maxResults,
                                Predicate<? super Blob> childProcessor) {
         getStorageSpace().listChildBlobs(this, prefixFilter, fileTypes, maxResults, childProcessor);
+    }
+
+    @Override
+    public BasePageHelper<? extends Blob, ?, ?, ?> queryChildBlobsAsPage(WebContext webContext) {
+        return getStorageSpace().queryChildBlobsAsPage(this, webContext);
     }
 
     @Override
