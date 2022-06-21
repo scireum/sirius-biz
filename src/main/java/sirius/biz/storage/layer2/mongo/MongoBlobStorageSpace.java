@@ -728,14 +728,14 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
         if (sortByLastModified) {
             pageHelper.addSortFacet(Tuple.create("$BlobStorageSpace.sortByLastModified",
-                                                 qry -> qry.orderDesc(MongoBlob.LAST_MODIFIED)),
+                                                 query -> query.orderDesc(MongoBlob.LAST_MODIFIED)),
                                     Tuple.create("$BlobStorageSpace.sortByFilename",
-                                                 qry -> qry.orderAsc(MongoBlob.NORMALIZED_FILENAME)));
+                                                 query -> query.orderAsc(MongoBlob.NORMALIZED_FILENAME)));
         } else {
             pageHelper.addSortFacet(Tuple.create("$BlobStorageSpace.sortByFilename",
-                                                 qry -> qry.orderAsc(MongoBlob.NORMALIZED_FILENAME)),
+                                                 query -> query.orderAsc(MongoBlob.NORMALIZED_FILENAME)),
                                     Tuple.create("$BlobStorageSpace.sortByLastModified",
-                                                 qry -> qry.orderDesc(MongoBlob.LAST_MODIFIED)));
+                                                 query -> query.orderDesc(MongoBlob.LAST_MODIFIED)));
         }
 
         return pageHelper;

@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.layer3.VirtualFileSystemController;
 import sirius.biz.web.BasePageHelper;
 import sirius.kernel.health.HandledException;
 import sirius.web.http.WebContext;
@@ -149,7 +150,7 @@ public interface Directory {
      * Executes a query for child blobs based on the filter settings given in the web context.
      * <p>
      * This is mainly used by the {@link L3Uplink} to implement a {@link sirius.biz.storage.layer3.ChildPageProvider}
-     * for the {@link sirius.biz.storage.layer3.VFSController} in order to customize the view within "layer 2"
+     * for the {@link VirtualFileSystemController} in order to customize the view within "layer 2"
      * directories.
      *
      * @param webContext the context to draw parameters from

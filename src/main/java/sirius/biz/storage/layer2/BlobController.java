@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
+import sirius.biz.storage.layer3.VirtualFileSystemController;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.web.BizController;
 import sirius.kernel.di.std.Part;
@@ -28,7 +29,7 @@ import java.io.IOException;
  * Provides some helper routes for managing and uploading {@link Blob blobs}.
  * <p>
  * Note that most of the management UI is handled via the VFS (layer 3) in the
- * {@link sirius.biz.storage.layer3.VFSController}.
+ * {@link VirtualFileSystemController}.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class BlobController extends BizController {

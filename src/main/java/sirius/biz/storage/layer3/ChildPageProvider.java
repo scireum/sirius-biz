@@ -14,10 +14,10 @@ import sirius.web.http.WebContext;
 /**
  * Provides an extended interface which can be used as transformation target for {@link VirtualFile}.
  * <p>
- * This is used to fully customize the view of children within a directory in the {@link VFSController}. This way,
- * we can use to {@link sirius.biz.storage.layer2.L3Uplink} to bridge the functionality to the "layer 2" so that we
- * can provide elaborate filter facets etc. without making the <tt>VirtualFile</tt> interface too complex for simple
- * scenarios like mapping external (CIFS, SFTP, ..) servers or while providing fully artificial directories and
+ * This is used to fully customize the view of children within a directory in the {@link VirtualFileSystemController}.
+ * This way, we can use to {@link sirius.biz.storage.layer2.L3Uplink} to bridge the functionality to the "layer 2" so
+ * that we can provide elaborate filter facets etc. without making the <tt>VirtualFile</tt> interface too complex for
+ * simple scenarios like mapping external (CIFS, SFTP, ..) servers or while providing fully artificial directories and
  * files (e.g. {@link sirius.biz.jobs.JobsRoot}.
  */
 public interface ChildPageProvider {

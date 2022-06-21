@@ -39,7 +39,7 @@ import java.util.Optional;
  * Provides a web based UI for the {@link VirtualFileSystem}.
  */
 @Register
-public class VFSController extends BizController {
+public class VirtualFileSystemController extends BizController {
 
     private static final String PARENT_DIR = "..";
 
@@ -54,23 +54,23 @@ public class VFSController extends BizController {
     /**
      * Lists all children of a given directory.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      */
     @LoginRequired
     @Routed("/fs")
     @Permission(PERMISSION_VIEW_FILES)
-    public void list(WebContext ctx) {
-        String path = ctx.get("path").asString("/");
+    public void list(WebContext webContext) {
+        String path = webContext.get("path").asString("/");
         VirtualFile file = resolveToExistingFile(path);
 
         if (!file.isDirectory()) {
-            file.deliverDownloadTo(ctx);
+            file.deliverDownloadTo(webContext);
         } else {
-            ctx.respondWith()
-               .template("/templates/biz/storage/list.html.pasta",
-                         file,
-                         file.pathList(),
-                         computeChildrenAsPage(ctx, file));
+            webContext.respondWith()
+                      .template("/templates/biz/storage/list.html.pasta",
+                                file,
+                                file.pathList(),
+                                computeChildrenAsPage(webContext, file));
         }
     }
 
@@ -95,23 +95,27 @@ public class VFSController extends BizController {
         return file;
     }
 
-    private Page<VirtualFile> computeChildrenAsPage(WebContext ctx, VirtualFile file) {
-        return file.tryAs(ChildPageProvider.class).map(provider -> provider.queryPage(file, ctx)).orElseGet(() -> {
-            Page<VirtualFile> page = new Page<VirtualFile>().withStart(1).bindToRequest(ctx);
-            page.withLimitedItemsSupplier(limit -> {
-                List<VirtualFile> childFiles = new ArrayList<>();
-                file.children(FileSearch.iterateAll(childFiles::add).withPrefixFilter(page.getQuery()).withLimit(limit));
-                return childFiles;
-            });
+    private Page<VirtualFile> computeChildrenAsPage(WebContext webContext, VirtualFile file) {
+        return file.tryAs(ChildPageProvider.class)
+                   .map(provider -> provider.queryPage(file, webContext))
+                   .orElseGet(() -> {
+                       Page<VirtualFile> page = new Page<VirtualFile>().withStart(1).bindToRequest(webContext);
+                       page.withLimitedItemsSupplier(limit -> {
+                           List<VirtualFile> childFiles = new ArrayList<>();
+                           file.children(FileSearch.iterateAll(childFiles::add)
+                                                   .withPrefixFilter(page.getQuery())
+                                                   .withLimit(limit));
+                           return childFiles;
+                       });
 
-            return page;
-        });
+                       return page;
+                   });
     }
 
     /**
      * Uploads a new file or replaces the contents of an existing one.
      *
-     * @param ctx         the request to handle
+     * @param webContext  the request to handle
      * @param out         the JSON response
      * @param inputStream the contents to process
      * @throws Exception in case of an error
@@ -120,11 +124,12 @@ public class VFSController extends BizController {
     @Routed(value = "/fs/upload", preDispatchable = true)
     @InternalService
     @Permission(PERMISSION_VIEW_FILES)
-    public void upload(WebContext ctx, JSONStructuredOutput out, InputStreamHandler inputStream) throws Exception {
-        VirtualFile parent = vfs.resolve(ctx.get("path").asString());
+    public void upload(WebContext webContext, JSONStructuredOutput out, InputStreamHandler inputStream)
+            throws Exception {
+        VirtualFile parent = vfs.resolve(webContext.get("path").asString());
         parent.assertExistingDirectory();
 
-        String filename = ctx.get("filename").asString(ctx.get("qqfile").asString());
+        String filename = webContext.get("filename").asString(webContext.get("qqfile").asString());
         VirtualFile file = parent.resolve(filename);
 
         boolean exists = file.exists();
@@ -133,13 +138,13 @@ public class VFSController extends BizController {
         }
 
         try {
-            ctx.markAsLongCall();
-            long size = ctx.getHeaderValue(HttpHeaderNames.CONTENT_LENGTH).asLong(0);
+            webContext.markAsLongCall();
+            long size = webContext.getHeaderValue(HttpHeaderNames.CONTENT_LENGTH).asLong(0);
             if (size > 0) {
                 file.consumeStream(inputStream, size);
             } else {
                 try (inputStream; OutputStream outputStream = file.createOutputStream()) {
-                    ctx.markAsLongCall();
+                    webContext.markAsLongCall();
                     Streams.transfer(inputStream, outputStream);
                 }
             }
@@ -162,14 +167,14 @@ public class VFSController extends BizController {
     /**
      * Deletes the given file or directory.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      */
     @LoginRequired
     @Routed("/fs/delete")
     @Permission(PERMISSION_VIEW_FILES)
-    public void delete(WebContext ctx) {
-        VirtualFile file = vfs.resolve(ctx.get("path").asString());
-        if (ctx.isSafePOST()) {
+    public void delete(WebContext webContext) {
+        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        if (webContext.isSafePOST()) {
             try {
                 if (file.exists()) {
                     file.delete();
@@ -178,25 +183,26 @@ public class VFSController extends BizController {
             } catch (Exception e) {
                 UserContext.handle(e);
             }
-            ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+            webContext.respondWith()
+                      .redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
         } else {
-            ctx.respondWith().redirectToGet("/fs");
+            webContext.respondWith().redirectToGet("/fs");
         }
     }
 
     /**
      * Renames the given file or directory.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      */
     @LoginRequired
     @Routed("/fs/rename")
     @Permission(PERMISSION_VIEW_FILES)
-    public void rename(WebContext ctx) {
-        VirtualFile file = vfs.resolve(ctx.get("path").asString());
-        if (ctx.isSafePOST()) {
+    public void rename(WebContext webContext) {
+        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        if (webContext.isSafePOST()) {
             try {
-                String name = ctx.get("name").asString();
+                String name = webContext.get("name").asString();
                 if (file.exists() && Strings.isFilled(name)) {
                     file.rename(name);
                     UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.renamed")));
@@ -204,54 +210,56 @@ public class VFSController extends BizController {
             } catch (Exception e) {
                 UserContext.handle(e);
             }
-            ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+            webContext.respondWith()
+                      .redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
         } else {
-            ctx.respondWith().redirectToGet("/fs");
+            webContext.respondWith().redirectToGet("/fs");
         }
     }
 
     /**
      * Creates a new directory.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      */
     @LoginRequired
     @Routed("/fs/createDirectory")
     @Permission(PERMISSION_VIEW_FILES)
-    public void createDirectory(WebContext ctx) {
-        VirtualFile parent = Optional.ofNullable(vfs.resolve(ctx.get("parent").asString()))
+    public void createDirectory(WebContext webContext) {
+        VirtualFile parent = Optional.ofNullable(vfs.resolve(webContext.get("parent").asString()))
                                      .filter(VirtualFile::exists)
                                      .filter(VirtualFile::isDirectory)
                                      .orElse(null);
-        if (ctx.isSafePOST()) {
+        if (webContext.isSafePOST()) {
             try {
-                String name = ctx.get("name").asString();
+                String name = webContext.get("name").asString();
                 VirtualFile newDirectory = parent.resolve(name);
                 newDirectory.createAsDirectory();
                 UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
-                ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", newDirectory.path()).toString());
+                webContext.respondWith()
+                          .redirectToGet(new LinkBuilder("/fs").append("path", newDirectory.path()).toString());
             } catch (Exception e) {
                 UserContext.handle(e);
-                ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", parent.path()).toString());
+                webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", parent.path()).toString());
             }
         } else {
-            ctx.respondWith().redirectToGet("/fs");
+            webContext.respondWith().redirectToGet("/fs");
         }
     }
 
     /**
      * Moves the given file or directory to a new parent directory.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      */
     @LoginRequired
     @Routed("/fs/move")
     @Permission(PERMISSION_VIEW_FILES)
-    public void move(WebContext ctx) {
-        VirtualFile file = vfs.resolve(ctx.get("path").asString());
-        VirtualFile newParent = vfs.resolve(ctx.get("newParent").asString());
+    public void move(WebContext webContext) {
+        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
         if (!file.exists()) {
-            ctx.respondWith().redirectToGet("/fs");
+            webContext.respondWith().redirectToGet("/fs");
             return;
         }
 
@@ -271,7 +279,7 @@ public class VFSController extends BizController {
             UserContext.handle(e);
         }
 
-        ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
     }
 
     /**

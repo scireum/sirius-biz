@@ -768,20 +768,20 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
     protected BasePageHelper<? extends Blob, ?, ?, ?> queryChildBlobsAsPage(SQLDirectory parent,
                                                                             WebContext webContext) {
-        SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
+        SmartQuery<SQLBlob> blobsQuery = oma.select(SQLBlob.class)
                                        .eq(SQLBlob.SPACE_NAME, spaceName)
                                        .eq(SQLBlob.PARENT, parent)
                                        .eq(SQLBlob.COMMITTED, true)
                                        .eq(SQLBlob.DELETED, false);
 
-        SQLPageHelper<SQLBlob> pageHelper = SQLPageHelper.withQuery(query)
+        SQLPageHelper<SQLBlob> pageHelper = SQLPageHelper.withQuery(blobsQuery)
                                                          .withContext(webContext)
                                                          .withSearchFields(QueryField.startsWith(SQLBlob.NORMALIZED_FILENAME),
                                                                            QueryField.startsWith(SQLBlob.FILE_EXTENSION));
 
         pageHelper.addQueryFacet(SQLBlob.FILE_EXTENSION.getName(),
                                  NLS.get("Blob.fileExtension"),
-                                 qry -> qry.copy().distinctFields(SQLBlob.FILE_EXTENSION).asSQLQuery());
+                                 query -> query.copy().distinctFields(SQLBlob.FILE_EXTENSION).asSQLQuery());
         pageHelper.addTimeFacet(SQLBlob.LAST_MODIFIED.getName(),
                                 NLS.get("Blob.lastModified"),
                                 false,
@@ -807,14 +807,14 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
         if (sortByLastModified) {
             pageHelper.addSortFacet(Tuple.create("$BlobStorageSpace.sortByLastModified",
-                                                 qry -> qry.orderDesc(SQLBlob.LAST_MODIFIED)),
+                                                 query -> query.orderDesc(SQLBlob.LAST_MODIFIED)),
                                     Tuple.create("$BlobStorageSpace.sortByFilename",
-                                                 qry -> qry.orderAsc(SQLBlob.NORMALIZED_FILENAME)));
+                                                 query -> query.orderAsc(SQLBlob.NORMALIZED_FILENAME)));
         } else {
             pageHelper.addSortFacet(Tuple.create("$BlobStorageSpace.sortByFilename",
-                                                 qry -> qry.orderAsc(SQLBlob.NORMALIZED_FILENAME)),
+                                                 query -> query.orderAsc(SQLBlob.NORMALIZED_FILENAME)),
                                     Tuple.create("$BlobStorageSpace.sortByLastModified",
-                                                 qry -> qry.orderDesc(SQLBlob.LAST_MODIFIED)));
+                                                 query -> query.orderDesc(SQLBlob.LAST_MODIFIED)));
         }
 
         return pageHelper;
