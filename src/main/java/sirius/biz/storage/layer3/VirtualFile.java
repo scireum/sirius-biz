@@ -1221,7 +1221,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return;
             }
 
-            tunnelHandler.accept(this, webContext.respondWith().download(name()).notCached());
+            tunnelHandler.accept(this, webContext.respondWith().named(name()).notCached());
         } catch (Exception e) {
             webContext.respondWith()
                       .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, handleErrorInCallback(e, "tunnelHandler"));
@@ -1240,7 +1240,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return;
             }
 
-            tunnelHandler.accept(this, webContext.respondWith().named(name()).notCached());
+            tunnelHandler.accept(this, webContext.respondWith().download(name()).notCached());
         } catch (Exception e) {
             webContext.respondWith()
                       .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, handleErrorInCallback(e, "tunnelHandler"));
