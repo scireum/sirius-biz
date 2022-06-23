@@ -67,7 +67,7 @@ public class ConfigBasedUplinksRoot implements VFSRoot {
     private ConfigBasedUplink makeUplink(Extension extension) {
         try {
             return ctx.findPart(extension.get("type").asString(), UplinkFactory.class)
-                      .make(extension.get("name").asString(extension.getId()), extension::get);
+                      .make(extension.get("name").asString(extension.getId()), extension::getRaw);
         } catch (IllegalArgumentException e) {
             StorageUtils.LOG.SEVERE(Strings.apply(
                     "Layer 3: An error occurred while initializing the uplink '%s' from the system configuration: %s",
