@@ -118,7 +118,7 @@
 
             <t:navbox labelKey="Process.files">
                 <i:for type="sirius.biz.storage.layer2.Blob" var="file" items="process.getFiles().findAttachedBlobs()">
-                    <i:local name="url" value="file.url().asDownload().buildURL()"/>
+                    <i:local name="url" value="file.url().enableLargeFileDetection().asDownload().buildURL()"/>
                     <i:if test="url.isPresent()">
                         <t:navboxLink icon="fa fa-file" url="@url.get()">
                             @file.getFilename()
