@@ -185,8 +185,8 @@ public interface BlobStorageSpace {
      * This is used by the {@link BlobContainer} to reference arbitrary blobs from an entity. This is mainly used,
      * if the blobs are not referenced by their filename.
      *
-     * @param objectKey           the blob to reference
-     * @param referencingEntity   the unique name of the entity
+     * @param objectKey         the blob to reference
+     * @param referencingEntity the unique name of the entity
      */
     void attachTemporaryBlob(String objectKey, String referencingEntity);
 
@@ -194,7 +194,7 @@ public interface BlobStorageSpace {
      * Fetches a blob attached to an entity via a {@link BlobContainer}.
      *
      * @param referencingEntity the referencing entity
-     * @param blobKey          the blob key to lookup
+     * @param blobKey           the blob key to lookup
      * @return the matching blob wrapped as optional or an empty optional if no matching blob was found
      */
     Optional<? extends Blob> findAttachedBlobByKey(String referencingEntity, String blobKey);
