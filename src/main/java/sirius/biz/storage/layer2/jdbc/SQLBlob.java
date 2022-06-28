@@ -288,7 +288,10 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Override
     public void deliver(Response response) {
-        getStorageSpace().deliver(getBlobKey(), URLBuilder.VARIANT_RAW, response, null);
+        getStorageSpace().deliverPhysical(getBlobKey(),
+                                          getPhysicalObjectKey(),
+                                          response,
+                                          URLBuilder.isConsideredLarge(this));
     }
 
     @Override
