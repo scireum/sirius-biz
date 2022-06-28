@@ -1266,7 +1266,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (physicalKey != null) {
                 response.addHeader(HEADER_VARIANT_SOURCE,
                                    Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "lookup");
-                getPhysicalSpace().deliver(response, physicalKey.getFirst());
+                getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
             } else {
                 if (markAsLongRunning != null) {
                     markAsLongRunning.run();
@@ -1283,9 +1283,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     @Override
-    public void deliverPhysical(@Nullable String blobKey, @Nonnull String physicalKey, @Nonnull Response response) {
+    public void deliverPhysical(@Nullable String blobKey,
+                                @Nonnull String physicalKey,
+                                @Nonnull Response response,
+                                boolean largeFileExpected) {
         touch(blobKey);
-        getPhysicalSpace().deliver(response, physicalKey);
+        getPhysicalSpace().deliver(response, physicalKey, largeFileExpected);
     }
 
     /**
@@ -1739,7 +1742,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                          } else {
                              response.addHeader(HEADER_VARIANT_SOURCE,
                                                 Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
-                             getPhysicalSpace().deliver(response, physicalKey.getFirst());
+                             getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
                          }
                      } catch (Exception e) {
                          handleFailedConversion(blobKey, variant, e);
