@@ -108,7 +108,7 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
-     * Determines if either a compression or an encrpytion (or both) transformer is present.
+     * Determines if either a compression or an encryption (or both) transformer is present.
      *
      * @return <tt>true</tt> if there is at least one transformer present, <tt>false</tt> otherwise
      */
@@ -184,7 +184,7 @@ public abstract class ObjectStorageSpace {
     /**
      * Creates a new cipher transformer which is used to decrypt data being read.
      *
-     * @return a cipher transfomer with the appropriate encryption / cipher settings
+     * @return a cipher transformer with the appropriate encryption / cipher settings
      */
     protected ByteBlockTransformer createDecrypter() {
         return new CipherTransformer(cipherProvider.createDecryptionChiper());
@@ -427,7 +427,7 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
-     * Provides the contents of the requrest object as input stream.
+     * Provides the contents of the request object as input stream.
      *
      * @param objectKey the id of the object
      * @return an input stream which provides the contents of the object
@@ -437,7 +437,7 @@ public abstract class ObjectStorageSpace {
     protected abstract InputStream getAsStream(String objectKey) throws IOException;
 
     /**
-     * Provides the contents of the requrest object as input stream.
+     * Provides the contents of the request object as input stream.
      *
      * @param objectKey the id of the object
      * @return an input stream which provides the contents of the object
