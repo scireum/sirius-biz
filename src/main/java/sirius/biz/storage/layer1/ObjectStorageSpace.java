@@ -29,13 +29,13 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Counter;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
+import sirius.web.http.ChunkedOutputStream;
 import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
@@ -503,7 +503,8 @@ public abstract class ObjectStorageSpace {
         tasks.executor("storage-deliver-large-file").fork(() -> {
             InputStream input = safeObtainInputStream(objectId, response);
             if (input != null) {
-                try (InputStream in = input; OutputStream out = response.outputStream(HttpResponseStatus.OK, null)) {
+                try (InputStream in = input; ChunkedOutputStream out = response.outputStream(HttpResponseStatus.OK, null)) {
+                    out.enableContentionControl();
                     Streams.transfer(in, out);
                 } catch (Exception exception) {
                     handleDeliveryError(response, objectId, exception);
