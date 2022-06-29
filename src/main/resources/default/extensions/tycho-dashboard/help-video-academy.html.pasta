@@ -3,7 +3,7 @@
 
 <i:switch test="@point">
     <i:block name="help-navbox">
-        <i:if test="isFrameworkEnabled('biz.tenants')">
+        <i:if test="isFrameworkEnabled('biz.tenants') && user().isLoggedIn()">
             <i:if test="sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
                 <t:navboxLink labelKey="OnboardingController.academy" url="/academy" icon="fa fa-video"/>
             </i:if>
