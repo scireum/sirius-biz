@@ -185,8 +185,8 @@ public interface BlobStorageSpace {
      * This is used by the {@link BlobContainer} to reference arbitrary blobs from an entity. This is mainly used,
      * if the blobs are not referenced by their filename.
      *
-     * @param objectKey           the blob to reference
-     * @param referencingEntity   the unique name of the entity
+     * @param objectKey         the blob to reference
+     * @param referencingEntity the unique name of the entity
      */
     void attachTemporaryBlob(String objectKey, String referencingEntity);
 
@@ -194,7 +194,7 @@ public interface BlobStorageSpace {
      * Fetches a blob attached to an entity via a {@link BlobContainer}.
      *
      * @param referencingEntity the referencing entity
-     * @param blobKey          the blob key to lookup
+     * @param blobKey           the blob key to lookup
      * @return the matching blob wrapped as optional or an empty optional if no matching blob was found
      */
     Optional<? extends Blob> findAttachedBlobByKey(String referencingEntity, String blobKey);
@@ -307,11 +307,15 @@ public interface BlobStorageSpace {
     /**
      * Delivers the contents of the given blob by using the already known physicalKey.
      *
-     * @param blobKey     the id of the blob to deliver (mostly for touch tracking)
-     * @param physicalKey the physical object to deliver
-     * @param response    the response to populate
+     * @param blobKey           the id of the blob to deliver (mostly for touch tracking)
+     * @param physicalKey       the physical object to deliver
+     * @param response          the response to populate
+     * @param largeFileExpected determines that a very large file is expected
      */
-    void deliverPhysical(@Nullable String blobKey, @Nonnull String physicalKey, @Nonnull Response response);
+    void deliverPhysical(@Nullable String blobKey,
+                         @Nonnull String physicalKey,
+                         @Nonnull Response response,
+                         boolean largeFileExpected);
 
     /**
      * Performs some housekeeping and maintenance tasks.

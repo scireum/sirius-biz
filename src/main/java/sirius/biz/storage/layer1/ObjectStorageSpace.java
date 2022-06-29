@@ -20,6 +20,8 @@ import sirius.biz.storage.layer1.transformer.DeflateTransformer;
 import sirius.biz.storage.layer1.transformer.InflateTransformer;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.async.Promise;
+import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
@@ -33,6 +35,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
@@ -60,6 +63,9 @@ public abstract class ObjectStorageSpace {
 
     @Part
     private static GlobalContext globalContext;
+
+    @Part
+    private static Tasks tasks;
 
     private static final Counter UPLOADS = new Counter();
     private static final Counter DOWNLOADS = new Counter();
@@ -108,7 +114,7 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
-     * Determines if either a compression or an encrpytion (or both) transformer is present.
+     * Determines if either a compression or an encryption (or both) transformer is present.
      *
      * @return <tt>true</tt> if there is at least one transformer present, <tt>false</tt> otherwise
      */
@@ -184,7 +190,7 @@ public abstract class ObjectStorageSpace {
     /**
      * Creates a new cipher transformer which is used to decrypt data being read.
      *
-     * @return a cipher transfomer with the appropriate encryption / cipher settings
+     * @return a cipher transformer with the appropriate encryption / cipher settings
      */
     protected ByteBlockTransformer createDecrypter() {
         return new CipherTransformer(cipherProvider.createDecryptionChiper());
@@ -427,7 +433,7 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
-     * Provides the contents of the requrest object as input stream.
+     * Provides the contents of the request object as input stream.
      *
      * @param objectKey the id of the object
      * @return an input stream which provides the contents of the object
@@ -437,7 +443,7 @@ public abstract class ObjectStorageSpace {
     protected abstract InputStream getAsStream(String objectKey) throws IOException;
 
     /**
-     * Provides the contents of the requrest object as input stream.
+     * Provides the contents of the request object as input stream.
      *
      * @param objectKey the id of the object
      * @return an input stream which provides the contents of the object
@@ -452,10 +458,11 @@ public abstract class ObjectStorageSpace {
      * If replication is active and delivery from the primary storage fails a delivery from the backup space is
      * attempted automatically (for 5XX HTTP errors).
      *
-     * @param response the response to populate
-     * @param objectId the id of the object to deliver
+     * @param response          the response to populate
+     * @param objectId          the id of the object to deliver
+     * @param largeFileExpected determines if a large file is expected
      */
-    public void deliver(Response response, String objectId) {
+    public void deliver(Response response, String objectId, boolean largeFileExpected) {
         try {
             DELIVERIES.inc();
 
@@ -463,26 +470,61 @@ public abstract class ObjectStorageSpace {
                 deliverPhysicalObject(response,
                                       objectId,
                                       createReadTransformer(),
-                                      status -> handleHttpError(response, objectId, status));
+                                      status -> handleHttpError(response, objectId, status, largeFileExpected));
+            } else if (largeFileExpected) {
+                deliverLarge(response, objectId);
             } else {
-                deliverPhysicalObject(response, objectId, status -> handleHttpError(response, objectId, status));
+                deliverPhysicalObject(response, objectId, status -> handleHttpError(response, objectId, status, false));
             }
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .error(e)
-                            .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
-                                                    objectId,
-                                                    name,
-                                                    response.getWebContext().getRequestedURI())
-                            .handle();
+        } catch (Exception exception) {
+            handleDeliveryError(response, objectId, exception);
         }
     }
 
-    private void handleHttpError(Response response, String objectId, int status) {
+    private void handleDeliveryError(Response response, String objectId, Exception exception) {
+        try {
+            response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception ex) {
+            Exceptions.ignore(ex);
+        }
+        throw Exceptions.handle()
+                        .error(exception)
+                        .to(StorageUtils.LOG)
+                        .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
+                                                objectId,
+                                                name,
+                                                response.getWebContext().getRequestedURI())
+                        .handle();
+    }
+
+    private void deliverLarge(Response response, String objectId) {
+        response.getWebContext().markAsLongCall();
+
+        tasks.executor("storage-deliver-large-file").fork(() -> {
+            InputStream input = safeObtainInputStream(objectId, response);
+            if (input != null) {
+                try (InputStream in = input; OutputStream out = response.outputStream(HttpResponseStatus.OK, null)) {
+                    Streams.transfer(in, out);
+                } catch (Exception exception) {
+                    handleDeliveryError(response, objectId, exception);
+                }
+            }
+        });
+    }
+
+    private InputStream safeObtainInputStream(String objectId, Response response) {
+        try {
+            return getInputStream(objectId).orElseThrow();
+        } catch (Exception e) {
+            handleHttpError(response, objectId, HttpResponseStatus.NOT_FOUND.code(), true);
+            return null;
+        }
+    }
+
+    private void handleHttpError(Response response, String objectId, int status, boolean largeFileExpected) {
         if (replicationSpace != null) {
             FALLBACKS.inc();
-            replicationSpace.deliver(response, objectId);
+            replicationSpace.deliver(response, objectId, largeFileExpected);
         } else {
             if (status >= 500) {
                 DELIVERY_SERVER_FAILURES.inc();
