@@ -198,7 +198,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Returns the relative path to the given root parent.
      * <p>
-     * If this would be <tt>/foo/bar/baz</tt> and the given root parent is <tt>/foo</tt> then this would
+     * If this be <tt>/foo/bar/baz</tt> and the given root parent is <tt>/foo</tt> then this would
      * return <tt>bar/baz</tt>. Therefore, this is the inverse of {@link #resolve(String)}.
      *
      * @param rootParent one of the parent directories of <tt>this</tt>

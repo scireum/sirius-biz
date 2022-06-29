@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
  * healthy to cache.
  * <p>
  * Note that this dispatcher itself doesn't do more than decoding and verifying the URL. All the heavy lifting is
- * either done by {@link sirius.biz.storage.layer1.ObjectStorageSpace#deliver(Response, String)} for physical URLs
+ * either done by {@link sirius.biz.storage.layer1.ObjectStorageSpace#deliver(Response, String, boolean)} for physical URLs
  * or {@link BlobStorageSpace#deliver(String, String, Response, Runnable)} for virtual URLs.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
@@ -170,8 +170,10 @@ public class BlobDispatcher implements WebDispatcher {
         uri = uri.substring(URI_PREFIX_LENGTH);
 
         // Cut off "xxl/" if present...
+        boolean largeFileExpected = false;
         if (uri.startsWith(LARGE_FILE_MARKER)) {
             uri = uri.substring(LARGE_FILE_MARKER_LENGTH);
+            largeFileExpected = true;
         }
 
         installCompletionHook(uri, request);
@@ -185,6 +187,7 @@ public class BlobDispatcher implements WebDispatcher {
                              uriParts.at(2).asString(),
                              uriParts.at(4).asString(),
                              Files.getFilenameWithoutExtension(filename),
+                             largeFileExpected,
                              filename);
 
             return DispatchDecision.DONE;
@@ -196,6 +199,7 @@ public class BlobDispatcher implements WebDispatcher {
                              uriParts.at(2).asString(),
                              uriParts.at(3).asString(),
                              uriParts.at(4).asString(),
+                             largeFileExpected,
                              stripAdditionalText(uriParts.at(5).asString()));
 
             return DispatchDecision.DONE;
@@ -306,18 +310,20 @@ public class BlobDispatcher implements WebDispatcher {
     /**
      * Prepares a {@link Response} and delegates the call to the layer 1.
      *
-     * @param request     the request to handle
-     * @param space       the space which is accessed
-     * @param accessToken the security token to verify
-     * @param blobKey     the blob key to be delivered
-     * @param physicalKey the physical object key used to determine which object should be delivered
-     * @param filename    the filename which is used to set up a proper <tt>Content-Type</tt>
+     * @param request           the request to handle
+     * @param space             the space which is accessed
+     * @param accessToken       the security token to verify
+     * @param blobKey           the blob key to be delivered
+     * @param physicalKey       the physical object key used to determine which object should be delivered
+     * @param largeFileExpected signals that a very large file is expected
+     * @param filename          the filename which is used to set up a proper <tt>Content-Type</tt>
      */
     private void physicalDelivery(WebContext request,
                                   String space,
                                   String accessToken,
                                   String blobKey,
                                   String physicalKey,
+                                  boolean largeFileExpected,
                                   String filename) {
         if (!utils.verifyHash(physicalKey, accessToken)) {
             request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
@@ -325,24 +331,26 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         Response response = request.respondWith().infinitelyCached().named(filename);
-        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response);
+        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
     }
 
     /**
      * Prepares a {@link Response} as download and delegates the call to the layer 1.
      *
-     * @param request     the request to handle
-     * @param space       the space which is accessed
-     * @param accessToken the security token to verify
-     * @param blobKey     the blob key of the blob to download
-     * @param physicalKey the physical object key used to determine which object should be delivered
-     * @param filename    the filename which is used to set up a proper <tt>Content-Type</tt>
+     * @param request           the request to handle
+     * @param space             the space which is accessed
+     * @param accessToken       the security token to verify
+     * @param blobKey           the blob key of the blob to download
+     * @param physicalKey       the physical object key used to determine which object should be delivered
+     * @param largeFileExpected signals that a very large file is expected
+     * @param filename          the filename which is used to set up a proper <tt>Content-Type</tt>
      */
     private void physicalDownload(WebContext request,
                                   String space,
                                   String accessToken,
                                   String blobKey,
                                   String physicalKey,
+                                  boolean largeFileExpected,
                                   String filename) {
         if (!utils.verifyHash(physicalKey, accessToken)) {
             request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
@@ -350,7 +358,7 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         Response response = request.respondWith().infinitelyCached().download(filename);
-        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response);
+        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
     }
 
     /**
