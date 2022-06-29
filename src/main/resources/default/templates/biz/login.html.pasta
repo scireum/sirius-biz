@@ -2,12 +2,146 @@
 <i:arg type="boolean" name="noindex"
        default="@('/' != CallContext.getCurrent().get(WebContext.class).getRawRequestedURI())"/>
 
-<w:page titleKey="Model.login" noindex="@noindex">
+<t:page titleKey="Model.login" noindex="@noindex">
+    <i:block name="menu"></i:block>
     <i:block name="breadcrumbBar"></i:block>
+    <i:block name="head">
+        <style>
+            #wrapper-menu {
+                display: none;
+            }
+        </style>
+    </i:block>
 
-    <div class="col-md-offset-2 col-md-6">
-        <div class="well">
-            <i:invoke template="/templates/biz/login-form.html.pasta" originalUrl="@originalUrl"/>
+    <div class="row mt-xl-4">
+        <div class="col-12 col-md-5">
+            <div class="card shadow-lg mb-4">
+                <div class="card-body">
+                    <form class="form-signin" method="post" action="@originalUrl">
+                        <div class="d-flex flex-column">
+                            <div class="align-self-center mb-4">
+                                <img alt="product logo" class="w-100" src="/assets/images/login_logo.png"/>
+                            </div>
+                            <h3 class="mb-3">@i18n("Model.login")</h3>
+                            <div class="form-group">
+                                <input id="user"
+                                       tabindex="1"
+                                       placeholder="@i18n('Model.login.user')"
+                                       name="user"
+                                       type="text"
+                                       autocomplete="off"
+                                       value="@CallContext.getCurrent().get(WebContext.class).get('user').asString()"
+                                       class="form-control input-block-level"/>
+                            </div>
+                            <div class="form-group">
+                                <input id="password"
+                                       tabindex="2"
+                                       placeholder="@i18n('Model.login.password')"
+                                       autocomplete="off"
+                                       name="password"
+                                       type="password"
+                                       class="form-control input-block-level"/>
+                            </div>
+                            <div>
+                                <input type="checkbox" tabindex="4" value="true" name="keepLogin" checked/>
+                                <span>@i18n('Model.login.keepLogin')</span>
+                            </div>
+                            <button tabindex="3" class="btn btn-lg btn-primary btn-block mt-4 mb-4"
+                                    type="submit">
+                                @i18n('Model.login.login')
+                            </button>
+                            <div class="d-flex flex-row justify-content-between">
+                                <a href="/saml" class="link text-small">@i18n('SAMLController.loginViaSAML')</a>
+                                <a href="#" onclick="showForgetPasswordModal()" class="link text-small">
+                                    @i18n('Model.login.forgotPassword')
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-7">
+            <i:extensions target="tycho-login" point="sidebar"/>
         </div>
     </div>
-</w:page>
+
+    <i:local name="technologies" value="@part(sirius.biz.tycho.DashboardController.class).getTechStack()"/>
+    <i:if test="technologies.size() > 0">
+        <div class="card mt-5 mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-small font-weight-light mb-4">This service is based on Open Source Software:</h5>
+                <div class="d-flex flex-row overflow-hidden align-items-center">
+                    <i:for type="Tuple" var="technology" items="technologies">
+                        <div class="pl-4 pr-4">
+                            <a href="@technology.getSecond()" target="_blank">
+                                <img src="@technology.getFirst()" style="max-height: 32px"/>
+                            </a>
+                        </div>
+                    </i:for>
+                </div>
+            </div>
+        </div>
+    </i:if>
+
+    <t:modal name="forgotPassword" titleKey="Model.login.forgotPassword">
+        <t:textfield class="required" id="mailField" name="email" value="" labelKey="Model.email"/>
+
+        <i:block name="footer">
+            <a onclick="submitForgotPassword()" class="btn btn-danger">@i18n('Model.login.resetPassword')</a>
+        </i:block>
+    </t:modal>
+    <script type="text/javascript">
+        sirius.ready(function () {
+            const _userField = document.getElementById('user');
+            const _passwordField = document.getElementById('password');
+
+            if (!sirius.isEmpty(_userField.value)) {
+                _passwordField.focus();
+            } else {
+                _userField.focus();
+            }
+
+            try {
+                window.localStorage.setItem('samlPostLoginUri', '@originalUrl');
+            } catch (e) {
+                console.log(e);
+            }
+        });
+
+        function showForgetPasswordModal() {
+            const _emailField = document.getElementById('mailField');
+            const _userField = document.getElementById('user');
+
+            _emailField.value = _userField.value;
+
+            // This bootstrap call sill needs jQuery :(...
+            $('#forgotPassword').modal('show');
+        }
+
+        function submitForgotPassword() {
+            const _emailField = document.getElementById('mailField');
+
+            // This bootstrap call sill needs jQuery :(...
+            $('#forgotPassword').modal('hide');
+
+            if (sirius.isEmpty(_emailField.value)) {
+                clearMessages();
+                addErrorMessage('@i18n("Model.login.emailRequired")');
+                return;
+            }
+
+            sirius.getJSON('/forgotPassword', {email: _emailField.value}).then(function (json) {
+                clearMessages();
+                if (json.error) {
+                    addErrorMessage(json.message);
+                } else {
+                    addSuccessMessage('@i18n("Model.login.passwordResetted")');
+                    _userField.value = _emailField.value;
+                    _passwordField.value = '';
+                    _passwordField.focus();
+                }
+            });
+        }
+    </script>
+</t:page>
