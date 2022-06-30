@@ -115,14 +115,14 @@
 
             _emailField.value = _userField.value;
 
-            // This bootstrap call sill needs jQuery :(...
+            // This bootstrap call still needs jQuery :(...
             $('#forgotPassword').modal('show');
         }
 
         function submitForgotPassword() {
             const _emailField = document.getElementById('mailField');
 
-            // This bootstrap call sill needs jQuery :(...
+            // This bootstrap call still needs jQuery :(...
             $('#forgotPassword').modal('hide');
 
             if (sirius.isEmpty(_emailField.value)) {

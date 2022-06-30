@@ -8,6 +8,7 @@
 
 package sirius.biz.tycho;
 
+import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Priorized;
 
 import java.util.function.BiConsumer;
@@ -18,6 +19,7 @@ import java.util.function.BiConsumer;
  * This has to be {@link sirius.kernel.di.std.Register registered} and will then be picked up by the
  * {@link DashboardController} to be shown on the login page.
  */
+@AutoRegister
 public interface TechStackInfo extends Priorized {
 
     /**
