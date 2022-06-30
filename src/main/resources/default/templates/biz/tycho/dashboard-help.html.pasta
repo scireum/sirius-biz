@@ -1,7 +1,8 @@
 <i:local name="contents" value="renderToString('body')" />
 <i:local name="navbox" value="renderToString('navbox')" />
+
 <i:if test="isFilled(contents) || isFilled(navbox)">
-    <div class="card mb-4">
+    <div class="card mb-4 flex-grow-1">
         <div class="card-body">
             <h5 class="card-title">
                 @i18n("DashboardController.help")

@@ -1,7 +1,7 @@
 <i:arg type="String" name="query"/>
 <t:page titleKey="OpenSearchController.label">
     <i:block name="head">
-        <script type="text/javascript" src="/assets/lib/oboe/oboe.min.js"></script>
+        <script type="text/javascript" src="/assets/libs/oboe/oboe.min.js"></script>
     </i:block>
     <i:block name="breadcrumbs">
         <li>
