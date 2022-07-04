@@ -86,6 +86,11 @@ public class LookupValueProperty extends StringProperty {
     }
 
     @Override
+    public String getValueForUserMessage(Object entity) {
+        return getLookupValue(entity).forceFetchName();
+    }
+
+    @Override
     protected void setValueToField(Object value, Object target) {
         LookupValue lookupValue = (LookupValue) super.getValueFromField(target);
         lookupValue.setValue((String) value);
