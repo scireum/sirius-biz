@@ -52,7 +52,7 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
         }
 
         redis.exec(() -> "Write to RedisUserMessageCache",
-                   jedis -> jedis.setex(CACHE_NAME + key, (long) DEFAULT_TTL, array.toJSONString()));
+                   jedis -> jedis.setex(CACHE_NAME + key, DEFAULT_TTL, array.toJSONString()));
     }
 
     @Override

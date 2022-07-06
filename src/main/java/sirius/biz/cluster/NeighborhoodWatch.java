@@ -19,7 +19,6 @@ import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Orchestration;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
-import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.Initializable;
@@ -330,7 +329,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                         db.setnx(syncName + EXECUTION_TIMESTAMP_SUFFIX, String.valueOf(System.currentTimeMillis()));
                 if (update == 1L) {
                     db.expire(syncName + EXECUTION_TIMESTAMP_SUFFIX,
-                              (long) TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS));
+                              TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS));
                     return true;
                 } else {
                     return false;
@@ -429,7 +428,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         result.add(getLocalBackgroundInfo());
         clusterManager.callEachNode("/system/cluster/background/" + clusterManager.getClusterAPIToken())
                       .map(this::parseBackgroundInfos)
-                      .collect(Lambdas.into(result));
+                      .forEach(result::add);
 
         return result;
     }

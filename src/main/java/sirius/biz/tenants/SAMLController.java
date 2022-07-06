@@ -11,7 +11,6 @@ package sirius.biz.tenants;
 import com.google.common.collect.Streams;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
-import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -108,7 +107,6 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         // "onExternalLogin" above...
         UserContext userContext = UserContext.get();
         userContext.setCurrentUser(manager.findUserByName(ctx, response.getNameId()));
-
 
         ctx.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
     }
@@ -224,6 +222,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
 
     private void updateAccount(SAMLResponse response, U account) {
         account.getUserAccountData().getPermissions().getPermissions().clear();
+        List<String> mutablePermissions = account.getUserAccountData().getPermissions().getPermissions().modify();
         Streams.concat(response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP).stream(),
                        response.getAttribute(SAMLResponse.ATTRIBUTE_ROLE).stream())
                .filter(Strings::isFilled)
@@ -231,7 +230,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
                .map(String::trim)
                .filter(Strings::isFilled)
                .filter(role -> roles.contains(role))
-               .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions().modify()));
+               .forEach(mutablePermissions::add);
 
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
             account.getUserAccountData()

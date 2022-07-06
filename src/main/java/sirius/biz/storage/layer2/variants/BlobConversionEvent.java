@@ -108,6 +108,12 @@ public class BlobConversionEvent extends Event {
         return this;
     }
 
+    /**
+     * Specifies the output fil which has been generated.
+     *
+     * @param handle the output file
+     * @return the event itself for fluent method calls
+     */
     public BlobConversionEvent withOutputFile(FileHandle handle) {
         if (handle.exists()) {
             this.successful = true;
@@ -117,6 +123,12 @@ public class BlobConversionEvent extends Event {
         return this;
     }
 
+    /**
+     * Adds and records a conversion error.
+     *
+     * @param exception the error to record
+     * @return the event itself for fluent method calls
+     */
     public BlobConversionEvent withConversionError(Throwable exception) {
         this.successful = false;
         this.failReason = exception.getMessage() + " (" + exception.getClass().getSimpleName() + ")";

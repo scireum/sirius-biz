@@ -16,6 +16,11 @@ import sirius.web.security.UserInfo;
 public class SpyUser {
     private final UserInfo rootUser;
 
+    /**
+     * Creates a new spy user for the given root user.
+     *
+     * @param rootUser the root user being spied
+     */
     public SpyUser(UserInfo rootUser) {
         this.rootUser = rootUser;
     }
