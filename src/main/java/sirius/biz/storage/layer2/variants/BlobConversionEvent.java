@@ -109,7 +109,7 @@ public class BlobConversionEvent extends Event {
     }
 
     /**
-     * Specifies the output fil which has been generated.
+     * Specifies the output file which has been generated.
      *
      * @param handle the output file
      * @return the event itself for fluent method calls
