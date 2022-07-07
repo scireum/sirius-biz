@@ -64,10 +64,14 @@
         <!-- Required as the version brought by clickhouse-jdbc contains security issues -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.13.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.13.3</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.apache.ftpserver</groupId>
@@ -127,7 +131,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.129</version>
+            <version>1.12.239</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
