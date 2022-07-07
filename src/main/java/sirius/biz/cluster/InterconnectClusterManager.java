@@ -27,7 +27,6 @@ import sirius.web.services.JSONCall;
 import javax.annotation.Nonnull;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.LocalDateTime;

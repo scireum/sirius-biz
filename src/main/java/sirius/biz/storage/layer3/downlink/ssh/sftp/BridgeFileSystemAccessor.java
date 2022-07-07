@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.layer3.downlink.ssh.sftp;
 
-import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.sftp.server.DirectoryHandle;
 import org.apache.sshd.sftp.server.FileHandle;
 import org.apache.sshd.sftp.server.SftpFileSystemAccessor;

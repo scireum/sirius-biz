@@ -15,6 +15,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
@@ -113,7 +114,8 @@ public class ImportTransactionHelper extends ImportHelper {
      * @param entityCallback an optional callback which is invoked for each entity to be deleted
      * @param <E>            the generic type of entities being deleted
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked",  "java:S1905"})
+    @Explain("This cast is actually necessary.")
     public <E extends BaseEntity<?> & ImportTransactionalEntity> void deleteUnmarked(Class<E> entityType,
                                                                                      Consumer<Query<?, E, ?>> queryExtender,
                                                                                      @Nullable
