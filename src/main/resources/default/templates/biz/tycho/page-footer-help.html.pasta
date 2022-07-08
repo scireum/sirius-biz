@@ -9,7 +9,7 @@
            id="tycho-page-help-toggle">
             <i class="fas fa-ambulance"></i> @i18n("DashboardController.help")
         </a>
-        <div class="dropdown-menu dropdown-menu-right p-4" style="min-width: 300px;line-height:1.5;">
+        <div class="dropdown-menu dropdown-menu-right p-4 shadow" style="min-width: 300px;line-height:1.5;">
             <h5 class="card-title">
                 @i18n("DashboardController.help")
             </h5>
