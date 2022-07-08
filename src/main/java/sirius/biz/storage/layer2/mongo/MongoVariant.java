@@ -108,6 +108,9 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
     @AfterDelete
     protected void onDelete() {
         MongoBlob mongoBlob = blob.fetchValue();
+        if (mongoBlob == null) {
+            return;
+        }
         if (Strings.isFilled(physicalObjectKey)) {
             mongoBlob.getStorageSpace().getPhysicalSpace().delete(physicalObjectKey);
         }
