@@ -95,7 +95,7 @@ public abstract class FileExportJob extends BatchJob {
                 return fileDestination.createOutputStream();
             }
 
-            return process.addFile(determineFilenameWithoutExtension() + "." + determineFileExtension());
+            return process.addFile(determineEffectiveFilename("", false));
         } catch (IOException e) {
             throw process.handle(e);
         }
@@ -108,17 +108,17 @@ public abstract class FileExportJob extends BatchJob {
      * @return a new file with a unique name
      */
     protected VirtualFile createUniqueFile(VirtualFile baseDirectory) {
-        VirtualFile result = baseDirectory.resolve(determineEffectiveFilename(""));
+        VirtualFile result = baseDirectory.resolve(determineEffectiveFilename("", true));
         int counter = 1;
         while (result.exists() && counter < 99) {
-            result = baseDirectory.resolve(determineEffectiveFilename("-" + counter));
+            result = baseDirectory.resolve(determineEffectiveFilename("-" + counter, true));
             counter++;
         }
 
         if (result.exists()) {
             throw Exceptions.createHandled()
                             .withNLSKey("FileExportJobs.tooManyFiles")
-                            .set("firstFile", determineEffectiveFilename(""))
+                            .set("firstFile", determineEffectiveFilename("", true))
                             .set("lastFile", result.name())
                             .handle();
         }
@@ -154,18 +154,16 @@ public abstract class FileExportJob extends BatchJob {
      * @param suffix an optional suffix to append to the name to generate a unique file name
      * @return a full file name including the file extension
      */
-    protected String determineEffectiveFilename(String suffix) {
-        LocalDate today = LocalDate.now();
-        return determineFilenameWithoutExtension()
-               + "-"
-               + today.getYear()
-               + "-"
-               + today.getMonthValue()
-               + "-"
-               + today.getDayOfMonth()
-               + suffix
-               + "."
-               + determineFileExtension();
+    protected String determineEffectiveFilename(String suffix, boolean includeDate) {
+        if (includeDate) {
+            LocalDate today = LocalDate.now();
+            return determineEffectiveFilename(Strings.apply("-%s-%s-%s%s",
+                                                            today.getYear(),
+                                                            today.getMonthValue(),
+                                                            today.getDayOfMonth(),
+                                                            suffix), false);
+        }
+        return determineFilenameWithoutExtension() + suffix + "." + determineFileExtension();
     }
 
     /**
@@ -178,8 +176,8 @@ public abstract class FileExportJob extends BatchJob {
     /**
      * Determines the base name to use for the file.
      * <p>
-     * This will be expanded by the date and also by additional suffixes to generate a unique name. Also the file
-     * extension as supplied by {@link #determineFileExtension()} will be appended.
+     * The file extension as supplied by {@link #determineFileExtension()} will be appended.
+     * If an unique name is required, a date and potentially additional suffixes are appended.
      *
      * @return the base file name to use
      */
@@ -197,8 +195,7 @@ public abstract class FileExportJob extends BatchJob {
             processInputStream(fileDestination::createInputStream, digester);
         } else {
             processInputStream(() -> {
-                return processes.getFile(process.getProcessId(),
-                                         determineFilenameWithoutExtension() + "." + determineFileExtension());
+                return processes.getFile(process.getProcessId(), determineEffectiveFilename("", false));
             }, digester);
         }
     }
