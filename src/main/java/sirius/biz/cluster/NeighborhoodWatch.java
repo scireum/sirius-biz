@@ -17,7 +17,6 @@ import sirius.kernel.async.AsyncExecutor;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Orchestration;
-import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -268,7 +267,6 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             String syncName = BACKGROUND_LOOP_PREFIX + name;
             SynchronizeType type = syncSettings.getOrDefault(syncName, SynchronizeType.LOCAL);
             if (type == SynchronizeType.CLUSTER
-                && CallContext.getCurrent().get(TaskContext.class).isActive()
                 && redis.isConfigured()) {
                 redis.unlock(syncName);
             }
