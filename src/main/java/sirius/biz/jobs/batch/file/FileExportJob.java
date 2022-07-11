@@ -177,7 +177,7 @@ public abstract class FileExportJob extends BatchJob {
      * Determines the base name to use for the file.
      * <p>
      * The file extension as supplied by {@link #determineFileExtension()} will be appended.
-     * If an unique name is required, a date and potentially additional suffixes are appended.
+     * If a unique name is required, a date and potentially additional suffixes are appended.
      *
      * @return the base file name to use
      */
