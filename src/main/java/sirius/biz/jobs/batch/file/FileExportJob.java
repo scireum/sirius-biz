@@ -151,7 +151,8 @@ public abstract class FileExportJob extends BatchJob {
     /**
      * Determines the effective file name to use.
      *
-     * @param suffix an optional suffix to append to the name to generate a unique file name
+     * @param suffix      an optional suffix to append to the name to generate a unique file name
+     * @param includeDate whether the current date should be appended to the filename
      * @return a full file name including the file extension
      */
     protected String determineEffectiveFilename(String suffix, boolean includeDate) {
