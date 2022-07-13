@@ -1,0 +1,15 @@
+<i:arg type="String" name="heading" default="" description="May contain a heading of this box."/>
+<i:arg type="String" name="anchor" default="" description="Defines an anchor to which a link can directly jump."/>
+
+<i:pragma name="description">
+    Renders a hint box based on a card/section. The box comes with an icon and a special styling.
+    The box could either be used within a section or stand alone (among other sections).
+</i:pragma>
+
+<k:section heading="@heading"
+           anchor="@anchor"
+           borderColor="border-sirius-yellow-dark"
+           headingColor="text-sirius-yellow-dark"
+           headingIcon="fas fa-exclamation-triangle">
+    <i:render name="body"/>
+</k:section>
