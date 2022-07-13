@@ -2,7 +2,7 @@
 <i:arg type="String" name="anchor" default="" description="Defines an anchor to which a link can directly jump."/>
 
 <i:pragma name="description">
-    Renders a hint box based on a card/section. The box comes with an icon and a special styling.
+    Renders a warning box based on a card/section. The box comes with an icon and a special styling.
     The box could either be used within a section or stand alone (among other sections).
 </i:pragma>
 
