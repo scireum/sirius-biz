@@ -1,7 +1,7 @@
 <i:arg type="String" name="heading" default="" description="May contain a heading of this section."/>
 <i:arg type="String" name="anchor" default="" description="Defines an anchor to which a link can directly jump."/>
-<i:arg type="String" name="borderColor" default="" description="Defines the border color via a declarative css-class."/>
-<i:arg type="String" name="headingColor" default="" description="Defines the text color via a declarative css-class."/>
+<i:arg type="String" name="class" default="" description="Defines additional css-classes for the card element."/>
+<i:arg type="String" name="headingClass" default="" description="Defines additional css-classes for the card heading."/>
 <i:arg type="String" name="headingIcon" default="" description="Defines the icon left to the heading via a declarative css-class. Requires a heading." />
 
 <i:pragma name="description">
@@ -9,10 +9,10 @@
     KB articles and should be wrapped around every text or other content of an article.
 </i:pragma>
 
-<div class="card mb-4 @if(isFilled(borderColor)) { card-border @borderColor }">
+<div class="card mb-4 @class">
     <div class="card-body">
         <i:if test="isFilled(heading)">
-            <h5 id="@anchor" class="card-title @headingColor">
+            <h5 id="@anchor" class="card-title @headingClass">
                 <i:if test="isFilled(headingIcon)">
                     <i class="@headingIcon"></i>
                 </i:if>

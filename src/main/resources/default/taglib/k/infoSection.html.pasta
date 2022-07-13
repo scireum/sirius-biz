@@ -8,8 +8,8 @@
 
 <k:section heading="@heading"
            anchor="@anchor"
-           borderColor="border-sirius-blue-light"
-           headingColor="text-sirius-blue-light"
+           class="full-border border-sirius-blue-light"
+           headingClass="text-sirius-blue-light"
            headingIcon="fas fa-info-circle">
     <i:render name="body"/>
 </k:section>
