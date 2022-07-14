@@ -87,7 +87,7 @@ public class ObjectStore {
      * {@link #INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE}) before a chunk is uploaded to S3. Note that a single multipart
      * upload can at most consist of 10.000 parts - therefore this size limits the maximal total object size.
      */
-    private static final int MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE = 8 * 1024 * 1024;
+    private static final int MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE = 10 * 1024 * 1024;
 
     /**
      * When reading from an input stream into the local aggregation buffer (as described in
