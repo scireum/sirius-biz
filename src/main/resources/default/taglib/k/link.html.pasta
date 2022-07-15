@@ -1,5 +1,5 @@
-<i:arg type="String" name="link" description="Contains a url or link."/>
-<i:arg type="String" name="name" description="Contains a speaking name or description."/>
+<i:arg type="String" name="link" description="Defines a url or link."/>
+<i:arg type="String" name="name" description="Defines a speaking name or description."/>
 <i:arg type="String" name="icon" default="fas fa-external-link-alt" description="Defines the icon left to the link name."/>
 
 <i:pragma name="description">
