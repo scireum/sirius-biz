@@ -147,6 +147,18 @@ public abstract class FileExportJob extends BatchJob {
     private boolean shouldUseProvidedOutputDirectory() {
         return destination.exists() && destination.isDirectory();
     }
+    
+    /**
+     * Determines the effective file name to use.
+     *
+     * @param suffix an optional suffix to append to the name to generate a unique file name
+     * @return a full file name including the file extension
+     * @deprecated use {@link #determineEffectiveFilename(String, boolean)} instead.
+     */
+    @Deprecated
+    protected String determineEffectiveFilename(String suffix) {
+        return determineEffectiveFilename(suffix, true);
+    }
 
     /**
      * Determines the effective file name to use.
