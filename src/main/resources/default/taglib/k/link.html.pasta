@@ -7,5 +7,5 @@
 </i:pragma>
 
 <a href="@link">
-    <i class="@linkIcon"></i>&nbsp;@linkName
+    <i class="@icon"></i>&nbsp;@name
 </a>
