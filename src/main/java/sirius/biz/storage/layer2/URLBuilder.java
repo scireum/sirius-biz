@@ -181,6 +181,7 @@ public class URLBuilder {
 
     /**
      * Determines if the given blob is considered a {@link #largeFileLimit} large file.
+     *
      * @param blob the blob to check
      * @return <tt>true</tt> if the blob is considered large, <tt>false</tt> otherwise@
      */
@@ -410,7 +411,8 @@ public class URLBuilder {
             result.append(physicalKey);
             result.append("/");
             appendAddonText(result);
-            result.append(Strings.urlEncode(determineEffectiveFilename()));
+            result.append(Strings.urlEncode(Files.toSaneFileName(determineEffectiveFilename())
+                                                 .orElse(physicalKey + fetchUrlEncodedFileExtension())));
         } else {
             appendAddonText(result);
             result.append(physicalKey);
