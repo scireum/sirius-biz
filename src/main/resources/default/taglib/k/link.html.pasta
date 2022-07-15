@@ -1,0 +1,10 @@
+<i:arg type="String" name="link" default="" description="Contains a url or link."/>
+<i:arg type="String" name="linkName" default="" description="Contains a speaking name or description."/>
+
+<i:pragma name="description">
+    Renders a link uniformly with a speaking name or description.
+</i:pragma>
+
+<a href="@link">
+    <i class="fas fa-external-link-alt"></i>&nbsp;@linkName
+</a>
