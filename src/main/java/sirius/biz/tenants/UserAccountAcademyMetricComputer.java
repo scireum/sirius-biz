@@ -44,7 +44,7 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
 
     /**
      * Defines the age (in days) for an onboarding video to be picked up by the statistics. If we'd also take newer
-     * videos into account, the user had no chance to actually view them and thus the education leven and the
+     * videos into account, the user had no chance to actually view them and thus the education level and the
      * related performance flag would fluctuate heavily.
      */
     private static final int MIN_AGE_FOR_RELEVANT_VIDEOS_IN_DAYS = 30;
@@ -91,8 +91,8 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
     /**
      * Queries visible (non-deleted) onboarding videos for the given user.
      * <p>
-     * Note that we filter on videos which have a certain age (30 days), so that the user had a chance to actually
-     * view the video. Otherwise, the statistics would fluctuate with the release of each new video.
+     * Note that we filter on videos which have a certain age (at least 30 days), so that the user had a chance to actually
+     * watch the video. Otherwise, the statistics would fluctuate with the release of each new video.
      *
      * @param userAccount the user account to fetch videos for
      * @return a query for all relevant {@link OnboardingVideo onboarding videos} for the given user
