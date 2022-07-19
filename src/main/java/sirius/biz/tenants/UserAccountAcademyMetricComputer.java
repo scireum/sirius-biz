@@ -43,6 +43,13 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
     public static final String METRIC_USER_EDUCATION_LEVEL = "user-education-level";
 
     /**
+     * Defines the age (in days) for an onboarding video to be picked up by the statistics. If we'd also take newer
+     * videos into account, the user had no chance to actually view them and thus the education level and the
+     * related performance flag would fluctuate heavily.
+     */
+    private static final int MIN_AGE_FOR_RELEVANT_VIDEOS_IN_DAYS = 30;
+
+    /**
      * Contains the minimal required education level for the academy user flag.
      */
     @ConfigValue("analytics.user-accounts.minEducationLevel")
@@ -54,30 +61,21 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
                         LocalDateTime endOfPeriod,
                         boolean pastDate,
                         E userAccount) throws Exception {
-        long totalVideos = getMapper().select(getOnboardingVideoEntity())
-                                      .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER),
-                                          userAccount.getUniqueName())
-                                      .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED),
-                                          false)
-                                      .count();
+        long totalVideos = queryEligibleOnboardingVideos(userAccount).count();
 
         if (totalVideos == 0) {
             return;
         }
 
-        long watchedVideos = getMapper().select(getOnboardingVideoEntity())
-                                        .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER),
-                                            userAccount.getUniqueName())
-                                        .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED),
-                                            false)
-                                        .where(getMapper().filters()
-                                                          .or(getMapper().filters()
-                                                                         .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
-                                                                                 OnboardingVideoData.WATCHED), true),
-                                                              getMapper().filters()
-                                                                         .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
-                                                                                 OnboardingVideoData.SKIPPED), true)))
-                                        .count();
+        Query<? extends Query<?, ?, ?>, ?, Constraint> watchedVideosQuery = queryEligibleOnboardingVideos(userAccount);
+        watchedVideosQuery.where(getMapper().filters()
+                                            .or(getMapper().filters()
+                                                           .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
+                                                                   OnboardingVideoData.WATCHED), true),
+                                                getMapper().filters()
+                                                           .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
+                                                                   OnboardingVideoData.SKIPPED), true)));
+        long watchedVideos = watchedVideosQuery.count();
 
         int educationLevel = (int) (watchedVideos * 100 / totalVideos);
         metrics.updateMonthlyMetric(userAccount, METRIC_USER_EDUCATION_LEVEL, date, educationLevel);
@@ -88,6 +86,25 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
                        .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
                        .commit();
         }
+    }
+
+    /**
+     * Queries visible (non-deleted) onboarding videos for the given user.
+     * <p>
+     * Note that we filter on videos which have a certain age (at least 30 days), so that the user had a chance to actually
+     * watch the video. Otherwise, the statistics would fluctuate with the release of each new video.
+     *
+     * @param userAccount the user account to fetch videos for
+     * @return a query for all relevant {@link OnboardingVideo onboarding videos} for the given user
+     */
+    private Query<? extends Query<?, ?, ?>, ?, Constraint> queryEligibleOnboardingVideos(E userAccount) {
+        return getMapper().select(getOnboardingVideoEntity())
+                          .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER),
+                              userAccount.getUniqueName())
+                          .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
+                          .where(getMapper().filters()
+                                            .lt(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.CREATED),
+                                                LocalDateTime.now().minusDays(MIN_AGE_FOR_RELEVANT_VIDEOS_IN_DAYS)));
     }
 
     protected abstract Class<? extends BaseEntity<?>> getOnboardingVideoEntity();
