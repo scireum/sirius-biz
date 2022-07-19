@@ -3,16 +3,14 @@
 
 <i:switch test="@point">
     <i:block name="footer-right-start">
-        <i:if test="!currentRenderContext().getRootContext().getTemplate().getName().endsWith('dashboard.html.pasta')">
-            <t:permission permission="flag-logged-in">
-                <i:invoke template="/templates/biz/tycho/page-footer-help.html.pasta">
-                    <i:block name="navbox">
-                        <i:extensions target="tycho-dashboard" point="help-navbox"/>
-                    </i:block>
-                    <i:extensions target="tycho-dashboard" point="help-content"/>
-                </i:invoke>
-            </t:permission>
-        </i:if>
+        <t:permission permission="flag-logged-in">
+            <i:invoke template="/templates/biz/tycho/page-footer-help.html.pasta">
+                <i:block name="navbox">
+                    <i:extensions target="tycho-dashboard" point="help-navbox"/>
+                </i:block>
+                <i:extensions target="tycho-dashboard" point="help-content"/>
+            </i:invoke>
+        </t:permission>
         <t:permission permission="flag-logged-in">
             <span class="d-none d-xl-inline-block text-muted small mr-2 pr-2 br-gray">
                <b>@currentUserName()</b>
