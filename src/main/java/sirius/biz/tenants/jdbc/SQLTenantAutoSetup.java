@@ -69,7 +69,10 @@ public class SQLTenantAutoSetup extends BaseTenantAutoSetup {
                               .where(OMA.FILTERS.eq(SQLTenant.ID, systemTenantId))
                               .one()
                               .orElseThrow(() -> {
-                                  return Exceptions.createHandled().withSystemErrorMessage("oh nej").handle();
+                                  return Exceptions.createHandled()
+                                                   .withSystemErrorMessage(
+                                                           "Failed to resolve the system tenant after creation!")
+                                                   .handle();
                               });
 
         // Having a semi-initialised tenant, it is now time to set it up as system tenant
