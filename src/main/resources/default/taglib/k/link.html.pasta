@@ -1,5 +1,5 @@
 <i:arg type="String" name="link" description="Defines a url or link."/>
-<i:arg type="String" name="name" description="Defines a speaking name or description."/>
+<i:arg type="String" name="name" default="" description="Defines a speaking name or description."/>
 <i:arg type="String" name="icon" default="fas fa-external-link-alt" description="Defines the icon left to the link name."/>
 
 <i:pragma name="description">
@@ -7,5 +7,5 @@
 </i:pragma>
 
 <a href="@link">
-    <i class="@icon"></i>&nbsp;@name
+    <i class="@icon"></i><i:if test="isFilled(name)"><span class="ml-1">@name</span></i:if>
 </a>
