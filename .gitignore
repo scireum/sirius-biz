@@ -7,4 +7,6 @@ instance.conf
 localhost.jks
 sirius-biz.iml
 .idea
+.gradle
+build
 hostkey.ser
