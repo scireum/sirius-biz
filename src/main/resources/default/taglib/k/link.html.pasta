@@ -2,7 +2,7 @@
 <i:arg type="String" name="link" description="Defines a url or link."/>
 <i:arg type="String" name="name" default="" description="Defines a speaking name or description."/>
 <i:arg type="String" name="icon" default="fas fa-external-link-alt" description="Defines the icon left to the link name."/>
-<i:arg type="String" name="target" default="_blank" description="Defines the target where to display the linked url or link."/>
+<i:arg type="String" name="target" default="_self" description="Defines the target where to display the linked url or link."/>
 
 <i:pragma name="description">
     Renders a link uniformly with a speaking name or description.
