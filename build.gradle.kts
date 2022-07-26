@@ -16,7 +16,7 @@ buildscript {
         maven("https://mvn-closed.scireum.com")
     }
     dependencies {
-        classpath("com.scireum:sirius-parent:1.0-SNAPSHOT")
+        classpath("com.scireum:sirius-parent:1.0-RC1")
     }
 }
 
