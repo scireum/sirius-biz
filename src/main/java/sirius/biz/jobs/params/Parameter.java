@@ -74,19 +74,6 @@ public class Parameter<V> extends Composable {
     }
 
     /**
-     * Returns the name of the template used to render the parameter in the UI.
-     * <p>
-     * Similar to {@link #getTemplateName()}, but this method considers the visibility
-     * of the parameter and delivers an alternative template in case the parameter should be hidden.
-     *
-     * @param context the context containing all parameter values
-     * @return the name or path of the template used to render the parameter
-     */
-    public String getEffectiveTemplateName(Map<String, String> context) {
-        return delegate.getEffectiveTemplateName(context);
-    }
-
-    /**
      * Verifies the value given for this parameter
      *
      * @param input the input wrapped as <tt>Value</tt>

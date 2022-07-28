@@ -32,8 +32,6 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      */
     private enum Visibility {NORMAL, ONLY_WITH_VALUE, HIDDEN}
 
-    private static final String HIDDEN_TEMPLATE_NAME = "/templates/biz/jobs/params/hidden.html.pasta";
-
     protected String name;
     protected String label;
     protected String description;
@@ -159,29 +157,13 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     protected boolean isVisible(Map<String, String> context) {
         if (this.visibility == Visibility.HIDDEN) {
             return false;
-        }
+    }
 
         if (this.visibility == Visibility.NORMAL) {
             return true;
-        }
-
-        return get(context).isPresent();
     }
 
-    /**
-     * Returns the name of the template used to render the parameter in the UI.
-     * <p>
-     * Similar to {@link #getTemplateName()}, but this method considers the visibility
-     * of the parameter and delivers an alternative template in case the parameter should be hidden.
-     *
-     * @param context the context containing all parameter values
-     * @return the name or path of the template used to render the parameter
-     */
-    protected String getEffectiveTemplateName(Map<String, String> context) {
-        if (!isVisible(context)) {
-            return HIDDEN_TEMPLATE_NAME;
-        }
-        return getTemplateName();
+        return get(context).isPresent();
     }
 
     /**
@@ -215,7 +197,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      *
      * @param input the input wrapped as <tt>Value</tt>
      * @return a serialized string version of the given input which can later be resolved using
-     *         {@link #resolveFromString(Value)}
+     * {@link #resolveFromString(Value)}
      * @throws IllegalArgumentException in case of invalid data
      */
     protected abstract String checkAndTransformValue(Value input);
