@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs;
 
+import com.alibaba.fastjson.JSON;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;
@@ -177,4 +178,12 @@ public interface JobFactory extends Named, Priorized {
      * @return the name of the job category
      */
     String getCategory();
+
+    /**
+     * Compute a json containing the required update operations for the javascript frontend.
+     *
+     * @param ctx the web context containing the values of all the parameters
+     * @return a json that can be handled by the javascript
+     */
+    JSON computeRequiredParameterUpdates(WebContext ctx);
 }

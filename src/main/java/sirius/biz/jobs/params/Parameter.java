@@ -13,6 +13,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.Message;
 
 import java.util.Map;
 import java.util.Optional;
@@ -62,6 +63,36 @@ public class Parameter<V> extends Composable {
      */
     public boolean isVisible(Map<String, String> context) {
         return delegate.isVisible(context);
+    }
+
+    /**
+     * Checks whether the parameter value should be cleared in the frontend.
+     *
+     * @param ctx the values of all parameters
+     * @return true when the parameter value should be cleared
+     */
+    public boolean needsClear(Map<String, String> ctx) {
+        return delegate.needsClear(ctx);
+    }
+
+    /**
+     * Checks whether the parameter value should be updated to a new value.
+     *
+     * @param ctx the values of all parameters
+     * @return an Optional, filled with the new value if the value should be updated
+     */
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return delegate.updateValue(ctx);
+    }
+
+    /**
+     * Validates the value of the parameter.
+     *
+     * @param context the values of all parameters
+     * @return a message containing a displayable info-, warning- or error-message, or null if no such message should be displayed
+     */
+    public Message validate(Map<String, String> context) {
+        return delegate.validate(context);
     }
 
     /**
@@ -158,15 +189,16 @@ public class Parameter<V> extends Composable {
      * @return the type of the builder which was used to create this parameter.
      */
     @SuppressWarnings("unchecked")
-    public Class<? extends ParameterBuilder<?, ?>> getBuilderType() {
-        return (Class<? extends ParameterBuilder<?, ?>>) delegate.getClass();
+    public Class<? extends ParameterBuilder<V, ?>> getBuilderType() {
+        return (Class<? extends ParameterBuilder<V, ?>>) delegate.getClass();
     }
 
     /**
      * Provides access to the underlying builder of this parameter.
+     *
      * @return the builder which was used for this parameter
      */
-    public ParameterBuilder<?, ?> getBuilder() {
+    public ParameterBuilder<V, ?> getBuilder() {
         return delegate;
     }
 }

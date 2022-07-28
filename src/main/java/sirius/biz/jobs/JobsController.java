@@ -8,10 +8,14 @@
 
 package sirius.biz.jobs;
 
+import sirius.biz.jobs.params.Autocompleter;
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
@@ -61,6 +65,21 @@ public class JobsController extends BizController {
     }
 
     /**
+     * Checks the values of the params after the user changed a value and outputs actions that the frontend should do in
+     * response to this change.
+     *
+     * @param ctx     the web context
+     * @param out     the output to write the JSON response to
+     * @param jobType the type of the job so we can find a suitable job factory
+     */
+    @Routed("/job/params/:1")
+    @InternalService
+    @LoginRequired
+    public void params(WebContext ctx, JSONStructuredOutput out, String jobType) {
+        out.property("params", jobs.findFactory(jobType, JobFactory.class).computeRequiredParameterUpdates(ctx));
+    }
+
+    /**
      * Outputs the documentation for a job.
      *
      * @param ctx     the current request
@@ -83,5 +102,23 @@ public class JobsController extends BizController {
     @InternalService
     public void json(WebContext ctx, JSONStructuredOutput out, String jobType) {
         jobs.findFactory(jobType, JobFactory.class).startInBackground(ctx::get);
+    }
+
+    /**
+     * A route that can handle autocompletes of parameter input fields via the {@link Autocompleter}.
+     *
+     * @param ctx               the web context
+     * @param out               the output to write the JSON response to
+     * @param autocompleterName the name of the autocompleter
+     */
+    @Routed("/jobs/parameter-autocomplete/:1")
+    @InternalService
+    @SuppressWarnings("unchecked")
+    @Explain("Because Autocompleter#suggest does not use the template parameter in its signature,"
+             + " it really does not matter.")
+    public void autocomplete(WebContext ctx, JSONStructuredOutput out, String autocompleterName) {
+        AutocompleteHelper.handle(ctx, (query, result) -> {
+            Injector.context().getPart(autocompleterName, Autocompleter.class).suggest(query, ctx, result);
+        });
     }
 }

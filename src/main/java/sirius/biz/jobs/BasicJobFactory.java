@@ -8,6 +8,8 @@
 
 package sirius.biz.jobs;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
@@ -27,6 +29,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -262,7 +265,7 @@ public abstract class BasicJobFactory implements JobFactory {
 
     /**
      * Enforces the permissions specified by this job.
-     *
+     * <p>
      * You cannot override this method, because it should behave consistently with {@link #getRequiredPermissions()}.
      * Please add all required permissions there.
      */
@@ -295,5 +298,31 @@ public abstract class BasicJobFactory implements JobFactory {
         }
 
         return context;
+    }
+
+    @Override
+    public JSON computeRequiredParameterUpdates(WebContext ctx) {
+        Map<String, String> context = new HashMap<>();
+        if (ctx != null) {
+            ctx.getParameterNames().forEach(key -> {
+                context.put(key, ctx.get(key).asString());
+            });
+        }
+        JSONObject json = new JSONObject();
+        getParameters().forEach(parameter -> {
+            JSONObject update = new JSONObject();
+            update.put("visible", parameter.isVisible(context));
+            update.put("clear", parameter.needsClear(context));
+            parameter.updateValue(context).ifPresent(val -> update.put("updatedValue", val));
+            Message validation = parameter.validate(context);
+            if (validation != null) {
+                update.put("validation",
+                           new JSONObject().fluentPut("type", validation.getType().name())
+                                           .fluentPut("class", validation.getType().getCssClass())
+                                           .fluentPut("html", validation.getHtml()));
+            }
+            json.put(parameter.getName(), update);
+        });
+        return json;
     }
 }
