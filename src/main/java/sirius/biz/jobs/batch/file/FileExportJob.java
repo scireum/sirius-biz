@@ -10,9 +10,9 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -69,9 +69,8 @@ public abstract class FileExportJob extends BatchJob {
      * @return the parameter used as destination
      */
     public static Parameter<VirtualFile> createDestinationParameter(@Nullable List<String> acceptedFileExtensions) {
-        FileOrDirectoryParameter result =
-                new FileOrDirectoryParameter("destination", "$FileExportJobFactory.destination").withDescription(
-                        "$FileExportJobFactory.destination.help").withBasePath("/work");
+        FileParameter result = new FileParameter("destination", "$FileExportJobFactory.destination").withDescription(
+                "$FileExportJobFactory.destination.help").withBasePath("/work");
         if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
             result.withAcceptedExtensionsList(acceptedFileExtensions);
         }
@@ -147,7 +146,7 @@ public abstract class FileExportJob extends BatchJob {
     private boolean shouldUseProvidedOutputDirectory() {
         return destination.exists() && destination.isDirectory();
     }
-    
+
     /**
      * Determines the effective file name to use.
      *
