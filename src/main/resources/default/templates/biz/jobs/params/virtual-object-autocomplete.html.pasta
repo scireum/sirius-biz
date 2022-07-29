@@ -5,22 +5,23 @@
 
 <div class="col-md-12">
     <div class="row">
-        <w:autocompleteSingleSelect span="12"
-                                    smallSpan="12"
-                                    name="@param.getName()"
-                                    label="@param.getLabel()"
-                                    help="@param.getDescription()"
-                                    required="@param.isRequired()"
-                                    optional="@!param.isRequired()"
-                                    serviceUri="@param.as(sirius.biz.storage.legacy.VirtualObjectParameter.class).getAutocompleteUri()">
+        @// setting optional=true because we don't want the singleselect to prefill automatically
+        @// this keeps the behavior of the (old) wondergem template
+        <t:singleSelect class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
+                        name="@param.getName()"
+                        label="@param.getLabel()"
+                        help="@param.getDescription()"
+                        optional="true"
+                        suggestionUri="@param.as(sirius.biz.storage.legacy.VirtualObjectParameter.class).getAutocompleteUrl()">
 
-            <i:local name="idAndLabel" value="param.as(sirius.biz.storage.legacy.VirtualObjectParameter.class).renderCurrentValue(context)"/>
+            <i:local name="idAndLabel"
+                     value="param.as(sirius.biz.storage.legacy.VirtualObjectParameter.class).renderCurrentValue(context)"/>
             <i:if test="idAndLabel != null">
                 <option value="@idAndLabel.getFirst()" selected="selected">
                     @idAndLabel.getSecond()
                 </option>
             </i:if>
-        </w:autocompleteSingleSelect>
+        </t:singleSelect>
     </div>
 
     <input type="file" id="upload-@param.getName()" style="display:none;"/>

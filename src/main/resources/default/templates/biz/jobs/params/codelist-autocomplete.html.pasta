@@ -1,14 +1,15 @@
 <i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
-<w:autocompleteSingleSelect span="12"
-                            smallSpan="12"
-                            name="@param.getName()"
-                            label="@param.getLabel()"
-                            help="@param.getDescription()"
-                            required="@param.isRequired()"
-                            optional="@!param.isRequired()"
-                            serviceUri="/code-lists/autocomplete">
+<!--@ setting optional=true because we don't want the singleselect to prefill automatically -->
+<!--@ this keeps the behavior of the (old) wondergem template -->
+<i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
+<t:singleSelect class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
+                name="@param.getName()"
+                label="@param.getLabel()"
+                help="@param.getDescription()"
+                optional="true"
+                suggestionUri="/code-lists/autocomplete">
 
     <i:local name="current" value="param.get(context).orElse(null).as(sirius.biz.codelists.CodeList.class)"/>
     <i:if test="current != null">
@@ -16,4 +17,4 @@
             @current.getCodeListData().getCode()
         </option>
     </i:if>
-</w:autocompleteSingleSelect>
+</t:singleSelect>

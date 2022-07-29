@@ -2,7 +2,7 @@
 <i:arg type="Map" name="context"/>
 <i:arg type="sirius.biz.jobs.presets.JobPresets" name="presets"/>
 
-<w:page title="@job.getLabel()">
+<t:page title="@job.getLabel()">
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
@@ -12,35 +12,31 @@
         </li>
     </i:block>
 
-    <w:pageHeader>
-        <div class="row">
-            <div class="col-md-8">
-                @job.getLabel()
-            </div>
-            <div class="col-md-4 align-right">
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@job.getLabel()</i:block>
+            <i:block name="actions">
                 <i:if test="!job.getJobInfos().isEmpty()">
-                    <a class="btn btn-default" href="/jobs/infos/@job.getName()">@i18n("JobsController.showInfos")</a>
+                    <a class="btn btn-outline-link"
+                       href="/jobs/infos/@job.getName()">
+                        <span><i class="fa fa-book"></i></span>
+                        @i18n("JobsController.showInfos")
+                    </a>
                 </i:if>
-            </div>
-        </div>
-    </w:pageHeader>
+            </i:block>
 
-    <i:if test="isFilled(job.getHTMLDescription())">
-        <div class="well">
-                <i:raw>
-                    @job.getHTMLDescription()
-                </i:raw>
-        </div>
-        <i:else>
-            <i:if test="isFilled(job.getDescription())">
-                <div class="well">
-                    @job.getDescription()
-                </div>
-            </i:if>
-        </i:else>
-    </i:if>
+            <t:iconInlineInfo icon="fa fa-info-circle">
+                <i:if test="isFilled(job.getHTMLDescription())">
+                    <i:raw>@job.getHTMLDescription()</i:raw>
+                    <i:else>
+                        @job.getDescription()
+                    </i:else>
+                </i:if>
+            </t:iconInlineInfo>
+        </t:pageHeader>
+    </i:block>
 
-    <w:editForm url="@apply('/job/%s', job.getName())">
+    <t:editForm url="@apply('/job/%s', job.getName())">
         <div class="row">
             <div class="col-md-8">
                 <div class="row">
@@ -51,30 +47,36 @@
             </div>
             <div class="col-md-4">
                 <i:if test="presets != null">
-                    <w:infobox titleKey="JobsController.presets">
-                        <i:for type="sirius.biz.jobs.presets.JobPreset" var="preset" items="presets.fetchPresets(job)">
-                            <w:infoboxElement>
-                                <div><b>@preset.getJobConfigData().getLabel()</b></div>
-                                <div>
-                                    <a href="javascript:loadPreset('@preset.getIdAsString()')">
-                                        <i class="fa fa-check"></i>
-                                        @i18n("JobsController.usePreset")
-                                    </a>
-                                    <a class="pull-right" href="javascript:deletePreset('@preset.getIdAsString()')">
-                                        <i class="fa fa-trash"></i>
-                                        @i18n("NLS.delete")
-                                    </a>
-                                </div>
-                            </w:infoboxElement>
-                        </i:for>
-                        <w:infoboxElement>
-                            <div style="margin-top: 16px">
-                                <a class="link" href="javascript:showCreatePresetModal()">
-                                    <i class="fa fa-plus"></i>
-                                    @i18n("JobsController.createPreset")</a>
-                            </div>
-                        </w:infoboxElement>
-                    </w:infobox>
+                    <div class="d-flex flex-column card card-border">
+                        <div class="card-header">
+                            @i18n("JobsController.presets")
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <i:for type="sirius.biz.jobs.presets.JobPreset" var="preset"
+                                   items="presets.fetchPresets(job)">
+                                <li class="list-group-item d-flex flex-row justify-content-between align-items-baseline">
+                                    <div><b>@preset.getJobConfigData().getLabel()</b></div>
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-outline-link"
+                                           href="javascript:loadPreset('@preset.getIdAsString()')">
+                                            <i class="fa fa-check"></i>
+                                            @i18n("JobsController.usePreset")
+                                        </a>
+                                        <a class="btn btn-outline-danger pull-right"
+                                           href="javascript:deletePreset('@preset.getIdAsString()')">
+                                            <i class="fa fa-trash"></i>
+                                            @i18n("NLS.delete")
+                                        </a>
+                                    </div>
+                                </li>
+                            </i:for>
+                        </ul>
+                        <div class="d-flex flex-row justify-content-between card-body">
+                            <a class="btn btn-outline-primary" href="javascript:showCreatePresetModal()">
+                                <i class="fa fa-plus"></i>
+                                @i18n("JobsController.createPreset")</a>
+                        </div>
+                    </div>
                 </i:if>
             </div>
         </div>
@@ -82,37 +84,29 @@
         <input type="hidden" name="updateOnly" id="updateOnly"/>
         <input type="hidden" name="jobFactory" value="@job.getName()"/>
 
-        <w:modal name="createPreset" titleKey="JobsController.createPreset">
-            <w:modalBody>
-                <fieldset>
-                    <w:textfield span="12" name="presetName" value="" labelKey="Model.name"
-                                 helpKey="JobsController.createPreset.help" required="true"/>
-                    <w:singleSelect span="12"
-                                    name="customPersistencePeriod"
-                                    labelKey="JobConfigData.customPersistencePeriod"
-                                    helpKey="JobConfigData.customPersistencePeriod.help"
-                                    optional="true"
-                                    required="false">
-                        <i:for var="period"
-                               type="sirius.biz.process.PersistencePeriod"
-                               items="@enumValues(sirius.biz.process.PersistencePeriod.class)">
-                            <option value="@period.name()">@period.toString()</option>
-                        </i:for>
-                    </w:singleSelect>
-                </fieldset>
-            </w:modalBody>
-            <w:modalFooter cancelKey="NLS.cancel">
+        <t:modal name="createPreset" titleKey="JobsController.createPreset">
+            <fieldset>
+                <t:textfield class="col-md-12" name="presetName" value="" labelKey="Model.name"
+                             helpKey="JobsController.createPreset.help"/>
+                <t:singleSelect class="col-md-12"
+                                name="customPersistencePeriod"
+                                labelKey="JobConfigData.customPersistencePeriod"
+                                helpKey="JobConfigData.customPersistencePeriod.help"
+                                optional="true">
+                    <i:for var="period"
+                           type="sirius.biz.process.PersistencePeriod"
+                           items="@enumValues(sirius.biz.process.PersistencePeriod.class)">
+                        <option value="@period.name()">@period.toString()</option>
+                    </i:for>
+                </t:singleSelect>
+            </fieldset>
+            <i:block name="footer">
                 <a onclick="createPreset()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
-            </w:modalFooter>
-        </w:modal>
-    </w:editForm>
-
-    <div class="form-actions">
-        <a class="btn btn-primary submit-link">
-            <i class="fa fa-check"></i> @i18n("JobFactory.execute")
-        </a>
-        <a href="/jobs" class="btn">@i18n("NLS.back")</a>
-    </div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@i18n("NLS.cancel")</button>
+            </i:block>
+        </t:modal>
+        <t:formBar btnLabelKey="JobFactory.execute"/>
+    </t:editForm>
 
     <script type="text/javascript">
         function showCreatePresetModal() {
@@ -126,13 +120,13 @@
             $.ajax({
                 type: 'POST',
                 url: '/jobs/preset/create',
-                data: $('#editForm').serialize(),
+                data: $('.edit-form').serialize(),
                 success: function (response) {
                     if (!response.success) {
-                        addError(response.message);
+                        addErrorMessage(response.message);
                     } else {
                         $('#updateOnly').val('true');
-                        $('#editForm').submit();
+                        $('.edit-form').submit();
                     }
                 }
             });
@@ -153,10 +147,13 @@
         }
 
         function deletePreset(id) {
-            $.post('/jobs/preset/delete', {preset: id, csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'},
+            $.post('/jobs/preset/delete', {
+                    preset: id,
+                    csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+                },
                 function (response) {
                     $('#updateOnly').val('true');
-                    $('#editForm').submit();
+                    $('.edit-form').submit();
                 }, 'json');
         }
 
@@ -165,4 +162,4 @@
         <input type="hidden" name="updateOnly" value="true"/>
         <input type="hidden" name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"/>
     </form>
-</w:page>
+</t:page>
