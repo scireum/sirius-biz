@@ -109,6 +109,35 @@
     </t:editForm>
 
     <script type="text/javascript">
+        sirius.ready(function () {
+            function onChange() {
+                const formData = sirius.getFormData(sirius.querySelector(".edit-form"));
+                sirius.getJSON("/job/params/___job.getName()", formData).then(handleParameterUpdates);
+            }
+
+            function handleParameterUpdates(json) {
+                for (const name in json.params) {
+                    const _elem = sirius.querySelector('.param-' + name);
+                    let param = json.params[name];
+                    if (param.visible) {
+                        _elem.removeAttribute("hidden");
+                    } else {
+                        _elem.setAttribute("hidden", true);
+                    }
+                }
+            }
+
+            document.querySelectorAll('.edit-form input[name]').forEach(function (input) {
+                input.addEventListener("change", onChange);
+            });
+            document.querySelectorAll('.edit-form .token-autocomplete-container').forEach(function (input) {
+                input.addEventListener("tokens-changed", onChange);
+            });
+            handleParameterUpdates({
+                params: <i:raw>@job.computeRequiredParameterUpdates(null).toString()</i:raw>
+            });
+        });
+
         function showCreatePresetModal() {
             $('#createPreset').on('shown.bs.modal', function () {
                 $('*[name="presetName"]').focus();
