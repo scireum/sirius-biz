@@ -145,45 +145,41 @@
         }
 
         function createPreset() {
-            $('#createPreset').modal('hide');
-            $.ajax({
-                type: 'POST',
-                url: '/jobs/preset/create',
-                data: $('.edit-form').serialize(),
-                success: function (response) {
-                    if (!response.success) {
-                        addErrorMessage(response.message);
-                    } else {
-                        $('#updateOnly').val('true');
-                        $('.edit-form').submit();
-                    }
+            sirius.postJSON('/jobs/preset/create', sirius.getFormData(sirius.querySelector(".edit-form"))).then(function (response) {
+                if (!response.success) {
+                    addErrorMessage(response.message);
+                } else {
+                    sirius.querySelector('#updateOnly').value = true;
+                    sirius.querySelector('.edit-form').submit();
                 }
             });
         }
 
         function loadPreset(id) {
-            $.getJSON('/jobs/preset/load', {preset: id}, function (response) {
+            sirius.getJSON('/jobs/preset/load', {preset: id}).then(function (response) {
                 // Fill a temporary form and submit all parameters to the server
                 // so that these are validated and rendered properly....
-                var $form = $('#loadForm');
+                var _form = sirius.querySelector('#loadForm');
                 for (var i = 0; i < response.params.length; i++) {
-                    var $field = $('<input type="hidden" name="' + response.params[i].name + '" />');
-                    $field.val(response.params[i].value);
-                    $form.append($field);
+                    const _field = document.createElement("input");
+                    _field.type = "hidden";
+                    _field.name = response.params[i].name;
+                    _field.value = response.params[i].value;
+                    _form.appendChild(_field);
                 }
-                $form.submit();
+            }).then(function () {
+                sirius.querySelector('#loadForm').submit();
             });
         }
 
         function deletePreset(id) {
-            $.post('/jobs/preset/delete', {
-                    preset: id,
-                    csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
-                },
-                function (response) {
-                    $('#updateOnly').val('true');
-                    $('.edit-form').submit();
-                }, 'json');
+            sirius.postJSON('/jobs/preset/delete', {
+                preset: id,
+                csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+            }).then(function (response) {
+                sirius.querySelector('#updateOnly').value = true;
+                sirius.querySelector('.edit-form').submit();
+            });
         }
 
     </script>
