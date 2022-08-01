@@ -33,13 +33,14 @@ services:
       - "9000"
     hostname: clickhouse
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.5
     ports:
       - "9200"
     environment:
       - ES_JAVA_OPTS=-Xms128M -Xmx128M
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ingest.geoip.downloader.enabled=false
     hostname: es
   s3-system:
     image: scireum/s3-ninja:8.0.0
