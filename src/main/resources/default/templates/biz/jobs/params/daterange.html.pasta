@@ -1,14 +1,10 @@
 <i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg name="context" type="Map"/>
 
-<i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
-<t:singleSelect class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
-                name="@param.getName()"
-                label="@param.getLabel()"
-                help="@param.getDescription()"
-                optional="@!param.isRequired()">
+<i:invoke template="/templates/biz/jobs/params/paramSingleSelect.html.pasta" param="param" context="context"
+          optional="!param.isRequired()">
     <i:for var="value" type="sirius.db.mixing.DateRange"
            items="@param.as(sirius.biz.jobs.params.DateRangeParameter.class).getValues()">
         <option value="@value.getKey()" @selected="value == param.get(context).orElse(null)">@value</option>
     </i:for>
-</t:singleSelect>
+</i:invoke>

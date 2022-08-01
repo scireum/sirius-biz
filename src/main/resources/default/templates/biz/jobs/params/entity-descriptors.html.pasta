@@ -1,16 +1,12 @@
 <i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
-<i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
-<t:singleSelect class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
-                name="@param.getName()"
-                label="@param.getLabel()"
-                help="@param.getDescription()"
-                optional="@!param.isRequired()">
+<i:invoke template="/templates/biz/jobs/params/paramSingleSelect.html.pasta" param="param" context="context"
+          optional="!param.isRequired()">
     <i:for var="descriptor" type="sirius.db.mixing.EntityDescriptor"
            items="@param.as(sirius.biz.jobs.params.EntityDescriptorParameter.class).getValues()">
         <option value="@param.as(sirius.biz.jobs.params.EntityDescriptorParameter.class).getLookupName(descriptor)"
                 @selected="descriptor == param.get(context).orElse(null)">@descriptor.getType().getSimpleName()
         </option>
     </i:for>
-</t:singleSelect>
+</i:invoke>

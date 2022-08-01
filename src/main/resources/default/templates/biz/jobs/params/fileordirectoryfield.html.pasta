@@ -11,3 +11,15 @@
              basePath="@fileParam.getBasePath()"
              label="@param.getLabel()"
              help="@param.getDescription()"/>
+
+<script>
+    sirius.ready(function () {
+        const _elem = sirius.querySelector(".param-___param.getName()");
+        _elem.addEventListener("clear", function() {
+            _elem.querySelector("input").value = null;
+        });
+        _elem.addEventListener("updated-value", function(event) {
+            _elem.querySelector("input").value = event.detail;
+        });
+    });
+</script>

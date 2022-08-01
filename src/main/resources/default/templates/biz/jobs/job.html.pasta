@@ -124,6 +124,12 @@
                     } else {
                         _elem.setAttribute("hidden", true);
                     }
+                    if (param.clear) {
+                        _elem.dispatchEvent(new CustomEvent("clear"));
+                    }
+                    if (typeof param.updatedValue !== 'undefined') {
+                        _elem.dispatchEvent(new CustomEvent("updated-value", {detail: param.updatedValue}));
+                    }
                     const _message = sirius.querySelector('.param-' + name + '-validation');
                     if (_message) {
                         _message.parentNode.removeChild(_message);

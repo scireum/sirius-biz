@@ -1,20 +1,11 @@
 <i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
-<!--@ setting optional=true because we don't want the singleselect to prefill automatically-->
-<!--@ this keeps the behavior of the (old) wondergem template-->
-<i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
-<t:singleSelect class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
-                name="@param.getName()"
-                label="@param.getLabel()"
-                help="@param.getDescription()"
-                optional="true"
-                suggestionUri="/tenants/autocomplete">
-
-    <i:local name="current" value="param.get(context).orElse(null).as(sirius.biz.tenants.Tenant.class)"/>
+<i:invoke template="/templates/biz/jobs/params/paramSingleSelect.html.pasta" param="param" context="context"
+          suggestionUri="/tenants/autocomplete">
     <i:if test="current != null">
         <option value="@current.getIdAsString()" selected="selected">
             @current
         </option>
     </i:if>
-</t:singleSelect>
+</i:invoke>
