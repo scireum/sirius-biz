@@ -44,7 +44,7 @@
                         <i:local name="category"
                                  value="categoryAndJobs.getFirst().as(sirius.biz.jobs.JobCategory.class)"/>
                         <h4>
-                            <i class="fa @category.getIcon()"></i>
+                            <i class="@category.getIcon()"></i>
                             <span>@category.getLabel()</span>
                         </h4>
 
@@ -53,7 +53,7 @@
                                items="categoryAndJobs.getSecond().as(java.util.Collection.class)">
                             <div class="job">
                                 <a class="link" href="/job/@job.getName()">
-                                    <i class="fa @job.getIcon()"></i>
+                            <i class="@job.getIcon()"></i>
                                     @job.getLabel()
                                 </a><br>
                                 <small class="muted">@job.getDescription()</small>

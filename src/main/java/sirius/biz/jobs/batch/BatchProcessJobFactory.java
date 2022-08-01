@@ -72,7 +72,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-cogs";
+        return "fa fa-cogs";
     }
 
     @Override

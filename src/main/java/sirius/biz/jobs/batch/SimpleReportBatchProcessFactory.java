@@ -36,6 +36,6 @@ public abstract class SimpleReportBatchProcessFactory extends SimpleBatchProcess
 
     @Override
     public String getIcon() {
-        return "fa-line-chart";
+        return "fas fa-chart-line";
     }
 }
