@@ -48,8 +48,11 @@
             <div class="col-md-4">
                 <i:if test="presets != null">
                     <div class="d-flex flex-column card card-border">
-                        <div class="card-header">
-                            @i18n("JobsController.presets")
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-save"></i>
+                                @i18n("JobsController.presets")
+                            </h5>
                         </div>
                         <ul class="list-group list-group-flush">
                             <i:for type="sirius.biz.jobs.presets.JobPreset" var="preset"
