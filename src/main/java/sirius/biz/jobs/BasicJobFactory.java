@@ -303,12 +303,11 @@ public abstract class BasicJobFactory implements JobFactory {
 
     @Override
     public JSON computeRequiredParameterUpdates(WebContext ctx) {
-        Map<String, String> context = new HashMap<>();
-        if (ctx != null) {
-            ctx.getParameterNames().forEach(key -> {
-                context.put(key, ctx.get(key).asString());
-            });
-        }
+        Map<String, Exception> errorByParameter = new HashMap<>();
+        Map<String, String> context =
+                buildAndVerifyContext(ctx != null ? ctx::get : ignored -> Value.EMPTY, false, (p, ex) -> {
+                    errorByParameter.put(p.getName(), ex);
+                });
         JSONObject json = new JSONObject();
         getParameters().forEach(parameter -> {
             JSONObject update = new JSONObject();
@@ -316,6 +315,10 @@ public abstract class BasicJobFactory implements JobFactory {
             update.put("clear", parameter.needsClear(context));
             parameter.updateValue(context).ifPresent(val -> update.put("updatedValue", val));
             Message validation = parameter.validate(context);
+            if (errorByParameter.containsKey(parameter.getName())) {
+                validation = Message.error()
+                                    .withTextMessage(errorByParameter.get(parameter.getName()).getLocalizedMessage());
+            }
             if (validation != null) {
                 update.put("validation",
                            new JSONObject().fluentPut("type", validation.getType().name())
