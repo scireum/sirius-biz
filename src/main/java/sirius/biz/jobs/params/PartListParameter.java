@@ -15,6 +15,8 @@ import sirius.kernel.nls.NLS;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -73,6 +75,16 @@ public class PartListParameter<E> extends ParameterBuilder<E, PartListParameter<
         }
 
         return partName;
+    }
+
+    @Override
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return updater.apply(ctx).map(value -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("value", value.getClass().getName());
+            map.put("text", value.toString());
+            return map;
+        });
     }
 
     @Override

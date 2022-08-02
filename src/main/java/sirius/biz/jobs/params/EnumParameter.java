@@ -14,7 +14,9 @@ import sirius.kernel.nls.NLS;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -86,6 +88,16 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
         }
 
         return input.getEnum(type).map(E::name).orElse(null);
+    }
+
+    @Override
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return updater.apply(ctx).map(value -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("value", value.name());
+            map.put("text", value.toString());
+            return map;
+        });
     }
 
     @Override

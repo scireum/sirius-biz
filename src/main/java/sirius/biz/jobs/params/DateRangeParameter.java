@@ -14,7 +14,9 @@ import sirius.kernel.commons.Value;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -100,6 +102,16 @@ public class DateRangeParameter extends ParameterBuilder<DateRange, DateRangePar
             return null;
         }
         return input.asString();
+    }
+
+    @Override
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return updater.apply(ctx).map(value -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("value", value.getKey());
+            map.put("text", value.toString());
+            return map;
+        });
     }
 
     @Override

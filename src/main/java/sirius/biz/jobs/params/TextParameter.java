@@ -10,6 +10,9 @@ package sirius.biz.jobs.params;
 
 import sirius.kernel.nls.NLS;
 
+import java.util.Map;
+import java.util.Optional;
+
 /**
  * Defines a parameter which uses the textfield as input field.
  *
@@ -49,6 +52,11 @@ public abstract class TextParameter<V, P extends TextParameter<V, P>> extends Pa
      */
     public String getAddonText() {
         return NLS.smartGet(addonText);
+    }
+
+    @Override
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return updater.apply(ctx).map(NLS::toUserString);
     }
 
     @Override

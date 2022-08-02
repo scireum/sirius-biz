@@ -12,6 +12,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -58,6 +59,11 @@ public class LocalDateParameter extends ParameterBuilder<LocalDate, LocalDatePar
         }
 
         return NLS.toMachineString(NLS.parseUserString(LocalDate.class, input.asString()));
+    }
+
+    @Override
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return super.updateValue(ctx).map(NLS::toUserString);
     }
 
     @Override

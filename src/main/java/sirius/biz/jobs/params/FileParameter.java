@@ -205,6 +205,11 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
         return get(context).map(VirtualFile::path).orElse("");
     }
 
+    @Override
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return super.updateValue(ctx).map(NLS::toUserString);
+    }
+
     public String getBasePath() {
         return basePath;
     }

@@ -12,6 +12,9 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -55,6 +58,16 @@ public class BooleanParameter extends ParameterBuilder<Boolean, BooleanParameter
             return Boolean.TRUE.toString();
         }
         return NLS.toMachineString(input.asBoolean());
+    }
+
+    @Override
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return updater.apply(ctx).map(value -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("value", Objects.toString(value));
+            map.put("text", NLS.get(Boolean.TRUE.equals(value) ? "NLS.yes" : "NLS.no"));
+            return map;
+        });
     }
 
     /**

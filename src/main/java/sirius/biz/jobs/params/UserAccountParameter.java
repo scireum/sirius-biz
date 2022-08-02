@@ -16,6 +16,8 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -48,6 +50,16 @@ public class UserAccountParameter extends ParameterBuilder<UserAccount<?, ?>, Us
     @Override
     protected String checkAndTransformValue(Value input) {
         return resolveFromString(input).map(UserAccount::getIdAsString).orElse(null);
+    }
+
+    @Override
+    public Optional<?> updateValue(Map<String, String> ctx) {
+        return updater.apply(ctx).map(value -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("value", value.getIdAsString());
+            map.put("text", value.toString());
+            return map;
+        });
     }
 
     @Override

@@ -11,11 +11,12 @@
     <script>
         sirius.ready(function () {
             const _elem = sirius.querySelector(".param-___param.getName()");
-            _elem.addEventListener("clear", function() {
-                _elem.querySelector("input").value = null;
+            const _input = _elem.querySelector("input");
+            _elem.addEventListener("clear", function () {
+                _input.value = null;
             });
-            _elem.addEventListener("updated-value", function(event) {
-                _elem.querySelector("input").value = event.detail;
+            _elem.addEventListener("updated-value", function (event) {
+                _input.value = event.detail;
             });
         });
     </script>
