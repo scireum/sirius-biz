@@ -19,16 +19,4 @@
             autocomplete.val(event.detail, true);
         });
     </i:block>
-
-    <i:if test="isFilled(suggestionUri)">
-        <i:block name="autocompleteOptions">
-            {
-                suggestionsUriBuilder: function (query) {
-                    const context = sirius.getFormData(sirius.querySelector(".edit-form"));
-                    return "@suggestionUri" + "?query="
-                            + query + "&" + new URLSearchParams(context).toString();
-                }
-            }
-        </i:block>
-    </i:if>
 </t:lookupValue>

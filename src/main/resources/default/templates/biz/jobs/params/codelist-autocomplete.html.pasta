@@ -2,7 +2,7 @@
 <i:arg type="Map" name="context"/>
 
 <i:invoke template="/templates/biz/jobs/params/paramSingleSelect.html.pasta" param="param" context="context"
-          suggestionsUri="/code-lists/autocomplete">
+          suggestionUri="/code-lists/autocomplete">
     <i:local name="current" value="param.get(context).orElse(null).as(sirius.biz.codelists.CodeList.class)"/>
     <i:if test="current != null">
         <option value="@current.getCodeListData().getCode()" selected="selected">

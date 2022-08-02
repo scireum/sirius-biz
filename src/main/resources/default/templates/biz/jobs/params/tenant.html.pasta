@@ -3,6 +3,7 @@
 
 <i:invoke template="/templates/biz/jobs/params/paramSingleSelect.html.pasta" param="param" context="context"
           suggestionUri="/tenants/autocomplete">
+    <i:local name="current" value="param.get(context).orElse(null).as(sirius.biz.tenants.Tenant.class)"/>
     <i:if test="current != null">
         <option value="@current.getIdAsString()" selected="selected">
             @current
