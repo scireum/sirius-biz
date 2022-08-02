@@ -155,7 +155,7 @@ public class JobConfigData extends Composite {
     public void loadFromContext(WebContext ctx) {
         // Check all parameters here to notify the user about config short comings...
         ValueHolder<HandledException> errorHolder = new ValueHolder<>(null);
-        Map<String, String> data = getJobFactory().buildAndVerifyContext(ctx::get, true, ex -> {
+        Map<String, String> data = getJobFactory().buildAndVerifyContext(ctx::get, true, (p, ex) -> {
             if (errorHolder.get() == null) {
                 errorHolder.accept(ex);
             }

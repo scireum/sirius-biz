@@ -29,7 +29,6 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
-import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -39,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -207,7 +207,7 @@ public abstract class BasicJobFactory implements JobFactory {
         setupTaskContext();
 
         AtomicBoolean submit = new AtomicBoolean(request.isSafePOST() && !request.get(PARAM_UPDATE_ONLY).asBoolean());
-        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), error -> {
+        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), (param, error) -> {
             UserContext.message(Message.error(error));
             submit.set(false);
         });
@@ -234,7 +234,7 @@ public abstract class BasicJobFactory implements JobFactory {
     public String startInBackground(Function<String, Value> parameterProvider) {
         checkPermissions();
         setupTaskContext();
-        Map<String, String> context = buildAndVerifyContext(parameterProvider, true, error -> {
+        Map<String, String> context = buildAndVerifyContext(parameterProvider, true, (param, error) -> {
             throw error;
         });
 
@@ -277,14 +277,15 @@ public abstract class BasicJobFactory implements JobFactory {
     @Override
     public Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
                                                      boolean enforceRequiredParameters,
-                                                     Consumer<HandledException> errorConsumer) {
+                                                     BiConsumer<Parameter<?>, HandledException> errorConsumer) {
         Map<String, String> context = new HashMap<>();
         for (Parameter<?> parameter : getParameters()) {
             try {
                 Value contextValue = parameterProvider.apply(parameter.getName());
                 String value = parameter.checkAndTransform(contextValue);
                 if (enforceRequiredParameters && Strings.isEmpty(value) && parameter.isRequired()) {
-                    errorConsumer.accept(Exceptions.createHandled()
+                    errorConsumer.accept(parameter,
+                                         Exceptions.createHandled()
                                                    .withNLSKey("Parameter.required")
                                                    .set("name", parameter.getLabel())
                                                    .handle());
@@ -293,7 +294,7 @@ public abstract class BasicJobFactory implements JobFactory {
                     context.put(parameter.getName(), value);
                 }
             } catch (HandledException e) {
-                errorConsumer.accept(e);
+                errorConsumer.accept(parameter, e);
             }
         }
 

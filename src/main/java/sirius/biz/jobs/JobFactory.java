@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -170,7 +170,7 @@ public interface JobFactory extends Named, Priorized {
      */
     Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
                                               boolean enforceRequiredParameters,
-                                              Consumer<HandledException> errorConsumer);
+                                              BiConsumer<Parameter<?>, HandledException> errorConsumer);
 
     /**
      * Returns the name of the {@link JobCategory} this job belongs to.
