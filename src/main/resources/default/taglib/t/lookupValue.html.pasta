@@ -28,13 +28,13 @@
         <i:if test="showSelectionButton">
             const helper = document.getElementById('___id-addon');
             helper.addEventListener('click', function () {
-            new LookupTableInfo({
-            tableName: '___table',
-            labelFormat: '___value.getDisplay()',
-            codeCallback: function (code, name) {
-            autocomplete.val({value: code, text: name});
-            }
-            });
+                new LookupTableInfo({
+                    tableName: '___table',
+                    labelFormat: '___value.getDisplay()',
+                    codeCallback: function (code, name) {
+                        autocomplete.val({value: code, text: name});
+                    }
+                });
             });
         </i:if>
         <i:render name="script"/>
