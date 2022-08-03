@@ -25,8 +25,8 @@
         });
     </i:block>
 
-    <i:if test="isFilled(suggestionUri)">
-        <i:block name="autocompleteOptions">
+    <i:block name="autocompleteOptions">
+        <i:if test="isFilled(suggestionUri)">
             {
                 suggestionsUriBuilder: function (query) {
                     const context = sirius.getFormData(sirius.querySelector(".edit-form"));
@@ -34,6 +34,6 @@
                             + query + "&" + new URLSearchParams(context).toString();
                 }
             }
-        </i:block>
-    </i:if>
+        </i:if>
+    </i:block>
 </t:singleSelect>
