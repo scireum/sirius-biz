@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Permits to select a directory in the {@link VirtualFileSystem}.
+ * Permits to select a file and/or directory in the {@link VirtualFileSystem}.
  */
 public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> {
 
@@ -33,7 +33,7 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
     private String basePath;
     private List<String> acceptedExtensions;
     private boolean allowFile = true;
-    private boolean allowDirectory = true;
+    private boolean allowDirectory = false;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -47,6 +47,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
 
     /**
      * Allow only files.
+     * <p>
+     * This is the default behavior, but you are encouraged to specify it anyway, as it enhances readability.
      *
      * @return the parameter itself for fluent method calls
      */
@@ -69,8 +71,6 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
 
     /**
      * Allow both files and directories.
-     * <p>
-     * This is the default behavior, but you are encouraged to specify it anyway, as it enhances readability.
      *
      * @return the parameter itself for fluent method calls
      */
@@ -110,7 +110,7 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
      */
     public FileParameter withBasePath(String basePath) {
         this.basePath = basePath;
-        return self();
+        return this;
     }
 
     /**

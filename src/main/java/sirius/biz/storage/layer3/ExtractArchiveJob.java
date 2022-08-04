@@ -114,6 +114,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                                                                              extractor.getSupportedFileExtensions()))
                                                                                      .withDescription(
                                                                                              "$ExtractArchiveJob.sourceParameter.help")
+                                                                                     .filesOnly()
                                                                                      .markRequired()
                                                                                      .build();
         }

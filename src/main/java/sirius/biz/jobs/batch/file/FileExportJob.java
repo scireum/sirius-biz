@@ -70,7 +70,7 @@ public abstract class FileExportJob extends BatchJob {
      */
     public static Parameter<VirtualFile> createDestinationParameter(@Nullable List<String> acceptedFileExtensions) {
         FileParameter result = new FileParameter("destination", "$FileExportJobFactory.destination").withDescription(
-                "$FileExportJobFactory.destination.help").withBasePath("/work");
+                "$FileExportJobFactory.destination.help").withBasePath("/work").filesAndDirectories();
         if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
             result.withAcceptedExtensionsList(acceptedFileExtensions);
         }

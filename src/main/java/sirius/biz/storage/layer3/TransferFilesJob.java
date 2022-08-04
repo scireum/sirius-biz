@@ -69,9 +69,12 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     }
 
     private final Parameter<VirtualFile> sourceParameter =
-            new FileParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").markRequired().build();
+            new FileParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").filesAndDirectories()
+                                                                                .markRequired()
+                                                                                .build();
     private final Parameter<VirtualFile> destinationParameter =
-            new FileParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").markRequired()
+            new FileParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").filesAndDirectories()
+                                                                                          .markRequired()
                                                                                           .build();
     private final Parameter<TransferMode> modeParameter =
             new EnumParameter<>(MODE_PARAMETER_NAME, "$TransferFilesJob.mode", TransferMode.class).withDefault(
