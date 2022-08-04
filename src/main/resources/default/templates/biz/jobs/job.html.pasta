@@ -138,12 +138,12 @@
                         _message.parentNode.removeChild(_message);
                     }
                     if (typeof param.validation !== 'undefined') {
-                        // pretty hacky to split css classes, but it works, and unless we change the Message type there is no good way around it
-                        const alertType = param.validation.class.split("-")[1];
-                        const html = Mustache.render("<div class='mt-1 py-1 px-3 border-top param-{{name}}-validation alert-{{style}} border-{{style}}'><small>{{html}}</small></div>", Object.assign({
-                            name: name,
-                            style: alertType
-                        }, param.validation));
+                        const html = Mustache.render(
+                            "<div class='mt-1 py-1 px-3 border-top param-{{name}}-validation alert-{{style}} border-{{style}}'>" +
+                            "<small>{{html}}</small>" +
+                            "</div>", Object.assign({
+                                name: name,
+                            }, param.validation));
                         _elem.insertAdjacentHTML("beforeend", html);
                     }
                 }

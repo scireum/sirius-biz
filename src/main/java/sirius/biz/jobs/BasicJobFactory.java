@@ -322,9 +322,13 @@ public abstract class BasicJobFactory implements JobFactory {
                                                                                  .getLocalizedMessage()));
             }
             validation.ifPresent(message -> {
+                // pretty hacky to split css classes, but it works, and unless we change the Message type there is no
+                // good way around it. The intention is, to reduce "alert-danger" to "danger", so we can use it in the
+                // frontend in a more flexible way.
+                String bootstrapStyle = message.getType().getCssClass().split("-")[1];
                 update.put("validation",
                            new JSONObject().fluentPut("type", message.getType().name())
-                                           .fluentPut("class", message.getType().getCssClass())
+                                           .fluentPut("style", bootstrapStyle)
                                            .fluentPut("html", message.getHtml()));
             });
             json.put(parameter.getName(), update);
