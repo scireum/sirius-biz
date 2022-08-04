@@ -206,8 +206,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return super.updateValue(ctx).map(NLS::toUserString);
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return super.updateValue(parameterContext).map(NLS::toUserString);
     }
 
     public String getBasePath() {

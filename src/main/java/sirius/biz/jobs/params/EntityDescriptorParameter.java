@@ -17,7 +17,6 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -141,13 +140,9 @@ public class EntityDescriptorParameter extends ParameterBuilder<EntityDescriptor
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return updater.apply(ctx).map(value -> {
-            Map<String, String> map = new HashMap<>();
-            map.put("value", getLookupName(value));
-            map.put("text", value.getType().getSimpleName());
-            return map;
-        });
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value", getLookupName(value), "text", value.getType().getSimpleName()));
     }
 
     @Override

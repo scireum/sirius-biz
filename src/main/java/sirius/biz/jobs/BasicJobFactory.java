@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -302,29 +303,30 @@ public abstract class BasicJobFactory implements JobFactory {
     }
 
     @Override
-    public JSON computeRequiredParameterUpdates(WebContext ctx) {
+    public JSON computeRequiredParameterUpdates(WebContext webContext) {
         Map<String, Exception> errorByParameter = new HashMap<>();
-        Map<String, String> context =
-                buildAndVerifyContext(ctx != null ? ctx::get : ignored -> Value.EMPTY, false, (p, ex) -> {
+        Map<String, String> parameterContext =
+                buildAndVerifyContext(webContext != null ? webContext::get : ignored -> Value.EMPTY, false, (p, ex) -> {
                     errorByParameter.put(p.getName(), ex);
                 });
         JSONObject json = new JSONObject();
         getParameters().forEach(parameter -> {
             JSONObject update = new JSONObject();
-            update.put("visible", parameter.isVisible(context));
-            update.put("clear", parameter.needsClear(context));
-            parameter.updateValue(context).ifPresent(val -> update.put("updatedValue", val));
-            Message validation = parameter.validate(context);
+            update.put("visible", parameter.isVisible(parameterContext));
+            update.put("clear", parameter.needsClear(parameterContext));
+            parameter.updateValue(parameterContext).ifPresent(val -> update.put("updatedValue", val));
+            Optional<Message> validation = parameter.validate(parameterContext);
             if (errorByParameter.containsKey(parameter.getName())) {
-                validation = Message.error()
-                                    .withTextMessage(errorByParameter.get(parameter.getName()).getLocalizedMessage());
+                validation = Optional.of(Message.error()
+                                                .withTextMessage(errorByParameter.get(parameter.getName())
+                                                                                 .getLocalizedMessage()));
             }
-            if (validation != null) {
+            validation.ifPresent(message -> {
                 update.put("validation",
-                           new JSONObject().fluentPut("type", validation.getType().name())
-                                           .fluentPut("class", validation.getType().getCssClass())
-                                           .fluentPut("html", validation.getHtml()));
-            }
+                           new JSONObject().fluentPut("type", message.getType().name())
+                                           .fluentPut("class", message.getType().getCssClass())
+                                           .fluentPut("html", message.getHtml()));
+            });
             json.put(parameter.getName(), update);
         });
         return json;

@@ -58,41 +58,42 @@ public class Parameter<V> extends Composable {
     /**
      * Determines if the parameter is currently visible.
      *
-     * @param context the context containing all parameter values
+     * @param parameterContext the context containing all parameter values
      * @return <tt>true</tt> if the parameter is visible, <tt>false</tt> otherwise
      */
-    public boolean isVisible(Map<String, String> context) {
-        return delegate.isVisible(context);
+    public boolean isVisible(Map<String, String> parameterContext) {
+        return delegate.isVisible(parameterContext);
     }
 
     /**
      * Checks whether the parameter value should be cleared in the frontend.
      *
-     * @param ctx the values of all parameters
+     * @param parameterContext the values of all parameters
      * @return true when the parameter value should be cleared
      */
-    public boolean needsClear(Map<String, String> ctx) {
-        return delegate.needsClear(ctx);
+    public boolean needsClear(Map<String, String> parameterContext) {
+        return delegate.needsClear(parameterContext);
     }
 
     /**
      * Checks whether the parameter value should be updated to a new value.
      *
-     * @param ctx the values of all parameters
+     * @param parameterContext the values of all parameters
      * @return an Optional, filled with the new value if the value should be updated
      */
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return delegate.updateValue(ctx);
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return delegate.updateValue(parameterContext);
     }
 
     /**
      * Validates the value of the parameter.
      *
-     * @param context the values of all parameters
-     * @return a message containing a displayable info-, warning- or error-message, or null if no such message should be displayed
+     * @param parameterContext the values of all parameters
+     * @return a message containing a displayable info-, warning- or error-message, or an empty optional if no such
+     * message should be displayed
      */
-    public Message validate(Map<String, String> context) {
-        return delegate.validate(context);
+    public Optional<Message> validate(Map<String, String> parameterContext) {
+        return delegate.validate(parameterContext);
     }
 
     /**
@@ -118,11 +119,11 @@ public class Parameter<V> extends Composable {
     /**
      * Reads and resolves the value for this parameter from the given context.
      *
-     * @param context the context to read the parameter value from
+     * @param parameterContext the context to read the parameter value from
      * @return the resolved value wrapped as optional or an empty optional if there is no value available
      */
-    public Optional<V> get(Map<String, String> context) {
-        return delegate.get(context);
+    public Optional<V> get(Map<String, String> parameterContext) {
+        return delegate.get(parameterContext);
     }
 
     /**
@@ -130,12 +131,12 @@ public class Parameter<V> extends Composable {
      * <p>
      * Fails if no value could be resolved from the given context.
      *
-     * @param context the context to read the parameter value from
+     * @param parameterContext the context to read the parameter value from
      * @return the resolved value
      * @throws sirius.kernel.health.HandledException if no value for this parameter is available in the given context
      */
-    public V require(Map<String, String> context) {
-        return delegate.require(context);
+    public V require(Map<String, String> parameterContext) {
+        return delegate.require(parameterContext);
     }
 
     /**

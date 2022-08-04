@@ -46,7 +46,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     protected Predicate<Map<String, String>> shouldHide = map -> false;
     protected Predicate<Map<String, String>> shouldClear = map -> false;
     protected Function<Map<String, String>, Optional<V>> updater = map -> Optional.empty();
-    protected Function<Map<String, String>, Message> validator = map -> null;
+    protected Function<Map<String, String>, Optional<Message>> validator = map -> Optional.empty();
 
     /**
      * Creates a new parameter with the given name and label.
@@ -100,24 +100,24 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     /**
      * Sets a predicate that is consulted when checking whether the parameter should be hidden.
      *
-     * @param test the predicate
+     * @param shouldHide the predicate
      * @return the parameter itself for fluent method calls
      * @see #isVisible(Map) for the usage
      */
-    public P hideWhen(Predicate<Map<String, String>> test) {
-        shouldHide = test;
+    public P hideWhen(Predicate<Map<String, String>> shouldHide) {
+        this.shouldHide = shouldHide;
         return self();
     }
 
     /**
      * Sets a predicate that is consulted when checking whether the parameter should be cleared.
      *
-     * @param test the predicate
+     * @param shouldClear the predicate
      * @return the parameter itself for fluent method calls
      * @see #needsClear(Map) for the usage
      */
-    public P clearWhen(Predicate<Map<String, String>> test) {
-        shouldClear = test;
+    public P clearWhen(Predicate<Map<String, String>> shouldClear) {
+        this.shouldClear = shouldClear;
         return self();
     }
 
@@ -140,7 +140,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * @return the parameter itself for fluent method calls
      * @see #validate(Map) for the usage
      */
-    public P withValidator(Function<Map<String, String>, Message> validator) {
+    public P withValidator(Function<Map<String, String>, Optional<Message>> validator) {
         this.validator = validator;
         return self();
     }
@@ -151,11 +151,11 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * The BiPredicate allows to chain the method calls directly onto the constructor, where usually the parameter
      * itself is not available as a variable yet.
      *
-     * @param test the predicate
+     * @param shouldHide the predicate
      * @return the parameter itself for fluent method calls
      */
-    public P hideWhen(BiPredicate<P, Map<String, String>> test) {
-        shouldHide = ctx -> test.test(self(), ctx);
+    public P hideWhen(BiPredicate<P, Map<String, String>> shouldHide) {
+        this.shouldHide = ctx -> shouldHide.test(self(), ctx);
         return self();
     }
 
@@ -165,11 +165,11 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * The BiPredicate allows to chain the method calls directly onto the constructor, where usually the parameter
      * itself is not available as a variable yet.
      *
-     * @param test the predicate
+     * @param shouldClear the predicate
      * @return the parameter itself for fluent method calls
      */
-    public P clearWhen(BiPredicate<P, Map<String, String>> test) {
-        shouldClear = ctx -> test.test(self(), ctx);
+    public P clearWhen(BiPredicate<P, Map<String, String>> shouldClear) {
+        this.shouldClear = ctx -> shouldClear.test(self(), ctx);
         return self();
     }
 
@@ -196,7 +196,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * @param validator the validate function
      * @return the parameter itself for fluent method calls
      */
-    public P withValidator(BiFunction<P, Map<String, String>, Message> validator) {
+    public P withValidator(BiFunction<P, Map<String, String>, Optional<Message>> validator) {
         this.validator = ctx -> validator.apply(self(), ctx);
         return self();
     }
@@ -282,41 +282,42 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     /**
      * Determines if the parameter is currently visible.
      *
-     * @param context the context containing all parameter values
+     * @param parameterContext the context containing all parameter values
      * @return <tt>true</tt> if the parameter is visible, <tt>false</tt> otherwise
      */
-    protected boolean isVisible(Map<String, String> context) {
-        return !shouldHide.test(context);
+    protected boolean isVisible(Map<String, String> parameterContext) {
+        return !shouldHide.test(parameterContext);
     }
 
     /**
      * Checks whether the parameter value should be cleared in the frontend.
      *
-     * @param ctx the values of all parameters
+     * @param parameterContext the values of all parameters
      * @return true when the parameter value should be cleared
      */
-    public boolean needsClear(Map<String, String> ctx) {
-        return shouldClear.test(ctx);
+    public boolean needsClear(Map<String, String> parameterContext) {
+        return shouldClear.test(parameterContext);
     }
 
     /**
      * Checks whether the parameter value should be updated to a new value.
      *
-     * @param ctx the values of all parameters
+     * @param parameterContext the values of all parameters
      * @return an Optional, filled with the new value if the value should be updated
      */
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return updater.apply(ctx);
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext);
     }
 
     /**
      * Validates the value of the parameter.
      *
-     * @param context the values of all parameters
-     * @return a message containing a displayable info-, warning- or error-message, or null if no such message should be displayed
+     * @param parameterContext the values of all parameters
+     * @return a message containing a displayable info-, warning- or error-message, or am empty optional if no such
+     * message should be displayed
      */
-    public Message validate(Map<String, String> context) {
-        return validator.apply(context);
+    public Optional<Message> validate(Map<String, String> parameterContext) {
+        return validator.apply(parameterContext);
     }
 
     /**
@@ -368,11 +369,11 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     /**
      * Reads and resolves the value for this parameter from the given context.
      *
-     * @param context the context to read the parameter value from
+     * @param parameterContext the context to read the parameter value from
      * @return the resolved value wrapped as optional or an empty optional if there is no value available
      */
-    public Optional<V> get(Map<String, String> context) {
-        return resolveFromString(Value.of(context.get(getName())));
+    public Optional<V> get(Map<String, String> parameterContext) {
+        return resolveFromString(Value.of(parameterContext.get(getName())));
     }
 
     /**
@@ -380,15 +381,15 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * <p>
      * Fails if no value could be resolved from the given context.
      *
-     * @param context the context to read the parameter value from
+     * @param parameterContext the context to read the parameter value from
      * @return the resolved value
      * @throws sirius.kernel.health.HandledException if no value for this parameter is available in the given context
      */
-    protected V require(Map<String, String> context) {
-        return get(context).orElseThrow(() -> Exceptions.createHandled()
-                                                        .withNLSKey("Parameter.required")
-                                                        .set("name", getLabel())
-                                                        .handle());
+    protected V require(Map<String, String> parameterContext) {
+        return get(parameterContext).orElseThrow(() -> Exceptions.createHandled()
+                                                                 .withNLSKey("Parameter.required")
+                                                                 .set("name", getLabel())
+                                                                 .handle());
     }
 
     /**

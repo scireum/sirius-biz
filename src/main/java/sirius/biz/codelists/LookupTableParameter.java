@@ -13,7 +13,6 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -70,13 +69,10 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return updater.apply(ctx).map(this::createLookupValue).map(value -> {
-            Map<String, String> map = new HashMap<>();
-            map.put("value", value.getValue());
-            map.put("text", value.resolveDisplayString());
-            return map;
-        });
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(this::createLookupValue)
+                      .map(value -> Map.of("value", value.getValue(), "text", value.resolveDisplayString()));
     }
 
     @Override

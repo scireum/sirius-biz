@@ -65,18 +65,18 @@ public class JobsController extends BizController {
     }
 
     /**
-     * Checks the values of the params after the user changed a value and outputs actions that the frontend should do in
-     * response to this change.
+     * Checks the user input on the job parameters and returns a response that will be handled in the frontend
+     * accordingly.
      *
-     * @param ctx     the web context
-     * @param out     the output to write the JSON response to
-     * @param jobType the type of the job so we can find a suitable job factory
+     * @param webContext the web context
+     * @param out        the output to write the JSON response to
+     * @param jobType    the type of the job so we can find a suitable job factory
      */
     @Routed("/job/params/:1")
     @InternalService
     @LoginRequired
-    public void params(WebContext ctx, JSONStructuredOutput out, String jobType) {
-        out.property("params", jobs.findFactory(jobType, JobFactory.class).computeRequiredParameterUpdates(ctx));
+    public void params(WebContext webContext, JSONStructuredOutput out, String jobType) {
+        out.property("params", jobs.findFactory(jobType, JobFactory.class).computeRequiredParameterUpdates(webContext));
     }
 
     /**

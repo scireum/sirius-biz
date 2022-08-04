@@ -16,7 +16,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -70,13 +69,9 @@ public class TenantParameter extends ParameterBuilder<Tenant<?>, TenantParameter
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return updater.apply(ctx).map(value -> {
-            Map<String, String> map = new HashMap<>();
-            map.put("value", value.getIdAsString());
-            map.put("text", value.toString());
-            return map;
-        });
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value", value.getIdAsString(), "text", value.toString()));
     }
 
     @Override

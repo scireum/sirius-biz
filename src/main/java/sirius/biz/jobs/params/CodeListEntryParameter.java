@@ -16,7 +16,6 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,13 +72,12 @@ public class CodeListEntryParameter extends ParameterBuilder<CodeListEntry<?, ?>
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return updater.apply(ctx).map(value -> {
-            Map<String, String> map = new HashMap<>();
-            map.put("value", value.getCodeListEntryData().getCode());
-            map.put("text", value.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang()));
-            return map;
-        });
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value",
+                                           value.getCodeListEntryData().getCode(),
+                                           "text",
+                                           value.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang())));
     }
 
     @SuppressWarnings("unchecked")

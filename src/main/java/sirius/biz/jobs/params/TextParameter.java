@@ -55,8 +55,8 @@ public abstract class TextParameter<V, P extends TextParameter<V, P>> extends Pa
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return updater.apply(ctx).map(NLS::toUserString);
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext).map(NLS::toUserString);
     }
 
     @Override

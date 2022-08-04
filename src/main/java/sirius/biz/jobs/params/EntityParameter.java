@@ -27,7 +27,6 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -169,13 +168,9 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> ctx) {
-        return updater.apply(ctx).map(value -> {
-            Map<String, String> map = new HashMap<>();
-            map.put("value", value.getIdAsString());
-            map.put("text", createLabel(value));
-            return map;
-        });
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value", value.getIdAsString(), "text", createLabel(value)));
     }
 
     @Override
