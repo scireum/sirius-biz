@@ -180,10 +180,10 @@ public interface JobFactory extends Named, Priorized {
     String getCategory();
 
     /**
-     * Compute a json containing the required update operations for the javascript frontend.
+     * Computes a JSON containing the required update operations for the JavaScript frontend.
      *
      * @param ctx the web context containing the values of all the parameters
-     * @return a json that can be handled by the javascript
+     * @return a JSON that can be handled by the JavaScript
      */
     JSON computeRequiredParameterUpdates(WebContext ctx);
 }
