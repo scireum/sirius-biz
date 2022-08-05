@@ -30,8 +30,7 @@
             {
                 suggestionsUriBuilder: function (query) {
                     const context = sirius.getFormData(sirius.querySelector(".edit-form"));
-                    return "@suggestionUri" + "?query="
-                            + query + "&" + new URLSearchParams(context).toString();
+                    return "@suggestionUri" + "?" + new URLSearchParams(context).append("query", query).toString();
                 }
             }
         </i:if>
