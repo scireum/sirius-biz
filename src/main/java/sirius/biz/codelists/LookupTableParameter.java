@@ -69,7 +69,7 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> parameterContext) {
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
                       .map(this::createLookupValue)
                       .map(value -> Map.of("value", value.getValue(), "text", value.resolveDisplayString()));

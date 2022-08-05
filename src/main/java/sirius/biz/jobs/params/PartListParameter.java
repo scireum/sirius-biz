@@ -77,7 +77,7 @@ public class PartListParameter<E> extends ParameterBuilder<E, PartListParameter<
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> parameterContext) {
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
                       .map(value -> Map.of("value", value.getClass().getName(), "text", value.toString()));
     }

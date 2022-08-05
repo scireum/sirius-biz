@@ -62,8 +62,8 @@ public class LocalDateParameter extends ParameterBuilder<LocalDate, LocalDatePar
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> parameterContext) {
-        return super.updateValue(parameterContext).map(NLS::toUserString);
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return super.computeValueUpdate(parameterContext).map(NLS::toUserString);
     }
 
     @Override

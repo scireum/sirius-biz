@@ -82,7 +82,7 @@ public class Parameter<V> extends Composable {
      * @return an Optional, filled with the new value if the value should be updated
      */
     public Optional<?> updateValue(Map<String, String> parameterContext) {
-        return delegate.updateValue(parameterContext);
+        return delegate.computeValueUpdate(parameterContext);
     }
 
     /**

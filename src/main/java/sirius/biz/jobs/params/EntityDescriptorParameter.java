@@ -140,7 +140,7 @@ public class EntityDescriptorParameter extends ParameterBuilder<EntityDescriptor
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> parameterContext) {
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
                       .map(value -> Map.of("value", getLookupName(value), "text", value.getType().getSimpleName()));
     }

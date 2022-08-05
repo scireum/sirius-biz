@@ -104,7 +104,7 @@ public class DateRangeParameter extends ParameterBuilder<DateRange, DateRangePar
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> parameterContext) {
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext).map(value -> Map.of("value", value.getKey(), "text", value.toString()));
     }
 

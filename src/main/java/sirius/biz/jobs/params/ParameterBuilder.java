@@ -126,7 +126,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      *
      * @param updater the function to compute the updated value
      * @return the parameter itself for fluent method calls
-     * @see #updateValue(Map) for the usage
+     * @see #computeValueUpdate(Map) for the usage
      */
     public P withUpdater(Function<Map<String, String>, Optional<V>> updater) {
         this.updater = updater;
@@ -305,7 +305,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * @param parameterContext the values of all parameters
      * @return an Optional, filled with the new value if the value should be updated
      */
-    public Optional<?> updateValue(Map<String, String> parameterContext) {
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext);
     }
 

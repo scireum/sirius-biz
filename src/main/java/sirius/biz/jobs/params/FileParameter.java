@@ -32,8 +32,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
 
     private String basePath;
     private List<String> acceptedExtensions;
-    private boolean allowFile = true;
-    private boolean allowDirectory = false;
+    private boolean allowFiles = true;
+    private boolean allowDirectories = false;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -53,8 +53,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
      * @return the parameter itself for fluent method calls
      */
     public FileParameter filesOnly() {
-        this.allowFile = true;
-        this.allowDirectory = false;
+        this.allowFiles = true;
+        this.allowDirectories = false;
         return self();
     }
 
@@ -64,8 +64,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
      * @return the parameter itself for fluent method calls
      */
     public FileParameter directoriesOnly() {
-        this.allowFile = false;
-        this.allowDirectory = true;
+        this.allowFiles = false;
+        this.allowDirectories = true;
         return self();
     }
 
@@ -75,13 +75,13 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
      * @return the parameter itself for fluent method calls
      */
     public FileParameter filesAndDirectories() {
-        this.allowFile = true;
-        this.allowDirectory = true;
+        this.allowFiles = true;
+        this.allowDirectories = true;
         return self();
     }
 
     public boolean isFilesOnly() {
-        return allowFile && !allowDirectory;
+        return allowFiles && !allowDirectories;
     }
 
     /**
@@ -89,8 +89,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
      *
      * @return true if files are allowed
      */
-    public boolean allowFile() {
-        return allowFile;
+    public boolean allowsFiles() {
+        return allowFiles;
     }
 
     /**
@@ -98,8 +98,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
      *
      * @return true if directories are allowed
      */
-    public boolean allowDirectory() {
-        return allowDirectory;
+    public boolean allowsDirectories() {
+        return allowDirectories;
     }
 
     /**
@@ -149,9 +149,9 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
         Optional<VirtualFile> virtualFile = resolveFromString(input);
         if (virtualFile.isEmpty()) {
             String nlsKey = "FileParameter.invalidFileOrDirectory";
-            if (!allowFile) {
+            if (!allowFiles) {
                 nlsKey = "FileParameter.invalidDirectory";
-            } else if (!allowDirectory) {
+            } else if (!allowDirectories) {
                 nlsKey = "FileParameter.invalidFile";
             }
             throw new IllegalArgumentException(NLS.fmtr(nlsKey).set("path", input.asString()).format());
@@ -169,8 +169,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
 
         return Optional.ofNullable(vfs.resolve(input.asString()))
                        .filter(VirtualFile::exists)
-                       .filter(file -> allowDirectory || file.isFile())
-                       .filter(file -> allowFile || file.isDirectory());
+                       .filter(file -> allowDirectories || file.isFile())
+                       .filter(file -> allowFiles || file.isDirectory());
     }
 
     private void verifyExtensions(VirtualFile selectedFile) {
@@ -206,8 +206,8 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> parameterContext) {
-        return super.updateValue(parameterContext).map(NLS::toUserString);
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return super.computeValueUpdate(parameterContext).map(NLS::toUserString);
     }
 
     public String getBasePath() {

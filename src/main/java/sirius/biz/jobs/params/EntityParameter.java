@@ -168,7 +168,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     }
 
     @Override
-    public Optional<?> updateValue(Map<String, String> parameterContext) {
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
                       .map(value -> Map.of("value", value.getIdAsString(), "text", createLabel(value)));
     }

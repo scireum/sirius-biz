@@ -18,7 +18,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 /**
- * An abstract class that can be implemented to supply {@link AutocompleteHelper.Completion Completions} for entity-based token-autocomplete fields.
+ * Allows to supply completions for entity-based token-autocomplete fields.
  *
  * @param <T> the type of the entity to autocomplete
  * @implNote the Autocompleter could be more generic to allow non-entity-autocompletes, but for now, this is not needed.
@@ -30,11 +30,11 @@ public interface Autocompleter<T extends Entity> extends Named {
      * <p>
      * Implementations may return the items in an ordered collection. This order is retained.
      *
-     * @param query   the query to search for
-     * @param context the web context with possibly additional context to the search
+     * @param query      the query to search for
+     * @param webContext the web context with possibly additional context to the search
      * @return a potentially ordered collection of completions
      */
-    Collection<T> getCompletions(String query, WebContext context);
+    Collection<T> getCompletions(String query, WebContext webContext);
 
     /**
      * A simple method to convert an entity to a label that can be displayed.
@@ -50,14 +50,16 @@ public interface Autocompleter<T extends Entity> extends Named {
      * Wrap the completions from {@link #getCompletions} to autocompletions using {@link #toLabel}.
      *
      * @param query              the query to search for
-     * @param context            the context to provide additional search context
+     * @param webContext         the context to provide additional search context
      * @param completionConsumer a consumer that handles the completions
      */
-    default void suggest(String query, WebContext context, Consumer<AutocompleteHelper.Completion> completionConsumer) {
-        getCompletions(query, context).stream()
-                                      .map(entity -> AutocompleteHelper.suggest(entity.getIdAsString())
-                                                                       .withCompletionLabel(toLabel(entity))
-                                                                       .withFieldLabel(toLabel(entity)))
-                                      .forEach(completionConsumer);
+    default void suggest(String query,
+                         WebContext webContext,
+                         Consumer<AutocompleteHelper.Completion> completionConsumer) {
+        getCompletions(query, webContext).stream()
+                                         .map(entity -> AutocompleteHelper.suggest(entity.getIdAsString())
+                                                                          .withCompletionLabel(toLabel(entity))
+                                                                          .withFieldLabel(toLabel(entity)))
+                                         .forEach(completionConsumer);
     }
 }
