@@ -5,8 +5,8 @@
 <i:local name="fileParam" value="param.as(sirius.biz.jobs.params.FileParameter.class)"/>
 <t:fileField class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
              name="@param.getName()"
-             allowFiles="@fileParam.allowFile()"
-             allowDirectories="@fileParam.allowDirectory()"
+             allowFiles="@fileParam.allowsFiles()"
+             allowDirectories="@fileParam.allowsDirectories()"
              value="@fileParam.getFieldValue(context)"
              basePath="@fileParam.getBasePath()"
              label="@param.getLabel()"
