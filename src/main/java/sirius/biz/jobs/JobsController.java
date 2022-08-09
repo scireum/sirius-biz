@@ -8,9 +8,9 @@
 
 package sirius.biz.jobs;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.jobs.params.Autocompleter;
 import sirius.biz.web.BizController;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
@@ -21,6 +21,7 @@ import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.security.UserContext;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
@@ -82,8 +83,8 @@ public class JobsController extends BizController {
     /**
      * Outputs the documentation for a job.
      *
-     * @param webContext     the current request
-     * @param jobType the name of the job to fetch the documentation for
+     * @param webContext the current request
+     * @param jobType    the name of the job to fetch the documentation for
      */
     @Routed("/jobs/infos/:1")
     @LoginRequired
@@ -95,9 +96,9 @@ public class JobsController extends BizController {
     /**
      * Uses a JSON call to invoke a job.
      *
-     * @param webContext     the current request
-     * @param out     the output to write the JSON response to
-     * @param jobType the name of the job to launch
+     * @param webContext the current request
+     * @param out        the output to write the JSON response to
+     * @param jobType    the name of the job to launch
      */
     @Routed("/jobs/api/:1")
     @InternalService
@@ -108,18 +109,18 @@ public class JobsController extends BizController {
     /**
      * A route that can handle autocompletes of parameter input fields via the {@link Autocompleter}.
      *
-     * @param webContext               the web context
+     * @param webContext        the web context
      * @param out               the output to write the JSON response to
      * @param autocompleterName the name of the autocompleter
      */
     @Routed("/jobs/parameter-autocomplete/:1")
     @InternalService
-    @SuppressWarnings("unchecked")
-    @Explain("Because Autocompleter#suggest does not use the template parameter in its signature,"
-             + " it really does not matter.")
     public void autocomplete(WebContext webContext, JSONStructuredOutput out, String autocompleterName) {
-        AutocompleteHelper.handle(webContext, (query, result) -> {
-            Injector.context().getPart(autocompleterName, Autocompleter.class).suggest(query, webContext, result);
-        });
+        Autocompleter<?> autocompleter = Injector.context().getPart(autocompleterName, Autocompleter.class);
+        if (!autocompleter.publicAccessible() && !UserContext.getCurrentUser().isLoggedIn()) {
+            webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            return;
+        }
+        AutocompleteHelper.handle(webContext, (query, result) -> autocompleter.suggest(query, webContext, result));
     }
 }

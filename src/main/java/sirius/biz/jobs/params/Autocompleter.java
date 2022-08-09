@@ -47,6 +47,15 @@ public interface Autocompleter<T extends Entity> extends Named {
     }
 
     /**
+     * Determines whether the resulting autocomplete entities should be accessible for not logged-in users.
+     *
+     * @return <tt>true</tt> if no login is required, <tt>false</tt> if only logged-in users must access
+     */
+    default boolean publicAccessible() {
+        return false;
+    }
+
+    /**
      * Wrap the completions from {@link #getCompletions} to autocompletions using {@link #toLabel}.
      *
      * @param query              the query to search for
