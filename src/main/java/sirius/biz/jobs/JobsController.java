@@ -8,7 +8,6 @@
 
 package sirius.biz.jobs;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.jobs.params.Autocompleter;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Tuple;
@@ -21,7 +20,6 @@ import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
-import sirius.web.security.UserContext;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
@@ -115,12 +113,9 @@ public class JobsController extends BizController {
      */
     @Routed("/jobs/parameter-autocomplete/:1")
     @InternalService
+    @LoginRequired
     public void autocomplete(WebContext webContext, JSONStructuredOutput out, String autocompleterName) {
         Autocompleter<?> autocompleter = Injector.context().getPart(autocompleterName, Autocompleter.class);
-        if (!autocompleter.publicAccessible() && !UserContext.getCurrentUser().isLoggedIn()) {
-            webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
-            return;
-        }
         AutocompleteHelper.handle(webContext, (query, result) -> autocompleter.suggest(query, webContext, result));
     }
 }
