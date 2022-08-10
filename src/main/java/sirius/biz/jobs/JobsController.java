@@ -8,10 +8,13 @@
 
 package sirius.biz.jobs;
 
+import sirius.biz.jobs.params.Autocompleter;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
@@ -34,54 +37,85 @@ public class JobsController extends BizController {
     /**
      * Used to list all available jobs for the current user.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Routed("/jobs")
     @DefaultRoute
     @LoginRequired
-    public void jobs(WebContext ctx) {
+    public void jobs(WebContext webContext) {
         Page<Tuple<JobCategory, Collection<JobFactory>>> page = new Page<>();
-        page.bindToRequest(ctx);
+        page.bindToRequest(webContext);
         page.withItems(jobs.groupByCategory(jobs.getAvailableJobs(page.getQuery())
                                                 .filter(JobFactory::canStartInteractive)));
 
-        ctx.respondWith().template("/templates/biz/jobs/jobs.html.pasta", page);
+        webContext.respondWith().template("/templates/biz/jobs/jobs.html.pasta", page);
     }
 
     /**
      * Launches the job with the given name.
      *
-     * @param ctx     the current request
-     * @param jobType the name of the job to launch
+     * @param webContext the current request
+     * @param jobType    the name of the job to launch
      */
     @Routed("/job/:1")
     @LoginRequired
-    public void job(WebContext ctx, String jobType) {
-        jobs.findFactory(jobType, JobFactory.class).startInteractively(ctx);
+    public void job(WebContext webContext, String jobType) {
+        jobs.findFactory(jobType, JobFactory.class).startInteractively(webContext);
+    }
+
+    /**
+     * Checks the user input on the job parameters and returns a response that will be handled in the frontend
+     * accordingly.
+     *
+     * @param webContext the web context
+     * @param out        the output to write the JSON response to
+     * @param jobType    the type of the job so we can find a suitable job factory
+     */
+    @Routed("/job/params/:1")
+    @InternalService
+    @LoginRequired
+    public void params(WebContext webContext, JSONStructuredOutput out, String jobType) {
+        out.property("params", jobs.findFactory(jobType, JobFactory.class).computeRequiredParameterUpdates(webContext));
     }
 
     /**
      * Outputs the documentation for a job.
      *
-     * @param ctx     the current request
-     * @param jobType the name of the job to fetch the documentation for
+     * @param webContext the current request
+     * @param jobType    the name of the job to fetch the documentation for
      */
     @Routed("/jobs/infos/:1")
     @LoginRequired
-    public void infos(WebContext ctx, String jobType) {
-        ctx.respondWith().template("/templates/biz/jobs/infos.html.pasta", jobs.findFactory(jobType, JobFactory.class));
+    public void infos(WebContext webContext, String jobType) {
+        webContext.respondWith()
+                  .template("/templates/biz/jobs/infos.html.pasta", jobs.findFactory(jobType, JobFactory.class));
     }
 
     /**
      * Uses a JSON call to invoke a job.
      *
-     * @param ctx     the current request
-     * @param out     the output to write the JSON response to
-     * @param jobType the name of the job to launch
+     * @param webContext the current request
+     * @param out        the output to write the JSON response to
+     * @param jobType    the name of the job to launch
      */
     @Routed("/jobs/api/:1")
     @InternalService
-    public void json(WebContext ctx, JSONStructuredOutput out, String jobType) {
-        jobs.findFactory(jobType, JobFactory.class).startInBackground(ctx::get);
+    public void json(WebContext webContext, JSONStructuredOutput out, String jobType) {
+        jobs.findFactory(jobType, JobFactory.class).startInBackground(webContext::get);
+    }
+
+    /**
+     * A route that can handle autocompletes of parameter input fields via the {@link Autocompleter}.
+     *
+     * @param webContext        the web context
+     * @param out               the output to write the JSON response to
+     * @param autocompleterName the name of the autocompleter
+     */
+    @Routed("/jobs/parameter-autocomplete/:1")
+    @InternalService
+    @LoginRequired
+    public void autocomplete(WebContext webContext, JSONStructuredOutput out, String autocompleterName) {
+        Autocompleter<?> autocompleter = Injector.context().getPart(autocompleterName, Autocompleter.class);
+        AutocompleteHelper.handle(webContext, (query, result) -> autocompleter.suggest(query, webContext, result));
     }
 }

@@ -8,10 +8,10 @@
 
 package sirius.biz.jobs;
 
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.presets.JobPreset;
 import sirius.biz.jobs.presets.JobPresets;
 import sirius.biz.storage.layer3.EnumerateOnlyProvider;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.FindOnlyProvider;
 import sirius.biz.storage.layer3.MutableVirtualFile;
@@ -103,7 +103,8 @@ public class JobsRoot extends JobStartingRoot {
     private boolean isFileJob(JobFactory factory) {
         return factory.getParameters()
                       .stream()
-                      .filter(parameter -> FileParameter.class.isAssignableFrom(parameter.getBuilderType()))
+                      .filter(parameter -> parameter.getBuilder() instanceof FileParameter fileParameter
+                                           && fileParameter.isFilesOnly())
                       .count() == 1;
     }
 

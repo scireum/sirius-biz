@@ -2,20 +2,24 @@
 <i:arg type="Map" name="context"/>
 
 <i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
-<t:datefield class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
+<i:local name="fileParam" value="param.as(sirius.biz.jobs.params.FileParameter.class)"/>
+<t:fileField class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
              name="@param.getName()"
+             allowFiles="@fileParam.allowsFiles()"
+             allowDirectories="@fileParam.allowsDirectories()"
+             value="@fileParam.getFieldValue(context)"
+             basePath="@fileParam.getBasePath()"
              label="@param.getLabel()"
-             help="@param.getDescription()"
-             value="@toUserString(param.get(context).orElse(null))"/>
+             help="@param.getDescription()"/>
 
 <script>
     sirius.ready(function () {
         const _elem = sirius.querySelector(".param-___param.getName()");
         const _input = _elem.querySelector("input");
-        _elem.addEventListener("clear", function () {
+        _elem.addEventListener("clear", function() {
             _input.value = null;
         });
-        _elem.addEventListener("updated-value", function (event) {
+        _elem.addEventListener("updated-value", function(event) {
             _input.value = event.detail;
         });
     });

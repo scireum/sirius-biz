@@ -11,10 +11,10 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
@@ -64,8 +64,9 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      * Contains the parameter which selects the template file to use when exporting data.
      */
     public static final Parameter<VirtualFile> TEMPLATE_FILE_PARAMETER =
-            new FileParameter("templateFile", "$EntityExportJobFactory.templateFile").withDescription(
-                    "$EntityExportJobFactory.templateFile.help")
+            new FileParameter("templateFile", "$EntityExportJobFactory.templateFile").filesOnly()
+                                                                                     .withDescription(
+                                                                                             "$EntityExportJobFactory.templateFile.help")
                                                                                      .withBasePath("/work")
                                                                                      .withAcceptedExtensionsList(
                                                                                              LineBasedImportJobFactory.SUPPORTED_FILE_EXTENSIONS)
@@ -325,7 +326,10 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         process.log(ProcessLog.info().withNLSKey("EntityExportJob.exportWithDefaultMapping"));
         dictionary.useMapping(defaultMapping);
         setupExtractors();
-        export.addListRow(dictionary.getMappings().stream().map(dictionary::expandToLabel).collect(Collectors.toList()));
+        export.addListRow(dictionary.getMappings()
+                                    .stream()
+                                    .map(dictionary::expandToLabel)
+                                    .toList());
 
         fullExportWithGivenMapping();
     }

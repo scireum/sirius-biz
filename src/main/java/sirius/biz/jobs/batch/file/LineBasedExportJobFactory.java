@@ -34,6 +34,6 @@ public abstract class LineBasedExportJobFactory extends FileExportJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-file-excel-o";
+        return "far fa-file-excel";
     }
 }

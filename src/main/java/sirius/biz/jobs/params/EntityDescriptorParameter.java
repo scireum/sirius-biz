@@ -18,6 +18,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -136,6 +137,12 @@ public class EntityDescriptorParameter extends ParameterBuilder<EntityDescriptor
         }
 
         return input.getString();
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value", getLookupName(value), "text", value.getType().getSimpleName()));
     }
 
     @Override

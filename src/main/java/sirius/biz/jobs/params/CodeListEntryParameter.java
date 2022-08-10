@@ -17,6 +17,7 @@ import sirius.kernel.nls.NLS;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -68,6 +69,15 @@ public class CodeListEntryParameter extends ParameterBuilder<CodeListEntry<?, ?>
             return null;
         }
         return input.asString();
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value",
+                                           value.getCodeListEntryData().getCode(),
+                                           "text",
+                                           value.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang())));
     }
 
     @SuppressWarnings("unchecked")

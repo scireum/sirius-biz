@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -86,6 +87,11 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
         }
 
         return input.getEnum(type).map(E::name).orElse(null);
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext).map(value -> Map.of("value", value.name(), "text", value.toString()));
     }
 
     @Override

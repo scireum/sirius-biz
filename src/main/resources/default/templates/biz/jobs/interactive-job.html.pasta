@@ -36,7 +36,7 @@
                         <div class="well">
                             <div class="row">
                                 <i:for type="sirius.biz.jobs.params.Parameter" var="param" items="parameters">
-                                    <i:dynamicInvoke template="@param.getEffectiveTemplateName(context)" param="@param" context="@context" />
+                                    <i:dynamicInvoke template="@param.getTemplateName()" param="@param" context="@context" />
                                 </i:for>
                             </div>
                             <div class="row">
