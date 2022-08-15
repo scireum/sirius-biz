@@ -1,0 +1,9 @@
+<i:pragma name="description">
+    Renders a table of content uniformly.
+</i:pragma>
+
+<k:section heading="Inhaltsverzeichnis" anchor="toc">
+    <ul class="mt-3">
+        <i:render name="body"/>
+    </ul>
+</k:section>
