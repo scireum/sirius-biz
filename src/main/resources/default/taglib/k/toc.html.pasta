@@ -1,5 +1,5 @@
-<i:arg type="String" name="headingKey" default="KnowledgeBase.tableOfContent.heading" description="May contain a i18n key." />
-<i:arg type="String" name="heading" default="@i18n(headingKey)" description="May contain a heading of this section."/>
+<i:arg type="String" name="headingKey" default="KnowledgeBase.tableOfContent.heading" description="Contains the i18n key for a localised heading." />
+<i:arg type="String" name="heading" default="@i18n(headingKey)" description="Contains the heading, defaulting to a localised generic string like &quot;Table of Content&quot;."/>
 
 <i:pragma name="description">
     Renders a table of content uniformly.
