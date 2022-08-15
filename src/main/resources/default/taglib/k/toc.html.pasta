@@ -1,8 +1,10 @@
+<i:arg type="String" name="heading" default="Table of Content" description="May contain a heading of this section."/>
+
 <i:pragma name="description">
     Renders a table of content uniformly.
 </i:pragma>
 
-<k:section heading="Inhaltsverzeichnis" anchor="toc">
+<k:section heading="@heading" anchor="toc">
     <ul class="mt-3">
         <i:render name="body"/>
     </ul>
