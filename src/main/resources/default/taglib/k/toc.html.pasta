@@ -1,4 +1,4 @@
-<i:arg type="String" name="headingKey" default="KnowledgeBaseArticle.toc_heading" description="May contain a i18n key." />
+<i:arg type="String" name="headingKey" default="KnowledgeBase.tableOfContent.heading" description="May contain a i18n key." />
 <i:arg type="String" name="heading" default="@i18n(headingKey)" description="May contain a heading of this section."/>
 
 <i:pragma name="description">
