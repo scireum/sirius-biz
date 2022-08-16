@@ -283,11 +283,8 @@ public class L3Uplink implements VFSRoot {
                                      Limit limit,
                                      List<VirtualFile> children,
                                      BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper) {
-            Page<? extends Blob> blobPage = blobPageHelper.withStart(limit.getItemsToSkip())
-                                                          .withPageSize(limit.getRemainingItems() != null ?
-                                                                        limit.getRemainingItems() :
-                                                                        limit.getMaxItems())
-                                                          .asPage();
+            Page<? extends Blob> blobPage =
+                    blobPageHelper.withStart(limit.getItemsToSkip()).withPageSize(limit.getMaxItems()).asPage();
             blobPage.getItems()
                     .stream()
                     .filter(blob -> Strings.isFilled(blob.getFilename()))
