@@ -156,7 +156,7 @@
                 _input.addEventListener("tokens-changed", onChange);
             });
             handleParameterUpdates({
-                params: <i:raw>@job.computeRequiredParameterUpdates(null).toString()</i:raw>
+                params: <i:raw>@job.computeRequiredParameterUpdates(context).toString()</i:raw>
             });
         });
 

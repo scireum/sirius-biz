@@ -186,4 +186,12 @@ public interface JobFactory extends Named, Priorized {
      * @return a JSON that can be handled by the JavaScript
      */
     JSON computeRequiredParameterUpdates(WebContext ctx);
+
+    /**
+     * Computes a JSON containing the required update operations for the JavaScript frontend.
+     *
+     * @param ctx the context containing the values of all the parameters
+     * @return a JSON that can be handled by the JavaScript
+     */
+    JSON computeRequiredParameterUpdates(Map<String, String> ctx);
 }
