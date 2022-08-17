@@ -140,7 +140,7 @@
                     if (typeof param.validation !== 'undefined') {
                         const html = Mustache.render(
                             "<div class='mt-1 py-1 px-3 border-top param-{{name}}-validation alert-{{style}} border-{{style}}'>" +
-                            "<small>{{html}}</small>" +
+                            "<small>{{{html}}}</small>" +
                             "</div>", Object.assign({
                                 name: name,
                             }, param.validation));
