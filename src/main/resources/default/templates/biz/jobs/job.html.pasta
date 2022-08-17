@@ -131,7 +131,7 @@
                         sirius.dispatchEvent("clear", _element);
                     }
                     if (typeof param.updatedValue !== 'undefined') {
-                        sirius.dispatchEvent("updated-value", _element, {detail: param.updatedValue});
+                        sirius.dispatchEvent("updated-value", _element, param.updatedValue);
                     }
                     const _message = sirius.querySelector('.param-' + name + '-validation');
                     if (_message) {
