@@ -114,7 +114,7 @@
     <script type="text/javascript">
         sirius.ready(function () {
             function onChange() {
-                const formData = sirius.getFormData(sirius.querySelector(".edit-form"));
+                const formData = getFormData(sirius.querySelector(".edit-form"));
                 sirius.getJSON("/job/params/___job.getName()", formData).then(handleParameterUpdates);
             }
 
@@ -167,7 +167,7 @@
         }
 
         function createPreset() {
-            sirius.postJSON('/jobs/preset/create', sirius.getFormData(sirius.querySelector(".edit-form"))).then(function (response) {
+            sirius.postJSON('/jobs/preset/create', getFormData(sirius.querySelector(".edit-form"))).then(function (response) {
                 if (!response.success) {
                     addErrorMessage(response.message);
                 } else {
