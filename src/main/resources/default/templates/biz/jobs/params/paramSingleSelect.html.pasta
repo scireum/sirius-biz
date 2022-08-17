@@ -29,7 +29,7 @@
         <i:if test="isFilled(suggestionUri)">
             {
                 suggestionsUriBuilder: function (query) {
-                    const context = sirius.getFormData(sirius.querySelector(".edit-form"));
+                    const context = getFormData(sirius.querySelector(".edit-form"));
                     const urlParameter = new URLSearchParams(context);
                     urlParameter.append("query", query);
                     return "@suggestionUri" + "?" + urlParameter.toString();
