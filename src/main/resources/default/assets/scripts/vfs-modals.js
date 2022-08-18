@@ -126,7 +126,7 @@ function selectVFSFile(config) {
                             parallelUploads: 1,
                             // Note that the event handler of "maxfilesexceeded" currently relies on
                             // this being 1...
-                             maxFiles: 1,
+                            maxFiles: 1,
                             maxFilesize: null,
                             acceptedFiles: config.allowedExtensions,
                             previewTemplate: '' +
