@@ -124,6 +124,8 @@ function selectVFSFile(config) {
                             },
                             sendFileAsBody: true,
                             parallelUploads: 1,
+                            // Note that the event handler of "maxfilesexceeded" currently relies on
+                            // this being 1...
                             maxFiles: 1,
                             maxFilesize: null,
                             acceptedFiles: config.allowedExtensions,
@@ -193,6 +195,11 @@ function selectVFSFile(config) {
                                     } else {
                                         resolve(response.file);
                                     }
+                                });
+                                this.on('maxfilesexceeded', function (file) {
+                                    // replace the file that was uploaded
+                                    this.removeAllFiles();
+                                    this.addFile(file);
                                 });
                             }
                         })

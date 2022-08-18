@@ -34,6 +34,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -305,10 +306,19 @@ public abstract class BasicJobFactory implements JobFactory {
     @Override
     public JSON computeRequiredParameterUpdates(WebContext webContext) {
         Map<String, Exception> errorByParameter = new HashMap<>();
-        Map<String, String> parameterContext =
-                buildAndVerifyContext(webContext != null ? webContext::get : ignored -> Value.EMPTY, false, (p, ex) -> {
-                    errorByParameter.put(p.getName(), ex);
-                });
+        Map<String, String> parameterContext = buildAndVerifyContext(webContext::get, false, (parameter, exception) -> {
+            errorByParameter.put(parameter.getName(), exception);
+        });
+        return computeRequiredParameterUpdates(parameterContext, errorByParameter);
+    }
+
+    @Override
+    public JSON computeRequiredParameterUpdates(Map<String, String> parameterContext) {
+        return computeRequiredParameterUpdates(parameterContext, Collections.emptyMap());
+    }
+
+    private JSON computeRequiredParameterUpdates(Map<String, String> parameterContext,
+                                                 Map<String, Exception> errorByParameter) {
         JSONObject json = new JSONObject();
         getParameters().forEach(parameter -> {
             JSONObject update = new JSONObject();

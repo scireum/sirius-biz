@@ -52,7 +52,8 @@
     <script type="text/javascript">
         sirius.ready(function () {
             document.querySelector('#___localId .select-btn').addEventListener('click', function () {
-                let value = document.querySelector('#___localId input').value;
+                const _input = document.querySelector('#___localId input');
+                let value = _input.value;
 
                 if (value == null || value === '') {
                     value = '@basePath';
@@ -67,7 +68,8 @@
                     allowedExtensions: '___allowedExtensions',
                     modalTitle: ___allowDirectories ? (___allowFiles ? '___i18n("VFSController.selectFileOrDirectory")' : '___i18n("VFSController.selectDirectory")') : '___i18n("VFSController.selectFile")'
                 }).then(function (selectedValue) {
-                    document.querySelector('#___localId input').value = selectedValue;
+                    _input.value = selectedValue;
+                    sirius.dispatchEvent("change", _input);
                 });
             });
         });
