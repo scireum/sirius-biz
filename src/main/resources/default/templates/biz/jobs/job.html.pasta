@@ -111,7 +111,7 @@
         <t:formBar btnLabelKey="JobFactory.execute"/>
     </t:editForm>
 
-    <i:invoke template="/templates/biz/jobs/job-parameters-logic.html.pasta" job="@job"/>
+    <i:invoke template="/templates/biz/jobs/job-parameters-logic.html.pasta" job="@job" context="@context"/>
 
     <script type="text/javascript">
         function showCreatePresetModal() {

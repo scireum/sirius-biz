@@ -86,5 +86,5 @@
         </div>
     </i:if>
 
-    <i:invoke template="/templates/biz/jobs/job-parameters-logic.html.pasta" job="@job"/>
+    <i:invoke template="/templates/biz/jobs/job-parameters-logic.html.pasta" job="@job" context="@context"/>
 </t:page>
