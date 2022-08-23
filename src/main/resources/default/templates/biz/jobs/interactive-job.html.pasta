@@ -3,7 +3,11 @@
 <i:arg type="List" name="additionalMetrics"/>
 <i:arg type="boolean" name="fullWidth" default="false"/>
 
-<w:page title="@job.getLabel()">
+<i:local name="parameters" value="job.getParameters()"/>
+<i:local name="hasVisibleParameters" value="job.hasVisibleParameters(context)"/>
+<i:local name="hasAdditionalMetrics" value="!additionalMetrics.isEmpty()"/>
+
+<t:page title="@job.getLabel()">
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
@@ -13,84 +17,74 @@
         </li>
     </i:block>
 
-    <w:pageHeader>
-        <div class="row">
-            <div class="col-md-8">
-                @job.getCurrentLabel(context)
-            </div>
-            <div class="col-md-4 align-right">
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@job.getCurrentLabel(context)</i:block>
+            <t:iconInlineInfo icon="fa fa-info-circle">@job.getCurrentDescription(context)</t:iconInlineInfo>
+            <i:block name="actions">
                 <i:if test="!job.getJobInfos().isEmpty()">
-                    <a class="btn btn-default" href="/jobs/infos/@job.getName()">@i18n("JobsController.showInfos")</a>
+                    <a class="btn btn-outline-link" href="/jobs/infos/@job.getName()">
+                        <span><i class="fa fa-book"></i></span> @i18n("JobsController.showInfos")
+                    </a>
                 </i:if>
-            </div>
-        </div>
-    </w:pageHeader>
+            </i:block>
+        </t:pageHeader>
+    </i:block>
 
     <div class="row">
-        <i:local name="parameters"
-                 value="job.getParameters()" />
-        <i:if test="@job.hasVisibleParameters(context) || !additionalMetrics.isEmpty()">
+        <i:if test="hasVisibleParameters">
             <div class="col-md-3">
-                <i:if test="@job.hasVisibleParameters(context)">
-                    <w:editForm url="@apply('/job/%s', job.getName())">
-                        <div class="well">
-                            <div class="row">
-                                <i:for type="sirius.biz.jobs.params.Parameter" var="param" items="parameters">
-                                    <i:dynamicInvoke template="@param.getTemplateName()" param="@param" context="@context" />
-                                </i:for>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <a class="btn btn-primary submit-link btn-block">
-                                        <i class="fa fa-check"></i> @i18n("JobFactory.execute")
-                                    </a>
-                                </div>
-                            </div>
-
-                        </div>
-                    </w:editForm>
-                </i:if>
-                <i:if test="!additionalMetrics.isEmpty()">
-                    <w:infobox titleKey="InteractiveJobFactory.additionalMetrics">
-                        <i:for type="Tuple" var="metric" items="additionalMetrics">
-                            <w:infoboxCell label="@toUserString(metric.getFirst())"
-                                           value="metric.getSecond().as(sirius.biz.analytics.reports.Cell.class)" />
+                <t:editForm url="@apply('/job/%s', job.getName())">
+                    <div class="row">
+                        <i:for type="sirius.biz.jobs.params.Parameter" var="param" items="parameters">
+                            <i:dynamicInvoke template="@param.getTemplateName()"
+                                             param="@param" context="@context"/>
                         </i:for>
-                    </w:infobox>
-                </i:if>
-                <div>
-                    <a href="/jobs" class="btn btn-block">@i18n("NLS.back")</a>
-                </div>
-            </div>
-            <div class="col-md-9">
-                <i:local name="description" value="job.getCurrentDescription(context)" />
-                <i:if test="isFilled(description)">
-                    <div class="well">
-                        @description
                     </div>
-                </i:if>
-                <div>
-                    <i:render name="body" />
-                </div>
+                    <t:formBar btnLabelKey="JobFactory.execute"/>
+                </t:editForm>
             </div>
-            <i:else>
-                <div class="@if (fullWidth) { col-md-12 } else { col-md-10 col-md-offset-1 }">
-                    <i:local name="description" value="job.getCurrentDescription(context)" />
-                    <i:if test="isFilled(description)">
-                        <div class="well">
-                            @description
+        </i:if>
+
+        <!--@ Calculate col-md value as some charts may not calculate a correct width otherwise -->
+        <i:local name="bodyColClass"
+                 value="(hasVisibleParameters && hasAdditionalMetrics) ? 'col-md-6' : ((hasVisibleParameters || hasAdditionalMetrics) ? 'col-md-9' : 'col-md-12')"/>
+        <div class="@bodyColClass">
+            <div class="card card-border p-2 mt-sm-3">
+                <i:render name="body"/>
+            </div>
+        </div>
+
+        <i:if test="hasAdditionalMetrics">
+            <div class="col-md-3 mt-sm-3">
+                <t:infobox labelKey="InteractiveJobFactory.additionalMetrics" class="card card-border p-2">
+                    <i:for type="Tuple" var="metric" items="additionalMetrics">
+                        <div class="d-flex flex-row pt-1 mb-1 border-top border-sirius-gray">
+                            <div class="text-small text-ellipsis overflow-hidden flex-grow-0">
+                                @toUserString(metric.getFirst())
+                            </div>
+                            <div class="text-small font-weight-bold text-right flex-grow-1 pl-2 pr-2">
+                                <i:raw>
+                                    @metric.getSecond().as(sirius.biz.analytics.reports.Cell.class).render()
+                                </i:raw>
+                            </div>
                         </div>
-                    </i:if>
-                    <div>
-                        <i:render name="body" />
-                    </div>
-                </div>
-                <div class="col-md-12">
-                    <div class="form-actions">
-                        <a href="/jobs" class="btn">@i18n("NLS.back")</a>
-                    </div>
-                </div>
-            </i:else>
+                    </i:for>
+                </t:infobox>
+            </div>
         </i:if>
     </div>
-</w:page>
+
+    <i:if test="!hasVisibleParameters">
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <a href="javascript:window.history.back()"
+                   class="btn btn-outline-secondary back-button">
+                    <i class="fa fa-chevron-left"></i> @i18n("NLS.back")
+                </a>
+            </div>
+        </div>
+    </i:if>
+
+    <i:invoke template="/templates/biz/jobs/job-parameters-logic.html.pasta" job="@job" context="@context"/>
+</t:page>
