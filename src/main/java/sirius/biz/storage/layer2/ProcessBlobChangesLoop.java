@@ -48,6 +48,11 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
         return FREQUENCY_EVERY_FIFTEEN_SECONDS;
     }
 
+    @Override
+    public double maxRuntimeInSeconds() {
+        return 600d;
+    }
+
     @Nullable
     @Override
     protected String doWork() throws Exception {
