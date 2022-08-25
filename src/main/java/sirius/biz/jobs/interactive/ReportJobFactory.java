@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 /**
- * Provides a base implementation for interactive charts which compute an display a {@link Report}.
+ * Provides a base implementation for interactive charts which compute and display a {@link Report}.
  */
 public abstract class ReportJobFactory extends InteractiveJobFactory {
 
