@@ -100,11 +100,11 @@
 
         _queryField.addEventListener('keyup', function (event) {
             const actions = document.querySelectorAll('.action-js');
-            if (event.keyCode === 13 && document.querySelectorAll('.action-visible-js').length === 1) {
+            if (event.key === "Enter" && document.querySelectorAll('.action-visible-js').length === 1) {
                 // Executes the action if only one is left and ENTER is pressed in the search field...
                 document.querySelector('.action-visible-js a').click();
                 return;
-            } else if (event.keyCode === 27) {
+            } else if (event.key === "Escape") {
                 // Clears the query field if ESC is pressed...
                 event.target.value = '';
             }
