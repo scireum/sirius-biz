@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.jobs.StandardJobCategories;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
@@ -31,6 +32,11 @@ public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
     @Override
     public String getName() {
         return "import-sql-user-accounts";
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardJobCategories.USERS_AND_TENANTS;
     }
 
     @Override

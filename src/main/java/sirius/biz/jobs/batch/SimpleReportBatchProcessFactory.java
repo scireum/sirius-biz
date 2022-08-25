@@ -9,7 +9,6 @@
 package sirius.biz.jobs.batch;
 
 import sirius.biz.analytics.reports.Cells;
-import sirius.biz.jobs.JobCategory;
 import sirius.biz.process.PersistencePeriod;
 import sirius.kernel.di.std.Part;
 
@@ -23,11 +22,6 @@ public abstract class SimpleReportBatchProcessFactory extends SimpleBatchProcess
 
     @Part
     protected Cells cells;
-
-    @Override
-    public String getCategory() {
-        return JobCategory.CATEGORY_REPORT;
-    }
 
     @Override
     protected PersistencePeriod getPersistencePeriod() {

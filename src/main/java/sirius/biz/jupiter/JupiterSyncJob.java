@@ -8,6 +8,7 @@
 
 package sirius.biz.jupiter;
 
+import sirius.biz.jobs.StandardJobCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -63,6 +64,11 @@ public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
     @Override
     public String getName() {
         return "jupiter-sync";
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardJobCategories.SYSTEM_ADMINISTRATION;
     }
 
     @Override

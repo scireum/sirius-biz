@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.jobs.StandardJobCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.jdbc.SmartQuery;
@@ -31,6 +32,11 @@ public class SQLUserAccountExportJobFactory extends EntityExportJobFactory<SQLUs
     @Override
     public String getName() {
         return "export-sql-user-accounts";
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardJobCategories.USERS_AND_TENANTS;
     }
 
     @Override

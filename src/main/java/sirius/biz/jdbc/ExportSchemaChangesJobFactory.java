@@ -8,6 +8,7 @@
 
 package sirius.biz.jdbc;
 
+import sirius.biz.jobs.StandardJobCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
@@ -93,6 +94,11 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
     @Override
     public String getDescription() {
         return "Exports all required Schema changes for the JDBC Databases known to Mixing.";
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardJobCategories.SYSTEM_ADMINISTRATION;
     }
 
     @Override
