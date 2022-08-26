@@ -118,7 +118,7 @@ function selectVFSFile(config) {
                     if (!_uploadBox.classList.contains('dropzone')) {
                         _uploadBox.classList.remove('d-none');
                         _uploadBox.classList.add('dropzone');
-                        new Dropzone("#select-file-modal .upload-box-js", {
+                        new Dropzone("#select-file-modal .dropzone-drop-area-js", {
                             url: function (files) {
                                 return '/fs/upload?filename=' + encodeURIComponent(files[0].name) + '&path=' + config.path;
                             },
