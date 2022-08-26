@@ -45,6 +45,8 @@ public interface JobFactory extends Named, Priorized {
 
     /**
      * Returns the icon to used when displaying this job.
+     * <p>
+     * This is actually the css class to use (e.g. to apply a Fontawesome icon).
      *
      * @return the icon of this job
      */
@@ -173,7 +175,10 @@ public interface JobFactory extends Named, Priorized {
                                               BiConsumer<Parameter<?>, HandledException> errorConsumer);
 
     /**
-     * Returns the name of the {@link JobCategory} this job belongs to.
+     * Returns the name of the <tt>category</tt> this job belongs to.
+     * <p>
+     * Within sirius, one of {@link StandardJobCategories} should be picked. For products a similar set of constants
+     * should probably exist.
      *
      * @return the name of the job category
      */

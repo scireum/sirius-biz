@@ -9,21 +9,21 @@
 package sirius.biz.jobs;
 
 import sirius.biz.jobs.params.Autocompleter;
+import sirius.biz.web.Action;
 import sirius.biz.web.BizController;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
-import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * Provides the UI for the jobs framework.
@@ -43,12 +43,15 @@ public class JobsController extends BizController {
     @DefaultRoute
     @LoginRequired
     public void jobs(WebContext webContext) {
-        Page<Tuple<JobCategory, Collection<JobFactory>>> page = new Page<>();
-        page.bindToRequest(webContext);
-        page.withItems(jobs.groupByCategory(jobs.getAvailableJobs(page.getQuery())
-                                                .filter(JobFactory::canStartInteractive)));
+        List<Action> actions = jobs.getAvailableJobs(null).map(this::toAction).toList();
+        webContext.respondWith().template("/templates/biz/jobs/jobs.html.pasta", actions);
+    }
 
-        webContext.respondWith().template("/templates/biz/jobs/jobs.html.pasta", page);
+    private Action toAction(JobFactory jobFactory) {
+        return new Action(jobFactory.getLabel(),
+                          "/job/" + jobFactory.getName(),
+                          NLS.smartGet(jobFactory.getCategory())).withDescription(jobFactory.getDescription())
+                                                                 .withIcon(jobFactory.getIcon());
     }
 
     /**

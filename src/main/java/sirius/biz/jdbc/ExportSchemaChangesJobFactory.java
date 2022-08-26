@@ -8,6 +8,7 @@
 
 package sirius.biz.jdbc;
 
+import sirius.biz.jobs.StandardJobCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
@@ -17,6 +18,7 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.schema.Schema;
 import sirius.db.jdbc.schema.SchemaUpdateAction;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -40,6 +42,8 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
     @Part
     private Schema schema;
 
+    @SuppressWarnings("resource")
+    @Explain("The writers are closed elsewhere as they are re-used.")
     @Override
     protected void execute(ProcessContext process) throws Exception {
         process.log("Computing changes...");
@@ -93,6 +97,11 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
     @Override
     public String getDescription() {
         return "Exports all required Schema changes for the JDBC Databases known to Mixing.";
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardJobCategories.SYSTEM_ADMINISTRATION;
     }
 
     @Override

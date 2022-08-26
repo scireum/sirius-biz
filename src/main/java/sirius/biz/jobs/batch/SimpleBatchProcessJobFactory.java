@@ -9,7 +9,6 @@
 package sirius.biz.jobs.batch;
 
 import sirius.biz.cluster.work.DistributedTaskExecutor;
-import sirius.biz.jobs.JobCategory;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 
@@ -49,11 +48,6 @@ public abstract class SimpleBatchProcessJobFactory extends BatchProcessJobFactor
      * @throws Exception in case of any error which should abort this job
      */
     protected abstract void execute(ProcessContext process) throws Exception;
-
-    @Override
-    public String getCategory() {
-        return JobCategory.CATEGORY_MISC;
-    }
 
     @Override
     protected PersistencePeriod getPersistencePeriod() {

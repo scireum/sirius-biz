@@ -963,7 +963,12 @@ public class Processes {
      * @return <tt>true</tt> if there are any active processes visible for the current user, <tt>false</tt> otherwise
      */
     public boolean hasActiveProcesses() {
-        return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
+        try {
+            return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
+        } catch (Exception e) {
+            Exceptions.handle(Log.APPLICATION, e);
+            return false;
+        }
     }
 
     /**

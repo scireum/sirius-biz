@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.deletion;
 
+import sirius.biz.jobs.StandardJobCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -134,5 +135,10 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     public String getName() {
         return "delete-tenant";
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardJobCategories.USERS_AND_TENANTS;
     }
 }
