@@ -1,5 +1,6 @@
 <i:arg type="sirius.biz.process.Process" name="process"/>
 <i:arg type="String" name="page"/>
+<i:arg type="boolean" name="isAutoRefreshEnabled"/>
 
 <t:page title="@process.getTitle()">
     <i:block name="breadcrumbs">
@@ -148,7 +149,9 @@
         <script type="text/javascript">
             sirius.ready(function () {
                 setTimeout(function () {
-                    window.location.reload();
+                    if (___isAutoRefreshEnabled) {
+                        window.location.reload();
+                    }
                 }, 5000);
             });
         </script>
