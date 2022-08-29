@@ -11,14 +11,14 @@
     </i:block>
     <i:block name="header-actions">
         <i:if test="process.shouldAutorefresh()">
-            <a id="activateAutoRefresh" class="btn btn-link d-none" href="@apply('/ps/%s?isAutoRefreshEnabled=true', process.getId())">Auto-Refresh aktivieren</a>
-            <a id="deactivateAutoRefresh" class="btn btn-link d-none" href="@apply('/ps/%s?isAutoRefreshEnabled=false', process.getId())">Auto-Refresh deaktivieren</a>
+            <a id="enableAutoRefresh" class="btn btn-link d-none" href="@apply('/ps/%s?isAutoRefreshEnabled=true', process.getId())">@i18n("Process.enableAutoRefresh")</a>
+            <a id="disableAutoRefresh" class="btn btn-link d-none" href="@apply('/ps/%s?isAutoRefreshEnabled=false', process.getId())">@i18n("Process.disableAutoRefresh")</a>
 
             <script type="text/javascript">
                 if(___isAutoRefreshEnabled) {
-                    document.getElementById("deactivateAutoRefresh").classList.remove("d-none");
+                    document.getElementById("disableAutoRefresh").classList.remove("d-none");
                 } else {
-                    document.getElementById("activateAutoRefresh").classList.remove("d-none");
+                    document.getElementById("enableAutoRefresh").classList.remove("d-none");
                 }
             </script>
         </i:if>
