@@ -145,14 +145,13 @@
         <i:render name="body"/>
     </t:sidebar>
 
-    <i:if test="process.shouldAutorefresh()">
+    <i:if test="process.shouldAutorefresh() && autoRefresh">
         <script type="text/javascript">
             sirius.ready(function () {
-                if (___autoRefresh) {
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 5000);
-                }
+                setTimeout(function () {
+                    window.location.reload();
+                }, 5000);
+
             });
         </script>
     </i:if>
