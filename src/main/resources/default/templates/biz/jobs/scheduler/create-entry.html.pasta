@@ -1,6 +1,6 @@
 <i:arg type="sirius.biz.jobs.scheduler.SchedulerEntry" name="entry"/>
 
-<w:page titleKey="SchedulerEntry.plural">
+<t:page titleKey="SchedulerEntry.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
@@ -13,22 +13,22 @@
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="SchedulerEntry.create"/>
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@i18n('SchedulerEntry.create')</i:block>
+        </t:pageHeader>
+    </i:block>
 
-    <w:editForm url="/jobs/scheduler/entry/new">
+    <t:editForm url="/jobs/scheduler/entry/new">
         <div class="row">
-            <w:autocompleteSingleSelect name="selectedJob" labelKey="JobConfigData.job" span="12"
-                                        serviceUri="/jobs/scheduler/autocomplete"
-                                        optional="false" required="true" strict="true">
-            </w:autocompleteSingleSelect>
+            <t:singleSelect class="col-md required"
+                            name="selectedJob"
+                            labelKey="JobConfigData.job"
+                            suggestionUri="/jobs/scheduler/autocomplete"
+                            optional="false">
+            </t:singleSelect>
         </div>
-    </w:editForm>
 
-    <div class="form-actions">
-        <a class="btn btn-primary submit-link">
-            <i class="fa fa-check"></i> @i18n("SchedulerEntry.continue")
-        </a>
-        <a href="/jobs/scheduler" class="btn">@i18n("NLS.cancel")</a>
-    </div>
-
-</w:page>
+        <t:formBar btnLabelKey="SchedulerEntry.continue"/>
+    </t:editForm>
+</t:page>
