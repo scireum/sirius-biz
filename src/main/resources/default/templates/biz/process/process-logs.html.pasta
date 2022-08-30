@@ -1,11 +1,11 @@
 <i:arg type="sirius.biz.process.Process" name="process"/>
 <i:arg type="Page" name="logs"/>
-<i:arg type="boolean" name="isAutoRefreshEnabled"/>
+<i:arg type="boolean" name="autoRefresh"/>
 
 <i:invoke template="/templates/biz/process/process.html.pasta"
           process="process"
           page="logs"
-          isAutoRefreshEnabled="isAutoRefreshEnabled">
+          autoRefresh="autoRefresh">
     <i:block name="sidebar">
         <t:filterbox page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
     </i:block>
