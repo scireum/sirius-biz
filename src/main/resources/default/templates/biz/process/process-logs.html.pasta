@@ -11,16 +11,12 @@
     </i:block>
     <i:block name="header-actions">
         <i:if test="process.shouldAutorefresh()">
-            <a id="enableAutoRefresh" class="btn btn-link d-none" href="@apply('/ps/%s?isAutoRefreshEnabled=true', process.getId())">@i18n("Process.enableAutoRefresh")</a>
-            <a id="disableAutoRefresh" class="btn btn-link d-none" href="@apply('/ps/%s?isAutoRefreshEnabled=false', process.getId())">@i18n("Process.disableAutoRefresh")</a>
-
-            <script type="text/javascript">
-                if(___isAutoRefreshEnabled) {
-                    document.getElementById("disableAutoRefresh").classList.remove("d-none");
-                } else {
-                    document.getElementById("enableAutoRefresh").classList.remove("d-none");
-                }
-            </script>
+            <i:if test="autoRefresh">
+                <a id="disableAutoRefresh" class="btn btn-link" href="@apply('/ps/%s?autoRefresh=false', process.getId())">@i18n("Process.disableAutoRefresh")</a>
+                <i:else>
+                    <a id="enableAutoRefresh" class="btn btn-link" href="@apply('/ps/%s?autoRefresh=true', process.getId())">@i18n("Process.enableAutoRefresh")</a>
+                </i:else>
+            </i:if>
         </i:if>
         <i:if test="process.getState() == sirius.biz.process.ProcessState.TERMINATED">
             <t:permission permission="permission-manage-processes">

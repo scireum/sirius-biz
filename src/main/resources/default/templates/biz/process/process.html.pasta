@@ -148,11 +148,11 @@
     <i:if test="process.shouldAutorefresh()">
         <script type="text/javascript">
             sirius.ready(function () {
-                setTimeout(function () {
-                    if (___autoRefresh) {
+                if (___autoRefresh) {
+                    setTimeout(function () {
                         window.location.reload();
-                    }
-                }, 5000);
+                    }, 5000);
+                }
             });
         </script>
     </i:if>
