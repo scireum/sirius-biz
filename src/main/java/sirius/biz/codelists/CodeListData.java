@@ -9,7 +9,6 @@
 package sirius.biz.codelists;
 
 import sirius.biz.mongo.PrefixSearchContent;
-import sirius.biz.protocol.TraceData;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
@@ -33,12 +32,6 @@ import javax.annotation.Nullable;
  * Represents all fields which are required to describe a code list.
  */
 public class CodeListData extends Composite {
-
-    /**
-     * Contains tracing data which records which user created and last edited the entity
-     */
-    public static final Mapping TRACE = Mapping.named("trace");
-    private final TraceData trace = new TraceData();
 
     /**
      * Contains the unique code or short name which identifies the code list.
@@ -120,10 +113,6 @@ public class CodeListData extends Composite {
         }
 
         return name;
-    }
-
-    public TraceData getTrace() {
-        return trace;
     }
 
     public String getCode() {
