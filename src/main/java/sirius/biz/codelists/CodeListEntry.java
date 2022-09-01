@@ -8,7 +8,6 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.protocol.Traced;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.Mapping;
@@ -27,7 +26,7 @@ import java.io.Serializable;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
-public interface CodeListEntry<I extends Serializable, L extends BaseEntity<I> & CodeList> extends Entity, Traced {
+public interface CodeListEntry<I extends Serializable, L extends BaseEntity<I> & CodeList> extends Entity {
 
     /**
      * Represents the reference of the code list to which this entry belongs.
