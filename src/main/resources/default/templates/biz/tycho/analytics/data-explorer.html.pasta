@@ -78,7 +78,7 @@
                         </div>
                     </div>
                     <div class="col-12 col-md-6 mb-2">
-                        <div class="mb-2 text-small text-muted">DataExplorerController.comparisonPeriod</div>
+                        <div class="mb-2 text-small text-muted">@i18n("DataExplorerController.comparisonPeriod")</div>
                         <div class="btn-group">
                             <button type="button"
                                     class="period-select-js btn btn-outline-primary"
