@@ -88,7 +88,7 @@ public class DataExplorerController extends BizController {
             return "javascript:selectEntity('"
                    + provider.getName()
                    + "','"
-                   + provider.resolver().autocompleteUri()
+                   + provider.resolver().getAutocompleteUri()
                    + "')";
         } else {
             return "javascript:addChart('" + provider.getName() + "')";
@@ -133,12 +133,12 @@ public class DataExplorerController extends BizController {
 
         return tasks.executor(POOL_DATA_EXPLORER).fork(() -> {
             try {
-                provider.computeData(object,
-                                     computeStart(range),
-                                     computeEnd(range),
-                                     computeGranularity(range),
-                                     comparisonPeriod,
-                                     output);
+                provider.generateOutput(object,
+                                        computeStart(range),
+                                        computeEnd(range),
+                                        computeGranularity(range),
+                                        comparisonPeriod,
+                                        output);
             } catch (Exception e) {
                 throw Exceptions.handle(Log.APPLICATION, e);
             }

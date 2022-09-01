@@ -46,5 +46,5 @@ public interface ChartObjectResolver<O> extends Named {
      * @return the autocomplete URI which provides suggestions. Note that the suggestions must contain identifiers
      * which can be resolved by {@link #resolve(String)}.
      */
-    String autocompleteUri();
+    String getAutocompleteUri();
 }

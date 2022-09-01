@@ -13,7 +13,7 @@ import sirius.kernel.nls.NLS;
 import java.time.LocalDate;
 
 /**
- * Enumerates available granularities for queries.
+ * Enumerates available granularities, which are actually the resolution of a requested period.
  */
 public enum Granularity {
     DAY, MONTH;
@@ -37,7 +37,7 @@ public enum Granularity {
      * @param date the date to compute the range end for
      * @return the end of the range in which the date is
      */
-    public LocalDate endOfRange(LocalDate date) {
+    public LocalDate computeEndOfRange(LocalDate date) {
         return switch (this) {
             case DAY -> date;
             case MONTH -> date.plusMonths(1).minusDays(1);

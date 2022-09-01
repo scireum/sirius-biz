@@ -135,9 +135,7 @@
             const _charts = document.getElementById("charts");
             const _chart = document.createElement('DIV');
             _chart.dataset.identifier = identifier;
-            _chart.classList.add('chart-js');
-            _chart.classList.add('card');
-            _chart.classList.add('mb-4');
+            _chart.classList.add('chart-js', 'card', 'mb-4');
             _chart.style['min-height'] = '300px';
             _chart.innerHTML =
                 '<button type="button" data-chart="' + identifier + '" ' +

@@ -175,7 +175,7 @@ public abstract class ChartFactory<O> implements Named, Priorized {
      *
      * @return a list of recommended {@link ChartFactory factories} which are known to be visible to the user.
      */
-    protected List<ChartFactory<O>> referencedFactories() {
+    protected List<ChartFactory<O>> fetchReferencedFactories() {
         if (referencedProviders == null) {
             List<ChartFactory<O>> providers = new ArrayList<>();
             collectReferencedCharts(providerType -> {
@@ -203,12 +203,12 @@ public abstract class ChartFactory<O> implements Named, Priorized {
      * @param output           the output to write all JSON to
      * @throws Exception in case of any error when computing the chart
      */
-    protected void computeData(@Nullable O object,
-                               LocalDate start,
-                               LocalDate end,
-                               Granularity granularity,
-                               ComparisonPeriod comparisonPeriod,
-                               JSONStructuredOutput output) throws Exception {
+    protected void generateOutput(@Nullable O object,
+                                  LocalDate start,
+                                  LocalDate end,
+                                  Granularity granularity,
+                                  ComparisonPeriod comparisonPeriod,
+                                  JSONStructuredOutput output) throws Exception {
         List<String> hints = new ArrayList<>();
         output.property(OUTPUT_LABEL, getChartLabel(object));
         output.property(OUTPUT_SUB_LABEL, getChartSubLabel(object));
@@ -228,7 +228,7 @@ public abstract class ChartFactory<O> implements Named, Priorized {
      */
     private void outputReferences(O object, JSONStructuredOutput output) {
         output.beginArray(OUTPUT_REFERENCES);
-        for (ChartFactory<O> referencedProvider : referencedFactories()) {
+        for (ChartFactory<O> referencedProvider : fetchReferencedFactories()) {
             output.beginObject(OUTPUT_REFERENCE);
             output.property(OUTPUT_LABEL, referencedProvider.getLabel());
             if (referencedProvider.resolver() != null) {
