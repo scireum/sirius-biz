@@ -114,6 +114,11 @@ public class KnowledgeBaseEntry extends SearchableEntity {
         setSearchableContent(getArticleId());
     }
 
+    @Override
+    public String toString() {
+        return getArticleId() + ": " + getTitle();
+    }
+
     /**
      * Checks if the permissions required by this article are met.
      *
