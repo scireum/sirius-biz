@@ -323,7 +323,7 @@
 
         // Updates the query string based on the currently visible charts, so that a link can be bookmarked.
         function updateUrl() {
-            const searchParams = new URLSearchParams()
+            const searchParams = new URLSearchParams();
             if (range !== "last12Months") {
                 searchParams.set("range", range);
             }
