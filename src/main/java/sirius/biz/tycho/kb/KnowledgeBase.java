@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Provides access to all available knowledge base articles.
@@ -119,7 +118,7 @@ public class KnowledgeBase {
                                  .stream()
                                  .map(Bucket::getKey)
                                  .sorted()
-                                 .collect(Collectors.toList());
+                                 .toList();
             } else {
                 languages = Collections.emptyList();
             }
@@ -150,7 +149,7 @@ public class KnowledgeBase {
                       .stream()
                       .map(KnowledgeBaseEntry::getLang)
                       .sorted()
-                      .collect(Collectors.toList());
+                      .toList();
     }
 
     protected List<KnowledgeBaseArticle> queryChildChapters(KnowledgeBaseArticle article) {
