@@ -10,7 +10,9 @@
                 </div>
             </div>
             <div class="row mt-4 mb-4 upload-container-js">
-                <div class="col">
+                <div class="col dropzone-drop-area-js">
+                    <div class="p-2 mb-4 border rounded text-secondary text-center bg-light">
+                        <span>@i18n("template.html.uploadArea")</span></div>
                     <div class="upload-box-js sirius-fileupload mb-lg-0 mb-2 d-none">
                         <a class="dropzone-select w-100 btn btn-primary">@i18n("FileUpload.uploadBtn")</a>
                         <div class="dropzone-items mt-2"></div>

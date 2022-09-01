@@ -1,13 +1,23 @@
 <i:arg type="sirius.biz.process.Process" name="process"/>
 <i:arg type="Page" name="logs"/>
+<i:arg type="boolean" name="autoRefresh"/>
 
 <i:invoke template="/templates/biz/process/process.html.pasta"
           process="process"
-          page="logs">
+          page="logs"
+          autoRefresh="autoRefresh">
     <i:block name="sidebar">
         <t:filterbox page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
     </i:block>
     <i:block name="header-actions">
+        <i:if test="process.shouldAutorefresh()">
+            <i:if test="autoRefresh">
+                <a id="disableAutoRefresh" class="btn btn-link" href="@apply('/ps/%s?autoRefresh=false', process.getId())">@i18n("Process.disableAutoRefresh")</a>
+                <i:else>
+                    <a id="enableAutoRefresh" class="btn btn-link" href="@apply('/ps/%s?autoRefresh=true', process.getId())">@i18n("Process.enableAutoRefresh")</a>
+                </i:else>
+            </i:if>
+        </i:if>
         <i:if test="process.getState() == sirius.biz.process.ProcessState.TERMINATED">
             <t:permission permission="permission-manage-processes">
                 <t:dropdown labelKey="Process.persistencePeriod"

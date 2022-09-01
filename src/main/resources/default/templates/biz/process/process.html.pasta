@@ -1,5 +1,6 @@
 <i:arg type="sirius.biz.process.Process" name="process"/>
 <i:arg type="String" name="page"/>
+<i:arg type="boolean" name="autoRefresh"/>
 
 <t:page title="@process.getTitle()">
     <i:block name="breadcrumbs">
@@ -144,7 +145,7 @@
         <i:render name="body"/>
     </t:sidebar>
 
-    <i:if test="process.shouldAutorefresh()">
+    <i:if test="process.shouldAutorefresh() && autoRefresh">
         <script type="text/javascript">
             sirius.ready(function () {
                 setTimeout(function () {

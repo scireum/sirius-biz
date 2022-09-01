@@ -43,6 +43,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.CookieManager;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
@@ -1297,6 +1298,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
             Outcall outcall = new Outcall(url);
             outcall.alwaysFollowRedirects();
+
+            CookieManager cookieManager = new CookieManager();
+            outcall.modifyClient().cookieHandler(cookieManager);
+
             if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
                 outcall.setIfModifiedSince(lastModifiedDate());
             }
@@ -1468,6 +1473,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             headRequest.markAsHeadRequest();
             headRequest.alwaysFollowRedirects();
             headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
+
+            CookieManager cookieManager = new CookieManager();
+            headRequest.modifyClient().cookieHandler(cookieManager);
 
             String path = headRequest.parseFileNameFromContentDisposition()
                                      .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
