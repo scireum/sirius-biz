@@ -247,18 +247,20 @@ public class KnowledgeBase {
 
         List<KnowledgeBaseArticle> result = new ArrayList<>();
         elastic.select(KnowledgeBaseEntry.class)
-               .eq(KnowledgeBaseEntry.LANG, language)
-               .queryString(query, QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
+               .eqIgnoreNull(KnowledgeBaseEntry.LANG, language)
+               .queryString(query,
+                            QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
                .limit(maxResults * 5)
                .iterateAll(entry -> {
                    if (entry.checkPermissions()) {
                        result.add(new KnowledgeBaseArticle(entry, language, this));
                    }
                });
-        if (!Strings.areEqual(language, fallbackLang)) {
+        if (language != null && !Strings.areEqual(language, fallbackLang)) {
             elastic.select(KnowledgeBaseEntry.class)
-                   .eq(KnowledgeBaseEntry.LANG, language)
-                   .queryString(query, QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
+                   .eq(KnowledgeBaseEntry.LANG, fallbackLang)
+                   .queryString(query,
+                                QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
                    .limit(maxResults * 5)
                    .iterateAll(entry -> {
                        if (entry.checkPermissions() && result.stream()
