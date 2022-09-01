@@ -15,12 +15,11 @@ import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
-
-import java.util.Optional;
 
 /**
  * Provides the UI of the knowledge base.
@@ -75,24 +74,7 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kba/:1/:2")
     public void langArticle(WebContext webContext, String lang, String articleId) {
-        renderArticleIfPresent(webContext, knowledgeBase.resolve(lang, articleId, false));
-    }
-
-    private void renderArticleIfPresent(WebContext webContext, Optional<KnowledgeBaseArticle> articleOptional) {
-        if (articleOptional.isPresent()) {
-            KnowledgeBaseArticle article = articleOptional.get();
-            UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
-            webContext.respondWith().template(article.getTemplatePath());
-            eventRecorder.record(new PageImpressionEvent().withUri("/kba/"
-                                                                   + article.getLanguage()
-                                                                   + "/"
-                                                                   + article.getArticleId())
-                                                          .withAggregationUrl("/kba")
-                                                          .withAction(article.getArticleId())
-                                                          .withDataObject(article.getEntry().getUniqueName()));
-        } else {
-            webContext.respondWith().error(HttpResponseStatus.NOT_FOUND);
-        }
+        langArticle(webContext, lang, articleId, null);
     }
 
     /**
@@ -105,15 +87,37 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kba/:1/:2/:3")
     public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
-        renderArticleIfPresent(webContext,
-                               knowledgeBase.resolve(lang, articleId, true)
-                                            .filter(article -> checkArticlePermission(article, authKey)));
+        KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, true).orElse(null);
+        if (article == null) {
+            webContext.respondWith().error(HttpResponseStatus.NOT_FOUND);
+            return;
+        }
+
+        if (!article.getEntry().checkPermissions() && !checkAuthKey(article, authKey)) {
+            if (!UserContext.getCurrentUser().isLoggedIn()) {
+                webContext.respondWith().template("/templates/biz/login.html.pasta", webContext.getRequest().uri());
+            } else {
+                throw Exceptions.createHandled().withNLSKey("KnowledgeBase.missionPermission").handle();
+            }
+            return;
+        }
+
+        UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
+        webContext.respondWith().template(article.getTemplatePath());
+        eventRecorder.record(new PageImpressionEvent().withUri("/kba/"
+                                                               + article.getLanguage()
+                                                               + "/"
+                                                               + article.getArticleId())
+                                                      .withAggregationUrl("/kba")
+                                                      .withAction(article.getArticleId())
+                                                      .withDataObject(article.getEntry().getUniqueName()));
     }
 
-    private boolean checkArticlePermission(KnowledgeBaseArticle article, String authKey) {
-        return article.getEntry().checkPermissions()
-               || Strings.areEqual(article.computeAuthenticationSignature(true),
-                                   authKey)
+    private boolean checkAuthKey(KnowledgeBaseArticle article, String authKey) {
+        if (Strings.isEmpty(authKey)) {
+            return false;
+        }
+        return Strings.areEqual(article.computeAuthenticationSignature(true), authKey)
                || Strings.areEqual(article.computeAuthenticationSignature(false), authKey);
     }
 }
