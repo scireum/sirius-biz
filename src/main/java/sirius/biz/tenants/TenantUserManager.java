@@ -1009,7 +1009,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     /**
      * Returns the id of the system tenant.
      * <p>
-     * Note that this method should only be used by the framework itself. Otherwise use
+     * Note that this method should only be used by the framework itself. Otherwise, use
      * {@link UserInfo#hasPermission(String)} or {@link Tenant#hasPermission(String)} and
      * {@link #PERMISSION_SYSTEM_ADMINISTRATOR} or {@link #PERMISSION_SYSTEM_TENANT_MEMBER}.
      *
