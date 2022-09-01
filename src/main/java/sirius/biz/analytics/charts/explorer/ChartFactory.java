@@ -32,7 +32,7 @@ import java.util.function.Consumer;
  * Note, however, that {@link TimeseriesChartFactory} provides a base class for all time-series related data, so this
  * might be a better foundation.
  * <p>
- * Note that access control can bei either handled by overwriting {@link #isAccessibleToCurrentUser()} or by
+ * Note that access control can be either handled by overwriting {@link #isAccessibleToCurrentUser()} or by
  * placing {@link sirius.web.security.Permission} annotations on this class.
  *
  * @param <O> the type of entities for which a chart can be shown
