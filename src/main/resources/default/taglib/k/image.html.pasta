@@ -1,10 +1,11 @@
 <i:arg type="String" name="imageUrl" description="Contains the url to the image."/>
+<i:arg type="String" name="hrefUrl" default="imageUrl" description="Contains the url to the href."/>
 <i:arg type="String" name="altText" default="" description="Contains the alternative text."/>
 
 <i:pragma name="description">
     Displays an image.
 </i:pragma>
 
-<a href="@imageUrl">
+<a href="@hrefUrl">
     <img alt="@altText" src="@imageUrl" class="card card-border p-1"/>
 </a>
