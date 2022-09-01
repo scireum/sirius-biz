@@ -8,7 +8,7 @@
 
 package sirius.biz.jdbc;
 
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
@@ -101,7 +101,7 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.SYSTEM_ADMINISTRATION;
+        return StandardCategories.SYSTEM_ADMINISTRATION;
     }
 
     @Override

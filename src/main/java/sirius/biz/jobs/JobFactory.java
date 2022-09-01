@@ -177,7 +177,7 @@ public interface JobFactory extends Named, Priorized {
     /**
      * Returns the name of the <tt>category</tt> this job belongs to.
      * <p>
-     * Within sirius, one of {@link StandardJobCategories} should be picked. For products a similar set of constants
+     * Within sirius, one of {@link StandardCategories} should be picked. For products a similar set of constants
      * should probably exist.
      *
      * @return the name of the job category
