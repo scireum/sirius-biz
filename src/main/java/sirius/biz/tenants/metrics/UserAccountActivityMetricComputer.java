@@ -6,11 +6,13 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants;
+package sirius.biz.tenants.metrics;
 
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
+import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.tenants.UserAccount;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;

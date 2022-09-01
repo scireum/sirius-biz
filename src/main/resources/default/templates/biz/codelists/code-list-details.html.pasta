@@ -26,7 +26,6 @@
     </w:editForm>
 
     <w:formBar backUrl="/code-lists">
-        <w:tracing trace="@codeList.getCodeListData().getTrace()"/>
+        <w:tracing trace="@codeList.getTrace()"/>
     </w:formBar>
 </i:invoke>
-
