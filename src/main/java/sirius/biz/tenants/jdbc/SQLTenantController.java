@@ -79,10 +79,13 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
             return baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, currentTenant),
                                                                   OMA.FILTERS.eq(Tenant.TENANT_DATA.inner(TenantData.PARENT_CAN_ACCESS),
                                                                                  true)),
-                                                  OMA.FILTERS.eq(SQLTenant.ID, currentTenant.getParent().getId())));
+                                                  OMA.FILTERS.eq(SQLTenant.ID, currentTenant.getParent().getId()),
+                                                  OMA.FILTERS.eq(SQLTenant.ID, currentTenant.getId())));
         }
-        return baseQuery.where(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, currentTenant),
-                                               OMA.FILTERS.eq(Tenant.TENANT_DATA.inner(TenantData.PARENT_CAN_ACCESS),
-                                                              true)));
+
+        return baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, currentTenant),
+                                                              OMA.FILTERS.eq(Tenant.TENANT_DATA.inner(TenantData.PARENT_CAN_ACCESS),
+                                                                             true)),
+                                              OMA.FILTERS.eq(SQLTenant.ID, currentTenant.getId())));
     }
 }

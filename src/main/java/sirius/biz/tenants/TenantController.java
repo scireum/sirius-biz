@@ -458,17 +458,25 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     @Routed("/tenants/autocomplete")
     public void tenantsAutocomplete(final WebContext webContext) {
         AutocompleteHelper.handle(webContext, (query, result) -> {
-            Page<T> tenants = getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage();
-
-            tenants.getItems().forEach(tenant -> {
-                String description = Formatter.create("[${zip}][ ${city}]")
-                                              .set("zip", tenant.getTenantData().getAddress().getZip())
-                                              .set("city", tenant.getTenantData().getAddress().getCity())
-                                              .format();
-                result.accept(AutocompleteHelper.suggest(tenant.getIdAsString())
-                                                .withFieldLabel(tenant.toString())
-                                                .withCompletionDescription(description));
-            });
+            if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SELECT_TENANT)) {
+                List<T> tenants =
+                        getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage().getItems();
+                tenants.forEach(tenant -> {
+                    result.accept(toSuggestion(tenant));
+                });
+            } else {
+                result.accept(toSuggestion(determineCurrentTenant(webContext)));
+            }
         });
+    }
+
+    private AutocompleteHelper.Completion toSuggestion(T tenant) {
+        String description = Formatter.create("[${zip}][ ${city}]")
+                                      .set("zip", tenant.getTenantData().getAddress().getZip())
+                                      .set("city", tenant.getTenantData().getAddress().getCity())
+                                      .format();
+        return AutocompleteHelper.suggest(tenant.getIdAsString())
+                                 .withFieldLabel(tenant.toString())
+                                 .withCompletionDescription(description);
     }
 }
