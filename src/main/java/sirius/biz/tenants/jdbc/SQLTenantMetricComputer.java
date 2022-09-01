@@ -10,9 +10,9 @@ package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.model.LoginData;
-import sirius.biz.tenants.TenantMetricComputer;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
+import sirius.biz.tenants.metrics.TenantMetricComputer;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
