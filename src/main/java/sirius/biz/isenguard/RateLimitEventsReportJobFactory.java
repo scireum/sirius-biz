@@ -10,7 +10,7 @@ package sirius.biz.isenguard;
 
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
@@ -121,7 +121,7 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.MONITORING;
+        return StandardCategories.MONITORING;
     }
 
     @Nonnull

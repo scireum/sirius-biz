@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
@@ -146,6 +146,6 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.MISC;
+        return StandardCategories.MISC;
     }
 }

@@ -12,7 +12,7 @@ import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.importer.ImportContext;
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -46,7 +46,7 @@ public class MongoCodeListExportJobFactory
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.MISC;
+        return StandardCategories.MISC;
     }
 
     @Override
