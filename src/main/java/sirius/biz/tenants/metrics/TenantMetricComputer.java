@@ -10,10 +10,14 @@ package sirius.biz.tenants.metrics;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
+import sirius.biz.process.Processes;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,6 +33,8 @@ import java.util.function.Consumer;
  *  <li><tt>num-active-users</tt>: Total number of <tt>active</tt> users.</li>
  *  <li><tt>avg-activity</tt>: Average activity level of all active users.</li>
  *  <li><tt>avg-education-level</tt>: Average education level level of all active users.</li>
+ *  <li><tt>num-processes</tt></tt>: The number of started processes.</li>
+ *  <li><tt>process-duration</tt>: The total computation time (in minutes) for the started processes.</li>
  * </ul>
  * <p>
  * Also, two performance flags are maintained: <tt>active-users</tt> for tenants which have at least one active user.
@@ -59,6 +65,20 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
      * Contains the average education level of all active users.
      */
     public static final String METRIC_AVG_EDUCATION_LEVEL = "avg-education-level";
+
+    /**
+     * Contains the number of processes that the tenant startet within a month.
+     */
+    public static final String METRIC_NUM_PROCESSES = "num-processes";
+
+    /**
+     * Contains the total computation time (in minutes) for the completed processes of the given tenant in a month.
+     */
+    public static final String METRIC_PROCESS_DURATION = "process-duration";
+
+    @Part
+    @Nullable
+    private Processes processes;
 
     @Override
     public int getLevel() {
@@ -115,6 +135,13 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
                                         sumEducationLevel.get() / activeUsers.get());
 
             tenant.getPerformanceData().modify().set(getActiveUsersFlag(), activeUsers.get() > 0).commit();
+        }
+
+        if (processes != null) {
+            Tuple<Integer, Integer> processMetrics =
+                    processes.computeProcessMetrics(startOfPeriod.toLocalDate(), endOfPeriod.toLocalDate(), tenant);
+            metrics.updateMonthlyMetric(tenant, METRIC_NUM_PROCESSES, date, processMetrics.getFirst());
+            metrics.updateMonthlyMetric(tenant, METRIC_PROCESS_DURATION, date, processMetrics.getSecond());
         }
     }
 
