@@ -9,7 +9,7 @@
 package sirius.biz.util;
 
 import sirius.biz.cluster.InterconnectClusterManager;
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
@@ -112,7 +112,7 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.MONITORING;
+        return StandardCategories.MONITORING;
     }
 
 }

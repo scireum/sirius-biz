@@ -11,25 +11,25 @@ package sirius.biz.jobs;
 /**
  * Represents a set of default categories used by SIRIUS.
  */
-public class StandardJobCategories {
+public class StandardCategories {
 
-    private StandardJobCategories() {
+    private StandardCategories() {
     }
 
     /**
      * Used for miscellaneous jobs with not better matching category.
      */
-    public static final String MISC = "$StandardJobCategories.misc";
+    public static final String MISC = "$StandardCategories.misc";
 
     /**
      * Used for system administration jobs.
      */
-    public static final String SYSTEM_ADMINISTRATION = "$StandardJobCategories.systemAdministration";
+    public static final String SYSTEM_ADMINISTRATION = "$StandardCategories.systemAdministration";
 
     /**
      * Used for system administration jobs.
      */
-    public static final String MONITORING = "$StandardJobCategories.monitoring";
+    public static final String MONITORING = "$StandardCategories.monitoring";
 
     /**
      * Used for jobs which import/export or manage users.
@@ -37,5 +37,5 @@ public class StandardJobCategories {
      * Note that this will be used by the <tt>tenants</tt> framework, but can also be used by custom jobs and
      * user managers.
      */
-    public static final String USERS_AND_TENANTS = "$StandardJobCategories.usersAndTenants";
+    public static final String USERS_AND_TENANTS = "$StandardCategories.usersAndTenants";
 }

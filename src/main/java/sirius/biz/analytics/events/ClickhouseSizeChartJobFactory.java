@@ -10,7 +10,7 @@ package sirius.biz.analytics.events;
 
 import sirius.biz.analytics.charts.Dataset;
 import sirius.biz.analytics.reports.Cell;
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.interactive.LinearChartJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -136,7 +136,7 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.MONITORING;
+        return StandardCategories.MONITORING;
     }
 
     @Nonnull

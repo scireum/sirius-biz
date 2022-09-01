@@ -8,7 +8,7 @@
 
 package sirius.biz.model;
 
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.params.BooleanParameter;
@@ -163,7 +163,7 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.SYSTEM_ADMINISTRATION;
+        return StandardCategories.SYSTEM_ADMINISTRATION;
     }
 
     @Override

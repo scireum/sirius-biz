@@ -10,7 +10,7 @@ package sirius.biz.analytics.events;
 
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.tenants.TenantUserManager;
@@ -142,7 +142,7 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.MONITORING;
+        return StandardCategories.MONITORING;
     }
 
     @Nonnull

@@ -8,7 +8,7 @@
 
 package sirius.biz.tenants.mongo;
 
-import sirius.biz.jobs.StandardJobCategories;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mongo.MongoQuery;
@@ -37,7 +37,7 @@ public class MongoUserAccountExportJobFactory
 
     @Override
     public String getCategory() {
-        return StandardJobCategories.USERS_AND_TENANTS;
+        return StandardCategories.USERS_AND_TENANTS;
     }
 
     @Override
