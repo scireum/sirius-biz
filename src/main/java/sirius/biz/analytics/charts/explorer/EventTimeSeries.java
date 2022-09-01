@@ -27,11 +27,11 @@ import java.util.function.Function;
  * strings should be constant and known to be safe, as any user input might lead to SQL injection bugs! Values can
  * be safely injected via {@link #withWhere(String, BiConsumer)}.
  * <p>
- * A minimal working example can be found in {@link EventCountingTimeseries}.
+ * A minimal working example can be found in {@link EventCountingTimeSeries}.
  *
  * @param <O> the type of entities being referenced
  */
-public class EventTimeseries<O> implements TimeseriesComputer<O> {
+public class EventTimeSeries<O> implements TimeSeriesComputer<O> {
 
     @Part
     protected static EventRecorder eventRecorder;
@@ -41,7 +41,7 @@ public class EventTimeseries<O> implements TimeseriesComputer<O> {
 
     private final Class<? extends Event> eventType;
     private String fieldsToSelect;
-    private Function<Timeseries, BiConsumer<LocalDate, Function<String, Double>>> rowProcessorFactory;
+    private Function<TimeSeries, BiConsumer<LocalDate, Function<String, Double>>> rowProcessorFactory;
     private String condition;
     private BiConsumer<O, SQLQuery> filterCustomizer;
     private String groupBy;
@@ -51,7 +51,7 @@ public class EventTimeseries<O> implements TimeseriesComputer<O> {
      *
      * @param eventType the type of events to query
      */
-    public EventTimeseries(Class<? extends Event> eventType) {
+    public EventTimeSeries(Class<? extends Event> eventType) {
         this.eventType = eventType;
     }
 
@@ -60,12 +60,12 @@ public class EventTimeseries<O> implements TimeseriesComputer<O> {
      *
      * @param fieldsToSelect      one or more field to query (this will be put behind the SELECT in the generated query).
      * @param rowProcessorFactory creates a row-processor, which is then supplied with all rows of the resulting query.
-     *                            This can create (and then fill) one or more {@link TimeseriesData} instances based
+     *                            This can create (and then fill) one or more {@link TimeSeriesData} instances based
      *                            on the query results.
      * @return the timeseries computer itself for fluent method calls
      */
-    public EventTimeseries<O> withSelect(String fieldsToSelect,
-                                         Function<Timeseries, BiConsumer<LocalDate, Function<String, Double>>> rowProcessorFactory) {
+    public EventTimeSeries<O> withSelect(String fieldsToSelect,
+                                         Function<TimeSeries, BiConsumer<LocalDate, Function<String, Double>>> rowProcessorFactory) {
         this.fieldsToSelect = fieldsToSelect;
         this.rowProcessorFactory = rowProcessorFactory;
 
@@ -81,7 +81,7 @@ public class EventTimeseries<O> implements TimeseriesComputer<O> {
      *                         <tt>condition</tt>
      * @return the timeseries computer itself for fluent method calls
      */
-    public EventTimeseries<O> withWhere(String condition, BiConsumer<O, SQLQuery> filterCustomizer) {
+    public EventTimeSeries<O> withWhere(String condition, BiConsumer<O, SQLQuery> filterCustomizer) {
         this.condition = condition;
         this.filterCustomizer = filterCustomizer;
 
@@ -94,7 +94,7 @@ public class EventTimeseries<O> implements TimeseriesComputer<O> {
      * @param condition the condition to add to the SQL
      * @return the timeseries computer itself for fluent method calls
      */
-    public EventTimeseries<O> withWhere(String condition) {
+    public EventTimeSeries<O> withWhere(String condition) {
         this.condition = condition;
 
         return this;
@@ -106,14 +106,14 @@ public class EventTimeseries<O> implements TimeseriesComputer<O> {
      * @param groupBy the clauses to add
      * @return the timeseries computer itself for fluent method calls
      */
-    public EventTimeseries<O> withGroupBy(String groupBy) {
+    public EventTimeSeries<O> withGroupBy(String groupBy) {
         this.groupBy = groupBy;
 
         return this;
     }
 
     @Override
-    public void compute(O object, Timeseries timeseries) throws Exception {
+    public void compute(O object, TimeSeries timeseries) throws Exception {
         if (fieldsToSelect == null) {
             throw new IllegalStateException("Missing call to withSelect");
         }

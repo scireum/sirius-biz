@@ -21,13 +21,13 @@ import java.util.function.Consumer;
 /**
  * Provides a base class to output time-series data into the {@link DataExplorerController Data-Explorer}.
  * <p>
- * Subclasses will probably use one or more {@link TimeseriesComputer} to compute the actual chart data.
+ * Subclasses will probably use one or more {@link TimeSeriesComputer} to compute the actual chart data.
  * <p>
  * Subclasses have to be {@link sirius.kernel.di.std.Register registered} in order to be visible to the framework.
  *
  * @param <O> the type of entities expected by this factory
  */
-public abstract class TimeseriesChartFactory<O> extends ChartFactory<O> {
+public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
 
     private static final String[] ICONS = {"fas fa-chart-line", "fas fa-chart-area", "fas fa-chart-bar"};
     private static final String OUTPUT_TYPE = "type";
@@ -63,12 +63,12 @@ public abstract class TimeseriesChartFactory<O> extends ChartFactory<O> {
      *
      * @param hasComparisonPeriod determines if a comparison period is requested
      * @param isComparisonPeriod  determines if we're currently executing the comparison period
-     * @param executor            the executor which can be supplied with one or more {@link TimeseriesComputer computers}
+     * @param executor            the executor which can be supplied with one or more {@link TimeSeriesComputer computers}
      * @throws Exception in case of any error while computing the chart data
      */
     protected abstract void computers(boolean hasComparisonPeriod,
                                       boolean isComparisonPeriod,
-                                      Callback<TimeseriesComputer<O>> executor) throws Exception;
+                                      Callback<TimeSeriesComputer<O>> executor) throws Exception;
 
     @Override
     protected void computeData(O object,
@@ -78,38 +78,38 @@ public abstract class TimeseriesChartFactory<O> extends ChartFactory<O> {
                                ComparisonPeriod comparisonPeriod,
                                Consumer<String> hints,
                                JSONStructuredOutput output) throws Exception {
-        Timeseries timeseries = new Timeseries(start, end, granularity);
-        List<TimeseriesData> data = new ArrayList<>();
-        timeseries.withDataConsumer(data::add);
+        TimeSeries timeSeries = new TimeSeries(start, end, granularity);
+        List<TimeSeriesData> data = new ArrayList<>();
+        timeSeries.withDataConsumer(data::add);
         output.property(OUTPUT_TYPE, determineChartType());
-        output.array(OUTPUT_LABELS, OUTPUT_RANGE, timeseries.startDates().map(granularity::format).toList());
+        output.array(OUTPUT_LABELS, OUTPUT_RANGE, timeSeries.startDates().map(granularity::format).toList());
 
         // Run all "main" computers...
         computers(comparisonPeriod != null, false, computer -> {
-            computer.compute(object, timeseries);
+            computer.compute(object, timeSeries);
         });
 
         // Run the computers for the comparison period if necessary...
-        Timeseries comparisonTimeseries = timeseries.comparisonSeries(comparisonPeriod);
+        TimeSeries comparisonTimeSeries = timeSeries.comparisonSeries(comparisonPeriod);
         if (comparisonPeriod != null && comparisonPeriod != ComparisonPeriod.NONE) {
             computers(true, true, computer -> {
-                computer.compute(object, comparisonTimeseries);
+                computer.compute(object, comparisonTimeSeries);
             });
         }
 
         // Output the collected data and determine if and how often we interpolate...
         output.beginArray(OUTPUT_DATASETS);
-        for (TimeseriesData timeseriesData : data) {
-            if (timeseriesData.isComparisonTimeseries()) {
-                outputDataset(timeseriesData.toDataset(comparisonTimeseries), output);
+        for (TimeSeriesData timeseriesData : data) {
+            if (timeseriesData.isComparisonTimeSeries()) {
+                outputDataset(timeseriesData.toDataset(comparisonTimeSeries), output);
             } else {
-                outputDataset(timeseriesData.toDataset(timeseries), output);
+                outputDataset(timeseriesData.toDataset(timeSeries), output);
             }
         }
         output.endArray();
 
         // Generate a hint based on the detected interpolations...
-        generateInterpolationHint(hints, timeseries, data);
+        generateInterpolationHint(hints, timeSeries, data);
 
         // Generated another hint, if a comparison period was requested, but none is present in the output...
         generateComparisonHint(comparisonPeriod, hints, data);
@@ -126,26 +126,26 @@ public abstract class TimeseriesChartFactory<O> extends ChartFactory<O> {
         output.endObject();
     }
 
-    private void generateInterpolationHint(Consumer<String> hints, Timeseries timeseries, List<TimeseriesData> data) {
+    private void generateInterpolationHint(Consumer<String> hints, TimeSeries timeseries, List<TimeSeriesData> data) {
         if (data.stream()
-                .anyMatch(timeseriesData -> timeseriesData.getGranularity() == Granularity.MONTH
+                .anyMatch(timeSeriesData -> timeSeriesData.getGranularity() == Granularity.MONTH
                                             && timeseries.getGranularity() == Granularity.DAY)) {
             if (data.stream()
-                    .allMatch(timeseriesData -> timeseriesData.getGranularity() == Granularity.MONTH
+                    .allMatch(timeSeriesData -> timeSeriesData.getGranularity() == Granularity.MONTH
                                                 && timeseries.getGranularity() == Granularity.DAY)) {
-                hints.accept(NLS.get("TimeseriesChartFactory.hintMonthlyValuesOnly"));
+                hints.accept(NLS.get("TimeSeriesChartFactory.hintMonthlyValuesOnly"));
             } else {
-                hints.accept(NLS.get("TimeseriesChartFactory.hintSomeMonthlyValues"));
+                hints.accept(NLS.get("TimeSeriesChartFactory.hintSomeMonthlyValues"));
             }
         }
     }
 
     private void generateComparisonHint(ComparisonPeriod comparisonPeriod,
                                         Consumer<String> hints,
-                                        List<TimeseriesData> data) {
+                                        List<TimeSeriesData> data) {
         if (comparisonPeriod != ComparisonPeriod.NONE && data.stream()
-                                                             .noneMatch(TimeseriesData::isComparisonTimeseries)) {
-            hints.accept(NLS.get("TimeseriesChartFactory.noComparisonSupported"));
+                                                             .noneMatch(TimeSeriesData::isComparisonTimeSeries)) {
+            hints.accept(NLS.get("TimeSeriesChartFactory.noComparisonSupported"));
         }
     }
 }

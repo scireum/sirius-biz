@@ -20,26 +20,26 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
- * Represents a timeseries used by the {@link TimeseriesChartFactory}.
+ * Represents a timeseries used by the {@link TimeSeriesChartFactory}.
  * <p>
- * As the {@link TimeseriesChartFactory} itself and also its subclasses operate heavily on the time-ranges to query,
+ * As the {@link TimeSeriesChartFactory} itself and also its subclasses operate heavily on the time-ranges to query,
  * this helper class is used to represent which time slots to query. It also drags along a consumer to collect all
- * generated output data ({@link TimeseriesData}) as well as a flag if this is a normal time-series or one computed
+ * generated output data ({@link TimeSeriesData}) as well as a flag if this is a normal time-series or one computed
  * for the {@link ComparisonPeriod}.
  * <p>
  * Next to actually deriving the comparison period and being used as a value object, this also provides a very helpful
  * method {@link #toMonthlySeries()} which can be used for data-sources which only can provide values on a "per month"
- * level, even if days are requested. This class, along with {@link TimeseriesData} and the {@link TimeseriesChartFactory}
+ * level, even if days are requested. This class, along with {@link TimeSeriesData} and the {@link TimeSeriesChartFactory}
  * will then work together, to interpolate the data, so that the output matches the other charts, while also notifying
  * the user, that an interpolation step happened.
  * <p>
- * Being a helper-class, instances are only created by the {@link TimeseriesChartFactory}, but as noted above,
+ * Being a helper-class, instances are only created by the {@link TimeSeriesChartFactory}, but as noted above,
  * subclasses of it might use the getters and {@link #toMonthlySeries()} in order to generate simple and effective
  * queries.
  */
-public class Timeseries {
+public class TimeSeries {
 
-    private Consumer<TimeseriesData> dataConsumer;
+    private Consumer<TimeSeriesData> dataConsumer;
 
     private final LocalDate requestedStart;
     private final LocalDate requestedEnd;
@@ -48,11 +48,11 @@ public class Timeseries {
 
     private boolean comparisonTimeseries = false;
 
-    protected Timeseries(LocalDate requestedStart, LocalDate requestedEnd, Granularity granularity) {
+    protected TimeSeries(LocalDate requestedStart, LocalDate requestedEnd, Granularity granularity) {
         this(requestedStart, requestedEnd, granularity, computeRanges(requestedStart, requestedEnd, granularity));
     }
 
-    protected Timeseries(LocalDate requestedStart,
+    protected TimeSeries(LocalDate requestedStart,
                          LocalDate requestedEnd,
                          Granularity granularity,
                          List<Tuple<LocalDate, LocalDate>> ranges) {
@@ -62,28 +62,28 @@ public class Timeseries {
         this.ranges = ranges;
     }
 
-    protected Timeseries withDataConsumer(Consumer<TimeseriesData> dataConsumer) {
+    protected TimeSeries withDataConsumer(Consumer<TimeSeriesData> dataConsumer) {
         this.dataConsumer = dataConsumer;
         return this;
     }
 
     /**
-     * Creates the default {@link TimeseriesData} to output into a chart.
+     * Creates the default {@link TimeSeriesData} to output into a chart.
      *
      * @return creates a timeseries data with the default label to use if only one chart line is present
      */
-    public TimeseriesData createDefaultData() {
+    public TimeSeriesData createDefaultData() {
         return createData(comparisonTimeseries ? "$Timeseries.comparisonDataset" : "$Timeseries.currentDataset");
     }
 
     /**
-     * Creates a {@link TimeseriesData} for this timeseries with the given name.
+     * Creates a {@link TimeSeriesData} for this timeseries with the given name.
      *
      * @param label the label to show for the generated data.
      * @return the data object to be supplied with values
      */
-    public TimeseriesData createData(String label) {
-        TimeseriesData data = new TimeseriesData(NLS.smartGet(label), granularity, comparisonTimeseries);
+    public TimeSeriesData createData(String label) {
+        TimeSeriesData data = new TimeSeriesData(NLS.smartGet(label), granularity, comparisonTimeseries);
 
         if (dataConsumer != null) {
             dataConsumer.accept(data);
@@ -167,23 +167,23 @@ public class Timeseries {
     }
 
     /**
-     * Enforces {@link Granularity#MONTH} by creating a new {@link Timeseries} if necessary.
+     * Enforces {@link Granularity#MONTH} by creating a new {@link TimeSeries} if necessary.
      * <p>
      * This can be used to answer to "daily" queries if only monthly queries are present. This will compact the
      * ranges, so that only a reduces number of ranges is present.
      * <p>
-     * Note that {@link TimeseriesData#toDataset(Timeseries)} will detect this difference and perform proper
+     * Note that {@link TimeSeriesData#toDataset(TimeSeries)} will detect this difference and perform proper
      * interpolation (by using the same value for each day of a month), so that daily and monthly charts have
      * the same number of values on the X axis and thus can be properly compared.
      *
      * @return a timeseries which is guaranteed to have {@link Granularity#MONTH} as granularity
      */
-    public Timeseries toMonthlySeries() {
+    public TimeSeries toMonthlySeries() {
         if (granularity == Granularity.MONTH) {
             return this;
         }
 
-        Timeseries monthlySeries = new Timeseries(requestedStart.withDayOfMonth(1),
+        TimeSeries monthlySeries = new TimeSeries(requestedStart.withDayOfMonth(1),
                                                   requestedEnd.with(TemporalAdjusters.lastDayOfMonth()),
                                                   Granularity.MONTH).withDataConsumer(dataConsumer);
         if (isComparisonTimeseries()) {
@@ -193,8 +193,8 @@ public class Timeseries {
         return monthlySeries;
     }
 
-    protected Timeseries comparisonSeries(ComparisonPeriod comparisonPeriod) {
-        return new Timeseries(comparisonPeriod.computeDate(requestedStart),
+    protected TimeSeries comparisonSeries(ComparisonPeriod comparisonPeriod) {
+        return new TimeSeries(comparisonPeriod.computeDate(requestedStart),
                               comparisonPeriod.computeDate(requestedEnd),
                               granularity,
                               ranges.stream()
@@ -203,7 +203,7 @@ public class Timeseries {
                                     .toList()).withDataConsumer(dataConsumer).markAsComparisonSeries();
     }
 
-    protected Timeseries markAsComparisonSeries() {
+    protected TimeSeries markAsComparisonSeries() {
         this.comparisonTimeseries = true;
         return this;
     }
