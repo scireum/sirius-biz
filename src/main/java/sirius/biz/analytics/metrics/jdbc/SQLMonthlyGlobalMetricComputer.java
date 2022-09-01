@@ -10,7 +10,9 @@ package sirius.biz.analytics.metrics.jdbc;
 
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
+import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;
+import sirius.kernel.di.std.Part;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +27,9 @@ import java.time.LocalDateTime;
  * (if possible - as best effort scheduling is used).
  */
 public abstract class SQLMonthlyGlobalMetricComputer extends MonthlyMetricComputer<SQLEntity> {
+
+    @Part
+    protected OMA oma;
 
     @Override
     public Class<SQLEntity> getType() {

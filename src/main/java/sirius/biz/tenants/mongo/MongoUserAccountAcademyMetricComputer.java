@@ -9,7 +9,7 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
-import sirius.biz.tenants.UserAccountAcademyMetricComputer;
+import sirius.biz.tenants.metrics.UserAccountAcademyMetricComputer;
 import sirius.biz.tycho.academy.mongo.MongoOnboardingEngine;
 import sirius.biz.tycho.academy.mongo.MongoOnboardingVideo;
 import sirius.db.mixing.BaseEntity;

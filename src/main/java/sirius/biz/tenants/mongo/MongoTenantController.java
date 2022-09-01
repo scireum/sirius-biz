@@ -87,14 +87,19 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
         if (currentTenant.getTenantData().isCanAccessParent()) {
             return baseQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT,
                                                                                                             currentTenant),
-                                                                                    QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA
-                                                                                                                    .inner(TenantData.PARENT_CAN_ACCESS),
+                                                                                    QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA.inner(
+                                                                                                                    TenantData.PARENT_CAN_ACCESS),
                                                                                                             true)),
                                                            QueryBuilder.FILTERS.eq(MongoTenant.ID,
-                                                                                   currentTenant.getParent().getId())));
+                                                                                   currentTenant.getParent().getId()),
+                                                           QueryBuilder.FILTERS.eq(MongoTenant.ID,
+                                                                                   currentTenant.getId())));
         }
-        return baseQuery.where(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT, currentTenant),
-                                                        QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA.inner(TenantData.PARENT_CAN_ACCESS),
-                                                                                true)));
+        return baseQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT,
+                                                                                                        currentTenant),
+                                                                                QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA.inner(
+                                                                                                                TenantData.PARENT_CAN_ACCESS),
+                                                                                                        true)),
+                                                       QueryBuilder.FILTERS.eq(MongoTenant.ID, currentTenant.getId())));
     }
 }

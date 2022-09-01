@@ -6,10 +6,11 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants;
+package sirius.biz.tenants.metrics;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
+import sirius.biz.tenants.UserAccount;
 import sirius.biz.tycho.academy.OnboardingVideo;
 import sirius.biz.tycho.academy.OnboardingVideoData;
 import sirius.db.mixing.BaseEntity;

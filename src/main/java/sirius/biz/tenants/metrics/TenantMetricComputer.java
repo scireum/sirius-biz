@@ -6,10 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants;
+package sirius.biz.tenants.metrics;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
+import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.UserAccount;
 import sirius.db.mixing.BaseEntity;
 
 import java.time.LocalDate;
@@ -115,7 +117,6 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
             tenant.getPerformanceData().modify().set(getActiveUsersFlag(), activeUsers.get() > 0).commit();
         }
     }
-
 
     protected abstract PerformanceFlag getActiveUserFlag();
 

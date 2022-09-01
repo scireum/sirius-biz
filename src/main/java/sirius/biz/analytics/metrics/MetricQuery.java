@@ -9,6 +9,9 @@
 package sirius.biz.analytics.metrics;
 
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.Mixing;
+import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.CheckReturnValue;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 /**
  * Provides a fluent API to create and execute queries against the metrics database.
@@ -135,7 +139,18 @@ public class MetricQuery {
     }
 
     /**
-     * Specifies that global metrics (not associated to an entity but rather system wide values) should be queried.
+     * Specifies the entity to query metrics for.
+     *
+     * @param ref the reference pointing to the entity to query metrics for
+     * @return the query itself for fluent method calls
+     */
+    @CheckReturnValue
+    public MetricQuery of(BaseEntityRef<?, ?> ref) {
+        return of(Mixing.getNameForType(ref.getType()), ref.getIdAsString());
+    }
+
+    /**
+     * Specifies that global metrics (not associated to an entity but rather system-wide values) should be queried.
      *
      * @return the query itself for fluent method calls
      */
@@ -170,6 +185,23 @@ public class MetricQuery {
         }
 
         return result;
+    }
+
+    /**
+     * Fetches a value for each of the dates in the given stream.
+     *
+     * @param dates the stream of dates to handle
+     * @return a stream of tuples containing the requested date and the fetches metric value
+     */
+    public Stream<Tuple<LocalDate, Integer>> values(Stream<LocalDate> dates) {
+        return dates.map(date -> Tuple.create(date,
+                                              metrics.executeQuery(interval,
+                                                                   targetType,
+                                                                   targetId,
+                                                                   metricName,
+                                                                   date.getYear(),
+                                                                   date.getMonthValue(),
+                                                                   date.getDayOfMonth()).orElse(0)));
     }
 
     private void assertParametersArePresent() {
