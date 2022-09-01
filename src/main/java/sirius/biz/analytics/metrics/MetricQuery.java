@@ -12,6 +12,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.CheckReturnValue;
 import java.time.LocalDate;
