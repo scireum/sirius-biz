@@ -81,7 +81,7 @@ public class DashboardUserAgentsChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     public int getPriority() {
-        return 0;
+        return 900;
     }
 
     @Override
