@@ -30,6 +30,7 @@ public class KnowledgeBaseEntry extends SearchableEntity {
      * Contains the five-letter code of this article.
      */
     public static final Mapping ARTICLE_ID = Mapping.named("articleId");
+    @SearchContent
     private String articleId;
 
     /**
@@ -107,6 +108,11 @@ public class KnowledgeBaseEntry extends SearchableEntity {
      */
     public static final Mapping SYNC_ID = Mapping.named("syncId");
     private String syncId;
+
+    @Override
+    public String toString() {
+        return getArticleId() + ": " + getTitle();
+    }
 
     /**
      * Checks if the permissions required by this article are met.

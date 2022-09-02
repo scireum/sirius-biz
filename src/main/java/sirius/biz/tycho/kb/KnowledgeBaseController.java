@@ -11,13 +11,16 @@ package sirius.biz.tycho.kb;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.PageImpressionEvent;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 
 import java.util.Optional;
@@ -115,5 +118,22 @@ public class KnowledgeBaseController extends BizController {
                || Strings.areEqual(article.computeAuthenticationSignature(true),
                                    authKey)
                || Strings.areEqual(article.computeAuthenticationSignature(false), authKey);
+    }
+
+    /**
+     * Provides an autocompletion for KB articles.
+     *
+     * @param webContext the current request
+     */
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
+    @Routed(value = "/kb/autocomplete", priority = 99)
+    public void articlesAutocomplete(final WebContext webContext) {
+        AutocompleteHelper.handle(webContext, (query, result) -> {
+            knowledgeBase.query(null, query, AutocompleteHelper.DEFAULT_LIMIT).forEach(article -> {
+                result.accept(AutocompleteHelper.suggest(article.getEntry().getIdAsString())
+                                                .withCompletionLabel(article.getArticleId() + ": " + article.getTitle())
+                                                .withCompletionDescription(article.getDescription()));
+            });
+        });
     }
 }
