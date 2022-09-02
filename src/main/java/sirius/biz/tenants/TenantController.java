@@ -463,7 +463,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
             if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SELECT_TENANT)) {
                 List<T> tenants =
                         getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage().getItems();
-                tenants.forEach(tenant -> {
+                tenants.stream().limit(AutocompleteHelper.DEFAULT_LIMIT).forEach(tenant -> {
                     result.accept(toSuggestion(tenant));
                 });
             } else {

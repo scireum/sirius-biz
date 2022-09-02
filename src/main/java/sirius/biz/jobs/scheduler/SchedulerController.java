@@ -170,6 +170,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         AutocompleteHelper.handle(ctx, (query, result) -> {
             jobs.getAvailableJobs(query)
                 .filter(JobFactory::canStartInBackground)
+                .limit(AutocompleteHelper.DEFAULT_LIMIT)
                 .forEach(factory -> result.accept(AutocompleteHelper.suggest(factory.getName())
                                                                     .withFieldLabel(factory.getLabel())
                                                                     .withCompletionDescription(factory.getDescription())));
