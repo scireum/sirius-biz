@@ -97,7 +97,7 @@ public class KnowledgeBaseController extends BizController {
             if (!UserContext.getCurrentUser().isLoggedIn()) {
                 webContext.respondWith().template("/templates/biz/login.html.pasta", webContext.getRequest().uri());
             } else {
-                throw Exceptions.createHandled().withNLSKey("KnowledgeBase.missionPermission").handle();
+                throw Exceptions.createHandled().withNLSKey("KnowledgeBase.missingPermission").handle();
             }
             return;
         }
