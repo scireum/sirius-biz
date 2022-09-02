@@ -22,13 +22,32 @@ import java.util.function.Function;
  * @param <O> the type of entities expected by this computer
  */
 public class UserAgentsTimeSeriesComputer<O> implements TimeSeriesComputer<O> {
+    /**
+     * Could be used within a sql query in order to retrieve the number of occurrences of the Firefox browser within the user agent data.
+     */
     public static final String COUNT_FIREFOX = "countIf(position('Firefox' in webData_userAgent) > 0) as firefox";
+
+    /**
+     * Could be used within a sql query in order to retrieve the number of occurrences of the Chrome browser within the user agent data.
+     */
     public static final String COUNT_CHROME =
             "countIf(position('Chrome' in webData_userAgent) > 0 and position('Edg' in webData_userAgent) == 0) as chrome";
+
+    /**
+     * Could be used within a sql query in order to retrieve the number of occurrences of the Internet Explorer browser within the user agent data.
+     */
     public static final String COUNT_INTERNET_EXPLORER =
             "countIf(position('MSIE' in webData_userAgent) > 0 or position('Trident' in webData_userAgent) > 0) as internetExplorer";
+
+    /**
+     * Could be used within a sql query in order to retrieve the number of occurrences of the Safari browser within the user agent data.
+     */
     public static final String COUNT_SAFARI =
             "countIf(position('Safari' in webData_userAgent) > 0 and position('Chrome' in webData_userAgent) == 0 and position('Edg' in webData_userAgent) == 0) as safari";
+
+    /**
+     * Could be used within a sql query in order to retrieve the number of occurrences of the Edge browser within the user agent data.
+     */
     public static final String COUNT_EDGE = "countIf(position('Edg' in webData_userAgent) > 0) as edge";
 
     @Part
