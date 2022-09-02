@@ -156,10 +156,8 @@ public class ProcessController extends BizController {
                                 Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));
         pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        boolean isAutoRefreshEnabled = webContext.get("autoRefresh").asBoolean(true);
-
         webContext.respondWith()
-                  .template("/templates/biz/process/process-logs.html.pasta", process, pageHelper.asPage(), isAutoRefreshEnabled);
+                  .template("/templates/biz/process/process-logs.html.pasta", process, pageHelper.asPage());
     }
 
     /**
