@@ -22,7 +22,17 @@
                 </span>
             </i:block>
             <i:block name="actions">
-                <div>@page</div>
+                <i:if test="process.shouldAutorefresh()">
+                    <a id="disableAutoRefresh"
+                       class="btn btn-link d-none"
+                       href="#">
+                        @i18n("Process.disableAutoRefresh")
+                    </a>
+                    <a id="enableAutoRefresh"
+                       class="btn btn-link d-none"
+                       href="#">@i18n("Process.enableAutoRefresh")
+                    </a>
+                </i:if>
                 <i:render name="header-actions"/>
             </i:block>
             <i:block name="additionalActions">
@@ -148,8 +158,38 @@
     <i:if test="process.shouldAutorefresh()">
         <script type="text/javascript">
             sirius.ready(function () {
-                setTimeout(function () {
-                    window.location.reload();
+                let autoRefreshStorageVariableName = "ps.isAutoRefreshEnabled";
+                let isAutoRefreshEnabled = sirius.readLocalStore(autoRefreshStorageVariableName) === "true" ? true : false;
+
+                let _enableAutoRefresh = document.getElementById("enableAutoRefresh");
+                let _disableAutoRefresh = document.getElementById("disableAutoRefresh");
+
+                if (isAutoRefreshEnabled === true) {
+                    _disableAutoRefresh.classList.remove("d-none");
+                } else {
+                    _enableAutoRefresh.classList.remove("d-none");
+                }
+
+                _enableAutoRefresh.onclick = function (event) {
+                    event.preventDefault();
+                    isAutoRefreshEnabled = true;
+                    sirius.writeLocalStore(autoRefreshStorageVariableName, true);
+                    _enableAutoRefresh.classList.add("d-none");
+                    _disableAutoRefresh.classList.remove("d-none");
+                };
+
+                _disableAutoRefresh.onclick = function (event) {
+                    event.preventDefault();
+                    isAutoRefreshEnabled = false;
+                    sirius.writeLocalStore(autoRefreshStorageVariableName, false);
+                    _disableAutoRefresh.classList.add("d-none");
+                    _enableAutoRefresh.classList.remove("d-none");
+                };
+
+                setInterval(function () {
+                    if (isAutoRefreshEnabled === true) {
+                        window.location.reload();
+                    }
                 }, 5000);
             });
         </script>
