@@ -170,7 +170,7 @@ public class TimeSeries {
      * Enforces {@link Granularity#MONTH} by creating a new {@link TimeSeries} if necessary.
      * <p>
      * This can be used to answer to "daily" queries if only monthly queries are present. This will compact the
-     * ranges, so that only a reduces number of ranges is present.
+     * ranges, so that only a reduced number of ranges is present.
      * <p>
      * Note that {@link TimeSeriesData#toDataset(TimeSeries)} will detect this difference and perform proper
      * interpolation (by using the same value for each day of a month), so that daily and monthly charts have
