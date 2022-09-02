@@ -178,7 +178,7 @@ public class QueryController extends BizController {
             String effectiveQuery = query.toLowerCase();
             fetchRelevantDescriptors().filter(descriptor -> filterMatch(effectiveQuery, descriptor))
                                       .map(this::createCompletion)
-
+                                      .limit(AutocompleteHelper.DEFAULT_LIMIT)
                                       .forEach(result);
         }));
     }

@@ -20,12 +20,14 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Log;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Provides access to all available knowledge base articles.
@@ -47,6 +49,19 @@ public class KnowledgeBase {
      * Used to log all messages and warnings related to the knowledge base.
      */
     public static final Log LOG = Log.get("knowlegdebase");
+
+    /**
+     * Imposes a hard limit when searching for knowledge base entries
+     */
+    private static final int SCAN_HARD_LIMIT = 250;
+
+    /**
+     * Used to compute the soft limit when searching for entries.
+     * <p>
+     * We multiply the original limit by this factor as we expect some entries to be filtered out due to permission
+     * checks.
+     */
+    private static final int SCAN_FACTOR = 5;
 
     /**
      * Contains the default or fallback language which is considered additionally to the current language.
@@ -119,7 +134,7 @@ public class KnowledgeBase {
                                  .stream()
                                  .map(Bucket::getKey)
                                  .sorted()
-                                 .collect(Collectors.toList());
+                                 .toList();
             } else {
                 languages = Collections.emptyList();
             }
@@ -150,7 +165,7 @@ public class KnowledgeBase {
                       .stream()
                       .map(KnowledgeBaseEntry::getLang)
                       .sorted()
-                      .collect(Collectors.toList());
+                      .toList();
     }
 
     protected List<KnowledgeBaseArticle> queryChildChapters(KnowledgeBaseArticle article) {
@@ -246,33 +261,30 @@ public class KnowledgeBase {
             return Collections.emptyList();
         }
 
-        List<KnowledgeBaseArticle> result = new ArrayList<>();
-        elastic.select(KnowledgeBaseEntry.class)
-               .eq(KnowledgeBaseEntry.LANG, language)
-               .queryString(query, QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
-               .limit(maxResults * 5)
-               .iterateAll(entry -> {
-                   if (entry.checkPermissions()) {
-                       result.add(new KnowledgeBaseArticle(entry, language, this));
-                   }
-               });
-        if (!Strings.areEqual(language, fallbackLang)) {
-            elastic.select(KnowledgeBaseEntry.class)
-                   .eq(KnowledgeBaseEntry.LANG, language)
-                   .queryString(query, QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
-                   .limit(maxResults * 5)
-                   .iterateAll(entry -> {
-                       if (entry.checkPermissions() && result.stream()
-                                                             .noneMatch(existingEntry -> Strings.areEqual(existingEntry.getArticleId(),
-                                                                                                          entry.getArticleId()))) {
-                           result.add(new KnowledgeBaseArticle(entry, language, this));
-                       }
-                   });
+        List<KnowledgeBaseArticle> result =
+                scanEntries(language, query, maxResults).map(entry -> new KnowledgeBaseArticle(entry, language, this))
+                                                        .collect(Collectors.toList());
+        if (language != null && !Strings.areEqual(language, fallbackLang)) {
+            scanEntries(fallbackLang, query, maxResults).filter(entry -> result.stream()
+                                                                               .noneMatch(existingEntry -> Strings.areEqual(
+                                                                                       existingEntry.getArticleId(),
+                                                                                       entry.getArticleId())))
+                                                        .map(entry -> new KnowledgeBaseArticle(entry, language, this))
+                                                        .forEach(result::add);
         }
 
         result.sort(Comparator.comparing(KnowledgeBaseArticle::getPriority)
                               .thenComparing(KnowledgeBaseArticle::getTitle));
 
         return result;
+    }
+
+    private Stream<KnowledgeBaseEntry> scanEntries(@Nullable String language, String query, int maxResults) {
+        return elastic.select(KnowledgeBaseEntry.class)
+                      .eqIgnoreNull(KnowledgeBaseEntry.LANG, language)
+                      .queryString(query, QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
+                      .limit(Math.min(maxResults * SCAN_FACTOR, SCAN_HARD_LIMIT))
+                      .streamList()
+                      .filter(KnowledgeBaseEntry::checkPermissions);
     }
 }

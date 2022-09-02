@@ -19,6 +19,7 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableProcessOutputType;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
@@ -31,7 +32,9 @@ import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -57,7 +60,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -822,6 +827,8 @@ public class Processes {
      * @param complete  <tt>true</tt> to mark the process as completed once the task is done, <tt>false</tt> otherwise
      * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
+    @SuppressWarnings("java:S2440")
+    @Explain("This is a false positive as this is our execution environment, not the one of Java")
     private void execute(String processId, Consumer<ProcessContext> task, boolean complete) {
         awaitProcess(processId);
         TaskContext taskContext = TaskContext.get();
@@ -1164,5 +1171,34 @@ public class Processes {
         }
 
         return logsQuery;
+    }
+
+    /**
+     * Obtains some process metrics for the given period.
+     *
+     * @param startOfPeriod the start date of the period to query
+     * @param endOfPeriod   the end date of the period to query
+     * @param tenant        the tenant to filter on (if present)
+     * @return a tuple containing the number of processes and the total execution time in minutes. Note that we
+     * collect all processes which {@link Process#COMPLETED} date is within the given period.
+     */
+    public Tuple<Integer, Integer> computeProcessMetrics(LocalDate startOfPeriod,
+                                                         LocalDate endOfPeriod,
+                                                         @Nullable Tenant<?> tenant) {
+        AtomicInteger numProcesses = new AtomicInteger(0);
+        AtomicLong computationDurationSeconds = new AtomicLong(0);
+        elastic.select(Process.class)
+               .where(Elastic.FILTERS.gte(Process.COMPLETED, startOfPeriod.atStartOfDay()))
+               .where(Elastic.FILTERS.lt(Process.COMPLETED, endOfPeriod.plusDays(1).atStartOfDay()))
+               .eq(Process.STATE, ProcessState.TERMINATED)
+               .eqIgnoreNull(Process.TENANT_ID, tenant != null ? tenant.getIdAsString() : null)
+               .streamBlockwise()
+               .forEach(process -> {
+                   numProcesses.incrementAndGet();
+                   computationDurationSeconds.addAndGet(Duration.between(process.getStarted(), process.getCompleted())
+                                                                .getSeconds());
+               });
+
+        return Tuple.create(numProcesses.get(), (int) TimeUnit.SECONDS.toMinutes(computationDurationSeconds.get()));
     }
 }
