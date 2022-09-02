@@ -11,7 +11,6 @@ package sirius.biz.tycho.kb;
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
@@ -31,6 +30,7 @@ public class KnowledgeBaseEntry extends SearchableEntity {
      * Contains the five-letter code of this article.
      */
     public static final Mapping ARTICLE_ID = Mapping.named("articleId");
+    @SearchContent
     private String articleId;
 
     /**
@@ -108,11 +108,6 @@ public class KnowledgeBaseEntry extends SearchableEntity {
      */
     public static final Mapping SYNC_ID = Mapping.named("syncId");
     private String syncId;
-
-    @BeforeSave
-    protected void onSave() {
-        setSearchableContent(getArticleId());
-    }
 
     @Override
     public String toString() {
