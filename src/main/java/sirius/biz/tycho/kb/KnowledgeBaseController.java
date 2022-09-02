@@ -129,7 +129,7 @@ public class KnowledgeBaseController extends BizController {
     @Routed(value = "/kb/autocomplete", priority = 99)
     public void tenantsAutocomplete(final WebContext webContext) {
         AutocompleteHelper.handle(webContext, (query, result) -> {
-            knowledgeBase.query(null, query, 25).forEach(article -> {
+            knowledgeBase.query(null, query, AutocompleteHelper.DEFAULT_LIMIT).forEach(article -> {
                 result.accept(AutocompleteHelper.suggest(article.getEntry().getIdAsString())
                                                 .withCompletionLabel(article.getArticleId() + ": " + article.getTitle())
                                                 .withCompletionDescription(article.getDescription()));

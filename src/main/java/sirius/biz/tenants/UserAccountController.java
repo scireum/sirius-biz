@@ -584,7 +584,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     public void usersAutocomplete(final WebContext webContext) {
         AutocompleteHelper.handle(webContext, (query, result) -> {
             Page<U> accounts = getUsersAsPage(webContext).asPage();
-            accounts.getItems().forEach(userAccount -> {
+            accounts.getItems().stream().limit(AutocompleteHelper.DEFAULT_LIMIT).forEach(userAccount -> {
                 result.accept(AutocompleteHelper.suggest(userAccount.getUniqueName())
                                                 .withFieldLabel(userAccount.toString()));
             });
