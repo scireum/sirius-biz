@@ -127,7 +127,7 @@ public class KnowledgeBaseController extends BizController {
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
     @Routed(value = "/kb/autocomplete", priority = 99)
-    public void tenantsAutocomplete(final WebContext webContext) {
+    public void articlesAutocomplete(final WebContext webContext) {
         AutocompleteHelper.handle(webContext, (query, result) -> {
             knowledgeBase.query(null, query, 25).forEach(article -> {
                 result.accept(AutocompleteHelper.suggest(article.getEntry().getIdAsString())
