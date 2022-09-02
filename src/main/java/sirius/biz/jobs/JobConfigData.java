@@ -91,7 +91,7 @@ public class JobConfigData extends Composite {
         }
 
         if (Strings.isFilled(job)) {
-            jobName = getJobFactory().getName();
+            jobName = getJobFactory().getLabel();
         }
     }
 
