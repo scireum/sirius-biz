@@ -17,7 +17,16 @@ import java.time.LocalDate;
 import java.util.function.Function;
 
 /**
- * A time series computer for the user agents data.
+ * Helps computing the user-agent distribution for a given Clickhouse event.
+ * <p>
+ * Note that the query has to be built manually, but helpful constants are provided below. Note that the query
+ * has to yield the expected fields: <tt>year</tt>, <tt>month</tt>, <tt>day</tt>, and the values as created by
+ * expressions as provided below.
+ * <p>
+ * Also note, that building SQL queries from multiple strings can be dangerous. Great care should be taken to
+ * only add constant strings to the query. Everything else must be passed in as parameter via {@code  SQLQuery.set("key", value)}
+ *
+ * @see sirius.biz.tycho.DashboardUserAgentsChart
  *
  * @param <O> the type of entities expected by this computer
  */

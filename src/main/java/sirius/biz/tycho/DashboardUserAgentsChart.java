@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 /**
  * Implements a time series chart for the dashboard.
- *
+ * <p></p>
  * The chart visualizes the browser which have been used in order to access the dashboard by extracting the required data from the user agents dataset.
  */
 @Register
