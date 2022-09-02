@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  * Provides the base class for all charts which can be shown in the {@link DataExplorerController Data-Explorer}.
  * <p>
  * Subclasses have to be {@link sirius.kernel.di.std.Register registered} in order to be visible to the framework.
- * Note, however, that {@link TimeseriesChartFactory} provides a base class for all time-series related data, so this
+ * Note, however, that {@link TimeSeriesChartFactory} provides a base class for all time-series related data, so this
  * might be a better foundation.
  * <p>
  * Note that access control can be either handled by overwriting {@link #isAccessibleToCurrentUser()} or by
