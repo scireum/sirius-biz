@@ -19,8 +19,6 @@ import javax.annotation.Nullable;
  *
  * @param <O> the type of entities expected by this computer
  * @see MonthlyMetricTimeSeries
- * @see EventTimeSeries
- * @see EventCountingTimeSeries
  */
 public interface TimeSeriesComputer<O> {
 
