@@ -158,11 +158,11 @@
     <i:if test="process.shouldAutorefresh()">
         <script type="text/javascript">
             sirius.ready(function () {
-                let autoRefreshStorageVariableName = "ps.isAutoRefreshEnabled";
+                const autoRefreshStorageVariableName = "sirius.ps.isAutoRefreshEnabled";
                 let isAutoRefreshEnabled = sirius.readLocalStore(autoRefreshStorageVariableName) === "true" ? true : false;
 
-                let _enableAutoRefresh = document.getElementById("enableAutoRefresh");
-                let _disableAutoRefresh = document.getElementById("disableAutoRefresh");
+                const _enableAutoRefresh = document.getElementById("enableAutoRefresh");
+                const _disableAutoRefresh = document.getElementById("disableAutoRefresh");
 
                 if (isAutoRefreshEnabled === true) {
                     _disableAutoRefresh.classList.remove("d-none");
