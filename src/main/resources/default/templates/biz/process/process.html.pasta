@@ -159,7 +159,7 @@
         <script type="text/javascript">
             sirius.ready(function () {
                 const autoRefreshStorageVariableName = "sirius.ps.isAutoRefreshEnabled";
-                let isAutoRefreshEnabled = sirius.readLocalStore(autoRefreshStorageVariableName) === "true" ? true : false;
+                let isAutoRefreshEnabled = sirius.readLocalStore(autoRefreshStorageVariableName) === "false" ? false : true;
 
                 const _enableAutoRefresh = document.getElementById("enableAutoRefresh");
                 const _disableAutoRefresh = document.getElementById("disableAutoRefresh");
