@@ -7,5 +7,5 @@
 </i:pragma>
 
 <a href="@hrefUrl">
-    <img alt="@altText" src="@imageUrl" class="card card-border p-1"/>
+    <img alt="@altText" src="@imageUrl" class="card card-border p-1 mw-100"/>
 </a>
