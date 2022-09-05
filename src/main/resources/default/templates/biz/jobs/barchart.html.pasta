@@ -8,8 +8,8 @@
           job="job"
           context="context"
           additionalMetrics="additionalMetrics">
-    <div class="well">
-        <canvas id="chart" class="chart" style="display: block" height="400"></canvas>
+    <div style="height: 60vh;">
+        <canvas id="chart" class="chart" style="display: block"></canvas>
     </div>
 
     <script type="text/javascript">
