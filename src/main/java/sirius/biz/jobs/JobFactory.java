@@ -51,6 +51,15 @@ public interface JobFactory extends Named, Priorized {
     String getIcon();
 
     /**
+     * Returns the icon to used when displaying this job in wondergem templates.
+     *
+     * @return the icon of this job
+     */
+    default String getLegacyIcon() {
+        return getIcon();
+    }
+
+    /**
      * Returns a short description of this job.
      * <p>
      * This is shown in lists and should therefore be quite concise.
