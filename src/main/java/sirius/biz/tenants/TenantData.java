@@ -252,6 +252,8 @@ public class TenantData extends Composite implements Journaled {
 
     @Transient
     private Config config;
+    @Transient
+    private Settings settings;
 
     /**
      * Used to record changes on fields of the tenant.
@@ -402,13 +404,17 @@ public class TenantData extends Composite implements Journaled {
      */
     @Nonnull
     public Settings getSettings() {
-        Config tenantConfig = getConfig();
+        if (settings == null) {
+            Config tenantConfig = getConfig();
 
-        if (tenantConfig != null) {
-            return new Settings(tenantConfig, false);
+            if (tenantConfig != null) {
+                settings = new Settings(tenantConfig, false);
+            } else {
+                settings = new Settings(ConfigFactory.empty(), false);
+            }
         }
 
-        return new Settings(ConfigFactory.empty(), false);
+        return settings;
     }
 
     /**
@@ -428,6 +434,7 @@ public class TenantData extends Composite implements Journaled {
     public void setConfigString(String configString) {
         this.configString = configString;
         this.config = null;
+        this.settings = null;
     }
 
     public String getName() {

@@ -26,7 +26,7 @@ import java.net.URL;
 public class MonitoredSOAPClient extends SOAPClient {
 
     @Part
-    protected EventRecorder eventRecorder;
+    protected static EventRecorder eventRecorder;
 
     /**
      * Creates a new client which talks to the given endpoint.

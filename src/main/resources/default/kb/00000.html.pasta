@@ -9,9 +9,9 @@
     <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
     <k:section>
         <i:if test="part(sirius.pasta.tagliatelle.Tagliatelle.class).resolve('/templates/biz/tycho/kb/welcome_' + article.getLanguage() + '.html.pasta').isPresent()">
-            <i:dynamicInvoke template="@apply('/templates/biz/tycho/kb/welcome_%s.html.pasta', article.getLanguage())" />
+            <i:dynamicInvoke template="@apply('/templates/biz/tycho/kb/welcome_%s.html.pasta', article.getLanguage())"/>
             <i:else>
-                <i:invoke template="/templates/biz/tycho/kb/welcome.html.pasta" />
+                <i:invoke template="/templates/biz/tycho/kb/welcome.html.pasta"/>
             </i:else>
         </i:if>
     </k:section>

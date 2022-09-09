@@ -78,7 +78,7 @@
     <script>
         $(document).ready(function () {
             let validLanguages = {};
-            <i:for type="List" var="lang" items="validLanguages">
+            <i:for type="String" var="lang" items="validLanguages">
                 validLanguages['@lang'] = '@i18n("Language." + lang)';
             </i:for>
 

@@ -43,6 +43,6 @@ public abstract class ReportBatchProcessFactory extends BatchProcessJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-line-chart";
+        return "fas fa-chart-line";
     }
 }

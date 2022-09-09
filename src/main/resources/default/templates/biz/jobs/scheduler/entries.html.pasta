@@ -1,6 +1,6 @@
 <i:arg type="Page" name="entries"/>
 
-<w:page titleKey="SchedulerEntry.plural">
+<t:page titleKey="SchedulerEntry.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
@@ -10,77 +10,82 @@
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="SchedulerEntry.plural"/>
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@i18n('SchedulerEntry.plural')</i:block>
+        </t:pageHeader>
+    </i:block>
 
-    <w:tableSearchHeader page="entries" baseUrl="/jobs/scheduler">
+    <t:searchHeader page="entries" baseUrl="/jobs/scheduler">
         <a class="btn btn-primary" href="/jobs/scheduler/entry/new">@i18n("Model.create")</a>
-    </w:tableSearchHeader>
+    </t:searchHeader>
 
-    <w:table data="entries">
-        <thead>
-        <tr>
-            <th>
-                @i18n("Model.name")
-            </th>
-            <th>
-                @i18n("SchedulerEntry.year")<br>
-                @i18n("SchedulerEntry.month")
-            </th>
-            <th>
-                @i18n("SchedulerEntry.dayOfMonth")<br>
-                @i18n("SchedulerEntry.dayOfWeek")
-            </th>
-            <th>
-                @i18n("SchedulerEntry.hourOfDay")<br>
-                @i18n("SchedulerEntry.minute")
-            </th>
-            <th>
-                @i18n("SchedulerEntry.enabled")<br>
-                @i18n("SchedulerEntry.runs")
-            </th>
-            <th class="align-right">
-                @i18n("SchedulerEntry.lastExecution")<br>
-                @i18n("SchedulerEntry.numberOfExecutions")
-            </th>
-            <th/>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.jobs.scheduler.SchedulerEntry" var="entry" items="entries.getItems()">
-            <tr>
-                <td>
-                    <a class="link" href="/jobs/scheduler/entry/@entry.getIdAsString()">@entry</a>
-                </td>
-                <td>
-                    @entry.getSchedulerData().getYear()<br>
-                    @entry.getSchedulerData().getMonth()
-                </td>
-                <td>
-                    @entry.getSchedulerData().getDayOfMonth()<br>
-                    @entry.getSchedulerData().getDayOfWeek()
-                </td>
-                <td>
-                    @entry.getSchedulerData().getHourOfDay()<br>
-                    @entry.getSchedulerData().getMinute()
-                </td>
-                <td>
-                    @toUserString(entry.getSchedulerData().isEnabled())<br>
-                    @toUserString(entry.getSchedulerData().getRuns())
-                </td>
-                <td class="align-right">
-                    @toUserString(entry.getSchedulerData().getLastExecution())<br>
-                    @toUserString(entry.getSchedulerData().getNumberOfExecutions())
-                </td>
-                <td class="col-md-2 align-center">
-                    <a class="link" href="/ps?reference=@entry.getUniqueName()&reference-label=@urlEncode(entry.toString())">
-                        <i class="fa fa-list"></i> Ausführungen
-                    </a><br>
-                    <w:deleteLink url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())" page="entries"/>
-                </td>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
+    <t:emptyCheck data="entries">
+        <t:datacards>
+            <i:for var="entry" items="entries.getItems()" type="sirius.biz.jobs.scheduler.SchedulerEntry">
+                <t:datacard subTitle="@entry.getJobConfigData().getJobFactory().getLabel()"
+                            link="@apply('/jobs/scheduler/entry/%s', entry.getIdAsString())">
+                    <i:block name="title">
+                        @limit(entry.toString(), 60, true)
+                    </i:block>
 
-    <w:pagination page="entries" baseUrl="/jobs/scheduler"/>
-</w:page>
+                    <i:block name="actions">
+                        <t:dropdownItem
+                                url="@apply('/ps?reference=%s&reference-label=%s', entry.getUniqueName(), urlEncode(entry.toString()))"
+                                icon="fa fa-list"
+                                labelKey="SchedulerEntry.performedExecutions"/>
+                        <t:dropdownDeleteItem
+                                url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())"/>
+                    </i:block>
+
+                    <i:if test="!'*'.equals(entry.getSchedulerData().getYear())">
+                        <t:inlineInfo labelKey="SchedulerEntry.year" value="@entry.getSchedulerData().getYear()"/>
+                    </i:if>
+
+                    <i:if test="!'*'.equals(entry.getSchedulerData().getMonth())">
+                        <t:inlineInfo labelKey="SchedulerEntry.month" value="@entry.getSchedulerData().getMonth()"/>
+                    </i:if>
+
+                    <i:if test="!'*'.equals(entry.getSchedulerData().getDayOfMonth())">
+                        <t:inlineInfo labelKey="SchedulerEntry.dayOfMonth"
+                                      value="@entry.getSchedulerData().getDayOfMonth()"/>
+                    </i:if>
+
+                    <i:if test="!'*'.equals(entry.getSchedulerData().getDayOfWeek())">
+                        <t:inlineInfo labelKey="SchedulerEntry.dayOfWeek"
+                                      value="@entry.getSchedulerData().getDayOfWeek()"/>
+                    </i:if>
+
+                    <i:if test="!'*'.equals(entry.getSchedulerData().getHourOfDay())">
+                        <t:inlineInfo labelKey="SchedulerEntry.hourOfDay"
+                                      value="@entry.getSchedulerData().getHourOfDay()"/>
+                    </i:if>
+
+                    <i:if test="!'*'.equals(entry.getSchedulerData().getMinute())">
+                        <t:inlineInfo labelKey="SchedulerEntry.minute" value="@entry.getSchedulerData().getMinute()"/>
+                    </i:if>
+
+                    <t:inlineInfo labelKey="SchedulerEntry.lastExecution"
+                                  value="@toUserString(entry.getSchedulerData().getLastExecution())"/>
+                    <t:inlineInfo labelKey="SchedulerEntry.numberOfExecutions"
+                                  value="@toUserString(entry.getSchedulerData().getNumberOfExecutions())"/>
+                    <t:inlineInfo labelKey="SchedulerEntry.runs"
+                                  value="@toUserString(entry.getSchedulerData().getRuns())"/>
+
+                    <i:block name="footer">
+                        <div>
+                            <i:if test="entry.getSchedulerData().isEnabled()">
+                                <t:dot color="green">@i18n('SchedulerData.enabled.true')</t:dot>
+                                <i:else>
+                                    <t:dot color="grey">@i18n('SchedulerData.enabled.false')</t:dot>
+                                </i:else>
+                            </i:if>
+                        </div>
+                    </i:block>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
+        <t:pagination page="entries" baseUrl="/jobs/scheduler"/>
+    </t:emptyCheck>
+
+</t:page>

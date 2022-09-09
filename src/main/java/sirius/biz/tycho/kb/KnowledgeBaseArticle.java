@@ -12,6 +12,7 @@ import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,7 +71,7 @@ public class KnowledgeBaseArticle {
             date = date.minusMonths(1);
         }
 
-        return Strings.limit(BizController.computeURISignature(getArticleId() + date.getYear() + date.getMonthValue()),
+        return Strings.limit(BizController.computeConstantSignature(getArticleId() + date.getYear() + date.getMonthValue()),
                              5);
     }
 
@@ -110,6 +111,24 @@ public class KnowledgeBaseArticle {
      */
     public Optional<KnowledgeBaseArticle> queryParent() {
         return knowledgeBase.resolve(language, entry.getParentId(), false);
+    }
+
+    /**
+     * Tries to resolve the parent structure of this article.
+     *
+     * @return a list of the roots of this article (ordered from near to far), or an empty list if the current article
+     * is already the root chapter or not placed in any chapter at all.
+     */
+    public List<KnowledgeBaseArticle> queryParents() {
+        List<KnowledgeBaseArticle> parents = new ArrayList<>();
+
+        KnowledgeBaseArticle parent = queryParent().orElse(null);
+        while (parent != null) {
+            parents.add(0, parent);
+            parent = parent.queryParent().orElse(null);
+        }
+
+        return parents;
     }
 
     public String getArticleId() {

@@ -27,6 +27,11 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
 
     @Override
     public String getIcon() {
+        return "fas fa-chart-line";
+    }
+
+    @Override
+    public String getLegacyIcon() {
         return "fa-line-chart";
     }
 

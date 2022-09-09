@@ -13,6 +13,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -65,6 +66,13 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
                                                         .withNLSKey("LookupTableParameter.invalidValue")
                                                         .set("value", input.asString())
                                                         .handle());
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(this::createLookupValue)
+                      .map(value -> Map.of("value", value.getValue(), "text", value.resolveDisplayString()));
     }
 
     @Override

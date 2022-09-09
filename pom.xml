@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>9.0.1</version>
+        <version>10.1.1</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-29.1.2</sirius.kernel>
-        <sirius.web>dev-46.8.0</sirius.web>
-        <sirius.db>dev-40.1.0</sirius.db>
+        <sirius.kernel>ga-5.0.0</sirius.kernel>
+        <sirius.web>ga-6.0.0</sirius.web>
+        <sirius.db>ga-6.0.0</sirius.db>
     </properties>
 
     <repositories>
@@ -61,33 +61,50 @@
             <artifactId>clickhouse-jdbc</artifactId>
             <version>0.2.6</version>
         </dependency>
+        <!-- Required as the version brought by clickhouse-jdbc contains security issues -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.13.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.13.3</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.ftpserver</groupId>
             <artifactId>ftpserver-core</artifactId>
-            <version>1.1.2</version>
+            <version>1.2.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-core</artifactId>
-            <version>2.8.0</version>
+            <version>2.9.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-sftp</artifactId>
-            <version>2.8.0</version>
+            <version>2.9.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-scp</artifactId>
-            <version>2.8.0</version>
+            <version>2.9.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.codelibs</groupId>
             <artifactId>jcifs</artifactId>
-            <version>2.1.28</version>
+            <version>2.1.31</version>
+        </dependency>
+        <!-- Required as the version provided by jcifs has security issues -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.70</version>
         </dependency>
 
         <dependency>
@@ -114,7 +131,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.129</version>
+            <version>1.12.272</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -129,7 +146,7 @@
         <dependency>
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>
-            <version>1.16.0</version>
+            <version>1.18.0</version>
         </dependency>
 
         <dependency>

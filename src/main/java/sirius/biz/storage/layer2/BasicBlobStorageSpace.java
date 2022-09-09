@@ -47,6 +47,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
@@ -287,7 +288,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.writePermission = config.get(CONFIG_KEY_PERMISSION_WRITE).asString();
         this.baseUrl = config.get(CONFIG_KEY_BASE_URL).getString();
         this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
-        this.description = config.get(CONFIG_KEY_DESCRIPTION).getString();
+        this.description = config.getRaw(CONFIG_KEY_DESCRIPTION).asString();
         this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
         this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
@@ -336,8 +337,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Provides the skeleton of most of the optimistic locking algorithms used by this class.
      * <p>
      * Some parts of this storage space need to fulfill some invariants (e.g. a filename is unique within a directory).
-     * However, most of the time, these won't be falsified, even in concurrent use. Therefore we use an optimistic
-     * locking approach. This is essentially a fastpath (create a data object) without any locking or other protection
+     * However, most of the time, these won't be falsified, even in concurrent use. Therefore, we use an optimistic
+     * locking approach. This is essentially a fast-path (create a data object) without any locking or other protection
      * and then check if an invariant holds. If so (which is expected) commit the change, otherwise, rollback and retry.
      *
      * @param lookup          provides the callback which performs the lookup to determine if the desired data
@@ -1185,6 +1186,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             } catch (Exception ex) {
                 Exceptions.ignore(ex);
             }
+            if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
+                throw Exceptions.createHandled()
+                                .error(e)
+                                .withSystemErrorMessage("Layer 2: Interrupted updating contents of %s in %s: %s (%s)",
+                                                        blob.getBlobKey(),
+                                                        spaceName)
+                                .handle();
+            }
 
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -1257,7 +1266,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (physicalKey != null) {
                 response.addHeader(HEADER_VARIANT_SOURCE,
                                    Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "lookup");
-                getPhysicalSpace().deliver(response, physicalKey.getFirst());
+                getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
             } else {
                 if (markAsLongRunning != null) {
                     markAsLongRunning.run();
@@ -1274,9 +1283,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     @Override
-    public void deliverPhysical(@Nullable String blobKey, @Nonnull String physicalKey, @Nonnull Response response) {
+    public void deliverPhysical(@Nullable String blobKey,
+                                @Nonnull String physicalKey,
+                                @Nonnull Response response,
+                                boolean largeFileExpected) {
         touch(blobKey);
-        getPhysicalSpace().deliver(response, physicalKey);
+        getPhysicalSpace().deliver(response, physicalKey, largeFileExpected);
     }
 
     /**
@@ -1730,7 +1742,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                          } else {
                              response.addHeader(HEADER_VARIANT_SOURCE,
                                                 Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
-                             getPhysicalSpace().deliver(response, physicalKey.getFirst());
+                             getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
                          }
                      } catch (Exception e) {
                          handleFailedConversion(blobKey, variant, e);
@@ -1804,8 +1816,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         String conversionUrl = "http://"
                                + randomHost
-                               + BlobDispatcher.URI_PREFIX
-                               + "/"
+                               + BlobDispatcher.URI_PREFIX_TRAILED
                                + BlobDispatcher.FLAG_VIRTUAL
                                + "/"
                                + spaceName

@@ -23,6 +23,7 @@ import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.annotations.Unique;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
@@ -76,6 +77,7 @@ import java.util.Optional;
 @Index(name = "blob_delete_old_temporary_loop",
         columns = {"spaceName", "deleted", "lastModified", "temporary"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@TranslationSource(Blob.class)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Part
@@ -293,7 +295,10 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Override
     public void deliver(Response response) {
-        getStorageSpace().deliver(getBlobKey(), URLBuilder.VARIANT_RAW, response, null);
+        getStorageSpace().deliverPhysical(getBlobKey(),
+                                          getPhysicalObjectKey(),
+                                          response,
+                                          URLBuilder.isConsideredLarge(this));
     }
 
     @Override

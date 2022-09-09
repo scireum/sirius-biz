@@ -393,10 +393,12 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     /**
      * Makes the current user belong to the given tenant.
      * <p>
-     * The user is will keep the permissions tied to its user,
-     * but the permissions granted by his tenant will change to the new tenant.
-     * Exception to this is {@link Tenant#PERMISSION_SYSTEM_TENANT}, this will be kept if the user originally belonged to the system tenant.
-     * Additionally, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the tenant switch.
+     * The user will keep the permissions tied to its user, but the permissions granted by his tenant will change to
+     * the new tenant.
+     * <p>
+     * The exception to this is {@link Tenant#PERMISSION_SYSTEM_TENANT}, this will be kept if the user originally
+     * belonged to the system tenant. Additionally, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is
+     * given, so the system can identify the tenant switch.
      *
      * @param webContext the current request
      * @param tenantId   the id of the tenant to switch to
@@ -458,17 +460,25 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     @Routed("/tenants/autocomplete")
     public void tenantsAutocomplete(final WebContext webContext) {
         AutocompleteHelper.handle(webContext, (query, result) -> {
-            Page<T> tenants = getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage();
-
-            tenants.getItems().forEach(tenant -> {
-                String description = Formatter.create("[${zip}][ ${city}]")
-                                              .set("zip", tenant.getTenantData().getAddress().getZip())
-                                              .set("city", tenant.getTenantData().getAddress().getCity())
-                                              .format();
-                result.accept(AutocompleteHelper.suggest(tenant.getIdAsString())
-                                                .withFieldLabel(tenant.toString())
-                                                .withCompletionDescription(description));
-            });
+            if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SELECT_TENANT)) {
+                List<T> tenants =
+                        getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage().getItems();
+                tenants.stream().limit(AutocompleteHelper.DEFAULT_LIMIT).forEach(tenant -> {
+                    result.accept(toSuggestion(tenant));
+                });
+            } else {
+                result.accept(toSuggestion(determineCurrentTenant(webContext)));
+            }
         });
+    }
+
+    private AutocompleteHelper.Completion toSuggestion(T tenant) {
+        String description = Formatter.create("[${zip}][ ${city}]")
+                                      .set("zip", tenant.getTenantData().getAddress().getZip())
+                                      .set("city", tenant.getTenantData().getAddress().getCity())
+                                      .smartFormat();
+        return AutocompleteHelper.suggest(tenant.getIdAsString())
+                                 .withFieldLabel(tenant.toString())
+                                 .withCompletionDescription(description);
     }
 }

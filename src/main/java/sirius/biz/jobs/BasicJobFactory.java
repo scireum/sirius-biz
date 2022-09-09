@@ -8,6 +8,8 @@
 
 package sirius.biz.jobs;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
@@ -32,10 +34,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -204,7 +209,7 @@ public abstract class BasicJobFactory implements JobFactory {
         setupTaskContext();
 
         AtomicBoolean submit = new AtomicBoolean(request.isSafePOST() && !request.get(PARAM_UPDATE_ONLY).asBoolean());
-        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), error -> {
+        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), (param, error) -> {
             UserContext.message(Message.error(error));
             submit.set(false);
         });
@@ -231,7 +236,7 @@ public abstract class BasicJobFactory implements JobFactory {
     public String startInBackground(Function<String, Value> parameterProvider) {
         checkPermissions();
         setupTaskContext();
-        Map<String, String> context = buildAndVerifyContext(parameterProvider, true, error -> {
+        Map<String, String> context = buildAndVerifyContext(parameterProvider, true, (param, error) -> {
             throw error;
         });
 
@@ -262,7 +267,7 @@ public abstract class BasicJobFactory implements JobFactory {
 
     /**
      * Enforces the permissions specified by this job.
-     *
+     * <p>
      * You cannot override this method, because it should behave consistently with {@link #getRequiredPermissions()}.
      * Please add all required permissions there.
      */
@@ -274,14 +279,15 @@ public abstract class BasicJobFactory implements JobFactory {
     @Override
     public Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
                                                      boolean enforceRequiredParameters,
-                                                     Consumer<HandledException> errorConsumer) {
+                                                     BiConsumer<Parameter<?>, HandledException> errorConsumer) {
         Map<String, String> context = new HashMap<>();
         for (Parameter<?> parameter : getParameters()) {
             try {
                 Value contextValue = parameterProvider.apply(parameter.getName());
                 String value = parameter.checkAndTransform(contextValue);
                 if (enforceRequiredParameters && Strings.isEmpty(value) && parameter.isRequired()) {
-                    errorConsumer.accept(Exceptions.createHandled()
+                    errorConsumer.accept(parameter,
+                                         Exceptions.createHandled()
                                                    .withNLSKey("Parameter.required")
                                                    .set("name", parameter.getLabel())
                                                    .handle());
@@ -290,10 +296,53 @@ public abstract class BasicJobFactory implements JobFactory {
                     context.put(parameter.getName(), value);
                 }
             } catch (HandledException e) {
-                errorConsumer.accept(e);
+                errorConsumer.accept(parameter, e);
             }
         }
 
         return context;
+    }
+
+    @Override
+    public JSON computeRequiredParameterUpdates(WebContext webContext) {
+        Map<String, Exception> errorByParameter = new HashMap<>();
+        Map<String, String> parameterContext = buildAndVerifyContext(webContext::get, false, (parameter, exception) -> {
+            errorByParameter.put(parameter.getName(), exception);
+        });
+        return computeRequiredParameterUpdates(parameterContext, errorByParameter);
+    }
+
+    @Override
+    public JSON computeRequiredParameterUpdates(Map<String, String> parameterContext) {
+        return computeRequiredParameterUpdates(parameterContext, Collections.emptyMap());
+    }
+
+    private JSON computeRequiredParameterUpdates(Map<String, String> parameterContext,
+                                                 Map<String, Exception> errorByParameter) {
+        JSONObject json = new JSONObject();
+        getParameters().forEach(parameter -> {
+            JSONObject update = new JSONObject();
+            update.put("visible", parameter.isVisible(parameterContext));
+            update.put("clear", parameter.needsClear(parameterContext));
+            parameter.updateValue(parameterContext).ifPresent(val -> update.put("updatedValue", val));
+            Optional<Message> validation = parameter.validate(parameterContext);
+            if (errorByParameter.containsKey(parameter.getName())) {
+                validation = Optional.of(Message.error()
+                                                .withTextMessage(errorByParameter.get(parameter.getName())
+                                                                                 .getLocalizedMessage()));
+            }
+            validation.ifPresent(message -> {
+                // pretty hacky to split css classes, but it works, and unless we change the Message type there is no
+                // good way around it. The intention is, to reduce "alert-danger" to "danger", so we can use it in the
+                // frontend in a more flexible way.
+                String bootstrapStyle = message.getType().getCssClass().split("-")[1];
+                update.put("validation",
+                           new JSONObject().fluentPut("type", message.getType().name())
+                                           .fluentPut("style", bootstrapStyle)
+                                           .fluentPut("html", message.getHtml()));
+            });
+            json.put(parameter.getName(), update);
+        });
+        return json;
     }
 }

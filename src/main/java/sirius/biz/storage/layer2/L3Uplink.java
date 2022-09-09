@@ -10,6 +10,7 @@ package sirius.biz.storage.layer2;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer3.ChildPageProvider;
 import sirius.biz.storage.layer3.ChildProvider;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
@@ -17,12 +18,16 @@ import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.web.BasePageHelper;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.web.controller.Page;
 import sirius.web.http.Response;
+import sirius.web.http.WebContext;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 
@@ -31,6 +36,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -49,6 +56,16 @@ public class L3Uplink implements VFSRoot {
 
     @Part
     private VirtualFileSystem vfs;
+
+    /**
+     * As the child provider is stateless, we can use a shared instance.
+     */
+    protected final DirectoryChildProvider directoryChildProvider = new DirectoryChildProvider();
+
+    /**
+     * As the child page provider is also stateless, we can use a shared instance as well.
+     */
+    protected final DirectoryChildPageProvider directoryChildPageProvider = new DirectoryChildPageProvider();
 
     /**
      * Represents a non-existent file or directory which might be created by
@@ -105,11 +122,6 @@ public class L3Uplink implements VFSRoot {
             return getParentAsExistingDirectory().findOrCreateChildBlob(name);
         }
     }
-
-    /**
-     * As the child provider is stateless, we can use a shared instance.
-     */
-    protected final DirectoryChildProvider directoryChildProvider = new DirectoryChildProvider();
 
     /**
      * Responsible for resolving children of a {@link Directory} and transforming them into
@@ -220,6 +232,68 @@ public class L3Uplink implements VFSRoot {
         }
     }
 
+    class DirectoryChildPageProvider implements ChildPageProvider {
+
+        @Override
+        public Page<VirtualFile> queryPage(VirtualFile parent, WebContext webContext) {
+            Directory directory = parent.as(Directory.class);
+
+            Page<VirtualFile> result = new Page<>();
+            result.withStart(1).bindToRequest(webContext);
+
+            Limit limit = new Limit(result.getStart() - 1, result.getPageSize() + 1);
+            List<VirtualFile> children = new ArrayList<>();
+
+            BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper = directory.queryChildBlobsAsPage(webContext);
+            if (!blobPageHelper.hasFacetFilters()) {
+                // We only query for directories if there are no filters (facets) are active,
+                // as we know that we cannot satisfy them anyway...
+                queryChildDirectories(parent, directory, result, limit, children);
+            }
+
+            queryChildBlobs(parent, result, limit, children, blobPageHelper);
+
+            // We always query for a bit too many result so that we know that there is "more" to page to...
+            while (children.size() > result.getPageSize()) {
+                result.withHasMore(true);
+                children.remove(children.size() - 1);
+            }
+
+            result.withItems(children);
+
+            return result;
+        }
+
+        private void queryChildDirectories(VirtualFile parent,
+                                           Directory directory,
+                                           Page<VirtualFile> result,
+                                           Limit limit,
+                                           List<VirtualFile> children) {
+            directory.listChildDirectories(result.getQuery(), limit.getTotalItems(), child -> {
+                if (limit.nextRow()) {
+                    children.add(wrapDirectory(parent, child, false));
+                }
+
+                return limit.shouldContinue();
+            });
+        }
+
+        private void queryChildBlobs(VirtualFile parent,
+                                     Page<VirtualFile> result,
+                                     Limit limit,
+                                     List<VirtualFile> children,
+                                     BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper) {
+            Page<? extends Blob> blobPage =
+                    blobPageHelper.withStart(limit.getItemsToSkip()).withPageSize(limit.getMaxItems()).asPage();
+            blobPage.getItems()
+                    .stream()
+                    .filter(blob -> Strings.isFilled(blob.getFilename()))
+                    .map(blob -> wrapBlob(parent, blob, false))
+                    .forEach(children::add);
+            blobPage.getFacets().forEach(result::addFacet);
+        }
+    }
+
     /**
      * Wraps the given directory into a {@link MutableVirtualFile}.
      *
@@ -234,6 +308,8 @@ public class L3Uplink implements VFSRoot {
         MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, directory.getName());
         file.attach(Directory.class, directory);
         file.attach(BlobStorageSpace.class, directory.getStorageSpace());
+        file.attach(ChildPageProvider.class, directoryChildPageProvider);
+
         attachHandlers(file, forceReadonly);
 
         return file;

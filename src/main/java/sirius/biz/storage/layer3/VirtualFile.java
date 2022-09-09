@@ -43,6 +43,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.CookieManager;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
@@ -198,7 +199,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Returns the relative path to the given root parent.
      * <p>
-     * If this would be <tt>/foo/bar/baz</tt> and the given root parent is <tt>/foo</tt> then this would
+     * If this be <tt>/foo/bar/baz</tt> and the given root parent is <tt>/foo</tt> then this would
      * return <tt>bar/baz</tt>. Therefore, this is the inverse of {@link #resolve(String)}.
      *
      * @param rootParent one of the parent directories of <tt>this</tt>
@@ -573,8 +574,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * Tries to resolve the relative path within this directory.
      *
      * @param relativePath the path to resolve
-     * @return the relative path wrapped as optional or an  empty optional if the given relative path cannot be
-     * resolved into a file.
+     * @return the relative path wrapped as a VirtualFile
+     * @throws IllegalArgumentException when the given path is empty after sanitization
      */
     @Nonnull
     public VirtualFile resolve(String relativePath) {
@@ -1221,7 +1222,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return;
             }
 
-            tunnelHandler.accept(this, webContext.respondWith().download(name()).notCached());
+            tunnelHandler.accept(this, webContext.respondWith().named(name()).notCached());
         } catch (Exception e) {
             webContext.respondWith()
                       .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, handleErrorInCallback(e, "tunnelHandler"));
@@ -1240,7 +1241,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return;
             }
 
-            tunnelHandler.accept(this, webContext.respondWith().named(name()).notCached());
+            tunnelHandler.accept(this, webContext.respondWith().download(name()).notCached());
         } catch (Exception e) {
             webContext.respondWith()
                       .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, handleErrorInCallback(e, "tunnelHandler"));
@@ -1297,6 +1298,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
             Outcall outcall = new Outcall(url);
             outcall.alwaysFollowRedirects();
+
+            CookieManager cookieManager = new CookieManager();
+            outcall.modifyClient().cookieHandler(cookieManager);
+
             if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
                 outcall.setIfModifiedSince(lastModifiedDate());
             }
@@ -1468,6 +1473,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             headRequest.markAsHeadRequest();
             headRequest.alwaysFollowRedirects();
             headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
+
+            CookieManager cookieManager = new CookieManager();
+            headRequest.modifyClient().cookieHandler(cookieManager);
 
             String path = headRequest.parseFileNameFromContentDisposition()
                                      .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))

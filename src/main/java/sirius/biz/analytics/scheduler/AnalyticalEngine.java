@@ -13,6 +13,7 @@ import sirius.biz.analytics.flags.ExecutionFlags;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
@@ -56,6 +57,8 @@ public class AnalyticalEngine implements EveryDay {
     /**
      * Contains the log used by the analytical scheduler and all its related classes.
      */
+    @SuppressWarnings("java:S1192")
+    @Explain("These constants are semantically different.")
     public static final Log LOG = Log.get("analytics");
 
     /**

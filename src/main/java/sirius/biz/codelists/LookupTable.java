@@ -34,11 +34,11 @@ import java.util.stream.Stream;
  * provided by Jupiter. Based on the system config, a lookup table can be represented by either of those.
  * <p>
  * A lookup table has a normalized code field, which is used e.g. in a database entity to represent a value. Using
- * {@link #normalize(String)} one can transform aliased codes (e.g. a three letter ISO language code) into the main
- * code (e.g. a two letter ISO code). This can also be used to verify that a code is valid.
+ * {@link #normalize(String)} one can transform aliased codes (e.g. a three-letter ISO language code) into the main
+ * code (e.g. a two-letter ISO code). This can also be used to verify that a code is valid.
  * <p>
  * Next to the code there is always a name field which is used to provide a textual representation of the field. This
- * can be automatically translated to the users language.
+ * can be automatically translated to the users' language.
  * <p>
  * Using {@link #fetchField(String, String)}, {@link #fetchTranslatedField(String, String)} or even
  * {@link #fetchObject(Class, String)} additional values can be resolved (esp. when using Jupiter).
@@ -260,7 +260,7 @@ public abstract class LookupTable {
     }
 
     private Value pullFirstValue(Value possibleCollection) {
-        if ((possibleCollection instanceof Collection values) && (!values.isEmpty())) {
+        if ((possibleCollection instanceof Collection<?> values) && (!values.isEmpty())) {
             return Value.of(values.iterator().next());
         } else {
             return possibleCollection;
@@ -371,9 +371,9 @@ public abstract class LookupTable {
     /**
      * Normalizes the given code into the main code used by this table.
      * <p>
-     * Lookup tables will most often provide multiple codes for the same entry (e.g. two letter and three letter ISO
+     * Lookup tables will most often provide multiple codes for the same entry (e.g. two letter and three-letter ISO
      * codes for countries). This method checks all code and alias fields and resolves the given code into the leading
-     * code used by this table so it can be used in the other methods provided.
+     * code used by this table, so it can be used in the other methods provided.
      * <p>
      * Note that this method can also be used to verify if a code is valid at all.
      *
@@ -447,9 +447,9 @@ public abstract class LookupTable {
      * {@link #normalize(String)} is attempted.
      * <p>
      * If a value for the standard <tt>acme 1.0</tt> is given, this would be invoked with <tt>acme-10</tt> as
-     * primary mapping and <tt>acme</tt> as secondary. Therefore if a mapping is present for the specific version,
+     * primary mapping and <tt>acme</tt> as secondary. Therefore, if a mapping is present for the specific version,
      * this will be used. Otherwise, if a general value is present for <tt>acme</tt> this will be the result.
-     * Finally if all this fails, a common {@link #normalize(String)} is attempted for the given code.
+     * Finally, if all this fails, a common {@link #normalize(String)} is attempted for the given code.
      *
      * @param code             the code to normalize / resolve
      * @param primaryMapping   the more specific mapping used when resolving the code
@@ -589,7 +589,7 @@ public abstract class LookupTable {
      * <p>
      * This table can be built / parsed using {@link #parseTranslationTable(JSONObject, String)}.
      *
-     * @param table he table used to lookup the value
+     * @param table the table used to look up the value
      * @param lang  the language to translate to or <tt>null</tt> to use the current language
      * @return the translation for the given language, or a fallback value, or an empty optional if no translation is
      * present
@@ -730,28 +730,6 @@ public abstract class LookupTable {
     protected abstract Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang);
 
     /**
-     * Determines if this list is short enough to properly support {@link #scan()} or {@link #scan(String)}.
-     *
-     * @return <tt>true</tt> if scanning (listing all entries) is supported, <tt>false</tt> otherwise
-     * @deprecated Unused as we now apply a limit to each scan call
-     */
-    @Deprecated(forRemoval = true)
-    public boolean canScan() {
-        return false;
-    }
-
-    /**
-     * Enumerates all entries in the table using the current language.
-     *
-     * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
-     * @deprecated Use {@link #scan(Limit)} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public Stream<LookupTableEntry> scan() {
-        return scan(NLS.getCurrentLang());
-    }
-
-    /**
      * Enumerates all entries in the table using the current language.
      *
      * @param limit the limit to apply to fetch a sane number of entries
@@ -759,18 +737,6 @@ public abstract class LookupTable {
      */
     public Stream<LookupTableEntry> scan(Limit limit) {
         return scan(NLS.getCurrentLang(), limit);
-    }
-
-    /**
-     * Enumerates all entries in the table using the given language.
-     *
-     * @param lang the language to translate the name and description to
-     * @return a stream of all entries in this table, or an empty stream if scanning isn't supported
-     * @deprecated Use {@link #scan(String, Limit)} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public Stream<LookupTableEntry> scan(String lang) {
-        return scan(lang, Limit.UNLIMITED);
     }
 
     /**
@@ -841,18 +807,16 @@ public abstract class LookupTable {
     protected abstract Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue);
 
     public String getTitle() {
-        return extension.get("title")
-                        .translate()
-                        .asOptionalString()
-                        .or(() -> NLS.getIfExists("LookupTable." + extension.getId(), null))
-                        .orElse(extension.getId());
+        return Optional.of(extension.getTranslatedString("title"))
+                       .filter(Strings::isFilled)
+                       .or(() -> NLS.getIfExists("LookupTable." + extension.getId(), null))
+                       .orElse(extension.getId());
     }
 
     public String getDescription() {
-        return extension.get("description")
-                        .translate()
-                        .asOptionalString()
-                        .or(() -> NLS.getIfExists("LookupTable." + extension.getId() + ".description", null))
-                        .orElse("");
+        return Optional.of(extension.getTranslatedString("description"))
+                       .filter(Strings::isFilled)
+                       .or(() -> NLS.getIfExists("LookupTable." + extension.getId() + ".description", null))
+                       .orElse("");
     }
 }

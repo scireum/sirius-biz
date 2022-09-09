@@ -75,7 +75,7 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
         setupTaskContext();
 
         AtomicBoolean submit = new AtomicBoolean(request.isSafePOST());
-        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), error -> {
+        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), (param, error) -> {
             UserContext.message(Message.error(error));
             submit.set(false);
         });

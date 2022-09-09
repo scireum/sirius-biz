@@ -63,6 +63,12 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
     }
 
     @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value", value, "text", NLS.smartGet(entries.get(value))));
+    }
+
+    @Override
     protected Optional<String> resolveFromString(@Nonnull Value input) {
         return input.asOptionalString();
     }

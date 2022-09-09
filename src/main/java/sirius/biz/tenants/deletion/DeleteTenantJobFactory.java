@@ -122,7 +122,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-trash";
+        return "fa fa-trash";
     }
 
     @Override

@@ -1,6 +1,6 @@
 <i:arg type="Page" name="jobs"/>
 
-<w:page titleKey="JobFactory.plural">
+<t:page titleKey="JobFactory.plural">
     <i:block name="head">
         <style>
             h4 span {
@@ -9,6 +9,10 @@
 
             div.job {
                 padding-top: 8px;
+            }
+
+            .job-card-columns {
+                column-count: 2;
             }
         </style>
     </i:block>
@@ -19,49 +23,48 @@
         </li>
     </i:block>
 
-    <w:pageHeader>
-        <div class="row">
-            <div class="col-md-8">
-                @i18n("JobFactory.plural")
-            </div>
-            <div class="col-md-4 align-right">
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@i18n("JobFactory.plural")</i:block>
+            <i:block name="actions">
                 <i:if test="isFrameworkEnabled('biz.scheduler-jdbc') || isFrameworkEnabled('biz.scheduler-mongo')">
-                    <w:permission permission="permission-manage-scheduler">
-                        <a class="btn btn-default" href="/jobs/scheduler">@i18n("SchedulerEntry.plural")</a>
-                    </w:permission>
+                    <t:permission permission="permission-manage-scheduler">
+                        <a class="btn btn-outline-secondary" href="/jobs/scheduler">
+                            <span><i class="fa fa-book" aria-hidden="true"></i></span>
+                            @i18n("SchedulerEntry.plural")
+                        </a>
+                    </t:permission>
                 </i:if>
-            </div>
-        </div>
-    </w:pageHeader>
+            </i:block>
+        </t:pageHeader>
+    </i:block>
 
-    <w:tableSearchHeader page="jobs" baseUrl="/jobs"/>
+    <t:searchHeader page="jobs" baseUrl="/jobs"/>
 
-    <i:for type="List" var="blocks" items="blockwise(jobs.getItems(), 2)">
-        <div class="row">
-            <i:for type="Tuple" var="categoryAndJobs" items="blocks">
-                <div class="col-md-6 col-xs-12">
-                    <div class="well">
-                        <i:local name="category"
-                                 value="categoryAndJobs.getFirst().as(sirius.biz.jobs.JobCategory.class)"/>
-                        <h4>
-                            <i class="fa @category.getIcon()"></i>
-                            <span>@category.getLabel()</span>
-                        </h4>
-
-                        <i:for type="sirius.biz.jobs.JobFactory"
-                               var="job"
-                               items="categoryAndJobs.getSecond().as(java.util.Collection.class)">
-                            <div class="job">
-                                <a class="link" href="/job/@job.getName()">
-                                    <i class="fa @job.getIcon()"></i>
-                                    @job.getLabel()
-                                </a><br>
-                                <small class="muted">@job.getDescription()</small>
-                            </div>
-                        </i:for>
-                    </div>
+    <div class="card-columns job-card-columns">
+        <i:for type="Tuple" var="categoryAndJobs" items="jobs.getItems()">
+            <div class="card card-border">
+                <i:local name="category"
+                         value="categoryAndJobs.getFirst().as(sirius.biz.jobs.JobCategory.class)"/>
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="@category.getIcon()"></i>
+                        <span>@category.getLabel()</span>
+                    </h5>
                 </div>
-            </i:for>
-        </div>
-    </i:for>
-</w:page>
+
+                <i:for type="sirius.biz.jobs.JobFactory"
+                       var="job"
+                       items="categoryAndJobs.getSecond().as(java.util.Collection.class)">
+                    <div class="card-body job">
+                        <a class="link" href="/job/@job.getName()">
+                            <i class="@job.getIcon()"></i>
+                            @job.getLabel()
+                        </a><br>
+                        <small class="muted">@job.getDescription()</small>
+                    </div>
+                </i:for>
+            </div>
+        </i:for>
+    </div>
+</t:page>

@@ -16,6 +16,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -48,6 +49,12 @@ public class UserAccountParameter extends ParameterBuilder<UserAccount<?, ?>, Us
     @Override
     protected String checkAndTransformValue(Value input) {
         return resolveFromString(input).map(UserAccount::getIdAsString).orElse(null);
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value", value.getIdAsString(), "text", value.toString()));
     }
 
     @Override

@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists;
 
+import sirius.biz.protocol.Traced;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.Mapping;
@@ -20,7 +21,7 @@ import sirius.kernel.commons.Explain;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
-public interface CodeList extends TenantAware {
+public interface CodeList extends TenantAware, Traced {
 
     /**
      * Contains the effective fields which are mapped by the appropriate mapper depending on the actual entity type.

@@ -96,6 +96,15 @@ public class LookupValuesProperty extends StringListProperty {
     }
 
     @Override
+    public String getValueForUserMessage(Object entity) {
+        LookupValues lookupValues = getLookupValues(entity);
+        return lookupValues.data()
+                           .stream()
+                           .map(value -> lookupValues.getTable().resolveName(value).orElse(value))
+                           .collect(Collectors.joining(", "));
+    }
+
+    @Override
     public void onBeforeSaveChecks(Object entity) {
         if (((BaseEntity<?>) entity).isChanged(Mapping.named(getName()))) {
             LookupValues lookupValues = getLookupValues(entity);

@@ -48,7 +48,7 @@ public class ChartProcessOutputType implements ProcessOutputType {
 
     @Override
     public String getIcon() {
-        return "fa fa-chart-line";
+        return "fas fa-chart-line";
     }
 
     /**

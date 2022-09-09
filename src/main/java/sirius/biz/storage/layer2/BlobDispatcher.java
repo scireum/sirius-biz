@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
  * healthy to cache.
  * <p>
  * Note that this dispatcher itself doesn't do more than decoding and verifying the URL. All the heavy lifting is
- * either done by {@link sirius.biz.storage.layer1.ObjectStorageSpace#deliver(Response, String)} for physical URLs
+ * either done by {@link sirius.biz.storage.layer1.ObjectStorageSpace#deliver(Response, String, boolean)} for physical URLs
  * or {@link BlobStorageSpace#deliver(String, String, Response, Runnable)} for virtual URLs.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
@@ -54,14 +54,19 @@ public class BlobDispatcher implements WebDispatcher {
     public static final String URI_PREFIX = "/dasd";
 
     /**
-     * Contains the prefix length ("/dasd" + "/") to cut from an incoming URI
+     * Contains the {@link #URI_PREFIX} with a trailing slash.
      */
-    private static final int URI_PREFIX_LENGTH = URI_PREFIX.length() + 1;
+    protected static final String URI_PREFIX_TRAILED = URI_PREFIX + "/";
+
+    /**
+     * Contains the prefix length ("/dasd/") to cut from an incoming URI
+     */
+    private static final int URI_PREFIX_LENGTH = URI_PREFIX_TRAILED.length();
 
     /**
      * Contains a marker which can be placed in a URI to signal that the underlying file might be very large.
      * <p>
-     * The dispatcher itself simply ignores this marker, but upstream reverse-proxies like NGNIX or Varnish
+     * The dispatcher itself simply ignores this marker, but upstream reverse-proxies like NGINX or Varnish
      * can use this to optimize their cache utilization (e.g. by fully ignoring or piping this request/response).
      */
     public static final String LARGE_FILE_MARKER = "xxl/";
@@ -157,7 +162,7 @@ public class BlobDispatcher implements WebDispatcher {
     @Override
     public DispatchDecision dispatch(WebContext request) throws Exception {
         String uri = request.getRequestedURI();
-        if (!uri.startsWith(URI_PREFIX)) {
+        if (!uri.startsWith(URI_PREFIX_TRAILED)) {
             return DispatchDecision.CONTINUE;
         }
 
@@ -165,38 +170,42 @@ public class BlobDispatcher implements WebDispatcher {
         uri = uri.substring(URI_PREFIX_LENGTH);
 
         // Cut off "xxl/" if present...
+        boolean largeFileExpected = false;
         if (uri.startsWith(LARGE_FILE_MARKER)) {
             uri = uri.substring(LARGE_FILE_MARKER_LENGTH);
+            largeFileExpected = true;
         }
 
         installCompletionHook(uri, request);
 
         Values uriParts = Values.of(uri.split("/"));
         String type = uriParts.at(0).asString();
-        if (Strings.areEqual(type, PHYSICAL_DELIVERY)) {
+        if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 5) {
             String filename = stripAdditionalText(uriParts.at(4).asString());
             physicalDelivery(request,
                              uriParts.at(1).asString(),
                              uriParts.at(2).asString(),
                              uriParts.at(4).asString(),
                              Files.getFilenameWithoutExtension(filename),
+                             largeFileExpected,
                              filename);
 
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, PHYSICAL_DOWNLOAD)) {
+        if (Strings.areEqual(type, PHYSICAL_DOWNLOAD) && uriParts.length() == 6) {
             physicalDownload(request,
                              uriParts.at(1).asString(),
                              uriParts.at(2).asString(),
                              uriParts.at(3).asString(),
                              uriParts.at(4).asString(),
+                             largeFileExpected,
                              stripAdditionalText(uriParts.at(5).asString()));
 
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, VIRTUAL_DELIVERY)) {
+        if (Strings.areEqual(type, VIRTUAL_DELIVERY) && uriParts.length() == 5) {
             String filename = stripAdditionalText(uriParts.at(4).asString());
             virtualDelivery(request,
                             uriParts.at(1).asString(),
@@ -209,7 +218,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, VIRTUAL_DOWNLOAD)) {
+        if (Strings.areEqual(type, VIRTUAL_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
                             uriParts.at(1).asString(),
                             uriParts.at(2).asString(),
@@ -221,7 +230,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DELIVERY)) {
+        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DELIVERY) && uriParts.length() == 5) {
             String filename = stripAdditionalText(uriParts.at(4).asString());
             virtualDelivery(request,
                             uriParts.at(1).asString(),
@@ -234,7 +243,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
-        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DOWNLOAD)) {
+        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
                             uriParts.at(1).asString(),
                             uriParts.at(2).asString(),
@@ -287,7 +296,7 @@ public class BlobDispatcher implements WebDispatcher {
      * Such an "enhanced" filename is generated when {@link URLBuilder#withAddonText(String)} was used.
      *
      * @param input the full filename with an optional SEO text as prefix
-     * @return the filename with the additionak text stripped of
+     * @return the filename with the additional text stripped of
      */
     private String stripAdditionalText(String input) {
         Tuple<String, String> additionalTextAndKey = Strings.splitAtLast(input, "--");
@@ -301,18 +310,20 @@ public class BlobDispatcher implements WebDispatcher {
     /**
      * Prepares a {@link Response} and delegates the call to the layer 1.
      *
-     * @param request     the request to handle
-     * @param space       the space which is accessed
-     * @param accessToken the security token to verify
-     * @param blobKey     the blob key to be delivered
-     * @param physicalKey the physical object key used to determine which object should be delivered
-     * @param filename    the filename which is used to set up a proper <tt>Content-Type</tt>
+     * @param request           the request to handle
+     * @param space             the space which is accessed
+     * @param accessToken       the security token to verify
+     * @param blobKey           the blob key to be delivered
+     * @param physicalKey       the physical object key used to determine which object should be delivered
+     * @param largeFileExpected signals that a very large file is expected
+     * @param filename          the filename which is used to set up a proper <tt>Content-Type</tt>
      */
     private void physicalDelivery(WebContext request,
                                   String space,
                                   String accessToken,
                                   String blobKey,
                                   String physicalKey,
+                                  boolean largeFileExpected,
                                   String filename) {
         if (!utils.verifyHash(physicalKey, accessToken)) {
             request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
@@ -320,24 +331,26 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         Response response = request.respondWith().infinitelyCached().named(filename);
-        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response);
+        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
     }
 
     /**
      * Prepares a {@link Response} as download and delegates the call to the layer 1.
      *
-     * @param request     the request to handle
-     * @param space       the space which is accessed
-     * @param accessToken the security token to verify
-     * @param blobKey     the blob key of the blob to download
-     * @param physicalKey the physical object key used to determine which object should be delivered
-     * @param filename    the filename which is used to set up a proper <tt>Content-Type</tt>
+     * @param request           the request to handle
+     * @param space             the space which is accessed
+     * @param accessToken       the security token to verify
+     * @param blobKey           the blob key of the blob to download
+     * @param physicalKey       the physical object key used to determine which object should be delivered
+     * @param largeFileExpected signals that a very large file is expected
+     * @param filename          the filename which is used to set up a proper <tt>Content-Type</tt>
      */
     private void physicalDownload(WebContext request,
                                   String space,
                                   String accessToken,
                                   String blobKey,
                                   String physicalKey,
+                                  boolean largeFileExpected,
                                   String filename) {
         if (!utils.verifyHash(physicalKey, accessToken)) {
             request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
@@ -345,7 +358,7 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         Response response = request.respondWith().infinitelyCached().download(filename);
-        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response);
+        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
     }
 
     /**

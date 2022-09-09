@@ -1,0 +1,30 @@
+<i:local name="updates" value="part(sirius.biz.tycho.updates.UpdateManager.class).fetchUpdates()" />
+<i:if test="!updates.isEmpty()">
+    <div class="card mb-4 flex-grow-1">
+        <div class="card-body">
+            <h5 class="card-title">
+                @i18n("DashboardController.news")
+            </h5>
+
+            <i:for type="sirius.biz.tycho.updates.UpdateInfo" var="info" items="updates">
+                <div class="mt-4 position-relative">
+                    <div class="mb-1 text-muted small">@toUserString(info.getCreated().toLocalDate())</div>
+                    <div class="mb-1">
+                        <b>@info.getLabel()</b>
+                    </div>
+                    <div><i:raw>@info.getDescription()</i:raw></div>
+                    <i:local name="linkId" value="@apply('update-link-%s', generateId())" />
+                    <div><a id="@linkId" class="small stretched-link" href="@info.getLink()" target="_blank">@i18n("DashboardController.more")</a></div>
+                    <script type="text/javascript">
+                        sirius.ready(function () {
+                            document.querySelector('#@linkId').addEventListener('click', function() {
+                                sirius.postJSON('/tycho/updates/markAsSeen',
+                                    {updateId: '@info.getGuid()'});
+                            });
+                        });
+                    </script>
+                </div>
+            </i:for>
+        </div>
+    </div>
+</i:if>

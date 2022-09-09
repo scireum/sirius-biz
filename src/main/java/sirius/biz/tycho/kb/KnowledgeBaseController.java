@@ -9,14 +9,19 @@
 package sirius.biz.tycho.kb;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.analytics.events.PageImpressionEvent;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
-import sirius.web.security.LoginRequired;
+import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 
 /**
@@ -27,6 +32,9 @@ public class KnowledgeBaseController extends BizController {
 
     @Part
     private KnowledgeBase knowledgeBase;
+
+    @Part
+    private EventRecorder eventRecorder;
 
     /**
      * Renders the entry point of the knowledge base in the current language.
@@ -69,13 +77,7 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kba/:1/:2")
     public void langArticle(WebContext webContext, String lang, String articleId) {
-        KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, false).orElse(null);
-        if (article != null) {
-            UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
-            webContext.respondWith().template(article.getTemplatePath());
-        } else {
-            webContext.respondWith().error(HttpResponseStatus.NOT_FOUND);
-        }
+        langArticle(webContext, lang, articleId, null);
     }
 
     /**
@@ -89,13 +91,53 @@ public class KnowledgeBaseController extends BizController {
     @Routed("/kba/:1/:2/:3")
     public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
         KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, true).orElse(null);
-        if (article != null && (article.getEntry().checkPermissions()
-                                || Strings.areEqual(article.computeAuthenticationSignature(true), authKey)
-                                || Strings.areEqual(article.computeAuthenticationSignature(false), authKey))) {
-            UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
-            webContext.respondWith().template(article.getTemplatePath());
-        } else {
-            webContext.respondWith().error(HttpResponseStatus.FORBIDDEN);
+        if (article == null) {
+            webContext.respondWith().error(HttpResponseStatus.NOT_FOUND);
+            return;
         }
+
+        if (!article.getEntry().checkPermissions() && !checkAuthKey(article, authKey)) {
+            if (!UserContext.getCurrentUser().isLoggedIn()) {
+                webContext.respondWith().template("/templates/biz/login.html.pasta", webContext.getRequest().uri());
+            } else {
+                throw Exceptions.createHandled().withNLSKey("KnowledgeBase.missingPermission").handle();
+            }
+            return;
+        }
+
+        UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
+        webContext.respondWith().template(article.getTemplatePath());
+        eventRecorder.record(new PageImpressionEvent().withUri("/kba/"
+                                                               + article.getLanguage()
+                                                               + "/"
+                                                               + article.getArticleId())
+                                                      .withAggregationUrl("/kba")
+                                                      .withAction(article.getArticleId())
+                                                      .withDataObject(article.getEntry().getUniqueName()));
+    }
+
+    private boolean checkAuthKey(KnowledgeBaseArticle article, String authKey) {
+        if (Strings.isEmpty(authKey)) {
+            return false;
+        }
+        return Strings.areEqual(article.computeAuthenticationSignature(true), authKey)
+               || Strings.areEqual(article.computeAuthenticationSignature(false), authKey);
+    }
+
+    /**
+     * Provides an autocompletion for KB articles.
+     *
+     * @param webContext the current request
+     */
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
+    @Routed(value = "/kb/autocomplete", priority = 99)
+    public void articlesAutocomplete(final WebContext webContext) {
+        AutocompleteHelper.handle(webContext, (query, result) -> {
+            knowledgeBase.query(null, query, AutocompleteHelper.DEFAULT_LIMIT).forEach(article -> {
+                result.accept(AutocompleteHelper.suggest(article.getEntry().getIdAsString())
+                                                .withCompletionLabel(article.getArticleId() + ": " + article.getTitle())
+                                                .withCompletionDescription(article.getDescription()));
+            });
+        });
     }
 }

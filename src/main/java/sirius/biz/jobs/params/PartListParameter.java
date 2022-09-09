@@ -15,6 +15,7 @@ import sirius.kernel.nls.NLS;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -73,6 +74,12 @@ public class PartListParameter<E> extends ParameterBuilder<E, PartListParameter<
         }
 
         return partName;
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> Map.of("value", value.getClass().getName(), "text", value.toString()));
     }
 
     @Override

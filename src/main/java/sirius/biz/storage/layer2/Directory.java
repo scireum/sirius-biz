@@ -8,7 +8,10 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.layer3.VirtualFileSystemController;
+import sirius.biz.web.BasePageHelper;
 import sirius.kernel.health.HandledException;
+import sirius.web.http.WebContext;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -81,7 +84,7 @@ public interface Directory {
     /**
      * Determines if there is a child with the given name, except for the given blob.
      *
-     * @param name the name to check
+     * @param name         the name to check
      * @param exemptedBlob the blob to ignore when searching for children
      * @return <tt>true</tt> if either a directory or a blob with the given name exists as child
      */
@@ -133,7 +136,7 @@ public interface Directory {
     /**
      * Lists all child blobs.
      *
-     * @param prefixFilter   the prefix filer to apply on the name
+     * @param prefixFilter   the prefix filter to apply on the name
      * @param fileTypes      the list of accepted file types
      * @param maxResults     the maximal number of results to return or 0 to indicate that there is no upper limit
      * @param childProcessor the processor which is used to iterate over the result
@@ -142,6 +145,19 @@ public interface Directory {
                         @Nullable Set<String> fileTypes,
                         int maxResults,
                         Predicate<? super Blob> childProcessor);
+
+    /**
+     * Executes a query for child blobs based on the filter settings given in the web context.
+     * <p>
+     * This is mainly used by the {@link L3Uplink} to implement a {@link sirius.biz.storage.layer3.ChildPageProvider}
+     * for the {@link VirtualFileSystemController} in order to customize the view within "layer 2"
+     * directories.
+     *
+     * @param webContext the context to draw parameters from
+     * @return a helper to construct a {@link sirius.web.controller.Page} which contains the query result and
+     * additional filter facets.
+     */
+    BasePageHelper<? extends Blob, ?, ?, ?> queryChildBlobsAsPage(WebContext webContext);
 
     /**
      * Deletes the directory along with all children.

@@ -8,7 +8,6 @@
 
 package sirius.biz.importer.format;
 
-import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.nls.NLS;
@@ -388,8 +387,10 @@ public class FieldDefinition {
      * @return a list of all remarks
      */
     public List<String> getRemarks() {
-        List<String> result = new ArrayList<>();
-        this.checks.stream().map(ValueCheck::generateRemark).filter(Objects::nonNull).collect(Lambdas.into(result));
+        List<String> result = this.checks.stream()
+                                         .map(ValueCheck::generateRemark)
+                                         .filter(Objects::nonNull)
+                                         .collect(Collectors.toList());
         if (!aliases.isEmpty()) {
             result.add(NLS.fmtr("FieldDefinition.aliasRemark")
                           .set("aliases", aliases.stream().map(NLS::smartGet).collect(Collectors.joining(", ")))

@@ -44,6 +44,11 @@ public class SQLPerformanceData extends PerformanceData {
     }
 
     @Override
+    public void clear() {
+        flags = 0;
+    }
+
+    @Override
     public boolean isSet(PerformanceFlag flag) {
         return (flags & (1L << flag.getBitIndex())) != 0;
     }

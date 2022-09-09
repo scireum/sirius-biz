@@ -14,20 +14,27 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.web.BasePageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Operator;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.UpdateStatement;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.jdbc.batch.UpdateQuery;
+import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import sirius.web.http.WebContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -733,14 +740,20 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
                                        .eq(SQLBlob.SPACE_NAME, spaceName)
                                        .eq(SQLBlob.PARENT, parent)
-                                       .eq(SQLBlob.DELETED, false)
-                                       .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
-                                                         .startsWith(prefixFilter)
-                                                         .ignoreEmpty()
-                                                         .build());
+                                       .eq(SQLBlob.COMMITTED, true)
+                                       .eq(SQLBlob.DELETED, false);
+
         if (fileTypes != null && !fileTypes.isEmpty()) {
             query.where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build());
         }
+        query.where(OMA.FILTERS.or(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
+                                              .startsWith(prefixFilter)
+                                              .ignoreEmpty()
+                                              .build(),
+                                   OMA.FILTERS.like(SQLBlob.FILE_EXTENSION)
+                                              .startsWith(prefixFilter)
+                                              .ignoreEmpty()
+                                              .build()));
 
         query.limit(maxResults);
 
@@ -751,6 +764,60 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
 
         query.iterate(childProcessor::test);
+    }
+
+    protected BasePageHelper<? extends Blob, ?, ?, ?> queryChildBlobsAsPage(SQLDirectory parent,
+                                                                            WebContext webContext) {
+        SmartQuery<SQLBlob> blobsQuery = oma.select(SQLBlob.class)
+                                       .eq(SQLBlob.SPACE_NAME, spaceName)
+                                       .eq(SQLBlob.PARENT, parent)
+                                       .eq(SQLBlob.COMMITTED, true)
+                                       .eq(SQLBlob.DELETED, false);
+
+        SQLPageHelper<SQLBlob> pageHelper = SQLPageHelper.withQuery(blobsQuery)
+                                                         .withContext(webContext)
+                                                         .withSearchFields(QueryField.startsWith(SQLBlob.NORMALIZED_FILENAME),
+                                                                           QueryField.startsWith(SQLBlob.FILE_EXTENSION));
+
+        pageHelper.addQueryFacet(SQLBlob.FILE_EXTENSION.getName(),
+                                 NLS.get("Blob.fileExtension"),
+                                 query -> query.copy().distinctFields(SQLBlob.FILE_EXTENSION).asSQLQuery());
+        pageHelper.addTimeFacet(SQLBlob.LAST_MODIFIED.getName(),
+                                NLS.get("Blob.lastModified"),
+                                false,
+                                DateRange.LAST_TWO_HOURS,
+                                DateRange.TODAY,
+                                DateRange.YESTERDAY,
+                                DateRange.LAST_WEEK,
+                                DateRange.LAST_MONTH,
+                                DateRange.THIS_YEAR,
+                                DateRange.LAST_YEAR);
+        if (touchTracking) {
+            pageHelper.addTimeFacet(SQLBlob.LAST_TOUCHED.getName(),
+                                    NLS.get("Blob.lastTouched"),
+                                    false,
+                                    DateRange.LAST_TWO_HOURS,
+                                    DateRange.TODAY,
+                                    DateRange.YESTERDAY,
+                                    DateRange.LAST_WEEK,
+                                    DateRange.LAST_MONTH,
+                                    DateRange.THIS_YEAR,
+                                    DateRange.LAST_YEAR);
+        }
+
+        if (sortByLastModified) {
+            pageHelper.addSortFacet(Tuple.create("$BlobStorageSpace.sortByLastModified",
+                                                 query -> query.orderDesc(SQLBlob.LAST_MODIFIED)),
+                                    Tuple.create("$BlobStorageSpace.sortByFilename",
+                                                 query -> query.orderAsc(SQLBlob.NORMALIZED_FILENAME)));
+        } else {
+            pageHelper.addSortFacet(Tuple.create("$BlobStorageSpace.sortByFilename",
+                                                 query -> query.orderAsc(SQLBlob.NORMALIZED_FILENAME)),
+                                    Tuple.create("$BlobStorageSpace.sortByLastModified",
+                                                 query -> query.orderDesc(SQLBlob.LAST_MODIFIED)));
+        }
+
+        return pageHelper;
     }
 
     protected List<? extends BlobVariant> fetchVariants(SQLBlob blob) {

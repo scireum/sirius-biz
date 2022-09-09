@@ -1,0 +1,39 @@
+<i:arg type="String"
+       name="table"
+       description="Contains the name of the table to show."/>
+<i:arg type="String"
+       name="label"
+       default="@part(sirius.biz.codelists.LookupTables.class).fetchTable(table).getTitle()"
+       description="Contains the label to use for the link. This will be the name of the lookup table by default."/>
+<i:arg type="String"
+       name="description"
+       default="@part(sirius.biz.codelists.LookupTables.class).fetchTable(table).getDescription()"
+       description="Contains a short description of the lookup table. By default, we use the description as provided by the system (if available)."/>
+<i:arg type="String"
+       name="class"
+       default=""
+       description="Contains additional classes to apply."/>
+<i:arg type="boolean"
+       name="plainLink"
+       default="false"
+       description="Defines if only a plain link should be rendered. When true, the description is discarded."/>
+
+<i:pragma name="description">
+    Renders a link to a LookupTable.
+</i:pragma>
+
+<i:if test="plainLink">
+    <a href="javascript:openLookupTable('@table', '@label')">@label</a>
+    <i:else>
+        <div class="@class">
+            <div>
+                <a href="javascript:openLookupTable('@table', '@label')">@label</a>
+            </div>
+            <i:if test="isFilled(description)">
+                <div class="text-muted">
+                    @description
+                </div>
+            </i:if>
+        </div>
+    </i:else>
+</i:if>

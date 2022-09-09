@@ -26,6 +26,7 @@ import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.annotations.Unique;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Files;
@@ -59,6 +60,7 @@ import java.util.Optional;
 @Index(name = "blob_deleted_loop", columns = "deleted")
 @Index(name = "blob_parent_changed_loop", columns = "parentChanged")
 @Index(name = "blob_delete_old_temporary_loop", columns = {"spaceName", "deleted", "lastModified", "temporary"})
+@TranslationSource(Blob.class)
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Part
@@ -286,7 +288,10 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Override
     public void deliver(Response response) {
-        getStorageSpace().deliver(getBlobKey(), URLBuilder.VARIANT_RAW, response, null);
+        getStorageSpace().deliverPhysical(getBlobKey(),
+                                          getPhysicalObjectKey(),
+                                          response,
+                                          URLBuilder.isConsideredLarge(this));
     }
 
     @Override

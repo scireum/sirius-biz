@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs;
 
+import com.alibaba.fastjson.JSON;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;
@@ -21,7 +22,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -48,6 +49,15 @@ public interface JobFactory extends Named, Priorized {
      * @return the icon of this job
      */
     String getIcon();
+
+    /**
+     * Returns the icon to used when displaying this job in wondergem templates.
+     *
+     * @return the icon of this job
+     */
+    default String getLegacyIcon() {
+        return getIcon();
+    }
 
     /**
      * Returns a short description of this job.
@@ -169,7 +179,7 @@ public interface JobFactory extends Named, Priorized {
      */
     Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
                                               boolean enforceRequiredParameters,
-                                              Consumer<HandledException> errorConsumer);
+                                              BiConsumer<Parameter<?>, HandledException> errorConsumer);
 
     /**
      * Returns the name of the {@link JobCategory} this job belongs to.
@@ -177,4 +187,20 @@ public interface JobFactory extends Named, Priorized {
      * @return the name of the job category
      */
     String getCategory();
+
+    /**
+     * Computes a JSON containing the required update operations for the JavaScript frontend.
+     *
+     * @param ctx the web context containing the values of all the parameters
+     * @return a JSON that can be handled by the JavaScript
+     */
+    JSON computeRequiredParameterUpdates(WebContext ctx);
+
+    /**
+     * Computes a JSON containing the required update operations for the JavaScript frontend.
+     *
+     * @param ctx the context containing the values of all the parameters
+     * @return a JSON that can be handled by the JavaScript
+     */
+    JSON computeRequiredParameterUpdates(Map<String, String> ctx);
 }

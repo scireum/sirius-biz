@@ -14,6 +14,7 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
+import sirius.kernel.nls.NLS;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -112,7 +113,7 @@ public abstract class ConfigBasedUplink {
      * @return the virtual root directory
      */
     protected VirtualFile makeDirectory(@Nonnull VirtualFile parent) {
-        return createDirectoryFile(parent).withDescription(description)
+        return createDirectoryFile(parent).withDescription(NLS.smartGet(description))
                                           .markAsExistingDirectory()
                                           .withChildren(innerChildProvider);
     }

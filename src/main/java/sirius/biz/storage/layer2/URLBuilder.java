@@ -172,11 +172,21 @@ public class URLBuilder {
         if (Strings.isFilled(blobKey) && blob == null) {
             space.findByBlobKey(blobKey).ifPresent(resolvedBlob -> this.blob = resolvedBlob);
         }
-        if (blob != null && blob.getSize() > largeFileLimit) {
+        if (isConsideredLarge(blob)) {
             this.largeFile = true;
         }
 
         return this;
+    }
+
+    /**
+     * Determines if the given blob is considered a {@link #largeFileLimit} large file.
+     *
+     * @param blob the blob to check
+     * @return <tt>true</tt> if the blob is considered large, <tt>false</tt> otherwise@
+     */
+    public static boolean isConsideredLarge(@Nullable Blob blob) {
+        return blob != null && blob.getSize() > largeFileLimit;
     }
 
     /**
@@ -381,8 +391,7 @@ public class URLBuilder {
             return createVirtualDeliveryUrl();
         }
 
-        result.append(BlobDispatcher.URI_PREFIX);
-        result.append("/");
+        result.append(BlobDispatcher.URI_PREFIX_TRAILED);
         if (largeFile) {
             result.append(BlobDispatcher.LARGE_FILE_MARKER);
         }
@@ -402,7 +411,8 @@ public class URLBuilder {
             result.append(physicalKey);
             result.append("/");
             appendAddonText(result);
-            result.append(Strings.urlEncode(determineEffectiveFilename()));
+            result.append(Strings.urlEncode(Files.toSaneFileName(determineEffectiveFilename())
+                                                 .orElse(physicalKey + fetchUrlEncodedFileExtension())));
         } else {
             appendAddonText(result);
             result.append(physicalKey);
@@ -416,8 +426,7 @@ public class URLBuilder {
 
     private String createVirtualDeliveryUrl() {
         StringBuilder result = createBaseURL();
-        result.append(BlobDispatcher.URI_PREFIX);
-        result.append("/");
+        result.append(BlobDispatcher.URI_PREFIX_TRAILED);
         if (largeFile) {
             result.append(BlobDispatcher.LARGE_FILE_MARKER);
         }

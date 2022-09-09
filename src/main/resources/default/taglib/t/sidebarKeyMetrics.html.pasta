@@ -1,4 +1,6 @@
 <i:arg type="java.lang.Object" name="target"/>
+<i:arg type="String" name="labelKey" default="Model.monthlyStatistics" />
+<i:arg type="String" name="label" default="@i18n(labelKey)" />
 
 <i:pragma name="description">Renders a sidebar view of some key metrics for the given target as supplied by
     "MetricDashboard".
@@ -7,7 +9,7 @@
 <i:local name="metrics"
          value="@part(sirius.biz.tycho.dashboards.MetricsDashboard.class).fetchImportantKeyMetrics(target, 5)"/>
 <i:if test="!metrics.isEmpty()">
-    <t:infobox labelKey="Model.statistics" class="mb-3">
+    <t:infobox label="@label" class="mb-3">
         <i:for type="sirius.biz.tycho.dashboards.MetricDescription"
                var="metric"
                items="metrics">
