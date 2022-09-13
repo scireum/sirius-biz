@@ -44,7 +44,6 @@
             </t:menuImageDropdownItem>
             <t:menuImageDropdownItem icon="/images/icons/server.png"
                                      activeIcon="/images/icons/server-notif.png"
-                                     smallLabel="System Einstellungen"
                                      active="part(sirius.web.health.Cluster.class).isAlarmPresent()">
                 <i:extensions target="biz-tycho-menu" point="system"/>
             </t:menuImageDropdownItem>
