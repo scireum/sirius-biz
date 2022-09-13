@@ -8,7 +8,18 @@
     </i:block>
 
     <i:block name="page-header">
-        <t:pageHeader titleKey="Process.plural"/>
+        <t:pageHeader titleKey="Process.plural">
+            <i:block name="actions">
+                <i:if test="isFrameworkEnabled('biz.jobs')">
+                    <t:permission permission="permission-execute-jobs">
+                        <a class="btn btn-link pr-2" href="/jobs">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span class="pl-1 d-none d-md-inline-block">@i18n("JobsController.jobs")</span>
+                        </a>
+                    </t:permission>
+                </i:if>
+            </i:block>
+        </t:pageHeader>
     </i:block>
 
     <t:sidebar>
