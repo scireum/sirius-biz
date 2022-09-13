@@ -124,7 +124,7 @@ public interface JobFactory extends Named, Priorized {
     /**
      * Generates a URL which can be invoked to start this job while using the given object as a parameter value.
      * <p>
-     * This is used by the <tt>w:jobs</tt> tag to display appropriate jobs next to a data object.
+     * This is used by the <tt>t:jobs</tt> tag to display appropriate jobs next to a data object.
      *
      * @param uri          the uri of the current page (which contains the <tt>t:jobs</tt> tag
      * @param targetObject the optional target object which is being shown / processed / edited by the page

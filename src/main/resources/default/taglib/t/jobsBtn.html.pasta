@@ -5,15 +5,16 @@
 <i:if test="jobs != null">
     <i:local name="jobsList" value="@jobs.getMatchingInteractiveJobs(uri, target)"/>
     <i:if test="!jobsList.isEmpty()">
-        <t:navbox labelKey="Jobs.matchingJobs">
+        <t:dropdown icon="fas fa-cogs" labelKey="Jobs.matchingJobs" labelClass="d-none d-md-inline-block">
             <i:for type="Tuple" var="linkAndJob" items="jobsList">
                 <i:local name="link" value="linkAndJob.getFirst().as(String.class)"/>
                 <i:local name="job" value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
 
-                <t:navboxLink icon="@apply('%s %s', job.getIcon(), sirius.biz.web.Action.fetchColorForLabel(job.getLabel()))"
-                              label="@job.getLabel()"
-                              url="@link"/>
+                <t:dropdownItem
+                        icon="@apply('%s %s', job.getIcon(), sirius.biz.web.Action.fetchColorForLabel(job.getLabel()))"
+                        label="@job.getLabel()"
+                        url="@link"/>
             </i:for>
-        </t:navbox>
+        </t:dropdown>
     </i:if>
 </i:if>
