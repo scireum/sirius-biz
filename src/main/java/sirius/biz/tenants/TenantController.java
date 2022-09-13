@@ -476,7 +476,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
         String description = Formatter.create("[${zip}][ ${city}]")
                                       .set("zip", tenant.getTenantData().getAddress().getZip())
                                       .set("city", tenant.getTenantData().getAddress().getCity())
-                                      .format();
+                                      .smartFormat();
         return AutocompleteHelper.suggest(tenant.getIdAsString())
                                  .withFieldLabel(tenant.toString())
                                  .withCompletionDescription(description);
