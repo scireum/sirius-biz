@@ -18,6 +18,7 @@ import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -128,6 +129,44 @@ public abstract class ChartFactory<O> implements Named, Priorized {
      */
     public String getDescription() {
         return NLS.getIfExists(getClass().getSimpleName() + ".description", null).orElse("");
+    }
+
+    /**
+     * Generates an identifier which can be passed to the {@link DataExplorerController}.
+     * <p>
+     * This is used by the <tt>t:charts</tt> tag to display appropriate charts next to a data object.
+     *
+     * @param uri          the uri of the current page (which contains the <tt>t:charts</tt> tag
+     * @param targetObject the optional target object which is being shown / processed / edited by the page
+     * @return an identifier which can be passed to <tt>/data-explorer</tt> or <tt>null</tt> to indicate that the given
+     * object isn't an appropriate parameter.
+     */
+    @SuppressWarnings("unchecked")
+    @Nullable
+    public String generateIdentifier(@Nonnull String uri, @Nullable Object targetObject) {
+        if (resolver() == null || targetObject == null) {
+            if (isMatchingChart(uri, targetObject)) {
+                return getName();
+            } else {
+                return null;
+            }
+        } else if (resolver().getTargetType().isAssignableFrom(targetObject.getClass())) {
+            return getName() + ":" + resolver().fetchIdentifier((O) targetObject);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Determines if the given URI or target object are plausible parameters to launch this global chart (without a
+     * resolver).
+     *
+     * @param uri          the uri of the current page (which contains the <tt>t:charts</tt> tag
+     * @param targetObject the optional target object which is being shown / processed / edited by the page
+     * @return <tt>true</tt> if the chart is to be shown for the given uri and or target, <tt>false</tt> otherwise
+     */
+    protected boolean isMatchingChart(String uri, Object targetObject) {
+        return false;
     }
 
     /**

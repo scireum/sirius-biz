@@ -32,13 +32,6 @@ public abstract class EntityChartObjectResolver<E extends BaseEntity<?>> impleme
     @Part
     protected Tenants<?, ?, ?> tenants;
 
-    /**
-     * Specifies the type of entities being resolved.
-     *
-     * @return the type of entities being resolved by this resolver
-     */
-    protected abstract Class<E> getEntityType();
-
     @Override
     public String fetchIdentifier(E object) {
         return object.getIdAsString();
@@ -46,7 +39,7 @@ public abstract class EntityChartObjectResolver<E extends BaseEntity<?>> impleme
 
     @Override
     public Optional<E> resolve(String identifier) {
-        return mixing.getDescriptor(getEntityType()).getMapper().find(getEntityType(), identifier).map(entity -> {
+        return mixing.getDescriptor(getTargetType()).getMapper().find(getTargetType(), identifier).map(entity -> {
             if (entity instanceof TenantAware tenantAware) {
                 tenants.assertTenant(tenantAware);
             }
