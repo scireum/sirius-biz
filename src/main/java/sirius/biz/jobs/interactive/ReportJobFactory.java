@@ -31,11 +31,6 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
     }
 
     @Override
-    public String getLegacyIcon() {
-        return "fa-line-chart";
-    }
-
-    @Override
     protected void generateResponse(WebContext request, Map<String, String> context) {
         Report report = new Report();
         List<Tuple<String, Cell>> additionalMetrics = new ArrayList<>();
