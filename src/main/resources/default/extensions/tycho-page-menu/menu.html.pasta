@@ -27,13 +27,14 @@
                     </a>
                 </li>
             </i:if>
-            <t:menuImageItem framework="biz.processes"
-                             class="d-none d-xxl-inline"
-                             icon="/images/icons/ps.png"
-                             activeIcon="/images/icons/ps-notif.png"
-                             active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
-                             link="/ps"
-                             permission="permission-view-processes"/>
+            <i:if test="isFrameworkEnabled('biz.processes')">
+                <t:menuImageItem class="d-none d-xxl-inline"
+                                 icon="/images/icons/ps.png"
+                                 activeIcon="/images/icons/ps-notif.png"
+                                 active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
+                                 link="/ps"
+                                 permission="permission-view-processes"/>
+            </i:if>
 
             <t:menuImageDropdownItem icon="@user().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/user_avatar_d.png')"
                                      label="@format('<b>${user}</b>[<br>${tenant}]').set('user', currentUserName()).set('tenant', user().getTenantName()).smartFormat()"
