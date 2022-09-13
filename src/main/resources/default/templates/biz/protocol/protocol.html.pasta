@@ -1,80 +1,85 @@
 <i:arg type="Page" name="protocol"/>
-<w:page titleKey="JournalEntry.plural">
+<t:page titleKey="JournalEntry.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/system/protocol">@i18n("JournalEntry.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="JournalEntry.plural"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="JournalEntry.plural"/>
+    </i:block>
 
-    <div class="row">
-        <div class="col-md-3">
-            <w:filterbox page="protocol" baseUrl="/system/protocol"/>
-        </div>
-        <div class="col-md-9">
-            <w:tableSearchHeader page="protocol" baseUrl="/system/protocol"/>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:filterbox page="protocol" baseUrl="/system/protocol"/>
+        </i:block>
 
-            <w:table data="protocol">
-                <thead>
-                <tr>
-                    <th>
-                        <div class="row">
-                            <div class="col-md-4">
-                                @i18n("JournalEntry.tod")<br>
-                                @i18n("JournalEntry.username")<br>
-                                <small>@i18n("JournalEntry.userId")</small>
-                            </div>
-                            <div class="col-md-4">@i18n("JournalEntry.targetName")
-                                <small>(@i18n("JournalEntry.targetId"))<br>@i18n("JournalEntry.targetType")</small>
-                            </div>
-                            <div class="col-md-4">@i18n("JournalEntry.subsystem")</div>
-                        </div>
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                <i:for type="sirius.biz.protocol.JournalEntry" var="msg" items="protocol.getItems()">
-                    <tr>
-                        <td>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <small>
-                                        @toUserString(msg.getTod())
-                                        <br>@msg.getUsername()
-                                        <br> @msg.getUserId()
-                                    </small>
+        <t:searchHeader page="protocol" baseUrl="/system/protocol"/>
+
+        <t:emptyCheck data="protocol">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div>@i18n("JournalEntry.tod")</div>
+                                        <div>@i18n("JournalEntry.username") (@i18n("JournalEntry.userId"))</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div>@i18n("JournalEntry.targetName") (@i18n("JournalEntry.targetId"))</div>
+                                        <div>@i18n("JournalEntry.targetType")</div>
+                                    </div>
+                                    <div class="col-md-4">@i18n("JournalEntry.subsystem")</div>
                                 </div>
-                                <div class="col-md-4">
-                                    <small>
-                                        <i:if test="user().hasPermission('flag-system-administrator')">
-                                            <i:local name="identifierParts" value="@msg.splitContentIdentifierParts()"/>
-                                            <a href="/system/query?class=@identifierParts.getFirst()&query=id:@identifierParts.getSecond()"
-                                               target="_blank">
-                                                <b>@msg.getContentIdentifier() (@msg.getTargetId())</b>
-                                            </a>
-                                            <i:else>
-                                                @msg.getContentIdentifier() (@msg.getTargetId())
-                                            </i:else>
-                                        </i:if>
-                                        <br>@msg.getTargetType()
-                                    </small>
-                                </div>
-                                <div class="col-md-4"><small>@msg.getSubsystem()</small></div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <pre class="plain" style="white-space: break-spaces; padding-top: 8px">@msg.getChanges()</pre>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </i:for>
-                </tbody>
-            </w:table>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <i:for type="sirius.biz.protocol.JournalEntry" var="message" items="protocol.getItems()">
+                            <tr>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-4 text-small text-muted">
+                                            <div>@toUserString(message.getTod())</div>
+                                            <div>@message.getUsername() (@message.getUserId())</div>
+                                        </div>
+                                        <div class="col-md-4 text-small text-muted">
+                                            <div>
+                                                <i:if test="user().hasPermission('flag-system-administrator')">
+                                                    <i:local name="identifierParts"
+                                                             value="@message.splitContentIdentifierParts()"/>
+                                                    <a href="/system/query?class=@identifierParts.getFirst()&query=id:@identifierParts.getSecond()"
+                                                       target="_blank">
+                                                        <b>@message.getContentIdentifier() (@message.getTargetId())</b>
+                                                    </a>
+                                                    <i:else>
+                                                        @message.getContentIdentifier() (@message.getTargetId())
+                                                    </i:else>
+                                                </i:if>
+                                            </div>
+                                            <div>@message.getTargetType()</div>
+                                        </div>
+                                        <div class="col-md-4 text-muted text-small">@message.getSubsystem()</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 pt-2">
+                                            <pre class="mb-0" style="white-space: break-spaces;">@message.getChanges()</pre>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </i:for>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-            <w:pagination page="protocol" baseUrl="/system/protocol"/>
-        </div>
-    </div>
+            <t:pagination page="protocol" baseUrl="/system/protocol"/>
+        </t:emptyCheck>
+    </t:sidebar>
 
-</w:page>
+</t:page>
