@@ -38,21 +38,21 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <i:for type="sirius.biz.protocol.JournalEntry" var="msg" items="protocol.getItems()">
+                        <i:for type="sirius.biz.protocol.JournalEntry" var="message" items="protocol.getItems()">
                             <tr>
                                 <td>
                                     <div class="row">
                                         <div class="col-md-4 text-small text-muted">
-                                            @toUserString(msg.getTod())
+                                            @toUserString(message.getTod())
                                         </div>
                                         <div class="col-md-4 text-small text-muted">
-                                            @msg.getUsername() (@msg.getUserId())
+                                            @message.getUsername() (@message.getUserId())
                                         </div>
-                                        <div class="col-md-4 text-small text-muted">@msg.getSubsystem()</div>
+                                        <div class="col-md-4 text-small text-muted">@message.getSubsystem()</div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 pt-2">
-                                            <pre class="mb-0" style="white-space: break-spaces">@msg.getChanges()</pre>
+                                            <pre class="mb-0" style="white-space: break-spaces">@message.getChanges()</pre>
                                         </div>
                                     </div>
                                 </td>

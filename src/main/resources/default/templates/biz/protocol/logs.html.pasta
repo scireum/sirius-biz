@@ -34,18 +34,18 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <i:for type="sirius.biz.protocol.LoggedMessage" var="msg" items="logs.getItems()">
+                        <i:for type="sirius.biz.protocol.LoggedMessage" var="message" items="logs.getItems()">
                             <tr>
-                                <td class="left-border @msg.getRowClass()">
+                                <td class="left-border @message.getRowClass()">
                                     <div class="row">
-                                        <div class="col-md-3 text-muted text-small">@toUserString(msg.getTod())</div>
-                                        <div class="col-md-3 text-muted text-small">@msg.getCategory()</div>
-                                        <div class="col-md-3 text-muted text-small">@msg.getUser()</div>
-                                        <div class="col-md-3 text-muted text-small">@msg.getNode()</div>
+                                        <div class="col-md-3 text-muted text-small">@toUserString(message.getTod())</div>
+                                        <div class="col-md-3 text-muted text-small">@message.getCategory()</div>
+                                        <div class="col-md-3 text-muted text-small">@message.getUser()</div>
+                                        <div class="col-md-3 text-muted text-small">@message.getNode()</div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 pt-2">
-                                            <pre class="mb-0" style="white-space: break-spaces">@msg.getMessage()</pre>
+                                            <pre class="mb-0" style="white-space: break-spaces">@message.getMessage()</pre>
                                         </div>
                                     </div>
                                 </td>

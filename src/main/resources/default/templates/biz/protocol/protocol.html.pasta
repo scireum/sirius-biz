@@ -39,35 +39,35 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <i:for type="sirius.biz.protocol.JournalEntry" var="msg" items="protocol.getItems()">
+                        <i:for type="sirius.biz.protocol.JournalEntry" var="message" items="protocol.getItems()">
                             <tr>
                                 <td>
                                     <div class="row">
                                         <div class="col-md-4 text-small text-muted">
-                                            <div>@toUserString(msg.getTod())</div>
-                                            <div>@msg.getUsername() (@msg.getUserId())</div>
+                                            <div>@toUserString(message.getTod())</div>
+                                            <div>@message.getUsername() (@message.getUserId())</div>
                                         </div>
                                         <div class="col-md-4 text-small text-muted">
                                             <div>
                                                 <i:if test="user().hasPermission('flag-system-administrator')">
                                                     <i:local name="identifierParts"
-                                                             value="@msg.splitContentIdentifierParts()"/>
+                                                             value="@message.splitContentIdentifierParts()"/>
                                                     <a href="/system/query?class=@identifierParts.getFirst()&query=id:@identifierParts.getSecond()"
                                                        target="_blank">
-                                                        <b>@msg.getContentIdentifier() (@msg.getTargetId())</b>
+                                                        <b>@message.getContentIdentifier() (@message.getTargetId())</b>
                                                     </a>
                                                     <i:else>
-                                                        @msg.getContentIdentifier() (@msg.getTargetId())
+                                                        @message.getContentIdentifier() (@message.getTargetId())
                                                     </i:else>
                                                 </i:if>
                                             </div>
-                                            <div>@msg.getTargetType()</div>
+                                            <div>@message.getTargetType()</div>
                                         </div>
-                                        <div class="col-md-4 text-muted text-small">@msg.getSubsystem()</div>
+                                        <div class="col-md-4 text-muted text-small">@message.getSubsystem()</div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 pt-2">
-                                            <pre class="mb-0" style="white-space: break-spaces;">@msg.getChanges()</pre>
+                                            <pre class="mb-0" style="white-space: break-spaces;">@message.getChanges()</pre>
                                         </div>
                                     </div>
                                 </td>
