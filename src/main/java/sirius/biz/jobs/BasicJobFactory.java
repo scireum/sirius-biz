@@ -43,7 +43,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Provides a robust base implementation of {@link JobFactory} which performs all the heavy lifting.
@@ -117,9 +116,7 @@ public abstract class BasicJobFactory implements JobFactory {
 
     @Override
     public List<String> getRequiredPermissions() {
-        return Arrays.stream(getClass().getAnnotationsByType(Permission.class))
-                     .map(Permission::value)
-                     .collect(Collectors.toList());
+        return Arrays.stream(getClass().getAnnotationsByType(Permission.class)).map(Permission::value).toList();
     }
 
     @Override

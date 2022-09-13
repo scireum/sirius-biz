@@ -29,7 +29,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -120,7 +119,7 @@ public class Jobs {
         return map.stream()
                   .map(e -> Tuple.create(e.getKey(), e.getValue()))
                   .sorted(Comparator.comparing(t -> t.getFirst().getPriority()))
-                  .collect(Collectors.toList());
+                  .toList();
     }
 
     /**
@@ -136,7 +135,7 @@ public class Jobs {
         return getAvailableJobs(null).filter(JobFactory::canStartInteractive)
                                      .map(job -> Tuple.create(job.generatePresetUrl(uri, targetObject), job))
                                      .filter(tuple -> tuple.getFirst() != null)
-                                     .collect(Collectors.toList());
+                                     .toList();
     }
 
     /**
