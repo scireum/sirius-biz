@@ -88,5 +88,5 @@
         </div>
     </div>
 
-    <t:formBar btnLabel="" />
+    <t:formBar btnLabel=""/>
 </t:page>
