@@ -1,6 +1,6 @@
-<i:arg type="sirius.biz.protocol.StoredIncident" name="incident" />
+<i:arg type="sirius.biz.protocol.StoredIncident" name="incident"/>
 
-<w:page title="@apply('%s (%s)', i18n('Model.incident'), incident.getCategory())">
+<t:page title="@apply('%s (%s)', i18n('Model.incident'), incident.getCategory())">
     <i:block name="breadcrumbs">
         <li>
             <a href="/system/errors">@i18n("StoredIncident.plural")</a>
@@ -10,36 +10,23 @@
         </li>
     </i:block>
 
-    <w:pageHeader>
-        @i18n("Model.incident") (@incident.getCategory())
-    </w:pageHeader>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="Model.incident">
+            <t:tag color="blue">@incident.getCategory()</t:tag>
+        </t:pageHeader>
+    </i:block>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="well">
-                <pre class="plain">@incident.getMessage()</pre>
-            </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@i18n("StoredIncident.message")</h5>
+            <pre class="mt-4 mb-0">@incident.getMessage()</pre>
         </div>
     </div>
-    <div class="row">
-        <w:textfield name="" labelKey="StoredIncident.lastOccurrence" value="@toUserString(incident.getLastOccurrence())" readonly="true" />
-        <w:textfield name="" labelKey="StoredIncident.numberOfOccurrences" value="@toUserString(incident.getNumberOfOccurrences())" readonly="true" />
-    </div>
-    <div class="row">
-        <w:textfield name="" labelKey="StoredIncident.firstOccurrence" value="@toUserString(incident.getFirstOccurrence())" readonly="true" />
-        <w:textfield name="" labelKey="StoredIncident.user" value="@incident.getUser()" readonly="true" />
-    </div>
-    <div class="row">
-        <w:textfield name="" labelKey="StoredIncident.category" value="@incident.getCategory()" readonly="true" />
-        <w:textfield name="" labelKey="StoredIncident.node" value="@incident.getNode()" readonly="true" />
-    </div>
-    <div class="row">
-        <w:textfield span="12" name="" labelKey="StoredIncident.location" value="@incident.getLocation()" readonly="true" />
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <w:heading labelKey="StoredIncident.mdc" />
-            <w:table data="@incident.getMdc().data().entrySet()">
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@i18n("Model.details")</h5>
+            <table class="table mt-4">
                 <thead>
                 <tr>
                     <th>
@@ -51,6 +38,34 @@
                 </tr>
                 </thead>
                 <tbody>
+                <tr>
+                    <td>@i18n("StoredIncident.firstOccurrence")</td>
+                    <td>@toUserString(incident.getFirstOccurrence())</td>
+                </tr>
+                <tr>
+                    <td>@i18n("StoredIncident.lastOccurrence")</td>
+                    <td>@toUserString(incident.getLastOccurrence())</td>
+                </tr>
+                <tr>
+                    <td>@i18n("StoredIncident.numberOfOccurrences")</td>
+                    <td>@toUserString(incident.getNumberOfOccurrences())</td>
+                </tr>
+                <tr>
+                    <td>@i18n("StoredIncident.user")</td>
+                    <td>@toUserString(incident.getUser())</td>
+                </tr>
+                <tr>
+                    <td>@i18n("StoredIncident.category")</td>
+                    <td>@toUserString(incident.getCategory())</td>
+                </tr>
+                <tr>
+                    <td>@i18n("StoredIncident.node")</td>
+                    <td>@toUserString(incident.getNode())</td>
+                </tr>
+                <tr>
+                    <td>@i18n("StoredIncident.location")</td>
+                    <td>@toUserString(incident.getLocation())</td>
+                </tr>
                 <i:for var="mdc" items="incident.getMdc().data().entrySet()" type="java.util.Map$Entry">
                     <tr>
                         <td>
@@ -62,20 +77,16 @@
                     </tr>
                 </i:for>
                 </tbody>
-            </w:table>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <w:heading labelKey="StoredIncident.stack" />
-            <div class="well">
-                <pre class="plain">@incident.getStack()</pre>
-            </div>
+            </table>
         </div>
     </div>
 
-    <div class="form-actions">
-        <a href="/system/errors" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@i18n("StoredIncident.stack")</h5>
+            <pre class="mt-4 mb-4">@incident.getStack()</pre>
+        </div>
     </div>
 
-</w:page>
+    <t:formBar btnLabel=""/>
+</t:page>

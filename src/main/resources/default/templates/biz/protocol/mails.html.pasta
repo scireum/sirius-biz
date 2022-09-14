@@ -1,61 +1,65 @@
 <i:arg type="Page" name="mails"/>
 
-<w:page titleKey="MailProtocol.plural">
+<t:page titleKey="MailProtocol.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/system/mails">@i18n("MailProtocol.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="MailProtocol.plural"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="MailProtocol.plural"/>
+    </i:block>
 
-    <div class="row">
-        <div class="col-md-3">
-            <w:filterbox page="mails" baseUrl="/system/mails"/>
-        </div>
-        <div class="col-md-9">
-            <w:tableSearchHeader page="mails" baseUrl="/system/mails"/>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:filterbox page="mails" baseUrl="/system/mails"/>
+        </i:block>
 
-            <w:table data="mails" colorized="true">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>
-                        <div class="row">
-                            <div class="col-md-3">@i18n("MailProtocol.tod")</div>
-                            <div class="col-md-3">@i18n("MailProtocol.sender")</div>
-                            <div class="col-md-3">@i18n("MailProtocol.receiver")</div>
-                            <div class="col-md-3">@i18n("MailProtocol.node")</div>
-                        </div>
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                <i:for type="sirius.biz.protocol.MailProtocol" var="mail" items="mails.getItems()">
-                    <tr @if (mail.isSuccess()) { class="success" } else { class="danger" }>
-                        <td></td>
-                        <td>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <a href="/system/mail/@mail.getId()">@toUserString(mail.getTod())</a>
+        <t:searchHeader page="mails" baseUrl="/system/mails"/>
+
+        <t:emptyCheck data="mails">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>
+                                <div class="row">
+                                    <div class="col-md-3">@i18n("MailProtocol.tod")</div>
+                                    <div class="col-md-3">@i18n("MailProtocol.sender")</div>
+                                    <div class="col-md-3">@i18n("MailProtocol.receiver")</div>
+                                    <div class="col-md-3">@i18n("MailProtocol.node")</div>
                                 </div>
-                                <div class="col-md-3">@mail.getSender()</div>
-                                <div class="col-md-3">@mail.getReceiver()</div>
-                                <div class="col-md-3">@mail.getNode()</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12 error-code">
-                                    <pre class="plain">@mail.getSubject()</pre>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </i:for>
-                </tbody>
-            </w:table>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <i:for type="sirius.biz.protocol.MailProtocol" var="mail" items="mails.getItems()">
+                            <tr>
+                                <td class="left-border @if (mail.isSuccess()) { border-sirius-green } else { border-sirius-red }">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <a href="/system/mail/@mail.getId()">@toUserString(mail.getTod())</a>
+                                        </div>
+                                        <div class="col-md-3">@mail.getSender()</div>
+                                        <div class="col-md-3">@mail.getReceiver()</div>
+                                        <div class="col-md-3">@mail.getNode()</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 pt-2">
+                                            <pre class="mb-0" style="white-space: break-spaces">@mail.getSubject()</pre>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </i:for>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-            <w:pagination page="mails" baseUrl="/system/mails"/>
-        </div>
-    </div>
-
-</w:page>
+            <t:pagination page="mails" baseUrl="/system/mails"/>
+        </t:emptyCheck>
+    </t:sidebar>
+</t:page>
