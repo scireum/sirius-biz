@@ -42,7 +42,7 @@ public class UpdatesReport extends ReportJobFactory {
     private static final String COLUMN_TOTAL = "total";
     private static final String COLUMN_LOGGED_IN = "loggedIn";
     private static final String COLUMN_ANONYMOUS = "anonymous";
-    
+
     @Part
     private EventRecorder eventRecorder;
 
