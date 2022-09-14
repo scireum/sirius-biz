@@ -18,7 +18,8 @@ import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 
 import javax.annotation.Nonnull;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Provides an import job for {@link SQLUserAccount user accounts} stored in a JDBC database.
@@ -41,10 +42,8 @@ public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    public List<String> getRequiredPermissions() {
-        List<String> requiredPermissions = super.getRequiredPermissions();
-        requiredPermissions.add(UserAccountController.getUserManagementPermission());
-        return requiredPermissions;
+    public Set<String> getRequiredPermissions() {
+        return Collections.singleton(UserAccountController.getUserManagementPermission());
     }
 
     @Override
