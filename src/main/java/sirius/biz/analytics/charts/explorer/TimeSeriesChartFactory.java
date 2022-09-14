@@ -87,7 +87,7 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
         output.array(OUTPUT_LABELS, OUTPUT_RANGE, timeSeries.startDates().map(granularity::format).toList());
 
         // Run all "main" computers...
-        computers(comparisonPeriod != null, false, computer -> {
+        computers(comparisonPeriod != ComparisonPeriod.NONE, false, computer -> {
             computer.compute(object, timeSeries);
         });
 
