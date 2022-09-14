@@ -45,16 +45,17 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
         return ICONS[Math.abs(getName().hashCode() % ICONS.length)];
     }
 
-    protected String determineChartType() {
-        return stackValues() ? "area" : "line";
+    protected String determineChartType(boolean hasComparisonPeriod) {
+        return stackValues(hasComparisonPeriod) ? "area" : "line";
     }
 
     /**
      * Determines if values should be stacked instead of showing them side-by-side.
      *
+     * @param hasComparisonPeriod <tt>true</tt> if a comparison period is requested, <tt>false</tt> otherwise
      * @return <tt>true</tt> to create an "area" chart, <tt>false</tt> to create a normal line chart
      */
-    protected boolean stackValues() {
+    protected boolean stackValues(boolean hasComparisonPeriod) {
         return false;
     }
 
@@ -81,7 +82,8 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
         TimeSeries timeSeries = new TimeSeries(start, end, granularity);
         List<TimeSeriesData> data = new ArrayList<>();
         timeSeries.withDataConsumer(data::add);
-        output.property(OUTPUT_TYPE, determineChartType());
+        output.property(OUTPUT_TYPE,
+                        determineChartType(comparisonPeriod != null && comparisonPeriod != ComparisonPeriod.NONE));
         output.array(OUTPUT_LABELS, OUTPUT_RANGE, timeSeries.startDates().map(granularity::format).toList());
 
         // Run all "main" computers...
