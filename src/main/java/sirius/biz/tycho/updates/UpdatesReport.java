@@ -38,6 +38,11 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
 public class UpdatesReport extends ReportJobFactory {
 
+    private static final String COLUMN_GUID = "guid";
+    private static final String COLUMN_TOTAL = "total";
+    private static final String COLUMN_LOGGED_IN = "loggedIn";
+    private static final String COLUMN_ANONYMOUS = "anonymous";
+    
     @Part
     private EventRecorder eventRecorder;
 
@@ -63,10 +68,10 @@ public class UpdatesReport extends ReportJobFactory {
     protected void computeReport(Map<String, String> context,
                                  Report report,
                                  BiConsumer<String, Cell> additionalMetricConsumer) throws Exception {
-        report.addColumn("guid", "$UpdatesReport.guid");
-        report.addColumn("total", "$UpdatesReport.total");
-        report.addColumn("loggedIn", "$UpdatesReport.loggedIn");
-        report.addColumn("anonymous", "$UpdatesReport.anonymous");
+        report.addColumn(COLUMN_GUID, "$UpdatesReport.guid");
+        report.addColumn(COLUMN_TOTAL, "$UpdatesReport.total");
+        report.addColumn(COLUMN_LOGGED_IN, "$UpdatesReport.loggedIn");
+        report.addColumn(COLUMN_ANONYMOUS, "$UpdatesReport.anonymous");
 
         LocalDate start = LocalDate.now().minusMonths(6).withDayOfMonth(1);
         additionalMetricConsumer.accept("$UpdatesReport.start", cells.of(start));
@@ -87,10 +92,10 @@ public class UpdatesReport extends ReportJobFactory {
                         ORDER BY count(*) desc
                         """).set("start", start).set("end", LocalDate.now()).iterateAll(row -> {
             String guid = row.getValue("updateGuid").asString();
-            report.addRow(List.of(Tuple.create("guid", isURL(guid) ? cells.link(guid, guid) : cells.of(guid)),
-                                  Tuple.create("total", cells.of(row.getValue("all").asInt(0))),
-                                  Tuple.create("loggedIn", cells.of(row.getValue("loggedIn").asInt(0))),
-                                  Tuple.create("anonymous", cells.of(row.getValue("anonymous").asInt(0)))));
+            report.addRow(List.of(Tuple.create(COLUMN_GUID, isURL(guid) ? cells.link(guid, guid) : cells.of(guid)),
+                                  Tuple.create(COLUMN_TOTAL, cells.of(row.getValue("all").asInt(0))),
+                                  Tuple.create(COLUMN_LOGGED_IN, cells.of(row.getValue(COLUMN_LOGGED_IN).asInt(0))),
+                                  Tuple.create(COLUMN_ANONYMOUS, cells.of(row.getValue(COLUMN_ANONYMOUS).asInt(0)))));
             totalClicks.addAndGet(row.getValue("all").asInt(0));
         }, Limit.UNLIMITED);
 
