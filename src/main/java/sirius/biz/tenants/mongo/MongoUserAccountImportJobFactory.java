@@ -10,6 +10,7 @@ package sirius.biz.tenants.mongo;
 
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
+import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Part;
@@ -53,6 +54,6 @@ public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
-        return queryString.path().startsWith("/user-account");
+        return targetObject instanceof Class<?> type && UserAccount.class.isAssignableFrom(type);
     }
 }

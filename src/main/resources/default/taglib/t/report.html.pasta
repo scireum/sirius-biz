@@ -1,0 +1,28 @@
+<i:arg type="sirius.biz.analytics.reports.Report" name="report"/>
+
+<t:emptyCheck data="report.getRows()">
+    <div class="card mb-4">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                <tr>
+                    <i:for type="String" var="column" items="report.getLabels()">
+                        <th style="text-align: center">@column</th>
+                    </i:for>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="Map" var="row" items="report.getRows()">
+                    <tr>
+                        <i:for type="String" var="column" items="report.getColumns()">
+                            <td class="cell">
+                                <i:raw>@row.get(column).as(sirius.biz.analytics.reports.Cell.class).render()</i:raw>
+                            </td>
+                        </i:for>
+                    </tr>
+                </i:for>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</t:emptyCheck>

@@ -31,33 +31,10 @@
         </t:pageHeader>
     </i:block>
 
-    <div class="row">
-        <i:if test="hasVisibleParameters">
-            <div class="col-md-3">
-                <t:editForm url="@apply('/job/%s', job.getName())">
-                    <div class="row">
-                        <i:for type="sirius.biz.jobs.params.Parameter" var="param" items="parameters">
-                            <i:dynamicInvoke template="@param.getTemplateName()"
-                                             param="@param" context="@context"/>
-                        </i:for>
-                    </div>
-                    <t:formBar btnLabelKey="JobFactory.execute"/>
-                </t:editForm>
-            </div>
-        </i:if>
-
-        <!--@ Calculate col-md value as some charts may not calculate a correct width otherwise -->
-        <i:local name="bodyColClass"
-                 value="(hasVisibleParameters && hasAdditionalMetrics) ? 'col-md-6' : ((hasVisibleParameters || hasAdditionalMetrics) ? 'col-md-9' : 'col-md-12')"/>
-        <div class="@bodyColClass">
-            <div class="card card-border p-2 mt-sm-3">
-                <i:render name="body"/>
-            </div>
-        </div>
-
-        <i:if test="hasAdditionalMetrics">
-            <div class="col-md-3 mt-sm-3">
-                <t:infobox labelKey="InteractiveJobFactory.additionalMetrics" class="card card-border p-2">
+    <i:if test="hasVisibleParameters || hasAdditionalMetrics">
+        <t:sidebar>
+            <i:block name="sidebar">
+                <t:infobox labelKey="InteractiveJobFactory.additionalMetrics" class="mb-4">
                     <i:for type="Tuple" var="metric" items="additionalMetrics">
                         <div class="d-flex flex-row pt-1 mb-1 border-top border-sirius-gray">
                             <div class="text-small text-ellipsis overflow-hidden flex-grow-0">
@@ -71,20 +48,33 @@
                         </div>
                     </i:for>
                 </t:infobox>
-            </div>
-        </i:if>
-    </div>
 
-    <i:if test="!hasVisibleParameters">
-        <div class="row">
-            <div class="col-md-12 mt-3">
-                <a href="javascript:window.history.back()"
-                   class="btn btn-outline-secondary back-button">
-                    <i class="fa fa-chevron-left"></i> @i18n("NLS.back")
-                </a>
-            </div>
-        </div>
+                <i:if test="hasVisibleParameters">
+                    <div class="mb-4">
+                        <div class="nav-header">@i18n("JobFactory.parameters")</div>
+                        <t:editForm url="@apply('/job/%s', job.getName())">
+                            <div class="row">
+                                <i:for type="sirius.biz.jobs.params.Parameter" var="param" items="parameters">
+                                    <i:dynamicInvoke template="@param.getTemplateName()"
+                                                     param="@param" context="@context"/>
+                                </i:for>
+                            </div>
+
+                            <a class="btn btn-primary btn-block submit-link-js">@i18n("JobFactory.refresh")</a>
+
+                            <i:invoke template="/templates/biz/jobs/job-parameters-logic.html.pasta" job="@job"
+                                      context="@context"/>
+                        </t:editForm>
+                    </div>
+                </i:if>
+            </i:block>
+
+            <i:render name="body"/>
+        </t:sidebar>
+
+        <i:else>
+            <i:render name="body"/>
+            <t:formBar btnLabel=""/>
+        </i:else>
     </i:if>
-
-    <i:invoke template="/templates/biz/jobs/job-parameters-logic.html.pasta" job="@job" context="@context"/>
 </t:page>

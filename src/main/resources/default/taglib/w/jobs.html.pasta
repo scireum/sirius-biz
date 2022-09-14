@@ -10,7 +10,7 @@
                 <i:local name="link" value="linkAndJob.getFirst().as(String.class)"/>
                 <i:local name="job" value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
 
-                <w:navboxLink icon="@job.getLegacyIcon()" label="@job.getLabel()" url="@link"/>
+                <w:navboxLink icon="fa-gears" label="@job.getLabel()" url="@link"/>
             </i:for>
         </w:navbox>
     </i:if>
