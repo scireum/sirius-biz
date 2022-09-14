@@ -29,7 +29,7 @@ public class UpdateClickEvent extends Event {
     private final UserData userData = new UserData();
 
     /**
-     * Specifies the {@link UpdateInfo#GUID} to record a click event for.
+     * Specifies the {@link UpdateInfo#getGuid} to record a click event for.
      *
      * @param updateGuid the id of the update
      * @return the event itself for fluent method calls
