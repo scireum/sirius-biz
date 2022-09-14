@@ -110,6 +110,11 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 10500;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.SYSTEM_ADMINISTRATION;
     }

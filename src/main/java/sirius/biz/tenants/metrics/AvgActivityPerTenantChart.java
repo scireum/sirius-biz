@@ -71,6 +71,6 @@ public class AvgActivityPerTenantChart extends TimeSeriesChartFactory<Tenant<?>>
 
     @Override
     public int getPriority() {
-        return 906;
+        return 9060;
     }
 }

@@ -144,4 +144,9 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
     public String getName() {
         return JOB_NAME;
     }
+
+    @Override
+    public int getPriority() {
+        return 8200;
+    }
 }

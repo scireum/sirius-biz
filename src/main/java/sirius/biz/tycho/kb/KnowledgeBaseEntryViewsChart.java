@@ -112,6 +112,6 @@ public class KnowledgeBaseEntryViewsChart extends TimeSeriesChartFactory<Knowled
 
     @Override
     public int getPriority() {
-        return 902;
+        return 8210;
     }
 }

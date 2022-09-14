@@ -60,4 +60,9 @@ public class BlockedIPsReportJobFactory extends ReportJobFactory {
     public String getName() {
         return "blocked-ips-report";
     }
+
+    @Override
+    public int getPriority() {
+        return 8120;
+    }
 }

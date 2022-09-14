@@ -44,6 +44,12 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 5200;
+    }
+
+
+    @Override
     public String getCategory() {
         return StandardCategories.MISC;
     }

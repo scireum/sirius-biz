@@ -114,4 +114,9 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
     public String getName() {
         return "export-schema-changes";
     }
+
+    @Override
+    public int getPriority() {
+        return 10110;
+    }
 }

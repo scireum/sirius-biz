@@ -37,6 +37,11 @@ public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 9100;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.USERS_AND_TENANTS;
     }

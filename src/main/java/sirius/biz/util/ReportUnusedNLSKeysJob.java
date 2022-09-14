@@ -111,6 +111,11 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 8500;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.MONITORING;
     }

@@ -42,6 +42,11 @@ public abstract class AcademyReport extends ReportJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 8400;
+    }
+
+    @Override
     public String getLabel() {
         return NLS.get("AcademyReport.label");
     }

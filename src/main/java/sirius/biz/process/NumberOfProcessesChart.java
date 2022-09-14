@@ -51,7 +51,7 @@ public class NumberOfProcessesChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     public int getPriority() {
-        return 800;
+        return 8000;
     }
 
     @Nullable

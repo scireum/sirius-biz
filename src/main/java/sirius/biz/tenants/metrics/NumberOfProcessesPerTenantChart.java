@@ -52,7 +52,7 @@ public class NumberOfProcessesPerTenantChart extends TimeSeriesChartFactory<Tena
 
     @Override
     public int getPriority() {
-        return 820;
+        return 8020;
     }
 
     @Nullable

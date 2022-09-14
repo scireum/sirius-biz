@@ -56,7 +56,7 @@ public class ProcessDurationChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     public int getPriority() {
-        return 801;
+        return 8010;
     }
 
     @Nullable

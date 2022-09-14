@@ -104,6 +104,6 @@ public class NumberOfUserInteractionsPerTenantChart extends TimeSeriesChartFacto
 
     @Override
     public int getPriority() {
-        return 905;
+        return 9050;
     }
 }

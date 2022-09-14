@@ -116,6 +116,6 @@ public class NumberOfUpdateClicksChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     public int getPriority() {
-        return 950;
+        return 8500;
     }
 }

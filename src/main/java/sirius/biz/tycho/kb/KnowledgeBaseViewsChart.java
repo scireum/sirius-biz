@@ -110,6 +110,6 @@ public class KnowledgeBaseViewsChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     public int getPriority() {
-        return 900;
+        return 8200;
     }
 }

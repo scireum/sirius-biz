@@ -116,4 +116,9 @@ public class UpdatesReport extends ReportJobFactory {
     public String getName() {
         return "UpdatesReport";
     }
+
+    @Override
+    public int getPriority() {
+        return 8300;
+    }
 }

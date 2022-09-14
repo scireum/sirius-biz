@@ -129,4 +129,9 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
     public String getName() {
         return "rate-limit-events-report";
     }
+
+    @Override
+    public int getPriority() {
+        return 8100;
+    }
 }

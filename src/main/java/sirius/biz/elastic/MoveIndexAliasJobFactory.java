@@ -109,6 +109,11 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 10210;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.SYSTEM_ADMINISTRATION;
     }

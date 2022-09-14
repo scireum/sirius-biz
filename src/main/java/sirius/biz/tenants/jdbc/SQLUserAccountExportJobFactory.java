@@ -37,6 +37,11 @@ public class SQLUserAccountExportJobFactory extends EntityExportJobFactory<SQLUs
     }
 
     @Override
+    public int getPriority() {
+        return 9110;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.USERS_AND_TENANTS;
     }

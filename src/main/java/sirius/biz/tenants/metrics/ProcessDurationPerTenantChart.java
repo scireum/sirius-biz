@@ -54,7 +54,7 @@ public class ProcessDurationPerTenantChart extends TimeSeriesChartFactory<Tenant
 
     @Override
     public int getPriority() {
-        return 821;
+        return 8030;
     }
 
     @Nullable
