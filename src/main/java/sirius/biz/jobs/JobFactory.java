@@ -53,15 +53,6 @@ public interface JobFactory extends Named, Priorized {
     String getIcon();
 
     /**
-     * Returns the icon to used when displaying this job in wondergem templates.
-     *
-     * @return the icon of this job
-     */
-    default String getLegacyIcon() {
-        return getIcon();
-    }
-
-    /**
      * Returns a short description of this job.
      * <p>
      * This is shown in lists and should therefore be quite concise.
@@ -124,9 +115,9 @@ public interface JobFactory extends Named, Priorized {
     /**
      * Generates a URL which can be invoked to start this job while using the given object as a parameter value.
      * <p>
-     * This is used by the <tt>w:jobs</tt> tag to display appropriate jobs next to a data object.
+     * This is used by the <tt>t:jobs</tt> tag to display appropriate jobs next to a data object.
      *
-     * @param uri          the uri of the current page (which contains the <tt>w:jobs</tt> tag
+     * @param uri          the uri of the current page (which contains the <tt>t:jobs</tt> tag
      * @param targetObject the optional target object which is being shown / processed / edited by the page
      * @return an url which starts the launch screen for this job while using the given parameter as value or
      * <tt>null</tt> to indicate that this jobs cannot be started in the ui or that the given object isn't an
