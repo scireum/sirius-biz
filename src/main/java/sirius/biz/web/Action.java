@@ -20,10 +20,10 @@ import java.util.stream.Stream;
  */
 public class Action {
 
-    private static final String[] COLOR_CLASSES = {"text-sirius-cyan",
-                                                   "text-sirius-green",
+    private static final String[] COLOR_CLASSES = {"text-sirius-green",
                                                    "text-sirius-violet",
                                                    "text-sirius-orange",
+                                                   "text-sirius-cyan",
                                                    "text-sirius-yellow",
                                                    "text-sirius-deep-blue"};
     private final String label;
