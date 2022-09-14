@@ -168,7 +168,7 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
         }
 
         return Optional.ofNullable(vfs.resolve(input.asString()))
-                       .filter(VirtualFile::exists)
+                       .filter(file -> allowDirectories && allowFiles && file.parent().exists() || file.exists())
                        .filter(file -> allowDirectories || file.isFile())
                        .filter(file -> allowFiles || file.isDirectory());
     }
