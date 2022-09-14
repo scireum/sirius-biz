@@ -26,7 +26,7 @@ public interface ChartObjectResolver<O> extends Named {
      *
      * @return the type of objects being resolved by this resolver
      */
-    Class<O> getTargetType();
+    Class<? super O> getTargetType();
 
     /**
      * Obtains the identifier used to represent the given object.
