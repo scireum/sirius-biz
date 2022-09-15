@@ -30,6 +30,7 @@ import sirius.web.services.JSONStructuredOutput;
 
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -60,7 +61,7 @@ public class DataExplorerController extends BizController {
     private GlobalContext globalContext;
 
     @PriorityParts(ChartFactory.class)
-    private List<ChartFactory<?>> providers;
+    private List<ChartFactory<?>> factories;
 
     /**
      * Provides the main UI of the chart explorer.
@@ -71,7 +72,7 @@ public class DataExplorerController extends BizController {
     @LoginRequired
     public void explorer(WebContext webContext) {
         List<Action> actions =
-                providers.stream().filter(ChartFactory::isAccessibleToCurrentUser).map(this::toAction).toList();
+                factories.stream().filter(ChartFactory::isAccessibleToCurrentUser).map(this::toAction).toList();
 
         webContext.respondWith().template("/templates/biz/tycho/analytics/data-explorer.html.pasta", actions);
     }
@@ -129,7 +130,8 @@ public class DataExplorerController extends BizController {
                                                              .handle());
 
         String range = webContext.require(PARAM_RANGE).asString();
-        ComparisonPeriod comparisonPeriod = computeComparisonPeriod(webContext.require(PARAM_COMPARISON_PERIOD).asString());
+        ComparisonPeriod comparisonPeriod =
+                computeComparisonPeriod(webContext.require(PARAM_COMPARISON_PERIOD).asString());
 
         return tasks.executor(POOL_DATA_EXPLORER).fork(() -> {
             try {
@@ -177,5 +179,26 @@ public class DataExplorerController extends BizController {
             case VALUE_LAST_30_DAYS, VALUE_LAST_90_DAYS, VALUE_LAST_MONTH -> Granularity.DAY;
             default -> Granularity.MONTH;
         };
+    }
+
+    /**
+     * Fetches all available charts for a given URI and target object.
+     * <p>
+     * This is used by <tt>t:charts</tt> to list matching charts.
+     *
+     * @param uri          the uri of the current page (which contains the <tt>t:charts</tt> tag
+     * @param targetObject the optional target object which is being shown / processed / edited by the page
+     * @return a list of identifiers and matching chart factories to show
+     */
+    public List<Tuple<String, ChartFactory<?>>> fetchAvailableCharts(String uri, Object targetObject) {
+        List<Tuple<String, ChartFactory<?>>> result = new ArrayList<>();
+        for (ChartFactory<?> factory : factories) {
+            String identifier = factory.generateIdentifier(uri, targetObject);
+            if (Strings.isFilled(identifier)) {
+                result.add(Tuple.create(identifier, factory));
+            }
+        }
+
+        return result;
     }
 }

@@ -12,6 +12,7 @@ import sirius.biz.analytics.metrics.MetricQuery;
 import sirius.biz.analytics.metrics.Metrics;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
 import java.util.function.Function;
@@ -26,21 +27,33 @@ import java.util.function.Function;
  *
  * @param <E> the type of entities referenced by the chart
  */
-public class MonthlyMetricTimeSeries<E> implements TimeSeriesComputer<E> {
+public class MetricTimeSeriesComputer<E> implements TimeSeriesComputer<E> {
 
     @Part
     private static Metrics metrics;
 
-    private final String metricName;
+    private final String monthlyMetricName;
+    private String dailyMetricName;
     private Function<E, Object> projector;
 
     /**
-     * Creates a new timeseries for the given metric.
+     * Creates a new time-series for the given metric.
      *
-     * @param metricName the name of the metric to query
+     * @param monthlyMetricName the name of the metric to query
      */
-    public MonthlyMetricTimeSeries(String metricName) {
-        this.metricName = metricName;
+    public MetricTimeSeriesComputer(String monthlyMetricName) {
+        this.monthlyMetricName = monthlyMetricName;
+    }
+
+    /**
+     * Specifies the metric to use if {@link Granularity#DAY} is requested.
+     *
+     * @param dailyMetricName the name of the daily metric to read
+     * @return the computer itself for fluent method calls
+     */
+    public MetricTimeSeriesComputer<E> withDailyMetricName(String dailyMetricName) {
+        this.dailyMetricName = dailyMetricName;
+        return this;
     }
 
     /**
@@ -49,16 +62,20 @@ public class MonthlyMetricTimeSeries<E> implements TimeSeriesComputer<E> {
      * @param projector the projector which maps the selected chart entity to the actual value to query
      * @return the computer itself for fluent method calls
      */
-    public MonthlyMetricTimeSeries<E> withProjector(Function<E, Object> projector) {
+    public MetricTimeSeriesComputer<E> withProjector(Function<E, Object> projector) {
         this.projector = projector;
         return this;
     }
 
     @Override
     public void compute(E object, TimeSeries timeseries) throws Exception {
-        TimeSeries effectiveTimeSeries = timeseries.toMonthlySeries();
+        TimeSeries effectiveTimeSeries = Strings.isFilled(dailyMetricName) ? timeseries : timeseries.toMonthlySeries();
         TimeSeriesData data = effectiveTimeSeries.createDefaultData();
-        MetricQuery metricQuery = customizeQuery(project(object), metrics.query().monthly(metricName));
+        MetricQuery metricQuery = customizeQuery(project(object),
+                                                 timeseries.getGranularity() == Granularity.DAY && Strings.isFilled(
+                                                         dailyMetricName) ?
+                                                 metrics.query().daily(dailyMetricName) :
+                                                 metrics.query().monthly(monthlyMetricName));
 
         metricQuery.values(effectiveTimeSeries.startDates())
                    .forEach(dateAndValue -> data.addValue(dateAndValue.getFirst(), dateAndValue.getSecond()));

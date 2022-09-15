@@ -13,12 +13,24 @@
             <i:block name="actions">
                 <i:if test="isFrameworkEnabled('biz.scheduler-jdbc') || isFrameworkEnabled('biz.scheduler-mongo')">
                     <t:permission permission="permission-manage-scheduler">
-                        <a class="btn btn-link" href="/jobs/scheduler">
-                            <span><i class="fa fa-book" aria-hidden="true"></i></span>
-                            @i18n("SchedulerEntry.plural")
+                        <a class="btn btn-link pr-2" href="/jobs/scheduler">
+                            <i class="far fa-clock"></i>
+                            <span class="pl-1 d-none d-md-inline-block">@i18n("SchedulerEntry.plural")</span>
                         </a>
                     </t:permission>
                 </i:if>
+            </i:block>
+            <i:block name="additionalActions">
+                <t:dropdownItem
+                        framework="biz.processes"
+                        permission="permission-view-processes"
+                        url="/ps"
+                        icon="fas fa-external-link-alt"
+                        labelKey="Process.plural"/>
+                <t:dropdownItem
+                        url="/data-explorer"
+                        icon="fas fa-external-link-alt"
+                        labelKey="DataExplorerController.title"/>
             </i:block>
         </t:pageHeader>
     </i:block>

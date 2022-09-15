@@ -10,6 +10,7 @@ package sirius.biz.tenants.mongo;
 
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
+import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.di.std.Part;
@@ -17,7 +18,8 @@ import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 
 import javax.annotation.Nonnull;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Provides an export for {@link MongoUserAccount user accounts}.
@@ -36,15 +38,18 @@ public class MongoUserAccountExportJobFactory
     }
 
     @Override
+    public int getPriority() {
+        return 9110;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.USERS_AND_TENANTS;
     }
 
     @Override
-    public List<String> getRequiredPermissions() {
-        List<String> requiredPermissions = super.getRequiredPermissions();
-        requiredPermissions.add(UserAccountController.getUserManagementPermission());
-        return requiredPermissions;
+    public Set<String> getRequiredPermissions() {
+        return Collections.singleton(UserAccountController.getUserManagementPermission());
     }
 
     @Override
@@ -54,6 +59,6 @@ public class MongoUserAccountExportJobFactory
 
     @Override
     protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
-        return queryString.path().startsWith("/user-account");
+        return targetObject instanceof Class<?> type && UserAccount.class.isAssignableFrom(type);
     }
 }

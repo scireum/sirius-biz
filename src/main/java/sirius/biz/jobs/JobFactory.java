@@ -91,11 +91,14 @@ public interface JobFactory extends Named, Priorized {
     List<JobInfo> getJobInfos();
 
     /**
-     * Returns a list of permissions which a user must have in order to run this job.
+     * Determines if the job is accessible by the current user.
+     * <p>
+     * The default implementation evaluates all {@link sirius.web.security.Permission} annotations present on
+     * the class-level.
      *
-     * @return the list of required permissions to run this job
+     * @return <tt>true</tt> if the current user can access a job, <tt>false</tt> otherwise
      */
-    List<String> getRequiredPermissions();
+    boolean isAccessibleToCurrentUser();
 
     /**
      * Returns the parameters accepted by this job.
@@ -115,9 +118,9 @@ public interface JobFactory extends Named, Priorized {
     /**
      * Generates a URL which can be invoked to start this job while using the given object as a parameter value.
      * <p>
-     * This is used by the <tt>w:jobs</tt> tag to display appropriate jobs next to a data object.
+     * This is used by the <tt>t:jobs</tt> tag to display appropriate jobs next to a data object.
      *
-     * @param uri          the uri of the current page (which contains the <tt>w:jobs</tt> tag
+     * @param uri          the uri of the current page (which contains the <tt>t:jobs</tt> tag
      * @param targetObject the optional target object which is being shown / processed / edited by the page
      * @return an url which starts the launch screen for this job while using the given parameter as value or
      * <tt>null</tt> to indicate that this jobs cannot be started in the ui or that the given object isn't an

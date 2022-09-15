@@ -121,4 +121,9 @@ public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
     public String getName() {
         return FACTORY_NAME;
     }
+
+    @Override
+    public int getPriority() {
+        return 10100;
+    }
 }

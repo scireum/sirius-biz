@@ -58,10 +58,7 @@ public class Jobs {
             return Stream.empty();
         }
 
-        Stream<JobFactory> stream = factories.stream()
-                                             .filter(factory -> factory.getRequiredPermissions()
-                                                                       .stream()
-                                                                       .allMatch(currentUser::hasPermission));
+        Stream<JobFactory> stream = factories.stream().filter(JobFactory::isAccessibleToCurrentUser);
         if (Strings.isFilled(query)) {
             String queryAsLowerCase = query.toLowerCase();
             stream = stream.filter(factory -> factory.getLabel().toLowerCase().contains(queryAsLowerCase));

@@ -32,4 +32,9 @@ public abstract class LineBasedExportJobFactory extends FileExportJobFactory {
         LineBasedImportJobFactory.SUPPORTED_FILE_EXTENSIONS.forEach(fileExtensionConsumer);
     }
 
+    @Override
+    public String getIcon() {
+        return "far fa-file-excel";
+    }
+
 }

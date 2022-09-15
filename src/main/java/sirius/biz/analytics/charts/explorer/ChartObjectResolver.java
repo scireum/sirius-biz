@@ -22,6 +22,13 @@ import java.util.Optional;
 public interface ChartObjectResolver<O> extends Named {
 
     /**
+     * Specifies the type of objects being resolved.
+     *
+     * @return the type of objects being resolved by this resolver
+     */
+    Class<? super O> getTargetType();
+
+    /**
      * Obtains the identifier used to represent the given object.
      *
      * @param object the object to marshal

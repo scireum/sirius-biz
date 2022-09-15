@@ -33,6 +33,11 @@ public abstract class LineBasedImportJobFactory extends FileImportJobFactory {
     }
 
     @Override
+    public String getIcon() {
+        return "far fa-file-excel";
+    }
+
+    @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
         parameterCollector.accept(LineBasedImportJob.IMPORT_ALL_SHEETS_PARAMETER);

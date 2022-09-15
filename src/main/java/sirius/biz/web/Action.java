@@ -20,10 +20,10 @@ import java.util.stream.Stream;
  */
 public class Action {
 
-    private static final String[] COLOR_CLASSES = {"text-sirius-cyan",
-                                                   "text-sirius-green",
+    private static final String[] COLOR_CLASSES = {"text-sirius-green",
                                                    "text-sirius-violet",
                                                    "text-sirius-orange",
+                                                   "text-sirius-cyan",
                                                    "text-sirius-yellow",
                                                    "text-sirius-deep-blue"};
     private final String label;
@@ -43,6 +43,16 @@ public class Action {
         MultiMap<String, Action> result = MultiMap.createOrdered();
         actions.forEach(action -> result.put(action.getCategory(), action));
         return result;
+    }
+
+    /**
+     * Determines the color to used for a given label.
+     *
+     * @param label the label to determine the color from
+     * @return the "randomly" selected color for the given label
+     */
+    public static String fetchColorForLabel(String label) {
+        return COLOR_CLASSES[Math.abs(label.hashCode() % COLOR_CLASSES.length)];
     }
 
     /**
@@ -81,7 +91,7 @@ public class Action {
     }
 
     public String getColorClass() {
-        return COLOR_CLASSES[Math.abs(label.hashCode() % COLOR_CLASSES.length)];
+        return fetchColorForLabel(label);
     }
 
     public String getLabel() {

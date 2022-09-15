@@ -32,6 +32,11 @@ public class MongoTenantExportJobFactory extends EntityExportJobFactory<MongoTen
     }
 
     @Override
+    public int getPriority() {
+        return 9200;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.USERS_AND_TENANTS;
     }

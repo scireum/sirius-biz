@@ -52,18 +52,18 @@ public class Cells {
      * @return the cell representing the wrapped value
      */
     public Cell of(Object value) {
-        if (Strings.isEmpty(value) || value instanceof Amount && ((Amount) value).isEmpty()) {
+        if (Strings.isEmpty(value) || value instanceof Amount amount && amount.isEmpty()) {
             return new Cell("");
         }
-        if (value instanceof String) {
-            return new Cell((String) value);
+        if (value instanceof String string) {
+            return new Cell(string);
         }
         if (value instanceof Enum) {
             return new Cell(Strings.toString((value)));
         }
 
-        if (value instanceof JSONObject) {
-            return new Cell((JSONObject) value);
+        if (value instanceof JSONObject object) {
+            return new Cell(object);
         }
 
         return rightAligned(value);

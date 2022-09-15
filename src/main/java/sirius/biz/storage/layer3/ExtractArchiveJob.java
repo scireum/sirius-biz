@@ -257,6 +257,11 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 5110;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.MISC;
     }
