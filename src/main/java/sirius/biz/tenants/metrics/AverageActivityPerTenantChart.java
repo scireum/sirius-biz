@@ -31,7 +31,7 @@ import java.util.function.Consumer;
  * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_AVG_ACTIVITY} for a tenant.
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
-public class AvgActivityPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
+public class AverageActivityPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
 
     @Override
     public boolean isAccessibleToCurrentUser() {
@@ -53,7 +53,7 @@ public class AvgActivityPerTenantChart extends TimeSeriesChartFactory<Tenant<?>>
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Tenant<?>>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(AvgActivityPerTenantChart.class);
+        referenceChartConsumer.accept(AverageActivityPerTenantChart.class);
     }
 
     @Override
