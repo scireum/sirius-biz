@@ -164,8 +164,11 @@ public interface ProcessContext extends TaskContextAdapter {
      * This is most probably done by {@link Processes#execute(String, Consumer)}. However, when executing in
      * multiple steps (maybe even on multiple nodes) using {@link Processes#partiallyExecute(String, Consumer)},
      * this has to be manually invoked once the process is finally completed.
+     *
+     * @param computationTimeInSeconds the computation time of the last manual step <tt>execute</tt> and
+     *                                 <tt>partiallyExecute</tt> already record this manually.
      */
-    void markCompleted();
+    void markCompleted(int computationTimeInSeconds);
 
     /**
      * Updates the "current state" message of the process.

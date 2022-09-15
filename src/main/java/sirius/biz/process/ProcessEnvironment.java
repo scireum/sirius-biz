@@ -249,9 +249,9 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void markCompleted() {
+    public void markCompleted(int computationTimeInSeconds) {
         processes.reportLimitedMessages(processId, messageCountsPerType, limitsPerType);
-        processes.markCompleted(processId, timings, adminTimings);
+        processes.markCompleted(processId, timings, adminTimings, computationTimeInSeconds);
     }
 
     /**

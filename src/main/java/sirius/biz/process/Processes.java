@@ -36,6 +36,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
@@ -539,19 +540,22 @@ public class Processes {
     /**
      * Marks a process as completed.
      *
-     * @param processId    the process to update
-     * @param timings      timings which have been collected and not yet committed
-     * @param adminTimings timings which have been collected and not yet committed and only administrators should see
+     * @param processId                the process to update
+     * @param timings                  timings which have been collected and not yet committed
+     * @param adminTimings             timings which have been collected and not yet committed and only administrators should see
+     * @param computationTimeInSeconds the computation time of the last step being recorded for this process
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean markCompleted(String processId,
                                     @Nullable Map<String, Average> timings,
-                                    @Nullable Map<String, Average> adminTimings) {
+                                    @Nullable Map<String, Average> adminTimings,
+                                    int computationTimeInSeconds) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             if (process.getState() != ProcessState.STANDBY) {
                 process.setErrorneous(process.isErrorneous() || !TaskContext.get().isActive());
                 process.setState(ProcessState.TERMINATED);
                 process.setCompleted(LocalDateTime.now());
+                process.setComputationTime(process.getComputationTime() + computationTimeInSeconds);
                 process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
             }
 
@@ -837,6 +841,7 @@ public class Processes {
         TaskContextAdapter taskContextAdapterBackup = taskContext.getAdapter();
         UserInfo userInfoBackup = userContext.getUser();
 
+        Watch watch = Watch.start();
         ProcessEnvironment env = new ProcessEnvironment(processId);
         taskContext.setJob(processId);
         taskContext.setAdapter(env);
@@ -844,6 +849,7 @@ public class Processes {
             if (env.isActive()) {
                 CallContext.getCurrent().resetLang();
                 installUserOfProcess(userContext, env);
+
                 task.accept(env);
             }
         } catch (Exception e) {
@@ -853,9 +859,14 @@ public class Processes {
             CallContext.getCurrent().resetLang();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
+
+            int computationTimeInSeconds = (int) watch.elapsed(TimeUnit.SECONDS, false);
             if (complete) {
-                env.markCompleted();
+                env.markCompleted(computationTimeInSeconds);
             } else {
+                modify(processId,
+                       process -> process.getState() != ProcessState.STANDBY || computationTimeInSeconds >= 10,
+                       process -> process.setComputationTime(process.getComputationTime() + computationTimeInSeconds));
                 env.flushTimings();
             }
         }
@@ -1200,8 +1211,7 @@ public class Processes {
                .streamBlockwise()
                .forEach(process -> {
                    numProcesses.incrementAndGet();
-                   computationDurationSeconds.addAndGet(Duration.between(process.getStarted(), process.getCompleted())
-                                                                .getSeconds());
+                   computationDurationSeconds.addAndGet(process.getComputationTime());
                });
 
         return Tuple.create(numProcesses.get(), (int) TimeUnit.SECONDS.toMinutes(computationDurationSeconds.get()));

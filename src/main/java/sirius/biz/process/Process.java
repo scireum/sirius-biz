@@ -220,6 +220,16 @@ public class Process extends SearchableEntity {
     private LocalDateTime completed;
 
     /**
+     * Contains the estimated computation time performed in this process in seconds.
+     * <p>
+     * Note that this is not an exact value, as we might skip very short computations (esp. for standby processes)
+     * to reduce the overhead for Elasticsearch.
+     */
+    public static final Mapping COMPUTATION_TIME = Mapping.named("computationTime");
+    @NullAllowed
+    private int computationTime;
+
+    /**
      * Contains the date when the process will be deleted.
      */
     public static final Mapping EXPIRES = Mapping.named("expires");
@@ -298,22 +308,6 @@ public class Process extends SearchableEntity {
     }
 
     /**
-     * Formats the duration between the given timestamps.
-     *
-     * @param from the start timestamp
-     * @param to   the end timestamp
-     * @return the duration as HH:MM:SS
-     */
-    protected String formatDuration(LocalDateTime from, LocalDateTime to) {
-        if (from == null || to == null) {
-            return "";
-        }
-
-        long absSeconds = Duration.between(from, to).getSeconds();
-        return Strings.apply("%02d:%02d:%02d", absSeconds / 3600, (absSeconds % 3600) / 60, absSeconds % 60);
-    }
-
-    /**
      * Returns the started timestamp formatted as string.
      *
      * @return the started timestamp as string
@@ -345,8 +339,22 @@ public class Process extends SearchableEntity {
      *
      * @return the duration of the process formatted as string
      */
+    @Nullable
     public String getRuntimeAsString() {
-        return formatDuration(getStarted(), getCompleted());
+        if (getComputationTime() > 0) {
+            return formatDuration(getComputationTime());
+        }
+        if (getStarted() == null || getCompleted() == null || state == ProcessState.STANDBY) {
+            return null;
+        }
+
+        // This is only required for legacy processes which have no "computationTime" (as it was newly introduced)...
+        int estimatedRuntime = (int) Duration.between(getStarted(), getCompleted()).getSeconds();
+        return formatDuration(estimatedRuntime);
+    }
+
+    private String formatDuration(int seconds) {
+        return Strings.apply("%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60);
     }
 
     /**
@@ -671,5 +679,13 @@ public class Process extends SearchableEntity {
 
     public void setWarnings(boolean warnings) {
         this.warnings = warnings;
+    }
+
+    public int getComputationTime() {
+        return computationTime;
+    }
+
+    public void setComputationTime(int computationTime) {
+        this.computationTime = computationTime;
     }
 }
