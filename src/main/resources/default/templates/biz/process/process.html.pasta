@@ -24,13 +24,26 @@
             <i:block name="actions">
                 <i:if test="process.shouldAutorefresh()">
                     <a id="disableAutoRefresh"
-                       class="btn btn-link d-none"
+                       class="btn btn-outline-primary d-none"
                        href="#">
-                        @i18n("Process.disableAutoRefresh")
+                        <span class="d-none d-lg-inline-block">
+                            <i class="far fa-check-square"></i>
+                            @i18n("Process.autoRefresh")
+                        </span>
+                        <span class="d-lg-none">
+                            <i class="fas fa-retweet"></i>
+                        </span>
                     </a>
                     <a id="enableAutoRefresh"
-                       class="btn btn-link d-none"
-                       href="#">@i18n("Process.enableAutoRefresh")
+                       class="btn btn-outline-secondary d-none"
+                       href="#">
+                        <span class="d-none d-lg-inline-block">
+                            <i class="far fa-square"></i>
+                            @i18n("Process.autoRefresh")
+                        </span>
+                        <span class="d-lg-none">
+                            <i class="fas fa-retweet"></i>
+                        </span>
                     </a>
                 </i:if>
                 <i:render name="header-actions"/>
