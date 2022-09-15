@@ -19,6 +19,14 @@
                     <i class="fa fa-sync"></i>
                 </button>
             </i:block>
+            <i:block name="additionalActions">
+                <t:dropdownItem
+                        framework="biz.jobs"
+                        permission="permission-execute-jobs"
+                        url="/jobs"
+                        icon="fas fa-external-link-alt"
+                        labelKey="JobFactory.plural"/>
+            </i:block>
         </t:pageHeader>
     </i:block>
 

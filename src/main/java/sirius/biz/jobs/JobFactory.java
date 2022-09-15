@@ -91,11 +91,14 @@ public interface JobFactory extends Named, Priorized {
     List<JobInfo> getJobInfos();
 
     /**
-     * Returns a list of permissions which a user must have in order to run this job.
+     * Determines if the job is accessible by the current user.
+     * <p>
+     * The default implementation evaluates all {@link sirius.web.security.Permission} annotations present on
+     * the class-level.
      *
-     * @return the list of required permissions to run this job
+     * @return <tt>true</tt> if the current user can access a job, <tt>false</tt> otherwise
      */
-    List<String> getRequiredPermissions();
+    boolean isAccessibleToCurrentUser();
 
     /**
      * Returns the parameters accepted by this job.

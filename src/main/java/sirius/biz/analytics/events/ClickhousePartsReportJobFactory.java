@@ -150,4 +150,9 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
     public String getName() {
         return "clickhouse-parts";
     }
+
+    @Override
+    public int getPriority() {
+        return 8210;
+    }
 }

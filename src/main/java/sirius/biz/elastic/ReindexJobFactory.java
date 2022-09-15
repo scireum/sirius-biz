@@ -109,6 +109,11 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 10200;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.SYSTEM_ADMINISTRATION;
     }

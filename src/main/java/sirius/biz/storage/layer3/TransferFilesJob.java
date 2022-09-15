@@ -88,6 +88,16 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     private VirtualFileSystem virtualFileSystem;
 
     @Override
+    public String getIcon() {
+        return "far fa-copy";
+    }
+
+    @Override
+    public int getPriority() {
+        return 5100;
+    }
+
+    @Override
     protected void execute(ProcessContext process) throws Exception {
         VirtualFile source = process.require(sourceParameter);
         VirtualFile destination = process.require(destinationParameter);

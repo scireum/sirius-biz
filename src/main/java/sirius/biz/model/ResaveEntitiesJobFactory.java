@@ -182,4 +182,9 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
     public String getName() {
         return "resave-entities";
     }
+
+    @Override
+    public int getPriority() {
+        return 10300;
+    }
 }

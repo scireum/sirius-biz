@@ -73,7 +73,7 @@ public class TimeSeries {
      * @return creates a timeseries data with the default label to use if only one chart line is present
      */
     public TimeSeriesData createDefaultData() {
-        return createData(comparisonTimeseries ? "$Timeseries.comparisonDataset" : "$Timeseries.currentDataset");
+        return createData(comparisonTimeseries ? "$TimeSeries.comparisonDataset" : "$TimeSeries.currentDataset");
     }
 
     /**

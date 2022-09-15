@@ -30,7 +30,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Reads a given <tt>ATOM</tt> feed and serves the recorded items as {@link UpdateInfo updates} to the users of the
@@ -105,7 +104,7 @@ public class UpdateManager {
                 List<String> categories = node.queryNodeList(ATOM_ITEM_CATEGORY)
                                               .stream()
                                               .map(category -> category.queryString("."))
-                                              .collect(Collectors.toList());
+                                              .toList();
                 UpdateInfo updateInfo = parseFeedItem(node, categories);
                 if (isTriggerCategoryPresent(categories) && !isOutdated(updateInfo) && limit.nextRow()) {
                     nextUpdates.add(updateInfo);
@@ -177,5 +176,14 @@ public class UpdateManager {
                   .eq(UpdateClickEvent.USER_DATA.inner(UserData.USER_ID), userId)
                   .eq(UpdateClickEvent.UPDATE_GUID, updateGuid)
                   .exists();
+    }
+
+    /**
+     * Determines if a feed is configured at all.
+     *
+     * @return <tt>true</tt> if there is an RSS feed configured, <tt>false</tt> otherwise
+     */
+    public boolean hasFeedUrl() {
+        return Strings.isFilled(feedUrl);
     }
 }

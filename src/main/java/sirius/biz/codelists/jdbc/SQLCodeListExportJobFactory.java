@@ -45,6 +45,11 @@ public class SQLCodeListExportJobFactory
     }
 
     @Override
+    public int getPriority() {
+        return 5210;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.MISC;
     }

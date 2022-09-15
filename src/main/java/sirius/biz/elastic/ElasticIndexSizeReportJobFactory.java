@@ -131,4 +131,9 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
     public String getName() {
         return "elastic-index-size";
     }
+
+    @Override
+    public int getPriority() {
+        return 8220;
+    }
 }

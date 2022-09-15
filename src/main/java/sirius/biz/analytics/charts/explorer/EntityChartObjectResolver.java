@@ -37,9 +37,10 @@ public abstract class EntityChartObjectResolver<E extends BaseEntity<?>> impleme
         return object.getIdAsString();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Optional<E> resolve(String identifier) {
-        return mixing.getDescriptor(getTargetType()).getMapper().find(getTargetType(), identifier).map(entity -> {
+        return mixing.getDescriptor(getTargetType()).getMapper().find((Class<E>)getTargetType(), identifier).map(entity -> {
             if (entity instanceof TenantAware tenantAware) {
                 tenants.assertTenant(tenantAware);
             }

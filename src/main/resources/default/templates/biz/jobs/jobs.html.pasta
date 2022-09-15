@@ -19,14 +19,18 @@
                         </a>
                     </t:permission>
                 </i:if>
-                <i:if test="isFrameworkEnabled('biz.processes')">
-                    <t:permission permission="permission-view-processes">
-                        <a class="btn btn-link pr-2" href="/ps">
-                            <i class="fas fa-external-link-alt"></i>
-                            <span class="pl-1 d-none d-md-inline-block">@i18n("Process.plural")</span>
-                        </a>
-                    </t:permission>
-                </i:if>
+            </i:block>
+            <i:block name="additionalActions">
+                <t:dropdownItem
+                        framework="biz.processes"
+                        permission="permission-view-processes"
+                        url="/ps"
+                        icon="fas fa-external-link-alt"
+                        labelKey="Process.plural"/>
+                <t:dropdownItem
+                        url="/data-explorer"
+                        icon="fas fa-external-link-alt"
+                        labelKey="DataExplorerController.title"/>
             </i:block>
         </t:pageHeader>
     </i:block>

@@ -98,6 +98,11 @@ public class RateLimitReportJobFactory extends ReportJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 8110;
+    }
+
+    @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         // there are no parameters for this job...
     }

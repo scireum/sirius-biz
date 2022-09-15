@@ -67,6 +67,11 @@ public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    public int getPriority() {
+        return 10400;
+    }
+
+    @Override
     public String getCategory() {
         return StandardCategories.SYSTEM_ADMINISTRATION;
     }

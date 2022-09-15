@@ -41,7 +41,6 @@ import java.util.function.Consumer;
 @AutoRegister
 public abstract class ChartFactory<O> implements Named, Priorized {
 
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String OUTPUT_LABEL = "label";
     private static final String OUTPUT_SUB_LABEL = "subLabel";
     private static final String OUTPUT_DESCRIPTION = "description";
@@ -93,7 +92,7 @@ public abstract class ChartFactory<O> implements Named, Priorized {
     public boolean isAccessibleToCurrentUser() {
         return UserContext.getCurrentUser()
                           .hasPermissions(Permissions.computePermissionsFromAnnotations(getClass())
-                                                     .toArray(EMPTY_STRING_ARRAY));
+                                                     .toArray(String[]::new));
     }
 
     /**

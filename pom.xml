@@ -19,7 +19,7 @@
     <properties>
         <sirius.kernel>ga-5.0.0</sirius.kernel>
         <sirius.web>dev-54.10.0</sirius.web>
-        <sirius.db>dev-41.12.0</sirius.db>
+        <sirius.db>dev-41.13.0</sirius.db>
     </properties>
 
     <repositories>
