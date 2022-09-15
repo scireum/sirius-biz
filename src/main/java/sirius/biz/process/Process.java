@@ -222,7 +222,7 @@ public class Process extends SearchableEntity {
     /**
      * Contains the estimated computation time performed in this process.
      * <p>
-     * Note that this is now an exact value, as we might skip very short computations (esp. for standby processes)
+     * Note that this is not an exact value, as we might skip very short computations (esp. for standby processes)
      * to reduce the overhead for Elasticsearch.
      */
     public static final Mapping COMPUTATION_TIME = Mapping.named("computationTime");
