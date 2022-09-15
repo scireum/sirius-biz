@@ -85,7 +85,7 @@ public class KnowledgeBaseUserAgentsChart extends TimeSeriesChartFactory<Object>
     }
 
     @Override
-    protected boolean stackValues() {
+    protected boolean stackValues(boolean hasComparisonPeriod) {
         return true;
     }
 }
