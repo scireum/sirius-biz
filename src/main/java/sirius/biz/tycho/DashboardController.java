@@ -54,7 +54,7 @@ public class DashboardController extends BizController {
     @Routed(value = "/admin", priority = 999)
     public void admin(WebContext webContext) {
         String path = new QueryStringDecoder(webContext.getRequest().uri()).path();
-        eventRecorder.record(new PageImpressionEvent().withAggregationUrl(path));
+        eventRecorder.record(new PageImpressionEvent().withAggregationUrl("/system/dashboard"));
         webContext.respondWith().template("/templates/biz/tycho/dashboard.html.pasta", path);
     }
 
