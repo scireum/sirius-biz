@@ -220,7 +220,7 @@ public class Process extends SearchableEntity {
     private LocalDateTime completed;
 
     /**
-     * Contains the estimated computation time performed in this process.
+     * Contains the estimated computation time performed in this process in seconds.
      * <p>
      * Note that this is not an exact value, as we might skip very short computations (esp. for standby processes)
      * to reduce the overhead for Elasticsearch.
