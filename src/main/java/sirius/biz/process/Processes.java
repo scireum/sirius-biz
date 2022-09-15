@@ -1211,8 +1211,7 @@ public class Processes {
                .streamBlockwise()
                .forEach(process -> {
                    numProcesses.incrementAndGet();
-                   computationDurationSeconds.addAndGet(Duration.between(process.getStarted(), process.getCompleted())
-                                                                .getSeconds());
+                   computationDurationSeconds.addAndGet(process.getComputationTime());
                });
 
         return Tuple.create(numProcesses.get(), (int) TimeUnit.SECONDS.toMinutes(computationDurationSeconds.get()));
