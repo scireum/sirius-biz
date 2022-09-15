@@ -16,9 +16,11 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Provides a base implementation for an executor which receives a scheduled task, created by a
@@ -76,17 +78,18 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
 
     protected void partiallyExecuteInProcess(String factoryId, ProcessContext process) {
         process.log(ProcessLog.info().withNLSKey("BatchProcessTaskExecutor.started"));
+        Watch watch = Watch.start();
         try {
             jobs.findFactory(factoryId, BatchProcessJobFactory.class).executeTask(process);
         } catch (Exception e) {
             process.handle(e);
             process.log(ProcessLog.warn().withNLSKey("BatchProcessTaskExecutor.completedButFailed"));
-            process.markCompleted();
+            process.markCompleted((int) watch.elapsed(TimeUnit.SECONDS, false));
         }
     }
 
     /**
-     * Creates an appropriate task context just like {@link BasicJobFactory#setupTaskContext()} does for interactive
+     * Creates an appropriate task context just like <tt>BasicJobFactory.setupTaskContext()</tt> does for interactive
      * jobs.
      *
      * @param factoryId the name of the {@link sirius.biz.jobs.JobFactory} which will execute the job.
