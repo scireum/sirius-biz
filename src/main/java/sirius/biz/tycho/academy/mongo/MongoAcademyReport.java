@@ -14,7 +14,7 @@ import sirius.biz.tycho.academy.AcademyReport;
 import sirius.biz.tycho.academy.AcademyVideoData;
 import sirius.biz.tycho.academy.OnboardingVideoData;
 import sirius.db.mongo.Mango;
-import sirius.db.mongo.facets.MongoAvgFacet;
+import sirius.db.mongo.facets.MongoAverageFacet;
 import sirius.db.mongo.facets.MongoBooleanFacet;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Strings;
@@ -48,8 +48,8 @@ public class MongoAcademyReport extends AcademyReport {
                          new MongoBooleanFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.SKIPPED));
                  MongoBooleanFacet recommendedFacet =
                          new MongoBooleanFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.SKIPPED));
-                 MongoAvgFacet percentWatchedFacet =
-                         new MongoAvgFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PERCENT_WATCHED));
+                 MongoAverageFacet percentWatchedFacet =
+                         new MongoAverageFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PERCENT_WATCHED));
                  mango.select(MongoOnboardingVideo.class)
                       .eq(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
                       .eq(MongoOnboardingVideo.ACADEMY_VIDEO, academyVideo)
