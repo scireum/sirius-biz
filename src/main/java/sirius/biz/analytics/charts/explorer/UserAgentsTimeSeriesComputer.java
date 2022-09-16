@@ -9,7 +9,6 @@
 package sirius.biz.analytics.charts.explorer;
 
 import sirius.biz.analytics.events.EventRecorder;
-import sirius.biz.tycho.DashboardUserAgentsBrowserDistributionChart;
 import sirius.kernel.di.std.Part;
 
 import java.util.function.Function;
@@ -17,14 +16,11 @@ import java.util.function.Function;
 /**
  * Helps computing the user-agent distribution for a given Clickhouse event.
  * <p>
- * Note that the query has to be built manually, but helpful constants are provided below. Note that the query
- * has to yield the expected fields: <tt>year</tt>, <tt>month</tt>, <tt>day</tt>, and the values as created by
- * expressions as provided below.
+ * Note that the query has to be built manually, but helpful constants are provided in each child class.
  * <p>
  * Also note, that building SQL queries from multiple strings can be dangerous. Great care should be taken to
- * only add constant strings to the query. Everything else must be passed in as parameter via {@code  SQLQuery.set("key", value)}
- *
- * @see DashboardUserAgentsBrowserDistributionChart
+ * only add constant strings to the query. Everything else must be passed in as parameter via
+ * {@code  SQLQuery.set("key", value)}
  *
  * @param <O> the type of entities expected by this computer
  */
