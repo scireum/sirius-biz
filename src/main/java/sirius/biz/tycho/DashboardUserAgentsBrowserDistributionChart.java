@@ -31,7 +31,7 @@ import java.util.function.Consumer;
  */
 @Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class DashboardUserAgentsChart extends TimeSeriesChartFactory<Object> {
+public class DashboardUserAgentsBrowserDistributionChart extends TimeSeriesChartFactory<Object> {
 
     private static final String SQL_QUERY = Strings.apply(// language=SQL
                                                           """
@@ -76,7 +76,7 @@ public class DashboardUserAgentsChart extends TimeSeriesChartFactory<Object> {
     @Nonnull
     @Override
     public String getName() {
-        return "GlobalDashboardUserAgentsChart";
+        return "GlobalDashboardUserAgentsBrowserDistributionChart";
     }
 
     @Override

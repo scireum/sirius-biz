@@ -31,7 +31,7 @@ import java.util.function.Consumer;
  */
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class KnowledgeBaseUserAgentsChart extends TimeSeriesChartFactory<Object> {
+public class KnowledgeBaseUserAgentsBrowserDistributionChart extends TimeSeriesChartFactory<Object> {
 
     private static final String SQL_QUERY = Strings.apply(// language=SQL
                                                           """
@@ -76,7 +76,7 @@ public class KnowledgeBaseUserAgentsChart extends TimeSeriesChartFactory<Object>
     @Nonnull
     @Override
     public String getName() {
-        return "GlobalKnowledgeBaseUserAgentsChart";
+        return "GlobalKnowledgeBaseUserAgentsBrowserDistributionChart";
     }
 
     @Override

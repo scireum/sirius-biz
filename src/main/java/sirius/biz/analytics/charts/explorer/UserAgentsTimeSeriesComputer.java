@@ -9,6 +9,7 @@
 package sirius.biz.analytics.charts.explorer;
 
 import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.tycho.DashboardUserAgentsBrowserDistributionChart;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.di.std.Part;
 
@@ -26,7 +27,7 @@ import java.util.function.Function;
  * Also note, that building SQL queries from multiple strings can be dangerous. Great care should be taken to
  * only add constant strings to the query. Everything else must be passed in as parameter via {@code  SQLQuery.set("key", value)}
  *
- * @see sirius.biz.tycho.DashboardUserAgentsChart
+ * @see DashboardUserAgentsBrowserDistributionChart
  *
  * @param <O> the type of entities expected by this computer
  */
