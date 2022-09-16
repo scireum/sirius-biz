@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 /**
  * Implements a time series chart for the dashboard, showing the browser distribution.
  * <p></p>
- * The chart visualizes the browser which have been used in order to access the dashboard by extracting the required data from the user agents dataset.
+ * The chart visualizes the browsers which have been used in order to access the dashboard by extracting the required data from the user agents dataset.
  */
 @Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
