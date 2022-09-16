@@ -33,18 +33,18 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
 public class KnowledgeBaseUserAgentsBrowserDistributionChart extends TimeSeriesChartFactory<Object> {
 
-    private static final String SQL_QUERY = Strings.apply(// language=SQL
-                                                          """
-                                                                  SELECT %s, %s, %s, %s, %s, YEAR(eventDate) as year, MONTH(eventDate) AS month [:daily , DAY(eventDate) AS day]
-                                                                  FROM pageimpressionevent
-                                                                  WHERE aggregationUri = '/kba' AND eventDate >= ${start} AND eventDate <= ${end}
-                                                                  GROUP BY [:daily DAY(eventDate), ] MONTH(eventDate), YEAR(eventDate)                                                     
-                                                                  """,
-                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_FIREFOX,
-                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_CHROME,
-                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_INTERNET_EXPLORER,
-                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_SAFARI,
-                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_EDGE);
+    private static final String SQL_QUERY = Strings.apply(
+            // language=SQL
+            """
+                    SELECT %s, %s, %s, %s, %s, YEAR(eventDate) as year, MONTH(eventDate) AS month [:daily , DAY(eventDate) AS day]
+                    FROM pageimpressionevent
+                    WHERE aggregationUri = '/kba' AND eventDate >= ${start} AND eventDate <= ${end}
+                    GROUP BY [:daily DAY(eventDate), ] MONTH(eventDate), YEAR(eventDate)""",
+            UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_FIREFOX,
+            UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_CHROME,
+            UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_INTERNET_EXPLORER,
+            UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_SAFARI,
+            UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_EDGE);
 
     @Nullable
     @Override
