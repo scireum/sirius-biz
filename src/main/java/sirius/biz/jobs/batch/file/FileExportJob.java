@@ -9,8 +9,8 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.BatchJob;
-import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.FileParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.storage.layer3.VirtualFile;
@@ -145,18 +145,6 @@ public abstract class FileExportJob extends BatchJob {
      */
     private boolean shouldUseProvidedOutputDirectory() {
         return destination.exists() && destination.isDirectory();
-    }
-
-    /**
-     * Determines the effective file name to use.
-     *
-     * @param suffix an optional suffix to append to the name to generate a unique file name
-     * @return a full file name including the file extension
-     * @deprecated use {@link #determineEffectiveFilename(String, boolean)} instead.
-     */
-    @Deprecated
-    protected String determineEffectiveFilename(String suffix) {
-        return determineEffectiveFilename(suffix, true);
     }
 
     /**
