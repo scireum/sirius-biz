@@ -19,8 +19,7 @@ import java.util.function.Function;
  * Note that the query has to be built manually, but helpful constants are provided in each child class.
  * <p>
  * Also note, that building SQL queries from multiple strings can be dangerous. Great care should be taken to
- * only add constant strings to the query. Everything else must be passed in as parameter via
- * {@code  SQLQuery.set("key", value)}
+ * only add constant strings to the query. Everything else must be passed in as parameter via {@code  SQLQuery.set("key", value)}
  *
  * @param <O> the type of entities expected by this computer
  */
