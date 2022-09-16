@@ -37,12 +37,9 @@ public class MultiLanguageStringExtender implements EntityImportHandlerExtender 
                                ImporterContext context,
                                BiConsumer<Mapping, BiConsumer<Context, Object>> loaderCollector) {
         for (Property property : descriptor.getProperties()) {
-            if (property instanceof MultiLanguageStringProperty) {
+            if (property instanceof MultiLanguageStringProperty multiLanguageStringProperty) {
                 loaderCollector.accept(Mapping.named(property.getName()),
-                                       (data, entity) -> load((MultiLanguageStringProperty) property,
-                                                              context,
-                                                              data,
-                                                              entity));
+                                       (data, entity) -> load(multiLanguageStringProperty, context, data, entity));
             }
         }
     }
@@ -87,8 +84,8 @@ public class MultiLanguageStringExtender implements EntityImportHandlerExtender 
                                                                             ImporterContext context,
                                                                             String fieldToExport) {
         Property property = descriptor.findProperty(fieldToExport);
-        if (property instanceof MultiLanguageStringProperty) {
-            return entity -> extractValue(context, (MultiLanguageStringProperty) property, entity);
+        if (property instanceof MultiLanguageStringProperty multiLanguageStringProperty) {
+            return entity -> extractValue(context, multiLanguageStringProperty, entity);
         }
 
         return null;

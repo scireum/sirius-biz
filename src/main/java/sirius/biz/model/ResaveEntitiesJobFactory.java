@@ -103,14 +103,14 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
                     // We do not want to update the tracing infos here as we most probably don't change anything.
                     //
                     // We do not suppress the Journal (if there is any) because we do not
-                    // expect any journalled changes. If there still are any, we have to log them
+                    // expect any journaled changes. If there still are any, we have to log them
                     // for traceability reasons.
-                    if (entity instanceof Traced) {
-                        ((Traced) entity).getTrace().setSilent(true);
+                    if (entity instanceof Traced traced) {
+                        traced.getTrace().setSilent(true);
                     }
 
-                    if (entity instanceof PrefixSearchableEntity) {
-                        ((PrefixSearchableEntity) entity).forceUpdateOfSearchPrefixes();
+                    if (entity instanceof PrefixSearchableEntity prefixSearchableEntity) {
+                        prefixSearchableEntity.forceUpdateOfSearchPrefixes();
                     }
 
                     descriptor.getMapper().update(entity);

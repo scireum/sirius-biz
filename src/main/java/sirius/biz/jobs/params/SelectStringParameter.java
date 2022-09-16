@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Provides a single select parameter from a list of key-value pairs.
@@ -51,7 +50,7 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
         return entries.keySet()
                       .stream()
                       .map(entry -> Tuple.create(entry, NLS.smartGet(entries.get(entry))))
-                      .collect(Collectors.toList());
+                      .toList();
     }
 
     @Override

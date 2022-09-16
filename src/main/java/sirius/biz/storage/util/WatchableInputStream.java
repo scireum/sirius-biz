@@ -62,12 +62,12 @@ public class WatchableInputStream extends InputStream {
     }
 
     @Override
-    public void mark(int readlimit) {
+    public synchronized void mark(int readlimit) {
         delegate.mark(readlimit);
     }
 
     @Override
-    public void reset() throws IOException {
+    public synchronized void reset() throws IOException {
         delegate.reset();
     }
 

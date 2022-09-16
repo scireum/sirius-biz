@@ -31,4 +31,8 @@ public class KBHelper {
     protected void installCurrentArticle(KnowledgeBaseArticle article) {
         currentArticle.set(article);
     }
+
+    protected void clearCurrentArticle() {
+        currentArticle.remove();
+    }
 }

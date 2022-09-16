@@ -93,7 +93,7 @@ public class DatabaseController extends BasicController {
         // Only display selectable databases which are properly configured...
         List<String> availableDatabases = selectableDatabases.stream()
                                                              .filter(name -> databases.getDatabases().contains(name))
-                                                             .collect(Collectors.toList());
+                                                             .toList();
         ctx.respondWith().template("/templates/biz/model/sql.html.pasta", availableDatabases, defaultDatabase);
     }
 

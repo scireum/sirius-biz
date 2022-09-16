@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -351,7 +350,7 @@ public class IDBTable {
     @SuppressWarnings("unchecked")
     private Values parseRow(Object obj) {
         if (obj instanceof List) {
-            return Values.of(((List<Object>) obj).stream().map(Jupiter::read).collect(Collectors.toList()));
+            return Values.of(((List<Object>) obj).stream().map(Jupiter::read).toList());
         } else {
             return Values.of(Collections.emptyList());
         }
@@ -417,7 +416,7 @@ public class IDBTable {
     private List<Values> parseQueryResult(Client redis) {
         Object result = redis.getOne();
         if (result instanceof List) {
-            return ((List<?>) result).stream().map(this::parseRow).collect(Collectors.toList());
+            return ((List<?>) result).stream().map(this::parseRow).toList();
         } else {
             return Collections.singletonList(Values.of(new Object[]{result}));
         }

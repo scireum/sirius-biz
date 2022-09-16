@@ -1171,7 +1171,7 @@ public class Processes {
         createLogsQuery(processOutput, process).iterate(logEntry -> {
             List<String> values = columns.stream()
                                          .map(column -> cells.rawValue(logEntry.getContext().get(column).orElse(null)))
-                                         .collect(Collectors.toList());
+                                         .toList();
             return columnsAndValues.test(columns, values);
         });
     }

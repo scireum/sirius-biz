@@ -16,6 +16,7 @@ import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyFactory;
 import sirius.db.mixing.properties.StringListProperty;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -105,6 +106,8 @@ public class LookupValuesProperty extends StringListProperty {
     }
 
     @Override
+    @SuppressWarnings("java:S6204")
+    @Explain("We probably want a mutable list in the field as this is expected by a caller of the getter")
     public void onBeforeSaveChecks(Object entity) {
         if (((BaseEntity<?>) entity).isChanged(Mapping.named(getName()))) {
             LookupValues lookupValues = getLookupValues(entity);
@@ -125,8 +128,9 @@ public class LookupValuesProperty extends StringListProperty {
         super.onBeforeSaveChecks(entity);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings({"unchecked", "java:S6204"})
+    @Explain("We probably want a mutable list in the field as this is expected by a caller of the getter")
     protected Object transformValueFromImport(Value value) {
         LookupTable table = referenceValues.getTable();
         List<String> values = (List<String>) super.transformValueFromImport(value);

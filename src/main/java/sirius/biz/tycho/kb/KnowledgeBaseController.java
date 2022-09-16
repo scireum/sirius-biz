@@ -106,14 +106,15 @@ public class KnowledgeBaseController extends BizController {
         }
 
         UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
-        webContext.respondWith().template(article.getTemplatePath());
-        eventRecorder.record(new PageImpressionEvent().withUri("/kba/"
-                                                               + article.getLanguage()
-                                                               + "/"
-                                                               + article.getArticleId())
-                                                      .withAggregationUrl("/kba")
-                                                      .withAction(article.getArticleId())
-                                                      .withDataObject(article.getEntry().getUniqueName()));
+        try {
+            webContext.respondWith().template(article.getTemplatePath());
+            eventRecorder.record(new PageImpressionEvent().withUri("/kba/" + article.getLanguage() + "/" + article.getArticleId())
+                                                          .withAggregationUrl("/kba")
+                                                          .withAction(article.getArticleId())
+                                                          .withDataObject(article.getEntry().getUniqueName()));
+        } finally {
+            UserContext.getHelper(KBHelper.class).clearCurrentArticle();
+        }
     }
 
     private boolean checkAuthKey(KnowledgeBaseArticle article, String authKey) {

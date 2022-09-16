@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -75,7 +74,7 @@ public class QueryController extends BizController {
         } else {
             webContext.respondWith()
                       .template("/templates/biz/model/query-descriptors.html.pasta",
-                                fetchRelevantDescriptors().collect(Collectors.toList()),
+                                fetchRelevantDescriptors().toList(),
                                 descriptor,
                                 queryString,
                                 limit);
@@ -163,7 +162,7 @@ public class QueryController extends BizController {
                                                       .map(IndexMode::excludeFromSource)
                                                       .orElse(false))
                          .sorted(Comparator.comparing(Property::getName))
-                         .collect(Collectors.toList());
+                         .toList();
     }
 
     /**

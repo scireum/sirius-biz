@@ -88,7 +88,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
                          .map(Property::getName)
                          .map(Mapping::named)
                          .filter(mapping -> !SQLEntity.ID.equals(mapping))
-                         .collect(Collectors.toList());
+                         .toList();
     }
 
     @Override

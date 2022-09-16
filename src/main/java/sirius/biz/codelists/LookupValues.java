@@ -13,7 +13,6 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Represents a string list value backed by a {@link LookupTable} to be used in database entities.
@@ -96,7 +95,7 @@ public class LookupValues extends StringList {
     public List<Tuple<String, String>> resolveDisplayStrings() {
         return data().stream()
                      .map(code -> Tuple.create(code, display.resolveDisplayString(getTable(), code)))
-                     .collect(Collectors.toList());
+                     .toList();
     }
 
     /**

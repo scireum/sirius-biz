@@ -53,7 +53,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Provides a base implementation for all import handlers which mainly takes care of the convenience methods.
@@ -366,7 +365,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                          .map(Property::getName)
                          .map(Mapping::named)
                          .filter(this::isAutoImportMappingAccepted)
-                         .collect(Collectors.toList());
+                         .toList();
     }
 
     /**
@@ -568,7 +567,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                                                                                                                name)));
         }
         Collections.sort(priorizedList);
-        return priorizedList.stream().map(Tuple::getSecond).map(Mapping::toString).collect(Collectors.toList());
+        return priorizedList.stream().map(Tuple::getSecond).map(Mapping::toString).toList();
     }
 
     protected boolean isExportable(UserInfo currentUser, Property property) {
