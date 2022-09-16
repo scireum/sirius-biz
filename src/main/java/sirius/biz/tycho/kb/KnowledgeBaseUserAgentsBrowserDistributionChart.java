@@ -12,7 +12,7 @@ import sirius.biz.analytics.charts.explorer.ChartFactory;
 import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
 import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
 import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.UserAgentsTimeSeriesComputer;
+import sirius.biz.analytics.charts.explorer.UserAgentsBrowserDistributionTimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.commons.Callback;
@@ -40,11 +40,11 @@ public class KnowledgeBaseUserAgentsBrowserDistributionChart extends TimeSeriesC
                                                                   WHERE aggregationUri = '/kba' AND eventDate >= ${start} AND eventDate <= ${end}
                                                                   GROUP BY [:daily DAY(eventDate), ] MONTH(eventDate), YEAR(eventDate)                                                     
                                                                   """,
-                                                          UserAgentsTimeSeriesComputer.COUNT_FIREFOX,
-                                                          UserAgentsTimeSeriesComputer.COUNT_CHROME,
-                                                          UserAgentsTimeSeriesComputer.COUNT_INTERNET_EXPLORER,
-                                                          UserAgentsTimeSeriesComputer.COUNT_SAFARI,
-                                                          UserAgentsTimeSeriesComputer.COUNT_EDGE);
+                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_FIREFOX,
+                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_CHROME,
+                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_INTERNET_EXPLORER,
+                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_SAFARI,
+                                                          UserAgentsBrowserDistributionTimeSeriesComputer.COUNT_EDGE);
 
     @Nullable
     @Override
@@ -70,7 +70,7 @@ public class KnowledgeBaseUserAgentsBrowserDistributionChart extends TimeSeriesC
             return;
         }
 
-        executor.invoke(new UserAgentsTimeSeriesComputer<>(ignored -> SQL_QUERY));
+        executor.invoke(new UserAgentsBrowserDistributionTimeSeriesComputer<>(ignored -> SQL_QUERY));
     }
 
     @Nonnull
