@@ -10,18 +10,18 @@ package sirius.biz.tenants.metrics;
 
 import sirius.biz.analytics.charts.explorer.ChartFactory;
 import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.Granularity;
+import sirius.biz.analytics.charts.explorer.EventTimeSeriesComputer;
 import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
 import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.TimeSeriesData;
 import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.analytics.events.UserActivityEvent;
+import sirius.biz.analytics.events.UserData;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccountController;
 import sirius.kernel.commons.Callback;
-import sirius.kernel.commons.Limit;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
@@ -29,7 +29,6 @@ import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.LocalDate;
 import java.util.function.Consumer;
 
 /**
@@ -69,31 +68,15 @@ public class NumberOfUserInteractionsPerTenantChart extends TimeSeriesChartFacto
     protected void computers(boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Tenant<?>>> executor) throws Exception {
-        executor.invoke((object, timeSeries) -> {
-            TimeSeriesData value = timeSeries.createDefaultData();
-            eventRecorder.createQuery(//language=SQL
-                                      """
-                                              SELECT count(*) AS value,
-                                                     YEAR(eventDate) as year,
-                                                     MONTH(eventDate) AS month
-                                                     [:daily , DAY(eventDate) AS day]
-                                              FROM useractivityevent
-                                              WHERE userData_tenantId = ${tenant}
-                                                AND eventDate >= ${start}
-                                                AND eventDate <= ${end}
-                                              GROUP BY [:daily DAY(eventDate), ] MONTH(eventDate), YEAR(eventDate)
-                                              """)
-                         .set("daily", timeSeries.getGranularity() == Granularity.DAY)
-                         .set("tenant", object.getIdAsString())
-                         .set("start", timeSeries.getStart())
-                         .set("end", timeSeries.getEnd())
-                         .iterateAll(row -> {
-                             LocalDate localDate = LocalDate.of(row.getValue("year").asInt(0),
-                                                                row.getValue("month").asInt(0),
-                                                                row.tryGetValue("day").asInt(1));
-                             value.addValue(localDate, row.getValue("value").asDouble(0d));
-                         }, Limit.UNLIMITED);
-        });
+        EventTimeSeriesComputer<Tenant<?>, UserActivityEvent> computer =
+                new EventTimeSeriesComputer<>(UserActivityEvent.class,
+                                              (tenant, query) -> query.eq(UserActivityEvent.USER_DATA.inner(UserData.TENANT_ID),
+                                                                          tenant.getIdAsString()));
+
+        computer.addAggregation(NumberOfUserInteractionsChart.AGGREGATION_EXPRESSION_USERS,
+                                NumberOfUserInteractionsChart.LABEL_USERS);
+
+        executor.invoke(computer);
     }
 
     @Nonnull
