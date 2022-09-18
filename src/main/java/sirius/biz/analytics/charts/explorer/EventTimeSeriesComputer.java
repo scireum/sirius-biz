@@ -81,7 +81,7 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
      * @param eventType       the events to query
      * @param queryCustomizer an optional customizer which adapts the query based on the selected data object
      */
-    public EventTimeSeriesComputer(Class<E> eventType, BiConsumer<O, SmartQuery<E>> queryCustomizer) {
+    public EventTimeSeriesComputer(Class<E> eventType, @Nullable BiConsumer<O, SmartQuery<E>> queryCustomizer) {
         this.eventType = eventType;
         this.queryCustomizer = queryCustomizer;
     }
@@ -108,7 +108,16 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
         return this;
     }
 
-    private LocalDate extractDate(Row row) {
+    /**
+     * Extracts the date from a result row.
+     * <p>
+     * Note that the columns <tt>year</tt> and <tt>month</tt> must be present. If <tt>day</tt> is present, it will
+     * be used, otherwise it is assumed to be <tt>1</tt>.
+     *
+     * @param row the row to parse
+     * @return the extracted date
+     */
+    public static LocalDate extractDate(Row row) {
         return LocalDate.of(row.getValue("year").asInt(0),
                             row.getValue("month").asInt(0),
                             row.tryGetValue("day").asInt(1));
@@ -122,8 +131,8 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
             queryCustomizer.accept(object, query);
         }
 
-        applyAggregations(timeSeries, query);
-        applyGroupBy(timeSeries, query);
+        applyDateAggregations(timeSeries, query);
+        applyGroupByDate(timeSeries, query);
         applyDateFilters(timeSeries, query);
 
         List<Tuple<String, TimeSeriesData>> timeSeriesData = new ArrayList<>();
@@ -145,7 +154,7 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
         }, Limit.UNLIMITED);
     }
 
-    private void applyAggregations(TimeSeries timeSeries, SmartQuery<E> query) {
+    private void applyDateAggregations(TimeSeries timeSeries, SmartQuery<E> query) {
         query.aggregationField("year(eventDate) AS year");
         query.aggregationField("month(eventDate) AS month");
         if (timeSeries.getGranularity() == Granularity.DAY) {
@@ -153,7 +162,7 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
         }
     }
 
-    private void applyGroupBy(TimeSeries timeSeries, SmartQuery<E> query) {
+    private void applyGroupByDate(TimeSeries timeSeries, SmartQuery<E> query) {
         if (timeSeries.getGranularity() == Granularity.DAY) {
             query.groupBy(Event.EVENT_DATE.toString());
         } else {
