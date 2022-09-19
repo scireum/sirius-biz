@@ -10,18 +10,15 @@ package sirius.biz.tenants.metrics;
 
 import sirius.biz.analytics.charts.explorer.ChartFactory;
 import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.Granularity;
+import sirius.biz.analytics.charts.explorer.EventTimeSeriesComputer;
 import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
 import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.TimeSeriesData;
-import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.analytics.events.UserActivityEvent;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccountController;
 import sirius.kernel.commons.Callback;
-import sirius.kernel.commons.Limit;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
@@ -29,7 +26,6 @@ import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.LocalDate;
 import java.util.function.Consumer;
 
 /**
@@ -40,8 +36,10 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
 public class NumberOfUserInteractionsChart extends TimeSeriesChartFactory<Object> {
 
-    @Part
-    private EventRecorder eventRecorder;
+    protected static final String AGGREGATION_EXPRESSION_USERS = "count(DISTINCT userData_userId) AS users";
+    protected static final String LABEL_USERS = "$NumberOfUserInteractionsChart.users";
+    protected static final String AGGREGATION_EXPRESSION_TENANTS = "count(DISTINCT userData_tenantId) AS tenants";
+    protected static final String LABEL_TENANTS = "NumberOfUserInteractionsChart.tenants";
 
     @Override
     public boolean isAccessibleToCurrentUser() {
@@ -69,39 +67,16 @@ public class NumberOfUserInteractionsChart extends TimeSeriesChartFactory<Object
     protected void computers(boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
-        executor.invoke((object, timeSeries) -> {
-            TimeSeriesData users = hasComparisonPeriod ?
-                                   timeSeries.createDefaultData() :
-                                   timeSeries.createData("$NumberOfUserInteractionsChart.users");
-            TimeSeriesData tenants =
-                    hasComparisonPeriod ? null : timeSeries.createData("NumberOfUserInteractionsChart.tenants");
+        EventTimeSeriesComputer<Object, UserActivityEvent> computer =
+                new EventTimeSeriesComputer<>(UserActivityEvent.class);
 
-            eventRecorder.createQuery(//language=SQL
-                                      """
-                                              SELECT count(DISTINCT userData_userId) AS users,
-                                                     YEAR(eventDate) as year,
-                                                     MONTH(eventDate) AS month
-                                                     [:daily , DAY(eventDate) AS day]
-                                                     [:tenants , count(DISTINCT userData_tenantId) AS tenants]
-                                              FROM useractivityevent
-                                              WHERE eventDate >= ${start}
-                                                AND eventDate <= ${end}
-                                              GROUP BY [:daily DAY(eventDate), ] MONTH(eventDate), YEAR(eventDate)
-                                              """)
-                         .set("daily", timeSeries.getGranularity() == Granularity.DAY)
-                         .set("tenants", tenants != null)
-                         .set("start", timeSeries.getStart())
-                         .set("end", timeSeries.getEnd())
-                         .iterateAll(row -> {
-                             LocalDate localDate = LocalDate.of(row.getValue("year").asInt(0),
-                                                                row.getValue("month").asInt(0),
-                                                                row.tryGetValue("day").asInt(1));
-                             users.addValue(localDate, row.getValue("users").asDouble(0d));
-                             if (tenants != null) {
-                                 tenants.addValue(localDate, row.getValue("tenants").asDouble(0d));
-                             }
-                         }, Limit.UNLIMITED);
-        });
+        computer.addAggregation(AGGREGATION_EXPRESSION_USERS, LABEL_USERS);
+
+        if (!hasComparisonPeriod) {
+            computer.addAggregation(AGGREGATION_EXPRESSION_TENANTS, LABEL_TENANTS);
+        }
+
+        executor.invoke(computer);
     }
 
     @Nonnull

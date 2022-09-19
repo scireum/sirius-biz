@@ -10,15 +10,13 @@ package sirius.biz.tycho.kb;
 
 import sirius.biz.analytics.charts.explorer.ChartFactory;
 import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.EventTimeSeriesComputer;
 import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
 import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
-import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.analytics.charts.explorer.UserAgentsTimeSeriesComputer;
 import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.commons.Callback;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
@@ -27,15 +25,13 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Shows the views of the whole {@link KnowledgeBase} based on recorded
- * {@link sirius.biz.analytics.events.PageImpressionEvent page impression events}.
+ * Implements a time series chart for the knowledge base.
+ * <p>
+ * The chart visualizes the browser which have been used in order to access the knowledge base by extracting the required data from the user agents dataset.
  */
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class KnowledgeBaseViewsChart extends TimeSeriesChartFactory<Object> {
-
-    @Part
-    private EventRecorder eventRecorder;
+public class KnowledgeBaseUserAgentsChart extends TimeSeriesChartFactory<Object> {
 
     @Nullable
     @Override
@@ -45,47 +41,40 @@ public class KnowledgeBaseViewsChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     public String getCategory() {
-        return StandardCategories.MONITORING;
+        return StandardCategories.MISC;
     }
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Object>>> referenceChartConsumer) {
-        // There are no referenced charts...
-    }
-
-    @Override
-    protected boolean stackValues(boolean hasComparisonPeriod) {
-        return !hasComparisonPeriod;
+        // intentionally empty -> there are no referenced charts
     }
 
     @Override
     protected void computers(boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
-        EventTimeSeriesComputer<Object, PageImpressionEvent> computer =
-                new EventTimeSeriesComputer<>(PageImpressionEvent.class,
-                                              (ignored, query) -> query.eq(PageImpressionEvent.AGGREGATION_URI,
-                                                                           "/kba"));
-        if (hasComparisonPeriod) {
-            computer.addAggregation(EventTimeSeriesComputer.AGGREGATION_EXPRESSION_COUNT, null);
-        } else {
-            computer.addAggregation(EventTimeSeriesComputer.AGGREGATION_EXPRESSION_COUNT_LOGGED_IN,
-                                    EventTimeSeriesComputer.LABEL_LOGGED_IN);
-            computer.addAggregation(EventTimeSeriesComputer.AGGREGATION_EXPRESSION_COUNT_ANONYMOUS,
-                                    EventTimeSeriesComputer.LABEL_ANONYMOUS);
+        if (isComparisonPeriod) {
+            return;
         }
 
-        executor.invoke(computer);
+        executor.invoke(new UserAgentsTimeSeriesComputer<>(PageImpressionEvent.class,
+                                                           (ignored, query) -> query.eq(PageImpressionEvent.AGGREGATION_URI,
+                                                                                        "/kba")));
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return "GlobalKnowledgeBaseViews";
+        return "GlobalKnowledgeBaseUserAgentsChart";
     }
 
     @Override
     public int getPriority() {
-        return 8200;
+        return 900;
+    }
+
+    @Override
+    protected boolean stackValues(boolean hasComparisonPeriod) {
+        return true;
     }
 }
