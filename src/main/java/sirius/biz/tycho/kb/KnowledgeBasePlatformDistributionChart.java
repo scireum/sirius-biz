@@ -8,8 +8,11 @@
 
 package sirius.biz.tycho.kb;
 
-import sirius.biz.analytics.charts.explorer.UserAgentsPlatformDistributionTimeSeriesChartFactory;
+import sirius.biz.analytics.charts.explorer.PlatformDistributionTimeSeriesChartFactory;
+import sirius.biz.analytics.events.Event;
+import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
@@ -22,11 +25,11 @@ import javax.annotation.Nonnull;
  */
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class KnowledgeBaseUserAgentsPlatformDistributionChart extends UserAgentsPlatformDistributionTimeSeriesChartFactory {
+public class KnowledgeBasePlatformDistributionChart extends PlatformDistributionTimeSeriesChartFactory {
     @Nonnull
     @Override
     public String getName() {
-        return "GlobalKnowledgeBaseUserAgentsPlatformDistributionChart";
+        return "GlobalKnowledgeBasePlatformDistributionChart";
     }
 
     @Override
@@ -35,12 +38,12 @@ public class KnowledgeBaseUserAgentsPlatformDistributionChart extends UserAgents
     }
 
     @Override
-    protected String getEventName() {
-        return "pageimpressionevent";
+    protected Class<? extends Event> getEvent() {
+        return PageImpressionEvent.class;
     }
 
     @Override
-    protected String getConditions() {
-        return "aggregationUri = '/kba'";
+    protected SmartQuery<? extends Event> getQuery(SmartQuery<? extends Event> query) {
+        return query.eq(PageImpressionEvent.AGGREGATION_URI, "/kba");
     }
 }

@@ -8,7 +8,9 @@
 
 package sirius.biz.analytics.charts.explorer;
 
+import sirius.biz.analytics.events.Event;
 import sirius.biz.jobs.StandardCategories;
+import sirius.db.jdbc.SmartQuery;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
@@ -38,9 +40,7 @@ public abstract class UserAgentsTimeSeriesChartFactory extends TimeSeriesChartFa
         return true;
     }
 
-    protected abstract String getSqlQuery();
+    protected abstract Class<? extends Event> getEvent();
 
-    protected abstract String getEventName();
-
-    protected abstract String getConditions();
+    protected abstract SmartQuery<? extends Event> getQuery(SmartQuery<? extends Event> query);
 }

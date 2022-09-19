@@ -15,13 +15,13 @@ import javax.annotation.Nullable;
 import java.util.function.BiConsumer;
 
 /**
- * Helps computing the user-agent distribution for a given Clickhouse event.
+ * Helps computing the browser distribution based on the user-agent data for a given Clickhouse event.
  *
  * @param <O> the type of entities expected by this computer
  * @param <E> the type of events being queried
- * @see sirius.biz.tycho.DashboardUserAgentsChart
+ * @see sirius.biz.tycho.DashboardBrowserDistributionChart
  */
-public class UserAgentsTimeSeriesComputer<O, E extends Event> extends EventTimeSeriesComputer<O, E> {
+public class BrowserDistributionTimeSeriesComputer<O, E extends Event> extends EventTimeSeriesComputer<O, E> {
 
     /**
      * Retrieves the number of occurrences of the Firefox browser within the user agent data.
@@ -50,8 +50,7 @@ public class UserAgentsTimeSeriesComputer<O, E extends Event> extends EventTimeS
     /**
      * Retrieves the number of occurrences of the Edge browser within the user agent data.
      */
-    private static final String AGGREGATION_EXPRESSION_EDGE =
-            "countIf(position('Edg' in webData_userAgent) > 0)";
+    private static final String AGGREGATION_EXPRESSION_EDGE = "countIf(position('Edg' in webData_userAgent) > 0)";
 
     /**
      * Creates a new computer for the given event type which customizes the query based on a given object.
@@ -59,7 +58,8 @@ public class UserAgentsTimeSeriesComputer<O, E extends Event> extends EventTimeS
      * @param eventType       the events to query
      * @param queryCustomizer an optional customizer which adapts the query based on the selected data object
      */
-    public UserAgentsTimeSeriesComputer(Class<E> eventType, @Nullable BiConsumer<O, SmartQuery<E>> queryCustomizer) {
+    public BrowserDistributionTimeSeriesComputer(Class<E> eventType,
+                                                 @Nullable BiConsumer<O, SmartQuery<E>> queryCustomizer) {
         super(eventType, queryCustomizer);
         addAggregation(AGGREGATION_EXPRESSION_FIREFOX, "Firefox");
         addAggregation(AGGREGATION_EXPRESSION_CHROME, "Chrome");
