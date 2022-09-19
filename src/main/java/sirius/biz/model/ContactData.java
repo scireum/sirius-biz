@@ -15,7 +15,6 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -38,19 +37,15 @@ import java.util.regex.Pattern;
 public class ContactData extends Composite {
 
     /**
-     * Validates a phone number.
+     * Matches a part of a phone number like <tt>55 55</tt> or <tt>55</tt>.
      */
-    @SuppressWarnings({"java:S5998", "java:S5843"})
-    @Explain(
-            "We permit backtracking here, as the input length is limited. Also, this regex is as simple as it gets when verifying phone numbers.")
-    public static final Pattern VALID_PHONE_NUMBER = Pattern.compile("\\+?\\d+( \\d+)*( */( *\\d+)+)?( *-( *\\d+)+)?");
+    private static final String NUMERIC_PART = "( *\\d+)*+";
 
     /**
-     * Used to ensure a proper max length of a phone number before applying {@link #VALID_PHONE_NUMBER}.
-     * <p>
-     * We require this as the regex is subject to catastrophic backtracking and thus needs an upper limit for its input.
+     * Validates a phone number.
      */
-    public static final int MAX_PHONE_NUMBER_LENGTH = 256;
+    public static final Pattern VALID_PHONE_NUMBER =
+            Pattern.compile("\\+?\\d+" + NUMERIC_PART + "( */" + NUMERIC_PART + ")?( *-" + NUMERIC_PART + ")?");
 
     /**
      * Contains an email address.
@@ -119,8 +114,7 @@ public class ContactData extends Composite {
      * @throws HandledException in case of an invalid phone number
      */
     public void verifyPhoneNumber() {
-        if (Strings.isFilled(phone) && phone.length() < MAX_PHONE_NUMBER_LENGTH && !VALID_PHONE_NUMBER.matcher(phone)
-                                                                                                      .matches()) {
+        if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
             throw invalidPhoneException(NLS.get("ContactData.phone"), phone);
         }
     }
@@ -135,8 +129,7 @@ public class ContactData extends Composite {
      *                                  passed into the on validate method and can simply be forwarded here.
      */
     public void validatePhoneNumber(Consumer<String> validationMessageConsumer) {
-        if (Strings.isFilled(phone) && phone.length() < MAX_PHONE_NUMBER_LENGTH && !VALID_PHONE_NUMBER.matcher(phone)
-                                                                                                      .matches()) {
+        if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
             validationMessageConsumer.accept(invalidPhoneException(NLS.get("ContactData.phone"), phone).getMessage());
         }
     }
@@ -150,8 +143,7 @@ public class ContactData extends Composite {
      * @throws HandledException in case of an invalid mobile phone number
      */
     public void verifyMobileNumber() {
-        if (Strings.isFilled(phone) && phone.length() < MAX_PHONE_NUMBER_LENGTH && !VALID_PHONE_NUMBER.matcher(phone)
-                                                                                                      .matches()) {
+        if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
             throw invalidPhoneException(NLS.get("ContactData.mobile"), phone);
         }
     }
@@ -166,8 +158,7 @@ public class ContactData extends Composite {
      *                                  passed into the on validate method and can simply be forwarded here.
      */
     public void validateMobileNumber(Consumer<String> validationMessageConsumer) {
-        if (Strings.isFilled(mobile) && phone.length() < MAX_PHONE_NUMBER_LENGTH && !VALID_PHONE_NUMBER.matcher(mobile)
-                                                                                                       .matches()) {
+        if (Strings.isFilled(mobile) && !VALID_PHONE_NUMBER.matcher(mobile).matches()) {
             validationMessageConsumer.accept(invalidPhoneException(NLS.get("ContactData.mobile"), mobile).getMessage());
         }
     }
@@ -181,8 +172,7 @@ public class ContactData extends Composite {
      * @throws HandledException in case of an invalid fax number
      */
     public void verifyFaxNumber() {
-        if (Strings.isFilled(fax) && phone.length() < MAX_PHONE_NUMBER_LENGTH && !VALID_PHONE_NUMBER.matcher(fax)
-                                                                                                    .matches()) {
+        if (Strings.isFilled(fax) && !VALID_PHONE_NUMBER.matcher(fax).matches()) {
             throw invalidPhoneException(NLS.get("ContactData.fax"), fax);
         }
     }
@@ -197,8 +187,7 @@ public class ContactData extends Composite {
      *                                  passed into the on validate method and can simply be forwarded here.
      */
     public void validateFaxNumber(Consumer<String> validationMessageConsumer) {
-        if (Strings.isFilled(fax) && phone.length() < MAX_PHONE_NUMBER_LENGTH && !VALID_PHONE_NUMBER.matcher(fax)
-                                                                                                    .matches()) {
+        if (Strings.isFilled(fax) && !VALID_PHONE_NUMBER.matcher(fax).matches()) {
             validationMessageConsumer.accept(invalidPhoneException(NLS.get("ContactData.fax"), fax).getMessage());
         }
     }
