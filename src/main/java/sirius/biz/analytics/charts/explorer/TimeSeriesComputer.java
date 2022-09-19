@@ -18,17 +18,17 @@ import javax.annotation.Nullable;
  * These are the work-horses of the time-series charts, as they compute the actual values.
  *
  * @param <O> the type of entities expected by this computer
- * @see MonthlyMetricTimeSeries
+ * @see MetricTimeSeriesComputer
  */
 public interface TimeSeriesComputer<O> {
 
     /**
-     * Computes the values for the given object and timeseries.
+     * Computes the values for the given object and time series.
      *
      * @param object     the object selected for the chart
-     * @param timeseries the timeseries which specifies the period to query and also permits to create the resulting
+     * @param timeSeries the time series which specifies the period to query and also permits to create the resulting
      *                   {@link TimeSeriesData} to output date into the chart
      * @throws Exception in case of any error during the computation
      */
-    void compute(@Nullable O object, TimeSeries timeseries) throws Exception;
+    void compute(@Nullable O object, TimeSeries timeSeries) throws Exception;
 }
