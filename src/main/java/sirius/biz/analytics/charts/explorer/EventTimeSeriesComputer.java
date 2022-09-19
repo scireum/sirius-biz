@@ -30,7 +30,7 @@ import java.util.function.BiConsumer;
  * Note that this is intended for straight forward queries which need to be adaptive
  * (like {@link sirius.biz.tycho.updates.NumberOfUpdateClicksChart} or which are re-usable like
  * {@link UserAgentsTimeSeriesComputer}). If a query grows and becomes too complex or isn't buildable using
- * {@link SmartQuery} anyway, a custom computer should be implements (most probably as anonymous lambda in the
+ * {@link SmartQuery} anyway, a custom computer should be implemented (most probably as anonymous lambda in the
  * chart itself), which directly builds the query as readable and maintainable SQL string and collects its result.
  *
  * @param <O> the types of objects on which this computer operates
