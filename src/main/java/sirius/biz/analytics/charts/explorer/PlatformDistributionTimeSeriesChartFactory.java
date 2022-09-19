@@ -15,7 +15,8 @@ import sirius.kernel.commons.Callback;
  * Lays the foundation of platform distribution based time series charts, by providing the base sql which extracts the
  * platform distribution from the user agent data based on a Clickhouse event and additional conditions.
  */
-public abstract class PlatformDistributionTimeSeriesChartFactory<E extends Event> extends UserAgentsTimeSeriesChartFactory<E> {
+public abstract class PlatformDistributionTimeSeriesChartFactory<E extends Event>
+        extends UserAgentsTimeSeriesChartFactory<E> {
     @Override
     protected void computers(boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
@@ -24,6 +25,7 @@ public abstract class PlatformDistributionTimeSeriesChartFactory<E extends Event
             return;
         }
 
-        executor.invoke(new PlatformDistributionTimeSeriesComputer<>(getEvent(), (ignored, query) -> modifyQuery(query)));
+        executor.invoke(new PlatformDistributionTimeSeriesComputer<>(getEvent(),
+                                                                     (ignored, query) -> modifyQuery(query)));
     }
 }
