@@ -9,7 +9,6 @@
 package sirius.biz.tycho;
 
 import sirius.biz.analytics.charts.explorer.PlatformDistributionTimeSeriesChartFactory;
-import sirius.biz.analytics.events.Event;
 import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.SmartQuery;
@@ -25,7 +24,8 @@ import javax.annotation.Nonnull;
  */
 @Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class DashboardPlatformDistributionChart extends PlatformDistributionTimeSeriesChartFactory {
+public class DashboardPlatformDistributionChart
+        extends PlatformDistributionTimeSeriesChartFactory<PageImpressionEvent> {
     @Nonnull
     @Override
     public String getName() {
@@ -38,12 +38,12 @@ public class DashboardPlatformDistributionChart extends PlatformDistributionTime
     }
 
     @Override
-    protected Class<? extends Event> getEvent() {
+    protected Class<PageImpressionEvent> getEvent() {
         return PageImpressionEvent.class;
     }
 
     @Override
-    protected SmartQuery<? extends Event> getQuery(SmartQuery<? extends Event> query) {
-        return query.eq(PageImpressionEvent.AGGREGATION_URI, "/system/dashboard");
+    protected void modifyQuery(SmartQuery<PageImpressionEvent> query) {
+        query.eq(PageImpressionEvent.AGGREGATION_URI, "/system/dashboard");
     }
 }

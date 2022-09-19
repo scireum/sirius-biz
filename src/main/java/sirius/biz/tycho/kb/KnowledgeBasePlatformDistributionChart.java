@@ -9,7 +9,6 @@
 package sirius.biz.tycho.kb;
 
 import sirius.biz.analytics.charts.explorer.PlatformDistributionTimeSeriesChartFactory;
-import sirius.biz.analytics.events.Event;
 import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.SmartQuery;
@@ -25,7 +24,8 @@ import javax.annotation.Nonnull;
  */
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class KnowledgeBasePlatformDistributionChart extends PlatformDistributionTimeSeriesChartFactory {
+public class KnowledgeBasePlatformDistributionChart
+        extends PlatformDistributionTimeSeriesChartFactory<PageImpressionEvent> {
     @Nonnull
     @Override
     public String getName() {
@@ -38,12 +38,12 @@ public class KnowledgeBasePlatformDistributionChart extends PlatformDistribution
     }
 
     @Override
-    protected Class<? extends Event> getEvent() {
+    protected Class<PageImpressionEvent> getEvent() {
         return PageImpressionEvent.class;
     }
 
     @Override
-    protected SmartQuery<? extends Event> getQuery(SmartQuery<? extends Event> query) {
-        return query.eq(PageImpressionEvent.AGGREGATION_URI, "/kba");
+    protected void modifyQuery(SmartQuery<PageImpressionEvent> query) {
+        query.eq(PageImpressionEvent.AGGREGATION_URI, "/kba");
     }
 }

@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 /**
  * Provides a base class for user agent based time series charts.
  */
-public abstract class UserAgentsTimeSeriesChartFactory extends TimeSeriesChartFactory<Object> {
+public abstract class UserAgentsTimeSeriesChartFactory<E extends Event> extends TimeSeriesChartFactory<Object> {
     @Nullable
     @Override
     protected Class<? extends ChartObjectResolver<Object>> getResolver() {
@@ -40,7 +40,7 @@ public abstract class UserAgentsTimeSeriesChartFactory extends TimeSeriesChartFa
         return true;
     }
 
-    protected abstract Class<? extends Event> getEvent();
+    protected abstract Class<E> getEvent();
 
-    protected abstract SmartQuery<? extends Event> getQuery(SmartQuery<? extends Event> query);
+    protected abstract void modifyQuery(SmartQuery<E> query);
 }
