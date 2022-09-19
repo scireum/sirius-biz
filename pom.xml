@@ -17,8 +17,8 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>ga-5.0.0</sirius.kernel>
-        <sirius.web>dev-54.10.0</sirius.web>
+        <sirius.kernel>dev-32.0.0</sirius.kernel>
+        <sirius.web>dev-55.0.0</sirius.web>
         <sirius.db>dev-43.0.0</sirius.db>
     </properties>
 
@@ -162,7 +162,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.30</version>
+            <version>1.32</version>
         </dependency>
     </dependencies>
 

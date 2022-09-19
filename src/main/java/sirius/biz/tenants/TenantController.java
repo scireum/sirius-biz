@@ -117,7 +117,9 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenants(WebContext webContext) {
         webContext.respondWith()
-                  .template("/templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(webContext).asPage(), this);
+                  .template("/templates/biz/tenants/tenants.html.pasta",
+                            getTenantsAsPage(webContext).withTotalCount().asPage(),
+                            this);
     }
 
     /**
@@ -406,7 +408,8 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     @LoginRequired
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext webContext, String tenantId) {
-        boolean isSwitchToMain = "main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId);
+        boolean isSwitchToMain =
+                "main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId);
         String redirectTarget = webContext.get("goto").asString(isSwitchToMain ? "/tenants/select" : wondergemRoot);
 
         if (isSwitchToMain) {

@@ -171,18 +171,6 @@ public interface ProcessContext extends TaskContextAdapter {
     void markCompleted(int computationTimeInSeconds);
 
     /**
-     * Updates the "current state" message of the process.
-     * <p>
-     * Note that this doesn't perform any rate limiting etc. Therefore {@link TaskContext#shouldUpdateState()}
-     * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
-     *
-     * @param state the new state message to show
-     * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
-     */
-    @Deprecated(since = "2021/07/01")
-    void setCurrentStateMessage(String state);
-
-    /**
      * Provides access to the context which has been provided for the process.
      * <p>
      * Note that this cannot and must not be modified.

@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -111,7 +110,7 @@ public class EntityDescriptorParameter extends ParameterBuilder<EntityDescriptor
             descriptors = descriptors.filter(filter);
         }
 
-        return descriptors.collect(Collectors.toList());
+        return descriptors.toList();
     }
 
     /**

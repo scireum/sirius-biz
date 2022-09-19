@@ -28,7 +28,21 @@ public class KBHelper {
         return currentArticle.get();
     }
 
+    /**
+     * Installs the article currently being rendered.
+     * <p>
+     * This is used internally to fetch related articles etc.
+     *
+     * @param article the article currently being rendered.
+     */
     protected void installCurrentArticle(KnowledgeBaseArticle article) {
         currentArticle.set(article);
+    }
+
+    /**
+     * Clears the article currently being rendered to prevent any memory leaks.
+     */
+    protected void clearCurrentArticle() {
+        currentArticle.remove();
     }
 }

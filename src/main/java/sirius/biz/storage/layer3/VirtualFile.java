@@ -1616,8 +1616,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return true;
         }
 
-        if ((other instanceof VirtualFile) && (Objects.equals(((VirtualFile) other).parent, parent))) {
-            return Objects.equals(name, ((VirtualFile) other).name);
+        if ((other instanceof VirtualFile file) && (Objects.equals(file.parent, parent))) {
+            return Objects.equals(name, file.name);
         }
 
         return false;

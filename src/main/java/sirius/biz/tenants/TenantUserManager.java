@@ -56,7 +56,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Provides a {@link UserManager} for {@link Tenant} and {@link UserAccount}.
@@ -994,9 +993,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * @return a list of tuples containing the ISO code and the translated name
      */
     public List<Tuple<String, String>> getAvailableLanguages() {
-        return availableLanguages.stream()
-                                 .map(code -> Tuple.create(code, NLS.get("Language." + code)))
-                                 .collect(Collectors.toList());
+        return availableLanguages.stream().map(code -> Tuple.create(code, NLS.get("Language." + code))).toList();
     }
 
     @Override

@@ -21,7 +21,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -82,7 +81,7 @@ public class Jobs {
         return getAvailableJobs(null).filter(JobFactory::canStartInteractive)
                                      .map(job -> Tuple.create(job.generatePresetUrl(uri, targetObject), job))
                                      .filter(tuple -> tuple.getFirst() != null)
-                                     .collect(Collectors.toList());
+                                     .toList();
     }
 
     /**

@@ -62,7 +62,7 @@ public class Cell {
      * @return a JSON string representing this cell
      */
     public String serializeToString() {
-        return value instanceof JSONObject ? ((JSONObject) value).toJSONString() : (String) value;
+        return value instanceof JSONObject object ? object.toJSONString() : (String) value;
     }
 
     /**
@@ -71,8 +71,8 @@ public class Cell {
      * @return a HTML string which represents the rendered result
      */
     public String render() {
-        if (value instanceof JSONObject) {
-            return cells.renderJSON((JSONObject) value);
+        if (value instanceof JSONObject object) {
+            return cells.renderJSON(object);
         } else {
             return cells.render(serializeToString());
         }

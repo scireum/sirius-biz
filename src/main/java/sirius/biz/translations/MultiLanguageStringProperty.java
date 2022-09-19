@@ -239,10 +239,10 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     protected Object transformFromElastic(Value object) {
         Map<String, String> result = new HashMap<>();
         Object value = object.get();
-        if (value instanceof JSONObject) {
-            ((JSONObject) value).forEach((language, text) -> {
-                if (text instanceof String) {
-                    result.put(language, (String) text);
+        if (value instanceof JSONObject jsonObject) {
+            jsonObject.forEach((language, text) -> {
+                if (text instanceof String string) {
+                    result.put(language, string);
                 }
             });
         }

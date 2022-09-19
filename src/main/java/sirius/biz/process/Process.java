@@ -415,7 +415,7 @@ public class Process extends SearchableEntity {
             counterStream = Stream.concat(counterStream, adminPerformanceCounters.data().keySet().stream());
         }
 
-        return counterStream.sorted().collect(Collectors.toList());
+        return counterStream.sorted().toList();
     }
 
     /**
