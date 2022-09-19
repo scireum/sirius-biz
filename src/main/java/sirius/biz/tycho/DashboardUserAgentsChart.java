@@ -13,10 +13,10 @@ import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
 import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
 import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
 import sirius.biz.analytics.charts.explorer.UserAgentsTimeSeriesComputer;
+import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.commons.Callback;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
@@ -26,25 +26,12 @@ import java.util.function.Consumer;
 
 /**
  * Implements a time series chart for the dashboard.
- * <p></p>
+ * <p>
  * The chart visualizes the browser which have been used in order to access the dashboard by extracting the required data from the user agents dataset.
  */
 @Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
 public class DashboardUserAgentsChart extends TimeSeriesChartFactory<Object> {
-
-    private static final String SQL_QUERY = Strings.apply(// language=SQL
-                                                          """
-                                                                  SELECT %s, %s, %s, %s, %s, YEAR(eventDate) as year, MONTH(eventDate) AS month [:daily , DAY(eventDate) AS day]
-                                                                  FROM pageimpressionevent
-                                                                  WHERE aggregationUri = '/system/dashboard' AND eventDate >= ${start} AND eventDate <= ${end}
-                                                                  GROUP BY [:daily DAY(eventDate), ] MONTH(eventDate), YEAR(eventDate)                                                     
-                                                                  """,
-                                                          UserAgentsTimeSeriesComputer.COUNT_FIREFOX,
-                                                          UserAgentsTimeSeriesComputer.COUNT_CHROME,
-                                                          UserAgentsTimeSeriesComputer.COUNT_INTERNET_EXPLORER,
-                                                          UserAgentsTimeSeriesComputer.COUNT_SAFARI,
-                                                          UserAgentsTimeSeriesComputer.COUNT_EDGE);
 
     @Nullable
     @Override
@@ -70,7 +57,9 @@ public class DashboardUserAgentsChart extends TimeSeriesChartFactory<Object> {
             return;
         }
 
-        executor.invoke(new UserAgentsTimeSeriesComputer<>(ignored -> SQL_QUERY));
+        executor.invoke(new UserAgentsTimeSeriesComputer<>(PageImpressionEvent.class,
+                                                           (ignored, query) -> query.eq(PageImpressionEvent.AGGREGATION_URI,
+                                                                                        "/system/dashboard")));
     }
 
     @Nonnull

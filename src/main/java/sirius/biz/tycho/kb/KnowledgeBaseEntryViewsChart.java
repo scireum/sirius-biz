@@ -10,22 +10,20 @@ package sirius.biz.tycho.kb;
 
 import sirius.biz.analytics.charts.explorer.ChartFactory;
 import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.Granularity;
+import sirius.biz.analytics.charts.explorer.EventTimeSeriesComputer;
 import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
 import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.TimeSeriesData;
 import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.commons.Callback;
-import sirius.kernel.commons.Limit;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.LocalDate;
 import java.util.function.Consumer;
 
 /**
@@ -64,44 +62,20 @@ public class KnowledgeBaseEntryViewsChart extends TimeSeriesChartFactory<Knowled
     protected void computers(boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<KnowledgeBaseEntry>> executor) throws Exception {
-        executor.invoke((object, timeSeries) -> {
-            TimeSeriesData all = hasComparisonPeriod ? timeSeries.createDefaultData() : null;
-            TimeSeriesData loggedIn = hasComparisonPeriod ? null : timeSeries.createData("$TimeSeries.loggedIn");
-            TimeSeriesData anonymous = hasComparisonPeriod ? null : timeSeries.createData("$TimeSeries.anonymous");
-            eventRecorder.createQuery(//language=SQL
-                                      """
-                                              SELECT count(*) AS all,
-                                                     countIf(userData_userId IS NOT NULL) AS loggedIn,
-                                                     countIf(userData_userId IS NULL) AS anonymous,
-                                                     YEAR(eventDate) as year,
-                                                     MONTH(eventDate) AS month
-                                                     [:daily , DAY(eventDate) AS day]
-                                              FROM pageimpressionevent
-                                              WHERE aggregationUri = '/kba'
-                                                AND dataObject = ${entry}
-                                                AND eventDate >= ${start}
-                                                AND eventDate <= ${end}
-                                              GROUP BY [:daily DAY(eventDate), ] MONTH(eventDate), YEAR(eventDate)
-                                              """)
-                         .set("daily", timeSeries.getGranularity() == Granularity.DAY)
-                         .set("entry", object.getUniqueName())
-                         .set("start", timeSeries.getStart())
-                         .set("end", timeSeries.getEnd())
-                         .iterateAll(row -> {
-                             LocalDate localDate = LocalDate.of(row.getValue("year").asInt(0),
-                                                                row.getValue("month").asInt(0),
-                                                                row.tryGetValue("day").asInt(1));
-                             if (all != null) {
-                                 all.addValue(localDate, row.getValue("all").asDouble(0d));
-                             }
-                             if (loggedIn != null) {
-                                 loggedIn.addValue(localDate, row.getValue("loggedIn").asDouble(0d));
-                             }
-                             if (anonymous != null) {
-                                 anonymous.addValue(localDate, row.getValue("anonymous").asDouble(0d));
-                             }
-                         }, Limit.UNLIMITED);
-        });
+        EventTimeSeriesComputer<KnowledgeBaseEntry, PageImpressionEvent> computer = new EventTimeSeriesComputer<>(
+                PageImpressionEvent.class,
+                (entry, query) -> query.eq(PageImpressionEvent.AGGREGATION_URI, "/kba")
+                                       .eq(PageImpressionEvent.DATA_OBJECT, entry.getUniqueName()));
+        if (hasComparisonPeriod) {
+            computer.addAggregation(EventTimeSeriesComputer.AGGREGATION_EXPRESSION_COUNT, null);
+        } else {
+            computer.addAggregation(EventTimeSeriesComputer.AGGREGATION_EXPRESSION_COUNT_LOGGED_IN,
+                                    EventTimeSeriesComputer.LABEL_LOGGED_IN);
+            computer.addAggregation(EventTimeSeriesComputer.AGGREGATION_EXPRESSION_COUNT_ANONYMOUS,
+                                    EventTimeSeriesComputer.LABEL_ANONYMOUS);
+        }
+
+        executor.invoke(computer);
     }
 
     @Nonnull

@@ -84,7 +84,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                                                               SELECT COUNT(DISTINCT eventDate) AS numberOfDays
                                                               FROM useractivityevent
                                                               WHERE userData_userId = ${userId}
-                                                                AND eventDate > ${lowerLimit}
+                                                                AND eventDate >= ${lowerLimit}
                                                                 AND eventDate <= ${upperLimit}""")
                                               .set("userId", entity.getUniqueName())
                                               .set("lowerLimit", lowerLimit)
