@@ -27,31 +27,31 @@ public class UserAgentsTimeSeriesComputer<O, E extends Event> extends EventTimeS
      * Retrieves the number of occurrences of the Firefox browser within the user agent data.
      */
     private static final String AGGREGATION_EXPRESSION_FIREFOX =
-            "countIf(position('Firefox' in webData_userAgent) > 0) as firefox";
+            "countIf(position('Firefox' in webData_userAgent) > 0)";
 
     /**
      * Retrieves the number of occurrences of the Chrome browser within the user agent data.
      */
     private static final String AGGREGATION_EXPRESSION_CHROME =
-            "countIf(position('Chrome' in webData_userAgent) > 0 and position('Edg' in webData_userAgent) == 0) as chrome";
+            "countIf(position('Chrome' in webData_userAgent) > 0 and position('Edg' in webData_userAgent) == 0)";
 
     /**
      * Retrieves the number of occurrences of the Internet Explorer browser within the user agent data.
      */
     private static final String AGGREGATION_EXPRESSION_INTERNET_EXPLORER =
-            "countIf(position('MSIE' in webData_userAgent) > 0 or position('Trident' in webData_userAgent) > 0) as internetExplorer";
+            "countIf(position('MSIE' in webData_userAgent) > 0 or position('Trident' in webData_userAgent) > 0)";
 
     /**
      * Retrieves the number of occurrences of the Safari browser within the user agent data.
      */
     private static final String AGGREGATION_EXPRESSION_SAFARI =
-            "countIf(position('Safari' in webData_userAgent) > 0 and position('Chrome' in webData_userAgent) == 0 and position('Edg' in webData_userAgent) == 0) as safari";
+            "countIf(position('Safari' in webData_userAgent) > 0 and position('Chrome' in webData_userAgent) == 0 and position('Edg' in webData_userAgent) == 0)";
 
     /**
      * Retrieves the number of occurrences of the Edge browser within the user agent data.
      */
     private static final String AGGREGATION_EXPRESSION_EDGE =
-            "countIf(position('Edg' in webData_userAgent) > 0) as edge";
+            "countIf(position('Edg' in webData_userAgent) > 0)";
 
     /**
      * Creates a new computer for the given event type which customizes the query based on a given object.
