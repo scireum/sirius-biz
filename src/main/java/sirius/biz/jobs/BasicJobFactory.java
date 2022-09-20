@@ -26,19 +26,18 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
 import sirius.web.http.QueryString;
 import sirius.web.http.WebContext;
-import sirius.web.security.Permission;
+import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -48,8 +47,6 @@ import java.util.function.Function;
  * Provides a robust base implementation of {@link JobFactory} which performs all the heavy lifting.
  */
 public abstract class BasicJobFactory implements JobFactory {
-
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     /**
      * Contains the {@link TaskContext#setSystem(String) system string} for jobs.
@@ -115,8 +112,19 @@ public abstract class BasicJobFactory implements JobFactory {
     }
 
     @Override
-    public List<String> getRequiredPermissions() {
-        return Arrays.stream(getClass().getAnnotationsByType(Permission.class)).map(Permission::value).toList();
+    public boolean isAccessibleToCurrentUser() {
+        return UserContext.getCurrentUser().hasPermissions(getRequiredPermissions().toArray(String[]::new));
+    }
+
+    /**
+     * Fetches the permissions required by this job.
+     * <p>
+     * By default, we pick up all {@link sirius.web.security.Permission} annotations on the job class.
+     *
+     * @return a set of all required permissions for this job
+     */
+    protected Set<String> getRequiredPermissions() {
+        return Permissions.computePermissionsFromAnnotations(getClass());
     }
 
     @Override
@@ -155,7 +163,7 @@ public abstract class BasicJobFactory implements JobFactory {
             return null;
         }
 
-        if (!UserContext.getCurrentUser().hasPermissions(getRequiredPermissions().toArray(EMPTY_STRING_ARRAY))) {
+        if (!isAccessibleToCurrentUser()) {
             return null;
         }
 
@@ -202,7 +210,7 @@ public abstract class BasicJobFactory implements JobFactory {
 
     @Override
     public void startInteractively(WebContext request) {
-        checkPermissions();
+        enforceAccessibility();
         setupTaskContext();
 
         AtomicBoolean submit = new AtomicBoolean(request.isSafePOST() && !request.get(PARAM_UPDATE_ONLY).asBoolean());
@@ -231,7 +239,7 @@ public abstract class BasicJobFactory implements JobFactory {
 
     @Override
     public String startInBackground(Function<String, Value> parameterProvider) {
-        checkPermissions();
+        enforceAccessibility();
         setupTaskContext();
         Map<String, String> context = buildAndVerifyContext(parameterProvider, true, (param, error) -> {
             throw error;
@@ -262,15 +270,10 @@ public abstract class BasicJobFactory implements JobFactory {
         taskContext.setJob("kernel");
     }
 
-    /**
-     * Enforces the permissions specified by this job.
-     * <p>
-     * You cannot override this method, because it should behave consistently with {@link #getRequiredPermissions()}.
-     * Please add all required permissions there.
-     */
-    protected final void checkPermissions() {
-        UserInfo currentUser = UserContext.getCurrentUser();
-        getRequiredPermissions().forEach(currentUser::assertPermission);
+    protected final void enforceAccessibility() {
+        if (!isAccessibleToCurrentUser()) {
+            throw Exceptions.createHandled().withDirectMessage(NLS.get("BasicJobFactory.unauthorized")).handle();
+        }
     }
 
     @Override
