@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer3;
 
 import sirius.biz.jobs.JobFactory;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
@@ -253,5 +254,15 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     @Override
     public String getName() {
         return "file-extraction";
+    }
+
+    @Override
+    public int getPriority() {
+        return 5110;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.MISC;
     }
 }

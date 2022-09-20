@@ -624,7 +624,7 @@ public abstract class LookupTable {
     }
 
     private static List<String> transformArrayToStringList(JSONArray array) {
-        return array.stream().filter(Strings::isFilled).map(String::valueOf).collect(Collectors.toList());
+        return array.stream().filter(Strings::isFilled).map(String::valueOf).toList();
     }
 
     /**

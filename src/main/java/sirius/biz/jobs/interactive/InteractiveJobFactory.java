@@ -71,7 +71,7 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
 
     @Override
     public void startInteractively(WebContext request) {
-        checkPermissions();
+        enforceAccessibility();
         setupTaskContext();
 
         AtomicBoolean submit = new AtomicBoolean(request.isSafePOST());

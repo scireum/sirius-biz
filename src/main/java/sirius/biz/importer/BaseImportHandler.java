@@ -28,7 +28,6 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.ComparableTuple;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
-import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -37,7 +36,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
-import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -55,8 +53,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 /**
  * Provides a base implementation for all import handlers which mainly takes care of the convenience methods.
@@ -320,7 +316,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected E newEntity() {
         try {
             return (E) descriptor.getType().getConstructor().newInstance();
-        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException e) {
             throw Exceptions.handle()
                             .error(e)
                             .withSystemErrorMessage("Cannot create an instance of: %s", descriptor.getType().getName())
@@ -368,7 +365,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                          .map(Property::getName)
                          .map(Mapping::named)
                          .filter(this::isAutoImportMappingAccepted)
-                         .collect(Collectors.toList());
+                         .toList();
     }
 
     /**
@@ -570,7 +567,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                                                                                                                name)));
         }
         Collections.sort(priorizedList);
-        return priorizedList.stream().map(Tuple::getSecond).map(Mapping::toString).collect(Collectors.toList());
+        return priorizedList.stream().map(Tuple::getSecond).map(Mapping::toString).toList();
     }
 
     protected boolean isExportable(UserInfo currentUser, Property property) {

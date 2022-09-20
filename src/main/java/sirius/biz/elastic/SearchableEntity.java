@@ -77,15 +77,15 @@ public abstract class SearchableEntity extends ElasticEntity {
      * @param propertyValue  the value to transform
      */
     protected void addContent(Tokenizer tokenizer, StringBuilder contentBuilder, Object propertyValue) {
-        if (propertyValue instanceof StringList) {
-            ((StringList) propertyValue).forEach(value -> addContentAsTokens(tokenizer, contentBuilder, value));
-        } else if (propertyValue instanceof StringMap) {
-            ((StringMap) propertyValue).forEach(entry -> {
+        if (propertyValue instanceof StringList list) {
+            list.forEach(value -> addContentAsTokens(tokenizer, contentBuilder, value));
+        } else if (propertyValue instanceof StringMap map) {
+            map.forEach(entry -> {
                 addContentAsTokens(tokenizer, contentBuilder, entry.getKey());
                 addContentAsTokens(tokenizer, contentBuilder, entry.getValue());
             });
-        } else if (propertyValue instanceof StringListMap) {
-            ((StringListMap) propertyValue).forEach(entry -> {
+        } else if (propertyValue instanceof StringListMap map) {
+           map.forEach(entry -> {
                 addContentAsTokens(tokenizer, contentBuilder, entry.getKey());
                 entry.getValue().forEach(value -> addContentAsTokens(tokenizer, contentBuilder, value));
             });

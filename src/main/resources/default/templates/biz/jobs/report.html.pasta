@@ -8,5 +8,5 @@
           fullWidth="true"
           context="context"
           additionalMetrics="additionalMetrics">
-    <w:report report="report" />
+    <t:report report="report" />
 </i:invoke>

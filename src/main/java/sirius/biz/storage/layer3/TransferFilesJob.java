@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
@@ -87,6 +88,16 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     private VirtualFileSystem virtualFileSystem;
 
     @Override
+    public String getIcon() {
+        return "far fa-copy";
+    }
+
+    @Override
+    public int getPriority() {
+        return 5100;
+    }
+
+    @Override
     protected void execute(ProcessContext process) throws Exception {
         VirtualFile source = process.require(sourceParameter);
         VirtualFile destination = process.require(destinationParameter);
@@ -141,5 +152,10 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     @Override
     public String getName() {
         return NAME;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.MISC;
     }
 }

@@ -56,7 +56,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Provides a {@link UserManager} for {@link Tenant} and {@link UserAccount}.
@@ -994,9 +993,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * @return a list of tuples containing the ISO code and the translated name
      */
     public List<Tuple<String, String>> getAvailableLanguages() {
-        return availableLanguages.stream()
-                                 .map(code -> Tuple.create(code, NLS.get("Language." + code)))
-                                 .collect(Collectors.toList());
+        return availableLanguages.stream().map(code -> Tuple.create(code, NLS.get("Language." + code))).toList();
     }
 
     @Override
@@ -1009,7 +1006,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     /**
      * Returns the id of the system tenant.
      * <p>
-     * Note that this method should only be used by the framework itself. Otherwise use
+     * Note that this method should only be used by the framework itself. Otherwise, use
      * {@link UserInfo#hasPermission(String)} or {@link Tenant#hasPermission(String)} and
      * {@link #PERMISSION_SYSTEM_ADMINISTRATOR} or {@link #PERMISSION_SYSTEM_TENANT_MEMBER}.
      *

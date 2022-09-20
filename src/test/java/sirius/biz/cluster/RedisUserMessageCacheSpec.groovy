@@ -24,7 +24,7 @@ class RedisUserMessageCacheSpec extends BaseSpecification {
         given:
         String key = "key" + System.currentTimeMillis()
         when:
-        cache.put(key, Collections.singletonList(Message.error("Test error message")))
+        cache.put(key, Collections.singletonList(Message.error().withHTMLMessage("Test error message")))
         then:
         List<Message> result = cache.getAndRemove(key)
         result.size() == 1

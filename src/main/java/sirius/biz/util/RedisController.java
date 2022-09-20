@@ -93,8 +93,8 @@ public class RedisController extends BizController {
                 resultBuilder.append(") ");
                 renderResult(results.get(i), offset + "    ", resultBuilder);
             }
-        } else if (result instanceof byte[]) {
-            resultBuilder.append(SafeEncoder.encode((byte[]) result));
+        } else if (result instanceof byte[] byteArray) {
+            resultBuilder.append(SafeEncoder.encode(byteArray));
             resultBuilder.append("\n");
         } else {
             resultBuilder.append(NLS.toUserString(result));

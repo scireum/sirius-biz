@@ -190,7 +190,7 @@ public class ClusterController extends BasicController {
                                           .flatMap(node -> node.getJobs().keySet().stream())
                                           .distinct()
                                           .sorted(Comparator.naturalOrder())
-                                          .collect(Collectors.toList());
+                                          .toList();
         Map<String, String> descriptions = clusterInfo.stream()
                                                       .flatMap(node -> node.getJobs().entrySet().stream())
                                                       .collect(Collectors.toMap(Map.Entry::getKey,

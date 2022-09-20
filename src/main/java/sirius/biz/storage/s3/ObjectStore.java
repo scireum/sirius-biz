@@ -63,7 +63,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Represents a S3 compatible object store which is commonly obtained via {@link ObjectStores}.
@@ -292,7 +291,7 @@ public class ObjectStore {
      * @return a list of all buckets in the given store
      */
     public List<String> listBuckets() {
-        return getClient().listBuckets().stream().map(Bucket::getName).collect(Collectors.toList());
+        return getClient().listBuckets().stream().map(Bucket::getName).toList();
     }
 
     /**

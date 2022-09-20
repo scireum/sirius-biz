@@ -13,8 +13,6 @@ import sirius.biz.analytics.metrics.jdbc.SQLMonthlyGlobalMetricComputer;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tenants.metrics.GlobalTenantMetricComputer;
-import sirius.db.jdbc.OMA;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import java.time.LocalDate;
@@ -25,9 +23,6 @@ import java.time.LocalDateTime;
  */
 @Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLTenantGlobalMetricComputer extends SQLMonthlyGlobalMetricComputer {
-
-    @Part
-    private OMA oma;
 
     @Override
     public int getLevel() {

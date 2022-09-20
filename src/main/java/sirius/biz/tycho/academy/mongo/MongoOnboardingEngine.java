@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 /**
  * Provides an implementation of the {@link OnboardingEngine} based on MongoDB.
  */
-@Register(classes = OnboardingEngine.class, framework = MongoOnboardingEngine.FRAMEWORK_TYCHO_MONGO_ACADEMIES)
+@Register(framework = MongoOnboardingEngine.FRAMEWORK_TYCHO_MONGO_ACADEMIES)
 public class MongoOnboardingEngine extends OnboardingEngine {
 
     /**

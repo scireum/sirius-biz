@@ -1,7 +1,7 @@
 <i:arg type="String" name="uri" default="@CallContext.getCurrent().get(WebContext.class).getRequest().uri()"/>
 <i:arg type="Object" name="target"/>
 
-<i:local name="jobs" value="Injector.context().getPart(Jobs.class)" />
+<i:local name="jobs" value="Injector.context().getPart(Jobs.class)"/>
 <i:if test="jobs != null">
     <i:local name="jobsList" value="@jobs.getMatchingInteractiveJobs(uri, target)"/>
     <i:if test="!jobsList.isEmpty()">
@@ -10,7 +10,9 @@
                 <i:local name="link" value="linkAndJob.getFirst().as(String.class)"/>
                 <i:local name="job" value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
 
-                <t:navboxLink icon="@apply('fa %s', job.getIcon())" label="@job.getLabel()" url="@link"/>
+                <t:navboxLink icon="@apply('%s %s', job.getIcon(), sirius.biz.web.Action.fetchColorForLabel(job.getLabel()))"
+                              label="@job.getLabel()"
+                              url="@link"/>
             </i:for>
         </t:navbox>
     </i:if>

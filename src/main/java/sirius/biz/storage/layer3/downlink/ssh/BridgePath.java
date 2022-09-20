@@ -222,8 +222,8 @@ public class BridgePath implements Path {
 
     @Override
     public int compareTo(Path other) {
-        if (other instanceof BridgePath) {
-            return Objects.compare(virtualFile, ((BridgePath) other).virtualFile, VirtualFile::compareTo);
+        if (other instanceof BridgePath bridgePath) {
+            return Objects.compare(virtualFile, bridgePath.virtualFile, VirtualFile::compareTo);
         }
 
         return 1;
@@ -244,8 +244,8 @@ public class BridgePath implements Path {
             return true;
         }
 
-        if (other instanceof BridgePath) {
-            return Objects.equals(virtualFile, ((BridgePath) other).virtualFile);
+        if (other instanceof BridgePath bridgePath) {
+            return Objects.equals(virtualFile, bridgePath.virtualFile);
         }
 
         return false;

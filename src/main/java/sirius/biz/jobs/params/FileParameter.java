@@ -10,6 +10,7 @@ package sirius.biz.jobs.params;
 
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -162,13 +163,15 @@ public class FileParameter extends ParameterBuilder<VirtualFile, FileParameter> 
     }
 
     @Override
+    @SuppressWarnings("java:S1067")
+    @Explain("The expression is already split up into multiple filters.")
     protected Optional<VirtualFile> resolveFromString(Value input) {
         if (input.isEmptyString()) {
             return Optional.empty();
         }
 
         return Optional.ofNullable(vfs.resolve(input.asString()))
-                       .filter(VirtualFile::exists)
+                       .filter(file -> (allowDirectories && allowFiles && file.parent().exists()) || file.exists())
                        .filter(file -> allowDirectories || file.isFile())
                        .filter(file -> allowFiles || file.isDirectory());
     }

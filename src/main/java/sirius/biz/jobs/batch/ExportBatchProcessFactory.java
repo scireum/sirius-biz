@@ -9,7 +9,6 @@
 package sirius.biz.jobs.batch;
 
 import sirius.biz.cluster.work.DistributedTaskExecutor;
-import sirius.biz.jobs.JobCategory;
 import sirius.biz.process.PersistencePeriod;
 
 /**
@@ -18,9 +17,7 @@ import sirius.biz.process.PersistencePeriod;
 public abstract class ExportBatchProcessFactory extends BatchProcessJobFactory {
 
     /**
-     * Provides an executor for batch jobs which are all put in the priorized queue named "export-jobs".
-     * <p>
-     * This should be used for jobs in {@link sirius.biz.jobs.JobCategory#CATEGORY_EXPORT}.
+     * Provides an executor for batch jobs which are all put in the prioritized queue named "export-jobs".
      */
     public static class ExportBatchProcessTaskExecutor extends BatchProcessTaskExecutor {
 
@@ -38,11 +35,6 @@ public abstract class ExportBatchProcessFactory extends BatchProcessJobFactory {
     @Override
     protected Class<? extends DistributedTaskExecutor> getExecutor() {
         return ExportBatchProcessTaskExecutor.class;
-    }
-
-    @Override
-    public String getCategory() {
-        return JobCategory.CATEGORY_EXPORT;
     }
 
     @Override

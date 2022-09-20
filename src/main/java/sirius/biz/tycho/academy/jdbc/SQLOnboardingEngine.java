@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 /**
  * Provides an implementation of the {@link OnboardingEngine} based on a JDBC/SQL database.
  */
-@Register(classes = OnboardingEngine.class, framework = SQLOnboardingEngine.FRAMEWORK_TYCHO_JDBC_ACADEMIES)
+@Register(framework = SQLOnboardingEngine.FRAMEWORK_TYCHO_JDBC_ACADEMIES)
 public class SQLOnboardingEngine extends OnboardingEngine {
 
     /**

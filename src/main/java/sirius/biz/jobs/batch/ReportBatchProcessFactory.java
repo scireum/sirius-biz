@@ -9,7 +9,6 @@
 package sirius.biz.jobs.batch;
 
 import sirius.biz.cluster.work.DistributedTaskExecutor;
-import sirius.biz.jobs.JobCategory;
 
 /**
  * Provides a base implementation for batch jobs which are executed by the {@link ReportBatchProcessTaskExecutor}.
@@ -19,9 +18,7 @@ import sirius.biz.jobs.JobCategory;
 public abstract class ReportBatchProcessFactory extends BatchProcessJobFactory {
 
     /**
-     * Provides an executor for batch jobs which are all put in the priorized queue named "report-jobs".
-     * <p>
-     * This should be used for jobs in {@link sirius.biz.jobs.JobCategory#CATEGORY_REPORT}.
+     * Provides an executor for batch jobs which are all put in the prioritized queue named "report-jobs".
      */
     public static class ReportBatchProcessTaskExecutor extends BatchProcessTaskExecutor {
 
@@ -34,11 +31,6 @@ public abstract class ReportBatchProcessFactory extends BatchProcessJobFactory {
     @Override
     protected Class<? extends DistributedTaskExecutor> getExecutor() {
         return ReportBatchProcessTaskExecutor.class;
-    }
-
-    @Override
-    public String getCategory() {
-        return JobCategory.CATEGORY_REPORT;
     }
 
     @Override

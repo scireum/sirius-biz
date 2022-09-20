@@ -25,7 +25,6 @@ import sirius.web.http.WebContext;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Represents an output type which renders all log entries as a table.
@@ -81,10 +80,7 @@ public class TableProcessOutputType implements ProcessOutputType {
      * @return the list of visible column labels
      */
     public List<String> determineLabels(ProcessOutput output, List<String> columns) {
-        return columns.stream()
-                      .map(col -> output.getContext().get(col).orElse(col))
-                      .map(NLS::smartGet)
-                      .collect(Collectors.toList());
+        return columns.stream().map(col -> output.getContext().get(col).orElse(col)).map(NLS::smartGet).toList();
     }
 
     @Override

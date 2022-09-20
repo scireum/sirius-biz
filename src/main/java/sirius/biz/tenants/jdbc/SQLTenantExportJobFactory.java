@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.TenantController;
 import sirius.db.jdbc.SmartQuery;
@@ -28,6 +29,16 @@ public class SQLTenantExportJobFactory extends EntityExportJobFactory<SQLTenant,
     @Override
     public String getName() {
         return "export-sql-tenants";
+    }
+
+    @Override
+    public int getPriority() {
+        return 9200;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.USERS_AND_TENANTS;
     }
 
     @Override

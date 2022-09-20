@@ -249,9 +249,9 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void markCompleted() {
+    public void markCompleted(int computationTimeInSeconds) {
         processes.reportLimitedMessages(processId, messageCountsPerType, limitsPerType);
-        processes.markCompleted(processId, timings, adminTimings);
+        processes.markCompleted(processId, timings, adminTimings, computationTimeInSeconds);
     }
 
     /**
@@ -272,34 +272,6 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public void trace(String s) {
         // ignored
-    }
-
-    /**
-     * Invoked if {@link sirius.kernel.async.TaskContext#setState(String, Object...)} is called in the attached
-     * context.
-     *
-     * @param message the message to set as state
-     * @deprecated Use either {@link #forceUpdateState(String)} or {@link #tryUpdateState(String)}
-     */
-    @Override
-    @Deprecated(since = "2021/07/01")
-    public void setState(String message) {
-        processes.setStateMessage(processId, message);
-    }
-
-    /**
-     * Updates the "current state" message of the process.
-     * <p>
-     * Note that this doesn't perform any rate limiting etc. Therefore {@link TaskContext#shouldUpdateState()}
-     * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
-     *
-     * @param state the new state message to show
-     * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
-     */
-    @Override
-    @Deprecated(since = "2021/07/01")
-    public void setCurrentStateMessage(String state) {
-        processes.setStateMessage(processId, state);
     }
 
     @Override
@@ -408,7 +380,7 @@ class ProcessEnvironment implements ProcessContext {
         columns.forEach(column -> output.getContext().modify().put(column.getFirst(), column.getSecond()));
 
         addOutput(output);
-        return new TableOutput(name, this, columns.stream().map(Tuple::getFirst).collect(Collectors.toList()));
+        return new TableOutput(name, this, columns.stream().map(Tuple::getFirst).toList());
     }
 
     @Override

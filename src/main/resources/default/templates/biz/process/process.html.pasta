@@ -24,13 +24,26 @@
             <i:block name="actions">
                 <i:if test="process.shouldAutorefresh()">
                     <a id="disableAutoRefresh"
-                       class="btn btn-link d-none"
+                       class="btn btn-outline-primary d-none"
                        href="#">
-                        @i18n("Process.disableAutoRefresh")
+                        <span class="d-none d-lg-inline-block">
+                            <i class="far fa-check-square"></i>
+                            @i18n("Process.autoRefresh")
+                        </span>
+                        <span class="d-lg-none">
+                            <i class="fas fa-retweet"></i>
+                        </span>
                     </a>
                     <a id="enableAutoRefresh"
-                       class="btn btn-link d-none"
-                       href="#">@i18n("Process.enableAutoRefresh")
+                       class="btn btn-outline-secondary d-none"
+                       href="#">
+                        <span class="d-none d-lg-inline-block">
+                            <i class="far fa-square"></i>
+                            @i18n("Process.autoRefresh")
+                        </span>
+                        <span class="d-lg-none">
+                            <i class="fas fa-retweet"></i>
+                        </span>
                     </a>
                 </i:if>
                 <i:render name="header-actions"/>
@@ -64,7 +77,9 @@
             <t:iconInlineInfo icon="fa fa-user">
                 <t:smartValue type="user-account" payload="@process.getUserId()" label="@process.getUserName()"/>
                 <i:if test="isFilled(process.getTenantId()) && user().getTenantId() != process.getTenantId()">
-                    (<t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()"/>)
+                    (
+                    <t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()"/>
+                    )
                 </i:if>
             </t:iconInlineInfo>
             <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
@@ -76,13 +91,11 @@
                         <div class="cycle-js link"
                              data-cycle="@process.getStartedAsString() - @process.getCompletedAsString()">
                             @toSpokenDate(process.getStarted())
-                            <i:if test="isFilled(process.getRuntimeAsString())">
-                                (@process.getRuntimeAsString())
-                            </i:if>
                         </div>
                     </t:iconInlineInfo>
                 </i:else>
             </i:if>
+            <t:iconInlineInfo icon="fas fa-stopwatch">@process.getRuntimeAsString()</t:iconInlineInfo>
         </t:pageHeader>
     </i:block>
 

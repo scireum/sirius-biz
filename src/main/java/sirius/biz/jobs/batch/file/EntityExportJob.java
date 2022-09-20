@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Provides a job for exporting entities as line based files (CSV, Excel) via a {@link EntityExportJobFactory}.
@@ -86,7 +85,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected final Importer importer;
     protected final List<String> defaultMapping;
     protected Class<E> type;
-    protected List<Function<? super E, ?>> extractors;
+    protected List<? extends Function<? super E, ?>> extractors;
     protected Consumer<Q> queryExtender;
     protected Consumer<Context> contextExtender;
     protected String targetFileName;
@@ -252,7 +251,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
             }
 
             return createExtractor(mapping);
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     /**
@@ -326,10 +325,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         process.log(ProcessLog.info().withNLSKey("EntityExportJob.exportWithDefaultMapping"));
         dictionary.useMapping(defaultMapping);
         setupExtractors();
-        export.addListRow(dictionary.getMappings()
-                                    .stream()
-                                    .map(dictionary::expandToLabel)
-                                    .toList());
+        export.addListRow(dictionary.getMappings().stream().map(dictionary::expandToLabel).toList());
 
         fullExportWithGivenMapping();
     }

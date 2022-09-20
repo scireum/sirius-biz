@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer1.replication;
 
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.LocalDateParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -107,4 +108,15 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
     public String getName() {
         return "force-layer1-replication";
     }
+
+    @Override
+    public int getPriority() {
+        return 10500;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.SYSTEM_ADMINISTRATION;
+    }
+
 }

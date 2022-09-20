@@ -24,7 +24,6 @@ import sirius.web.http.WebContext;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Provides a distributed cache to store not yet shown user messages.
@@ -48,7 +47,8 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
     public void put(String key, List<Message> value) {
         JSONArray array = new JSONArray();
         for (Message message : value) {
-            array.add(new JSONObject().fluentPut(FIELD_HTML, message.getHtml()).fluentPut(FIELD_TYPE, message.getType()));
+            array.add(new JSONObject().fluentPut(FIELD_HTML, message.getHtml())
+                                      .fluentPut(FIELD_TYPE, message.getType()));
         }
 
         redis.exec(() -> "Write to RedisUserMessageCache",
@@ -73,7 +73,7 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
                    .map(object -> new Message(Value.of(object.getString(FIELD_TYPE))
                                                    .getEnum(MessageLevel.class)
                                                    .orElse(MessageLevel.INFO), object.getString(FIELD_HTML)))
-                   .collect(Collectors.toList());
+                   .toList();
     }
 
     @Override

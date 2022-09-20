@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Provides a facility to connect to one or more <a href="https://github.com/scireum/jupiter">Jupiter</a> instances.
@@ -167,11 +166,11 @@ public class Jupiter implements MetricProvider {
      * @return the transformed object (where all inner objects are also transformed).
      */
     public static Object read(Object obj) {
-        if (obj instanceof byte[]) {
-            return SafeEncoder.encode((byte[]) obj);
+        if (obj instanceof byte[] byteArray) {
+            return SafeEncoder.encode(byteArray);
         }
         if (obj instanceof List) {
-            return ((List<?>) obj).stream().map(Jupiter::read).collect(Collectors.toList());
+            return ((List<?>) obj).stream().map(Jupiter::read).toList();
         }
 
         return obj;

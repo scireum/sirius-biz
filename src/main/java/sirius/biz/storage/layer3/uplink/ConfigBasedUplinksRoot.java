@@ -24,7 +24,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Collects all available {@link ConfigBasedUplink uplinks} and enumerates them in the root directory.
@@ -61,7 +60,7 @@ public class ConfigBasedUplinksRoot implements VFSRoot {
                      .stream()
                      .map(this::makeUplink)
                      .filter(Objects::nonNull)
-                     .collect(Collectors.toList());
+                     .toList();
     }
 
     private ConfigBasedUplink makeUplink(Extension extension) {
