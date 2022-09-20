@@ -58,6 +58,7 @@ public class Jobs {
         }
 
         Stream<JobFactory> stream = factories.stream().filter(JobFactory::isAccessibleToCurrentUser);
+
         if (Strings.isFilled(query)) {
             String queryAsLowerCase = query.toLowerCase();
             stream = stream.filter(factory -> factory.getLabel().toLowerCase().contains(queryAsLowerCase));
