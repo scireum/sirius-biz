@@ -106,6 +106,15 @@ public class Parameter<V> extends Composable {
     }
 
     /**
+     * Returns the name of the legacy template used to render the parameter in the UI.
+     *
+     * @return the name or path of the template used to render the parameter
+     */
+    public String getLegacyTemplateName() {
+        return delegate.getLegacyTemplateName();
+    }
+
+    /**
      * Verifies the value given for this parameter
      *
      * @param input the input wrapped as <tt>Value</tt>

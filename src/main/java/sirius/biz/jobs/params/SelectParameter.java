@@ -34,4 +34,9 @@ public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extend
     public String getTemplateName() {
         return "/templates/biz/jobs/params/selectString.html.pasta";
     }
+
+    @Override
+    public String getLegacyTemplateName() {
+        return "/templates/biz/jobs/params/legacy/selectString.html.pasta";
+    }
 }

@@ -64,6 +64,11 @@ public class CodeListEntryParameter extends ParameterBuilder<CodeListEntry<?, ?>
     }
 
     @Override
+    public String getLegacyTemplateName() {
+        return "/templates/biz/jobs/params/legacy/codelistentry.html.pasta";
+    }
+
+    @Override
     protected String checkAndTransformValue(@Nonnull Value input) {
         if (!codeLists.hasValue(codelist, input.asString())) {
             return null;

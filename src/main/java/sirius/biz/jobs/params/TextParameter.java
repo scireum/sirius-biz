@@ -63,4 +63,9 @@ public abstract class TextParameter<V, P extends TextParameter<V, P>> extends Pa
     public String getTemplateName() {
         return "/templates/biz/jobs/params/textfield.html.pasta";
     }
+
+    @Override
+    public String getLegacyTemplateName() {
+        return "/templates/biz/jobs/params/legacy/textfield.html.pasta";
+    }
 }

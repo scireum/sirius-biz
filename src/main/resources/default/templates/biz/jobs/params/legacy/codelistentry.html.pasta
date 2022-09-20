@@ -1,0 +1,16 @@
+<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
+<i:arg name="context" type="Map"/>
+
+<w:singleSelect span="12"
+                smallSpan="12"
+                name="@param.getName()"
+                label="@param.getLabel()"
+                help="@param.getDescription()"
+                optional="@!param.isRequired()"
+                required="@param.isRequired()">
+    <i:for var="value" type="sirius.biz.codelists.CodeListEntry" items="@param.as(sirius.biz.jobs.params.CodeListEntryParameter.class).getValues()">
+        <option value="@value.getCodeListEntryData().getCode()" @selected="value == param.get(context).orElse(null)">
+            @value.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang())
+        </option>
+    </i:for>
+</w:singleSelect>

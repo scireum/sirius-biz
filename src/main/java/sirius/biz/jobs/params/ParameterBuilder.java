@@ -328,6 +328,15 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     protected abstract String getTemplateName();
 
     /**
+     * Returns the name of the legacy template used to render the parameter in the UI.
+     *
+     * @return the name or path of the template used to render the parameter
+     */
+    protected String getLegacyTemplateName() {
+        throw new UnsupportedOperationException("Legacy template not implemented!");
+    }
+
+    /**
      * Verifies the value given for this parameter
      *
      * @param input the input wrapped as <tt>Value</tt>
