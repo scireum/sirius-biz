@@ -19,7 +19,7 @@ import javax.annotation.Nonnull;
 
 /**
  * Implements a time series chart for the knowledge base, showing the browser distribution.
- * <p></p>
+ * <p>
  * The chart visualizes the browsers which have been used in order to access the knowledge base by extracting the required data from the user agents dataset.
  */
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
