@@ -34,7 +34,7 @@ public class KnowledgeBasePlatformDistributionChart
 
     @Override
     public int getPriority() {
-        return 900;
+        return 904;
     }
 
     @Override

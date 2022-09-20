@@ -33,7 +33,7 @@ public class DashboardBrowserDistributionChart extends BrowserDistributionTimeSe
 
     @Override
     public int getPriority() {
-        return 900;
+        return 901;
     }
 
     @Override

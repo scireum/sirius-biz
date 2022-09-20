@@ -34,7 +34,7 @@ public class DashboardPlatformDistributionChart
 
     @Override
     public int getPriority() {
-        return 900;
+        return 902;
     }
 
     @Override
