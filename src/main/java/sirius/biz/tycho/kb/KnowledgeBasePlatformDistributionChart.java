@@ -8,14 +8,21 @@
 
 package sirius.biz.tycho.kb;
 
-import sirius.biz.analytics.charts.explorer.PlatformDistributionTimeSeriesChartFactory;
+import sirius.biz.analytics.charts.explorer.ChartFactory;
+import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
+import sirius.biz.analytics.charts.explorer.PlatformDistributionTimeSeriesComputer;
+import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
+import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
 import sirius.biz.analytics.events.PageImpressionEvent;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.TenantUserManager;
-import sirius.db.jdbc.SmartQuery;
+import sirius.kernel.commons.Callback;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 /**
  * Implements a time series chart for the knowledge base, showing the platform distribution.
@@ -24,8 +31,41 @@ import javax.annotation.Nonnull;
  */
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class KnowledgeBasePlatformDistributionChart
-        extends PlatformDistributionTimeSeriesChartFactory<PageImpressionEvent> {
+public class KnowledgeBasePlatformDistributionChart extends TimeSeriesChartFactory<Object> {
+    @Nullable
+    @Override
+    protected Class<? extends ChartObjectResolver<Object>> getResolver() {
+        return null;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.MISC;
+    }
+
+    @Override
+    protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Object>>> referenceChartConsumer) {
+        // intentionally empty -> there are no referenced charts
+    }
+
+    @Override
+    protected void computers(boolean hasComparisonPeriod,
+                             boolean isComparisonPeriod,
+                             Callback<TimeSeriesComputer<Object>> executor) throws Exception {
+        if (isComparisonPeriod) {
+            return;
+        }
+
+        executor.invoke(new PlatformDistributionTimeSeriesComputer<>(PageImpressionEvent.class,
+                                                                     (ignored, query) -> query.eq(PageImpressionEvent.AGGREGATION_URI,
+                                                                                                  "/kba")));
+    }
+
+    @Override
+    protected boolean stackValues(boolean hasComparisonPeriod) {
+        return true;
+    }
+
     @Nonnull
     @Override
     public String getName() {
@@ -34,16 +74,6 @@ public class KnowledgeBasePlatformDistributionChart
 
     @Override
     public int getPriority() {
-        return 904;
-    }
-
-    @Override
-    protected Class<PageImpressionEvent> getEvent() {
-        return PageImpressionEvent.class;
-    }
-
-    @Override
-    protected void modifyQuery(SmartQuery<PageImpressionEvent> query) {
-        query.eq(PageImpressionEvent.AGGREGATION_URI, "/kba");
+        return 9040;
     }
 }
