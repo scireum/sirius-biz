@@ -74,6 +74,6 @@ public class DashboardPlatformDistributionChart extends TimeSeriesChartFactory<O
 
     @Override
     public int getPriority() {
-        return 902;
+        return 9020;
     }
 }

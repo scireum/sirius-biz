@@ -74,6 +74,6 @@ public class KnowledgeBaseBrowserDistributionChart extends TimeSeriesChartFactor
 
     @Override
     public int getPriority() {
-        return 903;
+        return 9030;
     }
 }
