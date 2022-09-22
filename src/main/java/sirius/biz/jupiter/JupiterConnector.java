@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 /**
  * Permits to access a <b>Jupiter</b> instance.
  * <p>
- * This connector is in charge of taking of about the connection management. It also permits to failover to
+ * This connector is in charge of taking of about the connection management. It also permits failing over to
  * a fallback instance in case the main instance isn't reachable.
  * <p>
  * If a failover is performed, we will continue to use the fallback for up to 60s before we attempt to switch
@@ -35,6 +35,7 @@ import java.util.function.Supplier;
  */
 public class JupiterConnector {
 
+    private static final JupiterCommand CMD_SYS_MEM = new JupiterCommand("SYS.MEM");
     private static final JupiterCommand CMD_SET_CONFIG = new JupiterCommand("SYS.SET_CONFIG");
 
     /**
@@ -245,6 +246,29 @@ public class JupiterConnector {
      */
     public InfoGraphDB idb() {
         return new InfoGraphDB(this);
+    }
+
+    protected boolean isFallbackActive() {
+        return fallbackActiveUntil > System.currentTimeMillis();
+    }
+
+    /**
+     * Determines the allocated memory of the connected Jupiter instance
+     *
+     * @return the allocated memory in bytes
+     */
+    protected long getAllocatedMemory() {
+        try {
+            return queryDirect(() -> "SYS.MEM", client -> {
+                client.sendCommand(CMD_SYS_MEM, "raw");
+                return client.getIntegerMultiBulkReply().get(0);
+            });
+        } catch (Exception e) {
+            // As the monitoring command was introduced later, we simply return 0 if an error occurs
+            // (which most probably indicates that the Jupiter version is too old).
+            Exceptions.ignore(e);
+            return 0;
+        }
     }
 
     @Override
