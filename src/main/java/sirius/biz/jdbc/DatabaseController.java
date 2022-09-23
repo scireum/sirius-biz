@@ -38,6 +38,7 @@ import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
+import java.sql.Array;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -238,6 +239,14 @@ public class DatabaseController extends BasicController {
 
         if (value.getClass().isArray()) {
             return Arrays.stream((Object[]) value).map(NLS::toUserString).collect(Collectors.joining(", "));
+        }
+
+        if (value instanceof Array sqlArrayValue) {
+            try {
+                return Arrays.stream((Object[]) sqlArrayValue.getArray()).map(NLS::toUserString).collect(Collectors.joining(", "));
+            } catch (SQLException e) {
+                Exceptions.ignore(e);
+            }
         }
 
         return NLS.toUserString(value);
