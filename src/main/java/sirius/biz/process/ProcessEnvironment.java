@@ -210,11 +210,10 @@ class ProcessEnvironment implements ProcessContext {
         if (Strings.isFilled(logEntry.getMessageType()) && logEntry.getMaxMessagesToLog() > 0) {
             AtomicInteger messagesSoFar =
                     messageCountsPerType.computeIfAbsent(logEntry.getMessageType(), this::countMessagesForType);
+            limitsPerType.putIfAbsent(logEntry.getMessageType(), logEntry.getMaxMessagesToLog());
             if (messagesSoFar.incrementAndGet() > logEntry.getMaxMessagesToLog()) {
                 return;
             }
-
-            limitsPerType.put(logEntry.getMessageType(), logEntry.getMaxMessagesToLog());
         }
 
         processes.log(processId, logEntry);
