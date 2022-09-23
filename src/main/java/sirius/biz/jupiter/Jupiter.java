@@ -21,6 +21,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
 import sirius.kernel.health.Log;
+import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.MetricProvider;
 import sirius.kernel.health.metrics.MetricsCollector;
 
@@ -182,8 +183,8 @@ public class Jupiter implements MetricProvider {
             metricsCollector.metric("jupiter_memory",
                                     "jupiter-memory",
                                     "Jupiter-Memory",
-                                    getDefault().getAllocatedMemory() / 1024d / 1024d,
-                                    "MB");
+                                    Metric.bytesToMebibytes(getDefault().getAllocatedMemory()),
+                                    Metric.UNIT_MIB);
             metricsCollector.metric("jupiter_fallback",
                                     "jupiter-fallback",
                                     "Jupiter Fallback",
@@ -191,12 +192,16 @@ public class Jupiter implements MetricProvider {
                                     null);
         }
 
-        metricsCollector.metric("jupiter_calls", "jupiter-calls", "Jupiter Calls", callDuration.getCount(), "/min");
+        metricsCollector.metric("jupiter_calls",
+                                "jupiter-calls",
+                                "Jupiter Calls",
+                                callDuration.getCount(),
+                                Metric.UNIT_PER_MIN);
         metricsCollector.metric("jupiter_call_duration",
                                 "jupiter-call-duration",
                                 "Jupiter Call Duration",
                                 callDuration.getAndClear(),
-                                "ms");
+                                Metric.UNIT_MS);
     }
 
     /**

@@ -8,9 +8,9 @@
 
 package sirius.biz.ide;
 
-import parsii.tokenizer.Position;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.tokenizer.Position;
 import sirius.pasta.noodle.Environment;
 import sirius.pasta.noodle.compiler.CompilationContext;
 import sirius.pasta.noodle.compiler.ir.Node;
