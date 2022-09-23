@@ -178,6 +178,19 @@ public class Jupiter implements MetricProvider {
 
     @Override
     public void gather(MetricsCollector metricsCollector) {
+        if (getDefault().isConfigured()) {
+            metricsCollector.metric("jupiter_memory",
+                                    "jupiter-memory",
+                                    "Jupiter-Memory",
+                                    getDefault().getAllocatedMemory() / 1024d / 1024d,
+                                    "MB");
+            metricsCollector.metric("jupiter_fallback",
+                                    "jupiter-fallback",
+                                    "Jupiter Fallback",
+                                    getDefault().isFallbackActive() ? 1 : 0,
+                                    null);
+        }
+
         metricsCollector.metric("jupiter_calls", "jupiter-calls", "Jupiter Calls", callDuration.getCount(), "/min");
         metricsCollector.metric("jupiter_call_duration",
                                 "jupiter-call-duration",
@@ -210,7 +223,7 @@ public class Jupiter implements MetricProvider {
      * This is a smaller cache for (relatively) large/complex compound objects.
      * <p>
      * Note that the underlying cache is automatically cleared once the Jupiter repository is synced, so that
-     * this cache shoudln't contain any stale data.
+     * this cache shouldn't contain any stale data.
      *
      * @param key           the globally unique key used to locally lookup the value
      * @param valueComputer the computer which actually uses Jupiter (e.g. IDB) to compute the cachable data.
