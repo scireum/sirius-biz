@@ -34,10 +34,10 @@ public class I5MetricProvider implements MetricProvider {
                              i5.callDuration.getAndClear(),
                              Metric.UNIT_MS);
             collector.metric("i5_call_utilization",
-                                                              "i5-call-utilization",
-                                                              "I5 Call Utilization",
-                                                              i5.callUtilization.getAndClear(),
-                                                              Metric.UNIT_MS);
+                             "i5-call-utilization",
+                             "I5 Call Utilization",
+                             i5.callUtilization.getAndClear(),
+                             Metric.UNIT_MS);
         }
     }
 }
