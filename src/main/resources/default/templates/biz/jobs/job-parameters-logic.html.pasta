@@ -42,6 +42,9 @@
         document.querySelectorAll('.edit-form input[name]').forEach(function (_input) {
             _input.addEventListener("change", onChange);
         });
+        document.querySelectorAll('.edit-form textarea[name]').forEach(function (_input) {
+            _input.addEventListener("change", onChange);
+        });
         document.querySelectorAll('.edit-form .token-autocomplete-container').forEach(function (_input) {
             _input.addEventListener("tokens-changed", onChange);
         });
