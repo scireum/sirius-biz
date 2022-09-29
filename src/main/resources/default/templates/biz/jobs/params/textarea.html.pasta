@@ -2,7 +2,7 @@
 <i:arg type="Map" name="context"/>
 
 <i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
-<t:textarea className="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
+<t:textarea class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
             rows="3"
             name="@param.getName()"
             label="@param.getLabel()"
