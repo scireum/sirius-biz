@@ -7,17 +7,17 @@
              label="@param.getLabel()"
              help="@param.getDescription()"
              addonText="@param.as(sirius.biz.jobs.params.TextParameter.class).getAddonText()"
-             value="@toUserString(param.get(context).orElse(null))">
-    <script>
-        sirius.ready(function () {
-            const _elem = sirius.querySelector(".param-___param.getName()");
-            const _input = _elem.querySelector("input");
-            _elem.addEventListener("clear", function () {
-                _input.value = null;
-            });
-            _elem.addEventListener("updated-value", function (event) {
-                _input.value = event.detail;
-            });
+             value="@toUserString(param.get(context).orElse(null))"/>
+
+<script>
+    sirius.ready(function () {
+        const _elem = sirius.querySelector(".param-___param.getName()");
+        const _input = _elem.querySelector("input");
+        _elem.addEventListener("clear", function () {
+            _input.value = null;
         });
-    </script>
-</t:textfield>
+        _elem.addEventListener("updated-value", function (event) {
+            _input.value = event.detail;
+        });
+    });
+</script>
