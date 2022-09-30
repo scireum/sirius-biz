@@ -167,7 +167,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
 
             for (ImportFile importFile : importFiles) {
                 if (!TaskContext.get().isActive()) {
-                    break;
+                    return;
                 }
                 Optional<ExtractedFile> extractedFile = fetchEntry(importFile.filename);
                 if (extractedFile.isPresent()) {
