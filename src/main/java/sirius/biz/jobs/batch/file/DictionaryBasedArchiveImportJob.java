@@ -22,6 +22,7 @@ import sirius.web.data.LineBasedProcessor;
 import javax.annotation.CheckReturnValue;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -143,24 +144,40 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
      */
     protected abstract void collectImportFiles(Consumer<ImportFile> importFiles);
 
+    /**
+     * Provides a list of stages, each collecting a different set of files.
+     * <p>
+     * This method should only be overwritten when the import requires a complex handling.
+     * For instance: based on the contents of a specific file, different sets of files
+     * should be imported afterwards.
+     *
+     * @return list of import file consumers. Defaults to {@link #collectImportFiles(Consumer)}
+     */
+    protected List<Consumer<Consumer<ImportFile>>> fetchStages() {
+        return Collections.singletonList(this::collectImportFiles);
+    }
+
     @Override
     protected void importEntries() throws Exception {
-        List<ImportFile> importFiles = new ArrayList<>();
-        collectImportFiles(importFiles::add);
         handledFiles.clear();
 
-        for (ImportFile importFile : importFiles) {
-            if (!TaskContext.get().isActive()) {
-                break;
-            }
-            Optional<ExtractedFile> extractedFile = fetchEntry(importFile.filename);
-            if (extractedFile.isPresent()) {
-                handleFile(importFile, extractedFile.get());
-            } else if (!handledFiles.contains(importFile.filename)) {
-                handleMissingFile(importFile.filename, importFile.required);
-            }
+        for (Consumer<Consumer<ImportFile>> fileCollector : fetchStages()) {
+            List<ImportFile> importFiles = new ArrayList<>();
+            fileCollector.accept(importFiles::add);
 
-            handledFiles.add(importFile.filename);
+            for (ImportFile importFile : importFiles) {
+                if (!TaskContext.get().isActive()) {
+                    break;
+                }
+                Optional<ExtractedFile> extractedFile = fetchEntry(importFile.filename);
+                if (extractedFile.isPresent()) {
+                    handleFile(importFile, extractedFile.get());
+                } else if (!handledFiles.contains(importFile.filename)) {
+                    handleMissingFile(importFile.filename, importFile.required);
+                }
+
+                handledFiles.add(importFile.filename);
+            }
         }
 
         if (!TaskContext.get().isActive()) {
