@@ -46,7 +46,6 @@ import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
-import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -69,7 +68,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Provides the central facility to create and use {@link Process processes}.
@@ -934,45 +932,6 @@ public class Processes {
      */
     public void execute(String processId, Consumer<ProcessContext> task) {
         execute(processId, task, true);
-    }
-
-    /**
-     * Generates a JSON representation of the given process.
-     *
-     * @param processId the process to output
-     * @param out       the target to write the JSON to
-     */
-    public void outputAsJSON(String processId, JSONStructuredOutput out) {
-        Process process = fetchProcessForUser(processId).orElseThrow(() -> Exceptions.createHandled()
-                                                                                     .withSystemErrorMessage(
-                                                                                             "Unknown process id: %s",
-                                                                                             processId)
-                                                                                     .handle());
-        out.property("id", processId);
-        out.property("title", process.getTitle());
-        out.property("state", process.getState());
-        out.property("started", process.getStarted());
-        out.property("completed", process.getCompleted());
-        out.property("errorneous", process.isErrorneous());
-        out.property("processType", process.getProcessType());
-        out.property("stateMessage", process.getStateMessage());
-        out.beginArray("counters");
-        for (String counter : process.getPerformanceCounters().data().keySet()) {
-            out.beginObject("counter");
-            out.property("name", counter);
-            out.property("counter", process.getPerformanceCounters().get(counter).orElse(0));
-            out.property("avg", process.getTimings().get(counter).orElse(0));
-            out.endObject();
-        }
-        out.endArray();
-        out.beginArray("links");
-        for (ProcessLink link : process.getLinks()) {
-            out.beginObject("link");
-            out.property("label", link.getLabel());
-            out.property("uri", link.getUri());
-            out.endObject();
-        }
-        out.endArray();
     }
 
     /**

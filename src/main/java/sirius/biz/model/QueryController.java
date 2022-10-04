@@ -21,6 +21,7 @@ import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
@@ -31,6 +32,8 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
+import sirius.web.services.InternalService;
+import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -163,6 +166,47 @@ public class QueryController extends BizController {
                                                       .orElse(false))
                          .sorted(Comparator.comparing(Property::getName))
                          .toList();
+    }
+
+    /**
+     * Provides a JSON based query facility.
+     * <p>
+     * Note that this is only available in TEST and DEV systems as it is only intended to be used for integration tests.
+     * <p>
+     * Just like the UI, this expects <tt>type</tt> to contain a Mixing descriptor name as produced by
+     * {@link sirius.db.mixing.Mixing#getNameForType(Class)} and <tt>query</tt> to contain a proper query
+     * e.g. "id:X". Additionally <tt>limit</tt> can specify how many entities are to be returned.
+     * <p>
+     * Note that this isn't a public API as it isn't available on production systems.
+     *
+     * @param webContext the request to handle
+     * @param output     the output to write the retrieved entities to
+     */
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    @Routed("/system/query/api")
+    @InternalService
+    public void queryApi(WebContext webContext, JSONStructuredOutput output) {
+        if (!Sirius.isDev() && !Sirius.isTest()) {
+            throw new IllegalStateException("The query API is only available in development or test systems.");
+        }
+
+        EntityDescriptor descriptor = mixing.findDescriptor(webContext.get("type").asString())
+                                            .orElseThrow(() -> new IllegalArgumentException(
+                                                    "Please provide a valid class parameter."));
+        String queryString = webContext.get("query").asString();
+        int limit = Math.min(webContext.get("limit").asInt(DEFAULT_LIMIT), MAX_LIMIT);
+        List<BaseEntity<?>> entities = executeQuery(descriptor, queryString, limit);
+        
+        output.beginArray("entities");
+        for (BaseEntity<?> entity : entities) {
+            output.beginObject("entity");
+            output.property("id", entity.getId());
+            for (Property property : determineVisibleProperties(descriptor)) {
+                output.property(property.getName(), property.getValue(entity));
+            }
+            output.endObject();
+        }
+        output.endArray();
     }
 
     /**
