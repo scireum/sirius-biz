@@ -22,6 +22,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
+import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.MetricProvider;
 import sirius.kernel.health.metrics.MetricsCollector;
 
@@ -112,7 +113,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
                                 "events_buffer_usage",
                                 "Event Buffer Usage",
                                 100 * bufferedEvents.doubleValue() / MAX_BUFFER_SIZE,
-                                "%");
+                                Metric.UNIT_PERCENT);
     }
 
     /**

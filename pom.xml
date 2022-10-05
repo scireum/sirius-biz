@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-33.0.1</sirius.kernel>
-        <sirius.web>dev-57.1.0</sirius.web>
-        <sirius.db>dev-44.0.0</sirius.db>
+        <sirius.kernel>dev-33.1.0</sirius.kernel>
+        <sirius.web>dev-57.2.0</sirius.web>
+        <sirius.db>dev-45.0.0</sirius.db>
     </properties>
 
     <repositories>
@@ -49,28 +49,28 @@
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
-            <version>2.7.4</version>
+            <version>3.0.6</version>
         </dependency>
         <dependency>
             <groupId>net.sf.jt400</groupId>
             <artifactId>jt400</artifactId>
-            <version>10.7</version>
+            <version>11.0</version>
         </dependency>
         <dependency>
-            <groupId>ru.yandex.clickhouse</groupId>
+            <groupId>com.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
-            <version>0.2.6</version>
+            <version>0.3.2-patch11</version>
         </dependency>
         <!-- Required as the version brought by clickhouse-jdbc contains security issues -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.13.3</version>
+            <version>2.14.0-rc1</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.13.3</version>
+            <version>2.14.0-rc1</version>
         </dependency>
 
         <dependency>
@@ -98,7 +98,7 @@
         <dependency>
             <groupId>org.codelibs</groupId>
             <artifactId>jcifs</artifactId>
-            <version>2.1.31</version>
+            <version>2.1.32</version>
         </dependency>
         <!-- Required as the version provided by jcifs has security issues -->
         <dependency>
@@ -131,7 +131,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.272</version>
+            <version>1.12.307</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
