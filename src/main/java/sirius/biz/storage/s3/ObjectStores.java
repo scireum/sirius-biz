@@ -9,6 +9,7 @@
 package sirius.biz.storage.s3;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
@@ -52,6 +53,7 @@ public class ObjectStores {
     private static final String KEY_SIGNER = "signer";
     private static final String KEY_PATH_STYLE_ACCESS = "pathStyleAccess";
     private static final String KEY_END_POINT = "endPoint";
+    private static final String KEY_PROXY_HOST = "proxy";
 
     /**
      * Contains the logger used for all concerns related to object stores
@@ -146,6 +148,22 @@ public class ObjectStores {
         ClientConfiguration config = new ClientConfiguration().withSocketTimeout(LONG_SOCKET_TIMEOUT);
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
             config.withSignerOverride(extension.get(KEY_SIGNER).asString());
+        }
+        if (!extension.get(KEY_PROXY_HOST).isEmptyString()) {
+            try {
+                URL proxy = new URL(extension.get(KEY_PROXY_HOST).asString());
+                config.setProxyHost(proxy.getHost());
+                config.setProxyProtocol(PROTOCOL_HTTPS.equalsIgnoreCase(proxy.getProtocol()) ? Protocol.HTTPS : Protocol.HTTP);
+                config.setProxyPort(proxy.getPort());
+            } catch (MalformedURLException e) {
+                throw Exceptions.handle()
+                                .error(e)
+                                .to(LOG)
+                                .withSystemErrorMessage("Invalid proxy url for object store %s: %s - %s (%s)",
+                                                        name,
+                                                        extension.get(KEY_PROXY_HOST).asString())
+                                .handle();
+            }
         }
 
         AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard()
