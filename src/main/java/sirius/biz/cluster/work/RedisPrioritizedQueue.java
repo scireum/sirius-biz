@@ -20,6 +20,7 @@ import sirius.kernel.health.Log;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -94,7 +95,7 @@ class RedisPrioritizedQueue implements PrioritizedQueue {
 
             int retries = MAX_ATTEMPTS_TO_POLL;
             while (retries-- > 0) {
-                Set<String> possibleTasks = db.zrange(queue, 0, 0);
+                Set<String> possibleTasks = new HashSet<>(db.zrange(queue, 0, 0));
                 if (possibleTasks.isEmpty()) {
                     return null;
                 }
