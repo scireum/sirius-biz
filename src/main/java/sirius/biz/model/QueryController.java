@@ -186,8 +186,8 @@ public class QueryController extends BizController {
     @Routed("/system/query/api")
     @InternalService
     public void queryApi(WebContext webContext, JSONStructuredOutput output) {
-        if (!Sirius.isDev() && !Sirius.isTest()) {
-            throw new IllegalStateException("The query API is only available in development or test systems.");
+        if (Sirius.isProd()) {
+            throw new IllegalStateException("The query API is not available in productive systems.");
         }
 
         EntityDescriptor descriptor = mixing.findDescriptor(webContext.get("type").asString())
@@ -196,7 +196,7 @@ public class QueryController extends BizController {
         String queryString = webContext.get("query").asString();
         int limit = Math.min(webContext.get("limit").asInt(DEFAULT_LIMIT), MAX_LIMIT);
         List<BaseEntity<?>> entities = executeQuery(descriptor, queryString, limit);
-        
+
         output.beginArray("entities");
         for (BaseEntity<?> entity : entities) {
             output.beginObject("entity");
