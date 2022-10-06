@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
 import sirius.db.es.Elastic;
@@ -170,7 +171,8 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> Map.of("value", value.getIdAsString(), "text", createLabel(value)));
+                      .map(value -> new JSONObject().fluentPut("value", value.getIdAsString())
+                                                    .fluentPut("text", createLabel(value)));
     }
 
     @Override

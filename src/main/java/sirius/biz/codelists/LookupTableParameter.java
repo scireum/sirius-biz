@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.jobs.params.ParameterBuilder;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -72,7 +73,8 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
                       .map(this::createLookupValue)
-                      .map(value -> Map.of("value", value.getValue(), "text", value.resolveDisplayString()));
+                      .map(value -> new JSONObject().fluentPut("value", value.getValue())
+                                                    .fluentPut("text", value.resolveDisplayString()));
     }
 
     @Override

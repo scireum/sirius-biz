@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.Tenants;
@@ -71,7 +72,8 @@ public class TenantParameter extends ParameterBuilder<Tenant<?>, TenantParameter
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> Map.of("value", value.getIdAsString(), "text", value.toString()));
+                      .map(value -> new JSONObject().fluentPut("value", value.getIdAsString())
+                                                    .fluentPut("text", value.toString()));
     }
 
     @Override
