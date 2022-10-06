@@ -18,7 +18,7 @@
 
     <properties>
         <sirius.kernel>dev-33.1.0</sirius.kernel>
-        <sirius.web>dev-57.2.0</sirius.web>
+        <sirius.web>dev-57.3.0</sirius.web>
         <sirius.db>dev-45.0.0</sirius.db>
     </properties>
 
@@ -61,6 +61,13 @@
             <artifactId>clickhouse-jdbc</artifactId>
             <version>0.3.2-patch11</version>
         </dependency>
+        <!-- Included as the version provided by clickhouse has security issues -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.13</version>
+        </dependency>
+
         <!-- Required as the version brought by clickhouse-jdbc contains security issues -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -131,7 +138,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.307</version>
+            <version>1.12.272</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -162,7 +169,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.32</version>
+            <version>1.33</version>
         </dependency>
     </dependencies>
 
