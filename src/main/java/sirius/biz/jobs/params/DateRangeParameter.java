@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.db.mixing.DateRange;
 import sirius.kernel.commons.Value;
 
@@ -105,7 +106,9 @@ public class DateRangeParameter extends ParameterBuilder<DateRange, DateRangePar
 
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
-        return updater.apply(parameterContext).map(value -> Map.of("value", value.getKey(), "text", value.toString()));
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", value.getKey())
+                                                    .fluentPut("text", value.toString()));
     }
 
     @Override

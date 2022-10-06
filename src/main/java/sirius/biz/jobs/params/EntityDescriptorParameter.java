@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.db.es.ElasticEntity;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -141,7 +142,8 @@ public class EntityDescriptorParameter extends ParameterBuilder<EntityDescriptor
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> Map.of("value", getLookupName(value), "text", value.getType().getSimpleName()));
+                      .map(value -> new JSONObject().fluentPut("value", getLookupName(value))
+                                                    .fluentPut("text", value.getType().getSimpleName()));
     }
 
     @Override

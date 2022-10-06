@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccount;
 import sirius.db.mixing.Mixing;
@@ -54,7 +55,8 @@ public class UserAccountParameter extends ParameterBuilder<UserAccount<?, ?>, Us
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> Map.of("value", value.getIdAsString(), "text", value.toString()));
+                      .map(value -> new JSONObject().fluentPut("value", value.getIdAsString())
+                                                    .fluentPut("text", value.toString()));
     }
 
     @Override

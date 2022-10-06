@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeLists;
 import sirius.kernel.commons.Value;
@@ -74,10 +75,10 @@ public class CodeListEntryParameter extends ParameterBuilder<CodeListEntry<?, ?>
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> Map.of("value",
-                                           value.getCodeListEntryData().getCode(),
-                                           "text",
-                                           value.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang())));
+                      .map(value -> new JSONObject().fluentPut("value", value.getCodeListEntryData().getCode())
+                                                    .fluentPut("text",
+                                                               value.getCodeListEntryData()
+                                                                    .getTranslatedValue(NLS.getCurrentLang())));
     }
 
     @SuppressWarnings("unchecked")
