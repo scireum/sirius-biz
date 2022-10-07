@@ -53,7 +53,7 @@ public class QueryController extends BizController {
     private static final int DEFAULT_LIMIT = 100;
     private static final int MAX_LIMIT = 1000;
 
-    @ConfigValue("http.api.query.enabled")
+    @ConfigValue("security.query-api.enabled")
     private boolean queryApiEnabled;
 
     /**
