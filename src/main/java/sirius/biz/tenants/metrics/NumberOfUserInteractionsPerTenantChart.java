@@ -73,8 +73,7 @@ public class NumberOfUserInteractionsPerTenantChart extends TimeSeriesChartFacto
                                               (tenant, query) -> query.eq(UserActivityEvent.USER_DATA.inner(UserData.TENANT_ID),
                                                                           tenant.getIdAsString()));
 
-        computer.addAggregation(NumberOfUserInteractionsChart.AGGREGATION_EXPRESSION_USERS,
-                                NumberOfUserInteractionsChart.LABEL_USERS);
+        computer.addAggregation(NumberOfUserInteractionsChart.AGGREGATION_EXPRESSION_USERS, null);
 
         executor.invoke(computer);
     }

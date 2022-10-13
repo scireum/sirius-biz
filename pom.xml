@@ -19,7 +19,7 @@
     <properties>
         <sirius.kernel>dev-33.1.1</sirius.kernel>
         <sirius.web>dev-57.4.1</sirius.web>
-        <sirius.db>dev-45.1.1</sirius.db>
+        <sirius.db>dev-45.1.2</sirius.db>
     </properties>
 
     <repositories>
@@ -177,5 +177,4 @@
             <version>1.33</version>
         </dependency>
     </dependencies>
-
 </project>

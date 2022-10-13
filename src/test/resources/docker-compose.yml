@@ -33,7 +33,7 @@ services:
       - "9000"
     hostname: clickhouse
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.5
+    image: elasticsearch:8.4.1
     ports:
       - "9200"
     environment:
