@@ -64,6 +64,8 @@ public class ArchiveExtractor {
 
     private static final String FRAMEWORK_SEVEN_ZIP = "biz.seven-zip";
     private static final String ZIP_EXTENSION = "zip";
+    private static final String MAC_OS_NAME = "Mac OS X";
+    private static final String MAC_M1_ARCH = "aarch64";
 
     private Set<String> supportedExtensions;
     private Boolean sevenZipEnabled = null;
@@ -154,11 +156,18 @@ public class ArchiveExtractor {
                 SevenZip.initSevenZipFromPlatformJAR();
                 sevenZipEnabled = true;
             } catch (Throwable e) {
-                Exceptions.handle()
-                          .to(Log.SYSTEM)
-                          .error(e)
-                          .withSystemErrorMessage("Failed to initialize 7-Zip: %s (%s)")
-                          .handle();
+                if (MAC_OS_NAME.equals(System.getProperty("os.name"))
+                    && MAC_M1_ARCH.equals(System.getProperty("os.arch"))) {
+                    // There are no binaries for Mac M1 at the moment, so we ignore this error and disable
+                    // support for 7-Zip
+                    Exceptions.ignore(e);
+                } else {
+                    Exceptions.handle()
+                              .to(Log.SYSTEM)
+                              .error(e)
+                              .withSystemErrorMessage("Failed to initialize 7-Zip: %s (%s)")
+                              .handle();
+                }
                 sevenZipEnabled = false;
             }
         } else {
