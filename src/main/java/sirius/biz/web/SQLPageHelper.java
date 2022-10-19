@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Implements a page helper for {@link SmartQuery smart queries}.
@@ -64,6 +65,22 @@ public class SQLPageHelper<E extends SQLEntity>
     public SQLPageHelper<E> addQueryFacet(String name,
                                           String title,
                                           Function<SmartQuery<E>, SQLQuery> queryTransformer) {
+        return addQueryFacet(name, title, queryTransformer, UnaryOperator.identity());
+    }
+
+    /**
+     * Adds a query based filter which uses the given query to determine which filter items are shown.
+     *
+     * @param name             the name of the field to filter on
+     * @param title            the title of the filter shown to the user
+     * @param queryTransformer used to generate the sub-query which determines which filter values to show
+     * @param labelProvider    used to customize the values used as label
+     * @return the helper itself for fluent method calls
+     */
+    public SQLPageHelper<E> addQueryFacet(String name,
+                                          String title,
+                                          Function<SmartQuery<E>, SQLQuery> queryTransformer,
+                                          UnaryOperator<String> labelProvider) {
         return addFacet(new Facet(title, name), (facet, query) -> {
             if (Strings.isFilled(facet.getValue())) {
                 query.eq(Mapping.named(facet.getName()), facet.getValue());
@@ -81,7 +98,7 @@ public class SQLPageHelper<E extends SQLEntity>
                     if (iter.hasNext()) {
                         label = Value.of(iter.next().getSecond()).asString();
                     }
-                    facet.addItem(key, label, -1);
+                    facet.addItem(key, labelProvider.apply(label), -1);
                 }, new Limit(0, 100));
             } catch (SQLException e) {
                 Exceptions.handle(OMA.LOG, e);
