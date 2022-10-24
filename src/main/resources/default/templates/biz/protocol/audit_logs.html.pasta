@@ -51,7 +51,7 @@
                                         </div>
                                         <div class="col-md-4 text-small text-muted">@message.getIp()</div>
                                     </div>
-                                    <pre class="pt-2 mb-0" style="white-space: break-spaces">@i18n(message.getMessage())</pre>
+                                    <pre class="pt-2 mb-0" style="white-space: break-spaces; overflow-wrap: anywhere;">@i18n(message.getMessage())</pre>
                                 </td>
                             </tr>
                         </i:for>
