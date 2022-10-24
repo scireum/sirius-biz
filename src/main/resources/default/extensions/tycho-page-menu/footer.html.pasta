@@ -12,7 +12,7 @@
             </i:invoke>
         </t:permission>
         <t:permission permission="flag-logged-in">
-            <span class="d-none d-xl-inline-block text-muted small mr-2 pr-2 br-gray">
+            <span class="d-none d-xl-inline-block text-muted small ml-2 pl-2 bl-gray">
                <b>@currentUserName()</b>
                <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
             </span>
