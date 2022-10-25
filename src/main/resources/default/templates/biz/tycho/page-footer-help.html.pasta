@@ -2,7 +2,7 @@
 <i:local name="navbox" value="renderToString('navbox')"/>
 
 <i:if test="isFilled(contents) || isFilled(navbox)">
-     <span class="text-muted small mr-2 pr-2 br-gray dropup" id="tycho-page-help-dropdown">
+     <span class="text-muted small dropup" id="tycho-page-help-dropdown">
         <a class="btn btn-primary"
            data-toggle="dropdown"
            style="padding: 0.20rem .5rem;font-size: 0.75rem;line-height: 1.25;border-radius: .2rem;"

@@ -52,7 +52,7 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 pt-2">
-                                            <pre class="mb-0" style="white-space: break-spaces">@message.getChanges()</pre>
+                                            <pre class="mb-0" style="white-space: break-spaces; overflow-wrap: anywhere;">@message.getChanges()</pre>
                                         </div>
                                     </div>
                                 </td>
