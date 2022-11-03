@@ -219,8 +219,7 @@
                     sirius.dispatchEvent("change", _input);
                 });
             });
-        })
-        ;
+        });
     </script>
 
     <i:if test="isFilled(help)">
