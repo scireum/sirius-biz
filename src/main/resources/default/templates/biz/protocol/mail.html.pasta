@@ -13,7 +13,7 @@
     <i:block name="page-header">
         <t:pageHeader title="@mail.getSubject()">
             <i:if test="mail.isSuccess()">
-                <t:dot color="green">@i18n("MailProtocol.successful")</t:dot>
+                <t:dot color="green">@i18n("MailProtocol.success")</t:dot>
                 <i:else>
                     <t:dot color="red">@i18n("MailProtocol.failed")</t:dot>
                 </i:else>
