@@ -124,9 +124,6 @@ function selectVFSFile(config) {
                             },
                             sendFileAsBody: true,
                             parallelUploads: 1,
-                            // Note that the event handler of "maxfilesexceeded" currently relies on
-                            // this being 1...
-                            maxFiles: 1,
                             maxFilesize: null,
                             acceptedFiles: config.allowedExtensions,
                             previewTemplate: '' +
@@ -176,6 +173,57 @@ function selectVFSFile(config) {
                                 }
                             },
                             init: function () {
+                                const dropzone = this;
+                                let previewsContainer = '#select-file-modal .upload-box-js #sirius-upload-progress';
+
+                                if (previewsContainer) {
+                                    let _dropzoneIndicator = document.querySelector(previewsContainer + ' .sirius-upload-hover');
+
+                                    function hideIndicators() {
+                                        document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                                            _indicator.classList.remove('d-flex');
+                                            _indicator.classList.add('d-none');
+                                            _indicator.classList.remove('sirius-upload-hover-active');
+                                        });
+                                    }
+
+                                    document.addEventListener('dragenter', function (event) {
+                                        document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                                            _indicator.classList.add('d-flex');
+                                            _indicator.classList.remove('d-none');
+                                        });
+                                    }, false);
+                                    document.addEventListener('dragover', function (event) {
+                                        event.preventDefault();
+                                    });
+                                    document.addEventListener('dragend', function (event) {
+                                        hideIndicators();
+                                    }, false);
+                                    document.addEventListener('drop', function (event) {
+                                        hideIndicators();
+                                    }, false);
+                                    document.addEventListener('dragleave', function (event) {
+                                        if (event.relatedTarget === null) {
+                                            // left window
+                                            hideIndicators();
+                                        }
+                                    }, false);
+                                    _dropzoneIndicator.addEventListener('dragenter', function (event) {
+                                        _dropzoneIndicator.classList.add('sirius-upload-hover-active');
+                                    });
+                                    _dropzoneIndicator.addEventListener('dragleave', function (event) {
+                                        _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
+                                    });
+                                    _dropzoneIndicator.addEventListener('dragover', function (event) {
+                                        event.preventDefault();
+                                    });
+                                    _dropzoneIndicator.addEventListener('drop', function (event) {
+                                        event.preventDefault();
+                                    });
+                                    dropzone.on('drop', function () {
+                                        hideIndicators();
+                                    });
+                                }
                                 this.on('sending', function (file, xhr, formData) {
                                     formData.append('filename', file.name);
                                     formData.append('path', config.path);
@@ -195,11 +243,6 @@ function selectVFSFile(config) {
                                     } else {
                                         resolve(response.file);
                                     }
-                                });
-                                this.on('maxfilesexceeded', function (file) {
-                                    // replace the file that was uploaded
-                                    this.removeAllFiles();
-                                    this.addFile(file);
                                 });
                             }
                         })
