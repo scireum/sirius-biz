@@ -11,11 +11,15 @@
             </div>
             <div class="row mt-4 mb-4 upload-container-js">
                 <div class="col dropzone-drop-area-js">
-                    <div class="p-2 mb-4 border rounded text-secondary text-center bg-light">
-                        <span>@i18n("template.html.uploadArea")</span></div>
                     <div class="upload-box-js sirius-fileupload mb-lg-0 mb-2 d-none">
-                        <a class="dropzone-select w-100 btn btn-primary">@i18n("FileUpload.uploadBtn")</a>
-                        <div class="dropzone-items mt-2"></div>
+                        <a class="dropzone-select w-100 btn btn-primary"><i class="fas fa-cloud-upload-alt"></i>
+                            @i18n("FileUpload.uploadBtn")</a>
+                        <div id="sirius-upload-progress" class="mt-3 mb-3 dropzone-items">
+                            <div class="sirius-upload-hover h-100 d-none flex-column align-items-center justify-content-center">
+                                <i class="fa fa-2x fa-cloud-upload-alt"></i>
+                                <span>@i18n("template.html.uploadArea")</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

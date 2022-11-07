@@ -124,9 +124,6 @@ function selectVFSFile(config) {
                             },
                             sendFileAsBody: true,
                             parallelUploads: 1,
-                            // Note that the event handler of "maxfilesexceeded" currently relies on
-                            // this being 1...
-                            maxFiles: 1,
                             maxFilesize: null,
                             acceptedFiles: config.allowedExtensions,
                             previewTemplate: '' +
@@ -176,6 +173,57 @@ function selectVFSFile(config) {
                                 }
                             },
                             init: function () {
+                                const dropzone = this;
+                                let previewsContainer = '#select-file-modal .upload-box-js #sirius-upload-progress';
+
+                                if (previewsContainer) {
+                                    let _dropzoneIndicator = document.querySelector(previewsContainer + ' .sirius-upload-hover');
+
+                                    function hideIndicators() {
+                                        document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                                            _indicator.classList.remove('d-flex');
+                                            _indicator.classList.add('d-none');
+                                            _indicator.classList.remove('sirius-upload-hover-active');
+                                        });
+                                    }
+
+                                    document.addEventListener('dragenter', function (event) {
+                                        document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                                            _indicator.classList.add('d-flex');
+                                            _indicator.classList.remove('d-none');
+                                        });
+                                    }, false);
+                                    document.addEventListener('dragover', function (event) {
+                                        event.preventDefault();
+                                    });
+                                    document.addEventListener('dragend', function (event) {
+                                        hideIndicators();
+                                    }, false);
+                                    document.addEventListener('drop', function (event) {
+                                        hideIndicators();
+                                    }, false);
+                                    document.addEventListener('dragleave', function (event) {
+                                        if (event.relatedTarget === null) {
+                                            // left window
+                                            hideIndicators();
+                                        }
+                                    }, false);
+                                    _dropzoneIndicator.addEventListener('dragenter', function (event) {
+                                        _dropzoneIndicator.classList.add('sirius-upload-hover-active');
+                                    });
+                                    _dropzoneIndicator.addEventListener('dragleave', function (event) {
+                                        _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
+                                    });
+                                    _dropzoneIndicator.addEventListener('dragover', function (event) {
+                                        event.preventDefault();
+                                    });
+                                    _dropzoneIndicator.addEventListener('drop', function (event) {
+                                        event.preventDefault();
+                                    });
+                                    dropzone.on('drop', function () {
+                                        hideIndicators();
+                                    });
+                                }
                                 this.on('sending', function (file, xhr, formData) {
                                     formData.append('filename', file.name);
                                     formData.append('path', config.path);
@@ -195,11 +243,6 @@ function selectVFSFile(config) {
                                     } else {
                                         resolve(response.file);
                                     }
-                                });
-                                this.on('maxfilesexceeded', function (file) {
-                                    // replace the file that was uploaded
-                                    this.removeAllFiles();
-                                    this.addFile(file);
                                 });
                             }
                         })
@@ -227,5 +270,149 @@ function selectVFSFile(config) {
         _modal.querySelector('.ok-btn-js').parentElement.style.display = config.allowDirectories ? 'inline-block' : 'none';
 
         $(_modal).modal('show');
+    });
+}
+
+function createInplaceDropzone(basePath, localId, _input, allowedExtensions) {
+    new Dropzone("#sirius-upload-progress-" + localId, {
+        url: function (files) {
+            let value = _input.value;
+
+            if (value == null || value === '') {
+                value = basePath;
+            } else {
+                value = value.substr(0, value.lastIndexOf("/"))
+            }
+            return '/fs/upload?filename=' + encodeURIComponent(files[0].name) + '&path=' + value;
+        },
+        sendFileAsBody: true,
+        parallelUploads: 1,
+        maxFilesize: null,
+        acceptedFiles: allowedExtensions,
+        previewTemplate: '' +
+            '<div class="dropzone-item">\n' +
+            '   <div class="dropzone-file">\n' +
+            '       <div class="dropzone-filename">\n' +
+            '           <span data-dz-name></span>\n' +
+            '           <strong>(<span data-dz-size></span>)</strong>\n' +
+            '           <span class="dz-success-mark">✔</span>\n' +
+            '           <span class="dz-error-mark">✘</span>\n' +
+            '       </div>\n' +
+            '       <div class="dropzone-error" data-dz-errormessage></div>\n' +
+            '   </div>\n' +
+            '\n' +
+            '   <div class="dropzone-progress d-flex">\n' +
+            '       <div class="progress flex-grow-1">\n' +
+            '           <div class="progress-bar bg-primary" role="progressbar" aria-valuemin="0" aria-valuemax="100" ' +
+            '                         aria-valuenow="0" data-dz-uploadprogress>' +
+            '           </div>\n' +
+            '       </div>\n' +
+            '       <span class="dropzone-delete ml-4" data-dz-remove><i class="fa fa-times"></i></span>\n' +
+            '   </div>\n' +
+            '</div>',
+        previewsContainer: '#sirius-upload-progress-' + localId,
+        clickable: '#sirius-upload-progress-' + localId,
+        error: function (file, message) {
+            if (file.status === Dropzone.CANCELED) {
+                // no need to show error to the user
+                return;
+            }
+            if (file.previewElement) {
+                file.previewElement.classList.add('dz-error');
+
+                if (typeof message !== 'string' && message.message) {
+                    message = message.message;
+                }
+
+                file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
+
+                clearMessages();
+                addErrorMessage(message);
+                setTimeout(function () {
+                    file.previewElement.remove();
+                }, 500);
+
+            }
+        },
+        init: function () {
+            const dropzone = this;
+            let previewsContainer = '#sirius-upload-progress-' + localId;
+
+            if (previewsContainer) {
+                let _dropzoneIndicator = document.querySelector(previewsContainer + ' .sirius-upload-hover');
+
+                function hideIndicators() {
+                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                        _indicator.classList.remove('d-flex');
+                        _indicator.classList.add('d-none');
+                        _indicator.classList.remove('sirius-upload-hover-active');
+                    });
+                }
+
+                document.addEventListener('dragenter', function (event) {
+                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                        _indicator.classList.add('d-flex');
+                        _indicator.classList.remove('d-none');
+                    });
+                }, false);
+                document.addEventListener('dragover', function (event) {
+                    event.preventDefault();
+                });
+                document.addEventListener('dragend', function (event) {
+                    hideIndicators();
+                }, false);
+                document.addEventListener('drop', function (event) {
+                    hideIndicators();
+                }, false);
+                document.addEventListener('dragleave', function (event) {
+                    if (event.relatedTarget === null) {
+                        // left window
+                        hideIndicators();
+                    }
+                }, false);
+                _dropzoneIndicator.addEventListener('dragenter', function (event) {
+                    _dropzoneIndicator.classList.add('sirius-upload-hover-active');
+                });
+                _dropzoneIndicator.addEventListener('dragleave', function (event) {
+                    _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
+                });
+                _dropzoneIndicator.addEventListener('dragover', function (event) {
+                    event.preventDefault();
+                });
+                _dropzoneIndicator.addEventListener('drop', function (event) {
+                    event.preventDefault();
+                });
+                dropzone.on('drop', function () {
+                    hideIndicators();
+                });
+            }
+            this.on('sending', function (file, xhr, formData) {
+                let value = _input.value;
+
+                if (value == null || value === '') {
+                    value = basePath;
+                } else {
+                    value = value.substr(0, value.lastIndexOf("/"))
+                }
+                formData.append('filename', file.name);
+                formData.append('path', value);
+            });
+            this.on('success', function (file, response) {
+                if (file.previewElement) {
+                    setTimeout(function () {
+                        file.previewElement.remove();
+                    }, 500);
+                }
+                if (response.error) {
+                    file.previewElement.classList.add('dz-error');
+                    file.previewElement.classList.remove('dz-success');
+                    clearMessages();
+                    addErrorMessage(response.message);
+                } else {
+                    _input.value = response.file;
+                    sirius.dispatchEvent("change", _input);
+                }
+            });
+        }
     });
 }
