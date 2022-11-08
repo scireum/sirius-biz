@@ -47,6 +47,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 
@@ -73,6 +74,8 @@ public class ObjectStore {
      * Contains the name of the thread pool, which is used for all up- and downloads.
      */
     public static final String EXECUTOR_S3 = "s3";
+
+    public static final ExceptionHint EMPTY_INPUT_STREAM = new ExceptionHint("empty-input-stream");
 
     /**
      * When performing a multipart upload in {@link #upload(BucketName, String, InputStream)} we keep
@@ -714,6 +717,8 @@ public class ObjectStore {
         ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
+
+        boolean emptyInputStream = false;
         try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
@@ -725,6 +730,8 @@ public class ObjectStore {
                                       bucket,
                                       eTags.size());
             }
+
+            emptyInputStream = eTags.isEmpty();
 
             getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
                                                                                    objectId,
@@ -745,6 +752,7 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
+                            .hint(EMPTY_INPUT_STREAM, emptyInputStream)
                             .withSystemErrorMessage("Failed to perform a multipart upload for %s (%s): %s (%s)",
                                                     objectId,
                                                     bucket.getName())
