@@ -10,12 +10,15 @@ package sirius.biz.storage.layer1.replication;
 
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.biz.storage.s3.ObjectStore;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
@@ -165,6 +168,12 @@ public class ReplicationManager {
             try (InputStream in = primarySpace.getInputStream(objectId)
                                               .orElseThrow(() -> new IllegalStateException("No InputStream is available"))) {
                 primarySpace.getReplicationSpace().upload(objectId, in, contentLength);
+            } catch (HandledException e) {
+                if (e.getHint(ObjectStore.EMPTY_INPUT_STREAM).asBoolean()) {
+                    // If the original object has a 0-byte length, a multipart upload will throw an error.
+                    // this error is annotated in the exception and ignored from replication context
+                    Exceptions.ignore(e);
+                }
             }
         }
         replicationExecutionDuration.addValue(watch.elapsedMillis());
