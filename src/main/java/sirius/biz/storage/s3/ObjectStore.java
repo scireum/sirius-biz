@@ -731,9 +731,7 @@ public class ObjectStore {
                                                                                    multipartUpload.getUploadId(),
                                                                                    eTags));
         } catch (Exception e) {
-            getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
-                                                                             objectId,
-                                                                             multipartUpload.getUploadId()));
+            abortMultipartUpload(bucket, objectId, multipartUpload);
             if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
                 throw Exceptions.createHandled()
                                 .error(e)
@@ -750,6 +748,14 @@ public class ObjectStore {
                                                     bucket.getName())
                             .handle();
         }
+    }
+
+    private void abortMultipartUpload(BucketName bucket,
+                                      String objectId,
+                                      InitiateMultipartUploadResult multipartUpload) {
+        getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
+                                                                         objectId,
+                                                                         multipartUpload.getUploadId()));
     }
 
     @Nonnull
