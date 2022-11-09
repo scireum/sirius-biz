@@ -726,10 +726,17 @@ public class ObjectStore {
                                       eTags.size());
             }
 
-            getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
-                                                                                   objectId,
-                                                                                   multipartUpload.getUploadId(),
-                                                                                   eTags));
+            if (eTags.isEmpty()) {
+                // If the input stream had no contents, attempting to complete the multipart upload will error out.
+                // Therefore, we abort it and put an empty string, creating an object with 0 bytes
+                abortMultipartUpload(bucket, objectId, multipartUpload);
+                getClient().putObject(bucket.getName(), objectId, "");
+            } else {
+                getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
+                                                                                       objectId,
+                                                                                       multipartUpload.getUploadId(),
+                                                                                       eTags));
+            }
         } catch (Exception e) {
             abortMultipartUpload(bucket, objectId, multipartUpload);
             if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
