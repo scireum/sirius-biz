@@ -726,14 +726,19 @@ public class ObjectStore {
                                       eTags.size());
             }
 
-            getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
-                                                                                   objectId,
-                                                                                   multipartUpload.getUploadId(),
-                                                                                   eTags));
+            if (eTags.isEmpty()) {
+                // If the input stream had no contents, attempting to complete the multipart upload will error out.
+                // Therefore, we abort it and put an empty string, creating an object with 0 bytes
+                abortMultipartUpload(bucket, objectId, multipartUpload);
+                getClient().putObject(bucket.getName(), objectId, "");
+            } else {
+                getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
+                                                                                       objectId,
+                                                                                       multipartUpload.getUploadId(),
+                                                                                       eTags));
+            }
         } catch (Exception e) {
-            getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
-                                                                             objectId,
-                                                                             multipartUpload.getUploadId()));
+            abortMultipartUpload(bucket, objectId, multipartUpload);
             if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
                 throw Exceptions.createHandled()
                                 .error(e)
@@ -750,6 +755,14 @@ public class ObjectStore {
                                                     bucket.getName())
                             .handle();
         }
+    }
+
+    private void abortMultipartUpload(BucketName bucket,
+                                      String objectId,
+                                      InitiateMultipartUploadResult multipartUpload) {
+        getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
+                                                                         objectId,
+                                                                         multipartUpload.getUploadId()));
     }
 
     @Nonnull
