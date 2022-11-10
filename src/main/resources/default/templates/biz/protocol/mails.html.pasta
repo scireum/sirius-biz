@@ -37,7 +37,7 @@
                         <tbody>
                         <i:for type="sirius.biz.protocol.MailProtocol" var="mail" items="mails.getItems()">
                             <tr>
-                                <td class="left-border @if (mail.isSuccess()) { border-sirius-green } else { border-sirius-red }">
+                                <td class="@if (mail.isSuccess()) { sci-left-border-green } else { sci-left-border-red }">
                                     <div class="row">
                                         <div class="col-md-3">
                                             <a href="/system/mail/@mail.getId()">@toUserString(mail.getTod())</a>

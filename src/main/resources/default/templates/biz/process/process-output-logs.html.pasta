@@ -43,7 +43,7 @@
                     <tbody>
                     <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="logs.getItems()">
                         <tr>
-                            <td class="left-border border-sirius-@log.getRowColor()">
+                            <td class="sci-left-border-@log.getRowColor()">
                                 <div class="whitespace-pre-wrap overflow-hidden text-monospace text-small">@log.getMessage()</div>
                             </td>
                             <td class="text-right">
