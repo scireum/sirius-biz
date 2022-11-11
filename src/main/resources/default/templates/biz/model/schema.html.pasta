@@ -42,17 +42,17 @@
             '<tbody id="schemaList">' +
             '   {{#changes}}' +
             '       <tr id="{{id}}">' +
-            '       <td class="left-border ' +
+            '       <td class="' +
             '{{#executed}}' +
             '{{#failed}}' +
-            'border-sirius-red ' +
+            'sci-left-border-red ' +
             '{{/failed}}' +
             '{{^failed}}' +
-            'border-sirius-green ' +
+            'sci-left-border-green ' +
             '{{/failed}}' +
             '{{/executed}}' +
             '{{#dataLossPossible}}' +
-            'border-sirius-yellow ' +
+            'sci-left-border-yellow ' +
             '{{/dataLossPossible}}' +
             '">' +
             '       <div class="overflow-hidden text-small text-break whitespace-pre-line">' +

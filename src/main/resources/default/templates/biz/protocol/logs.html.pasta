@@ -36,7 +36,7 @@
                         <tbody>
                         <i:for type="sirius.biz.protocol.LoggedMessage" var="message" items="logs.getItems()">
                             <tr>
-                                <td class="left-border @message.getRowClass()">
+                                <td class="@message.getRowClass()">
                                     <div class="row">
                                         <div class="col-md-3 text-muted text-small">@toUserString(message.getTod())</div>
                                         <div class="col-md-3 text-muted text-small">@message.getCategory()</div>
