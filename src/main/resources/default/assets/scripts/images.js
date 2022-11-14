@@ -39,7 +39,7 @@ function loadImageSafely(_img) {
     _img.onerror = function () {
         _img.dataset.src = _img.getAttribute('src');
         _img.setAttribute('src', _img.dataset.fallback);
-        sirius.loadImageLazily(_img);
+        loadImageLazily(_img);
     };
 }
 
