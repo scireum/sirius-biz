@@ -251,7 +251,7 @@ function selectVFSFile(config) {
                                 }
                             });
                             this.on('maxfilesexceeded', function (file) {
-                                // replace the file that was uploaded
+                                // remove all files to reset limit, so a second separate upload is possible
                                 this.removeAllFiles();
                                 this.addFile(file);
                             });
@@ -429,7 +429,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 }
             });
             this.on('maxfilesexceeded', function (file) {
-                // replace the file that was uploaded
+                // remove all files to reset limit, so a second separate upload is possible
                 this.removeAllFiles();
                 this.addFile(file);
             });
