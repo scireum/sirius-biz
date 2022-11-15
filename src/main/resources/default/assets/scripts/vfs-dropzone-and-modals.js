@@ -194,7 +194,7 @@ function selectVFSFile(config) {
                                 }
 
                                 document.addEventListener('dragenter', function (event) {
-                                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                                    _modal.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
                                         _indicator.classList.add('d-flex');
                                         _indicator.classList.remove('d-none');
                                     });
@@ -362,10 +362,13 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 }
 
                 document.addEventListener('dragenter', function (event) {
-                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
-                        _indicator.classList.add('d-flex');
-                        _indicator.classList.remove('d-none');
-                    });
+                    let _modal = document.querySelector('#select-file-modal');
+                    if (window.getComputedStyle(_modal).display === 'none') {
+                        document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                            _indicator.classList.add('d-flex');
+                            _indicator.classList.remove('d-none');
+                        });
+                    }
                 }, false);
                 document.addEventListener('dragover', function (event) {
                     event.preventDefault();
