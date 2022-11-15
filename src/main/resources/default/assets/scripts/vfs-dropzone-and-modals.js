@@ -129,6 +129,8 @@ function selectVFSFile(config) {
                         sendFileAsBody: true,
                         parallelUploads: 1,
                         maxFilesize: null,
+                        maxFiles: 1,
+                        dictMaxFilesExceeded: config.dictMaxFilesExceeded,
                         acceptedFiles: config.allowedExtensions,
                         previewTemplate: '' +
                             '<div class="dropzone-item">\n' +
@@ -248,6 +250,11 @@ function selectVFSFile(config) {
                                     resolve(response.file);
                                 }
                             });
+                            this.on('maxfilesexceeded', function (file) {
+                                // replace the file that was uploaded
+                                this.removeAllFiles();
+                                this.addFile(file);
+                            });
                         }
                     });
                 } else {
@@ -276,7 +283,7 @@ function selectVFSFile(config) {
     });
 }
 
-function createInplaceDropzone(basePath, localId, _input, allowedExtensions) {
+function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dictMaxFilesExceeded) {
     new Dropzone("#sirius-upload-progress-" + localId, {
         url: function (files) {
             let value = _input.value;
@@ -291,6 +298,8 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions) {
         sendFileAsBody: true,
         parallelUploads: 1,
         maxFilesize: null,
+        maxFiles: 1,
+        dictMaxFilesExceeded: dictMaxFilesExceeded,
         acceptedFiles: allowedExtensions,
         previewTemplate: '' +
             '<div class="dropzone-item">\n' +
@@ -415,6 +424,11 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions) {
                     _input.value = response.file;
                     sirius.dispatchEvent("change", _input);
                 }
+            });
+            this.on('maxfilesexceeded', function (file) {
+                // replace the file that was uploaded
+                this.removeAllFiles();
+                this.addFile(file);
             });
         }
     });
