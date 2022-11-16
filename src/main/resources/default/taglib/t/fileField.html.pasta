@@ -58,7 +58,7 @@
     <script type="text/javascript">
         sirius.ready(function () {
             let _input = document.querySelector('#___localId input');
-            createInplaceDropzone('___basePath', '___localId', _input, '___allowedExtensions');
+            createInplaceDropzone('___basePath', '___localId', _input, '___allowedExtensions', '___i18n("VirtualFile.onlyOneFile")');
             document.querySelector('#___localId .select-btn').addEventListener('click', function () {
                 let value = _input.value;
 
@@ -73,6 +73,7 @@
                     allowDirectories: ___allowDirectories,
                     allowFiles: ___allowFiles,
                     allowedExtensions: '___allowedExtensions',
+                    dictMaxFilesExceeded: '___i18n("VirtualFile.onlyOneFile")',
                     modalTitle: ___allowDirectories ? (___allowFiles ? '___i18n("VFSController.selectFileOrDirectory")' : '___i18n("VFSController.selectDirectory")') : '___i18n("VFSController.selectFile")'
                 }).then(function (selectedValue) {
                     _input.value = selectedValue;

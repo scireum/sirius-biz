@@ -129,6 +129,8 @@ function selectVFSFile(config) {
                         sendFileAsBody: true,
                         parallelUploads: 1,
                         maxFilesize: null,
+                        maxFiles: 1,
+                        dictMaxFilesExceeded: config.dictMaxFilesExceeded,
                         acceptedFiles: config.allowedExtensions,
                         previewTemplate: '' +
                             '<div class="dropzone-item">\n' +
@@ -192,7 +194,7 @@ function selectVFSFile(config) {
                                 }
 
                                 document.addEventListener('dragenter', function (event) {
-                                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                                    _modal.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
                                         _indicator.classList.add('d-flex');
                                         _indicator.classList.remove('d-none');
                                     });
@@ -248,6 +250,11 @@ function selectVFSFile(config) {
                                     resolve(response.file);
                                 }
                             });
+                            this.on('maxfilesexceeded', function (file) {
+                                // remove all files to reset limit, so a second separate upload is possible
+                                this.removeAllFiles();
+                                this.addFile(file);
+                            });
                         }
                     });
                 } else {
@@ -276,7 +283,7 @@ function selectVFSFile(config) {
     });
 }
 
-function createInplaceDropzone(basePath, localId, _input, allowedExtensions) {
+function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dictMaxFilesExceeded) {
     new Dropzone("#sirius-upload-progress-" + localId, {
         url: function (files) {
             let value = _input.value;
@@ -291,6 +298,8 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions) {
         sendFileAsBody: true,
         parallelUploads: 1,
         maxFilesize: null,
+        maxFiles: 1,
+        dictMaxFilesExceeded: dictMaxFilesExceeded,
         acceptedFiles: allowedExtensions,
         previewTemplate: '' +
             '<div class="dropzone-item">\n' +
@@ -353,10 +362,13 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions) {
                 }
 
                 document.addEventListener('dragenter', function (event) {
-                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
-                        _indicator.classList.add('d-flex');
-                        _indicator.classList.remove('d-none');
-                    });
+                    let _modal = document.querySelector('#select-file-modal');
+                    if (window.getComputedStyle(_modal).display === 'none') {
+                        document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                            _indicator.classList.add('d-flex');
+                            _indicator.classList.remove('d-none');
+                        });
+                    }
                 }, false);
                 document.addEventListener('dragover', function (event) {
                     event.preventDefault();
@@ -415,6 +427,11 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions) {
                     _input.value = response.file;
                     sirius.dispatchEvent("change", _input);
                 }
+            });
+            this.on('maxfilesexceeded', function (file) {
+                // remove all files to reset limit, so a second separate upload is possible
+                this.removeAllFiles();
+                this.addFile(file);
             });
         }
     });
