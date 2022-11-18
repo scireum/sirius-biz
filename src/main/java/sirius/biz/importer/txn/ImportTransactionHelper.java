@@ -72,8 +72,10 @@ public class ImportTransactionHelper extends ImportHelper {
      * @return the helper itself for fluent method calls
      */
     public ImportTransactionHelper start(String source) {
-        this.transactionId = System.currentTimeMillis();
-        this.source = source;
+        start();
+        if (Strings.isFilled(source)) {
+            this.source = source.trim();
+        }
         return this;
     }
 
