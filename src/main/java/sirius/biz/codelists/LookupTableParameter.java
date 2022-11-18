@@ -64,7 +64,7 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
         return lookupTables.fetchTable(lookupTable)
                            .normalizeInput(input.getString())
                            .orElseThrow(() -> Exceptions.createHandled()
-                                                        .withNLSKey("LookupTableParameter.invalidValue")
+                                                        .withNLSKey("LookupValue.invalidValue")
                                                         .set("value", input.asString())
                                                         .handle());
     }
