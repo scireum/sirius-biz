@@ -130,12 +130,12 @@ public class ImportTransactionHelper extends ImportHelper {
      * @param entityCallback an optional callback which is invoked for each entity to be deleted
      * @param <E>            the generic type of entities being deleted
      */
-    @SuppressWarnings({"unchecked",  "java:S1905"})
+    @SuppressWarnings({"unchecked", "java:S1905"})
     @Explain("This cast is actually necessary.")
     public <E extends BaseEntity<?> & ImportTransactionalEntity> void deleteUnmarked(Class<E> entityType,
                                                                                      Consumer<Query<?, E, ?>> queryExtender,
                                                                                      @Nullable
-                                                                                             Consumer<E> entityCallback) {
+                                                                                     Consumer<E> entityCallback) {
         Query<?, E, ?> query =
                 (Query<?, E, ?>) (Object) mixing.getDescriptor(entityType).getMapper().select(entityType);
         query.ne(ImportTransactionalEntity.IMPORT_TRANSACTION_DATA.inner(ImportTransactionData.TXN_ID),
@@ -161,7 +161,7 @@ public class ImportTransactionHelper extends ImportHelper {
                                                                                         Mapping field,
                                                                                         Object value,
                                                                                         @Nullable
-                                                                                                Consumer<E> entityCallback) {
+                                                                                        Consumer<E> entityCallback) {
         deleteUnmarked(entityType, qry -> qry.eq(field, value), entityCallback);
     }
 }
