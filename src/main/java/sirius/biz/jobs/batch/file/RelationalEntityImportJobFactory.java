@@ -107,9 +107,26 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
         getDictionary().emitJobInfos(collector);
     }
 
+    /**
+     * Defines if the {@link RelationalEntityImportJob#SYNC_SOURCE_PARAMETER source} parameter should be included.
+     * <p>
+     * This parameter controls which records will be deleted when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
+     * is set to {@link SyncMode#SYNC}.
+     * By default, no source is collected and all records will be deleted, which were not
+     * {@link sirius.biz.importer.txn.ImportTransactionHelper#mark(ImportTransactionalEntity) marked}.
+     *
+     * @return <tt>true</tt> to enable the source parameter, <tt>false</tt> otherwise.
+     */
+    protected boolean useSyncSource() {
+        return false;
+    }
+
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
         parameterCollector.accept(RelationalEntityImportJob.SYNC_MODE_PARAMETER);
+        if (useSyncSource()) {
+            parameterCollector.accept(RelationalEntityImportJob.SYNC_SOURCE_PARAMETER);
+        }
     }
 }

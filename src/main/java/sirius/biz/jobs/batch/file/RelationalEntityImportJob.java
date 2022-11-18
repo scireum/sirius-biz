@@ -13,6 +13,7 @@ import sirius.biz.importer.txn.ImportTransactionHelper;
 import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenants;
 import sirius.db.mixing.BaseEntity;
@@ -61,6 +62,10 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
                                                                                                      .withDescription(
                                                                                                              "$EntityImportSyncJobFactory.syncMode.help")
                                                                                                      .build();
+
+    public static final Parameter<String> SYNC_SOURCE_PARAMETER =
+            new StringParameter("syncSource", "$EntityImportSyncJobFactory.syncSource").withDescription(
+                    "$EntityImportSyncJobFactory.syncSource.help").build();
 
     private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
 
@@ -124,7 +129,8 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
 
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
-        importTransactionHelper.start();
+        process.getParameter(SYNC_SOURCE_PARAMETER)
+               .ifPresentOrElse(source -> importTransactionHelper.start(source), () -> importTransactionHelper.start());
         try (InputStream in = inputSupplier.create()) {
             LineBasedProcessor.create(filename,
                                       in,
