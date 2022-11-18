@@ -117,7 +117,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
      *
      * @return <tt>true</tt> to enable the source parameter, <tt>false</tt> otherwise.
      */
-    protected boolean useSyncSource() {
+    protected boolean enableSyncSourceParameter() {
         return false;
     }
 
@@ -125,7 +125,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
         parameterCollector.accept(RelationalEntityImportJob.SYNC_MODE_PARAMETER);
-        if (useSyncSource()) {
+        if (enableSyncSourceParameter()) {
             parameterCollector.accept(RelationalEntityImportJob.SYNC_SOURCE_PARAMETER);
         }
     }
