@@ -50,7 +50,9 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
                                                    process,
                                                    getName()).withDeleteQueryTuner(this::tuneDeleteQuery)
                                                              .withContextExtender(context -> context.putAll(
-                                                                     parameterContext));
+                                                                     parameterContext))
+                                                             .withSource(process.getParameter(RelationalEntityImportJob.SYNC_SOURCE_PARAMETER)
+                                                                                .orElse(collectSyncSource()));
     }
 
     protected void tuneDeleteQuery(ProcessContext processContext, Q query) {
@@ -119,6 +121,19 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
      */
     protected boolean enableSyncSourceParameter() {
         return false;
+    }
+
+    /**
+     * Defines a fixed source to use for record deletion when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
+     * is set to {@link SyncMode#SYNC}.
+     * <p>
+     * Use this method when the source must be a fixed value, without exposing a parameter.
+     *
+     * @return the source to initialize transactions
+     * @see this.enableSyncSourceParameter()
+     */
+    protected String collectSyncSource() {
+        return null;
     }
 
     @Override

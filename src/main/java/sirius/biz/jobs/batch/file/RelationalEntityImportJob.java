@@ -82,6 +82,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     protected Class<E> type;
     protected SyncMode mode;
     protected BiConsumer<ProcessContext, Q> queryTuner;
+    private String syncSource;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -127,10 +128,22 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
         return this;
     }
 
+    /**
+     * Specifies the source to use when initializing {@link ImportTransactionHelper import transactions}.
+     * <p>
+     * This permits to fine tune which entities will be deleted if they remain unmarked during an import.
+     *
+     * @param source the source used to filter entities to delete
+     * @return the job itself for fluent method calls
+     */
+    public RelationalEntityImportJob<E, Q> withSource(String source) {
+        this.syncSource = source;
+        return this;
+    }
+
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
-        process.getParameter(SYNC_SOURCE_PARAMETER)
-               .ifPresentOrElse(source -> importTransactionHelper.start(source), () -> importTransactionHelper.start());
+        importTransactionHelper.start(syncSource);
         try (InputStream in = inputSupplier.create()) {
             LineBasedProcessor.create(filename,
                                       in,
