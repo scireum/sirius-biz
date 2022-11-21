@@ -52,11 +52,6 @@
             <version>3.0.6</version>
         </dependency>
         <dependency>
-            <groupId>net.sf.jt400</groupId>
-            <artifactId>jt400</artifactId>
-            <version>11.0</version>
-        </dependency>
-        <dependency>
             <groupId>com.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
             <version>0.3.2-patch11</version>
