@@ -44,7 +44,7 @@
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
         <div class="input-group-append select-btn">
             <span class="input-group-text">
-                <span class="fa fa-cloud-upload-alt cursor-pointer"></span>
+                <span class="fa @if (allowFiles) {fa-cloud-upload-alt} else {fa-folder-open} cursor-pointer"></span>
             </span>
         </div>
     </div>
