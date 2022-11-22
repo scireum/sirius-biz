@@ -116,6 +116,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                                                                      .withDescription(
                                                                                              "$ExtractArchiveJob.sourceParameter.help")
                                                                                      .filesOnly()
+                                                                                     .withBasePath("/work")
                                                                                      .markRequired()
                                                                                      .build();
         }
