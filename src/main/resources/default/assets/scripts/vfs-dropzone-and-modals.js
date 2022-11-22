@@ -349,12 +349,16 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
         init: function () {
             const dropzone = this;
             let previewsContainer = '#sirius-upload-progress-' + localId;
+            let _outerContainer = document.querySelector(previewsContainer);
 
             if (previewsContainer) {
                 let _dropzoneIndicator = document.querySelector(previewsContainer + ' .sirius-upload-hover');
 
                 function hideIndicators() {
                     document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                        if (!_indicator.parentElement.querySelector('.dropzone-item')) {
+                            _indicator.parentElement.classList.add('d-none');
+                        }
                         _indicator.classList.remove('d-flex');
                         _indicator.classList.add('d-none');
                         _indicator.classList.remove('sirius-upload-hover-active');
@@ -364,7 +368,8 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 document.addEventListener('dragenter', function (event) {
                     let _modal = document.querySelector('#select-file-modal');
                     if (window.getComputedStyle(_modal).display === 'none') {
-                        document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                        _outerContainer.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                            _outerContainer.classList.remove('d-none');
                             _indicator.classList.add('d-flex');
                             _indicator.classList.remove('d-none');
                         });
@@ -416,6 +421,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 if (file.previewElement) {
                     setTimeout(function () {
                         file.previewElement.remove();
+                        _outerContainer.classList.add('d-none');
                     }, 500);
                 }
                 if (response.error) {
