@@ -22,7 +22,6 @@ import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
@@ -146,7 +145,6 @@ public class JobsController extends BizController {
     @ApiResponse(responseCode = "404",
             description = "Unknown or inaccessible job",
             content = @Content(mediaType = "application/json"))
-
     @ApiResponse(responseCode = "405",
             description = "Attempting a GET instead of a POST.",
             content = @Content(mediaType = "application/json"))
@@ -154,23 +152,17 @@ public class JobsController extends BizController {
             description = "The name of the job to start.",
             required = true,
             example = "jupiter-sync")
+    @LoginRequired
     public void jsonApi(WebContext webContext, JSONStructuredOutput out, String jobType) {
-        if (webContext.isUnsafePOST()) {
-            try {
-                JobFactory factory = jobs.findFactory(jobType, JobFactory.class);
-                out.property("process", factory.startInBackground(webContext::get));
-            } catch (IllegalArgumentException e) {
-                throw Exceptions.createHandled()
-                                .withDirectMessage(Strings.apply("Unknown factory: %s", jobType))
-                                .hint(Controller.HTTP_STATUS, HttpResponseStatus.NOT_FOUND.code())
-                                .handle();
-            } catch (HandledException e) {
-                throw e.withHint(Controller.HTTP_STATUS, HttpResponseStatus.BAD_REQUEST.code());
-            }
-        } else {
+        enforceMethodPost(webContext);
+
+        try {
+            JobFactory factory = jobs.findFactory(jobType, JobFactory.class);
+            out.property("process", factory.startInBackground(webContext::get));
+        } catch (IllegalArgumentException e) {
             throw Exceptions.createHandled()
-                            .withDirectMessage("A POST request is expected.")
-                            .hint(HTTP_STATUS, HttpResponseStatus.METHOD_NOT_ALLOWED.code())
+                            .withDirectMessage(Strings.apply("Unknown factory: %s", jobType))
+                            .hint(Controller.HTTP_STATUS, HttpResponseStatus.NOT_FOUND.code())
                             .handle();
         }
     }
