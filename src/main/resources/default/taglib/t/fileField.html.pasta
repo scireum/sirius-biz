@@ -44,21 +44,25 @@
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
         <div class="input-group-append select-btn">
             <span class="input-group-text">
-                <span class="fa fa-cloud-upload-alt cursor-pointer"></span>
+                <span class="fa @if (allowFiles) {fa-cloud-upload-alt} else {fa-folder-open} cursor-pointer"></span>
             </span>
         </div>
     </div>
-    <div id="sirius-upload-progress-@localId" class="mt-3 mb-3 dropzone-items">
-        <div class="sirius-upload-hover h-100 d-none flex-column align-items-center justify-content-center">
-            <i class="fa fa-2x fa-cloud-upload-alt"></i>
-            <span>@i18n("template.html.uploadArea")</span>
+    <i:if test="allowFiles">
+        <div id="sirius-upload-progress-@localId" class="mt-3 d-none mb-3 dropzone-items">
+            <div class="sirius-upload-hover d-flex h-100 flex-column align-items-center justify-content-center">
+                <i class="fa fa-2x fa-cloud-upload-alt"></i>
+                <span>@i18n("template.html.uploadArea")</span>
+            </div>
         </div>
-    </div>
+    </i:if>
 
     <script type="text/javascript">
         sirius.ready(function () {
             let _input = document.querySelector('#___localId input');
-            createInplaceDropzone('___basePath', '___localId', _input, '___allowedExtensions', '___i18n("VirtualFile.onlyOneFile")');
+            if (___allowFiles) {
+                createInplaceDropzone('___basePath', '___localId', _input, '___allowedExtensions', '___i18n("VirtualFile.onlyOneFile")');
+            }
             document.querySelector('#___localId .select-btn').addEventListener('click', function () {
                 let value = _input.value;
 
