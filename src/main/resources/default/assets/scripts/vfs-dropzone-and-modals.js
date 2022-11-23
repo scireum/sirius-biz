@@ -116,7 +116,7 @@ function selectVFSFile(config) {
                     _breadcrumbs.appendChild(_folderBreadcrumb);
                 }
                 const _uploadBox = _modal.querySelector('.upload-box-js');
-                if (config.allowUpload && json.canCreateChildren) {
+                if (config.allowFiles && json.canCreateChildren) {
                     _uploadBox.classList.remove('d-none');
                     _uploadBox.classList.add('dropzone');
                     if (vfsModalDropzone) {

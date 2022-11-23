@@ -73,7 +73,6 @@
                 }
                 selectVFSFile({
                     path: value,
-                    allowUpload: true,
                     allowDirectories: ___allowDirectories,
                     allowFiles: ___allowFiles,
                     allowedExtensions: '___allowedExtensions',
