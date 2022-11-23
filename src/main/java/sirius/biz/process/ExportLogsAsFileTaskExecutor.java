@@ -24,6 +24,7 @@ import sirius.db.es.Elastic;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
+import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -84,6 +85,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     @Override
     public void executeWork(JSONObject context) throws Exception {
+        // we need to wait for elastic to propagate process state changes if running on a different machine
+        Wait.seconds(2);
+
         processes.execute(context.getString(CONTEXT_PROCESS), process -> executeInProcess(context, process));
     }
 
