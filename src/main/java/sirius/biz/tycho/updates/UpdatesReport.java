@@ -19,6 +19,7 @@ import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -74,8 +75,8 @@ public class UpdatesReport extends ReportJobFactory {
         report.addColumn(COLUMN_ANONYMOUS, "$UpdatesReport.anonymous");
 
         LocalDate start = LocalDate.now().minusMonths(6).withDayOfMonth(1);
-        additionalMetricConsumer.accept("$UpdatesReport.start", cells.of(start));
-        additionalMetricConsumer.accept("$UpdatesReport.end", cells.of(LocalDate.now()));
+        additionalMetricConsumer.accept(NLS.get("UpdatesReport.start"), cells.of(start));
+        additionalMetricConsumer.accept(NLS.get("UpdatesReport.end"), cells.of(LocalDate.now()));
 
         AtomicInteger totalClicks = new AtomicInteger();
         eventRecorder.createQuery(
@@ -99,7 +100,7 @@ public class UpdatesReport extends ReportJobFactory {
             totalClicks.addAndGet(row.getValue("all").asInt(0));
         }, Limit.UNLIMITED);
 
-        additionalMetricConsumer.accept("$UpdatesReport.totalClicks", cells.of(totalClicks.get()));
+        additionalMetricConsumer.accept(NLS.get("UpdatesReport.totalClicks"), cells.of(totalClicks.get()));
     }
 
     private boolean isURL(String guid) {
