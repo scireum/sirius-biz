@@ -27,7 +27,7 @@
                 <script type="text/javascript">
                     sirius.ready(function () {
                         document.querySelector('#supportLink').addEventListener('click', function () {
-                            copyToClipboard(window.location.protocol + '//' + window.location.host + '/tenants/select/@user().getTenantId()?goto=' + encodeURI(window.location.href));
+                            copyToClipboard(window.location.protocol + '//' + window.location.host + '/tenants/select/@user().getTenantId()?goto=' + encodeURIComponent(window.location.href));
 
                             clearMessages();
                             addSuccessMessage('@i18n("footer.html.supportLinkCopiedSuccessfully")');
