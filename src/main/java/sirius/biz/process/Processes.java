@@ -209,6 +209,9 @@ public class Processes {
                process -> process.getState() == ProcessState.TERMINATED,
                process -> process.setState(ProcessState.RUNNING));
         log(processId, ProcessLog.info().withNLSKey("Processes.restarted").withContext("reason", reason));
+
+        // we need to wait for elastic to propagate process state changes if running on a different machine
+        Wait.seconds(2);
     }
 
     /**
