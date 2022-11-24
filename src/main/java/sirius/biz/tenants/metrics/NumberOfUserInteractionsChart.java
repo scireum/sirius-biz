@@ -44,7 +44,7 @@ public class NumberOfUserInteractionsChart extends TimeSeriesChartFactory<Object
     @Override
     public boolean isAccessibleToCurrentUser() {
         UserInfo currentUser = UserContext.getCurrentUser();
-        return currentUser.hasPermission(UserAccountController.getUserManagementPermission());
+        return super.isAccessibleToCurrentUser() && currentUser.hasPermission(UserAccountController.getUserManagementPermission());
     }
 
     @Nullable
