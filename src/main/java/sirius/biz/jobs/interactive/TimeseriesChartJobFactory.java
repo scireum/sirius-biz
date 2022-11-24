@@ -55,9 +55,8 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
      * Determines the desired comparison period for the timeseries.
      */
     public static final Parameter<ComparisonPeriod> PARAM_COMPARISON_PERIOD = new EnumParameter<>("comparisonPeriod",
-                                                                                                  "$TimeseriesChartJobFactory.comparisonPeriod",
-                                                                                                  ComparisonPeriod.class)
-            .build();
+                                                                                                  "$TimeSeriesChartJobFactory.comparisonPeriod",
+                                                                                                  ComparisonPeriod.class).build();
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
@@ -79,13 +78,13 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
         Timeseries timeseries = new Timeseries(start.atStartOfDay(), end.atStartOfDay().plusDays(1), unit, 35, 50);
         labelConsumer.accept(timeseries.getLabels());
 
-        Dataset currentDataset = new Dataset(NLS.get("TimeseriesChartJobFactory.currentPeriod"));
+        Dataset currentDataset = new Dataset(NLS.get("TimeSeriesChartJobFactory.currentPeriod"));
         provideData(timeseries, context, currentDataset, Optional.of(additionalMetricConsumer));
         datasetConsumer.accept(currentDataset);
 
         ComparisonPeriod period = PARAM_COMPARISON_PERIOD.get(context).orElse(null);
         if (period != null) {
-            Dataset comparedDataset = new Dataset(NLS.get("TimeseriesChartJobFactory.comparisonPeriod"));
+            Dataset comparedDataset = new Dataset(NLS.get("TimeSeriesChartJobFactory.comparisonPeriod"));
             provideData(timeseries.computeComparisonPeriod(period), context, comparedDataset, Optional.empty());
             datasetConsumer.accept(comparedDataset);
         }
