@@ -24,11 +24,11 @@ import sirius.kernel.health.Log;
 import java.util.function.Consumer;
 
 /**
- * Provides a base implementation for batch jobs which synchronize a set of entities based on line based files using a
+ * Provides a base implementation for batch jobs which synchronize a set of entities based on line-based files using a
  * {@link sirius.biz.importer.ImportHandler}.
  *
  * @param <E> the type of entities being imported by this job
- * @param <Q> the generic type of queries for the entities being procesed
+ * @param <Q> the generic type of queries for the entities being processed
  */
 public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJobFactory {
@@ -50,7 +50,9 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
                                                    process,
                                                    getName()).withDeleteQueryTuner(this::tuneDeleteQuery)
                                                              .withContextExtender(context -> context.putAll(
-                                                                     parameterContext));
+                                                                     parameterContext))
+                                                             .withSource(process.getParameter(RelationalEntityImportJob.SYNC_SOURCE_PARAMETER)
+                                                                                .orElse(collectSyncSource()));
     }
 
     protected void tuneDeleteQuery(ProcessContext processContext, Q query) {
@@ -90,7 +92,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     protected abstract Class<E> getImportType();
 
     /**
-     * Adds the possibility to enhance a dicitonary during the setup of the job
+     * Adds the possibility to enhance a dictionary during the setup of the job
      *
      * @param importer   the current importer which can be asked to provide a dictionary for an entity
      * @param dictionary the dictionary to enhance
@@ -107,9 +109,39 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
         getDictionary().emitJobInfos(collector);
     }
 
+    /**
+     * Defines if the {@link RelationalEntityImportJob#SYNC_SOURCE_PARAMETER source} parameter should be included.
+     * <p>
+     * This parameter controls which records will be deleted when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
+     * is set to {@link SyncMode#SYNC}.
+     * By default, no source is collected and all records will be deleted, which were not
+     * {@link sirius.biz.importer.txn.ImportTransactionHelper#mark(ImportTransactionalEntity) marked}.
+     *
+     * @return <tt>true</tt> to enable the source parameter, <tt>false</tt> otherwise.
+     */
+    protected boolean enableSyncSourceParameter() {
+        return false;
+    }
+
+    /**
+     * Defines a fixed source to use for record deletion when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
+     * is set to {@link SyncMode#SYNC}.
+     * <p>
+     * Use this method when the source must be a fixed value, without exposing a parameter.
+     *
+     * @return the source to initialize transactions
+     * @see this.enableSyncSourceParameter()
+     */
+    protected String collectSyncSource() {
+        return null;
+    }
+
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
         parameterCollector.accept(RelationalEntityImportJob.SYNC_MODE_PARAMETER);
+        if (enableSyncSourceParameter()) {
+            parameterCollector.accept(RelationalEntityImportJob.SYNC_SOURCE_PARAMETER);
+        }
     }
 }
