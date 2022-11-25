@@ -36,15 +36,15 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
 public class NumberOfUserInteractionsChart extends TimeSeriesChartFactory<Object> {
 
-    protected static final String AGGREGATION_EXPRESSION_USERS = "count(DISTINCT userData_userId) AS users";
+    protected static final String AGGREGATION_EXPRESSION_USERS = "count(DISTINCT userData_userId)";
     protected static final String LABEL_USERS = "$NumberOfUserInteractionsChart.users";
-    protected static final String AGGREGATION_EXPRESSION_TENANTS = "count(DISTINCT userData_tenantId) AS tenants";
-    protected static final String LABEL_TENANTS = "NumberOfUserInteractionsChart.tenants";
+    protected static final String AGGREGATION_EXPRESSION_TENANTS = "count(DISTINCT userData_tenantId)";
+    protected static final String LABEL_TENANTS = "$NumberOfUserInteractionsChart.tenants";
 
     @Override
     public boolean isAccessibleToCurrentUser() {
         UserInfo currentUser = UserContext.getCurrentUser();
-        return currentUser.hasPermission(UserAccountController.getUserManagementPermission());
+        return super.isAccessibleToCurrentUser() && currentUser.hasPermission(UserAccountController.getUserManagementPermission());
     }
 
     @Nullable
@@ -70,9 +70,10 @@ public class NumberOfUserInteractionsChart extends TimeSeriesChartFactory<Object
         EventTimeSeriesComputer<Object, UserActivityEvent> computer =
                 new EventTimeSeriesComputer<>(UserActivityEvent.class);
 
-        computer.addAggregation(AGGREGATION_EXPRESSION_USERS, LABEL_USERS);
-
-        if (!hasComparisonPeriod) {
+        if (hasComparisonPeriod) {
+            computer.addAggregation(AGGREGATION_EXPRESSION_USERS, null);
+        } else {
+            computer.addAggregation(AGGREGATION_EXPRESSION_USERS, LABEL_USERS);
             computer.addAggregation(AGGREGATION_EXPRESSION_TENANTS, LABEL_TENANTS);
         }
 

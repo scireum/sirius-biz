@@ -39,7 +39,7 @@
                         <tbody>
                         <i:for type="sirius.biz.protocol.AuditLogEntry" var="message" items="messages.getItems()">
                             <tr>
-                                <td class="left-border @if (message.isNegative()) { border-sirius-yellow } else { border-sirius-blue }">
+                                <td class="@if (message.isNegative()) { sci-left-border-yellow } else { sci-left-border-blue }">
                                     <div class="row">
                                         <div class="col-md-4 text-small text-muted">
                                             <div>@toUserString(message.getTimestamp())</div>
@@ -51,7 +51,7 @@
                                         </div>
                                         <div class="col-md-4 text-small text-muted">@message.getIp()</div>
                                     </div>
-                                    <pre class="pt-2 mb-0" style="white-space: break-spaces">@i18n(message.getMessage())</pre>
+                                    <pre class="pt-2 mb-0" style="white-space: break-spaces; overflow-wrap: anywhere;">@i18n(message.getMessage())</pre>
                                 </td>
                             </tr>
                         </i:for>

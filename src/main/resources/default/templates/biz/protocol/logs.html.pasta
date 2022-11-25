@@ -36,7 +36,7 @@
                         <tbody>
                         <i:for type="sirius.biz.protocol.LoggedMessage" var="message" items="logs.getItems()">
                             <tr>
-                                <td class="left-border @message.getRowClass()">
+                                <td class="@message.getRowClass()">
                                     <div class="row">
                                         <div class="col-md-3 text-muted text-small">@toUserString(message.getTod())</div>
                                         <div class="col-md-3 text-muted text-small">@message.getCategory()</div>
@@ -45,7 +45,7 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 pt-2">
-                                            <pre class="mb-0" style="white-space: break-spaces">@message.getMessage()</pre>
+                                            <pre class="mb-0" style="white-space: break-spaces; overflow-wrap: anywhere;">@message.getMessage()</pre>
                                         </div>
                                     </div>
                                 </td>

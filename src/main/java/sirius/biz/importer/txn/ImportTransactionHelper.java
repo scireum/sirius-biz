@@ -16,6 +16,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
@@ -40,6 +41,7 @@ public class ImportTransactionHelper extends ImportHelper {
     private static Mixing mixing;
 
     private long transactionId = NO_TRANSACTION;
+    private String source;
 
     /**
      * Creates a new instance.
@@ -60,6 +62,20 @@ public class ImportTransactionHelper extends ImportHelper {
      */
     public ImportTransactionHelper start() {
         this.transactionId = System.currentTimeMillis();
+        return this;
+    }
+
+    /**
+     * Starts a new transaction by setting the internal transaction id to the current timestamp and a source.
+     *
+     * @param source the source, later used to delete unmarked items of the same source
+     * @return the helper itself for fluent method calls
+     */
+    public ImportTransactionHelper start(String source) {
+        start();
+        if (Strings.isFilled(source)) {
+            this.source = source.trim();
+        }
         return this;
     }
 
@@ -93,6 +109,7 @@ public class ImportTransactionHelper extends ImportHelper {
      */
     public void finish() {
         this.transactionId = NO_TRANSACTION;
+        this.source = null;
     }
 
     /**
@@ -104,6 +121,7 @@ public class ImportTransactionHelper extends ImportHelper {
      */
     public void mark(ImportTransactionalEntity entity) {
         entity.getImportTransactionData().setTxnId(getCurrentTransaction());
+        entity.getImportTransactionData().setSource(source);
     }
 
     /**
@@ -114,16 +132,19 @@ public class ImportTransactionHelper extends ImportHelper {
      * @param entityCallback an optional callback which is invoked for each entity to be deleted
      * @param <E>            the generic type of entities being deleted
      */
-    @SuppressWarnings({"unchecked",  "java:S1905"})
+    @SuppressWarnings({"unchecked", "java:S1905"})
     @Explain("This cast is actually necessary.")
     public <E extends BaseEntity<?> & ImportTransactionalEntity> void deleteUnmarked(Class<E> entityType,
                                                                                      Consumer<Query<?, E, ?>> queryExtender,
                                                                                      @Nullable
-                                                                                             Consumer<E> entityCallback) {
+                                                                                     Consumer<E> entityCallback) {
         Query<?, E, ?> query =
                 (Query<?, E, ?>) (Object) mixing.getDescriptor(entityType).getMapper().select(entityType);
         query.ne(ImportTransactionalEntity.IMPORT_TRANSACTION_DATA.inner(ImportTransactionData.TXN_ID),
                  getCurrentTransaction());
+        if (Strings.isFilled(source)) {
+            query.eq(ImportTransactionalEntity.IMPORT_TRANSACTION_DATA.inner(ImportTransactionData.SOURCE), source);
+        }
         queryExtender.accept(query);
         query.delete(entityCallback);
     }
@@ -142,7 +163,7 @@ public class ImportTransactionHelper extends ImportHelper {
                                                                                         Mapping field,
                                                                                         Object value,
                                                                                         @Nullable
-                                                                                                Consumer<E> entityCallback) {
+                                                                                        Consumer<E> entityCallback) {
         deleteUnmarked(entityType, qry -> qry.eq(field, value), entityCallback);
     }
 }

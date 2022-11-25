@@ -37,7 +37,7 @@
                         <tbody>
                         <i:for type="sirius.biz.protocol.MailProtocol" var="mail" items="mails.getItems()">
                             <tr>
-                                <td class="left-border @if (mail.isSuccess()) { border-sirius-green } else { border-sirius-red }">
+                                <td class="@if (mail.isSuccess()) { sci-left-border-green } else { sci-left-border-red }">
                                     <div class="row">
                                         <div class="col-md-3">
                                             <a href="/system/mail/@mail.getId()">@toUserString(mail.getTod())</a>
@@ -48,7 +48,7 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 pt-2">
-                                            <pre class="mb-0" style="white-space: break-spaces">@mail.getSubject()</pre>
+                                            <pre class="mb-0" style="white-space: break-spaces; overflow-wrap: anywhere;">@mail.getSubject()</pre>
                                         </div>
                                     </div>
                                 </td>
