@@ -12,6 +12,7 @@ import sirius.biz.importer.AutoImport;
 import sirius.biz.protocol.NoJournal;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.SkipDefaultValue;
 
@@ -45,6 +46,7 @@ public class ImportTransactionData extends Composite {
     @AutoImport(hidden = true)
     @SkipDefaultValue
     @NullAllowed
+    @Length(50)
     private String source;
 
     public long getTxnId() {

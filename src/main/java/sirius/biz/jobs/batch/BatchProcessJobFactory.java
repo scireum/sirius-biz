@@ -164,8 +164,11 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @param processId the id of the process which has been created
      */
     protected void addLinkToJob(String processId) {
-        processes.addLink(processId,
-                          new ProcessLink().withLabel("$BatchProcessJobFactory.jobLink").withUri("/job/" + getName()));
+        if (canStartInteractive()) {
+            processes.addLink(processId,
+                              new ProcessLink().withLabel("$BatchProcessJobFactory.jobLink")
+                                               .withUri("/job/" + getName()));
+        }
     }
 
     private void createAndScheduleDistributedTask(String processId) {
