@@ -101,6 +101,9 @@ public class StorageMetrics extends CachingLoadInfoProvider implements MetricPro
             consumer.accept(new LoadInfo("storage-total-replication-tasks",
                                          "Total Replication Tasks",
                                          replicationTaskStorage.countTotalNumberOfTasks()));
+            consumer.accept(new LoadInfo("storage-delayed-replication-tasks",
+                                         "Delayed / Parked Replication Tasks",
+                                         replicationTaskStorage.countNumberOfDelayedTasks()));
             consumer.accept(new LoadInfo("storage-executable-replication-tasks",
                                          "Executable Replication Tasks",
                                          replicationTaskStorage.countNumberOfExecutableTasks()));
