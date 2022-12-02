@@ -142,9 +142,6 @@ public class ImportTransactionHelper extends ImportHelper {
                 (Query<?, E, ?>) (Object) mixing.getDescriptor(entityType).getMapper().select(entityType);
         query.ne(ImportTransactionalEntity.IMPORT_TRANSACTION_DATA.inner(ImportTransactionData.TXN_ID),
                  getCurrentTransaction());
-        if (Strings.isFilled(source)) {
-            query.eq(ImportTransactionalEntity.IMPORT_TRANSACTION_DATA.inner(ImportTransactionData.SOURCE), source);
-        }
         queryExtender.accept(query);
         query.delete(entityCallback);
     }
