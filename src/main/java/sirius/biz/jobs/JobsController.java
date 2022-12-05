@@ -29,6 +29,8 @@ import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.services.ApiResponsesFrom;
+import sirius.web.services.DefaultErrorResponsesJson;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.services.PublicService;
@@ -129,25 +131,7 @@ public class JobsController extends BizController {
                                 "process":"KR8E6I36AK7POAK0IP9L3KB0Q1"
                             }
                             """)))
-    @ApiResponse(responseCode = "400",
-            description = "Missing or invalid job parameters",
-            content = @Content(mediaType = "application/json", examples = @ExampleObject(//language=JSON
-                    """
-                            {
-                                "success":false,
-                                "error":true,
-                                "message":"The parameter {label} must be filled."
-                            }
-                            """)))
-    @ApiResponse(responseCode = "401",
-            description = "Missing authentication",
-            content = @Content(mediaType = "application/json"))
-    @ApiResponse(responseCode = "404",
-            description = "Unknown or inaccessible job",
-            content = @Content(mediaType = "application/json"))
-    @ApiResponse(responseCode = "405",
-            description = "Attempting a GET instead of a POST.",
-            content = @Content(mediaType = "application/json"))
+    @ApiResponsesFrom(DefaultErrorResponsesJson.class)
     @Parameter(name = "process",
             description = "The name of the job to start.",
             required = true,
