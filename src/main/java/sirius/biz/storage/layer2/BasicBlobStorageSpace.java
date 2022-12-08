@@ -1345,11 +1345,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             } else {
                 return null;
             }
-        } catch (Exception ex) {
+        } catch (Exception exception) {
             // The conversion ultimately failed, we can therefore cache the result, as no more conversion attempts
             // will happen...
             blobKeyToPhysicalCache.put(cacheKey, CACHED_FAILURE_MARKER);
-            throw ex;
+            throw exception;
         }
     }
 

@@ -769,10 +769,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected BasePageHelper<? extends Blob, ?, ?, ?> queryChildBlobsAsPage(SQLDirectory parent,
                                                                             WebContext webContext) {
         SmartQuery<SQLBlob> blobsQuery = oma.select(SQLBlob.class)
-                                       .eq(SQLBlob.SPACE_NAME, spaceName)
-                                       .eq(SQLBlob.PARENT, parent)
-                                       .eq(SQLBlob.COMMITTED, true)
-                                       .eq(SQLBlob.DELETED, false);
+                                            .eq(SQLBlob.SPACE_NAME, spaceName)
+                                            .eq(SQLBlob.PARENT, parent)
+                                            .eq(SQLBlob.COMMITTED, true)
+                                            .eq(SQLBlob.DELETED, false);
 
         SQLPageHelper<SQLBlob> pageHelper = SQLPageHelper.withQuery(blobsQuery)
                                                          .withContext(webContext)
