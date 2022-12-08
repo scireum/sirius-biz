@@ -1261,6 +1261,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void deliver(String blobKey, String variant, Response response, Runnable markAsLongRunning) {
         touch(blobKey);
 
+        // TODO: do we need to filter out inconvertible blobs here already?
+
         try {
             Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
             if (physicalKey != null) {
@@ -1288,6 +1290,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                 @Nonnull Response response,
                                 boolean largeFileExpected) {
         touch(blobKey);
+        // TODO: filter out inconvertible blobs?
         getPhysicalSpace().deliver(response, physicalKey, largeFileExpected);
     }
 
@@ -1397,6 +1400,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return blob.getPhysicalObjectKey();
         }
 
+        if (blob.isInconvertible()) {
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("Requested physical key for inconvertible blob "
+                                                    + blob.getBlobKey())
+                            .handle();
+        }
+
         if (!conversionEngine.isKnownVariant(variantName)) {
             throw new IllegalArgumentException(Strings.apply("Unknown variant type: %s", variantName));
         }
@@ -1456,9 +1466,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     @Nullable
     @SuppressWarnings("java:S3776")
-    @Explain("This is a complex beast, but we rather keep the whole logik in one place.")
+    @Explain("This is a complex beast, but we rather keep the whole logic in one place.")
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
+        if (blob.isInconvertible()) {
+            // The blob was identified as inconvertible in other conversion attempts. Signal that the to client.
+            // We use a handled exception here, as the problem has already been logged...
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("Failed to create any variant from the given image.")
+                            .handle();
+        }
+
         V variant = findAnyVariant(blob, variantName);
         if (variant != null) {
             if (Strings.isFilled(variant.getPhysicalObjectKey())) {
@@ -1731,6 +1749,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param response the response to populate
      */
     private void deliverAsync(String blobKey, String variant, Response response) {
+        // TODO: only try delivery, if blobKey not inconvertible
+        //  maybe we need a cache with "blobKey <-> inconvertible" here
         tasks.executor(EXECUTOR_STORAGE_CONVERSION_DELIVERY)
              .dropOnOverload(() -> response.notCached().error(HttpResponseStatus.TOO_MANY_REQUESTS))
              .fork(() -> {

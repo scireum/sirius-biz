@@ -256,4 +256,8 @@ public interface Blob {
      * @return a builder to create a download or delivery URL
      */
     URLBuilder url();
+
+    void markInconvertible();
+
+    boolean isInconvertible();
 }

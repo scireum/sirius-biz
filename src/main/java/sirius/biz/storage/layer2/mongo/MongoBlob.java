@@ -210,6 +210,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private boolean deleted;
 
     /**
+     * Indicates that this blob is not convertible.
+     */
+    public static final Mapping INCONVERTIBLE = Mapping.named("inconvertible");
+    private boolean inconvertible;
+
+    /**
      * Stores if the blob was inserted or renamed.
      */
     public static final Mapping CREATED_OR_RENAMED = Mapping.named("createdOrRenamed");
@@ -469,6 +475,20 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    @Override
+    public void markInconvertible() {
+        if (!inconvertible) {
+            inconvertible = true;
+            mango.update(this);
+        }
+    }
+
+    @Override
+    public boolean isInconvertible() {
+        mango.tryRefresh(this);
+        return inconvertible;
     }
 
     public boolean isCreatedOrRenamed() {

@@ -10,6 +10,7 @@ package sirius.biz.storage.layer2.mongo;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
+import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
@@ -129,7 +130,8 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     @Override
     public boolean isFailed() {
-        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
+        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS
+               || Optional.ofNullable(blob.fetchValue()).map(Blob::isInconvertible).orElse(false);
     }
 
     @Override

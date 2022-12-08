@@ -10,6 +10,7 @@ package sirius.biz.storage.layer2.jdbc;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
+import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
@@ -131,7 +132,8 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     @Override
     public boolean isFailed() {
-        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
+        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS || Optional.ofNullable(
+                sourceBlob.fetchValue()).map(Blob::isInconvertible).orElse(false);
     }
 
     @Override
