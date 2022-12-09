@@ -260,8 +260,8 @@ public class ClusterController extends BasicController {
     @ApiResponse(responseCode = "200",
             description = "Successful response",
             content = @Content(mediaType = "text/plain", examples = @ExampleObject("OK")))
-    @ApiResponse(responseCode = "403",
-            description = "Invalid authentication",
+    @ApiResponse(responseCode = "401",
+            description = "Authentication required but none provided",
             content = @Content(mediaType = "text/plain"))
     public void apiBleed(WebContext webContext, String setting, String node, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
