@@ -18,7 +18,7 @@
 
     <properties>
         <sirius.kernel>ga-6.0.0</sirius.kernel>
-        <sirius.web>dev-58.1.0</sirius.web>
+        <sirius.web>dev-58.2.1</sirius.web>
         <sirius.db>ga-7.0.0</sirius.db>
     </properties>
 
