@@ -476,15 +476,17 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Override
     public void markInconvertible() {
-        if (!inconvertible) {
-            inconvertible = true;
-            oma.update(this);
-        }
+        inconvertible = true;
     }
 
     @Override
     public boolean isInconvertible() {
         return inconvertible;
+    }
+
+    @Override
+    public SQLBlob refreshFromDb() {
+        return oma.tryRefresh(this);
     }
 
     public boolean isCreatedOrRenamed() {

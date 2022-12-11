@@ -260,4 +260,6 @@ public interface Blob {
     void markInconvertible();
 
     boolean isInconvertible();
+
+    Blob refreshFromDb();
 }

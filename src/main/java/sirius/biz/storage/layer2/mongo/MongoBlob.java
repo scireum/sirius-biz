@@ -479,16 +479,17 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Override
     public void markInconvertible() {
-        if (!inconvertible) {
-            inconvertible = true;
-            mango.update(this);
-        }
+        inconvertible = true;
     }
 
     @Override
     public boolean isInconvertible() {
-        mango.tryRefresh(this);
         return inconvertible;
+    }
+
+    @Override
+    public MongoBlob refreshFromDb() {
+        return mango.tryRefresh(this);
     }
 
     public boolean isCreatedOrRenamed() {

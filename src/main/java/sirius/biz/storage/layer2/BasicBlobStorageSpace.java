@@ -1507,7 +1507,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                     // We successfully created a variant and forked a conversion... Await its result...
                     return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
                 } else {
-                    // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
+                    // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
                     // wait a short and random amount of time and retry...
                     return retryFindVariant(blob, variantName, retries);
                 }
@@ -1535,7 +1535,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 invokeConversionPipelineAsync(blob, variant);
                 return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
             } else {
-                // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
+                // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
                 // wait a short and random amount of time and retry...
                 return retryFindVariant(blob, variantName, retries);
             }
@@ -1560,7 +1560,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws Exception if case of any error when performing the next attempt
      */
     private V retryFindVariant(B blob, String variantName, int retries) throws Exception {
-        // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
+        // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
         // wait a short and random amount of time and retry...
         Wait.randomMillis(0, 150);
         return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
@@ -1576,6 +1576,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
      * @throws Exception if case of any error when performing the next attempt
      */
+    @SuppressWarnings("unchecked")
+    @Explain("The cast is necessary and simply refreshes the input blob.")
     private V awaitConversionResultAndRetryToFindVariant(B blob, String variantName, int retries) throws Exception {
         if (retries == 0) {
             return null;
@@ -1584,7 +1586,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
         // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish...
         Wait.millis(TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS);
-        return attemptToFindOrCreateVariant(blob,
+        return attemptToFindOrCreateVariant((B) blob.refreshFromDb(),
                                             variantName,
                                             false,
                                             Math.min(retries - 1, NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION - 1));
