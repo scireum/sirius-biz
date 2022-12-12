@@ -119,6 +119,14 @@ public interface Blob {
     Optional<FileHandle> download();
 
     /**
+     * Ensures that the desired variant exists.
+     *
+     * @param variantName the name of the desired variant
+     */
+    void ensureVariantExists(String variantName);
+
+
+    /**
      * Delivers the data of this blob into the given HTTP response.
      *
      * @param response the HTTP response to populate

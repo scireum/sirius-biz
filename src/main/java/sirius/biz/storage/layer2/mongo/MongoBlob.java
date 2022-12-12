@@ -294,6 +294,11 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     }
 
     @Override
+    public void ensureVariantExists(String variantName) {
+        getStorageSpace().ensureVariantExists(this, variantName);
+    }
+
+    @Override
     public void deliver(Response response) {
         getStorageSpace().deliverPhysical(getBlobKey(),
                                           getPhysicalObjectKey(),

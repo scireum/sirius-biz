@@ -1411,6 +1411,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
+     * Ensures that the desired variant exists.
+     *
+     * @param blob        the blob for which the variant should exist
+     * @param variantName the name of the desired variant
+     */
+    public void ensureVariantExists(B blob, String variantName) {
+        findOrCreateVariant(blob, variantName, false);
+    }
+
+    /**
      * Tries to either find or create the requested variant for the given blob.
      * <p>
      * Note that there this is a recursive optimistic locking algorithm at work where
