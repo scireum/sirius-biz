@@ -1324,6 +1324,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws IllegalArgumentException if an unknown variant is requested
      */
     private Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
+        String blobCacheKey = buildCacheLookupKeyForBlob(blobKey);
+        String cachedPhysicalBlobKey = blobKeyToPhysicalCache.get(blobCacheKey);
+        if (Strings.isFilled(cachedPhysicalBlobKey)) {
+            assertNoFailureCached(cachedPhysicalBlobKey);
+        }
+
         String variantCacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalVariantKey = blobKeyToPhysicalCache.get(variantCacheKey);
         if (Strings.isFilled(cachedPhysicalVariantKey)) {
@@ -1342,7 +1348,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         } catch (Exception exception) {
             // The conversion ultimately failed, we can therefore cache the result, as no more conversion attempts
             // will happen...
-            blobKeyToPhysicalCache.put(variantCacheKey, CACHED_FAILURE_MARKER);
+            blobKeyToPhysicalCache.put(blobCacheKey, CACHED_FAILURE_MARKER);
             throw exception;
         }
     }
@@ -1359,6 +1365,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     protected String buildCacheLookupKey(String blobKey, String variantName) {
         return spaceName + "-" + blobKey + "-" + variantName;
+    }
+
+    protected String buildCacheLookupKeyForBlob(String blobKey) {
+        return spaceName + "-" + blobKey;
     }
 
     /**
