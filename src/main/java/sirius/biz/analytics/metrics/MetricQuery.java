@@ -348,8 +348,8 @@ public class MetricQuery {
             case MONTHLY -> date.plusMonths(1);
             case YEARLY -> date.plusYears(1);
             default ->
-                    // In case of a fact, there is no point in changing the date. However, to be 100% sure that
-                    // any loop etc will terminate we output the extreme here...
+                // In case of a fact, there is no point in changing the date. However, to be 100% sure that
+                // any loop etc will terminate we output the extreme here...
                     LocalDate.MAX;
         };
     }
@@ -360,8 +360,8 @@ public class MetricQuery {
             case MONTHLY -> date.minusMonths(1);
             case YEARLY -> date.minusYears(1);
             default ->
-                    // In case of a fact, there is no point in changing the date. However, to be 100% sure that
-                    // any loop etc will terminate we output the extreme here...
+                // In case of a fact, there is no point in changing the date. However, to be 100% sure that
+                // any loop etc will terminate we output the extreme here...
                     LocalDate.MIN;
         };
     }
