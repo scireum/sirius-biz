@@ -1324,23 +1324,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws IllegalArgumentException if an unknown variant is requested
      */
     private Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
-        String cacheKey = buildCacheLookupKey(blobKey, variantName);
-        String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
-        if (Strings.isFilled(cachedPhysicalKey)) {
-            if (CACHED_FAILURE_MARKER.equals(cachedPhysicalKey)) {
-                // We detected a cached failure (see below). Throw an appropriate but exception to the user. No
-                // need to log anything as the incident has already been reported...
-                throw Exceptions.createHandled()
-                                .withSystemErrorMessage("Failed to create the requested variant from the given image.")
-                                .handle();
-            }
-            return Tuple.create(cachedPhysicalKey, true);
+        String variantCacheKey = buildCacheLookupKey(blobKey, variantName);
+        String cachedPhysicalVariantKey = blobKeyToPhysicalCache.get(variantCacheKey);
+        if (Strings.isFilled(cachedPhysicalVariantKey)) {
+            assertNoFailureCached(cachedPhysicalVariantKey);
+            return Tuple.create(cachedPhysicalVariantKey, true);
         }
 
         try {
             String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
             if (physicalKey != null) {
-                blobKeyToPhysicalCache.put(cacheKey, physicalKey);
+                blobKeyToPhysicalCache.put(variantCacheKey, physicalKey);
                 return Tuple.create(physicalKey, false);
             } else {
                 return null;
@@ -1348,8 +1342,18 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         } catch (Exception exception) {
             // The conversion ultimately failed, we can therefore cache the result, as no more conversion attempts
             // will happen...
-            blobKeyToPhysicalCache.put(cacheKey, CACHED_FAILURE_MARKER);
+            blobKeyToPhysicalCache.put(variantCacheKey, CACHED_FAILURE_MARKER);
             throw exception;
+        }
+    }
+
+    private void assertNoFailureCached(String cachedPhysicalKey) {
+        if (CACHED_FAILURE_MARKER.equals(cachedPhysicalKey)) {
+            // We detected a cached failure. Throw an appropriate but exception to the user. No
+            // need to log anything as the incident has already been reported...
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("Failed to create the requested variant from the given image.")
+                            .handle();
         }
     }
 
