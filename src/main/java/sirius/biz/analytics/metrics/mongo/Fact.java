@@ -44,7 +44,7 @@ public class Fact extends MongoEntity {
      * Contains the name of the metric.
      */
     public static final Mapping NAME = Mapping.named("name");
-    @Length(50)
+    @Length(255)
     private String name;
 
     /**
