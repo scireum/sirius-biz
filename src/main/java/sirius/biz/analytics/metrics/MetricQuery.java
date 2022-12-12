@@ -390,6 +390,25 @@ public class MetricQuery {
     }
 
     /**
+     * Fetches and returns the value for the metric and the given date wrapped in an {@link Optional} if available
+     * or {@link Optional#empty()} if no value was computed for the given date.
+     *
+     * @param date the date of the metric to fetch the value for
+     * @return the value for the metric and the given date
+     */
+    public Optional<Integer> value(LocalDate date) {
+        assertParametersArePresent();
+
+        return metrics.executeQuery(interval,
+                                    targetType,
+                                    targetId,
+                                    metricName,
+                                    date.getYear(),
+                                    date.getMonthValue(),
+                                    date.getDayOfMonth());
+    }
+
+    /**
      * Fetches the most current value available for the given metric.
      * <p>
      * This will attempt to resolve the metric using the current date. If no value is present, {@link #lastValue()}
@@ -398,14 +417,8 @@ public class MetricQuery {
      * @return the must current value for the queried metric
      */
     public int currentValue() {
-        assertParametersArePresent();
-        Optional<Integer> metric = metrics.executeQuery(interval,
-                                                        targetType,
-                                                        targetId,
-                                                        metricName,
-                                                        LocalDate.now().getYear(),
-                                                        LocalDate.now().getMonthValue(),
-                                                        LocalDate.now().getDayOfMonth());
+        Optional<Integer> metric = value(LocalDate.now());
+
         if (metric.isPresent() || interval == Interval.FACT) {
             return metric.orElse(0);
         }
@@ -426,16 +439,7 @@ public class MetricQuery {
      * @return the value for the metric which should currently be safely available
      */
     public int lastValue() {
-        assertParametersArePresent();
-        LocalDate date = decrement(LocalDate.now(), interval);
-
-        return metrics.executeQuery(interval,
-                                    targetType,
-                                    targetId,
-                                    metricName,
-                                    date.getYear(),
-                                    date.getMonthValue(),
-                                    date.getDayOfMonth()).orElse(0);
+        return value(decrement(LocalDate.now(), interval)).orElse(0);
     }
 
     @Override
