@@ -209,8 +209,7 @@ function selectVFSFile(config) {
                                     hideIndicators();
                                 }, false);
                                 document.addEventListener('dragleave', function (event) {
-                                    if (event.relatedTarget === null) {
-                                        // left window
+                                    if (sirius.isDragleaveEventLeavingWindow(event)) {
                                         hideIndicators();
                                     }
                                 }, false);
@@ -385,8 +384,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                     hideIndicators();
                 }, false);
                 document.addEventListener('dragleave', function (event) {
-                    if (event.relatedTarget === null) {
-                        // left window
+                    if (sirius.isDragleaveEventLeavingWindow(event)) {
                         hideIndicators();
                     }
                 }, false);
