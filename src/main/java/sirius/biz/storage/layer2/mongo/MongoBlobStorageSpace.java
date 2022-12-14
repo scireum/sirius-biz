@@ -26,6 +26,7 @@ import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -442,6 +443,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
     @Nonnull
     @Override
+    @SuppressWarnings("java:S2259")
+    @Explain("String filled check is performed on filename.")
     protected Optional<String> updateBlob(@Nonnull MongoBlob blob,
                                           @Nonnull String nextPhysicalId,
                                           long size,
