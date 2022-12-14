@@ -884,12 +884,10 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
     @Override
     public void markTouched(Set<String> blobKeys) {
-        blobKeys.forEach(blobKey -> {
-            mongo.update()
-                 .set(MongoBlob.LAST_TOUCHED, LocalDateTime.now())
-                 .where(MongoBlob.BLOB_KEY, blobKey)
-                 .executeForOne(MongoBlob.class);
-        });
+        blobKeys.forEach(blobKey -> mongo.update()
+                                         .set(MongoBlob.LAST_TOUCHED, LocalDateTime.now())
+                                         .where(MongoBlob.BLOB_KEY, blobKey)
+                                         .executeForOne(MongoBlob.class));
     }
 
     @Override
