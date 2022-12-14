@@ -456,7 +456,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                 filename = filename.trim();
                 updater.set(MongoBlob.FILENAME, filename)
                        .set(MongoBlob.NORMALIZED_FILENAME, filename.toLowerCase())
-                       .set(MongoBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
+                       .set(MongoBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()))
+                       .set(MongoBlob.INCONVERTIBLE, false);
             }
 
             long numUpdated = updater.where(MongoBlob.ID, blob.getId())
@@ -473,6 +474,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                 blob.updateFilenameFields();
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
+                blob.setInconvertible(false);
 
                 return Optional.ofNullable(previousPhysicalObjectKey);
             } else if (retries > 0) {

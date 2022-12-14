@@ -534,7 +534,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 filename = filename.trim();
                 updateStatement.set(SQLBlob.FILENAME, filename)
                                .set(SQLBlob.NORMALIZED_FILENAME, filename.toLowerCase())
-                               .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
+                               .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()))
+                               .set(SQLBlob.INCONVERTIBLE, false);
             }
 
             int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())
@@ -550,6 +551,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 blob.updateFilenameFields();
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
+                blob.setInconvertible(false);
 
                 return Optional.ofNullable(previousPhysicalObjectKey);
             } else if (retries > 0) {

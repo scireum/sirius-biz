@@ -475,8 +475,8 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     }
 
     @Override
-    public void markInconvertible() {
-        inconvertible = true;
+    public void setInconvertible(boolean inconvertible) {
+        this.inconvertible = inconvertible;
     }
 
     @Override
