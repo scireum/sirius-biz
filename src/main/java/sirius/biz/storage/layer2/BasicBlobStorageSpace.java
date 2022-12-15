@@ -1765,22 +1765,23 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         tasks.executor(EXECUTOR_STORAGE_CONVERSION_DELIVERY)
              .dropOnOverload(() -> response.notCached().error(HttpResponseStatus.TOO_MANY_REQUESTS))
              .fork(() -> {
-                 if (conversionEnabled) {
-                     try {
-                         Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
-                         if (physicalKey == null) {
-                             response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
-                         } else {
-                             response.addHeader(HEADER_VARIANT_SOURCE,
-                                                Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
-                             getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
-                         }
-                     } catch (Exception e) {
-                         handleFailedConversion(blobKey, variant, e);
-                         response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                     }
-                 } else {
+                 if (!conversionEnabled) {
                      delegateConversion(blobKey, variant, response, MAX_CONVERSION_DELEGATE_ATTEMPTS);
+                     return;
+                 }
+
+                 try {
+                     Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                     if (physicalKey == null) {
+                         response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
+                     } else {
+                         response.addHeader(HEADER_VARIANT_SOURCE,
+                                            Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
+                         getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
+                     }
+                 } catch (Exception e) {
+                     handleFailedConversion(blobKey, variant, e);
+                     response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                  }
              });
     }
