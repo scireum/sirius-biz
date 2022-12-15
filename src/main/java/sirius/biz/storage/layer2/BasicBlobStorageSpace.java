@@ -1261,8 +1261,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void deliver(String blobKey, String variant, Response response, Runnable markAsLongRunning) {
         touch(blobKey);
 
-        // TODO: do we need to filter out inconvertible blobs here already?
-
         try {
             Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
             if (physicalKey != null) {
@@ -1290,7 +1288,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                 @Nonnull Response response,
                                 boolean largeFileExpected) {
         touch(blobKey);
-        // TODO: filter out inconvertible blobs?
         getPhysicalSpace().deliver(response, physicalKey, largeFileExpected);
     }
 
@@ -1765,8 +1762,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param response the response to populate
      */
     private void deliverAsync(String blobKey, String variant, Response response) {
-        // TODO: only try delivery, if blobKey not inconvertible
-        //  maybe we need a cache with "blobKey <-> inconvertible" here
         tasks.executor(EXECUTOR_STORAGE_CONVERSION_DELIVERY)
              .dropOnOverload(() -> response.notCached().error(HttpResponseStatus.TOO_MANY_REQUESTS))
              .fork(() -> {
