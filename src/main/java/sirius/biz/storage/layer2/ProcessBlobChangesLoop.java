@@ -37,6 +37,9 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     @PriorityParts(BlobParentChangedHandler.class)
     private List<BlobParentChangedHandler> parentChangedHandlers;
 
+    @PriorityParts(BlobConvertibilityChangedHandler.class)
+    private List<BlobConvertibilityChangedHandler> convertibilityChangedHandlers;
+
     @Nonnull
     @Override
     public String getName() {
@@ -61,28 +64,32 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
         AtomicInteger deletedBlobs = new AtomicInteger();
         AtomicInteger createdRenamedBlobs = new AtomicInteger();
         AtomicInteger parentChangedBlobs = new AtomicInteger();
+        AtomicInteger convertibilityChangedBlobs = new AtomicInteger();
 
         deleteDirectories(deletedDirectories::incrementAndGet);
         processRenamedDirectories(renamedDirectories::incrementAndGet);
         deleteBlobs(deletedBlobs::incrementAndGet);
         processParentChangedBlobs(parentChangedBlobs::incrementAndGet);
         processCreatedOrRenamedBlobs(createdRenamedBlobs::incrementAndGet);
+        processConvertibilityChangedBlobs(convertibilityChangedBlobs::incrementAndGet);
 
         if (deletedDirectories.get()
             + renamedDirectories.get()
             + deletedBlobs.get()
             + createdRenamedBlobs.get()
-            + parentChangedBlobs.get() == 0) {
+            + parentChangedBlobs.get()
+            + convertibilityChangedBlobs.get() == 0) {
             return null;
         }
 
         return Strings.apply(
-                "Directories: deleted (%s), renamed (%s). Blobs: deleted (%s), created/renamed (%s), moved (%s)",
+                "Directories: deleted (%s), renamed (%s). Blobs: deleted (%s), created/renamed (%s), moved (%s), convertibility changed (%s)",
                 deletedDirectories.get(),
                 renamedDirectories.get(),
                 deletedBlobs.get(),
                 createdRenamedBlobs.get(),
-                parentChangedBlobs.get());
+                parentChangedBlobs.get(),
+                convertibilityChangedBlobs.get());
     }
 
     protected void deletePhysicalObject(@Nonnull Blob blob) {
@@ -113,6 +120,21 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
             } catch (Exception e) {
                 buildStorageException(e).withSystemErrorMessage(
                         "Layer 2: %s failed to process parent change for blob %s (%s) in %s: (%s)",
+                        handler.getClass().getSimpleName(),
+                        blob.getBlobKey(),
+                        blob.getFilename(),
+                        blob.getSpaceName()).handle();
+            }
+        });
+    }
+
+    protected void invokeConvertibilityChangedHandlers(Blob blob) {
+        convertibilityChangedHandlers.forEach(handler -> {
+            try {
+                handler.execute(blob);
+            } catch (Exception e) {
+                buildStorageException(e).withSystemErrorMessage(
+                        "Layer 2: %s failed to process convertibility change for blob %s (%s) in %s: (%s)",
                         handler.getClass().getSimpleName(),
                         blob.getBlobKey(),
                         blob.getFilename(),
@@ -204,4 +226,13 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
      * @param counter a {@link Runnable} to be called for each {@link Blob blob} processed
      */
     protected abstract void processParentChangedBlobs(Runnable counter);
+
+    /**
+     * Queries and processes {@link Blob blobs} with changed {@link Blob#isInconvertible() convertibility status}.
+     * <p>
+     * The processing is performed by the registered {@link BlobConvertibilityChangedHandler handlers}
+     *
+     * @param counter a {@link Runnable} to be called for each {@link Blob blob} processed
+     */
+    protected abstract void processConvertibilityChangedBlobs(Runnable counter);
 }

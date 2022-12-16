@@ -216,6 +216,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private boolean inconvertible;
 
     /**
+     * Stores if the convertibility of the blob changed, e.g. after updating the physical file.
+     */
+    public static final Mapping CONVERTIBILITY_CHANGED = Mapping.named("convertibilityChanged");
+    private boolean convertibilityChanged;
+
+    /**
      * Stores if the blob was inserted or renamed.
      */
     public static final Mapping CREATED_OR_RENAMED = Mapping.named("createdOrRenamed");
@@ -246,6 +252,10 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
             createdOrRenamed = true;
         }
 
+        if (isNew() || isChanged(CONVERTIBILITY_CHANGED)) {
+            convertibilityChanged = true;
+        }
+
         if (!isNew() && isChanged(PARENT)) {
             parentChanged = true;
         }
@@ -253,6 +263,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         if (deleted) {
             createdOrRenamed = false;
             parentChanged = false;
+            convertibilityChanged = false;
         }
     }
 
