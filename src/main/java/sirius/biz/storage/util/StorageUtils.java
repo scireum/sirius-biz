@@ -238,7 +238,7 @@ public class StorageUtils {
     public OutputStream createLocalBuffer(Consumer<File> dataConsumer) throws IOException {
         File bufferFile = File.createTempFile("local-file-buffer", null);
         WatchableOutputStream out = new WatchableOutputStream(new FileOutputStream(bufferFile));
-        out.getCompletionFuture().onFailure(error -> {
+        out.onFailure(error -> {
             Files.delete(bufferFile);
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -246,7 +246,7 @@ public class StorageUtils {
                             .withSystemErrorMessage("An error occurred while writing to a temporary buffer: %s (%s)")
                             .handle();
         });
-        out.getCompletionFuture().onSuccess(() -> {
+        out.onSuccess(() -> {
             try {
                 dataConsumer.accept(bufferFile);
             } finally {

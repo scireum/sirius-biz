@@ -401,7 +401,7 @@ class ProcessEnvironment implements ProcessContext {
         zipOutputStream.putNextEntry(new ZipEntry(filename));
 
         WatchableOutputStream outputStream = new WatchableOutputStream(new UncloseableOutputStream(zipOutputStream));
-        outputStream.getCompletionFuture().onSuccess(() -> {
+        outputStream.onSuccess(() -> {
             try {
                 zipOutputStream.closeEntry();
                 zipOutputStream.close();
