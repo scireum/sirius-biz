@@ -911,6 +911,24 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
+    protected void markConversionFailure(SQLBlob blob) {
+        try {
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.INCONVERTIBLE, true)
+               .where(SQLBlob.ID, blob.getId())
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occurred, when marking the blob '%s' as inconvertible: %s (%s)",
+                              blob.getIdAsString())
+                      .handle();
+        }
+    }
+
+    @Override
     protected void markConversionSuccess(SQLVariant variant, String physicalKey, ConversionProcess conversionProcess) {
         try {
             oma.updateStatement(SQLVariant.class)

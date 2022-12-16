@@ -229,7 +229,6 @@ public class ConversionEngine {
             conversionDuration.addValue(conversionProcess.getConversionDuration());
             result.success();
         } catch (Exception exception) {
-            conversionProcess.getBlobToConvert().setInconvertible(true);
             recordErrorInStandbyProcess(conversionProcess, exception);
             result.fail(exception);
         }

@@ -823,6 +823,14 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    protected void markConversionFailure(MongoBlob blob) {
+        mongo.update()
+             .set(MongoBlob.INCONVERTIBLE, true)
+             .where(MongoBlob.ID, blob.getId())
+             .executeForOne(MongoBlob.class);
+    }
+
+    @Override
     protected void markConversionSuccess(MongoVariant variant,
                                          String physicalKey,
                                          ConversionProcess conversionProcess) {

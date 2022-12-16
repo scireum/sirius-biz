@@ -1655,6 +1655,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                               .withOutputFile(automaticHandle));
             }
         }).onFailure(conversionException -> {
+            markConversionFailure(blob);
             markConversionFailure(variant, conversionProcess);
             eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                           .withConversionError(conversionException));
@@ -1686,6 +1687,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant the variant to record the failed attempt for
      */
     protected abstract void markConversionFailure(V variant, ConversionProcess conversionProcess);
+
+    /**
+     * Records a failed conversion attempt for the given blob.
+     *
+     * @param blob the blob to record the failed attempt for
+     */
+    protected abstract void markConversionFailure(B blob);
 
     /**
      * Determines if another conversion of the variant should be attempted.
