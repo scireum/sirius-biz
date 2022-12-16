@@ -432,9 +432,9 @@ public class FTPUplink extends ConfigBasedUplink {
                 }
 
                 WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
-                watchableInputStream.getCompletionFuture()
-                                    .then(() -> completePendingCommand(connector, path, "download"));
-                return watchableInputStream;
+
+                return watchableInputStream.onSuccess(() -> completePendingCommand(connector, path, "download"))
+                                           .onFailure(ignored -> completeFailedCommand(connector, path, "download"));
             } catch (Exception exception) {
                 connector.forceClose();
                 connector.safeClose();
@@ -457,12 +457,44 @@ public class FTPUplink extends ConfigBasedUplink {
     private void completePendingCommand(UplinkConnector<FTPClient> connector, String path, String command) {
         try {
             if (!connector.connector().completePendingCommand()) {
+                connector.forceClose();
+
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .withSystemErrorMessage(
+                                        "Layer 3/FTP: Failed to complete the %s for '%s' in uplink '%s'.",
+                                        command,
+                                        path,
+                                        ftpConfig)
+                                .handle();
+            }
+        } catch (IOException exception) {
+            connector.forceClose();
+
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(exception)
+                            .withSystemErrorMessage(
+                                    "Layer 3/FTP: Failed to complete the %s for '%s' in uplink '%s': %s (%s)",
+                                    command,
+                                    path,
+                                    ftpConfig)
+                            .handle();
+        }
+
+        connector.safeClose();
+    }
+
+    private void completeFailedCommand(UplinkConnector<FTPClient> connector, String path, String command) {
+        try {
+            if (!connector.connector().completePendingCommand()) {
                 Exceptions.handle()
                           .to(StorageUtils.LOG)
-                          .withSystemErrorMessage("Layer 3/FTP: Failed to complete the %s for '%s' in uplink '%s'.",
-                                                  command,
-                                                  path,
-                                                  ftpConfig)
+                          .withSystemErrorMessage(
+                                  "Layer 3/FTP: Failed to complete the (failed) %s for '%s' in uplink '%s'.",
+                                  command,
+                                  path,
+                                  ftpConfig)
                           .handle();
                 connector.forceClose();
             }
@@ -470,10 +502,11 @@ public class FTPUplink extends ConfigBasedUplink {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
                       .error(exception)
-                      .withSystemErrorMessage("Layer 3/FTP: Failed to complete the %s for '%s' in uplink '%s': %s (%s)",
-                                              command,
-                                              path,
-                                              ftpConfig)
+                      .withSystemErrorMessage(
+                              "Layer 3/FTP: Failed to complete the (failed) %s for '%s' in uplink '%s': %s (%s)",
+                              command,
+                              path,
+                              ftpConfig)
                       .handle();
             connector.forceClose();
         }
@@ -492,9 +525,9 @@ public class FTPUplink extends ConfigBasedUplink {
                 }
 
                 WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
-                watchableOutputStream.getCompletionFuture()
-                                     .then(() -> completePendingCommand(connector, path, "upload"));
-                return watchableOutputStream;
+
+                return watchableOutputStream.onSuccess(() -> completePendingCommand(connector, path, "upload"))
+                                            .onFailure(ignored -> completeFailedCommand(connector, path, "upload"));
             } catch (Exception exception) {
                 connector.forceClose();
                 connector.safeClose();
