@@ -1570,11 +1570,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
      * @throws Exception if case of any error when performing the next attempt
      */
+    @SuppressWarnings("unchecked")
+    @Explain("The cast is necessary and simply refreshes the input blob.")
     private V retryFindVariant(B blob, String variantName, int retries) throws Exception {
         // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
         // wait a short and random amount of time and retry...
         Wait.randomMillis(0, 150);
-        return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
+        return attemptToFindOrCreateVariant((B) blob.refreshFromDb(), variantName, false, retries - 1);
     }
 
     /**
