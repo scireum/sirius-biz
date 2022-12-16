@@ -477,7 +477,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                 blob.updateFilenameFields();
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
-                blob.setInconvertible(false);
+                blob.resetInconvertibleFlag();
 
                 return Optional.ofNullable(previousPhysicalObjectKey);
             } else if (retries > 0) {

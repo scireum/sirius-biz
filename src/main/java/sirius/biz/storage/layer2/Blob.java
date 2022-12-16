@@ -257,7 +257,7 @@ public interface Blob {
      */
     URLBuilder url();
 
-    void setInconvertible(boolean inconvertible);
+    void resetInconvertibleFlag();
 
     boolean isInconvertible();
 

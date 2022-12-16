@@ -478,8 +478,8 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     }
 
     @Override
-    public void setInconvertible(boolean inconvertible) {
-        this.inconvertible = inconvertible;
+    public void resetInconvertibleFlag() {
+        this.inconvertible = false;
     }
 
     @Override

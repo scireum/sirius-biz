@@ -554,7 +554,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 blob.updateFilenameFields();
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
-                blob.setInconvertible(false);
+                blob.resetInconvertibleFlag();
 
                 return Optional.ofNullable(previousPhysicalObjectKey);
             } else if (retries > 0) {
