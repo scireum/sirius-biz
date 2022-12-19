@@ -225,7 +225,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
             Extension ext = getCodeListConfig(codeListName);
             boolean isGlobal = ext.get(CONFIG_KEY_GLOBAL).asBoolean();
             if (isGlobal && ext.get(CONFIG_KEY_AUTOFILL).asBoolean()) {
-                LOG.WARN("The code list %s is 'global' and has 'autofill' enabled. This is a dangerous combination!");
+                LOG.WARN("The code list '%s' is 'global' and has 'autofill' enabled. This is a dangerous combination!",
+                         codeListName);
             }
             return isGlobal;
         });
