@@ -16,6 +16,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.function.Function;
 
 /**
@@ -33,7 +34,7 @@ class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
         try {
             FTPSClient client = new FTPSClient();
             client.setConnectTimeout(connectTimeoutMillis);
-            client.setDataTimeout(readTimeoutMillis);
+            client.setDataTimeout(Duration.ofMillis(readTimeoutMillis));
             client.setDefaultTimeout(readTimeoutMillis);
 
             client.setControlEncoding(encoding);
