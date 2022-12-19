@@ -62,17 +62,23 @@ class BridgeSftpSubsystem extends SftpSubsystem {
     }
 
     @Override
-    protected void sendStatus(Buffer buffer, int id, Throwable e, int cmd, Object... args) throws IOException {
-        if (e instanceof HandledException handledException) {
+    protected void sendStatus(Buffer buffer, int commandId, Throwable exception, int command, Object... args)
+            throws IOException {
+        if (exception instanceof HandledException handledException) {
             SftpErrorStatusDataHandler handler = getErrorStatusDataHandler();
-            int subStatus = handler.resolveSubStatus(this, id, e, cmd, args);
+            int subStatus = handler.resolveSubStatus(this, commandId, exception, command, args);
             String message = Strings.apply("%s: %s",
-                                           handler.resolveErrorMessage(this, id, e, subStatus, cmd, args),
+                                           handler.resolveErrorMessage(this,
+                                                                       commandId,
+                                                                       exception,
+                                                                       subStatus,
+                                                                       command,
+                                                                       args),
                                            handledException.getLocalizedMessage());
-            String lang = handler.resolveErrorLanguage(this, id, e, subStatus, cmd, args);
-            sendStatus(buffer, id, subStatus, message, lang);
+            String language = handler.resolveErrorLanguage(this, commandId, exception, subStatus, command, args);
+            sendStatus(buffer, commandId, subStatus, message, language);
         } else {
-            super.sendStatus(buffer, id, e, cmd, args);
+            super.sendStatus(buffer, commandId, exception, command, args);
         }
     }
 }
