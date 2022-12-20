@@ -8,20 +8,12 @@
 
 package sirius.biz.storage.layer2;
 
-import sirius.kernel.di.std.Priorized;
-
-import javax.annotation.Nonnull;
-
 /**
  * Defines handlers to process {@link Blob blobs} after their {@link Blob#isInconvertible() convertibility status} changed.
+ * <p>
+ * Note: Handlers need to be {@link sirius.kernel.di.std.Register registered}.
  *
  * @see ProcessBlobChangesLoop
  */
-public interface BlobConvertibilityChangedHandler extends Priorized {
-    /**
-     * Executed when a blob's inconvertible flag changed.
-     *
-     * @param blob the modified blob
-     */
-    void execute(@Nonnull Blob blob);
+public interface BlobConvertibilityChangedHandler extends BlobChangedHandler {
 }
