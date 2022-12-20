@@ -66,11 +66,11 @@ public class XMLValidator {
 
         try {
             validator.validate(xml);
-        } catch (SAXParseException e) {
+        } catch (SAXParseException exception) {
             // Cause of the exception is already logged via validator's error handler.
-            Exceptions.ignore(e);
-        } catch (IOException e) {
-            process.log(ProcessLog.error().withMessage(e.getMessage()));
+            Exceptions.ignore(exception);
+        } catch (IOException exception) {
+            process.log(ProcessLog.error().withMessage(exception.getMessage()));
             return false;
         }
 

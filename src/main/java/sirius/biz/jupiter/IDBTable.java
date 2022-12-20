@@ -64,8 +64,8 @@ public class IDBTable {
         private boolean exact;
         private String searchPaths;
         private String searchValue;
-        private String primaryLang;
-        private String fallbackLang;
+        private String primaryLanguage;
+        private String fallbackLanguage;
 
         /**
          * Specifies the paths to look for a given value.
@@ -137,25 +137,25 @@ public class IDBTable {
         /**
          * Specifies the translation languages to use for translatable fields.
          *
-         * @param primaryLang  the first language to attempt
-         * @param fallbackLang the fallback language to attempt
+         * @param primaryLanguage  the first language to attempt
+         * @param fallbackLanguage the fallback language to attempt
          * @return the builder itself for fluent method calls
          */
-        public QueryBuilder translate(String primaryLang, String fallbackLang) {
-            this.primaryLang = primaryLang;
-            this.fallbackLang = fallbackLang;
+        public QueryBuilder translate(String primaryLanguage, String fallbackLanguage) {
+            this.primaryLanguage = primaryLanguage;
+            this.fallbackLanguage = fallbackLanguage;
             return this;
         }
 
         /**
          * Specifies a single language to use for translatable fields.
          *
-         * @param lang the language to use for lookups
+         * @param language the language to use for lookups
          * @return the builder itself for fluent method calls
          */
-        public QueryBuilder translate(String lang) {
-            this.primaryLang = lang;
-            this.fallbackLang = lang;
+        public QueryBuilder translate(String language) {
+            this.primaryLanguage = language;
+            this.fallbackLanguage = language;
             return this;
         }
 
@@ -167,8 +167,8 @@ public class IDBTable {
          * @return the builder itself for fluent method calls
          */
         public QueryBuilder translate() {
-            this.primaryLang = NLS.getCurrentLanguage();
-            this.fallbackLang = NLS.getFallbackLanguage();
+            this.primaryLanguage = NLS.getCurrentLanguage();
+            this.fallbackLanguage = NLS.getFallbackLanguage();
             return this;
         }
 
@@ -182,8 +182,8 @@ public class IDBTable {
             checkConstraints();
 
             if (exact && Strings.isFilled(searchValue)) {
-                if (Strings.isFilled(primaryLang)) {
-                    return ilookup(primaryLang, fallbackLang, searchPaths, searchValue, pathsToQuery);
+                if (Strings.isFilled(primaryLanguage)) {
+                    return ilookup(primaryLanguage, fallbackLanguage, searchPaths, searchValue, pathsToQuery);
                 } else {
                     return lookup(searchPaths, searchValue, pathsToQuery);
                 }
@@ -217,20 +217,20 @@ public class IDBTable {
                 if (Strings.isFilled(searchPaths)) {
                     return Collections.emptyList();
                 }
-                if (Strings.isFilled(primaryLang)) {
-                    return iscan(primaryLang, fallbackLang, limit, pathsToQuery);
+                if (Strings.isFilled(primaryLanguage)) {
+                    return iscan(primaryLanguage, fallbackLanguage, limit, pathsToQuery);
                 } else {
                     return scan(limit, pathsToQuery);
                 }
             } else if (exact) {
-                if (Strings.isFilled(primaryLang)) {
-                    return iquery(primaryLang, fallbackLang, searchPaths, searchValue, limit, pathsToQuery);
+                if (Strings.isFilled(primaryLanguage)) {
+                    return iquery(primaryLanguage, fallbackLanguage, searchPaths, searchValue, limit, pathsToQuery);
                 } else {
                     return query(searchPaths, searchValue, limit, pathsToQuery);
                 }
             } else {
-                if (Strings.isFilled(primaryLang)) {
-                    return isearch(primaryLang, fallbackLang, searchPaths, searchValue, limit, pathsToQuery);
+                if (Strings.isFilled(primaryLanguage)) {
+                    return isearch(primaryLanguage, fallbackLanguage, searchPaths, searchValue, limit, pathsToQuery);
                 } else {
                     return search(searchPaths, searchValue, limit, pathsToQuery);
                 }
