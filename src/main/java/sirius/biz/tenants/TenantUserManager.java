@@ -600,7 +600,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                                .withUsername(account.getUserAccountData().getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
                                .withTenantName(account.getTenant().fetchValue().getTenantData().getName())
-                               .withLang(computeLang(null, account.getUniqueName()))
+                               .withLanguage(computeLanguage(null, account.getUniqueName()))
                                .withPermissions(roles)
                                .withSettingsSupplier(user -> getUserSettings(getScopeSettings(), user))
                                .withUserSupplier(ignored -> account)
@@ -1018,7 +1018,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Nonnull
     @Override
-    protected String computeLang(WebContext ctx, String userId) {
+    protected String computeLanguage(WebContext webContext, String userId) {
         U userAccount = fetchAccount(userId);
         if (userAccount == null) {
             return NLS.getDefaultLanguage();

@@ -179,7 +179,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @throws sirius.kernel.health.HandledException if the current language is invalid
      */
     public MultiLanguageString addText(String text) {
-        return addText(NLS.getCurrentLang(), text);
+        return addText(NLS.getCurrentLanguage(), text);
     }
 
     /**
@@ -243,7 +243,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      */
     @Nonnull
     public Optional<String> getText() {
-        return getText(NLS.getCurrentLang());
+        return getText(NLS.getCurrentLanguage());
     }
 
     /**
@@ -274,7 +274,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      */
     @Nullable
     public String fetchText() {
-        return data().get(NLS.getCurrentLang());
+        return data().get(NLS.getCurrentLanguage());
     }
 
     /**
@@ -309,7 +309,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      */
     @Nullable
     public String fetchTextOrFallback() {
-        return fetchTextOrFallback(NLS.getCurrentLang());
+        return fetchTextOrFallback(NLS.getCurrentLanguage());
     }
 
     /**

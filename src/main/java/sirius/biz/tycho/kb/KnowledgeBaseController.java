@@ -43,7 +43,7 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kb")
     public void kb(WebContext webContext) {
-        langArticle(webContext, NLS.getCurrentLang(), KnowledgeBase.ROOT_CHAPTER_ID);
+        langArticle(webContext, NLS.getCurrentLanguage(), KnowledgeBase.ROOT_CHAPTER_ID);
     }
 
     /**
@@ -65,7 +65,7 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kba/:1")
     public void article(WebContext webContext, String articleId) {
-        langArticle(webContext, NLS.getCurrentLang(), articleId);
+        langArticle(webContext, NLS.getCurrentLanguage(), articleId);
     }
 
     /**

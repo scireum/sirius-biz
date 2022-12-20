@@ -452,7 +452,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      */
     @Nullable
     public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code) {
-        return getTranslatedValue(codeListName, code, NLS.getCurrentLang());
+        return getTranslatedValue(codeListName, code, NLS.getCurrentLanguage());
     }
 
     /**

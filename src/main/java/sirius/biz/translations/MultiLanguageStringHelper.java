@@ -217,7 +217,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
         if (Strings.isFilled(defaultLanguage)) {
             return defaultLanguage;
         } else {
-            return NLS.getCurrentLang();
+            return NLS.getCurrentLanguage();
         }
     }
 }

@@ -55,7 +55,7 @@ public class XMLValidator {
         Schema schema = schemaFactory.newSchema(xsd);
 
         Validator validator = schema.newValidator();
-        String language = UserContext.getCurrentUser().getLang();
+        String language = UserContext.getCurrentUser().getLanguage();
         // Apply a workaround for using the english translations as those are not stored in an extra "en" resource
         // bundle but in the root one instead.
         Locale locale = Strings.areEqual(language, "en") ? Locale.ROOT : new Locale(language);

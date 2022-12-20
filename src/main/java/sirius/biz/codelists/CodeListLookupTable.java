@@ -98,7 +98,7 @@ class CodeListLookupTable extends LookupTable {
     }
 
     private String performReverseLookupScan(String name) {
-        return scan(NLS.getCurrentLang(), Limit.UNLIMITED).filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
+        return scan(NLS.getCurrentLanguage(), Limit.UNLIMITED).filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
                                                           .findFirst()
                                                           .map(LookupTableEntry::getCode)
                                                           .orElse(null);

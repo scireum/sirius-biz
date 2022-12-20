@@ -106,7 +106,7 @@ public abstract class LookupTable {
      * {@link #normalize(String)} before invoking this method.
      */
     public Optional<String> resolveName(String code) {
-        return resolveName(code, NLS.getCurrentLang());
+        return resolveName(code, NLS.getCurrentLanguage());
     }
 
     /**
@@ -157,7 +157,7 @@ public abstract class LookupTable {
      * must be normalized via {@link #normalize(String)} before invoking this method.
      */
     public Optional<String> resolveDescription(String code) {
-        return resolveDescription(code, NLS.getCurrentLang());
+        return resolveDescription(code, NLS.getCurrentLanguage());
     }
 
     /**
@@ -343,7 +343,7 @@ public abstract class LookupTable {
      * {@link #normalize(String)} before invoking this method.
      */
     public Optional<String> fetchTranslatedField(String code, String targetField) {
-        return fetchTranslatedField(code, targetField, NLS.getCurrentLang());
+        return fetchTranslatedField(code, targetField, NLS.getCurrentLanguage());
     }
 
     /**
@@ -595,7 +595,7 @@ public abstract class LookupTable {
      * present
      */
     public static Optional<String> fetchTranslation(Map<String, String> table, @Nullable String lang) {
-        String result = table.get(Strings.isFilled(lang) ? lang : NLS.getCurrentLang());
+        String result = table.get(Strings.isFilled(lang) ? lang : NLS.getCurrentLanguage());
         if (Strings.isFilled(result)) {
             return Optional.of(result);
         }
@@ -701,7 +701,7 @@ public abstract class LookupTable {
      * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
      */
     public Stream<LookupTableEntry> suggest(@Nullable String searchTerm) {
-        return suggest(searchTerm, NLS.getCurrentLang());
+        return suggest(searchTerm, NLS.getCurrentLanguage());
     }
 
     /**
@@ -736,7 +736,7 @@ public abstract class LookupTable {
      * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
      */
     public Stream<LookupTableEntry> scan(Limit limit) {
-        return scan(NLS.getCurrentLang(), limit);
+        return scan(NLS.getCurrentLanguage(), limit);
     }
 
     /**
@@ -760,7 +760,7 @@ public abstract class LookupTable {
      * @return a stream of matches for the given term
      */
     public Stream<LookupTableEntry> search(@Nullable String searchTerm, Limit limit) {
-        return search(searchTerm, limit, NLS.getCurrentLang());
+        return search(searchTerm, limit, NLS.getCurrentLanguage());
     }
 
     /**

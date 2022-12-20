@@ -162,12 +162,12 @@ public class IDBTable {
         /**
          * Uses the currently active languages for translatable fields.
          * <p>
-         * This is boilerplate for {@code translate(NLS.getCurrentLang(), NLS.getFallbackLanguage())}.
+         * This is boilerplate for {@code translate(NLS.getCurrentLanguage(), NLS.getFallbackLanguage())}.
          *
          * @return the builder itself for fluent method calls
          */
         public QueryBuilder translate() {
-            this.primaryLang = NLS.getCurrentLang();
+            this.primaryLang = NLS.getCurrentLanguage();
             this.fallbackLang = NLS.getFallbackLanguage();
             return this;
         }
