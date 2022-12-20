@@ -328,7 +328,7 @@ public class FieldDefinition {
         UserContext.getCurrentScope()
                    .getDisplayLanguages()
                    .stream()
-                   .map(lang -> NLS.smartGet(alias, lang))
+                   .map(language -> NLS.smartGet(alias, language))
                    .filter(text -> !text.equals(getLabel()))
                    .filter(text -> !aliases.stream()
                                            .map(String::toLowerCase)

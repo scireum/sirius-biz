@@ -45,12 +45,12 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performResolveName(String code, String lang) {
-        return Optional.ofNullable(codeLists.getTranslatedValue(codeList, code, lang));
+    protected Optional<String> performResolveName(String code, String language) {
+        return Optional.ofNullable(codeLists.getTranslatedValue(codeList, code, language));
     }
 
     @Override
-    protected Optional<String> performResolveDescription(@Nonnull String code, String lang) {
+    protected Optional<String> performResolveDescription(@Nonnull String code, String language) {
         // Descriptions are not supported by code lists...
         return Optional.empty();
     }
@@ -61,8 +61,8 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performFetchTranslatedField(String code, String targetField, String lang) {
-        return Optional.ofNullable(codeLists.getTranslatedValues(codeList, code, lang).getSecond());
+    protected Optional<String> performFetchTranslatedField(String code, String targetField, String language) {
+        return Optional.ofNullable(codeLists.getTranslatedValues(codeList, code, language).getSecond());
     }
 
     @Override
@@ -98,10 +98,11 @@ class CodeListLookupTable extends LookupTable {
     }
 
     private String performReverseLookupScan(String name) {
-        return scan(NLS.getCurrentLanguage(), Limit.UNLIMITED).filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
-                                                          .findFirst()
-                                                          .map(LookupTableEntry::getCode)
-                                                          .orElse(null);
+        return scan(NLS.getCurrentLanguage(), Limit.UNLIMITED).filter(pair -> Strings.equalIgnoreCase(name,
+                                                                                                      pair.getName()))
+                                                              .findFirst()
+                                                              .map(LookupTableEntry::getCode)
+                                                              .orElse(null);
     }
 
     @Override
@@ -110,49 +111,49 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang) {
+    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
         return codeLists.getEntries(codeList)
                         .stream()
-                        .filter(entry -> filter(entry, searchTerm, lang))
-                        .map(entry -> extractEntryData(entry, lang))
+                        .filter(entry -> filter(entry, searchTerm, language))
+                        .map(entry -> extractEntryData(entry, language))
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
+    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
         // As plain code lists don't support deprecations or source data, we can re-use the same
         // method..
-        return performSuggest(limit, searchTerm, lang);
+        return performSuggest(limit, searchTerm, language);
     }
 
-    private LookupTableEntry extractEntryData(CodeListEntry<?, ?> entry, String lang) {
+    private LookupTableEntry extractEntryData(CodeListEntry<?, ?> entry, String language) {
         return new LookupTableEntry(entry.getCodeListEntryData().getCode(),
-                                    entry.getCodeListEntryData().getTranslatedValue(lang),
+                                    entry.getCodeListEntryData().getTranslatedValue(language),
                                     entry.getCodeListEntryData().getDescription());
     }
 
-    private boolean filter(CodeListEntry<?, ?> entry, String searchTerm, String lang) {
+    private boolean filter(CodeListEntry<?, ?> entry, String searchTerm, String language) {
         if (Strings.isEmpty(searchTerm)) {
             return true;
         }
 
         String effectiveSearchTerm = searchTerm.toLowerCase();
         return Value.of(entry.getCodeListEntryData().getCode()).toLowerCase().contains(effectiveSearchTerm) || Value.of(
-                entry.getCodeListEntryData().getTranslatedValue(lang)).toLowerCase().contains(effectiveSearchTerm);
+                entry.getCodeListEntryData().getTranslatedValue(language)).toLowerCase().contains(effectiveSearchTerm);
     }
 
     @Override
-    public Stream<LookupTableEntry> scan(String lang, Limit limit) {
+    public Stream<LookupTableEntry> scan(String language, Limit limit) {
         return codeLists.getEntries(codeList)
                         .stream()
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
-                        .map(entry -> extractEntryData(entry, lang));
+                        .map(entry -> extractEntryData(entry, language));
     }
 
     @Override
-    protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
+    protected Stream<LookupTableEntry> performQuery(String language, String lookupPath, String lookupValue) {
         // This would need a complex caching strategy as always fetching the DB would be too expensive.
         // Could be implemented when needed.
         throw new UnsupportedOperationException();
