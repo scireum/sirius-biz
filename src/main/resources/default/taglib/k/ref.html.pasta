@@ -5,7 +5,7 @@
 
 <i:local name="currentArticle" value="@helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
 <i:local name="referencedArticle"
-         value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(currentArticle != null ? currentArticle.getLanguage() : NLS.getCurrentLang(), code, true).orElse(null)"/>
+         value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(currentArticle != null ? currentArticle.getLanguage() : NLS.getCurrentLanguage(), code, true).orElse(null)"/>
 <i:if test="referencedArticle != null">
     <a class="@class"
        target="_blank"

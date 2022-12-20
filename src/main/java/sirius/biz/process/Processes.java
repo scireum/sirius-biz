@@ -848,7 +848,7 @@ public class Processes {
         taskContext.setAdapter(env);
         try {
             if (env.isActive()) {
-                CallContext.getCurrent().resetLang();
+                CallContext.getCurrent().resetLanguage();
                 installUserOfProcess(userContext, env);
 
                 task.accept(env);
@@ -857,7 +857,7 @@ public class Processes {
             throw env.handle(e);
         } finally {
             env.awaitCompletion();
-            CallContext.getCurrent().resetLang();
+            CallContext.getCurrent().resetLanguage();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
 

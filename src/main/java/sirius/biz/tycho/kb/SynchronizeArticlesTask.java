@@ -115,13 +115,15 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
 
     private void updateArticle(String templatePath, String syncId) {
         try {
-            Template template = tagliatelle.resolve(templatePath).orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: " + templatePath));
+            Template template = tagliatelle.resolve(templatePath)
+                                           .orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: "
+                                                                                           + templatePath));
             GlobalRenderContext context = tagliatelle.createRenderContext();
             template.render(context);
 
             String articleId = Value.of(context.getExtraBlock(BLOCK_CODE)).toUpperCase();
-            String lang = context.getExtraBlock(BLOCK_LANG);
-            KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, lang);
+            String language = context.getExtraBlock(BLOCK_LANG);
+            KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, language);
 
             entry.setSyncId(syncId);
             entry.setChapter(Value.of(context.getExtraBlock(BLOCK_CHAPTER)).asBoolean());
@@ -147,17 +149,17 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         }
     }
 
-    private KnowledgeBaseEntry findOrCreateEntry(String templatePath, String articleId, String lang) {
+    private KnowledgeBaseEntry findOrCreateEntry(String templatePath, String articleId, String language) {
         KnowledgeBaseEntry entry = elastic.select(KnowledgeBaseEntry.class)
                                           .eq(KnowledgeBaseEntry.ARTICLE_ID, articleId)
-                                          .eq(KnowledgeBaseEntry.LANG, lang)
+                                          .eq(KnowledgeBaseEntry.LANG, language)
                                           .queryFirst();
         if (entry == null) {
             entry = new KnowledgeBaseEntry();
             entry.setArticleId(articleId);
             entry.setCreated(LocalDate.now());
             entry.setCreatedInVersion(Product.getProduct().getVersion());
-            entry.setLang(lang);
+            entry.setLang(language);
             entry.setTemplatePath(templatePath);
         } else if (!Strings.areEqual(templatePath, entry.getTemplatePath())) {
             throw Exceptions.handle()
@@ -166,7 +168,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                                     articleId,
                                     templatePath,
                                     entry.getTemplatePath(),
-                                    lang)
+                                    language)
                             .handle();
         }
 

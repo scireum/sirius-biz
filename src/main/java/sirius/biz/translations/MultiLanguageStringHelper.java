@@ -53,20 +53,19 @@ public class MultiLanguageStringHelper extends ImportHelper {
         /**
          * Specifies a value to store for the given language
          *
-         * @param lang  the language to store the value for
-         * @param value the new value for the given language
+         * @param language the language to store the value for
+         * @param value    the new value for the given language
          * @return the builder itself for fluent method calls
          */
-        public MultiLanguageStringValue withText(String lang, String value) {
+        public MultiLanguageStringValue withText(String language, String value) {
             if (data == null) {
                 data = new HashMap<>();
             }
 
-            data.put(lang, value);
+            data.put(language, value);
 
             return this;
         }
-
     }
 
     private boolean replaceOnImport;
@@ -130,13 +129,13 @@ public class MultiLanguageStringHelper extends ImportHelper {
      * Creates a new value builder just like {@link #createUpdate()} which is filled with the given text for the given
      * language.
      *
-     * @param lang  the language to store the text for
+     * @param language  the language to store the text for
      * @param value the text value to store
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
      * a multi-language string field.
      */
-    public static MultiLanguageStringValue createUpdate(String lang, String value) {
-        return new MultiLanguageStringValue(false).withText(lang, value);
+    public static MultiLanguageStringValue createUpdate(String language, String value) {
+        return new MultiLanguageStringValue(false).withText(language, value);
     }
 
     /**
@@ -217,7 +216,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
         if (Strings.isFilled(defaultLanguage)) {
             return defaultLanguage;
         } else {
-            return NLS.getCurrentLang();
+            return NLS.getCurrentLanguage();
         }
     }
 }

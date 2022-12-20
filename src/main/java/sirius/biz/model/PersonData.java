@@ -140,7 +140,7 @@ public class PersonData extends Composite {
      * @return a short string (salutation, title and last name) used to address the person
      */
     public String getAddressableName() {
-        return getAddressableName(NLS.getCurrentLang());
+        return getAddressableName(NLS.getCurrentLanguage());
     }
 
     /**
