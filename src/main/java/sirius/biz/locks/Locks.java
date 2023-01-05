@@ -127,7 +127,9 @@ public class Locks implements MetricProvider {
         Long currentThreadId = Thread.currentThread().getId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
-        if (localLockInfo == null || !Objects.equals(ownerThreadId, localLockInfo.getFirst())) {
+        if (localLockInfo == null || (!Objects.equals(ownerThreadId, localLockInfo.getFirst()) && !Objects.equals(
+                currentThreadId,
+                localLockInfo.getFirst()))) {
             throw new IllegalStateException("Failed to transfer lock! The owner thread no longer holds the lock: "
                                             + lockName);
         }
