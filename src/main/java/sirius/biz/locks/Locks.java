@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * These locks can either be distributed (via SQL or REDIS) or held locally. The implementation is provided via a
  * {@link LockManager}.
  * <p>
- * Note that the implementation provided by the {@link LockManager} are not guaranteed to be reentrant. Therefore
+ * Note that the implementation provided by the {@link LockManager} are not guaranteed to be reentrant. Therefore,
  * we keep a local map <tt>"localLocks"</tt> (lock name to thread id) to simulate this behaviour.
  */
 @Register(classes = {Locks.class, MetricProvider.class}, framework = Locks.FRAMEWORK_LOCKS)
@@ -122,14 +122,14 @@ public class Locks implements MetricProvider {
 
         if (localLockInfo == null || !Objects.equals(currentThreadId, localLockInfo.getFirst())) {
             unlock(lockName);
-            Map<Long, Thread> allThreadsById = getLiveThreadsById();
+            Map<Long, Thread> liveThreadsById = getLiveThreadsById();
             throw new IllegalStateException(Strings.apply("""
                                                                   The current thread doesn't hold the lock: %s
                                                                   Current thread:         %s
                                                                   Owner thread from lock: %s""",
                                                           lockName,
                                                           Thread.currentThread(),
-                                                          allThreadsById.get(localLockInfo.getFirst())));
+                                                          liveThreadsById.get(localLockInfo.getFirst())));
         }
         return () -> transferLockToCurrentThread(lockName, currentThreadId);
     }
@@ -144,7 +144,7 @@ public class Locks implements MetricProvider {
                 localLockInfo.getFirst()))) {
             // We need to force unlocking here, as the owner thread won't unlock and target thread can't unlock.
             unlock(lockName, true);
-            Map<Long, Thread> allThreadsById = getLiveThreadsById();
+            Map<Long, Thread> liveThreadsById = getLiveThreadsById();
             throw new IllegalStateException(Strings.apply("""
                                                                   Failed to transfer lock! The owner thread no longer holds the lock: %s
                                                                   Target thread:               %s
@@ -152,8 +152,8 @@ public class Locks implements MetricProvider {
                                                                   Owner thread from lock:      %s""",
                                                           lockName,
                                                           currentThread,
-                                                          allThreadsById.get(ownerThreadId),
-                                                          allThreadsById.get(localLockInfo.getFirst())));
+                                                          liveThreadsById.get(ownerThreadId),
+                                                          liveThreadsById.get(localLockInfo.getFirst())));
         }
 
         localLockInfo.setFirst(currentThreadId);
@@ -178,8 +178,7 @@ public class Locks implements MetricProvider {
             return false;
         }
 
-        // Already locked by this thread - increment the nesting level to handle the unlock
-        // calls properly...
+        // Already locked by this thread - increment the nesting level to handle unlock calls properly...
         localLockInfo.getSecond().incrementAndGet();
         return true;
     }
@@ -189,7 +188,7 @@ public class Locks implements MetricProvider {
      * <p>
      * See {@link #tryLock(String, Duration)} for details on acquiring a lock.
      * <p>
-     * If the lock cannot be acquired, nothing will happen (neighter the task will be execute nor an exception will be
+     * If the lock cannot be acquired, nothing will happen (neither the task will be executed nor an exception will be
      * thrown).
      *
      * @param lock           the name of the lock to acquire
@@ -222,7 +221,7 @@ public class Locks implements MetricProvider {
 
         return manager.isLocked(lock);
     }
-    
+
     /**
      * Determines if the given lock is currently locked by the current thread.
      *
@@ -262,10 +261,10 @@ public class Locks implements MetricProvider {
     }
 
     /**
-     * Determines if the lock is held by the appropriate thread and chckes the nesting level.
+     * Determines if the lock is held by the appropriate thread and checks the nesting level.
      *
      * @param lock the lock to check
-     * @return <tt>true</tt> if the unlock was local due to several nested locks or <tt>false</tt> if the lock
+     * @return <tt>true</tt> if unlock was local due to several nested locks or <tt>false</tt> if the lock
      * should be globally unlocked.
      */
     private boolean unlockLocally(String lock) {
