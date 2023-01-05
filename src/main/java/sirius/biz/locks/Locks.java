@@ -121,6 +121,7 @@ public class Locks implements MetricProvider {
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
         if (localLockInfo == null || !Objects.equals(currentThreadId, localLockInfo.getFirst())) {
+            unlock(lockName);
             Map<Long, Thread> allThreadsById = getLiveThreadsById();
             throw new IllegalStateException(Strings.apply("""
                                                                   The current thread doesn't hold the lock: %s
@@ -141,6 +142,8 @@ public class Locks implements MetricProvider {
         if (localLockInfo == null || (!Objects.equals(ownerThreadId, localLockInfo.getFirst()) && !Objects.equals(
                 currentThreadId,
                 localLockInfo.getFirst()))) {
+            // We need to force unlocking here, as the owner thread won't unlock and target thread can't unlock.
+            unlock(lockName, true);
             Map<Long, Thread> allThreadsById = getLiveThreadsById();
             throw new IllegalStateException(Strings.apply("""
                                                                   Failed to transfer lock! The owner thread no longer holds the lock: %s
