@@ -125,8 +125,8 @@ public class Locks implements MetricProvider {
             Map<Long, Thread> liveThreadsById = getLiveThreadsById();
             throw new IllegalStateException(Strings.apply("""
                                                                   The current thread doesn't hold the lock: %s
-                                                                  Current thread:         %s
-                                                                  Owner thread from lock: %s""",
+                                                                  Current thread:       %s
+                                                                  Owner thread of lock: %s""",
                                                           lockName,
                                                           Thread.currentThread(),
                                                           liveThreadsById.get(localLockInfo.getFirst())));
@@ -149,7 +149,7 @@ public class Locks implements MetricProvider {
                                                                   Failed to transfer lock! The owner thread no longer holds the lock: %s
                                                                   Target thread:               %s
                                                                   Owner thread from parameter: %s
-                                                                  Owner thread from lock:      %s""",
+                                                                  Owner thread of lock:        %s""",
                                                           lockName,
                                                           currentThread,
                                                           liveThreadsById.get(ownerThreadId),
