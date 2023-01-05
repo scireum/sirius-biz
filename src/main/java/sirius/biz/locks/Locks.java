@@ -8,6 +8,7 @@
 
 package sirius.biz.locks;
 
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -24,6 +25,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Provides a central framework to obtain and manage named locks.
@@ -118,23 +121,47 @@ public class Locks implements MetricProvider {
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
         if (localLockInfo == null || !Objects.equals(currentThreadId, localLockInfo.getFirst())) {
-            throw new IllegalStateException("The current thread doesn't hold the lock: " + lockName);
+            Map<Long, Thread> allThreadsById = getLiveThreadsById();
+            throw new IllegalStateException(Strings.apply("""
+                                                                  The current thread doesn't hold the lock: %s
+                                                                  Current thread:         %s
+                                                                  Owner thread from lock: %s""",
+                                                          lockName,
+                                                          Thread.currentThread(),
+                                                          allThreadsById.get(localLockInfo.getFirst())));
         }
         return () -> transferLockToCurrentThread(lockName, currentThreadId);
     }
 
     private void transferLockToCurrentThread(String lockName, Long ownerThreadId) {
-        Long currentThreadId = Thread.currentThread().getId();
+        Thread currentThread = Thread.currentThread();
+        Long currentThreadId = currentThread.getId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
         if (localLockInfo == null || (!Objects.equals(ownerThreadId, localLockInfo.getFirst()) && !Objects.equals(
                 currentThreadId,
                 localLockInfo.getFirst()))) {
-            throw new IllegalStateException("Failed to transfer lock! The owner thread no longer holds the lock: "
-                                            + lockName);
+            Map<Long, Thread> allThreadsById = getLiveThreadsById();
+            throw new IllegalStateException(Strings.apply("""
+                                                                  Failed to transfer lock! The owner thread no longer holds the lock: %s
+                                                                  Target thread:               %s
+                                                                  Owner thread from parameter: %s
+                                                                  Owner thread from lock:      %s""",
+                                                          lockName,
+                                                          currentThread,
+                                                          allThreadsById.get(ownerThreadId),
+                                                          allThreadsById.get(localLockInfo.getFirst())));
         }
 
         localLockInfo.setFirst(currentThreadId);
+    }
+
+    @Nonnull
+    private static Map<Long, Thread> getLiveThreadsById() {
+        return Thread.getAllStackTraces()
+                     .keySet()
+                     .stream()
+                     .collect(Collectors.toMap(Thread::getId, Function.identity()));
     }
 
     private boolean acquireLockLocally(String lockName, Long currentThreadId) {
