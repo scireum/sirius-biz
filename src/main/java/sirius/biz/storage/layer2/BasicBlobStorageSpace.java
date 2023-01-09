@@ -20,7 +20,6 @@ import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.KeyGenerator;
-import sirius.kernel.async.Future;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -1402,7 +1401,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw new IllegalArgumentException(Strings.apply("Unknown variant type: %s", variantName));
         }
 
-        V variant = findOrCreateVariantAsync(blob, variantName, nonblocking);
+        V variant = findOrCreateVariant(blob, variantName, nonblocking);
 
         if (variant == null || Strings.isEmpty(variant.getPhysicalObjectKey())) {
             return null;
@@ -1418,46 +1417,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variantName the name of the desired variant
      */
     public void ensureVariantExists(B blob, String variantName) {
-        findOrCreateVariant(blob, variantName, false, false);
-    }
-
-    /**
-     * Tries to either find or create the requested variant asynchronously for the given blob.
-     * <p>
-     * Note that there this is a recursive optimistic locking algorithm at work where
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int, boolean)} and
-     * {@link #awaitConversionResultAndRetryToFindVariant(Blob, String, int, boolean)} build the "loop".
-     *
-     * @param blob        the blob for which the variant is to be resolved
-     * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
-     * @return the variant for the given blob with the given name or null if no such variant exists
-     */
-    @Nullable
-    protected V findOrCreateVariantAsync(B blob, String variantName, boolean nonblocking) {
-        return findOrCreateVariant(blob, variantName, nonblocking, true);
+        findOrCreateVariant(blob, variantName, false);
     }
 
     /**
      * Tries to either find or create the requested variant for the given blob.
+     * <p>
+     * Note that there this is a recursive optimistic locking algorithm at work where
+     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)} and
+     * {@link #awaitConversionResultAndRetryToFindVariant(Blob, String, int)} build the "loop".
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
      * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
      *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
-     * @param async       <tt>true</tt> to specify that the variant should be resolved asynchronously, <tt>false</tt>
-     *                    otherwise
      * @return the variant for the given blob with the given name or null if no such variant exists
      */
     @Nullable
-    protected V findOrCreateVariant(B blob, String variantName, boolean nonblocking, boolean async) {
+    protected V findOrCreateVariant(B blob, String variantName, boolean nonblocking) {
         try {
             return attemptToFindOrCreateVariant(blob,
                                                 variantName,
                                                 nonblocking,
-                                                NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS - 1,
-                                                async);
+                                                NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS - 1);
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -1479,15 +1461,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
      *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @param retries     the number of retries left
-     * @param async       <tt>true</tt> to specify that the variant should be resolved asynchronously, <tt>false</tt>
-     *                    otherwise
      * @return the variant for the given blob with the given name or null if no such variant exists
      * @throws Exception in case of an error while searching or creating the variant
      */
     @Nullable
     @SuppressWarnings("java:S3776")
     @Explain("This is a complex beast, but we rather keep the whole logik in one place.")
-    private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries, boolean async)
+    private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
         V variant = findAnyVariant(blob, variantName);
         if (variant != null) {
@@ -1497,7 +1477,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 return variant;
             }
             if (!variant.isQueuedForConversion() && retryLimitReached(variant)) {
-                // The conversion has failed - signal that to the client. We use a handled exception here, as the problem
+                // The conversion has failed - signal that the to client. We use a handled exception here, as the problem
                 // has already been logged...
                 throw Exceptions.createHandled()
                                 .withSystemErrorMessage("Failed to create the requested variant from the given image.")
@@ -1515,13 +1495,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (conversionEnabled) {
                 // No variant is present, therefore we spawn a thread which will create it and start a conversion
                 // pipeline
-                if (tryCreateVariant(blob, variantName, async)) {
+                if (tryCreateVariantAsync(blob, variantName)) {
                     // We successfully created a variant and forked a conversion... Await its result...
-                    return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries, async);
+                    return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
                 } else {
                     // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
                     // wait a short and random amount of time and retry...
-                    return retryFindVariant(blob, variantName, retries, async);
+                    return retryFindVariant(blob, variantName, retries);
                 }
             } else {
                 // No variant is present and no conversion is possible -> give up
@@ -1537,23 +1517,19 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         if (!shouldRetryConversion(variant)) {
             // A variant exists but didn't yield a usable result yet - try to wait and retry...
-            return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries, async);
+            return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
         if (conversionEnabled && !retryLimitReached(variant)) {
             // A variant exists and we should re-try to create it...
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
-                if (async) {
-                    invokeConversionPipelineAsync(blob, variant);
-                } else {
-                    invokeConversionPipeline(blob, variant);
-                }
-                return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries, async);
+                invokeConversionPipelineAsync(blob, variant);
+                return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
             } else {
                 // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
                 // wait a short and random amount of time and retry...
-                return retryFindVariant(blob, variantName, retries, async);
+                return retryFindVariant(blob, variantName, retries);
             }
         }
 
@@ -1567,37 +1543,32 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     /**
      * Handles the retry (after an optimistic lock error) path of
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int, boolean)}.
+     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
      * @param retries     the number of retries left
-     * @param async       <tt>true</tt> to specify that the variant should be resolved asynchronously, <tt>false</tt>
-     *                    otherwise
      * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
      * @throws Exception if case of any error when performing the next attempt
      */
-    private V retryFindVariant(B blob, String variantName, int retries, boolean async) throws Exception {
+    private V retryFindVariant(B blob, String variantName, int retries) throws Exception {
         // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
         // wait a short and random amount of time and retry...
         Wait.randomMillis(0, 150);
-        return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1, async);
+        return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
     }
 
     /**
      * Handles the retry (when waiting for a conversion result) path of
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int, boolean)}.
+     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
      * @param retries     the number of retries left
-     * @param async       <tt>true</tt> to specify that the variant should be resolved asynchronously, <tt>false</tt>
-     *                    otherwise
      * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
      * @throws Exception if case of any error when performing the next attempt
      */
-    private V awaitConversionResultAndRetryToFindVariant(B blob, String variantName, int retries, boolean async)
-            throws Exception {
+    private V awaitConversionResultAndRetryToFindVariant(B blob, String variantName, int retries) throws Exception {
         if (retries == 0) {
             return null;
         }
@@ -1608,8 +1579,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         return attemptToFindOrCreateVariant(blob,
                                             variantName,
                                             false,
-                                            Math.min(retries - 1, NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION - 1),
-                                            async);
+                                            Math.min(retries - 1, NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION - 1));
     }
 
     /**
@@ -1645,16 +1615,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract boolean markConversionAttempt(V variant) throws Exception;
 
     /**
-     * Spawns a thread which will actually invoke the appropriate conversion pipeline asynchronously.
+     * Spawns a thread which will actually invoke the appropriate conversion pipeline.
      *
      * @param blob    the blob for which the variant is to be created
      * @param variant the variant to generate
-     * @return a future holding the conversion process
      */
-    private Future invokeConversionPipelineAsync(B blob, V variant) {
+    private void invokeConversionPipelineAsync(B blob, V variant) {
         ConversionProcess conversionProcess = new ConversionProcess(blob, variant.getVariantName());
-        Future conversion = conversionEngine.performConversion(conversionProcess);
-        conversion.onSuccess(ignored -> {
+        conversionEngine.performConversion(conversionProcess).onSuccess(ignored -> {
             try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
                 String physicalKey = keyGenerator.generateId();
                 conversionProcess.upload(() -> {
@@ -1680,18 +1648,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                     blob.getFilename())
                             .handle();
         });
-        return conversion;
-    }
-
-    /**
-     * Spawns a thread which will actually invoke the appropriate conversion pipeline.
-     *
-     * @param blob    the blob for which the variant is to be created
-     * @param variant the variant to generate
-     */
-    private void invokeConversionPipeline(B blob, V variant) {
-        Future conversion = invokeConversionPipelineAsync(blob, variant);
-        conversion.asFuture().await(Duration.ofHours(3));
     }
 
     /**
@@ -1734,26 +1690,20 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to create the requested variant if it does not exist.
+     * Tries to create and the asynchronous generated the requested variant.
      *
      * @param blob        the blob for which the variant is to be created
      * @param variantName the variant to generate
-     * @param isAsync     <tt>true</tt> if the variant should be created asynchronously, <tt>false</tt> if the variant
-     *                    should be created blocking
      * @return <tt>true</tt> if the variant was created and a conversion has been forked, <tt>false</tt>
      * if the variant existed already...
      */
-    private boolean tryCreateVariant(B blob, String variantName, boolean isAsync) {
+    private boolean tryCreateVariantAsync(B blob, String variantName) {
         V variant = createVariant(blob, variantName);
 
         if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
             return false;
         } else {
-            if (isAsync) {
-                invokeConversionPipelineAsync(blob, variant);
-            } else {
-                invokeConversionPipeline(blob, variant);
-            }
+            invokeConversionPipelineAsync(blob, variant);
             return true;
         }
     }
