@@ -81,7 +81,7 @@ public class WatchableOutputStream extends OutputStream {
     }
 
     /**
-     * Adds a completion handler to this stream which is executed only if closing the stream is successful.
+     * Sets the completion handler to this stream which is executed only if closing the stream is successful.
      *
      * @param successHandler the handler to be executed once the stream is successfully closed
      * @return <tt>this</tt> for fluent method chaining
@@ -96,7 +96,7 @@ public class WatchableOutputStream extends OutputStream {
     }
 
     /**
-     * Adds a completion handler to this stream which is executed only if closing the stream fails.
+     * Sets the completion handler to this stream which is executed only if closing the stream fails.
      * <p>
      * The original exception will be thrown, if this handler doesn't throw its own exception.
      *
@@ -113,7 +113,7 @@ public class WatchableOutputStream extends OutputStream {
     }
 
     /**
-     * Adds a completion handler to this stream which is executed when the stream is closed.
+     * Installs a completion handler to this stream which is executed when the stream is closed.
      * <p>
      * In case of a failure, the original exception will be thrown, if this handler doesn't throw its own exception.
      *
