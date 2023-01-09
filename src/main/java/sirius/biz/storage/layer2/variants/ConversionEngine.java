@@ -187,16 +187,6 @@ public class ConversionEngine {
     }
 
     private void doConversion(ConversionProcess conversionProcess, Future result, Watch queueWatch) {
-        if (conversionProcess.getBlobToConvert() != null && conversionProcess.getBlobToConvert().isInconvertible()) {
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage(Strings.apply(
-                                    "The conversion engine tried generating the variant %s for inconvertible blob %s (%s)",
-                                    conversionProcess.getVariantName(),
-                                    conversionProcess.getBlobToConvert().getFilename(),
-                                    conversionProcess.getBlobToConvert().getBlobKey()))
-                            .handle();
-        }
-
         try {
             conversionProcess.recordQueueDuration(queueWatch.elapsedMillis());
             Converter converter = fetchConverter(conversionProcess.getVariantName());

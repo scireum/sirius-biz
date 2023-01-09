@@ -1321,12 +1321,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws IllegalArgumentException if an unknown variant is requested
      */
     private Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
-        String blobCacheKey = buildCacheLookupKeyForBlob(blobKey);
-        String cachedPhysicalBlobKey = blobKeyToPhysicalCache.get(blobCacheKey);
-        if (Strings.isFilled(cachedPhysicalBlobKey)) {
-            assertNoFailureCached(cachedPhysicalBlobKey);
-        }
-
         String variantCacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalVariantKey = blobKeyToPhysicalCache.get(variantCacheKey);
         if (Strings.isFilled(cachedPhysicalVariantKey)) {
@@ -1345,7 +1339,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         } catch (Exception exception) {
             // The conversion ultimately failed, we can therefore cache the result, as no more conversion attempts
             // will happen...
-            blobKeyToPhysicalCache.put(blobCacheKey, CACHED_FAILURE_MARKER);
+            blobKeyToPhysicalCache.put(variantCacheKey, CACHED_FAILURE_MARKER);
             throw exception;
         }
     }
@@ -1362,10 +1356,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     protected String buildCacheLookupKey(String blobKey, String variantName) {
         return spaceName + "-" + blobKey + "-" + variantName;
-    }
-
-    protected String buildCacheLookupKeyForBlob(String blobKey) {
-        return spaceName + "-" + blobKey;
     }
 
     /**
@@ -1409,13 +1399,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         if (URLBuilder.VARIANT_RAW.equals(variantName)) {
             return blob.getPhysicalObjectKey();
-        }
-
-        if (blob.isInconvertible()) {
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Requested physical key for inconvertible blob "
-                                                    + blob.getBlobKey())
-                            .handle();
         }
 
         if (!conversionEngine.isKnownVariant(variantName)) {
@@ -1480,14 +1463,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Explain("This is a complex beast, but we rather keep the whole logic in one place.")
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
-        if (blob.isInconvertible()) {
-            // The blob was identified as inconvertible in other conversion attempts. Signal that the to client.
-            // We use a handled exception here, as the problem has already been logged...
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Failed to create any variant from the given image.")
-                            .handle();
-        }
-
         V variant = findAnyVariant(blob, variantName);
         if (variant != null) {
             if (Strings.isFilled(variant.getPhysicalObjectKey())) {
@@ -1570,13 +1545,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
      * @throws Exception if case of any error when performing the next attempt
      */
-    @SuppressWarnings("unchecked")
-    @Explain("The cast is necessary and simply refreshes the input blob.")
     private V retryFindVariant(B blob, String variantName, int retries) throws Exception {
         // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
         // wait a short and random amount of time and retry...
         Wait.randomMillis(0, 150);
-        return attemptToFindOrCreateVariant((B) blob.refreshFromDb(), variantName, false, retries - 1);
+        return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
     }
 
     /**
@@ -1589,8 +1562,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
      * @throws Exception if case of any error when performing the next attempt
      */
-    @SuppressWarnings("unchecked")
-    @Explain("The cast is necessary and simply refreshes the input blob.")
     private V awaitConversionResultAndRetryToFindVariant(B blob, String variantName, int retries) throws Exception {
         if (retries == 0) {
             return null;
@@ -1599,7 +1570,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
         // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish...
         Wait.millis(TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS);
-        return attemptToFindOrCreateVariant((B) blob.refreshFromDb(),
+        return attemptToFindOrCreateVariant(blob,
                                             variantName,
                                             false,
                                             Math.min(retries - 1, NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION - 1));
@@ -1648,16 +1619,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         conversionEngine.performConversion(conversionProcess).onSuccess(ignored -> {
             try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
                 String physicalKey = keyGenerator.generateId();
-                conversionProcess.upload(() -> {
-                    getPhysicalSpace().upload(physicalKey, automaticHandle.getFile());
-                });
+                conversionProcess.upload(() -> getPhysicalSpace().upload(physicalKey, automaticHandle.getFile()));
 
                 markConversionSuccess(variant, physicalKey, conversionProcess);
                 eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                               .withOutputFile(automaticHandle));
             }
         }).onFailure(conversionException -> {
-            markConversionFailure(blob);
             markConversionFailure(variant, conversionProcess);
             eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                           .withConversionError(conversionException));
@@ -1689,13 +1657,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant the variant to record the failed attempt for
      */
     protected abstract void markConversionFailure(V variant, ConversionProcess conversionProcess);
-
-    /**
-     * Records a failed conversion attempt for the given blob.
-     *
-     * @param blob the blob to record the failed attempt for
-     */
-    protected abstract void markConversionFailure(B blob);
 
     /**
      * Determines if another conversion of the variant should be attempted.
