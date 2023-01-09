@@ -26,7 +26,7 @@ public class WatchableInputStream extends InputStream {
     private final InputStream delegate;
     private Runnable successHandler;
     private Consumer<Throwable> failureHandler;
-    private boolean closeHandled = false;
+    private volatile boolean closeHandled = false;
 
     /**
      * Creates a new stream which wraps and delegates all calls to the given one.
