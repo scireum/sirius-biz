@@ -29,6 +29,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
+import sirius.kernel.async.Future;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
@@ -296,6 +297,11 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     @Override
     public void ensureVariantExists(String variantName) {
         getStorageSpace().ensureVariantExists(this, variantName);
+    }
+
+    @Override
+    public Future tryCreateVariant(String variantName) {
+        return getStorageSpace().tryCreateVariant(this, variantName);
     }
 
     @Override

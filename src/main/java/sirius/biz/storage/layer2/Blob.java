@@ -10,6 +10,7 @@ package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.kernel.async.Future;
 import sirius.kernel.health.HandledException;
 import sirius.web.http.Response;
 
@@ -125,6 +126,13 @@ public interface Blob {
      */
     void ensureVariantExists(String variantName);
 
+    /**
+     * Tries to create the desired variant.
+     *
+     * @param variantName the name of the desired variant
+     * @return a future holding the conversion process
+     */
+    Future tryCreateVariant(String variantName);
 
     /**
      * Delivers the data of this blob into the given HTTP response.
