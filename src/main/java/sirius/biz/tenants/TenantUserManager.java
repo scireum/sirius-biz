@@ -686,7 +686,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         long currentTimestampInDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis());
-        // Timestamps of tomorrow and yesterday should be valid too, to be more gracefull with nightly scripts utilizing
+        // Timestamps of tomorrow and yesterday should be valid too, to be more gracefully with nightly scripts utilizing
         // the apiToken. If midnight passes while execution, the hashed apiToken would be suddenly invalid.
         for (int i = -1; i <= 1; i++) {
             long timestampToCheck = currentTimestampInDays + i;
@@ -986,7 +986,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * @return the list of supported languages
      */
     public List<String> getAvailableLanguageCodes() {
-        return Collections.unmodifiableList(availableLanguages);
+        return availableLanguages;
     }
 
     /**

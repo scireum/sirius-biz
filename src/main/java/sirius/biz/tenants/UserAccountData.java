@@ -45,7 +45,7 @@ import java.util.function.Consumer;
 /**
  * Represents a user account which can log into the system.
  * <p>
- * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
+ * Several users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 public class UserAccountData extends Composite implements MessageProvider {
 
