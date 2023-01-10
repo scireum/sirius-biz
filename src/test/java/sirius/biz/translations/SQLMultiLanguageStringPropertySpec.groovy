@@ -47,14 +47,14 @@ class SQLMultiLanguageStringPropertySpec extends BaseSpecification {
         output.getMultiLangText().getText("fr") == Optional.empty()
 
         when:
-        CallContext.getCurrent().setLang("en")
+        CallContext.getCurrent().setLanguage("en")
 
         then:
         output.getMultiLangText().fetchText() == "Butterfly"
         output.getMultiLangText().getText() == Optional.of("Butterfly")
 
         when:
-        CallContext.getCurrent().setLang("fr")
+        CallContext.getCurrent().setLanguage("fr")
 
         then:
         output.getMultiLangText().fetchText() == null
