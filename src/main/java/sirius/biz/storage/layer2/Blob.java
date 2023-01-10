@@ -120,13 +120,6 @@ public interface Blob {
     Optional<FileHandle> download();
 
     /**
-     * Ensures that the desired variant exists.
-     *
-     * @param variantName the name of the desired variant
-     */
-    void ensureVariantExists(String variantName);
-
-    /**
      * Tries to create the desired variant.
      *
      * @param variantName the name of the desired variant
