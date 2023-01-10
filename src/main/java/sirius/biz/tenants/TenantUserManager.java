@@ -352,7 +352,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             U currentUser = originalUser.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
             modifiedUser.setId(currentUser.getId());
-            modifiedUser.getUserAccountData().getLang().setValue(currentUser.getUserAccountData().getLang().getValue());
+            modifiedUser.getUserAccountData()
+                        .getLanguage()
+                        .setValue(currentUser.getUserAccountData().getLanguage().getValue());
             modifiedUser.getUserAccountData()
                         .getLogin()
                         .setUsername(currentUser.getUserAccountData().getLogin().getUsername());
@@ -1023,8 +1025,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         if (userAccount == null) {
             return NLS.getDefaultLanguage();
         }
-        return Strings.firstFilled(userAccount.getUserAccountData().getLang().getValue(),
-                                   userAccount.getTenant().fetchValue().getTenantData().getLang().getValue(),
+        return Strings.firstFilled(userAccount.getUserAccountData().getLanguage().getValue(),
+                                   userAccount.getTenant().fetchValue().getTenantData().getLanguage().getValue(),
                                    NLS.getDefaultLanguage());
     }
 }

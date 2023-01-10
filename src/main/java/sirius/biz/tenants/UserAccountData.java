@@ -104,11 +104,11 @@ public class UserAccountData extends Composite implements MessageProvider {
     /**
      * The language of the {@link UserAccount}.
      */
-    public static final Mapping LANG = Mapping.named("lang");
+    public static final Mapping LANGUAGE = Mapping.named("language");
     @Autoloaded
     @NullAllowed
     @Length(2)
-    private final LookupValue lang = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
+    private final LookupValue language = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
 
     @Part
     private static Mails ms;
@@ -365,8 +365,13 @@ public class UserAccountData extends Composite implements MessageProvider {
         this.externalLoginRequired = externalLoginRequired;
     }
 
+    @Deprecated
     public LookupValue getLang() {
-        return lang;
+        return language;
+    }
+
+    public LookupValue getLanguage() {
+        return language;
     }
 
     public StringList getSubScopes() {
