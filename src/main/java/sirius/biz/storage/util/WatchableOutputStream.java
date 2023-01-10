@@ -14,6 +14,7 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Wraps an {@link OutputStream} and provides a {@link Future completion future}.
@@ -23,7 +24,9 @@ import java.util.Objects;
 public class WatchableOutputStream extends OutputStream {
 
     private final OutputStream delegate;
-    private final Future completionFuture;
+    private Runnable successHandler;
+    private Consumer<Throwable> failureHandler;
+    private volatile boolean closeHandled = false;
 
     /**
      * Creates a new stream which wraps and delegates all calls to the given one.
@@ -33,7 +36,6 @@ public class WatchableOutputStream extends OutputStream {
     public WatchableOutputStream(@Nonnull OutputStream delegate) {
         Objects.requireNonNull(delegate, "null was passed into a WatchableOutputStream");
         this.delegate = delegate;
-        this.completionFuture = new Future();
     }
 
     @Override
@@ -55,18 +57,21 @@ public class WatchableOutputStream extends OutputStream {
     public void close() throws IOException {
         try {
             delegate.close();
-
-            // Close might be invoked several times (e.g. by some ZIP implementations).
-            // Therefore, we filter this to only fulfill the future once.
-            if (!completionFuture.isCompleted()) {
-                completionFuture.success();
-            }
         } catch (IOException e) {
-            // Filter duplicate completions (s.a.)...
-            if (!completionFuture.isCompleted()) {
-                completionFuture.fail(e);
+            // Close might be invoked several times (e.g. by some ZIP implementations).
+            // Therefore, we filter this to only execute the handler once.
+            if (failureHandler != null && !closeHandled) {
+                closeHandled = true;
+                failureHandler.accept(e);
             }
+
             throw e;
+        }
+
+        // Filter duplicate executions (s.a.)...
+        if (successHandler != null && !closeHandled) {
+            closeHandled = true;
+            successHandler.run();
         }
     }
 
@@ -76,11 +81,52 @@ public class WatchableOutputStream extends OutputStream {
     }
 
     /**
-     * Provides the completion future which is fullfilled once the stream is closed.
+     * Sets the completion handler to this stream which is executed only if closing the stream is successful.
      *
-     * @return the completion future of this stream
+     * @param successHandler the handler to be executed once the stream is successfully closed
+     * @return <tt>this</tt> for fluent method chaining
      */
-    public Future getCompletionFuture() {
-        return completionFuture;
+    public WatchableOutputStream onSuccess(@Nonnull final Runnable successHandler) {
+        if (this.successHandler != null) {
+            throw new UnsupportedOperationException("Only one success handler can be specified");
+        }
+
+        this.successHandler = successHandler;
+        return this;
+    }
+
+    /**
+     * Sets the completion handler to this stream which is executed only if closing the stream fails.
+     * <p>
+     * The original exception will be thrown, if this handler doesn't throw its own exception.
+     *
+     * @param failureHandler the handler to be executed once closing the stream failed
+     * @return <tt>this</tt> for fluent method chaining
+     */
+    public WatchableOutputStream onFailure(@Nonnull final Consumer<Throwable> failureHandler) {
+        if (this.failureHandler != null) {
+            throw new UnsupportedOperationException("Only one failure handler can be specified");
+        }
+
+        this.failureHandler = failureHandler;
+        return this;
+    }
+
+    /**
+     * Installs a completion handler to this stream which is executed when the stream is closed.
+     * <p>
+     * In case of a failure, the original exception will be thrown, if this handler doesn't throw its own exception.
+     *
+     * @param completionHandler the handler to be executed once the stream is closed
+     * @return <tt>this</tt> for fluent method chaining
+     */
+    public WatchableOutputStream onCompletion(@Nonnull final Runnable completionHandler) {
+        if (this.successHandler != null || this.failureHandler != null) {
+            throw new UnsupportedOperationException("Only one completion handler can be specified");
+        }
+
+        this.successHandler = completionHandler;
+        this.failureHandler = ignored -> completionHandler.run();
+        return this;
     }
 }
