@@ -48,7 +48,7 @@ public class KnowledgeBase {
     /**
      * Used to log all messages and warnings related to the knowledge base.
      */
-    public static final Log LOG = Log.get("knowlegdebase");
+    public static final Log LOG = Log.get("knowledgebase");
 
     /**
      * Imposes a hard limit when searching for knowledge base entries
@@ -174,7 +174,7 @@ public class KnowledgeBase {
                       .orderAsc(KnowledgeBaseEntry.LANGUAGE)
                       .queryList()
                       .stream()
-                      .map(KnowledgeBaseEntry::getLang)
+                      .map(KnowledgeBaseEntry::getLanguage)
                       .sorted()
                       .toList();
     }
