@@ -223,6 +223,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected static Tasks tasks;
 
     @Part
+    protected static FailedVariantConversionListener failedVariantConversionListener;
+
+    @Part
     @Nullable
     protected static TouchWritebackLoop touchWritebackLoop;
 
@@ -1076,6 +1079,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     private void handleFailedConversion(String blobKey, String variant, Exception e) {
+        failedVariantConversionListener.propagateError(e, blobKey, variant);
         Exceptions.handle()
                   .error(e)
                   .to(StorageUtils.LOG)
@@ -1674,7 +1678,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Determines if the conversion of a variant has finally failed.
      *
      * @param variant the variant to check
-     * @return <tt>true</tt> if the conversion has finally failed and not further conversions should be attempted,
+     * @return <tt>true</tt> if the conversion has finally failed and no further conversions should be attempted,
      * <tt>false</tt> otherwise
      */
     private boolean retryLimitReached(V variant) {
