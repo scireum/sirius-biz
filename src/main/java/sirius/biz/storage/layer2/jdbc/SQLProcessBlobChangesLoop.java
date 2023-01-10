@@ -150,23 +150,4 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             counter.run();
         });
     }
-
-    @Override
-    protected void processConvertibilityChangedBlobs(Runnable counter) {
-        oma.select(SQLBlob.class).eq(SQLBlob.CONVERTIBILITY_CHANGED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeConvertibilityChangedHandlers(blob);
-            try {
-                oma.updateStatement(SQLBlob.class)
-                   .set(SQLBlob.CONVERTIBILITY_CHANGED, false)
-                   .where(SQLBlob.ID, blob.getId())
-                   .executeUpdate();
-            } catch (SQLException e) {
-                buildStorageException(e).withSystemErrorMessage(
-                        "Layer 2: Failed to reset blob %s (%s) in %s as convertibility not changed: (%s)",
-                        blob.getBlobKey(),
-                        blob.getFilename(),
-                        blob.getSpaceName()).handle();
-            }
-        });
-    }
 }

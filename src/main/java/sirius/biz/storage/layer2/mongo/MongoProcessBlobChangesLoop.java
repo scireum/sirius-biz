@@ -70,21 +70,6 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     }
 
     @Override
-    protected void processConvertibilityChangedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class)
-             .eq(MongoBlob.CONVERTIBILITY_CHANGED, true)
-             .limit(CURSOR_LIMIT)
-             .iterateAll(blob -> {
-                 invokeConvertibilityChangedHandlers(blob);
-                 mongo.update()
-                      .set(MongoBlob.CONVERTIBILITY_CHANGED, false)
-                      .where(MongoBlob.ID, blob.getId())
-                      .executeForOne(MongoBlob.class);
-                 counter.run();
-             });
-    }
-
-    @Override
     protected void propagateDelete(@Nonnull Directory dir) {
         String directoryId = dir.getIdAsString();
         mongo.update()
