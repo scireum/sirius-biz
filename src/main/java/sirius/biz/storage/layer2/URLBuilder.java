@@ -353,9 +353,8 @@ public class URLBuilder {
     /**
      * Determines if a conversion for the given variant is expected.
      *
-     * @return <tt>true</tt> if a variant is selected, for which no physical key is present. <tt>false</tt> if the blob
-     * is marked as {@link Blob#isInconvertible() inconvertible}, or if there already exists a physical key for the
-     * given variant.
+     * @return <tt>true</tt> if a variant is selected, for which no physical key is present. <tt>false</tt> if there
+     * already exists a physical key for the given variant.
      */
     public boolean isConversionExpected() {
         return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());

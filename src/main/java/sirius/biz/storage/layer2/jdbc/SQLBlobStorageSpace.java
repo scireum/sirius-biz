@@ -537,8 +537,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 filename = filename.trim();
                 updateStatement.set(SQLBlob.FILENAME, filename)
                                .set(SQLBlob.NORMALIZED_FILENAME, filename.toLowerCase())
-                               .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()))
-                               .set(SQLBlob.INCONVERTIBLE, false);
+                               .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
             int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())
@@ -554,7 +553,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 blob.updateFilenameFields();
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
-                blob.resetInconvertibleFlag();
 
                 return Optional.ofNullable(previousPhysicalObjectKey);
             } else if (retries > 0) {
@@ -906,24 +904,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                               "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as failed: %s (%s)",
                               variant.getIdAsString(),
                               variant.getSourceBlob().getIdAsString())
-                      .handle();
-        }
-    }
-
-    @Override
-    protected void markConversionFailure(SQLBlob blob) {
-        try {
-            oma.updateStatement(SQLBlob.class)
-               .set(SQLBlob.INCONVERTIBLE, true)
-               .where(SQLBlob.ID, blob.getId())
-               .executeUpdate();
-        } catch (SQLException e) {
-            Exceptions.handle()
-                      .to(StorageUtils.LOG)
-                      .error(e)
-                      .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occurred, when marking the blob '%s' as inconvertible: %s (%s)",
-                              blob.getIdAsString())
                       .handle();
         }
     }
