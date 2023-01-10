@@ -629,7 +629,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         UserInfo result = findUserByName(ctx, user);
         if (result == null) {
-            auditLog.negative("AuditLog.lockedOrNonexitentUserTriedLogin").forUser(null, user).log();
+            auditLog.negative("AuditLog.lockedOrNonexistentUserTriedLogin").forUser(null, user).log();
             return null;
         }
 
