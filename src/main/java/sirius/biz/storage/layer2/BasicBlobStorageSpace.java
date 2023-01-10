@@ -1453,21 +1453,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private V tryFetchVariant(B blob, String variantName) {
         V variant = findAnyVariant(blob, variantName);
-        if (variant != null) {
-            if (Strings.isFilled(variant.getPhysicalObjectKey())) {
-                // We hit the nail on the head - we found a variant which has successfully been converted already.
-                // -> use it
-                return variant;
-            }
-            if (!variant.isQueuedForConversion() && retryLimitReached(variant)) {
-                // The conversion has failed - signal that the to client. We use a handled exception here, as the problem
-                // has already been logged...
-                throw Exceptions.createHandled()
-                                .withSystemErrorMessage("Failed to create the requested variant from the given image.")
-                                .handle();
-            }
+        if (variant != null
+            && !variant.isQueuedForConversion()
+            && retryLimitReached(variant)
+            && Strings.isEmpty(variant.getPhysicalObjectKey())) {
+            // The conversion has failed - signal that the to client. We use a handled exception here, as the problem
+            // has already been logged...
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("Failed to create the requested variant from the given variant.")
+                            .handle();
         }
-        return null;
+        return variant;
     }
 
     /**
@@ -1487,6 +1483,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
         V variant = tryFetchVariant(blob, variantName);
+
+        if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
+            // We hit the nail on the head - we found a variant which has successfully been converted already.
+            // -> use it
+            return variant;
+        }
 
         if (nonblocking) {
             // We didn't find anything and the caller doesn't permit to block and wait for either our node or
@@ -1733,33 +1735,35 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         V variant = tryFetchVariant(blob, variantName);
 
-        if (variant == null) {
-            if (conversionEnabled) {
-                variant = createVariant(blob, variantName);
+        if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
+            return new Future().success();
+        }
 
-                if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
-                    // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
-                    // wait a short and random amount of time and retry...
-                    Wait.randomMillis(0, 150);
-                    // the variant does already exist
-                    return tryCreateVariant(blob, variantName, retries - 1);
-                } else {
-                    return invokeConversionPipelineAsync(blob, variant);
-                }
+        if (conversionEnabled) {
+            if (variant == null) {
+                variant = createVariant(blob, variantName);
+            }
+
+            if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
+                // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
+                // wait a short and random amount of time and retry...
+                Wait.randomMillis(0, 150);
+                // the variant does already exist
+                return tryCreateVariant(blob, variantName, retries - 1);
             } else {
-                // No variant is present and no conversion is possible -> give up
-                Future future = new Future();
-                future.fail(Exceptions.handle()
-                                      .to(StorageUtils.LOG)
-                                      .withSystemErrorMessage(
-                                              "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
-                                              blob.getBlobKey(),
-                                              variantName)
-                                      .handle());
-                return future;
+                return invokeConversionPipelineAsync(blob, variant);
             }
         } else {
-            return new Future().success();
+            // No variant is present and no conversion is possible -> give up
+            Future future = new Future();
+            future.fail(Exceptions.handle()
+                                  .to(StorageUtils.LOG)
+                                  .withSystemErrorMessage(
+                                          "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
+                                          blob.getBlobKey(),
+                                          variantName)
+                                  .handle());
+            return future;
         }
     }
 
