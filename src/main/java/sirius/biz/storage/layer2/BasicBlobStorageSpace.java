@@ -1457,7 +1457,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             && !variant.isQueuedForConversion()
             && retryLimitReached(variant)
             && Strings.isEmpty(variant.getPhysicalObjectKey())) {
-            // The conversion has failed - signal that the to client. We use a handled exception here, as the problem
+            // The conversion has failed - signal that to the client. We use a handled exception here, as the problem
             // has already been logged...
             throw Exceptions.createHandled()
                             .withSystemErrorMessage("Failed to create the requested variant from the given variant.")
