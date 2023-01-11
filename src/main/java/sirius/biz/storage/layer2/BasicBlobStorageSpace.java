@@ -34,6 +34,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
@@ -222,8 +223,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Part
     protected static Tasks tasks;
 
-    @Part
-    protected static FailedVariantConversionListener failedVariantConversionListener;
+    @PriorityParts(FailedVariantConversionHandler.class)
+    private List<FailedVariantConversionHandler> failedVariantHandlers;
 
     @Part
     @Nullable
@@ -1079,7 +1080,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     private void handleFailedConversion(String blobKey, String variant, Exception e) {
-        failedVariantConversionListener.propagateError(e, blobKey, variant);
+        failedVariantHandlers.forEach(handler -> handler.handle(e, blobKey, variant));
         Exceptions.handle()
                   .error(e)
                   .to(StorageUtils.LOG)
