@@ -1628,8 +1628,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private Future invokeConversionPipelineAsync(B blob, V variant) {
         ConversionProcess conversionProcess = new ConversionProcess(blob, variant.getVariantName());
-        Future conversion = conversionEngine.performConversion(conversionProcess);
-        conversion.onSuccess(ignored -> {
+        Future future = conversionEngine.performConversion(conversionProcess);
+        future.onSuccess(ignored -> {
             try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
                 String physicalKey = keyGenerator.generateId();
                 conversionProcess.upload(() -> {
@@ -1655,7 +1655,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                     blob.getFilename())
                             .handle();
         });
-        return conversion;
+        return future;
     }
 
     /**
