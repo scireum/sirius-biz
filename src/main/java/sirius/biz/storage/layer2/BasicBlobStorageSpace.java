@@ -1748,7 +1748,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
                 // wait a short and random amount of time and retry...
                 Wait.randomMillis(0, 150);
-                // the variant does already exist
+                // A collision was detected and the given variant was removed, therefore we need to create the variant again.
                 return tryCreateVariant(blob, variantName, retries - 1);
             } else {
                 return invokeConversionPipelineAsync(blob, variant);
