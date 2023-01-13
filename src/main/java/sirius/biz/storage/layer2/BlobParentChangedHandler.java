@@ -8,6 +8,8 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.kernel.di.std.AutoRegister;
+
 /**
  * Defines handlers to process {@link Blob blobs} which parent have been moved between {@link Directory directories}.
  * <p>
@@ -15,5 +17,6 @@ package sirius.biz.storage.layer2;
  *
  * @see ProcessBlobChangesLoop
  */
+@AutoRegister
 public interface BlobParentChangedHandler extends BlobChangedHandler {
 }

@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Priorized;
 
 import javax.annotation.Nonnull;
@@ -19,6 +20,7 @@ import javax.annotation.Nonnull;
  *
  * @see ProcessBlobChangesLoop
  */
+@AutoRegister
 public interface BlobChangedHandler extends Priorized {
 
     /**
