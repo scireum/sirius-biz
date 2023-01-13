@@ -20,6 +20,7 @@ import javax.annotation.Nonnull;
  * @see ProcessBlobChangesLoop
  */
 public interface BlobChangedHandler extends Priorized {
+
     /**
      * Executed when a blob's properties changed.
      *
