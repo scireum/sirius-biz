@@ -35,6 +35,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
@@ -222,6 +223,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Part
     protected static Tasks tasks;
+
+    @PriorityParts(FailedVariantConversionHandler.class)
+    private List<FailedVariantConversionHandler> failedVariantHandlers;
 
     @Part
     @Nullable
@@ -1077,6 +1081,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     private void handleFailedConversion(String blobKey, String variant, Exception e) {
+        failedVariantHandlers.forEach(handler -> handler.handle(e, blobKey, variant));
         Exceptions.handle()
                   .error(e)
                   .to(StorageUtils.LOG)
@@ -1322,32 +1327,36 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws IllegalArgumentException if an unknown variant is requested
      */
     private Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
-        String cacheKey = buildCacheLookupKey(blobKey, variantName);
-        String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
-        if (Strings.isFilled(cachedPhysicalKey)) {
-            if (CACHED_FAILURE_MARKER.equals(cachedPhysicalKey)) {
-                // We detected a cached failure (see below). Throw an appropriate but exception to the user. No
-                // need to log anything as the incident has already been reported...
-                throw Exceptions.createHandled()
-                                .withSystemErrorMessage("Failed to create the requested variant from the given image.")
-                                .handle();
-            }
-            return Tuple.create(cachedPhysicalKey, true);
+        String variantCacheKey = buildCacheLookupKey(blobKey, variantName);
+        String cachedPhysicalVariantKey = blobKeyToPhysicalCache.get(variantCacheKey);
+        if (Strings.isFilled(cachedPhysicalVariantKey)) {
+            assertNoFailureCached(cachedPhysicalVariantKey);
+            return Tuple.create(cachedPhysicalVariantKey, true);
         }
 
         try {
             String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
             if (physicalKey != null) {
-                blobKeyToPhysicalCache.put(cacheKey, physicalKey);
+                blobKeyToPhysicalCache.put(variantCacheKey, physicalKey);
                 return Tuple.create(physicalKey, false);
             } else {
                 return null;
             }
-        } catch (Exception ex) {
+        } catch (Exception exception) {
             // The conversion ultimately failed, we can therefore cache the result, as no more conversion attempts
             // will happen...
-            blobKeyToPhysicalCache.put(cacheKey, CACHED_FAILURE_MARKER);
-            throw ex;
+            blobKeyToPhysicalCache.put(variantCacheKey, CACHED_FAILURE_MARKER);
+            throw exception;
+        }
+    }
+
+    private void assertNoFailureCached(String cachedPhysicalKey) {
+        if (CACHED_FAILURE_MARKER.equals(cachedPhysicalKey)) {
+            // We detected a cached failure. Throw an appropriate but exception to the user. No
+            // need to log anything as the incident has already been reported...
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("Failed to create the requested variant from the given image.")
+                            .handle();
         }
     }
 
@@ -1479,7 +1488,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     @Nullable
     @SuppressWarnings("java:S3776")
-    @Explain("This is a complex beast, but we rather keep the whole logik in one place.")
+    @Explain("This is a complex beast, but we rather keep the whole logic in one place.")
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
         V variant = tryFetchVariant(blob, variantName);
@@ -1504,7 +1513,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                     // We successfully created a variant and forked a conversion... Await its result...
                     return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
                 } else {
-                    // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
+                    // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
                     // wait a short and random amount of time and retry...
                     return retryFindVariant(blob, variantName, retries);
                 }
@@ -1532,7 +1541,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 invokeConversionPipelineAsync(blob, variant);
                 return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
             } else {
-                // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
+                // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
                 // wait a short and random amount of time and retry...
                 return retryFindVariant(blob, variantName, retries);
             }
@@ -1557,7 +1566,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws Exception if case of any error when performing the next attempt
      */
     private V retryFindVariant(B blob, String variantName, int retries) throws Exception {
-        // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
+        // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
         // wait a short and random amount of time and retry...
         Wait.randomMillis(0, 150);
         return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
@@ -1632,9 +1641,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         future.onSuccess(ignored -> {
             try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
                 String physicalKey = keyGenerator.generateId();
-                conversionProcess.upload(() -> {
-                    getPhysicalSpace().upload(physicalKey, automaticHandle.getFile());
-                });
+                conversionProcess.upload(() -> getPhysicalSpace().upload(physicalKey, automaticHandle.getFile()));
 
                 markConversionSuccess(variant, physicalKey, conversionProcess);
                 eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
@@ -1690,7 +1697,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Determines if the conversion of a variant has finally failed.
      *
      * @param variant the variant to check
-     * @return <tt>true</tt> if the conversion has finally failed and not further conversions should be attempted,
+     * @return <tt>true</tt> if the conversion has finally failed and no further conversions should be attempted,
      * <tt>false</tt> otherwise
      */
     private boolean retryLimitReached(V variant) {
@@ -1814,22 +1821,23 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         tasks.executor(EXECUTOR_STORAGE_CONVERSION_DELIVERY)
              .dropOnOverload(() -> response.notCached().error(HttpResponseStatus.TOO_MANY_REQUESTS))
              .fork(() -> {
-                 if (conversionEnabled) {
-                     try {
-                         Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
-                         if (physicalKey == null) {
-                             response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
-                         } else {
-                             response.addHeader(HEADER_VARIANT_SOURCE,
-                                                Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
-                             getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
-                         }
-                     } catch (Exception e) {
-                         handleFailedConversion(blobKey, variant, e);
-                         response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                     }
-                 } else {
+                 if (!conversionEnabled) {
                      delegateConversion(blobKey, variant, response, MAX_CONVERSION_DELEGATE_ATTEMPTS);
+                     return;
+                 }
+
+                 try {
+                     Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                     if (physicalKey == null) {
+                         response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
+                     } else {
+                         response.addHeader(HEADER_VARIANT_SOURCE,
+                                            Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
+                         getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
+                     }
+                 } catch (Exception e) {
+                     handleFailedConversion(blobKey, variant, e);
+                     response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                  }
              });
     }
