@@ -214,6 +214,16 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     }
 
     /**
+     * A convenience method for {@link #hideWhen(Predicate)} that hides this parameter, when the other {@link BooleanParameter} is false or empty.
+     *
+     * @param parameter the other boolean parameter
+     * @return the parameter itself for fluent method calls
+     */
+    public P hideWhenFalseOrEmpty(Parameter<Boolean> parameter) {
+        return hideWhen(ctx -> !parameter.get(ctx).orElse(false));
+    }
+
+    /**
      * A convenience method for {@link #clearWhen(Predicate)} that clears the parameter when it is hidden.
      *
      * @return the parameter itself for fluent method calls
