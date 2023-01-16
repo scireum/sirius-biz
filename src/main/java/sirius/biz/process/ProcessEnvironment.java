@@ -8,6 +8,7 @@
 
 package sirius.biz.process;
 
+import sirius.biz.jobs.batch.file.FileImportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ChartOutput;
@@ -207,7 +208,9 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void log(ProcessLog logEntry) {
-        if (Strings.isFilled(logEntry.getMessageType()) && logEntry.getMaxMessagesToLog() > 0) {
+        if (getParameter(FileImportJobFactory.LIMIT_LOG_MESSAGES_PARAMETER).orElse(true)
+            && Strings.isFilled(logEntry.getMessageType())
+            && logEntry.getMaxMessagesToLog() > 0) {
             AtomicInteger messagesSoFar =
                     messageCountsPerType.computeIfAbsent(logEntry.getMessageType(), this::countMessagesForType);
             limitsPerType.putIfAbsent(logEntry.getMessageType(), logEntry.getMaxMessagesToLog());
