@@ -225,7 +225,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected static Tasks tasks;
 
     @PriorityParts(FailedVariantConversionHandler.class)
-    private List<FailedVariantConversionHandler> failedVariantHandlers;
+    private static List<FailedVariantConversionHandler> failedVariantHandlers;
 
     @Part
     @Nullable
