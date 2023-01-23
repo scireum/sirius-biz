@@ -43,7 +43,7 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
                 parameterCollector.accept(FileImportJob.AUX_FILE_PARENT_DIRECTORY_PARAMETER);
             }
         }
-        if (UserContext.getCurrentUser().hasPermission(PERMISSION_BYPASS_PROCESS_LOG_LIMITS)) {
+        if (UserContext.getCurrentUser().hasPermission(FEATURE_BYPASS_PROCESS_LOG_LIMITS)) {
             parameterCollector.accept(LIMIT_LOG_MESSAGES_PARAMETER);
         }
     }
