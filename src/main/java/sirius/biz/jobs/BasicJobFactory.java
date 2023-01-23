@@ -10,6 +10,7 @@ package sirius.biz.jobs;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import sirius.biz.jobs.batch.file.FileImportJobFactory;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.BooleanParameter;
@@ -64,6 +65,13 @@ public abstract class BasicJobFactory implements JobFactory {
      * rendered nicely.
      */
     private static final String PARAM_UPDATE_ONLY = "updateOnly";
+
+    /**
+     * Defines the permission needed for bypassing log limitation.
+     *
+     * @see #LIMIT_LOG_MESSAGES_PARAMETER
+     */
+    public static final String PERMISSION_BYPASS_PROCESS_LOG_LIMITS = "permission-bypass-process-log-limits";
 
     /**
      * Declares a boolean parameter that determines if log messages with a set limit should actually be limited.

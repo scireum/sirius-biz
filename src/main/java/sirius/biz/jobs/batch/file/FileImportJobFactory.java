@@ -13,6 +13,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.util.ArchiveExtractor;
 import sirius.kernel.di.std.Part;
+import sirius.web.security.UserContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,9 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
                 parameterCollector.accept(FileImportJob.AUX_FILE_PARENT_DIRECTORY_PARAMETER);
             }
         }
-        parameterCollector.accept(LIMIT_LOG_MESSAGES_PARAMETER);
+        if (UserContext.getCurrentUser().hasPermission(PERMISSION_BYPASS_PROCESS_LOG_LIMITS)) {
+            parameterCollector.accept(LIMIT_LOG_MESSAGES_PARAMETER);
+        }
     }
 
     /**
