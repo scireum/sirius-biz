@@ -230,7 +230,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
         updateFilenameFields();
 
-        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION, PHYSICAL_OBJECT_KEY)) {
             createdOrRenamed = true;
         }
 
