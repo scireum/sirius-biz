@@ -2,7 +2,7 @@ version: "2"
 
 services:
   redis:
-    image: redis:6.2.6-alpine
+    image: redis:6.2.10-alpine
     ports:
       - "6379"
     hostname: redis
