@@ -14,6 +14,9 @@ import sirius.kernel.di.std.AutoRegister;
  * Defines handlers to process {@link Blob blobs} which content (the underlying physical object) has been updated.
  * <p>
  * Note: Handlers need to be {@link sirius.kernel.di.std.Register registered}.
+ * <p>
+ * Note that this handler will be invoked for fresh created blobs which {@link BlobCreatedHandler} has been already
+ * invoked but no physical object was available at the time.
  *
  * @see ProcessBlobChangesLoop
  */
