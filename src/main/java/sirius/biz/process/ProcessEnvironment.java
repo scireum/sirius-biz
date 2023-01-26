@@ -77,6 +77,8 @@ class ProcessEnvironment implements ProcessContext {
     private final Map<String, Integer> limitsPerType = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> messageCountsPerType = new ConcurrentHashMap<>();
 
+    private Boolean limitLogMessages = null;
+
     @Part
     @Nullable
     private static Processes processes;
@@ -208,9 +210,9 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void log(ProcessLog logEntry) {
-        if (getParameter(FileImportJobFactory.LIMIT_LOG_MESSAGES_PARAMETER).orElse(true)
-            && Strings.isFilled(logEntry.getMessageType())
-            && logEntry.getMaxMessagesToLog() > 0) {
+        if (Strings.isFilled(logEntry.getMessageType())
+            && logEntry.getMaxMessagesToLog() > 0
+            && shouldLimitLogMessages()) {
             AtomicInteger messagesSoFar =
                     messageCountsPerType.computeIfAbsent(logEntry.getMessageType(), this::countMessagesForType);
             limitsPerType.putIfAbsent(logEntry.getMessageType(), logEntry.getMaxMessagesToLog());
@@ -220,6 +222,13 @@ class ProcessEnvironment implements ProcessContext {
         }
 
         processes.log(processId, logEntry);
+    }
+
+    private boolean shouldLimitLogMessages() {
+        if (limitLogMessages == null) {
+            limitLogMessages = getParameter(FileImportJobFactory.LIMIT_LOG_MESSAGES_PARAMETER).orElse(true);
+        }
+        return limitLogMessages;
     }
 
     private AtomicInteger countMessagesForType(String messageType) {
