@@ -58,18 +58,6 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     }
 
     @Override
-    protected void processCreatedOrRenamedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.CREATED_OR_RENAMED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeCreatedOrRenamedHandlers(blob);
-            mongo.update()
-                 .set(MongoBlob.CREATED_OR_RENAMED, false)
-                 .where(MongoBlob.ID, blob.getId())
-                 .executeForOne(MongoBlob.class);
-            counter.run();
-        });
-    }
-
-    @Override
     protected void processCreatedBlobs(Runnable counter) {
         mango.select(MongoBlob.class).eq(MongoBlob.CREATED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             invokeCreatedHandlers(blob);
