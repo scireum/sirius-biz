@@ -92,6 +92,26 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     }
 
     @Override
+    protected void processRenamedBlobs(Runnable counter) {
+        oma.select(SQLBlob.class).eq(SQLBlob.RENAMED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
+            invokeRenamedHandlers(blob);
+            try {
+                oma.updateStatement(SQLBlob.class)
+                   .set(SQLBlob.RENAMED, false)
+                   .where(SQLBlob.ID, blob.getId())
+                   .executeUpdate();
+            } catch (SQLException e) {
+                buildStorageException(e).withSystemErrorMessage(
+                        "Layer 2: Failed to reset blob %s (%s) in %s as not renamed: (%s)",
+                        blob.getBlobKey(),
+                        blob.getFilename(),
+                        blob.getSpaceName()).handle();
+            }
+            counter.run();
+        });
+    }
+
+    @Override
     protected void propagateDelete(Directory dir) {
         Long directoryId = ((SQLDirectory) dir).getId();
         try {
