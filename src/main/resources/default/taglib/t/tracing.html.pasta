@@ -9,7 +9,7 @@
     </btn>
 
     <div class="row tracing collapse">
-        <t:datacard class="mt-4" title="@i18n('TraceData.infos')">
+        <t:datacard class="mt-2" title="@i18n('TraceData.infos')">
             <i:render name="body"/>
             <div class="row">
                 <div class="col-lg">
@@ -42,5 +42,3 @@
 
     </div>
 </i:if>
-
-
