@@ -19,6 +19,9 @@ import java.util.function.BiConsumer;
 
 /**
  * Describes a provider which yields or fills a {@link Dataset dataset} for a given {@link Timeseries timeseries}.
+ *
+ * @deprecated Use the {@link sirius.biz.analytics.charts.explorer.DataExplorerController Data-Explorer} for advanced
+ * charts and statistics.
  */
 @Deprecated
 public interface TimeseriesDataProvider extends Named {
