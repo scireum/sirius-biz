@@ -66,6 +66,13 @@ public abstract class BasicJobFactory implements JobFactory {
     private static final String PARAM_UPDATE_ONLY = "updateOnly";
 
     /**
+     * Defines the permission needed for bypassing log limitation.
+     *
+     * @see #LIMIT_LOG_MESSAGES_PARAMETER
+     */
+    public static final String FEATURE_BYPASS_PROCESS_LOG_LIMITS = "feature-bypass-process-log-limits";
+
+    /**
      * Declares a boolean parameter that determines if log messages with a set limit should actually be limited.
      *
      * @see sirius.biz.process.logs.ProcessLog#withLimitedMessageType(String, int)
