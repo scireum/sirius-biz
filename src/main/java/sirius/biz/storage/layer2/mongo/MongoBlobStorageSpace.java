@@ -462,6 +462,10 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                        .set(MongoBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
+            if (!blob.isNew()) {
+                updater.set(MongoBlob.CONTENT_UPDATED, true);
+            }
+
             long numUpdated = updater.where(MongoBlob.ID, blob.getId())
                                      .where(MongoBlob.PHYSICAL_OBJECT_KEY, blob.getPhysicalObjectKey())
                                      .executeForOne(MongoBlob.class)

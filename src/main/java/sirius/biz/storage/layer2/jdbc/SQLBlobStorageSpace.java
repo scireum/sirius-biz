@@ -540,6 +540,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
+            if (!blob.isNew()) {
+                updateStatement.set(SQLBlob.CONTENT_UPDATED, true);
+            }
+
             int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())
                                             .where(SQLBlob.PHYSICAL_OBJECT_KEY, blob.getPhysicalObjectKey())
                                             .executeUpdate();
