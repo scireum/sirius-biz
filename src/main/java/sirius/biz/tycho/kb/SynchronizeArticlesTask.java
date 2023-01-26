@@ -152,14 +152,14 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     private KnowledgeBaseEntry findOrCreateEntry(String templatePath, String articleId, String language) {
         KnowledgeBaseEntry entry = elastic.select(KnowledgeBaseEntry.class)
                                           .eq(KnowledgeBaseEntry.ARTICLE_ID, articleId)
-                                          .eq(KnowledgeBaseEntry.LANG, language)
+                                          .eq(KnowledgeBaseEntry.LANGUAGE, language)
                                           .queryFirst();
         if (entry == null) {
             entry = new KnowledgeBaseEntry();
             entry.setArticleId(articleId);
             entry.setCreated(LocalDate.now());
             entry.setCreatedInVersion(Product.getProduct().getVersion());
-            entry.setLang(language);
+            entry.setLanguage(language);
             entry.setTemplatePath(templatePath);
         } else if (!Strings.areEqual(templatePath, entry.getTemplatePath())) {
             throw Exceptions.handle()
@@ -197,7 +197,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                 KnowledgeBase.LOG.INFO("Deleting outdated entry %s (%s) in language (%s)",
                                        entry.getArticleId(),
                                        entry.getTitle(),
-                                       entry.getLang());
+                                       entry.getLanguage());
 
                 elastic.delete(entry);
             }
@@ -212,13 +212,13 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                 if (entry.isChapter()) {
                     boolean hasChildren = elastic.select(KnowledgeBaseEntry.class)
                                                  .eq(KnowledgeBaseEntry.PARENT_ID, entry.getArticleId())
-                                                 .eq(KnowledgeBaseEntry.LANG, entry.getLang())
+                                                 .eq(KnowledgeBaseEntry.LANGUAGE, entry.getLanguage())
                                                  .exists();
                     if (!hasChildren) {
                         KnowledgeBase.LOG.INFO("Deleting empty chapter %s (%s) in language %s",
                                                entry.getArticleId(),
                                                entry.getTitle(),
-                                               entry.getLang());
+                                               entry.getLanguage());
                         elastic.delete(entry);
                         performCheck.set(true);
                     }

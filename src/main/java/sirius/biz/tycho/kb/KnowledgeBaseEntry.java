@@ -80,8 +80,8 @@ public class KnowledgeBaseEntry extends SearchableEntity {
     /**
      * Contains the two-letter language code of this article.
      */
-    public static final Mapping LANG = Mapping.named("lang");
-    private String lang;
+    public static final Mapping LANGUAGE = Mapping.named("language");
+    private String language;
 
     /**
      * Contains the title of this article.
@@ -143,12 +143,22 @@ public class KnowledgeBaseEntry extends SearchableEntity {
         this.chapter = chapter;
     }
 
+    @Deprecated
     public String getLang() {
-        return lang;
+        return language;
     }
 
+    @Deprecated
     public void setLang(String lang) {
-        this.lang = lang;
+        this.language = lang;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public String getTitle() {

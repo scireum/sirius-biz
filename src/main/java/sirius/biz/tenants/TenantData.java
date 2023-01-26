@@ -263,11 +263,11 @@ public class TenantData extends Composite implements Journaled {
     /**
      * The language of the {@link Tenant}
      */
-    public static final Mapping LANG = Mapping.named("lang");
+    public static final Mapping LANGUAGE = Mapping.named("language");
     @NullAllowed
     @Autoloaded
     @Length(2)
-    private final LookupValue lang = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
+    private final LookupValue language = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
 
     @Part
     @Nullable
@@ -558,8 +558,13 @@ public class TenantData extends Composite implements Journaled {
         return journal;
     }
 
+    @Deprecated
     public LookupValue getLang() {
-        return lang;
+        return language;
+    }
+
+    public LookupValue getLanguage() {
+        return language;
     }
 
     public PackageData getPackageData() {

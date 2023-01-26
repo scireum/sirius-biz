@@ -15,7 +15,7 @@
             <w:singleSelect name="tenantData_lang" labelKey="Model.lang" required="true">
                 <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
                     <option value="@language.getFirst()"
-                            @selected="language.getFirst() == tenant.getTenantData().getLang().getValue()">
+                            @selected="language.getFirst() == tenant.getTenantData().getLanguage().getValue()">
                         @language.getSecond()
                     </option>
                 </i:for>
