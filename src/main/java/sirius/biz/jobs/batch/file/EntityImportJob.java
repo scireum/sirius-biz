@@ -144,7 +144,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * Overwrite this method do add additional parameters to the <tt>context</tt>.
      *
      * @param context the context containing all relevant data
-     * @return the entity which was either found in he database or create using the given data
+     * @return the entity which was either found in the database or create using the given data
      */
     protected E findAndLoad(Context context) {
         return importer.findAndLoad(type, context);
