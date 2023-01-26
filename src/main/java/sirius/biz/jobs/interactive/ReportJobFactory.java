@@ -37,7 +37,9 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
         List<Tuple<String, Cell>> additionalMetrics = new ArrayList<>();
 
         try {
-            computeReport(context, report, (name, value) -> additionalMetrics.add(Tuple.create(name, value)));
+            computeReport(context,
+                          report,
+                          (name, value) -> additionalMetrics.add(Tuple.create(NLS.smartGet(name), value)));
         } catch (Exception e) {
             UserContext.handle(e);
         }
