@@ -27,7 +27,11 @@ import java.util.stream.Collectors;
 
 /**
  * Represents a set of {@link Interval intervals} to cover a period of time.
+ *
+ * @deprecated Use the {@link sirius.biz.analytics.charts.explorer.DataExplorerController Data-Explorer} for advanced
+ * charts and statistics.
  */
+@Deprecated
 public class Timeseries {
 
     private final LocalDateTime requestedStart;

@@ -13,7 +13,11 @@ import java.time.LocalDateTime;
 
 /**
  * Represents an interval (a start and end date as {@link LocalDateTime}).
+ *
+ * @deprecated Use the {@link sirius.biz.analytics.charts.explorer.DataExplorerController Data-Explorer} for advanced
+ * charts and statistics.
  */
+@Deprecated
 @Immutable
 public class Interval {
 

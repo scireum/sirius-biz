@@ -12,7 +12,11 @@ import sirius.kernel.nls.NLS;
 
 /**
  * Defines the units or resolutions understood by {@link Timeseries}.
+ *
+ * @deprecated Use the {@link sirius.biz.analytics.charts.explorer.DataExplorerController Data-Explorer} for advanced
+ * charts and statistics.
  */
+@Deprecated
 public enum Unit {
     HOUR(60 * 60), DAY(HOUR.getEstimatedSeconds() * 24), WEEK(DAY.getEstimatedSeconds() * 7),
     MONTH(DAY.getEstimatedSeconds() * 30), YEAR(DAY.getEstimatedSeconds() * 365);

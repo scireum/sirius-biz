@@ -11,6 +11,7 @@ package sirius.biz.tycho.dashboards;
 /**
  * Represents a line chart used to represent time-series data.
  */
+@Deprecated
 public class LineChart extends BaseTimeseriesChart {
 
     @Override

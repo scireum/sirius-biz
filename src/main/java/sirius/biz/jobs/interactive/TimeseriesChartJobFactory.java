@@ -27,7 +27,11 @@ import java.util.function.Consumer;
 
 /**
  * Renders a line chart representing a user defined {@link TimeseriesDataProvider timeseries}.
+ *
+ * @deprecated Use the {@link sirius.biz.analytics.charts.explorer.DataExplorerController Data-Explorer} for advanced
+ * charts and statistics.
  */
+@Deprecated
 public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory implements TimeseriesDataProvider {
 
     /**

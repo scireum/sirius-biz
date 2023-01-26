@@ -20,6 +20,7 @@ import java.util.function.BiConsumer;
 /**
  * Describes a provider which yields or fills a {@link Dataset dataset} for a given {@link Timeseries timeseries}.
  */
+@Deprecated
 public interface TimeseriesDataProvider extends Named {
 
     /**
