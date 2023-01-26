@@ -71,26 +71,34 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processRenamedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.RENAMED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeRenamedHandlers(blob);
-            mongo.update()
-                 .set(MongoBlob.RENAMED, false)
-                 .where(MongoBlob.ID, blob.getId())
-                 .executeForOne(MongoBlob.class);
-            counter.run();
-        });
+        mango.select(MongoBlob.class)
+             .eq(MongoBlob.RENAMED, true)
+             .eq(MongoBlob.CREATED, false)
+             .limit(CURSOR_LIMIT)
+             .iterateAll(blob -> {
+                 invokeRenamedHandlers(blob);
+                 mongo.update()
+                      .set(MongoBlob.RENAMED, false)
+                      .where(MongoBlob.ID, blob.getId())
+                      .executeForOne(MongoBlob.class);
+                 counter.run();
+             });
     }
 
     @Override
     protected void processContentUpdatedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.CONTENT_UPDATED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeContentUpdatedHandlers(blob);
-            mongo.update()
-                 .set(MongoBlob.CONTENT_UPDATED, false)
-                 .where(MongoBlob.ID, blob.getId())
-                 .executeForOne(MongoBlob.class);
-            counter.run();
-        });
+        mango.select(MongoBlob.class)
+             .eq(MongoBlob.CONTENT_UPDATED, true)
+             .eq(MongoBlob.CREATED, false)
+             .limit(CURSOR_LIMIT)
+             .iterateAll(blob -> {
+                 invokeContentUpdatedHandlers(blob);
+                 mongo.update()
+                      .set(MongoBlob.CONTENT_UPDATED, false)
+                      .where(MongoBlob.ID, blob.getId())
+                      .executeForOne(MongoBlob.class);
+                 counter.run();
+             });
     }
 
     @Override
