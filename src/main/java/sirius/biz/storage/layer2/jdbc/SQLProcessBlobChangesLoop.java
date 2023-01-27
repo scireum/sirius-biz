@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2.jdbc;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
 import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.UpdateStatement;
 import sirius.kernel.di.std.Part;
@@ -30,7 +31,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteBlobs(Runnable counter) {
-        oma.select(SQLBlob.class).eq(SQLBlob.DELETED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
+        buildBaseQuery(SQLBlob.class, query -> query.eq(SQLBlob.DELETED, true)).iterateAll(blob -> {
             try {
                 deletePhysicalObject(blob);
                 oma.delete(blob);
@@ -43,7 +44,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteDirectories(Runnable counter) {
-        oma.select(SQLDirectory.class).eq(SQLDirectory.DELETED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
+        buildBaseQuery(SQLDirectory.class, query -> query.eq(SQLDirectory.DELETED, true)).iterateAll(dir -> {
             try {
                 propagateDelete(dir);
                 oma.delete(dir);
@@ -106,7 +107,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processRenamedDirectories(Runnable counter) {
-        oma.select(SQLDirectory.class).eq(SQLDirectory.RENAMED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
+        buildBaseQuery(SQLDirectory.class, query -> query.eq(SQLDirectory.RENAMED, true)).iterateAll(dir -> {
             try {
                 propagateRename(dir);
                 oma.updateStatement(SQLDirectory.class)
@@ -155,9 +156,8 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                                       Consumer<UpdateStatement> updaterExtender,
                                       String updateExceptionType,
                                       Runnable counter) {
-        SmartQuery<SQLBlob> query = oma.select(SQLBlob.class);
-        queryExtender.accept(query);
-        query.limit(CURSOR_LIMIT).iterateAll(blob -> {
+        SmartQuery<SQLBlob> query = buildBaseQuery(SQLBlob.class, queryExtender);
+        query.iterateAll(blob -> {
             blobConsumer.accept(blob);
 
             try {
@@ -175,5 +175,11 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                         updateExceptionType).handle();
             }
         });
+    }
+
+    private <E extends SQLEntity> SmartQuery<E> buildBaseQuery(Class<E> clazz, Consumer<SmartQuery<E>> filterExtender) {
+        SmartQuery<E> query = oma.select(clazz);
+        filterExtender.accept(query);
+        return query.limit(CURSOR_LIMIT);
     }
 }

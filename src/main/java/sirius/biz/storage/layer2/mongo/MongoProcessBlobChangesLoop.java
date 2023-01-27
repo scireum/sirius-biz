@@ -12,6 +12,7 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
+import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.Updater;
 import sirius.kernel.di.std.Part;
@@ -36,7 +37,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.DELETED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
+        buildBaseQuery(MongoBlob.class, query -> query.eq(MongoBlob.DELETED, true)).iterateAll(blob -> {
             try {
                 deletePhysicalObject(blob);
                 mango.delete(blob);
@@ -49,7 +50,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteDirectories(Runnable counter) {
-        mango.select(MongoDirectory.class).eq(MongoDirectory.DELETED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
+        buildBaseQuery(MongoDirectory.class, query -> query.eq(MongoDirectory.DELETED, true)).iterateAll(dir -> {
             try {
                 propagateDelete(dir);
                 mango.delete(dir);
@@ -99,7 +100,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processRenamedDirectories(Runnable counter) {
-        mango.select(MongoDirectory.class).eq(MongoDirectory.RENAMED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
+        buildBaseQuery(MongoDirectory.class, query -> query.eq(MongoDirectory.RENAMED, true)).iterateAll(dir -> {
             try {
                 propagateRename(dir);
                 mongo.update()
@@ -138,9 +139,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                                       Consumer<MongoBlob> blobConsumer,
                                       Consumer<Updater> updaterExtender,
                                       Runnable counter) {
-        MongoQuery<MongoBlob> query = mango.select(MongoBlob.class);
-        filterExtender.accept(query);
-        query.limit(CURSOR_LIMIT).iterateAll(blob -> {
+        MongoQuery<MongoBlob> query = buildBaseQuery(MongoBlob.class, filterExtender);
+        query.iterateAll(blob -> {
             blobConsumer.accept(blob);
 
             Updater updater = mongo.update();
@@ -149,5 +149,12 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
             counter.run();
         });
+    }
+
+    private <E extends MongoEntity> MongoQuery<E> buildBaseQuery(Class<E> clazz,
+                                                                 Consumer<MongoQuery<E>> filterExtender) {
+        MongoQuery<E> query = mango.select(clazz);
+        filterExtender.accept(query);
+        return query.limit(CURSOR_LIMIT);
     }
 }
