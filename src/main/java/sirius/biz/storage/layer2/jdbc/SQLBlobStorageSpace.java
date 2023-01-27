@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2.jdbc;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
+import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
@@ -540,8 +541,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
-            if (!blob.isNew()) {
-                updateStatement.set(SQLBlob.CONTENT_UPDATED, true);
+            String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
+            if (Strings.isFilled(previousPhysicalObjectKey)) {
+                updateStatement.set(MongoBlob.CONTENT_UPDATED, true);
+            } else {
+                updateStatement.set(MongoBlob.CREATED, true);
             }
 
             int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())
@@ -549,7 +553,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                             .executeUpdate();
             if (numUpdated == 1) {
                 // Also update in-memory to avoid an additional database fetch...
-                String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
                 blob.setPhysicalObjectKey(nextPhysicalId);
                 if (Strings.isFilled(filename)) {
                     blob.setFilename(filename);

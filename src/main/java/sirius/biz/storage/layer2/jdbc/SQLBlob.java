@@ -244,25 +244,30 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
         updateFilenameFields();
 
-        if (isNew()) {
-            created = true;
-        } else {
-            if (isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
-                renamed = true;
-            }
-            if (isChanged(PHYSICAL_OBJECT_KEY)) {
-                contentUpdated = true;
-            }
-            if (isChanged(PARENT)) {
-                parentChanged = true;
-            }
-        }
-
         if (deleted) {
+            // The blob has been deleted. Reset all other flags since its now pointless to trigger any BlobChangedHandler.
             created = false;
             renamed = false;
             contentUpdated = false;
             parentChanged = false;
+            return;
+        }
+
+        if (isNew() || isCreated()) {
+            // New Blob entities have no physical object and won't be used by any loops until a blob is uploaded.
+            // Blobs still marked as created have not yet been processed by the BlobCreatedHandler, therefore
+            // it is pointless to set any other flag.
+            return;
+        }
+
+        if (isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+            renamed = true;
+        }
+        if (isChanged(PHYSICAL_OBJECT_KEY)) {
+            contentUpdated = true;
+        }
+        if (isChanged(PARENT)) {
+            parentChanged = true;
         }
     }
 
