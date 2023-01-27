@@ -9,15 +9,15 @@
         <i:for type="sirius.biz.tycho.metrics.MetricDescription"
                var="metric"
                items="metrics">
-            <div class="mb-2 col-md-6 col-lg-4 col-xl-3">
+            <div class="mb-2 col-12 col-md-6 col-lg-4 col-xl-3">
                 <div class="lazy-metric-js card h-100"
                      data-type="KeyMetric"
                      data-provider="@metric.getProviderName()"
                      data-metric="@metric.getMetricName()"
                      data-target="@metric.getTargetName()">
                     <div class="card-body">
-                        <div class="text-uppercase text-muted text-center">@metric.getLabel()</div>
-                        <div class="mt-2 display-6 text-center metric-value-js"></div>
+                        <div class="text-uppercase text-small text-muted text-center">@metric.getLabel()</div>
+                        <div class="mt-2 display-6 font-weight-lighter text-center metric-value-js"></div>
                         <div class="mt-2">
                             <canvas class="ml-auto mr-auto" style="width: 100%; max-width: 200px" height="32"></canvas>
                         </div>
