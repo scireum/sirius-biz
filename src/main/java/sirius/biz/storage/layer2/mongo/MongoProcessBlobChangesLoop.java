@@ -12,10 +12,13 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
+import sirius.db.mongo.MongoQuery;
+import sirius.db.mongo.Updater;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
+import java.util.function.Consumer;
 
 /**
  * Implements processing actions on {@link MongoDirectory directories} and {@link MongoBlob blobs}.
@@ -59,46 +62,26 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processCreatedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.CREATED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeCreatedHandlers(blob);
-            mongo.update()
-                 .set(MongoBlob.CREATED, false)
-                 .where(MongoBlob.ID, blob.getId())
-                 .executeForOne(MongoBlob.class);
-            counter.run();
-        });
+        fetchAndProcessBlobs(query -> query.eq(MongoBlob.CREATED, true),
+                             this::invokeCreatedHandlers,
+                             updater -> updater.set(MongoBlob.CREATED, false),
+                             counter);
     }
 
     @Override
     protected void processRenamedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class)
-             .eq(MongoBlob.RENAMED, true)
-             .eq(MongoBlob.CREATED, false)
-             .limit(CURSOR_LIMIT)
-             .iterateAll(blob -> {
-                 invokeRenamedHandlers(blob);
-                 mongo.update()
-                      .set(MongoBlob.RENAMED, false)
-                      .where(MongoBlob.ID, blob.getId())
-                      .executeForOne(MongoBlob.class);
-                 counter.run();
-             });
+        fetchAndProcessBlobs(query -> query.eq(MongoBlob.RENAMED, true).eq(MongoBlob.CREATED, false),
+                             this::invokeRenamedHandlers,
+                             updater -> updater.set(MongoBlob.RENAMED, false),
+                             counter);
     }
 
     @Override
     protected void processContentUpdatedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class)
-             .eq(MongoBlob.CONTENT_UPDATED, true)
-             .eq(MongoBlob.CREATED, false)
-             .limit(CURSOR_LIMIT)
-             .iterateAll(blob -> {
-                 invokeContentUpdatedHandlers(blob);
-                 mongo.update()
-                      .set(MongoBlob.CONTENT_UPDATED, false)
-                      .where(MongoBlob.ID, blob.getId())
-                      .executeForOne(MongoBlob.class);
-                 counter.run();
-             });
+        fetchAndProcessBlobs(query -> query.eq(MongoBlob.CONTENT_UPDATED, true).eq(MongoBlob.CREATED, false),
+                             this::invokeContentUpdatedHandlers,
+                             updater -> updater.set(MongoBlob.CONTENT_UPDATED, false),
+                             counter);
     }
 
     @Override
@@ -145,17 +128,26 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processParentChangedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class)
-             .eq(MongoBlob.PARENT_CHANGED, true)
-             .eq(MongoBlob.CREATED, false)
-             .limit(CURSOR_LIMIT)
-             .iterateAll(blob -> {
-                 invokeParentChangedHandlers(blob);
-                 mongo.update()
-                      .set(MongoBlob.PARENT_CHANGED, false)
-                      .where(MongoBlob.ID, blob.getId())
-                      .executeForOne(MongoBlob.class);
-                 counter.run();
-             });
+        fetchAndProcessBlobs(query -> query.eq(MongoBlob.PARENT_CHANGED, true).eq(MongoBlob.CREATED, false),
+                             this::invokeParentChangedHandlers,
+                             updater -> updater.set(MongoBlob.PARENT_CHANGED, false),
+                             counter);
+    }
+
+    private void fetchAndProcessBlobs(Consumer<MongoQuery<MongoBlob>> filterExtender,
+                                      Consumer<MongoBlob> blobConsumer,
+                                      Consumer<Updater> updaterExtender,
+                                      Runnable counter) {
+        MongoQuery<MongoBlob> query = mango.select(MongoBlob.class);
+        filterExtender.accept(query);
+        query.limit(CURSOR_LIMIT).iterateAll(blob -> {
+            blobConsumer.accept(blob);
+
+            Updater updater = mongo.update();
+            updaterExtender.accept(updater);
+            updater.where(MongoBlob.ID, blob.getId()).executeForOne(MongoBlob.class);
+
+            counter.run();
+        });
     }
 }

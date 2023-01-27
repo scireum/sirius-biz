@@ -11,10 +11,13 @@ package sirius.biz.storage.layer2.jdbc;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
 import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.UpdateStatement;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import java.sql.SQLException;
+import java.util.function.Consumer;
 
 /**
  * Implements processing actions on {@link SQLDirectory directories} and {@link SQLBlob blobs}.
@@ -53,70 +56,29 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processCreatedBlobs(Runnable counter) {
-        oma.select(SQLBlob.class).eq(SQLBlob.CREATED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeCreatedHandlers(blob);
-            try {
-                oma.updateStatement(SQLBlob.class)
-                   .set(SQLBlob.CREATED, false)
-                   .where(SQLBlob.ID, blob.getId())
-                   .executeUpdate();
-            } catch (SQLException e) {
-                buildStorageException(e).withSystemErrorMessage(
-                        "Layer 2: Failed to reset blob %s (%s) in %s as not created: (%s)",
-                        blob.getBlobKey(),
-                        blob.getFilename(),
-                        blob.getSpaceName()).handle();
-            }
-            counter.run();
-        });
+        fetchAndProcessBlobs(query -> query.eq(SQLBlob.CREATED, true),
+                             this::invokeCreatedHandlers,
+                             updater -> updater.set(SQLBlob.CREATED, false),
+                             "not created",
+                             counter);
     }
 
     @Override
     protected void processRenamedBlobs(Runnable counter) {
-        oma.select(SQLBlob.class)
-           .eq(SQLBlob.RENAMED, true)
-           .eq(SQLBlob.CREATED, false)
-           .limit(CURSOR_LIMIT)
-           .iterateAll(blob -> {
-               invokeRenamedHandlers(blob);
-               try {
-                   oma.updateStatement(SQLBlob.class)
-                      .set(SQLBlob.RENAMED, false)
-                      .where(SQLBlob.ID, blob.getId())
-                      .executeUpdate();
-               } catch (SQLException e) {
-                   buildStorageException(e).withSystemErrorMessage(
-                           "Layer 2: Failed to reset blob %s (%s) in %s as not renamed: (%s)",
-                           blob.getBlobKey(),
-                           blob.getFilename(),
-                           blob.getSpaceName()).handle();
-               }
-               counter.run();
-           });
+        fetchAndProcessBlobs(query -> query.eq(SQLBlob.RENAMED, true).eq(SQLBlob.CREATED, false),
+                             this::invokeRenamedHandlers,
+                             updater -> updater.set(SQLBlob.RENAMED, false),
+                             "not renamed",
+                             counter);
     }
 
     @Override
     protected void processContentUpdatedBlobs(Runnable counter) {
-        oma.select(SQLBlob.class)
-           .eq(SQLBlob.CONTENT_UPDATED, true)
-           .eq(SQLBlob.CREATED, false)
-           .limit(CURSOR_LIMIT)
-           .iterateAll(blob -> {
-               invokeContentUpdatedHandlers(blob);
-               try {
-                   oma.updateStatement(SQLBlob.class)
-                      .set(SQLBlob.CONTENT_UPDATED, false)
-                      .where(SQLBlob.ID, blob.getId())
-                      .executeUpdate();
-               } catch (SQLException e) {
-                   buildStorageException(e).withSystemErrorMessage(
-                           "Layer 2: Failed to reset blob %s (%s) in %s as content not changed: (%s)",
-                           blob.getBlobKey(),
-                           blob.getFilename(),
-                           blob.getSpaceName()).handle();
-               }
-               counter.run();
-           });
+        fetchAndProcessBlobs(query -> query.eq(SQLBlob.CONTENT_UPDATED, true).eq(SQLBlob.CREATED, false),
+                             this::invokeContentUpdatedHandlers,
+                             updater -> updater.set(SQLBlob.CONTENT_UPDATED, false),
+                             "not changed",
+                             counter);
     }
 
     @Override
@@ -181,25 +143,37 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processParentChangedBlobs(Runnable counter) {
-        oma.select(SQLBlob.class)
-           .eq(SQLBlob.PARENT_CHANGED, true)
-           .eq(SQLBlob.CREATED, false)
-           .limit(CURSOR_LIMIT)
-           .iterateAll(blob -> {
-               invokeParentChangedHandlers(blob);
-               try {
-                   oma.updateStatement(SQLBlob.class)
-                      .set(SQLBlob.PARENT_CHANGED, false)
-                      .where(SQLBlob.ID, blob.getId())
-                      .executeUpdate();
-               } catch (SQLException e) {
-                   buildStorageException(e).withSystemErrorMessage(
-                           "Layer 2: Failed to reset blob %s (%s) in %s as parent not changed: (%s)",
-                           blob.getBlobKey(),
-                           blob.getFilename(),
-                           blob.getSpaceName()).handle();
-               }
-               counter.run();
-           });
+        fetchAndProcessBlobs(query -> query.eq(SQLBlob.PARENT_CHANGED, true).eq(SQLBlob.CREATED, false),
+                             this::invokeParentChangedHandlers,
+                             updater -> updater.set(SQLBlob.PARENT_CHANGED, false),
+                             "parent not changed",
+                             counter);
+    }
+
+    private void fetchAndProcessBlobs(Consumer<SmartQuery<SQLBlob>> queryExtender,
+                                      Consumer<SQLBlob> blobConsumer,
+                                      Consumer<UpdateStatement> updaterExtender,
+                                      String updateExceptionType,
+                                      Runnable counter) {
+        SmartQuery<SQLBlob> query = oma.select(SQLBlob.class);
+        queryExtender.accept(query);
+        query.limit(CURSOR_LIMIT).iterateAll(blob -> {
+            blobConsumer.accept(blob);
+
+            try {
+                UpdateStatement update = oma.updateStatement(SQLBlob.class);
+                updaterExtender.accept(update);
+                update.where(SQLBlob.ID, blob.getId()).executeUpdate();
+
+                counter.run();
+            } catch (SQLException e) {
+                buildStorageException(e).withSystemErrorMessage(
+                        "Layer 2: Failed to reset blob %s (%s) in %s as %s: (%s)",
+                        blob.getBlobKey(),
+                        blob.getFilename(),
+                        blob.getSpaceName(),
+                        updateExceptionType).handle();
+            }
+        });
     }
 }
