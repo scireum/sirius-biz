@@ -8,12 +8,13 @@
 
 package sirius.biz.analytics.charts;
 
+import sirius.biz.analytics.explorer.DataExplorerController;
 import sirius.kernel.nls.NLS;
 
 /**
  * Defines deltas understood by {@link Timeseries} to compute a comparison period.
  *
- * @deprecated Use the {@link sirius.biz.analytics.charts.explorer.DataExplorerController Data-Explorer} for advanced
+ * @deprecated Use the {@link DataExplorerController Data-Explorer} for advanced
  * charts and statistics.
  */
 @Deprecated

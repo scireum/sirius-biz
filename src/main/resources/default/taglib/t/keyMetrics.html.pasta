@@ -1,12 +1,12 @@
 <i:arg type="java.lang.Object" name="target"/>
 
-<i:pragma name="description">Renders some key metrics for the given target as supplied by "MetricDashboard"</i:pragma>
+<i:pragma name="description">Renders some key metrics for the given target as supplied by "KeyMetrics"</i:pragma>
 
 <i:local name="metrics"
-         value="@part(sirius.biz.tycho.dashboards.MetricsDashboard.class).fetchImportantKeyMetrics(target, 4)"/>
+         value="@part(sirius.biz.tycho.metrics.KeyMetrics.class).fetchImportantKeyMetrics(target, 4)"/>
 <i:if test="!metrics.isEmpty()">
-    <div class="mb-4 row">
-        <i:for type="sirius.biz.tycho.dashboards.MetricDescription"
+    <div class="mb-2 row">
+        <i:for type="sirius.biz.tycho.metrics.MetricDescription"
                var="metric"
                items="metrics">
             <div class="mb-2 col-md-6 col-lg-4 col-xl-3">

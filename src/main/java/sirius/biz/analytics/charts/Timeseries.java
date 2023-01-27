@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.charts;
 
+import sirius.biz.analytics.explorer.DataExplorerController;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.nls.NLS;
 
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * Represents a set of {@link Interval intervals} to cover a period of time.
  *
- * @deprecated Use the {@link sirius.biz.analytics.charts.explorer.DataExplorerController Data-Explorer} for advanced
+ * @deprecated Use the {@link DataExplorerController Data-Explorer} for advanced
  * charts and statistics.
  */
 @Deprecated

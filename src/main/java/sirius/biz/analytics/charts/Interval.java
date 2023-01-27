@@ -8,13 +8,15 @@
 
 package sirius.biz.analytics.charts;
 
+import sirius.biz.analytics.explorer.DataExplorerController;
+
 import javax.annotation.concurrent.Immutable;
 import java.time.LocalDateTime;
 
 /**
  * Represents an interval (a start and end date as {@link LocalDateTime}).
  *
- * @deprecated Use the {@link sirius.biz.analytics.charts.explorer.DataExplorerController Data-Explorer} for advanced
+ * @deprecated Use the {@link DataExplorerController Data-Explorer} for advanced
  * charts and statistics.
  */
 @Deprecated
