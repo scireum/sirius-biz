@@ -23,7 +23,7 @@
 <div class="row">
     <w:textfield name="userAccountData_person_lastname" value="@account.getUserAccountData().getPerson().getLastname()"
                  labelKey="PersonData.lastname"/>
-    <w:singleSelect name="userAccountData_lang" labelKey="Model.lang" required="true">
+    <w:singleSelect name="userAccountData_language" labelKey="Model.lang" required="true">
         <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
             <option value="@language.getFirst()"
                     @selected="language.getFirst() == account.getUserAccountData().getLanguage().getValue()">
