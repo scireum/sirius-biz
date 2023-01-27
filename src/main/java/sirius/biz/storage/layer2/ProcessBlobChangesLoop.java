@@ -183,29 +183,29 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     protected abstract void deleteDirectories(Runnable counter);
 
     /**
-     * Queries and processes {@link Blob blobs} marked as created.
+     * Queries and processes {@linkplain Blob blobs} marked as created.
      * <p>
-     * The processing is performed by the registered {@link BlobCreatedHandler handlers}
+     * The processing is performed by the registered {@linkplain BlobCreatedHandler handlers}
      *
-     * @param counter a {@link Runnable} to be called for each {@link Blob blob} processed
+     * @param counter a {@link Runnable} to be called for each {@linkplain Blob blob} processed
      */
     protected abstract void processCreatedBlobs(Runnable counter);
 
     /**
-     * Queries and processes {@link Blob blobs} marked as renamed.
+     * Queries and processes {@linkplain Blob blobs} marked as renamed.
      * <p>
-     * The processing is performed by the registered {@link BlobRenamedHandler handlers}
+     * The processing is performed by the registered {@linkplain BlobRenamedHandler handlers}
      *
-     * @param counter a {@link Runnable} to be called for each {@link Blob blob} processed
+     * @param counter a {@link Runnable} to be called for each {@linkplain Blob blob} processed
      */
     protected abstract void processRenamedBlobs(Runnable counter);
 
     /**
-     * Queries and processes {@link Blob blobs} which physical object has been replaced.
+     * Queries and processes {@linkplain Blob blobs} which physical object has been replaced.
      * <p>
-     * The processing is performed by the registered {@link BlobContentUpdatedHandler handlers}
+     * The processing is performed by the registered {@linkplain BlobContentUpdatedHandler handlers}
      *
-     * @param counter a {@link Runnable} to be called for each {@link Blob blob} processed
+     * @param counter a {@link Runnable} to be called for each {@linkplain Blob blob} processed
      */
     protected abstract void processContentUpdatedBlobs(Runnable counter);
 

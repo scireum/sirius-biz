@@ -11,9 +11,9 @@ package sirius.biz.storage.layer2;
 import sirius.kernel.di.std.AutoRegister;
 
 /**
- * Defines handlers to process renamed {@link Blob blobs}.
+ * Defines handlers to process renamed {@linkplain Blob blobs}.
  * <p>
- * Note: Handlers need to be {@link sirius.kernel.di.std.Register registered}.
+ * Note: Handlers need to be {@linkplain sirius.kernel.di.std.Register registered}.
  *
  * @see ProcessBlobChangesLoop
  */

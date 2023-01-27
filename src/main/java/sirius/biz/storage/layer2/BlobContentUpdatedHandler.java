@@ -11,9 +11,9 @@ package sirius.biz.storage.layer2;
 import sirius.kernel.di.std.AutoRegister;
 
 /**
- * Defines handlers to process {@link Blob blobs} which content (the underlying physical object) has been updated.
+ * Defines handlers to process {@linkplain Blob blobs} which content (the underlying physical object) has been updated.
  * <p>
- * Note: Handlers need to be {@link sirius.kernel.di.std.Register registered}.
+ * Note: Handlers need to be {@linkplain sirius.kernel.di.std.Register registered}.
  *
  * @see ProcessBlobChangesLoop
  */
