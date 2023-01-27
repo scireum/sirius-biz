@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
  * Provides the executor which is responsible for scheduling {@link MonthlyMetricComputer} instances which refer
  * to {@link sirius.db.jdbc.SQLEntity sql entities} on a daily basis using the best effort principle.
  */
-@Register(framework = SQLMetrics.FRAMEWORK_JDBC_METRICS)
+@Register
 public class SQLBestEffortDailyScheduler extends SQLAnalyticalTaskScheduler {
 
     @Override

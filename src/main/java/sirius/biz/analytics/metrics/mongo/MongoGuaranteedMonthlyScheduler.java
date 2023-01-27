@@ -25,7 +25,7 @@ import java.time.LocalDate;
  * Provides the executor which is responsible for scheduling {@link MonthlyMetricComputer} instances which refer
  * to {@link sirius.db.mongo.MongoEntity mongo entities} on a monthly basis.
  */
-@Register(framework = MongoMetrics.FRAMEWORK_MONGO_METRICS)
+@Register
 public class MongoGuaranteedMonthlyScheduler extends MongoAnalyticalTaskScheduler {
 
     @Override

@@ -25,7 +25,7 @@ import java.time.LocalDate;
  * Provides the executor which is responsible for scheduling {@link DailyMetricComputer} instances which refer
  * to {@link sirius.db.jdbc.SQLEntity sql entities} on a daily basis.
  */
-@Register(framework = SQLMetrics.FRAMEWORK_JDBC_METRICS)
+@Register
 public class SQLGuaranteedDailyMetricScheduler extends SQLAnalyticalTaskScheduler {
 
     @Override
