@@ -181,21 +181,25 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processParentChangedBlobs(Runnable counter) {
-        oma.select(SQLBlob.class).eq(SQLBlob.PARENT_CHANGED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeParentChangedHandlers(blob);
-            try {
-                oma.updateStatement(SQLBlob.class)
-                   .set(SQLBlob.PARENT_CHANGED, false)
-                   .where(SQLBlob.ID, blob.getId())
-                   .executeUpdate();
-            } catch (SQLException e) {
-                buildStorageException(e).withSystemErrorMessage(
-                        "Layer 2: Failed to reset blob %s (%s) in %s as parent not changed: (%s)",
-                        blob.getBlobKey(),
-                        blob.getFilename(),
-                        blob.getSpaceName()).handle();
-            }
-            counter.run();
-        });
+        oma.select(SQLBlob.class)
+           .eq(SQLBlob.PARENT_CHANGED, true)
+           .eq(SQLBlob.CREATED, false)
+           .limit(CURSOR_LIMIT)
+           .iterateAll(blob -> {
+               invokeParentChangedHandlers(blob);
+               try {
+                   oma.updateStatement(SQLBlob.class)
+                      .set(SQLBlob.PARENT_CHANGED, false)
+                      .where(SQLBlob.ID, blob.getId())
+                      .executeUpdate();
+               } catch (SQLException e) {
+                   buildStorageException(e).withSystemErrorMessage(
+                           "Layer 2: Failed to reset blob %s (%s) in %s as parent not changed: (%s)",
+                           blob.getBlobKey(),
+                           blob.getFilename(),
+                           blob.getSpaceName()).handle();
+               }
+               counter.run();
+           });
     }
 }

@@ -145,13 +145,17 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processParentChangedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.PARENT_CHANGED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeParentChangedHandlers(blob);
-            mongo.update()
-                 .set(MongoBlob.PARENT_CHANGED, false)
-                 .where(MongoBlob.ID, blob.getId())
-                 .executeForOne(MongoBlob.class);
-            counter.run();
-        });
+        mango.select(MongoBlob.class)
+             .eq(MongoBlob.PARENT_CHANGED, true)
+             .eq(MongoBlob.CREATED, false)
+             .limit(CURSOR_LIMIT)
+             .iterateAll(blob -> {
+                 invokeParentChangedHandlers(blob);
+                 mongo.update()
+                      .set(MongoBlob.PARENT_CHANGED, false)
+                      .where(MongoBlob.ID, blob.getId())
+                      .executeForOne(MongoBlob.class);
+                 counter.run();
+             });
     }
 }
