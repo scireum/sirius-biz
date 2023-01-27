@@ -47,10 +47,10 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             try {
                 propagateDelete(dir);
                 oma.delete(dir);
+                counter.run();
             } catch (Exception e) {
                 handleDirectoryDeletionException(dir, e);
             }
-            counter.run();
         });
     }
 
@@ -113,10 +113,10 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                    .set(SQLDirectory.RENAMED, false)
                    .where(SQLDirectory.ID, dir.getId())
                    .executeUpdate();
+                counter.run();
             } catch (Exception e) {
                 handleDirectoryDeletionException(dir, e);
             }
-            counter.run();
         });
     }
 
