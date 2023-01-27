@@ -49,10 +49,10 @@ public class KeyMetrics {
 
         List<MetricDescription> result = new ArrayList<>();
         keyMetricProviders.getParts().stream().filter(KeyMetricProvider::isAccessible).forEach(provider -> {
-            provider.collectKeyMetrics(targetName, description -> {
-                description.targetName = targetName;
-                description.providerName = provider.getName();
-                result.add(description);
+            provider.collectKeyMetrics(targetName, () -> {
+                MetricDescription metricDescription = new MetricDescription(provider.getName(), targetName);
+                result.add(metricDescription);
+                return metricDescription;
             });
         });
 

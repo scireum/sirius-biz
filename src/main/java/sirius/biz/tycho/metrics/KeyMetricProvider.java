@@ -11,7 +11,7 @@ package sirius.biz.tycho.metrics;
 import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Named;
 
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Provides one or more key metrics for a <tt>metrics dashboard</tt>.
@@ -39,10 +39,10 @@ public interface KeyMetricProvider extends Named {
      * Note that this doesn't actually emit the key metrics, but only creates {@link MetricDescription descriptors}.
      * These are used by the UI to request the key metric data asynchronously.
      *
-     * @param target              the target to collect the key metrics for
-     * @param descriptionConsumer the consumer which collects the emitted metric descriptions
+     * @param target        the target to collect the key metrics for
+     * @param metricFactory a factory which is used to create {@link MetricDescription metric descriptions}
      */
-    void collectKeyMetrics(String target, Consumer<MetricDescription> descriptionConsumer);
+    void collectKeyMetrics(String target, Supplier<MetricDescription> metricFactory);
 
     /**
      * Actually emits the {@link KeyMetric} for the given target and metric name.

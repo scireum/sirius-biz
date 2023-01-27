@@ -8,7 +8,7 @@
 
 package sirius.biz.tycho.metrics;
 
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Provides charts which are shown on the main statistics dashboard as well as the main dashboard of Tycho.
@@ -17,19 +17,24 @@ import java.util.function.Consumer;
  */
 public abstract class GlobalKeyMetricProvider extends BasicKeyMetricProvider {
 
+    /**
+     * Defines the placeholder target to be used for globally visible metrics.
+     */
+    public static final String GLOBAL_TARGET = "-";
+
     @Override
-    public void collectKeyMetrics(String target, Consumer<MetricDescription> descriptionConsumer) {
-        if (GlobalChartProvider.GLOBAL_TARGET.equals(target)) {
-            collectKeyMetrics(descriptionConsumer);
+    public void collectKeyMetrics(String target, Supplier<MetricDescription> metricFactory) {
+        if (GLOBAL_TARGET.equals(target)) {
+            collectKeyMetrics(metricFactory);
         }
     }
 
     /**
      * Collects the actual key metrics.
      *
-     * @param descriptionConsumer the consumer used to collect all metrics
+     * @param metricFactory a factory which is used to create {@link MetricDescription metric descriptions}
      */
-    protected abstract void collectKeyMetrics(Consumer<MetricDescription> descriptionConsumer);
+    protected abstract void collectKeyMetrics(Supplier<MetricDescription> metricFactory);
 
     @Override
     public KeyMetric resolveKeyMetric(String target, String metricName) {

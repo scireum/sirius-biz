@@ -46,25 +46,9 @@ public class MetricDescription {
     private boolean important;
     private String description;
 
-    /**
-     * Creates a metric description with the given label to show.
-     *
-     * @param label the label to show to the user
-     */
-    public MetricDescription(String label) {
-        this.targetName = "-";
-        this.label = label;
-    }
-
-    /**
-     * Creates a metric description without a label.
-     * <p>
-     *     In this case {@link #withMetricName(String)} must be used and the given metric name there will be used
-     *     to load a label (and tries to load a description) via {@link Metrics#fetchLabel(String)}.
-     */
-    public MetricDescription() {
-        this.targetName = "-";
-        this.label = null;
+    protected MetricDescription(String providerName, String targetName) {
+        this.providerName = providerName;
+        this.targetName = targetName;
     }
 
     /**
@@ -107,8 +91,6 @@ public class MetricDescription {
         this.metricName = metricName;
         if (Strings.isEmpty(label)) {
             this.label = metrics.fetchLabel(metricName);
-        }
-        if (Strings.isEmpty(description)) {
             this.description = metrics.fetchDescription(metricName);
         }
 
@@ -116,7 +98,24 @@ public class MetricDescription {
     }
 
     /**
-     * Specifies a translated short description to be shown for the chart or metric.
+     * Specifies a translated label to be shown for the metric.
+     * <p>
+     * Note that if a {@link #withMetricName(String) metric name} is used and the label is left empty,
+     * {@link Metrics#fetchLabel(String)} will be used to derive a label.
+     *
+     * @param label the label to show
+     * @return the description itself for fluent method calls
+     */
+    public MetricDescription withLabel(String label) {
+        this.label = label;
+        return this;
+    }
+
+    /**
+     * Specifies a translated short description to be shown for the metric.
+     * <p>
+     * Note that if a {@link #withMetricName(String) metric name} is used and the label is left empty,
+     * {@link Metrics#fetchDescription(String)} will be used to derive a description.
      *
      * @param description the description to show
      * @return the description itself for fluent method calls

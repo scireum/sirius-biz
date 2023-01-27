@@ -14,7 +14,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Provides a base implementation which provides key metrics for an entity of a given type.
@@ -36,12 +36,12 @@ public abstract class EntityKeyMetricProvider<E extends Entity> extends BasicKey
 
     @SuppressWarnings("unchecked")
     @Override
-    public void collectKeyMetrics(String target, Consumer<MetricDescription> descriptionConsumer) {
+    public void collectKeyMetrics(String target, Supplier<MetricDescription> metricFactory) {
         Tuple<String, String> targetName = Mixing.splitUniqueName(target);
         if (Mixing.getNameForType(getTargetType()).equals(targetName.getFirst())) {
             E entity = (E) mixing.getDescriptor(getTargetType()).getMapper().resolve(target).orElse(null);
             if (entity != null) {
-                collectKeyMetrics(entity, descriptionConsumer);
+                collectKeyMetrics(entity, metricFactory);
             }
         }
     }
@@ -49,10 +49,10 @@ public abstract class EntityKeyMetricProvider<E extends Entity> extends BasicKey
     /**
      * Collects all key metrics available for the given entity.
      *
-     * @param entity              the entity to provide key metrics for
-     * @param descriptionConsumer the consumer which collects the emitted metric descriptions
+     * @param entity        the entity to provide key metrics for
+     * @param metricFactory a factory which is used to create {@link MetricDescription metric descriptions}
      */
-    protected abstract void collectKeyMetrics(E entity, Consumer<MetricDescription> descriptionConsumer);
+    protected abstract void collectKeyMetrics(E entity, Supplier<MetricDescription> metricFactory);
 
     @SuppressWarnings("unchecked")
     @Override
