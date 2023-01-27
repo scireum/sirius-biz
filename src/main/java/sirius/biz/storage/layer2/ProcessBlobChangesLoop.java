@@ -106,57 +106,31 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     }
 
     protected void invokeCreatedHandlers(Blob blob) {
-        createdHandlers.forEach(handler -> {
-            try {
-                handler.execute(blob);
-            } catch (Exception e) {
-                buildStorageException(e).withSystemErrorMessage(
-                        "Layer 2: %s failed to process the new blob %s (%s) in %s: (%s)",
-                        handler.getClass().getSimpleName(),
-                        blob.getBlobKey(),
-                        blob.getFilename(),
-                        blob.getSpaceName()).handle();
-            }
-        });
+        invokeBlobChangedHandlers(blob, createdHandlers, "new");
     }
 
     protected void invokeRenamedHandlers(Blob blob) {
-        renamedHandlers.forEach(handler -> {
-            try {
-                handler.execute(blob);
-            } catch (Exception e) {
-                buildStorageException(e).withSystemErrorMessage(
-                        "Layer 2: %s failed to process the renamed blob %s (%s) in %s: (%s)",
-                        handler.getClass().getSimpleName(),
-                        blob.getBlobKey(),
-                        blob.getFilename(),
-                        blob.getSpaceName()).handle();
-            }
-        });
+        invokeBlobChangedHandlers(blob, renamedHandlers, "renamed");
     }
 
     protected void invokeContentUpdatedHandlers(Blob blob) {
-        contentUpdatedHandlers.forEach(handler -> {
-            try {
-                handler.execute(blob);
-            } catch (Exception e) {
-                buildStorageException(e).withSystemErrorMessage(
-                        "Layer 2: %s failed to process the changed blob %s (%s) in %s: (%s)",
-                        handler.getClass().getSimpleName(),
-                        blob.getBlobKey(),
-                        blob.getFilename(),
-                        blob.getSpaceName()).handle();
-            }
-        });
+        invokeBlobChangedHandlers(blob, contentUpdatedHandlers, "changed");
     }
 
     protected void invokeParentChangedHandlers(Blob blob) {
-        parentChangedHandlers.forEach(handler -> {
+        invokeBlobChangedHandlers(blob, parentChangedHandlers, "parent change for");
+    }
+
+    private <H extends BlobChangedHandler> void invokeBlobChangedHandlers(Blob blob,
+                                                                          List<H> handlers,
+                                                                          String changeType) {
+        handlers.forEach(handler -> {
             try {
                 handler.execute(blob);
             } catch (Exception e) {
                 buildStorageException(e).withSystemErrorMessage(
-                        "Layer 2: %s failed to process parent change for blob %s (%s) in %s: (%s)",
+                        "Layer 2: %s failed to process %s blob %s (%s) in %s: (%s)",
+                        changeType,
                         handler.getClass().getSimpleName(),
                         blob.getBlobKey(),
                         blob.getFilename(),
