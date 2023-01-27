@@ -109,45 +109,4 @@ public class KeyMetrics {
 
         return keyMetricProvider.resolveKeyMetric(targetName, metricName);
     }
-
-    /**
-     * Fetches all available charts for the given target.
-     * <p>
-     * Note that this only loads the {@link MetricDescription} not the actual data, so this call should be quite fast.
-     *
-     * @param target the target to fetch charts for
-     * @return the list of available charts as descriptors
-     */
-    public List<MetricDescription> fetchAllCharts(Object target) {
-        String targetName = determineTargetName(target);
-        List<MetricDescription> result = new ArrayList<>();
-        chartProviders.getParts().stream().filter(ChartProvider::isAccessible).forEach(provider -> {
-            provider.collectCharts(targetName, description -> {
-                description.targetName = targetName;
-                description.providerName = provider.getName();
-                result.add(description);
-            });
-        });
-
-        result.sort(Comparator.comparing(MetricDescription::getPriority));
-
-        return result;
-    }
-
-    /**
-     * Resolves the chart based on the given parameters.
-     *
-     * @param providerName the name of the {@link ChartProvider}
-     * @param targetName   the target to fetch the metric for
-     * @param metricName   the name of the chart in case the provider has several
-     * @return the resolved and computed chart
-     */
-    public Chart resolveChart(String providerName, String targetName, String metricName) {
-        ChartProvider chartProvider = globalContext.findPart(providerName, ChartProvider.class);
-        if (!chartProvider.isAccessible()) {
-            throw new IllegalArgumentException("Cannot access provider");
-        }
-
-        return chartProvider.resolveChart(targetName, metricName);
-    }
 }

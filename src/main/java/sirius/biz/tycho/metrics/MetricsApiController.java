@@ -22,7 +22,7 @@ import sirius.web.services.JSONStructuredOutput;
 /**
  * Provides the API called by the metrics dashboard UI.
  * <p>
- * Note that this is called by the helpers defined in <tt>metrics-dashboards.js</tt>. These are created / rendered by
+ * Note that this is called by the helpers defined in <tt>key-metrics.js</tt>. These are created / rendered by
  * the macros <tt>&lt;t:keyMetrics&gt;</tt> or <tt>&lt;t:metricsDashboard&gt;</tt>.
  */
 @Register
@@ -54,10 +54,9 @@ public class MetricsApiController extends BizController {
     }
 
     private void fetchMetric(JSONObject obj, JSONStructuredOutput output) {
+        // For now, there are only "KeyMetrics" which may be lazy-loaded, but we might add some more in the future...
         if ("KeyMetric".equals(obj.getString("type"))) {
             fetchKeyMetric(obj, output);
-        } else if ("Chart".equals(obj.getString("type"))) {
-            fetchChart(obj, output);
         } else {
             output.beginObject("task").endObject();
         }
@@ -74,21 +73,6 @@ public class MetricsApiController extends BizController {
                       .to(Log.APPLICATION)
                       .error(e)
                       .withSystemErrorMessage("Failed to fetch key metric for: %s - %s (%s)", obj.toJSONString())
-                      .handle();
-        }
-    }
-
-    private void fetchChart(JSONObject obj, JSONStructuredOutput output) {
-        try {
-            Chart chart = dashboards.resolveChart(obj.getString("provider"),
-                                                  obj.getString("target"),
-                                                  obj.getString("metric"));
-            chart.writeJson(output);
-        } catch (Exception e) {
-            Exceptions.handle()
-                      .to(Log.APPLICATION)
-                      .error(e)
-                      .withSystemErrorMessage("Failed to fetch chart for: %s - %s (%s)", obj.toJSONString())
                       .handle();
         }
     }
