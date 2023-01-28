@@ -9,6 +9,7 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.util.ExtractedFile;
@@ -183,19 +184,19 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
                                                                                 importFile.rowHandler).withIgnoreEmptyValues(
                 importFile.ignoreEmptyFields).withRowCounterName(importFile.rowCounterName);
 
-        errorContext.withContext(ERROR_CONTEXT_FILE_PATH, extractedFile.getFilePath());
+        ErrorContext.get().withContext(ERROR_CONTEXT_FILE_PATH, extractedFile.getFilePath());
         try (InputStream stream = extractedFile.openInputStream()) {
             LineBasedProcessor.create(importFile.filename, stream, false).run((lineNumber, row) -> {
-                errorContext.withContext(ERROR_CONTEXT_ROW, lineNumber);
+                ErrorContext.get().withContext(ERROR_CONTEXT_ROW, lineNumber);
                 dictionaryBasedImport.handleRow(lineNumber, row);
-                errorContext.removeContext(ERROR_CONTEXT_ROW);
+                ErrorContext.get().removeContext(ERROR_CONTEXT_ROW);
             }, error -> {
                 process.handle(error);
-                errorContext.removeContext(ERROR_CONTEXT_ROW);
+                ErrorContext.get().removeContext(ERROR_CONTEXT_ROW);
                 return true;
             });
         } finally {
-            errorContext.removeContext(ERROR_CONTEXT_FILE_PATH);
+            ErrorContext.get().removeContext(ERROR_CONTEXT_FILE_PATH);
         }
 
         if (importFile.completionHandler != null) {

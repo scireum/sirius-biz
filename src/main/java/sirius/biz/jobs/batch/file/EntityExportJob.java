@@ -12,6 +12,7 @@ import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer3.FileParameter;
@@ -203,7 +204,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
                 return;
             }
 
-            errorContext.withContext(ERROR_CONTEXT_ROW, rowNumber);
+            ErrorContext.get().withContext(ERROR_CONTEXT_ROW, rowNumber);
 
             if (!dictionary.hasMappings()) {
                 determineMappingsFromRow(rowNumber, row);
@@ -214,10 +215,10 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
                 handleTemplateRow(row);
             }
 
-            errorContext.removeContext(ERROR_CONTEXT_ROW);
+            ErrorContext.get().removeContext(ERROR_CONTEXT_ROW);
         }, error -> {
             process.handle(error);
-            errorContext.removeContext(ERROR_CONTEXT_ROW);
+            ErrorContext.get().removeContext(ERROR_CONTEXT_ROW);
 
             return true;
         });
@@ -238,7 +239,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         dictionary.determineMappingFromHeadings(row, false);
         process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
         setupExtractors();
-        errorContext.handle(() -> export.addListRow(row.asList()));
+        ErrorContext.get().handle(() -> export.addListRow(row.asList()));
     }
 
     /**
@@ -277,7 +278,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     private void handleTemplateRow(Values row) {
         Watch w = Watch.start();
 
-        errorContext.handle(() -> {
+        ErrorContext.get().handle(() -> {
             Context data = dictionary.load(row, false);
 
             if (contextExtender != null) {
