@@ -1131,7 +1131,7 @@ public class Processes {
             List<String> values = Arrays.asList(logEntry.getType().toString(),
                                                 NLS.toMachineString(logEntry.getTimestamp()),
                                                 logEntry.getMessage(),
-                                                logEntry.getMessageType(),
+                                                NLS.smartGet(logEntry.getMessageType()),
                                                 logEntry.getNode());
             return columnsAndValues.test(columns, values);
         });

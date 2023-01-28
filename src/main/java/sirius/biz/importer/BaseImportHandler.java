@@ -499,12 +499,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * a different content.
      *
      * @param exception a {@link HandledException} thrown saving an entity
-     * @param entity    the entity being saved
      * @return the enriched exception
      */
-    protected HandledException enhanceExceptionWithHints(HandledException exception, E entity) {
-        if (exception.getHint(ProcessLog.HINT_MESSAGE_KEY).isEmptyString()) {
-            exception.withHint(ProcessLog.HINT_MESSAGE_KEY, obtainMessageTypeKey(entity));
+    protected HandledException enhanceExceptionWithHints(HandledException exception) {
+        if (exception.getHint(ProcessLog.HINT_MESSAGE_TYPE).isEmptyString()) {
+            exception.withHint(ProcessLog.HINT_MESSAGE_TYPE, obtainMessageType());
         }
         if (obtainMessageTypeLimit() > 0) {
             exception.withHint(ProcessLog.HINT_MESSAGE_COUNT, obtainMessageTypeLimit());

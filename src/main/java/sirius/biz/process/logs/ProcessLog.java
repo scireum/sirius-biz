@@ -83,7 +83,10 @@ public class ProcessLog extends SearchableEntity {
      * {@link #withHandledException(HandledException)}.
      * <p>
      * A message key is supposed to be {@link NLS#smartGet(String) smart translated}.
+     *
+     * @deprecated Use {@link #HINT_MESSAGE_TYPE} instead and apply the "$" manually
      */
+    @Deprecated
     public static final ExceptionHint HINT_MESSAGE_KEY = new ExceptionHint("messageKey");
 
     /**
@@ -445,8 +448,8 @@ public class ProcessLog extends SearchableEntity {
     /**
      * Specifies a handled handledException from where to inherit the message.
      * <p>
-     * If set, the {@link #HINT_MESSAGE_TYPE} or {@link #HINT_MESSAGE_KEY} is used to categorize the log in
-     * message types and {@link #HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
+     * If set, the {@link #HINT_MESSAGE_TYPE} is used to categorize the log in message types and
+     * {@link #HINT_MESSAGE_COUNT} to limit the amount of allowed messages per type.
      *
      * @param handledException the {@link HandledException} to retrieve the message and eventually hints from
      * @return the log entry itself for fluent method calls
@@ -463,6 +466,19 @@ public class ProcessLog extends SearchableEntity {
                                               }
                                           });
         return this;
+    }
+
+    private Value obtainMessageKey(@Nonnull HandledException handledException) {
+        Value messageKey = handledException.getHint(HINT_MESSAGE_KEY);
+        if (messageKey.isEmptyString()) {
+            return Value.EMPTY;
+        }
+
+        if (messageKey.startsWith("$")) {
+            return messageKey;
+        } else {
+            return Value.of("$").append("", messageKey);
+        }
     }
 
     /**
@@ -541,19 +557,6 @@ public class ProcessLog extends SearchableEntity {
         }
 
         return actions;
-    }
-
-    private Value obtainMessageKey(@Nonnull HandledException handledException) {
-        Value messageKey = handledException.getHint(HINT_MESSAGE_KEY);
-        if (messageKey.isEmptyString()) {
-            return Value.EMPTY;
-        }
-
-        if (messageKey.startsWith("$")) {
-            return messageKey;
-        } else {
-            return Value.of("$").append("", messageKey);
-        }
     }
 
     @Override
