@@ -84,6 +84,18 @@ public class JobConfigData extends Composite {
     @Part
     private static Jobs jobs;
 
+    @Override
+    public String toString() {
+        if (Strings.isFilled(getLabel())) {
+            return getLabel();
+        }
+        if (Strings.isFilled(getJobName())) {
+            return getJobName();
+        }
+
+        return getJobFactory().getLabel();
+    }
+
     @BeforeSave
     protected void updateConfig() {
         if (configMap != null) {

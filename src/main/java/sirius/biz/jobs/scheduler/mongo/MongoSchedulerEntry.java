@@ -13,7 +13,6 @@ import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.db.mixing.annotations.TranslationSource;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
 /**
@@ -38,6 +37,6 @@ public class MongoSchedulerEntry extends MongoTenantAware implements SchedulerEn
 
     @Override
     public String toString() {
-        return Strings.isFilled(jobConfigData.getLabel()) ? jobConfigData.getLabel() : jobConfigData.getJobName();
+        return jobConfigData.toString();
     }
 }
