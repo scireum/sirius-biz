@@ -181,16 +181,13 @@ public class Importer implements Closeable {
     }
 
     /**
-     * Tries to find an instance of the given type based on the given data. Uses {@link #load(Class, Context)} if no
-     * matching entity was found.
-     * <p>
-     * This is a convenience method which utilizes {@link #tryFind(Class, Context)} but uses
-     * {@link #load(Class, Context)} to create a new entity if the lookup isn't successful.
+     * Tries to find an instance of the given type based on the given data. Uses {@link #load(Class, Context)} to
+     * update the entity afterwards. Note that a new entity is created if no matching one was found.
      *
      * @param type the type of entity to find
      * @param data the data used to describe the entity to search
      * @param <E>  the generic type of the entity to find
-     * @return either a matching entity or a new and not yet peristed entity loaded from the given data
+     * @return either a matching entity or a new and not yet persisted entity loaded from the given data
      */
     public <E extends BaseEntity<?>> E findAndLoad(Class<E> type, Context data) {
         return context.findHandler(type).findAndLoad(data);
