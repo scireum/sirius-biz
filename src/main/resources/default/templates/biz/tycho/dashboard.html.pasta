@@ -1,4 +1,4 @@
-<i:arg type="String" name="path" />
+<i:arg type="String" name="path"/>
 <t:page title="Dashboard">
     <i:block name="breadcrumbs">
         <li>
@@ -9,6 +9,37 @@
     <div class="row">
         <div class="col-12 col-lg-9 pr-xl-4">
             <i:extensions target="tycho-dashboard" point="main-content"/>
+
+            <t:heading label="Ihre Aufgaben"/>
+            <div class="mb-4">
+                <div class="card left-border border-sirius-blue mb-3">
+                    <div class="d-flex flex-row p-2 align-items-center">
+                        <span class="mr-auto overflow-hidden pl-2">Viele Knöpfe und Tasten drücken</span>
+
+                        <a href="/system/timing?enable=true" class="btn btn-link ml-1"><i class="fa fa-wh fa-bell"></i></a>
+                        <a href="/system/timing?enable=true" class="btn btn-link ml-1"><i class="fa fa-wh fa-check"></i></a>
+                        <a href="/system/timing?enable=true" class="btn btn-link ml-1"><i
+                                class="fa fa-wh fa-satellite-dish"></i></a>
+                    </div>
+                </div>
+                <div class="card left-border border-sirius-violet mb-3">
+                    <div class="d-flex flex-row p-2 align-items-center">
+                        <span class="mr-auto overflow-hidden pl-2">Entwickler zu der guten Software beglückwünschen</span>
+
+                        <a href="/system/timing?enable=true" class="btn btn-link ml-1"><i
+                                class="fa fa-address-card"></i></a>
+                    </div>
+                </div>
+                <div class="card left-border border-sirius-yellow mb-3">
+                    <div class="d-flex flex-row p-2 align-items-center">
+                        <span class="mr-auto overflow-hidden pl-2">Ganz arg viel tolle Dinge tun</span>
+
+                        <a href="/system/timing?enable=true" class="btn btn-link ml-1"><i class="fa fa-bell-slash"></i></a>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
 
         <div class="col-12 col-lg-3 pl-xl-4">
