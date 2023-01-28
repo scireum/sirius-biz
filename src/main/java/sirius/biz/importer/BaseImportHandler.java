@@ -13,6 +13,7 @@ import sirius.biz.importer.format.FieldDefinitionSupplier;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.importer.txn.ImportTransactionHelper;
 import sirius.biz.importer.txn.ImportTransactionalEntity;
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.TenantAware;
@@ -28,7 +29,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.ComparableTuple;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
-import sirius.kernel.commons.Producer;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -42,7 +43,6 @@ import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -287,13 +287,72 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     @Override
+    public HandledException fail(@Nullable String referenceNumber,
+                                 @Nullable Context data,
+                                 Object... relevantContextFields) {
+        return enhanceExceptionWithHints(Exceptions.createHandled()
+                                                   .withDirectMessage(createErrorMessage(referenceNumber,
+                                                                                         data,
+                                                                                         relevantContextFields))
+                                                   .handle());
+    }
+
+    protected String createErrorMessage(String referenceNumber, Context data, Object... relevantContextFields) {
+        StringBuilder message = new StringBuilder();
+        if (Strings.isFilled(referenceNumber)) {
+            message.append("'");
+            message.append(referenceNumber);
+            message.append("' ");
+        }
+        if (data != null && relevantContextFields.length > 0) {
+            boolean hasReference = !message.isEmpty();
+            if (hasReference) {
+                message.append("(");
+            }
+            Monoflop firstContextField = Monoflop.create();
+            for (Object field : relevantContextFields) {
+                if (firstContextField.successiveCall()) {
+                    message.append(", ");
+                }
+                message.append(getImportDictionary().expandToLabel(field.toString()));
+                message.append(": ");
+                message.append("'");
+                message.append(NLS.toUserString(data.getValue(field.toString()).replaceEmptyWith("-")));
+                message.append("'");
+            }
+            if (hasReference) {
+                message.append(") ");
+            } else {
+                message.append(" ");
+            }
+        }
+
+        message.append(createCannotResolveMessage());
+
+        return message.toString();
+    }
+
+    protected String createCannotResolveMessage() {
+        return NLS.fmtr("BaseImportHandler.cannotResolveMessage").set("type", descriptor.getLabel()).format();
+    }
+
+    @Override
+    public E warn(@Nullable String referenceNumber, @Nullable Context data, Object... relevantContextFields) {
+        return warn(null, referenceNumber, data, relevantContextFields);
+    }
+
+    @Override
+    public E warn(@Nullable E defaultValue,
+                  @Nullable String referenceNumber,
+                  @Nullable Context data,
+                  Object... relevantContextFields) {
+        ErrorContext.get().logExceptionAsWarning(fail(referenceNumber, data, relevantContextFields));
+        return defaultValue;
+    }
+
+    @Override
     public E findOrFail(Context data) {
-        return tryFind(data).orElseThrow(() -> Exceptions.createHandled()
-                                                         .withSystemErrorMessage(
-                                                                 "Cannot find an instance for: %s of type %s",
-                                                                 data,
-                                                                 descriptor.getType().getName())
-                                                         .handle());
+        return tryFind(data).orElseThrow(() -> fail(null, data));
     }
 
     @Override
@@ -423,12 +482,13 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     /**
      * Returns the entity label key used to categorize messages for errors.
+     * <p>
+     * This will be put into {@link ProcessLog#HINT_MESSAGE_TYPE}.
      *
-     * @param entity the entity to retrieve the label
-     * @return the key
+     * @return the message type to use
      */
-    protected String obtainMessageTypeKey(@Nonnull E entity) {
-        return entity.getDescriptor().getLabelKey();
+    protected String obtainMessageType() {
+        return "$" + descriptor.getLabelKey();
     }
 
     /**
