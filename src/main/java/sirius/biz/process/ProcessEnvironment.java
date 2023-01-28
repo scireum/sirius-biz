@@ -126,7 +126,9 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void addDebugTiming(String counter, long millis) {
-        addDebugTiming(counter, millis, false);
+        if (isDebugging()) {
+            addTiming(counter, millis, false);
+        }
     }
 
     /**
