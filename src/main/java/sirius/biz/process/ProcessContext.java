@@ -345,6 +345,11 @@ public interface ProcessContext extends TaskContextAdapter {
     Future performInSideTask(UnitOfWork parallelTask);
 
     /**
+     * Blocks until all currently active side-tasks are completed.
+     */
+    void awaitSideTaskCompletion();
+
+    /**
      * Blocks the current thread until all logs have been flushed into Elasticsearch.
      * <p>
      * As we internally pump the logs through the {@link sirius.biz.elastic.AutoBatchLoop}, we have to wait

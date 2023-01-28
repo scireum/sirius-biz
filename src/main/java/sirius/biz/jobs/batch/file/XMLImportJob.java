@@ -12,6 +12,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -67,7 +68,14 @@ public abstract class XMLImportJob extends FileImportJob {
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         if (isValid(inputSupplier)) {
+            Monoflop firstStage = Monoflop.create();
             for (Consumer<BiConsumer<String, NodeHandler>> handlerConsumer : fetchStages()) {
+                if (firstStage.successiveCall()) {
+                    // If an import is split into several stages, we almost always want to await the completion of
+                    // any running side-task before starting the next stage....
+                    process.awaitSideTaskCompletion();
+                }
+
                 try (InputStream inputStream = inputSupplier.create()) {
                     executeProcessingStage(inputStream, handlerConsumer);
                 }
