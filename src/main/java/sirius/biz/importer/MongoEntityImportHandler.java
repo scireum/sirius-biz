@@ -132,7 +132,7 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
                                                           .withDirectMessage(entity.getDescriptor()
                                                                                    .createCannotSaveMessage(exception.getMessage()))
                                                           .handle();
-            throw enhanceExceptionWithHints(handledException, entity);
+            throw enhanceExceptionWithHints(handledException);
         }
     }
 
