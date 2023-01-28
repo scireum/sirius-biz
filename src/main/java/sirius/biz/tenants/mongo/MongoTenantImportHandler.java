@@ -104,7 +104,7 @@ public class MongoTenantImportHandler extends MongoEntityImportHandler<MongoTena
         collector.accept(100, MongoTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER));
         collector.accept(110, MongoTenant.TENANT_DATA.inner(TenantData.NAME));
         collector.accept(120, MongoTenant.TENANT_DATA.inner(TenantData.FULL_NAME));
-        collector.accept(130, MongoTenant.TENANT_DATA.inner(TenantData.LANG));
+        collector.accept(130, MongoTenant.TENANT_DATA.inner(TenantData.LANGUAGE));
         collector.accept(140, MongoTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET));
         collector.accept(150, MongoTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.ZIP));
         collector.accept(160, MongoTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY));

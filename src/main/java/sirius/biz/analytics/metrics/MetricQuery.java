@@ -9,6 +9,9 @@
 package sirius.biz.analytics.metrics;
 
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.Mixing;
+import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.CheckReturnValue;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 /**
  * Provides a fluent API to create and execute queries against the metrics database.
@@ -135,7 +139,18 @@ public class MetricQuery {
     }
 
     /**
-     * Specifies that global metrics (not associated to an entity but rather system wide values) should be queried.
+     * Specifies the entity to query metrics for.
+     *
+     * @param ref the reference pointing to the entity to query metrics for
+     * @return the query itself for fluent method calls
+     */
+    @CheckReturnValue
+    public MetricQuery of(BaseEntityRef<?, ?> ref) {
+        return of(Mixing.getNameForType(ref.getType()), ref.getIdAsString());
+    }
+
+    /**
+     * Specifies that global metrics (not associated to an entity but rather system-wide values) should be queried.
      *
      * @return the query itself for fluent method calls
      */
@@ -170,6 +185,23 @@ public class MetricQuery {
         }
 
         return result;
+    }
+
+    /**
+     * Fetches a value for each of the dates in the given stream.
+     *
+     * @param dates the stream of dates to handle
+     * @return a stream of tuples containing the requested date and the fetches metric value
+     */
+    public Stream<Tuple<LocalDate, Integer>> values(Stream<LocalDate> dates) {
+        return dates.map(date -> Tuple.create(date,
+                                              metrics.executeQuery(interval,
+                                                                   targetType,
+                                                                   targetId,
+                                                                   metricName,
+                                                                   date.getYear(),
+                                                                   date.getMonthValue(),
+                                                                   date.getDayOfMonth()).orElse(0)));
     }
 
     private void assertParametersArePresent() {
@@ -316,8 +348,8 @@ public class MetricQuery {
             case MONTHLY -> date.plusMonths(1);
             case YEARLY -> date.plusYears(1);
             default ->
-                    // In case of a fact, there is no point in changing the date. However, to be 100% sure that
-                    // any loop etc will terminate we output the extreme here...
+                // In case of a fact, there is no point in changing the date. However, to be 100% sure that
+                // any loop etc will terminate we output the extreme here...
                     LocalDate.MAX;
         };
     }
@@ -328,8 +360,8 @@ public class MetricQuery {
             case MONTHLY -> date.minusMonths(1);
             case YEARLY -> date.minusYears(1);
             default ->
-                    // In case of a fact, there is no point in changing the date. However, to be 100% sure that
-                    // any loop etc will terminate we output the extreme here...
+                // In case of a fact, there is no point in changing the date. However, to be 100% sure that
+                // any loop etc will terminate we output the extreme here...
                     LocalDate.MIN;
         };
     }
@@ -358,6 +390,25 @@ public class MetricQuery {
     }
 
     /**
+     * Fetches and returns the value for the metric and the given date wrapped in an {@link Optional} if available
+     * or {@link Optional#empty()} if no value was computed for the given date.
+     *
+     * @param date the date of the metric to fetch the value for
+     * @return the value for the metric and the given date
+     */
+    public Optional<Integer> value(LocalDate date) {
+        assertParametersArePresent();
+
+        return metrics.executeQuery(interval,
+                                    targetType,
+                                    targetId,
+                                    metricName,
+                                    date.getYear(),
+                                    date.getMonthValue(),
+                                    date.getDayOfMonth());
+    }
+
+    /**
      * Fetches the most current value available for the given metric.
      * <p>
      * This will attempt to resolve the metric using the current date. If no value is present, {@link #lastValue()}
@@ -366,14 +417,8 @@ public class MetricQuery {
      * @return the must current value for the queried metric
      */
     public int currentValue() {
-        assertParametersArePresent();
-        Optional<Integer> metric = metrics.executeQuery(interval,
-                                                        targetType,
-                                                        targetId,
-                                                        metricName,
-                                                        LocalDate.now().getYear(),
-                                                        LocalDate.now().getMonthValue(),
-                                                        LocalDate.now().getDayOfMonth());
+        Optional<Integer> metric = value(LocalDate.now());
+
         if (metric.isPresent() || interval == Interval.FACT) {
             return metric.orElse(0);
         }
@@ -394,16 +439,7 @@ public class MetricQuery {
      * @return the value for the metric which should currently be safely available
      */
     public int lastValue() {
-        assertParametersArePresent();
-        LocalDate date = decrement(LocalDate.now(), interval);
-
-        return metrics.executeQuery(interval,
-                                    targetType,
-                                    targetId,
-                                    metricName,
-                                    date.getYear(),
-                                    date.getMonthValue(),
-                                    date.getDayOfMonth()).orElse(0);
+        return value(decrement(LocalDate.now(), interval)).orElse(0);
     }
 
     @Override

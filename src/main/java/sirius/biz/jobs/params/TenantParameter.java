@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.Tenants;
@@ -16,6 +17,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -65,6 +67,13 @@ public class TenantParameter extends ParameterBuilder<Tenant<?>, TenantParameter
     @Override
     protected String checkAndTransformValue(Value input) {
         return resolveFromString(input).map(Tenant::getIdAsString).orElse(null);
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", value.getIdAsString())
+                                                    .fluentPut("text", value.toString()));
     }
 
     @Override

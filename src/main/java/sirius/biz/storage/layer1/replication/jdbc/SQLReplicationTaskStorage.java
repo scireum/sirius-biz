@@ -119,6 +119,14 @@ public class SQLReplicationTaskStorage
     }
 
     @Override
+    public int countNumberOfDelayedTasks() {
+        return (int) oma.select(SQLReplicationTask.class)
+                        .eq(SQLReplicationTask.FAILED, false)
+                        .where(OMA.FILTERS.gte(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
+                        .count();
+    }
+
+    @Override
     public int countNumberOfExecutableTasks() {
         return (int) oma.select(SQLReplicationTask.class)
                         .eq(SQLReplicationTask.FAILED, false)

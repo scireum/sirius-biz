@@ -45,24 +45,27 @@ public class MongoTenantAutoSetup extends BaseTenantAutoSetup {
         }
 
         AutoSetup.LOG.INFO("Creating system tenant....");
-        MongoTenant tenant = new MongoTenant();
-        setupTenantData(tenant);
-        mango.update(tenant);
 
-        // Fix the ID of the system tenant to be "1" - This should normally be avoided
-        // at all cost, but in this case it greatly simplifies the system config...
+        // The ID of the future system tenant will be set to "1" or another fixed value from the configuration files.
+        // This should normally be avoided at all cost, but in this case, it greatly simplifies the system config...
         String systemTenantId = "1";
         if (tenants != null) {
             systemTenantId = tenants.getSystemTenantId();
         }
-        mongo.update()
-             .where(MongoEntity.ID, tenant.getId())
-             .set(MongoEntity.ID, systemTenantId)
-             .executeForOne(MongoTenant.class);
 
-        tenant = mango.find(MongoTenant.class, systemTenantId)
-                      .orElseThrow(() -> new IllegalStateException(
-                              "Failed to resolve the system tenant after changing its ID!"));
+        // We can not modify the ID of a new tenant entity directly. Thus, we create an empty tenant with the proper ID
+        // using low-level techniques first, just to be filled properly in an instant.
+        mongo.insert().set(MongoEntity.ID, systemTenantId).into(MongoTenant.class);
+
+        // We load the newly created empty tenant via high-level techniques, making use of default values set in the
+        // entity
+        MongoTenant tenant = mango.find(MongoTenant.class, systemTenantId)
+                                  .orElseThrow(() -> new IllegalStateException(
+                                          "Failed to resolve the system tenant after creation!"));
+
+        // Having a semi-initialised tenant, it is now time to set it up as system tenant
+        setupTenantData(tenant);
+        mango.update(tenant);
 
         // We only create the system user, if no SAML settings are present...
         if (Strings.isEmpty(tenant.getTenantData().getSamlRequestIssuerName())) {

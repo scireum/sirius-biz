@@ -16,7 +16,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Provides a fast multi node implementation which is based on Redis.
@@ -60,7 +59,7 @@ public class RedisLockManager implements LockManager {
 
     @Override
     public List<LockInfo> getLocks() {
-        return redis.getLockList().stream().map(this::transformLockInfo).collect(Collectors.toList());
+        return redis.getLockList().stream().map(this::transformLockInfo).toList();
     }
 
     private LockInfo transformLockInfo(Redis.LockInfo redisLock) {

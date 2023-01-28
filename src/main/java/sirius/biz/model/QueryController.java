@@ -21,9 +21,11 @@ import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Message;
@@ -31,6 +33,8 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
+import sirius.web.services.InternalService;
+import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -38,7 +42,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -49,6 +52,9 @@ public class QueryController extends BizController {
 
     private static final int DEFAULT_LIMIT = 100;
     private static final int MAX_LIMIT = 1000;
+
+    @ConfigValue("security.query-api.enabled")
+    private boolean queryApiEnabled;
 
     /**
      * Builds the given query via {@link Query#queryString}, executes it and renders the UI.
@@ -75,7 +81,7 @@ public class QueryController extends BizController {
         } else {
             webContext.respondWith()
                       .template("/templates/biz/model/query-descriptors.html.pasta",
-                                fetchRelevantDescriptors().collect(Collectors.toList()),
+                                fetchRelevantDescriptors().toList(),
                                 descriptor,
                                 queryString,
                                 limit);
@@ -163,7 +169,51 @@ public class QueryController extends BizController {
                                                       .map(IndexMode::excludeFromSource)
                                                       .orElse(false))
                          .sorted(Comparator.comparing(Property::getName))
-                         .collect(Collectors.toList());
+                         .toList();
+    }
+
+    /**
+     * Provides a JSON based query facility.
+     * <p>
+     * Note that this is only available in TEST and DEV systems as it is only intended to be used for integration tests.
+     * <p>
+     * Just like the UI, this expects <tt>type</tt> to contain a Mixing descriptor name as produced by
+     * {@link sirius.db.mixing.Mixing#getNameForType(Class)} and <tt>query</tt> to contain a proper query
+     * e.g. "id:X". Additionally <tt>limit</tt> can specify how many entities are to be returned.
+     * <p>
+     * Note that this isn't a public API as it isn't available on production systems.
+     *
+     * @param webContext the request to handle
+     * @param output     the output to write the retrieved entities to
+     */
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    @Routed("/system/query/api")
+    @InternalService
+    public void queryApi(WebContext webContext, JSONStructuredOutput output) {
+        if (!queryApiEnabled) {
+            throw new IllegalStateException("The query API is not enabled in this system.");
+        }
+        if (Sirius.isProd()) {
+            throw new IllegalStateException("The query API is not available in productive systems.");
+        }
+
+        EntityDescriptor descriptor = mixing.findDescriptor(webContext.get("type").asString())
+                                            .orElseThrow(() -> new IllegalArgumentException(
+                                                    "Please provide a valid class parameter."));
+        String queryString = webContext.get("query").asString();
+        int limit = Math.min(webContext.get("limit").asInt(DEFAULT_LIMIT), MAX_LIMIT);
+        List<BaseEntity<?>> entities = executeQuery(descriptor, queryString, limit);
+
+        output.beginArray("entities");
+        for (BaseEntity<?> entity : entities) {
+            output.beginObject("entity");
+            output.property("id", entity.getId());
+            for (Property property : determineVisibleProperties(descriptor)) {
+                output.property(property.getName(), property.getValue(entity));
+            }
+            output.endObject();
+        }
+        output.endArray();
     }
 
     /**
@@ -178,7 +228,7 @@ public class QueryController extends BizController {
             String effectiveQuery = query.toLowerCase();
             fetchRelevantDescriptors().filter(descriptor -> filterMatch(effectiveQuery, descriptor))
                                       .map(this::createCompletion)
-
+                                      .limit(AutocompleteHelper.DEFAULT_LIMIT)
                                       .forEach(result);
         }));
     }

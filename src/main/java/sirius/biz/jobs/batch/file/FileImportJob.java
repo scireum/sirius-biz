@@ -11,13 +11,13 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.jobs.batch.ImportJob;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.storage.util.StorageUtils;
@@ -157,7 +157,7 @@ public abstract class FileImportJob extends ImportJob {
      * @return the parameter used to select the import file
      */
     public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions) {
-        FileParameter result = new FileParameter("file", FILE_LABEL).withBasePath("/work");
+        FileParameter result = new FileParameter("file", FILE_LABEL).filesOnly().withBasePath("/work");
         if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
             result.withAcceptedExtensionsList(acceptedFileExtensions);
         }

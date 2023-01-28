@@ -38,14 +38,14 @@ class CustomLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performResolveName(String code, String lang) {
-        return customTable.performResolveName(code, lang).or(() -> baseTable.performResolveName(code, lang));
+    protected Optional<String> performResolveName(String code, String language) {
+        return customTable.performResolveName(code, language).or(() -> baseTable.performResolveName(code, language));
     }
 
     @Override
-    protected Optional<String> performResolveDescription(@Nonnull String code, String lang) {
-        return customTable.performResolveDescription(code, lang)
-                          .or(() -> baseTable.performResolveDescription(code, lang));
+    protected Optional<String> performResolveDescription(@Nonnull String code, String language) {
+        return customTable.performResolveDescription(code, language)
+                          .or(() -> baseTable.performResolveDescription(code, language));
     }
 
     @Override
@@ -58,9 +58,9 @@ class CustomLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performFetchTranslatedField(String code, String targetField, String lang) {
-        return customTable.performFetchTranslatedField(code, targetField, lang)
-                          .or(() -> baseTable.performFetchTranslatedField(code, targetField, lang));
+    protected Optional<String> performFetchTranslatedField(String code, String targetField, String language) {
+        return customTable.performFetchTranslatedField(code, targetField, language)
+                          .or(() -> baseTable.performFetchTranslatedField(code, targetField, language));
     }
 
     @Override
@@ -86,24 +86,24 @@ class CustomLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang) {
-        return Stream.concat(customTable.performSuggest(Limit.UNLIMITED, searchTerm, lang),
-                             baseTable.performSuggest(Limit.UNLIMITED, searchTerm, lang))
+    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
+        return Stream.concat(customTable.performSuggest(Limit.UNLIMITED, searchTerm, language),
+                             baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
-        return Stream.concat(customTable.performSearch(searchTerm, Limit.UNLIMITED, lang),
-                             baseTable.performSearch(searchTerm, Limit.UNLIMITED, lang))
+    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
+        return Stream.concat(customTable.performSearch(searchTerm, Limit.UNLIMITED, language),
+                             baseTable.performSearch(searchTerm, Limit.UNLIMITED, language))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
-    public Stream<LookupTableEntry> scan(String lang, Limit limit) {
-        return Stream.concat(customTable.scan(lang, Limit.UNLIMITED), baseTable.scan(lang, Limit.UNLIMITED))
+    public Stream<LookupTableEntry> scan(String language, Limit limit) {
+        return Stream.concat(customTable.scan(language, Limit.UNLIMITED), baseTable.scan(language, Limit.UNLIMITED))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
@@ -114,8 +114,8 @@ class CustomLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
-        return Stream.concat(customTable.performQuery(lang, lookupPath, lookupValue),
-                             baseTable.performQuery(lang, lookupPath, lookupValue));
+    protected Stream<LookupTableEntry> performQuery(String language, String lookupPath, String lookupValue) {
+        return Stream.concat(customTable.performQuery(language, lookupPath, lookupValue),
+                             baseTable.performQuery(language, lookupPath, lookupValue));
     }
 }

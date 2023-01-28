@@ -27,7 +27,6 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Provides distributed locks based on SQL.
@@ -119,7 +118,7 @@ public class SQLLockManager extends BasicLockManager {
     public List<LockInfo> getLocks() {
         awaitReadiness();
 
-        return oma.select(ManagedLock.class).queryList().stream().map(this::transformLock).collect(Collectors.toList());
+        return oma.select(ManagedLock.class).queryList().stream().map(this::transformLock).toList();
     }
 
     private LockInfo transformLock(ManagedLock managedLock) {

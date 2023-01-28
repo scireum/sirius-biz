@@ -76,14 +76,14 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
         output.getMultiLangText().getText("fr") == Optional.empty()
 
         when:
-        CallContext.getCurrent().setLang("en")
+        CallContext.getCurrent().setLanguage("en")
 
         then:
         output.getMultiLangText().fetchText() == "Butterfly"
         output.getMultiLangText().getText() == Optional.of("Butterfly")
 
         when:
-        CallContext.getCurrent().setLang("fr")
+        CallContext.getCurrent().setLanguage("fr")
 
         then:
         output.getMultiLangText().fetchText() == null
@@ -93,7 +93,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
     def "store using default language"() {
         given:
         TenantsHelper.installTestTenant()
-        CallContext.getCurrent().setLang("en")
+        CallContext.getCurrent().setLanguage("en")
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangText().addText("Butterfly")
         mango.update(entity)
@@ -169,14 +169,14 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
         output.getMultiLangTextWithFallback().getText("fr") == Optional.of("OK")
 
         when:
-        CallContext.getCurrent().setLang("en")
+        CallContext.getCurrent().setLanguage("en")
 
         then:
         output.getMultiLangTextWithFallback().fetchText() == "Fine"
         output.getMultiLangTextWithFallback().getText() == Optional.of("Fine")
 
         when:
-        CallContext.getCurrent().setLang("fr")
+        CallContext.getCurrent().setLanguage("fr")
 
         then:
         output.getMultiLangTextWithFallback().fetchTextOrFallback() == "OK"
@@ -186,7 +186,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
     def "new null values are not stored"() {
         given:
         TenantsHelper.installTestTenant()
-        CallContext.getCurrent().setLang("en")
+        CallContext.getCurrent().setLanguage("en")
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangTextWithFallback().addText(null)
         entity.getMultiLangTextWithFallback().addText("de", "Super")
@@ -206,7 +206,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
     def "keys with null values are removed from the underlying map if a key already exists"() {
         given:
         TenantsHelper.installTestTenant()
-        CallContext.getCurrent().setLang("en")
+        CallContext.getCurrent().setLanguage("en")
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangText().addText("en", "Super")
         mango.update(entity)
@@ -229,7 +229,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
     def "asserts setData removes null keys before persisting"() {
         given:
         TenantsHelper.installTestTenant()
-        CallContext.getCurrent().setLang("en")
+        CallContext.getCurrent().setLanguage("en")
         def entity = new MongoMultiLanguageStringEntity()
         Map<String, String> data = new LinkedHashMap<>()
         data.put("en", "Great")

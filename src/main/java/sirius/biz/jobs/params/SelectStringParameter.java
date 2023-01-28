@@ -1,5 +1,6 @@
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -10,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Provides a single select parameter from a list of key-value pairs.
@@ -48,10 +48,7 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      */
     @Override
     public List<Tuple<String, String>> getValues() {
-        return entries.keySet()
-                      .stream()
-                      .map(entry -> Tuple.create(entry, NLS.smartGet(entries.get(entry))))
-                      .collect(Collectors.toList());
+        return entries.keySet().stream().map(entry -> Tuple.create(entry, NLS.smartGet(entries.get(entry)))).toList();
     }
 
     @Override
@@ -60,6 +57,13 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
             return null;
         }
         return input.asString();
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", value)
+                                                    .fluentPut("text", NLS.smartGet(entries.get(value))));
     }
 
     @Override

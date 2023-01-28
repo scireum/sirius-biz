@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs;
 
+import com.alibaba.fastjson.JSON;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;
@@ -21,7 +22,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -44,6 +45,8 @@ public interface JobFactory extends Named, Priorized {
 
     /**
      * Returns the icon to used when displaying this job.
+     * <p>
+     * This is actually the css class to use (e.g. to apply a Fontawesome icon).
      *
      * @return the icon of this job
      */
@@ -88,11 +91,14 @@ public interface JobFactory extends Named, Priorized {
     List<JobInfo> getJobInfos();
 
     /**
-     * Returns a list of permissions which a user must have in order to run this job.
+     * Determines if the job is accessible by the current user.
+     * <p>
+     * The default implementation evaluates all {@link sirius.web.security.Permission} annotations present on
+     * the class-level.
      *
-     * @return the list of required permissions to run this job
+     * @return <tt>true</tt> if the current user can access a job, <tt>false</tt> otherwise
      */
-    List<String> getRequiredPermissions();
+    boolean isAccessibleToCurrentUser();
 
     /**
      * Returns the parameters accepted by this job.
@@ -112,9 +118,9 @@ public interface JobFactory extends Named, Priorized {
     /**
      * Generates a URL which can be invoked to start this job while using the given object as a parameter value.
      * <p>
-     * This is used by the <tt>w:jobs</tt> tag to display appropriate jobs next to a data object.
+     * This is used by the <tt>t:jobs</tt> tag to display appropriate jobs next to a data object.
      *
-     * @param uri          the uri of the current page (which contains the <tt>w:jobs</tt> tag
+     * @param uri          the uri of the current page (which contains the <tt>t:jobs</tt> tag
      * @param targetObject the optional target object which is being shown / processed / edited by the page
      * @return an url which starts the launch screen for this job while using the given parameter as value or
      * <tt>null</tt> to indicate that this jobs cannot be started in the ui or that the given object isn't an
@@ -169,12 +175,31 @@ public interface JobFactory extends Named, Priorized {
      */
     Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
                                               boolean enforceRequiredParameters,
-                                              Consumer<HandledException> errorConsumer);
+                                              BiConsumer<Parameter<?>, HandledException> errorConsumer);
 
     /**
-     * Returns the name of the {@link JobCategory} this job belongs to.
+     * Returns the name of the <tt>category</tt> this job belongs to.
+     * <p>
+     * Within sirius, one of {@link StandardCategories} should be picked. For products a similar set of constants
+     * should probably exist.
      *
      * @return the name of the job category
      */
     String getCategory();
+
+    /**
+     * Computes a JSON containing the required update operations for the JavaScript frontend.
+     *
+     * @param ctx the web context containing the values of all the parameters
+     * @return a JSON that can be handled by the JavaScript
+     */
+    JSON computeRequiredParameterUpdates(WebContext ctx);
+
+    /**
+     * Computes a JSON containing the required update operations for the JavaScript frontend.
+     *
+     * @param ctx the context containing the values of all the parameters
+     * @return a JSON that can be handled by the JavaScript
+     */
+    JSON computeRequiredParameterUpdates(Map<String, String> ctx);
 }

@@ -8,11 +8,12 @@
 
 package sirius.biz.storage.layer1
 
+import org.junit.jupiter.api.Tag
 import sirius.biz.storage.layer1.replication.ReplicationBackgroundLoop
 import sirius.kernel.BaseSpecification
 import sirius.kernel.Tags
-import org.junit.jupiter.api.Tag
 import sirius.kernel.async.BackgroundLoop
+import sirius.kernel.commons.Wait
 import sirius.kernel.di.std.Part
 
 import java.nio.charset.StandardCharsets
@@ -26,8 +27,8 @@ class ReplicationSpec extends BaseSpecification {
 
     def awaitReplication() {
         BackgroundLoop.nextExecution(ReplicationBackgroundLoop.class).await(Duration.ofMinutes(1))
-        // extra wait required due to asynchronous data transfers in replication
-        Thread.sleep(10000)
+        // Give the sync some time to actually complete its tasks...
+        Wait.seconds(10)
     }
 
     def "updates are replicated correctly"() {

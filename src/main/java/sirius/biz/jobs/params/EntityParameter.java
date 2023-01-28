@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
 import sirius.db.es.Elastic;
@@ -17,9 +18,11 @@ import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mango;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -87,8 +90,35 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * Returns the autocompletion URL used to determine suggestions for inputs provided by the user.
      *
      * @return the autocomplete URL used to provide suggestions for user input
+     * @deprecated override {@link #getAutocompleterName()} instead, or, if it is not feasible to implement an
+     * {@link Autocompleter}, override {@link #getAutocompleteUrl()}
      */
-    public abstract String getAutocompleteUri();
+    @Deprecated
+    public String getAutocompleteUri() {
+        return null;
+    }
+
+    /**
+     * The {@link sirius.kernel.di.std.Register registered} name of an {@link Autocompleter} implementation.
+     *
+     * @return the name of the Autocompleter
+     */
+    public String getAutocompleterName() {
+        return null;
+    }
+
+    /**
+     * Returns the autocompletion URL used to determine suggestions for inputs provided by the user.
+     * <p>
+     * Consider to register an {@link Autocompleter} instead.
+     *
+     * @return the autocomplete URL used to provide suggestions for user input
+     */
+    public String getAutocompleteUrl() {
+        return Optional.ofNullable(getAutocompleterName())
+                       .map(name -> "/jobs/parameter-autocomplete/" + name)
+                       .orElseGet(this::getAutocompleteUri);
+    }
 
     /**
      * Returns the type of entities represented by this paramter.
@@ -127,8 +157,22 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @param entity the entity to derive  the label from
      * @return the label or textual representation to use for the given entity
      */
+    @SuppressWarnings("unchecked")
+    @Explain("There is no way to rewrite this. "
+             + "Also, it _should_ be fine if the Autocompleter is implemented according to the specification")
     protected String createLabel(V entity) {
+        if (Strings.isFilled(getAutocompleterName())) {
+            Autocompleter<V> autocompleter = Injector.context().getPart(getAutocompleterName(), Autocompleter.class);
+            return autocompleter.toLabel(entity);
+        }
         return entity.toString();
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", value.getIdAsString())
+                                                    .fluentPut("text", createLabel(value)));
     }
 
     @Override
@@ -167,8 +211,8 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @param entity the entity to check
      */
     protected void assertAccess(V entity) {
-        if (entity instanceof TenantAware) {
-            tenants.assertTenant((TenantAware) entity);
+        if (entity instanceof TenantAware tenantAware) {
+            tenants.assertTenant(tenantAware);
         }
     }
 

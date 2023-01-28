@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.db.es.ElasticEntity;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -18,9 +19,9 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -110,7 +111,7 @@ public class EntityDescriptorParameter extends ParameterBuilder<EntityDescriptor
             descriptors = descriptors.filter(filter);
         }
 
-        return descriptors.collect(Collectors.toList());
+        return descriptors.toList();
     }
 
     /**
@@ -136,6 +137,13 @@ public class EntityDescriptorParameter extends ParameterBuilder<EntityDescriptor
         }
 
         return input.getString();
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", getLookupName(value))
+                                                    .fluentPut("text", value.getType().getSimpleName()));
     }
 
     @Override

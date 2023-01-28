@@ -13,6 +13,7 @@ import sirius.biz.importer.txn.ImportTransactionHelper;
 import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenants;
@@ -38,7 +39,7 @@ import java.util.function.Consumer;
 /**
  * Provides a job for importing line based files (CSV, Excel) as relational entities.
  * <p>
- * This job behaves alomost exactly like {@link EntityImportJob}. The only difference is that it is suited for
+ * This job behaves almost exactly like {@link EntityImportJob}. The only difference is that it is suited for
  * "relational" entities (entities which represent a relation between two other entities). These are often
  * synchronized as described by {@link SyncMode}, which is handled by this implementation.
  * <p>
@@ -46,7 +47,7 @@ import java.util.function.Consumer;
  * framework can provide efficient delta updates.
  *
  * @param <E> the type of entities being imported by this job
- * @param <Q> the generic type of queries for the entities being procesed
+ * @param <Q> the generic type of queries for the entities being processed
  */
 public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJob {
@@ -63,6 +64,10 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
                                                                                                              "$EntityImportSyncJobFactory.syncMode.help")
                                                                                                      .build();
 
+    public static final Parameter<String> SYNC_SOURCE_PARAMETER =
+            new StringParameter("syncSource", "$EntityImportSyncJobFactory.syncSource").withDescription(
+                    "$EntityImportSyncJobFactory.syncSource.help").build();
+
     private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
 
     @Part
@@ -78,6 +83,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     protected Class<E> type;
     protected SyncMode mode;
     protected BiConsumer<ProcessContext, Q> queryTuner;
+    private String syncSource;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -111,9 +117,9 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     }
 
     /**
-     * Specifies the delete query tuner to use.
+     * Specifies the deletion query tuner to use.
      * <p>
-     * This permits to control which enities will be deleted if the remain unmarked during an import.
+     * This permits to control which entities will be deleted if they remain unmarked during an import.
      *
      * @param queryTuner the tuner to invoke
      * @return the job itself for fluent method calls
@@ -123,9 +129,22 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
         return this;
     }
 
+    /**
+     * Specifies the source to use when initializing {@link ImportTransactionHelper import transactions}.
+     * <p>
+     * This permits to fine tune which entities will be deleted if they remain unmarked during an import.
+     *
+     * @param source the source used to filter entities to delete
+     * @return the job itself for fluent method calls
+     */
+    public RelationalEntityImportJob<E, Q> withSource(String source) {
+        this.syncSource = source;
+        return this;
+    }
+
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
-        importTransactionHelper.start();
+        importTransactionHelper.start(syncSource);
         try (InputStream in = inputSupplier.create()) {
             LineBasedProcessor.create(filename,
                                       in,
@@ -160,7 +179,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     }
 
     /**
-     * Tunes the delete query of the import transaction so that all untouched entities will be deleted.
+     * Tunes the deletion query of the import transaction so that all untouched entities will be deleted.
      *
      * @param deleteQuery the query to enhance
      */
@@ -219,7 +238,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
      * Overwrite this method do add additional parameters to the <tt>context</tt>.
      *
      * @param context the context containing all relevant data
-     * @return the entity which was either found in he database or create using the given data
+     * @return the entity which was either found in the database or create using the given data
      */
     protected E findAndLoad(Context context) {
         return importer.findAndLoad(type, context);
@@ -252,10 +271,10 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     /**
      * Creates or updates the given entity.
      * <p>
-     * This can be overwritten to use a custom way of persisting data. Also this can be used to perfrom
+     * This can be overwritten to use a custom way of persisting data. Also, this can be used to perform
      * post-save activities.
      * <p>
-     * By default we instantly create or update the entity. Note that if this is set to batch updates,
+     * By default, we instantly create or update the entity. Note that if this is set to batch updates,
      * a post-save handler would need to be a
      * {@link sirius.biz.importer.ImporterContext#addPostCommitCallback(Runnable)}.
      *

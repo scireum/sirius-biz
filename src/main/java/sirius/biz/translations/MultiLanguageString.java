@@ -78,10 +78,10 @@ public class MultiLanguageString extends SafeMap<String, String> {
     /**
      * Sets the given set of valid languages by specifying the target scope type.
      * <p>
-     * If set (and if no specific {@link #withValidLanguages(Supplier) valid languages supplier} is present, we
+     * If set (and if no specific {@link #withValidLanguages(Supplier) valid languages supplier} is present), we
      * use the {@link ScopeInfo#getDisplayLanguages()} of the specified scope.
      *
-     * @param scopeType the <tt>scopeType</tt> used to lookup the valid languages.
+     * @param scopeType the <tt>scopeType</tt> used to look up the valid languages.
      * @return the object itself for fluent method calls
      */
     public MultiLanguageString forTargetScope(@Nonnull String scopeType) {
@@ -170,7 +170,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Adds a new text using the language defined by {@link NLS#getCurrentLang()}.
+     * Adds a new text using the language defined by {@link NLS#getCurrentLanguage()}.
      * <p>
      * If a null text is given it will be ignored, if the list already contains an entry it will be removed.
      *
@@ -179,7 +179,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @throws sirius.kernel.health.HandledException if the current language is invalid
      */
     public MultiLanguageString addText(String text) {
-        return addText(NLS.getCurrentLang(), text);
+        return addText(NLS.getCurrentLanguage(), text);
     }
 
     /**
@@ -235,7 +235,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Returns an optional text associated with the current language defined by {@link NLS#getCurrentLang()}.
+     * Returns an optional text associated with the current language defined by {@link NLS#getCurrentLanguage()}.
      * <p>
      * If no text for the language exists and a fallback is defined, the fallback is returned.
      *
@@ -243,7 +243,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      */
     @Nonnull
     public Optional<String> getText() {
-        return getText(NLS.getCurrentLang());
+        return getText(NLS.getCurrentLanguage());
     }
 
     /**
@@ -266,7 +266,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Returns the text associated with the current language defined by {@link NLS#getCurrentLang()}.
+     * Returns the text associated with the current language defined by {@link NLS#getCurrentLanguage()}.
      * <p>
      * Please note that the defined fallback is never used, use {@link #fetchTextOrFallback()} instead.
      *
@@ -274,7 +274,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      */
     @Nullable
     public String fetchText() {
-        return data().get(NLS.getCurrentLang());
+        return data().get(NLS.getCurrentLanguage());
     }
 
     /**
@@ -303,13 +303,13 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Returns the text associated with with the current language defined by {@link NLS#getCurrentLang()}, falling back to the saved fallback.
+     * Returns the text associated with the current language defined by {@link NLS#getCurrentLanguage()}, falling back to the saved fallback.
      *
      * @return the text found under <tt>language</tt>, if none found the one from {@link #FALLBACK_KEY} is returned
      */
     @Nullable
     public String fetchTextOrFallback() {
-        return fetchTextOrFallback(NLS.getCurrentLang());
+        return fetchTextOrFallback(NLS.getCurrentLanguage());
     }
 
     /**
@@ -384,7 +384,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Direct modifications of the underlying map are not allowed. Therefore upon calling a {@link UnsupportedOperationException} will be thrown.
+     * Direct modifications of the underlying map are not allowed. Therefore, upon calling a {@link UnsupportedOperationException} will be thrown.
      * <br>
      * Please use one of the other methods to modify the underlying map:
      * <ul>

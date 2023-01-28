@@ -21,6 +21,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
 import sirius.kernel.health.Log;
+import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.MetricProvider;
 import sirius.kernel.health.metrics.MetricsCollector;
 
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Provides a facility to connect to one or more <a href="https://github.com/scireum/jupiter">Jupiter</a> instances.
@@ -167,11 +167,11 @@ public class Jupiter implements MetricProvider {
      * @return the transformed object (where all inner objects are also transformed).
      */
     public static Object read(Object obj) {
-        if (obj instanceof byte[]) {
-            return SafeEncoder.encode((byte[]) obj);
+        if (obj instanceof byte[] byteArray) {
+            return SafeEncoder.encode(byteArray);
         }
         if (obj instanceof List) {
-            return ((List<?>) obj).stream().map(Jupiter::read).collect(Collectors.toList());
+            return ((List<?>) obj).stream().map(Jupiter::read).toList();
         }
 
         return obj;
@@ -179,12 +179,29 @@ public class Jupiter implements MetricProvider {
 
     @Override
     public void gather(MetricsCollector metricsCollector) {
-        metricsCollector.metric("jupiter_calls", "jupiter-calls", "Jupiter Calls", callDuration.getCount(), "/min");
+        if (getDefault().isConfigured()) {
+            metricsCollector.metric("jupiter_memory",
+                                    "jupiter-memory",
+                                    "Jupiter-Memory",
+                                    Metric.bytesToMebibytes(getDefault().getAllocatedMemory()),
+                                    Metric.UNIT_MIB);
+            metricsCollector.metric("jupiter_fallback",
+                                    "jupiter-fallback",
+                                    "Jupiter Fallback",
+                                    getDefault().isFallbackActive() ? 1 : 0,
+                                    null);
+        }
+
+        metricsCollector.metric("jupiter_calls",
+                                "jupiter-calls",
+                                "Jupiter Calls",
+                                callDuration.getCount(),
+                                Metric.UNIT_PER_MIN);
         metricsCollector.metric("jupiter_call_duration",
                                 "jupiter-call-duration",
                                 "Jupiter Call Duration",
                                 callDuration.getAndClear(),
-                                "ms");
+                                Metric.UNIT_MS);
     }
 
     /**
@@ -211,7 +228,7 @@ public class Jupiter implements MetricProvider {
      * This is a smaller cache for (relatively) large/complex compound objects.
      * <p>
      * Note that the underlying cache is automatically cleared once the Jupiter repository is synced, so that
-     * this cache shoudln't contain any stale data.
+     * this cache shouldn't contain any stale data.
      *
      * @param key           the globally unique key used to locally lookup the value
      * @param valueComputer the computer which actually uses Jupiter (e.g. IDB) to compute the cachable data.

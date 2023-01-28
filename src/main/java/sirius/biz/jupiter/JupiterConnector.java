@@ -8,7 +8,7 @@
 
 package sirius.biz.jupiter;
 
-import redis.clients.jedis.Client;
+import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import sirius.db.redis.RedisDB;
@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 /**
  * Permits to access a <b>Jupiter</b> instance.
  * <p>
- * This connector is in charge of taking of about the connection management. It also permits to failover to
+ * This connector is in charge of taking of about the connection management. It also permits failing over to
  * a fallback instance in case the main instance isn't reachable.
  * <p>
  * If a failover is performed, we will continue to use the fallback for up to 60s before we attempt to switch
@@ -35,6 +35,7 @@ import java.util.function.Supplier;
  */
 public class JupiterConnector {
 
+    private static final JupiterCommand CMD_SYS_MEM = new JupiterCommand("SYS.MEM");
     private static final JupiterCommand CMD_SET_CONFIG = new JupiterCommand("SYS.SET_CONFIG");
 
     /**
@@ -91,7 +92,7 @@ public class JupiterConnector {
      * @param <T>         the generic type of the result
      * @return a result computed by <tt>task</tt>
      */
-    public <T> T query(Supplier<String> description, Function<Client, T> task) {
+    public <T> T query(Supplier<String> description, Function<Connection, T> task) {
         if (fallbackRedis == null) {
             return queryDirect(description, task);
         }
@@ -115,7 +116,7 @@ public class JupiterConnector {
     }
 
     private <T> T performWithFailover(Supplier<String> description,
-                                      Function<Client, T> task,
+                                      Function<Connection, T> task,
                                       RedisDB main,
                                       RedisDB fallback,
                                       Runnable executeOnFailover) {
@@ -130,7 +131,7 @@ public class JupiterConnector {
         }
     }
 
-    private <T> T performWithoutFailover(Supplier<String> description, Function<Client, T> task, RedisDB redis) {
+    private <T> T performWithoutFailover(Supplier<String> description, Function<Connection, T> task, RedisDB redis) {
         try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
@@ -139,7 +140,7 @@ public class JupiterConnector {
         }
     }
 
-    private <T> T perform(Supplier<String> description, Jedis jedis, Function<Client, T> task) {
+    private <T> T perform(Supplier<String> description, Jedis jedis, Function<Connection, T> task) {
         Watch watch = Watch.start();
         try {
             return task.apply(jedis.getClient());
@@ -166,7 +167,7 @@ public class JupiterConnector {
      * @param <T>         the generic type of the result
      * @return a result computed by <tt>task</tt>
      */
-    public <T> T queryDirect(Supplier<String> description, Function<Client, T> task) {
+    public <T> T queryDirect(Supplier<String> description, Function<Connection, T> task) {
         try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
@@ -184,7 +185,7 @@ public class JupiterConnector {
      * @param description a description of the actions performed used for debugging and tracing
      * @param task        the actual task to perform using redis
      */
-    public void exec(Supplier<String> description, Consumer<Client> task) {
+    public void exec(Supplier<String> description, Consumer<Connection> task) {
         query(description, client -> {
             task.accept(client);
             return null;
@@ -200,7 +201,7 @@ public class JupiterConnector {
      * @param description a description of the actions performed used for debugging and tracing
      * @param task        the actual task to perform using redis
      */
-    public void execDirect(Supplier<String> description, Consumer<Client> task) {
+    public void execDirect(Supplier<String> description, Consumer<Connection> task) {
         queryDirect(description, client -> {
             task.accept(client);
             return null;
@@ -245,6 +246,29 @@ public class JupiterConnector {
      */
     public InfoGraphDB idb() {
         return new InfoGraphDB(this);
+    }
+
+    protected boolean isFallbackActive() {
+        return fallbackActiveUntil > System.currentTimeMillis();
+    }
+
+    /**
+     * Determines the allocated memory of the connected Jupiter instance
+     *
+     * @return the allocated memory in bytes
+     */
+    protected long getAllocatedMemory() {
+        try {
+            return queryDirect(() -> "SYS.MEM", client -> {
+                client.sendCommand(CMD_SYS_MEM, "raw");
+                return client.getIntegerMultiBulkReply().get(0);
+            });
+        } catch (Exception e) {
+            // As the monitoring command was introduced later, we simply return 0 if an error occurs
+            // (which most probably indicates that the Jupiter version is too old).
+            Exceptions.ignore(e);
+            return 0;
+        }
     }
 
     @Override

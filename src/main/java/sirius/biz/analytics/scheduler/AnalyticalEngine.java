@@ -13,6 +13,7 @@ import sirius.biz.analytics.flags.ExecutionFlags;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Executes on a daily basis and invokes all {@link AnalyticsScheduler schedulers} (daily or once per month).
@@ -56,6 +56,8 @@ public class AnalyticalEngine implements EveryDay {
     /**
      * Contains the log used by the analytical scheduler and all its related classes.
      */
+    @SuppressWarnings("java:S1192")
+    @Explain("These constants are semantically different.")
     public static final Log LOG = Log.get("analytics");
 
     /**
@@ -121,8 +123,7 @@ public class AnalyticalEngine implements EveryDay {
     }
 
     protected void initialize() {
-        activeSchedulers =
-                schedulers.getParts().stream().filter(AnalyticsScheduler::isActive).collect(Collectors.toList());
+        activeSchedulers = schedulers.getParts().stream().filter(AnalyticsScheduler::isActive).toList();
 
         if (flags == null && activeSchedulers.stream()
                                              .anyMatch(scheduler -> scheduler.getInterval()

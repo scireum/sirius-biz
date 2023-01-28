@@ -15,6 +15,9 @@ import sirius.web.controller.MessageExpander;
 
 import java.util.regex.Pattern;
 
+/**
+ * Expands blocks like <tt>lookupTable:units</tt> into proper links to a {@link LookupTable}.
+ */
 @Register
 public class LookupTableMessageExpander implements MessageExpander {
 

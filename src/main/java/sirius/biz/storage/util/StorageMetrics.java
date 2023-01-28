@@ -13,6 +13,7 @@ import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.MetricProvider;
 import sirius.kernel.health.metrics.MetricsCollector;
 import sirius.web.health.CachingLoadInfoProvider;
@@ -38,59 +39,59 @@ public class StorageMetrics extends CachingLoadInfoProvider implements MetricPro
                                             "storage-uploads",
                                             "Storage Uploads",
                                             ObjectStorageSpace.getUploads(),
-                                            "/min");
+                                            Metric.UNIT_PER_MIN);
         metricsCollector.differentialMetric("storage_downloads",
                                             "storage-downloads",
                                             "Storage Downloads",
                                             ObjectStorageSpace.getDownloads(),
-                                            "/min");
+                                            Metric.UNIT_PER_MIN);
         metricsCollector.differentialMetric("storage_streams",
                                             "storage-streams",
                                             "Storage Streams",
                                             ObjectStorageSpace.getStreams(),
-                                            "/min");
+                                            Metric.UNIT_PER_MIN);
         metricsCollector.differentialMetric("storage_deliveries",
                                             "storage-deliveries",
                                             "Storage Deliveries",
                                             ObjectStorageSpace.getDeliveries(),
-                                            "/min");
+                                            Metric.UNIT_PER_MIN);
         metricsCollector.differentialMetric("storage_fallbacks",
                                             "storage-fallbacks",
                                             "Storage Fallbacks",
                                             ObjectStorageSpace.getFallbacks(),
-                                            "/min");
+                                            Metric.UNIT_PER_MIN);
         metricsCollector.differentialMetric("storage_client_errors",
                                             "storage-client-errors",
                                             "Storage Client Errors (4xx)",
                                             ObjectStorageSpace.getDeliveryClientFailures(),
-                                            "/min");
+                                            Metric.UNIT_PER_MIN);
         metricsCollector.differentialMetric("storage_server_errors",
                                             "storage-server-errors",
                                             "Storage Server Errors (5xx)",
                                             ObjectStorageSpace.getDeliveryServerFailures(),
-                                            "/min");
+                                            Metric.UNIT_PER_MIN);
 
         metricsCollector.metric("storage_replication_tasks",
                                 "storage-replication-tasks",
                                 "Storage Replication Tasks",
                                 replicationManager.getReplicationExecutionDuration().getCount(),
-                                "/min");
+                                Metric.UNIT_PER_MIN);
         metricsCollector.metric("storage_replication_duration",
                                 "storage-replication-duration",
                                 "Storage Replication Duration",
                                 replicationManager.getReplicationExecutionDuration().getAndClear(),
-                                "ms");
+                                Metric.UNIT_PER_MIN);
 
         metricsCollector.metric("storage_conversions",
                                 "storage-conversions",
                                 "Storage Conversions",
                                 conversionEngine.getConversionDuration().getCount(),
-                                "/min");
+                                Metric.UNIT_PER_MIN);
         metricsCollector.metric("storage_conversion_duration",
                                 "storage-conversion-duration",
                                 "Storage Conversion Duration",
                                 conversionEngine.getConversionDuration().getAndClear(),
-                                "ms");
+                                Metric.UNIT_MS);
     }
 
     @Override
@@ -100,6 +101,9 @@ public class StorageMetrics extends CachingLoadInfoProvider implements MetricPro
             consumer.accept(new LoadInfo("storage-total-replication-tasks",
                                          "Total Replication Tasks",
                                          replicationTaskStorage.countTotalNumberOfTasks()));
+            consumer.accept(new LoadInfo("storage-delayed-replication-tasks",
+                                         "Delayed / Parked Replication Tasks",
+                                         replicationTaskStorage.countNumberOfDelayedTasks()));
             consumer.accept(new LoadInfo("storage-executable-replication-tasks",
                                          "Executable Replication Tasks",
                                          replicationTaskStorage.countNumberOfExecutableTasks()));

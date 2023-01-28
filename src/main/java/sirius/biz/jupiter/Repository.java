@@ -11,7 +11,6 @@ package sirius.biz.jupiter;
 import sirius.kernel.commons.Values;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Permits to display and manage the repository contents of an attached Jupiter instance.
@@ -101,7 +100,7 @@ public class Repository {
     public List<RepositoryFile> list() {
         return connection.queryDirect(() -> "REPO.LIST", jupiter -> {
             jupiter.sendCommand(CMD_LIST, "raw");
-            return jupiter.getObjectMultiBulkReply().stream().map(this::parseMetadataRow).collect(Collectors.toList());
+            return jupiter.getObjectMultiBulkReply().stream().map(this::parseMetadataRow).toList();
         });
     }
 

@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Provides a {@link Firewall} and rate-limiting facility.
@@ -326,7 +325,7 @@ public class Isenguard {
                      .stream()
                      .filter(ext -> Strings.areEqual(type, ext.getString("type")))
                      .map(Extension::getId)
-                     .collect(Collectors.toList());
+                     .toList();
     }
 
     /**
@@ -340,4 +339,3 @@ public class Isenguard {
         return limiter.getBlockedIPs();
     }
 }
-

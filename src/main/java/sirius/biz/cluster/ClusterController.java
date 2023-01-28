@@ -190,7 +190,7 @@ public class ClusterController extends BasicController {
                                           .flatMap(node -> node.getJobs().keySet().stream())
                                           .distinct()
                                           .sorted(Comparator.naturalOrder())
-                                          .collect(Collectors.toList());
+                                          .toList();
         Map<String, String> descriptions = clusterInfo.stream()
                                                       .flatMap(node -> node.getJobs().entrySet().stream())
                                                       .collect(Collectors.toMap(Map.Entry::getKey,
@@ -260,6 +260,9 @@ public class ClusterController extends BasicController {
     @ApiResponse(responseCode = "200",
             description = "Successful response",
             content = @Content(mediaType = "text/plain", examples = @ExampleObject("OK")))
+    @ApiResponse(responseCode = "401",
+            description = "Authentication required but none provided",
+            content = @Content(mediaType = "text/plain"))
     public void apiBleed(WebContext webContext, String setting, String node, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);

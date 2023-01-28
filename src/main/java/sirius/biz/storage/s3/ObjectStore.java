@@ -63,7 +63,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Represents a S3 compatible object store which is commonly obtained via {@link ObjectStores}.
@@ -86,8 +85,9 @@ public class ObjectStore {
      * Specifies the maximal size of the local aggregation buffer (as described in
      * {@link #INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE}) before a chunk is uploaded to S3. Note that a single multipart
      * upload can at most consist of 10.000 parts - therefore this size limits the maximal total object size.
+     * The resulting limit should be 10 * 1024 * 1024 * 10000 bytes = 104,8576 GB.
      */
-    private static final int MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE = 8 * 1024 * 1024;
+    private static final int MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE = 10 * 1024 * 1024;
 
     /**
      * When reading from an input stream into the local aggregation buffer (as described in
@@ -291,7 +291,7 @@ public class ObjectStore {
      * @return a list of all buckets in the given store
      */
     public List<String> listBuckets() {
-        return getClient().listBuckets().stream().map(Bucket::getName).collect(Collectors.toList());
+        return getClient().listBuckets().stream().map(Bucket::getName).toList();
     }
 
     /**
@@ -726,14 +726,19 @@ public class ObjectStore {
                                       eTags.size());
             }
 
-            getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
-                                                                                   objectId,
-                                                                                   multipartUpload.getUploadId(),
-                                                                                   eTags));
+            if (eTags.isEmpty()) {
+                // If the input stream had no contents, attempting to complete the multipart upload will error out.
+                // Therefore, we abort it and put an empty string, creating an object with 0 bytes
+                abortMultipartUpload(bucket, objectId, multipartUpload);
+                getClient().putObject(bucket.getName(), objectId, "");
+            } else {
+                getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
+                                                                                       objectId,
+                                                                                       multipartUpload.getUploadId(),
+                                                                                       eTags));
+            }
         } catch (Exception e) {
-            getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
-                                                                             objectId,
-                                                                             multipartUpload.getUploadId()));
+            abortMultipartUpload(bucket, objectId, multipartUpload);
             if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
                 throw Exceptions.createHandled()
                                 .error(e)
@@ -750,6 +755,14 @@ public class ObjectStore {
                                                     bucket.getName())
                             .handle();
         }
+    }
+
+    private void abortMultipartUpload(BucketName bucket,
+                                      String objectId,
+                                      InitiateMultipartUploadResult multipartUpload) {
+        getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
+                                                                         objectId,
+                                                                         multipartUpload.getUploadId()));
     }
 
     @Nonnull

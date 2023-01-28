@@ -166,20 +166,11 @@ public interface ProcessContext extends TaskContextAdapter {
      * This is most probably done by {@link Processes#execute(String, Consumer)}. However, when executing in
      * multiple steps (maybe even on multiple nodes) using {@link Processes#partiallyExecute(String, Consumer)},
      * this has to be manually invoked once the process is finally completed.
-     */
-    void markCompleted();
-
-    /**
-     * Updates the "current state" message of the process.
-     * <p>
-     * Note that this doesn't perform any rate limiting etc. Therefore {@link TaskContext#shouldUpdateState()}
-     * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
      *
-     * @param state the new state message to show
-     * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
+     * @param computationTimeInSeconds the computation time of the last manual step <tt>execute</tt> and
+     *                                 <tt>partiallyExecute</tt> already record this manually.
      */
-    @Deprecated(since = "2021/07/01")
-    void setCurrentStateMessage(String state);
+    void markCompleted(int computationTimeInSeconds);
 
     /**
      * Provides access to the context which has been provided for the process.

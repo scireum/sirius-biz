@@ -367,10 +367,8 @@ public class SFTPUplink extends ConfigBasedUplink {
             UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig);
             try {
                 InputStream rawStream = connector.connector().read(path);
-                WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
-                watchableInputStream.getCompletionFuture().then(connector::safeClose);
 
-                return watchableInputStream;
+                return new WatchableInputStream(rawStream).onCompletion(connector::safeClose);
             } catch (Exception e) {
                 connector.safeClose();
                 if (attempt.shouldThrow(e)) {
@@ -395,10 +393,8 @@ public class SFTPUplink extends ConfigBasedUplink {
             UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig);
             try {
                 OutputStream rawStream = connector.connector().write(path);
-                WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
-                watchableOutputStream.getCompletionFuture().then(connector::safeClose);
 
-                return watchableOutputStream;
+                return new WatchableOutputStream(rawStream).onCompletion(connector::safeClose);
             } catch (Exception e) {
                 connector.safeClose();
                 if (attempt.shouldThrow(e)) {

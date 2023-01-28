@@ -12,9 +12,14 @@ import sirius.biz.importer.AutoImport;
 import sirius.biz.protocol.NoJournal;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.SkipDefaultValue;
+
+import java.util.function.Consumer;
 
 /**
- * Contains an import transaction id.
+ * Contains import transaction information.
  * <p>
  * This is used by the {@link ImportTransactionHelper} to identify and delete all unchanged
  * entities after an update transaction has been completed.
@@ -31,11 +36,32 @@ public class ImportTransactionData extends Composite {
     @AutoImport(hidden = true)
     private long txnId;
 
+    /**
+     * Represents the source associated with the {@link #TXN_ID}, used to limit the scope of data being deleted.
+     *
+     * @see ImportTransactionHelper#deleteUnmarked(Class, Consumer, Consumer)
+     */
+    public static final Mapping SOURCE = Mapping.named("source");
+    @NoJournal
+    @AutoImport(hidden = true)
+    @SkipDefaultValue
+    @NullAllowed
+    @Length(50)
+    private String source;
+
     public long getTxnId() {
         return txnId;
     }
 
     public void setTxnId(long txnId) {
         this.txnId = txnId;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }

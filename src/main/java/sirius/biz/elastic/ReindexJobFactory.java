@@ -8,6 +8,7 @@
 
 package sirius.biz.elastic;
 
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -106,4 +107,15 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     public String getName() {
         return "reindex-index-mapping";
     }
+
+    @Override
+    public int getPriority() {
+        return 10200;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.SYSTEM_ADMINISTRATION;
+    }
+
 }

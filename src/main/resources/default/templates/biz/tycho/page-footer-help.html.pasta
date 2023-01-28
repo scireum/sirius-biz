@@ -2,14 +2,14 @@
 <i:local name="navbox" value="renderToString('navbox')"/>
 
 <i:if test="isFilled(contents) || isFilled(navbox)">
-     <span class="text-muted small mr-2 pr-2 br-gray dropup" id="tycho-page-help-dropdown">
-        <a class="btn btn-outline-primary"
+     <span class="text-muted small dropup" id="tycho-page-help-dropdown">
+        <a class="btn btn-primary"
            data-toggle="dropdown"
            style="padding: 0.20rem .5rem;font-size: 0.75rem;line-height: 1.25;border-radius: .2rem;"
            id="tycho-page-help-toggle">
             <i class="fas fa-ambulance"></i> @i18n("DashboardController.help")
         </a>
-        <div class="dropdown-menu dropdown-menu-right p-4" style="min-width: 300px;line-height:1.5;">
+        <div class="dropdown-menu dropdown-menu-right p-4 shadow" style="min-width: 300px;line-height:1.5;">
             <h5 class="card-title">
                 @i18n("DashboardController.help")
             </h5>

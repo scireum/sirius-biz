@@ -11,7 +11,7 @@ package sirius.biz.elastic;
 import com.alibaba.fastjson.JSONObject;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
-import sirius.biz.jobs.JobCategory;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.tenants.TenantUserManager;
@@ -123,12 +123,17 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
 
     @Override
     public String getCategory() {
-        return JobCategory.CATEGORY_MISC;
+        return StandardCategories.MONITORING;
     }
 
     @Nonnull
     @Override
     public String getName() {
         return "elastic-index-size";
+    }
+
+    @Override
+    public int getPriority() {
+        return 8220;
     }
 }

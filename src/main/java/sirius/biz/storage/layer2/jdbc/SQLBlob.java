@@ -29,6 +29,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.annotations.Unique;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.async.Future;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
@@ -154,7 +155,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     public static final Mapping PARENT = Mapping.named("parent");
     @NullAllowed
     private final SQLEntityRef<SQLDirectory> parent =
-            SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.IGNORE);
+            SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.IGNORE).weak();
 
     /**
      * Stores if the blob was moved into another folder.
@@ -229,7 +230,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
         updateFilenameFields();
 
-        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION, PHYSICAL_OBJECT_KEY)) {
             createdOrRenamed = true;
         }
 
@@ -284,6 +285,11 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     @Override
     public Optional<FileHandle> download() {
         return getStorageSpace().download(this);
+    }
+
+    @Override
+    public Future tryCreateVariant(String variantName) {
+        return getStorageSpace().tryCreateVariant(this, variantName);
     }
 
     @Override

@@ -8,7 +8,6 @@
 
 package sirius.biz.importer.format;
 
-import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.nls.NLS;
@@ -317,7 +316,7 @@ public class FieldDefinition {
      * Opposed to {@link #addAlias(String)}, this method resolves all available translations and not only
      * the one in the current language context.
      *
-     * @param alias the alias to add, which will be expanced to all available translations
+     * @param alias the alias to add, which will be expanded to all available translations
      * @return the field itself for fluent method calls
      */
     public FieldDefinition addTranslatedAliases(@Nonnull String alias) {
@@ -329,7 +328,7 @@ public class FieldDefinition {
         UserContext.getCurrentScope()
                    .getDisplayLanguages()
                    .stream()
-                   .map(lang -> NLS.smartGet(alias, lang))
+                   .map(language -> NLS.smartGet(alias, language))
                    .filter(text -> !text.equals(getLabel()))
                    .filter(text -> !aliases.stream()
                                            .map(String::toLowerCase)
@@ -388,8 +387,10 @@ public class FieldDefinition {
      * @return a list of all remarks
      */
     public List<String> getRemarks() {
-        List<String> result = new ArrayList<>();
-        this.checks.stream().map(ValueCheck::generateRemark).filter(Objects::nonNull).collect(Lambdas.into(result));
+        List<String> result = this.checks.stream()
+                                         .map(ValueCheck::generateRemark)
+                                         .filter(Objects::nonNull)
+                                         .collect(Collectors.toList());
         if (!aliases.isEmpty()) {
             result.add(NLS.fmtr("FieldDefinition.aliasRemark")
                           .set("aliases", aliases.stream().map(NLS::smartGet).collect(Collectors.joining(", ")))
@@ -418,7 +419,7 @@ public class FieldDefinition {
     /**
      * Determines if the field is hidden from the documentation.
      *
-     * @return <tt>true</tt> if the field is hidden, <tt>false</tt> othewise
+     * @return <tt>true</tt> if the field is hidden, <tt>false</tt> otherwise
      */
     public boolean isHidden() {
         return hidden;

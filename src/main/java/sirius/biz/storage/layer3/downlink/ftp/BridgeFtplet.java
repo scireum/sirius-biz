@@ -62,8 +62,8 @@ class BridgeFtplet implements Ftplet {
 
         UserContext.get().setCurrentScope(ScopeInfo.DEFAULT_SCOPE);
 
-        if (session.getUser() instanceof BridgeUser) {
-            String scopeId = ((BridgeUser) session.getUser()).getScopeId();
+        if (session.getUser() instanceof BridgeUser bridgeUser) {
+            String scopeId = bridgeUser.getScopeId();
             if (detector != null && !ScopeInfo.DEFAULT_SCOPE.getScopeId().equals(scopeId)) {
                 if (StorageUtils.LOG.isFINE()) {
                     StorageUtils.LOG.FINE("Layer 3/FTP: Setting scope: " + scopeId);

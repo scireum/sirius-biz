@@ -27,6 +27,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -520,6 +521,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
     @Nonnull
     @Override
+    @SuppressWarnings("java:S2259")
+    @Explain("String filled check is performed on filename.")
     protected Optional<String> updateBlob(@Nonnull SQLBlob blob,
                                           @Nonnull String nextPhysicalId,
                                           long size,
@@ -769,10 +772,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected BasePageHelper<? extends Blob, ?, ?, ?> queryChildBlobsAsPage(SQLDirectory parent,
                                                                             WebContext webContext) {
         SmartQuery<SQLBlob> blobsQuery = oma.select(SQLBlob.class)
-                                       .eq(SQLBlob.SPACE_NAME, spaceName)
-                                       .eq(SQLBlob.PARENT, parent)
-                                       .eq(SQLBlob.COMMITTED, true)
-                                       .eq(SQLBlob.DELETED, false);
+                                            .eq(SQLBlob.SPACE_NAME, spaceName)
+                                            .eq(SQLBlob.PARENT, parent)
+                                            .eq(SQLBlob.COMMITTED, true)
+                                            .eq(SQLBlob.DELETED, false);
 
         SQLPageHelper<SQLBlob> pageHelper = SQLPageHelper.withQuery(blobsQuery)
                                                          .withContext(webContext)

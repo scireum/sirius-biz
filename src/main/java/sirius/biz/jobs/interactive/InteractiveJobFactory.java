@@ -71,11 +71,11 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
 
     @Override
     public void startInteractively(WebContext request) {
-        checkPermissions();
+        enforceAccessibility();
         setupTaskContext();
 
         AtomicBoolean submit = new AtomicBoolean(request.isSafePOST());
-        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), error -> {
+        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), (param, error) -> {
             UserContext.message(Message.error(error));
             submit.set(false);
         });

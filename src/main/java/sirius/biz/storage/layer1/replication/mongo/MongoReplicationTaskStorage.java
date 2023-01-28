@@ -125,6 +125,14 @@ public class MongoReplicationTaskStorage
     }
 
     @Override
+    public int countNumberOfDelayedTasks() {
+        return (int) mango.select(MongoReplicationTask.class)
+                          .eq(MongoReplicationTask.FAILED, false)
+                          .where(QueryBuilder.FILTERS.gte(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
+                          .count();
+    }
+
+    @Override
     public int countNumberOfExecutableTasks() {
         return (int) mango.select(MongoReplicationTask.class)
                           .eq(MongoReplicationTask.FAILED, false)

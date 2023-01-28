@@ -8,21 +8,21 @@
           job="job"
           context="context"
           additionalMetrics="additionalMetrics">
-    <div class="well">
-        <canvas id="chart" class="chart" style="display: block" height="400"></canvas>
+    <div class="card">
+        <div class="card-body">
+            <canvas id="chart" class="chart" style="display: block; height: 60vh;"></canvas>
+        </div>
     </div>
 
     <script type="text/javascript">
-        @raw {
-            $(document).ready(function () {
-                var datasets = [];
-                @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
-                    datasets.push({ label: '@dataset.getLabel()',
-                                    data: [ @raw { @dataset.renderData() } ],
-                                    axis: @raw { @dataset.renderAxisName() }});
-                }
-                barChart('#chart', [ @labels ], datasets);
-            });
-        }
+        sirius.ready(function () {
+            const datasets = [];
+            @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
+                datasets.push({ label: '@dataset.getLabel()',
+                                data: [ @raw { @dataset.renderData() } ],
+                                axis: @raw { @dataset.renderAxisName() }});
+            }
+            barChart('#chart', [ @raw { @labels } ], datasets);
+        });
     </script>
 </i:invoke>

@@ -52,12 +52,12 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     protected E load(Context data, E entity, Mapping... mappings) {
-        E e = super.load(data, entity, mappings);
-        if (e instanceof MongoTenantAware) {
-            ((MongoTenantAware) e).fillWithCurrentTenant();
+        E loadedEntity = super.load(data, entity, mappings);
+        if (loadedEntity instanceof MongoTenantAware mongoTenantAware) {
+            mongoTenantAware.fillWithCurrentTenant();
         }
 
-        return e;
+        return loadedEntity;
     }
 
     @Override

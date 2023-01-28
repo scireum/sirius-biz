@@ -106,27 +106,27 @@ public abstract class LookupTable {
      * {@link #normalize(String)} before invoking this method.
      */
     public Optional<String> resolveName(String code) {
-        return resolveName(code, NLS.getCurrentLang());
+        return resolveName(code, NLS.getCurrentLanguage());
     }
 
     /**
      * Resolves the name in the given language for the given code.
      *
-     * @param code the code to resolve the name for
-     * @param lang the language of the name to resolve
+     * @param code     the code to resolve the name for
+     * @param language the language of the name to resolve
      * @return the name for the given code in the given language or an empty optional, if the code is unknown.
      * Note that this will only resolve the main code. When in doubt, the code must be normalized via
      * {@link #normalize(String)} before invoking this method.
      */
-    public Optional<String> resolveName(String code, String lang) {
+    public Optional<String> resolveName(String code, String language) {
         if (Strings.isEmpty(code)) {
             return Optional.empty();
         }
 
-        return performResolveName(normalizeCodeValue(code), lang);
+        return performResolveName(normalizeCodeValue(code), language);
     }
 
-    protected abstract Optional<String> performResolveName(@Nonnull String code, String lang);
+    protected abstract Optional<String> performResolveName(@Nonnull String code, String language);
 
     /**
      * Determines if the table contains the given code.
@@ -157,29 +157,29 @@ public abstract class LookupTable {
      * must be normalized via {@link #normalize(String)} before invoking this method.
      */
     public Optional<String> resolveDescription(String code) {
-        return resolveDescription(code, NLS.getCurrentLang());
+        return resolveDescription(code, NLS.getCurrentLanguage());
     }
 
     /**
      * Resolves the description in the given language for the given code.
      *
-     * @param code the code to resolve the description for
-     * @param lang the language of the description to resolve
+     * @param code     the code to resolve the description for
+     * @param language the language of the description to resolve
      * @return the description for the given code in the given language or an empty optional, if the code is unknown or
      * if no description is present.
      * <p>
      * Note that this will only resolve the main code. When in doubt, the code must be normalized via
      * {@link #normalize(String)} before invoking this method.
      */
-    public Optional<String> resolveDescription(String code, String lang) {
+    public Optional<String> resolveDescription(String code, String language) {
         if (Strings.isEmpty(code)) {
             return Optional.empty();
         }
 
-        return performResolveDescription(normalizeCodeValue(code), lang);
+        return performResolveDescription(normalizeCodeValue(code), language);
     }
 
-    protected abstract Optional<String> performResolveDescription(@Nonnull String code, String lang);
+    protected abstract Optional<String> performResolveDescription(@Nonnull String code, String language);
 
     /**
      * Fetches the requested field for the given code.
@@ -343,7 +343,7 @@ public abstract class LookupTable {
      * {@link #normalize(String)} before invoking this method.
      */
     public Optional<String> fetchTranslatedField(String code, String targetField) {
-        return fetchTranslatedField(code, targetField, NLS.getCurrentLang());
+        return fetchTranslatedField(code, targetField, NLS.getCurrentLanguage());
     }
 
     /**
@@ -351,22 +351,22 @@ public abstract class LookupTable {
      *
      * @param code        the code to fetch the field for
      * @param targetField the field to fetch
-     * @param lang        the language used to translate the resulting value
+     * @param language    the language used to translate the resulting value
      * @return the translated value of the field using the given language, or an empty optional if the code is unknown.
      * Note that this will only resolve the main code. When in doubt, the code must be normalized via
      * {@link #normalize(String)} before invoking this method.
      */
-    public Optional<String> fetchTranslatedField(String code, String targetField, String lang) {
+    public Optional<String> fetchTranslatedField(String code, String targetField, String language) {
         if (Strings.isEmpty(code)) {
             return Optional.empty();
         }
 
-        return performFetchTranslatedField(normalizeCodeValue(code), targetField, lang);
+        return performFetchTranslatedField(normalizeCodeValue(code), targetField, language);
     }
 
     protected abstract Optional<String> performFetchTranslatedField(@Nonnull String code,
                                                                     String targetField,
-                                                                    String lang);
+                                                                    String language);
 
     /**
      * Normalizes the given code into the main code used by this table.
@@ -589,13 +589,13 @@ public abstract class LookupTable {
      * <p>
      * This table can be built / parsed using {@link #parseTranslationTable(JSONObject, String)}.
      *
-     * @param table the table used to look up the value
-     * @param lang  the language to translate to or <tt>null</tt> to use the current language
+     * @param table    the table used to look up the value
+     * @param language the language to translate to or <tt>null</tt> to use the current language
      * @return the translation for the given language, or a fallback value, or an empty optional if no translation is
      * present
      */
-    public static Optional<String> fetchTranslation(Map<String, String> table, @Nullable String lang) {
-        String result = table.get(Strings.isFilled(lang) ? lang : NLS.getCurrentLang());
+    public static Optional<String> fetchTranslation(Map<String, String> table, @Nullable String language) {
+        String result = table.get(Strings.isFilled(language) ? language : NLS.getCurrentLanguage());
         if (Strings.isFilled(result)) {
             return Optional.of(result);
         }
@@ -624,7 +624,7 @@ public abstract class LookupTable {
     }
 
     private static List<String> transformArrayToStringList(JSONArray array) {
-        return array.stream().filter(Strings::isFilled).map(String::valueOf).collect(Collectors.toList());
+        return array.stream().filter(Strings::isFilled).map(String::valueOf).toList();
     }
 
     /**
@@ -701,22 +701,22 @@ public abstract class LookupTable {
      * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
      */
     public Stream<LookupTableEntry> suggest(@Nullable String searchTerm) {
-        return suggest(searchTerm, NLS.getCurrentLang());
+        return suggest(searchTerm, NLS.getCurrentLanguage());
     }
 
     /**
      * Suggests several entries for the given search term using the given language.
      *
      * @param searchTerm the term used to filter the suggestions
-     * @param lang       the language to translate the name and description to
+     * @param language   the language to translate the name and description to
      * @return a stream of suggestions for the given term. Note that most probably {@link Stream#limit(long)} should
      * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
      */
-    public Stream<LookupTableEntry> suggest(@Nullable String searchTerm, String lang) {
+    public Stream<LookupTableEntry> suggest(@Nullable String searchTerm, String language) {
         if (Strings.isEmpty(searchTerm)) {
-            return scan(lang, new Limit(0, MAX_SUGGESTIONS));
+            return scan(language, new Limit(0, MAX_SUGGESTIONS));
         }
-        return performSuggest(new Limit(0, MAX_SUGGESTIONS), searchTerm, lang);
+        return performSuggest(new Limit(0, MAX_SUGGESTIONS), searchTerm, language);
     }
 
     /**
@@ -724,10 +724,10 @@ public abstract class LookupTable {
      *
      * @param limit      regulates how many suggestions are generated
      * @param searchTerm the term to search by
-     * @param lang       the language to translate names and descriptions in
+     * @param language   the language to translate names and descriptions in
      * @return a stream containing all suggestions
      */
-    protected abstract Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang);
+    protected abstract Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language);
 
     /**
      * Enumerates all entries in the table using the current language.
@@ -736,17 +736,17 @@ public abstract class LookupTable {
      * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
      */
     public Stream<LookupTableEntry> scan(Limit limit) {
-        return scan(NLS.getCurrentLang(), limit);
+        return scan(NLS.getCurrentLanguage(), limit);
     }
 
     /**
      * Enumerates all entries in the table using the given language.
      *
-     * @param lang  the language to translate the name and description to
-     * @param limit the limit to apply to fetch a sane number of entries
+     * @param language the language to translate the name and description to
+     * @param limit    the limit to apply to fetch a sane number of entries
      * @return a stream of the selected amount of entries in this table
      */
-    public abstract Stream<LookupTableEntry> scan(String lang, Limit limit);
+    public abstract Stream<LookupTableEntry> scan(String language, Limit limit);
 
     /**
      * Executes a search for the given (optional) search term.
@@ -760,7 +760,7 @@ public abstract class LookupTable {
      * @return a stream of matches for the given term
      */
     public Stream<LookupTableEntry> search(@Nullable String searchTerm, Limit limit) {
-        return search(searchTerm, limit, NLS.getCurrentLang());
+        return search(searchTerm, limit, NLS.getCurrentLanguage());
     }
 
     /**
@@ -772,18 +772,18 @@ public abstract class LookupTable {
      *
      * @param searchTerm the term used to filter the suggestions
      * @param limit      the limit to apply to fetch a sane number of entries
-     * @param lang       the language to translate the name and description to
+     * @param language   the language to translate the name and description to
      * @return a stream of matches for the given term
      */
-    public Stream<LookupTableEntry> search(@Nullable String searchTerm, Limit limit, String lang) {
+    public Stream<LookupTableEntry> search(@Nullable String searchTerm, Limit limit, String language) {
         if (Strings.isEmpty(searchTerm)) {
-            return scan(lang, limit);
+            return scan(language, limit);
         } else {
-            return performSearch(searchTerm, limit, lang);
+            return performSearch(searchTerm, limit, language);
         }
     }
 
-    protected abstract Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang);
+    protected abstract Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language);
 
     /**
      * Returns the number of entries in this table.
@@ -795,16 +795,16 @@ public abstract class LookupTable {
     /**
      * Enumerates all entries matching the given lookup in the table using the given language.
      *
-     * @param lang        the language to translate the name and description to
+     * @param language    the language to translate the name and description to
      * @param lookupPath  the field to search in
      * @param lookupValue the value to search for
      * @return a stream of all entries matching the lookup, or an empty stream if scanning isn't supported
      */
-    public Stream<LookupTableEntry> query(String lang, String lookupPath, String lookupValue) {
-        return performQuery(lang, lookupPath, lookupValue);
+    public Stream<LookupTableEntry> query(String language, String lookupPath, String lookupValue) {
+        return performQuery(language, lookupPath, lookupValue);
     }
 
-    protected abstract Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue);
+    protected abstract Stream<LookupTableEntry> performQuery(String language, String lookupPath, String lookupValue);
 
     public String getTitle() {
         return Optional.of(extension.getTranslatedString("title"))

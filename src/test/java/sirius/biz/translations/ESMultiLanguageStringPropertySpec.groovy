@@ -23,26 +23,26 @@ class ESMultiLanguageStringPropertySpec extends BaseSpecification {
         TenantsHelper.installTestTenant()
         when:
         def test = new ESMultiLanguageStringEntity()
-        test.getMultiLang().put("de", "Das ist ein Test").put("en", "This is a test")
+        test.getMultiLanguage().put("de", "Das ist ein Test").put("en", "This is a test")
         elastic.update(test)
         def resolved = elastic.refreshOrFail(test)
         then:
-        resolved.getMultiLang().size() == 2
+        resolved.getMultiLanguage().size() == 2
         and:
-        resolved.getMultiLang().getText("de").get() == "Das ist ein Test"
-        resolved.getMultiLang().getText("en").get() == "This is a test"
+        resolved.getMultiLanguage().getText("de").get() == "Das ist ein Test"
+        resolved.getMultiLanguage().getText("en").get() == "This is a test"
 
         when:
-        resolved.getMultiLang().remove("de")
+        resolved.getMultiLanguage().remove("de")
         and:
         elastic.update(resolved)
         and:
         resolved = elastic.refreshOrFail(test)
         then:
-        resolved.getMultiLang().size() == 1
+        resolved.getMultiLanguage().size() == 1
         and:
-        !resolved.getMultiLang().contains("Das ist ein Test")
-        resolved.getMultiLang().getText("en").get() == "This is a test"
+        !resolved.getMultiLanguage().contains("Das ist ein Test")
+        resolved.getMultiLanguage().getText("en").get() == "This is a test"
     }
 
 }

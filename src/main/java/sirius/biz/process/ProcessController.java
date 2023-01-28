@@ -9,6 +9,12 @@
 package sirius.biz.process;
 
 import com.alibaba.fastjson.JSONObject;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogHandler;
@@ -31,6 +37,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.Controller;
 import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -38,8 +45,10 @@ import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
-import sirius.web.services.InternalService;
+import sirius.web.services.ApiResponsesFrom;
+import sirius.web.services.DefaultErrorResponsesJson;
 import sirius.web.services.JSONStructuredOutput;
+import sirius.web.services.PublicService;
 
 /**
  * Provides the management UI for {@link java.lang.Process processes}.
@@ -389,9 +398,94 @@ public class ProcessController extends BizController {
      * @param processId  the process to output
      */
     @Routed("/ps/:1/api")
-    @InternalService
+    @PublicService(apiName = "jobs-processes", path = "/ps/{process}/api", priority = 110)
+    @Operation(summary = "Process Information", method = "GET", description = """
+            Fetches the metadata, attached files, link, timers and the latest log messages of the
+            given process.
+            """)
+    @ApiResponse(responseCode = "200",
+            description = "Successful response",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(//language=JSON
+                    """
+                            {
+                                "success":true,
+                                "error":false,
+                                "id":"KR8E6I36AK7POAK0IP9L3KB0Q1",
+                                "title":"Jupiter Synchronization",
+                                "state":"STANDBY",
+                                "started":"2022-09-23T16:16:58.033",
+                                "completed":null,
+                                "erroneous":false,
+                                "processType":"jupiter-sync",
+                                "stateMessage":null,
+                                "counters":[],
+                                "links":[],
+                                "lastMessages":[
+                                    {
+                                        "type":"INFO",
+                                        "timestamp":"2022-09-23T16:16:58.073",
+                                        "message":"Flushing local cache...",
+                                        "node":"mbp-aha.local",
+                                        "state":null,
+                                        "messageType":null
+                                    }
+                                ]
+                            }
+                            """)))
+    @ApiResponsesFrom(DefaultErrorResponsesJson.class)
+    @Parameter(name = "process",
+            description = "The ID of the process to fetch",
+            required = true,
+            example = "KR8E6I36AK7POAK0IP9L3KB0Q1")
+    @LoginRequired
     @Permission(PERMISSION_VIEW_PROCESSES)
     public void processAPI(WebContext webContext, JSONStructuredOutput out, String processId) {
-        processes.outputAsJSON(processId, out);
+        Process process = processes.fetchProcessForUser(processId).orElse(null);
+        if (process == null) {
+            throw Exceptions.createHandled()
+                            .withDirectMessage(Strings.apply("Unknown or inaccessible process: %s", processId))
+                            .hint(Controller.HTTP_STATUS, HttpResponseStatus.NOT_FOUND)
+                            .handle();
+        }
+
+        out.property("id", processId);
+        out.property("title", process.getTitle());
+        out.property("state", process.getState());
+        out.property("started", process.getStarted());
+        out.property("completed", process.getCompleted());
+        out.property("erroneous", process.isErrorneous());
+        out.property("processType", process.getProcessType());
+        out.property("stateMessage", process.getStateMessage());
+        out.beginArray("counters");
+        for (String counter : process.getCounterList()) {
+            out.beginObject("counter");
+            out.property("name", counter);
+            out.property("counter", process.getCounterValue(counter));
+            out.property("timing", process.getCounterTiming(counter));
+            out.endObject();
+        }
+        out.endArray();
+
+        out.beginArray("links");
+        for (ProcessLink link : process.getLinks()) {
+            out.beginObject("link");
+            out.property("label", link.getLabel());
+            out.property("uri", link.getUri());
+            out.endObject();
+        }
+        out.endArray();
+
+        out.beginArray("lastMessages");
+        for (ProcessLog log : buildLogsQuery(process).limit(50).orderDesc(ProcessLog.SORT_KEY).queryList()) {
+            out.beginObject("message");
+            out.property("type", log.getType().name());
+            out.property("timestamp", log.getTimestamp());
+            out.property("message", log.getMessage());
+            out.property("node", log.getNode());
+            out.property("state", log.getState() != null ? log.getState().name() : null);
+            out.property("messageType", log.getMessageType());
+            out.endObject();
+        }
+        out.endArray();
     }
 }

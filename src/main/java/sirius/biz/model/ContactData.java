@@ -37,9 +37,15 @@ import java.util.regex.Pattern;
 public class ContactData extends Composite {
 
     /**
+     * Matches a part of a phone number like <tt>55 55</tt> or <tt>55</tt>.
+     */
+    private static final String NUMERIC_PART = "( *\\d+)*+";
+
+    /**
      * Validates a phone number.
      */
-    public static final Pattern VALID_PHONE_NUMBER = Pattern.compile("\\+?\\d+( \\d+)*( */( *\\d+)+)?( *-( *\\d+)+)?");
+    public static final Pattern VALID_PHONE_NUMBER =
+            Pattern.compile("\\+?\\d+" + NUMERIC_PART + "( */" + NUMERIC_PART + ")?( *-" + NUMERIC_PART + ")?");
 
     /**
      * Contains an email address.

@@ -8,11 +8,13 @@
 
 package sirius.biz.codelists;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.jobs.params.ParameterBuilder;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -62,9 +64,17 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
         return lookupTables.fetchTable(lookupTable)
                            .normalizeInput(input.getString())
                            .orElseThrow(() -> Exceptions.createHandled()
-                                                        .withNLSKey("LookupTableParameter.invalidValue")
+                                                        .withNLSKey("LookupValue.invalidValue")
                                                         .set("value", input.asString())
                                                         .handle());
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(this::createLookupValue)
+                      .map(value -> new JSONObject().fluentPut("value", value.getValue())
+                                                    .fluentPut("text", value.resolveDisplayString()));
     }
 
     @Override

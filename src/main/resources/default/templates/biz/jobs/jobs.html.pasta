@@ -1,67 +1,39 @@
-<i:arg type="Page" name="jobs"/>
+<i:arg type="List" name="jobs"/>
 
-<w:page titleKey="JobFactory.plural">
-    <i:block name="head">
-        <style>
-            h4 span {
-                padding-left: 8px;
-            }
-
-            div.job {
-                padding-top: 8px;
-            }
-        </style>
-    </i:block>
-
+<t:page titleKey="JobFactory.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader>
-        <div class="row">
-            <div class="col-md-8">
-                @i18n("JobFactory.plural")
-            </div>
-            <div class="col-md-4 align-right">
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@i18n("JobFactory.plural")</i:block>
+            <i:block name="actions">
                 <i:if test="isFrameworkEnabled('biz.scheduler-jdbc') || isFrameworkEnabled('biz.scheduler-mongo')">
-                    <w:permission permission="permission-manage-scheduler">
-                        <a class="btn btn-default" href="/jobs/scheduler">@i18n("SchedulerEntry.plural")</a>
-                    </w:permission>
+                    <t:permission permission="permission-manage-scheduler">
+                        <a class="btn btn-link pr-2" href="/jobs/scheduler">
+                            <i class="far fa-clock"></i>
+                            <span class="pl-1 d-none d-md-inline-block">@i18n("SchedulerEntry.plural")</span>
+                        </a>
+                    </t:permission>
                 </i:if>
-            </div>
-        </div>
-    </w:pageHeader>
+            </i:block>
+            <i:block name="additionalActions">
+                <t:dropdownItem
+                        framework="biz.processes"
+                        permission="permission-view-processes"
+                        url="/ps"
+                        icon="fas fa-external-link-alt"
+                        labelKey="Process.plural"/>
+                <t:dropdownItem
+                        url="/data-explorer"
+                        icon="fas fa-external-link-alt"
+                        labelKey="DataExplorerController.title"/>
+            </i:block>
+        </t:pageHeader>
+    </i:block>
 
-    <w:tableSearchHeader page="jobs" baseUrl="/jobs"/>
-
-    <i:for type="List" var="blocks" items="blockwise(jobs.getItems(), 2)">
-        <div class="row">
-            <i:for type="Tuple" var="categoryAndJobs" items="blocks">
-                <div class="col-md-6 col-xs-12">
-                    <div class="well">
-                        <i:local name="category"
-                                 value="categoryAndJobs.getFirst().as(sirius.biz.jobs.JobCategory.class)"/>
-                        <h4>
-                            <i class="fa @category.getIcon()"></i>
-                            <span>@category.getLabel()</span>
-                        </h4>
-
-                        <i:for type="sirius.biz.jobs.JobFactory"
-                               var="job"
-                               items="categoryAndJobs.getSecond().as(java.util.Collection.class)">
-                            <div class="job">
-                                <a class="link" href="/job/@job.getName()">
-                                    <i class="fa @job.getIcon()"></i>
-                                    @job.getLabel()
-                                </a><br>
-                                <small class="muted">@job.getDescription()</small>
-                            </div>
-                        </i:for>
-                    </div>
-                </div>
-            </i:for>
-        </div>
-    </i:for>
-</w:page>
+    <t:actions actions="jobs"/>
+</t:page>

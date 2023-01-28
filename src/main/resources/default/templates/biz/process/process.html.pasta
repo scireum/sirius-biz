@@ -22,6 +22,30 @@
                 </span>
             </i:block>
             <i:block name="actions">
+                <i:if test="process.shouldAutorefresh()">
+                    <a id="disableAutoRefresh"
+                       class="btn btn-outline-primary d-none"
+                       href="#">
+                        <span class="d-none d-lg-inline-block">
+                            <i class="far fa-check-square"></i>
+                            @i18n("Process.autoRefresh")
+                        </span>
+                        <span class="d-lg-none">
+                            <i class="fas fa-retweet"></i>
+                        </span>
+                    </a>
+                    <a id="enableAutoRefresh"
+                       class="btn btn-outline-secondary d-none"
+                       href="#">
+                        <span class="d-none d-lg-inline-block">
+                            <i class="far fa-square"></i>
+                            @i18n("Process.autoRefresh")
+                        </span>
+                        <span class="d-lg-none">
+                            <i class="fas fa-retweet"></i>
+                        </span>
+                    </a>
+                </i:if>
                 <i:render name="header-actions"/>
             </i:block>
             <i:block name="additionalActions">
@@ -53,7 +77,9 @@
             <t:iconInlineInfo icon="fa fa-user">
                 <t:smartValue type="user-account" payload="@process.getUserId()" label="@process.getUserName()"/>
                 <i:if test="isFilled(process.getTenantId()) && user().getTenantId() != process.getTenantId()">
-                    (<t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()"/>)
+                    (
+                    <t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()"/>
+                    )
                 </i:if>
             </t:iconInlineInfo>
             <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
@@ -65,13 +91,11 @@
                         <div class="cycle-js link"
                              data-cycle="@process.getStartedAsString() - @process.getCompletedAsString()">
                             @toSpokenDate(process.getStarted())
-                            <i:if test="isFilled(process.getRuntimeAsString())">
-                                (@process.getRuntimeAsString())
-                            </i:if>
                         </div>
                     </t:iconInlineInfo>
                 </i:else>
             </i:if>
+            <t:iconInlineInfo icon="fas fa-stopwatch">@process.getRuntimeAsString()</t:iconInlineInfo>
         </t:pageHeader>
     </i:block>
 
@@ -147,8 +171,38 @@
     <i:if test="process.shouldAutorefresh()">
         <script type="text/javascript">
             sirius.ready(function () {
-                setTimeout(function () {
-                    window.location.reload();
+                const autoRefreshStorageVariableName = "sirius.ps.isAutoRefreshEnabled";
+                let isAutoRefreshEnabled = sirius.readLocalStore(autoRefreshStorageVariableName) === "false" ? false : true;
+
+                const _enableAutoRefresh = document.getElementById("enableAutoRefresh");
+                const _disableAutoRefresh = document.getElementById("disableAutoRefresh");
+
+                if (isAutoRefreshEnabled === true) {
+                    _disableAutoRefresh.classList.remove("d-none");
+                } else {
+                    _enableAutoRefresh.classList.remove("d-none");
+                }
+
+                _enableAutoRefresh.onclick = function (event) {
+                    event.preventDefault();
+                    isAutoRefreshEnabled = true;
+                    sirius.writeLocalStore(autoRefreshStorageVariableName, true);
+                    _enableAutoRefresh.classList.add("d-none");
+                    _disableAutoRefresh.classList.remove("d-none");
+                };
+
+                _disableAutoRefresh.onclick = function (event) {
+                    event.preventDefault();
+                    isAutoRefreshEnabled = false;
+                    sirius.writeLocalStore(autoRefreshStorageVariableName, false);
+                    _disableAutoRefresh.classList.add("d-none");
+                    _enableAutoRefresh.classList.remove("d-none");
+                };
+
+                setInterval(function () {
+                    if (isAutoRefreshEnabled === true) {
+                        window.location.reload();
+                    }
                 }, 5000);
             });
         </script>

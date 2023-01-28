@@ -47,7 +47,7 @@ abstract class LocksSpec extends BaseSpecification {
         Semaphore semaphore = new Semaphore(1)
         and: "Acquire the semaphore, so that the forked thread doesn't start uncontrolled.."
         semaphore.acquire()
-        and: "Fork a thread which transferts to lock to itself and unlocks it"
+        and: "Fork a thread which transfers the lock to itself and unlocks it"
         tasks.defaultExecutor().start({ ->
             lockTransfer.run()
             semaphore.acquire()

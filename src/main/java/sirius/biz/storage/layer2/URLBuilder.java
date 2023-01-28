@@ -181,6 +181,7 @@ public class URLBuilder {
 
     /**
      * Determines if the given blob is considered a {@link #largeFileLimit} large file.
+     *
      * @param blob the blob to check
      * @return <tt>true</tt> if the blob is considered large, <tt>false</tt> otherwise@
      */
@@ -352,7 +353,8 @@ public class URLBuilder {
     /**
      * Determines if a conversion for the given variant is expected.
      *
-     * @return <tt>true</tt> if a variant is selected, for which no physical key is present, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if a variant is selected, for which no physical key is present. <tt>false</tt> if there
+     * already exists a physical key for the given variant.
      */
     public boolean isConversionExpected() {
         return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
@@ -410,7 +412,8 @@ public class URLBuilder {
             result.append(physicalKey);
             result.append("/");
             appendAddonText(result);
-            result.append(Strings.urlEncode(determineEffectiveFilename()));
+            result.append(Strings.urlEncode(Files.toSaneFileName(determineEffectiveFilename())
+                                                 .orElse(physicalKey + fetchUrlEncodedFileExtension())));
         } else {
             appendAddonText(result);
             result.append(physicalKey);

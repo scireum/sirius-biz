@@ -9,9 +9,11 @@
 package sirius.biz.storage.layer3;
 
 import sirius.biz.jobs.JobFactory;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
@@ -84,9 +86,11 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
      * This constructor is primarily used to make the parameter instantiation more readable.
      */
     public ExtractArchiveJob() {
-        this.destinationParameter = new DirectoryParameter(DESTINATION_PARAMETER_NAME,
-                                                           "$ExtractArchiveJob.destinationParameter").withDescription(
-                "$ExtractArchiveJob.destinationParameter.help").build();
+        this.destinationParameter = new FileParameter(DESTINATION_PARAMETER_NAME,
+                                                      "$ExtractArchiveJob.destinationParameter").directoriesOnly()
+                                                                                                .withDescription(
+                                                                                                        "$ExtractArchiveJob.destinationParameter.help")
+                                                                                                .build();
 
         this.overwriteExistingFilesParameter = new EnumParameter<>(OVERWRITE_EXISTING_FILES_PARAMETER_NAME,
                                                                    "$ExtractArchiveJob.overwriteExistingFilesParameter",
@@ -111,6 +115,8 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                                                                              extractor.getSupportedFileExtensions()))
                                                                                      .withDescription(
                                                                                              "$ExtractArchiveJob.sourceParameter.help")
+                                                                                     .filesOnly()
+                                                                                     .withBasePath("/work")
                                                                                      .markRequired()
                                                                                      .build();
         }
@@ -232,7 +238,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-file-archive-o";
+        return "far fa-file-archive";
     }
 
     @Override
@@ -249,5 +255,15 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     @Override
     public String getName() {
         return "file-extraction";
+    }
+
+    @Override
+    public int getPriority() {
+        return 5110;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.MISC;
     }
 }

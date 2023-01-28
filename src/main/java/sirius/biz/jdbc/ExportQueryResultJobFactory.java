@@ -8,7 +8,7 @@
 
 package sirius.biz.jdbc;
 
-import sirius.biz.jobs.JobCategory;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.LineBasedExportJob;
 import sirius.biz.jobs.batch.file.LineBasedExportJobFactory;
 import sirius.biz.jobs.params.Parameter;
@@ -113,12 +113,17 @@ public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
 
     @Override
     public String getCategory() {
-        return JobCategory.CATEGORY_MISC;
+        return StandardCategories.SYSTEM_ADMINISTRATION;
     }
 
     @Nonnull
     @Override
     public String getName() {
         return FACTORY_NAME;
+    }
+
+    @Override
+    public int getPriority() {
+        return 10100;
     }
 }

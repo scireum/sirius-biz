@@ -8,7 +8,7 @@
 
 package sirius.biz.jupiter;
 
-import redis.clients.jedis.Client;
+import redis.clients.jedis.Connection;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.PullBasedSpliterator;
 import sirius.kernel.commons.Strings;
@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -65,8 +64,8 @@ public class IDBTable {
         private boolean exact;
         private String searchPaths;
         private String searchValue;
-        private String primaryLang;
-        private String fallbackLang;
+        private String primaryLanguage;
+        private String fallbackLanguage;
 
         /**
          * Specifies the paths to look for a given value.
@@ -138,38 +137,38 @@ public class IDBTable {
         /**
          * Specifies the translation languages to use for translatable fields.
          *
-         * @param primaryLang  the first language to attempt
-         * @param fallbackLang the fallback language to attempt
+         * @param primaryLanguage  the first language to attempt
+         * @param fallbackLanguage the fallback language to attempt
          * @return the builder itself for fluent method calls
          */
-        public QueryBuilder translate(String primaryLang, String fallbackLang) {
-            this.primaryLang = primaryLang;
-            this.fallbackLang = fallbackLang;
+        public QueryBuilder translate(String primaryLanguage, String fallbackLanguage) {
+            this.primaryLanguage = primaryLanguage;
+            this.fallbackLanguage = fallbackLanguage;
             return this;
         }
 
         /**
          * Specifies a single language to use for translatable fields.
          *
-         * @param lang the language to use for lookups
+         * @param language the language to use for lookups
          * @return the builder itself for fluent method calls
          */
-        public QueryBuilder translate(String lang) {
-            this.primaryLang = lang;
-            this.fallbackLang = lang;
+        public QueryBuilder translate(String language) {
+            this.primaryLanguage = language;
+            this.fallbackLanguage = language;
             return this;
         }
 
         /**
          * Uses the currently active languages for translatable fields.
          * <p>
-         * This is boilerplate for {@code translate(NLS.getCurrentLang(), NLS.getFallbackLanguage())}.
+         * This is boilerplate for {@code translate(NLS.getCurrentLanguage(), NLS.getFallbackLanguage())}.
          *
          * @return the builder itself for fluent method calls
          */
         public QueryBuilder translate() {
-            this.primaryLang = NLS.getCurrentLang();
-            this.fallbackLang = NLS.getFallbackLanguage();
+            this.primaryLanguage = NLS.getCurrentLanguage();
+            this.fallbackLanguage = NLS.getFallbackLanguage();
             return this;
         }
 
@@ -183,8 +182,8 @@ public class IDBTable {
             checkConstraints();
 
             if (exact && Strings.isFilled(searchValue)) {
-                if (Strings.isFilled(primaryLang)) {
-                    return ilookup(primaryLang, fallbackLang, searchPaths, searchValue, pathsToQuery);
+                if (Strings.isFilled(primaryLanguage)) {
+                    return ilookup(primaryLanguage, fallbackLanguage, searchPaths, searchValue, pathsToQuery);
                 } else {
                     return lookup(searchPaths, searchValue, pathsToQuery);
                 }
@@ -218,20 +217,20 @@ public class IDBTable {
                 if (Strings.isFilled(searchPaths)) {
                     return Collections.emptyList();
                 }
-                if (Strings.isFilled(primaryLang)) {
-                    return iscan(primaryLang, fallbackLang, limit, pathsToQuery);
+                if (Strings.isFilled(primaryLanguage)) {
+                    return iscan(primaryLanguage, fallbackLanguage, limit, pathsToQuery);
                 } else {
                     return scan(limit, pathsToQuery);
                 }
             } else if (exact) {
-                if (Strings.isFilled(primaryLang)) {
-                    return iquery(primaryLang, fallbackLang, searchPaths, searchValue, limit, pathsToQuery);
+                if (Strings.isFilled(primaryLanguage)) {
+                    return iquery(primaryLanguage, fallbackLanguage, searchPaths, searchValue, limit, pathsToQuery);
                 } else {
                     return query(searchPaths, searchValue, limit, pathsToQuery);
                 }
             } else {
-                if (Strings.isFilled(primaryLang)) {
-                    return isearch(primaryLang, fallbackLang, searchPaths, searchValue, limit, pathsToQuery);
+                if (Strings.isFilled(primaryLanguage)) {
+                    return isearch(primaryLanguage, fallbackLanguage, searchPaths, searchValue, limit, pathsToQuery);
                 } else {
                     return search(searchPaths, searchValue, limit, pathsToQuery);
                 }
@@ -351,7 +350,7 @@ public class IDBTable {
     @SuppressWarnings("unchecked")
     private Values parseRow(Object obj) {
         if (obj instanceof List) {
-            return Values.of(((List<Object>) obj).stream().map(Jupiter::read).collect(Collectors.toList()));
+            return Values.of(((List<Object>) obj).stream().map(Jupiter::read).toList());
         } else {
             return Values.of(Collections.emptyList());
         }
@@ -414,10 +413,10 @@ public class IDBTable {
         });
     }
 
-    private List<Values> parseQueryResult(Client redis) {
+    private List<Values> parseQueryResult(Connection redis) {
         Object result = redis.getOne();
         if (result instanceof List) {
-            return ((List<?>) result).stream().map(this::parseRow).collect(Collectors.toList());
+            return ((List<?>) result).stream().map(this::parseRow).toList();
         } else {
             return Collections.singletonList(Values.of(new Object[]{result}));
         }

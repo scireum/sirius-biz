@@ -8,6 +8,7 @@
 
 package sirius.biz.process;
 
+import sirius.biz.jobs.batch.file.FileImportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ChartOutput;
@@ -75,6 +76,8 @@ class ProcessEnvironment implements ProcessContext {
     private Map<String, Average> adminTimings;
     private final Map<String, Integer> limitsPerType = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> messageCountsPerType = new ConcurrentHashMap<>();
+
+    private Boolean limitLogMessages = null;
 
     @Part
     @Nullable
@@ -216,17 +219,25 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void log(ProcessLog logEntry) {
-        if (Strings.isFilled(logEntry.getMessageType()) && logEntry.getMaxMessagesToLog() > 0) {
+        if (Strings.isFilled(logEntry.getMessageType())
+            && logEntry.getMaxMessagesToLog() > 0
+            && shouldLimitLogMessages()) {
             AtomicInteger messagesSoFar =
                     messageCountsPerType.computeIfAbsent(logEntry.getMessageType(), this::countMessagesForType);
+            limitsPerType.putIfAbsent(logEntry.getMessageType(), logEntry.getMaxMessagesToLog());
             if (messagesSoFar.incrementAndGet() > logEntry.getMaxMessagesToLog()) {
                 return;
             }
-
-            limitsPerType.put(logEntry.getMessageType(), logEntry.getMaxMessagesToLog());
         }
 
         processes.log(processId, logEntry);
+    }
+
+    private boolean shouldLimitLogMessages() {
+        if (limitLogMessages == null) {
+            limitLogMessages = getParameter(FileImportJobFactory.LIMIT_LOG_MESSAGES_PARAMETER).orElse(true);
+        }
+        return limitLogMessages;
     }
 
     private AtomicInteger countMessagesForType(String messageType) {
@@ -258,9 +269,9 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void markCompleted() {
+    public void markCompleted(int computationTimeInSeconds) {
         processes.reportLimitedMessages(processId, messageCountsPerType, limitsPerType);
-        processes.markCompleted(processId, timings, adminTimings);
+        processes.markCompleted(processId, timings, adminTimings, computationTimeInSeconds);
     }
 
     /**
@@ -281,34 +292,6 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public void trace(String s) {
         // ignored
-    }
-
-    /**
-     * Invoked if {@link sirius.kernel.async.TaskContext#setState(String, Object...)} is called in the attached
-     * context.
-     *
-     * @param message the message to set as state
-     * @deprecated Use either {@link #forceUpdateState(String)} or {@link #tryUpdateState(String)}
-     */
-    @Override
-    @Deprecated(since = "2021/07/01")
-    public void setState(String message) {
-        processes.setStateMessage(processId, message);
-    }
-
-    /**
-     * Updates the "current state" message of the process.
-     * <p>
-     * Note that this doesn't perform any rate limiting etc. Therefore {@link TaskContext#shouldUpdateState()}
-     * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
-     *
-     * @param state the new state message to show
-     * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
-     */
-    @Override
-    @Deprecated(since = "2021/07/01")
-    public void setCurrentStateMessage(String state) {
-        processes.setStateMessage(processId, state);
     }
 
     @Override
@@ -417,7 +400,7 @@ class ProcessEnvironment implements ProcessContext {
         columns.forEach(column -> output.getContext().modify().put(column.getFirst(), column.getSecond()));
 
         addOutput(output);
-        return new TableOutput(name, this, columns.stream().map(Tuple::getFirst).collect(Collectors.toList()));
+        return new TableOutput(name, this, columns.stream().map(Tuple::getFirst).toList());
     }
 
     @Override
@@ -439,7 +422,7 @@ class ProcessEnvironment implements ProcessContext {
         zipOutputStream.putNextEntry(new ZipEntry(filename));
 
         WatchableOutputStream outputStream = new WatchableOutputStream(new UncloseableOutputStream(zipOutputStream));
-        outputStream.getCompletionFuture().onSuccess(() -> {
+        outputStream.onSuccess(() -> {
             try {
                 zipOutputStream.closeEntry();
                 zipOutputStream.close();

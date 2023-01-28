@@ -2,13 +2,13 @@ version: "2"
 
 services:
   redis:
-    image: redis:6.2.6-alpine
+    image: redis:6.2.10-alpine
     ports:
       - "6379"
     hostname: redis
 
   redis-jupiter:
-    image: scireum/jupiter-io:1.5.0
+    image: scireum/jupiter-io:2.2.0
     ports:
       - "2410"
     hostname: redis-jupiter
@@ -33,13 +33,14 @@ services:
       - "9000"
     hostname: clickhouse
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
+    image: elasticsearch:8.4.1
     ports:
       - "9200"
     environment:
       - ES_JAVA_OPTS=-Xms128M -Xmx128M
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ingest.geoip.downloader.enabled=false
     hostname: es
   s3-system:
     image: scireum/s3-ninja:8.0.0

@@ -11,7 +11,6 @@ package sirius.biz.jupiter;
 import sirius.kernel.commons.Values;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Provides access to the InfoGraphDB of a Jupiter connection.
@@ -52,10 +51,7 @@ public class InfoGraphDB {
     public List<IDBTableInfo> showTables() {
         return connection.query(() -> "IDB.SHOW_TABLES", redis -> {
             redis.sendCommand(CMD_SHOW_TABLES, "raw");
-            return redis.getObjectMultiBulkReply()
-                        .stream()
-                        .map(this::parseTableMetadataRow)
-                        .collect(Collectors.toList());
+            return redis.getObjectMultiBulkReply().stream().map(this::parseTableMetadataRow).toList();
         });
     }
 
@@ -69,7 +65,6 @@ public class InfoGraphDB {
                                 row.at(4).asLong(0),
                                 row.at(5).asLong(0));
     }
-
 
     /**
      * Provides a query wrapper for the given set.
@@ -89,7 +84,7 @@ public class InfoGraphDB {
     public List<IDBSetInfo> showSets() {
         return connection.query(() -> "IDB.SHOW_SETS", redis -> {
             redis.sendCommand(CMD_SHOW_SETS, "raw");
-            return redis.getObjectMultiBulkReply().stream().map(this::parseSetMetadataRow).collect(Collectors.toList());
+            return redis.getObjectMultiBulkReply().stream().map(this::parseSetMetadataRow).toList();
         });
     }
 

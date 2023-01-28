@@ -21,7 +21,7 @@
            items="@Injector.context().getPart(CodeLists.class).getEntries(list)">
         <option value="@entry.getCodeListEntryData().getCode()"
                 @selected="value.contains(entry.getCodeListEntryData().getCode())">
-            @entry.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang())
+            @entry.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLanguage())
         </option>
     </i:for>
 </w:multiSelect>

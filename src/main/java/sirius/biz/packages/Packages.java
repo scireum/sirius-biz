@@ -20,7 +20,6 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * This helper class is a wrapper for the <tt>security.packages</tt> configurations.
@@ -138,7 +137,7 @@ public class Packages {
                              .filter(permission -> !config.hasPath(permission)
                                                    || Permissions.hasPermission(config.getString(permission),
                                                                                 hasPermissionPredicate))
-                             .collect(Collectors.toList());
+                             .toList();
     }
 
     /**

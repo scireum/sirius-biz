@@ -1,64 +1,66 @@
 <i:arg type="Page" name="messages"/>
-<w:page titleKey="AuditLogEntry.plural">
+<t:page titleKey="AuditLogEntry.plural">
     <i:block name="breadcrumbs">
         <li><a href="/audit-log">@i18n("AuditLogEntry.plural")</a></li>
     </i:block>
 
-    <w:pageHeader titleKey="AuditLogEntry.plural"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="AuditLogEntry.plural"/>
+    </i:block>
 
-    <div class="row">
-        <div class="col-md-3">
-            <w:filterbox page="messages" baseUrl="/audit-log"/>
-        </div>
-        <div class="col-md-9">
-            <w:tableSearchHeader page="messages" baseUrl="/audit-log"/>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:filterbox page="messages" baseUrl="/audit-log"/>
+        </i:block>
 
-            <w:table data="messages" colorized="true">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>
-                        <div class="row">
-                            <div class="col-md-4">
-                                @i18n("AuditLogEntry.timestamp")<br>
-                                @i18n("AuditLogEntry.causedBy")
-                            </div>
-                            <div class="col-md-4">
-                                @i18n("AuditLogEntry.user")<br>
-                                @i18n("AuditLogEntry.tenant")
-                            </div>
-                            <div class="col-md-2">@i18n("AuditLogEntry.ip")</div>
-                        </div>
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                <i:for type="sirius.biz.protocol.AuditLogEntry" var="msg" items="messages.getItems()">
-                    <tr @if (msg.isNegative()) { class="warning" } else { class="info" }>
-                        <td></td>
-                        <td>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    @toUserString(msg.getTimestamp())
-                                    <br>
-                                    @msg.getCausedByUserName()
-                                </div>
-                                <div class="col-md-4">
-                                    @msg.getUserName()<br>
-                                    @msg.getTenantName()
-                                </div>
-                                <div class="col-md-4">
-                                    @msg.getIp()
-                                </div>
-                            </div>
-                            <pre class="plain" style="white-space: break-spaces">@i18n(msg.getMessage())</pre>
-                        </td>
-                    </tr>
-                </i:for>
+        <t:searchHeader page="messages" baseUrl="/audit-log"/>
 
-                </tbody>
-            </w:table>
-            <w:pagination page="messages" baseUrl="/audit-log"/>
-        </div>
-    </div>
-</w:page>
+        <t:emptyCheck data="messages">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div>@i18n("AuditLogEntry.timestamp")</div>
+                                        <div>@i18n("AuditLogEntry.causedBy")</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div>@i18n("AuditLogEntry.user")</div>
+                                        <div>@i18n("AuditLogEntry.tenant")</div>
+                                    </div>
+                                    <div class="col-md-2">@i18n("AuditLogEntry.ip")</div>
+                                </div>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <i:for type="sirius.biz.protocol.AuditLogEntry" var="message" items="messages.getItems()">
+                            <tr>
+                                <td class="@if (message.isNegative()) { sci-left-border-yellow } else { sci-left-border-blue }">
+                                    <div class="row">
+                                        <div class="col-md-4 text-small text-muted">
+                                            <div>@toUserString(message.getTimestamp())</div>
+                                            <div>@message.getCausedByUserName()</div>
+                                        </div>
+                                        <div class="col-md-4 text-small text-muted">
+                                            <div>@message.getUserName()</div>
+                                            <div>@message.getTenantName()</div>
+                                        </div>
+                                        <div class="col-md-4 text-small text-muted">@message.getIp()</div>
+                                    </div>
+                                    <pre class="pt-2 mb-0" style="white-space: break-spaces; overflow-wrap: anywhere;">@i18n(message.getMessage())</pre>
+                                </td>
+                            </tr>
+                        </i:for>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <t:pagination page="messages" baseUrl="/audit-log"/>
+        </t:emptyCheck>
+    </t:sidebar>
+</t:page>

@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -86,6 +88,13 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
         }
 
         return input.getEnum(type).map(E::name).orElse(null);
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", value.name())
+                                                    .fluentPut("text", value.toString()));
     }
 
     @Override
