@@ -262,7 +262,7 @@ public abstract class FileImportJob extends ImportJob {
      * This might be used e.g. if an XML file is being processed which is accompanied by some media files to
      * move them into the proper directory in the {@link sirius.biz.storage.layer3.VirtualFileSystem}.
      * <p>
-     * By default this is attempted if the {@link #determineAuxiliaryFilesDirectory()} returns a non-null result.
+     * By default, this is attempted if the {@link #determineAuxiliaryFilesDirectory()} returns a non-null result.
      * Otherwise, these files are simply ignored.
      *
      * @param extractedFile the extracted file which cannot be handled by the job itself
