@@ -591,9 +591,6 @@ public class ImportDictionary {
         for (Function<String, FieldDefinition> customLookup : computedFieldLookups) {
             FieldDefinition result = customLookup.apply(name);
             if (result != null) {
-                if (!fields.containsKey(result.getName())) {
-                    fields.put(result.getName(), result);
-                }
                 return Optional.of(result);
             }
         }
