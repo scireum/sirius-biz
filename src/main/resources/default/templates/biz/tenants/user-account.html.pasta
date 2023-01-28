@@ -78,7 +78,8 @@
                     <i:extensions target="user-account" point="sidebar-menu" account="account" page="page"/>
                 </w:navbox>
 
-                <w:jobs target="account" />
+                <t:jobsBtn target="account" />
+                <t:charts target="account" />
 
                 <w:rateLimitBox>
                     <w:rateLimitsPerType type="user" scope="account.getIdAsString()" />
