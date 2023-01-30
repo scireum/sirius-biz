@@ -3,7 +3,7 @@
        description="Determines the additional styles to apply. Most probably a height should be set here."/>
 <i:arg type="String" name="imgStyle" default="max-width: 100%; max-height: 100%;"
        description="Determines the additional style to apply to the img object."/>
-<i.arg type="String" name="imgClass" default="" description="Contains additional classes to apply to the img."/>
+<i:arg type="String" name="imgClass" default="" description="Contains additional classes to apply to the img."/>
 <i:arg type="String" name="class" default="" description="Contains additional classes to apply."/>
 <i:arg type="boolean" name="skipEmpty" default="false"
        description="If set to true, an empty blob will be skipped entirely, instead of rendering the fallback image."/>
