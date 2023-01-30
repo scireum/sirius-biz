@@ -8,7 +8,7 @@
 
 package sirius.biz.tycho.kb;
 
-import sirius.biz.analytics.charts.explorer.EntityChartObjectResolver;
+import sirius.biz.analytics.explorer.EntityChartObjectResolver;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;

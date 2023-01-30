@@ -1,0 +1,8 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="200"/>
+
+<i:switch test="@point">
+    <i:block name="main-content">
+        <t:keyMetrics target="@'-'" />
+    </i:block>
+</i:switch>

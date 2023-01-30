@@ -8,12 +8,12 @@
 
 package sirius.biz.tycho;
 
-import sirius.biz.analytics.charts.explorer.BrowserDistributionTimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.ChartFactory;
-import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
-import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
 import sirius.biz.analytics.events.PageImpressionEvent;
+import sirius.biz.analytics.explorer.BrowserDistributionTimeSeriesComputer;
+import sirius.biz.analytics.explorer.ChartFactory;
+import sirius.biz.analytics.explorer.ChartObjectResolver;
+import sirius.biz.analytics.explorer.TimeSeriesChartFactory;
+import sirius.biz.analytics.explorer.TimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.commons.Callback;

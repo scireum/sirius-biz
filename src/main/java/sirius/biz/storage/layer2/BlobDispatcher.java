@@ -96,7 +96,7 @@ public class BlobDispatcher implements WebDispatcher {
     /**
      * Marks the request as cacheable.
      * <p>
-     * Otherwise all HTTPS cache settings would be turned off.
+     * Otherwise, all HTTPS cache settings would be turned off.
      */
     public static final String FLAG_CACHEABLE = "c";
 
