@@ -22,7 +22,7 @@ function selectVFSFile(config) {
         _fileTableRow.innerHTML = Mustache.render(
             '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa {{icon}}"></i>&nbsp;{{name}}</a></td>' +
             '<td class="text-right">{{sizeString}}</td>' +
-            '<td class="text-right">{{lastModifiedString}}</td>', child);
+            '<td class="text-right" title="{{lastModifiedString}}">{{lastModifiedSpokenString}}</td>', child);
 
         _fileTableRow.querySelector(".file-link").addEventListener("click", function () {
             if (this.dataset.dir === "true") {

@@ -36,6 +36,7 @@ import sirius.kernel.nls.NLS;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -58,25 +59,41 @@ public abstract class FileImportJob extends ImportJob {
     /**
      * Determines the mode in which auxiliary files are handled (if this job supports it).
      */
-    public static final Parameter<AuxiliaryFileMode> AUX_FILE_MODE_PARAMETER = new EnumParameter<>("auxFileMode",
-                                                                                                   "$FileImportJobFactory.auxFileMode",
-                                                                                                   AuxiliaryFileMode.class).withDefault(
-            AuxiliaryFileMode.UPDATE_ON_CHANGE).markRequired().build();
+    public static final Parameter<AuxiliaryFileMode> AUX_FILE_MODE_PARAMETER;
+
+    static {
+        EnumParameter<AuxiliaryFileMode> parameter =
+                new EnumParameter<>("auxFileMode", "$FileImportJobFactory.auxFileMode", AuxiliaryFileMode.class);
+        AUX_FILE_MODE_PARAMETER = parameter.withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE).markRequired().build();
+    }
 
     /**
      * Determines if auxiliary files are extracted including directories (if this job supports it).
      */
-    public static final Parameter<Boolean> AUX_FILE_FLATTEN_DIRS_PARAMETER = new BooleanParameter("auxFileFlattenDirs",
-                                                                                                  "$FileImportJobFactory.auxFileFlattenDirectoriesParameter").withDescription(
-            "$FileImportJobFactory.auxFileFlattenDirectoriesParameter.help").build();
+    public static final Parameter<Boolean> AUX_FILE_FLATTEN_DIRS_PARAMETER;
+
+    static {
+        BooleanParameter parameter =
+                new BooleanParameter("auxFileFlattenDirs", "$FileImportJobFactory.auxFileFlattenDirectoriesParameter");
+        parameter.withDescription("$FileImportJobFactory.auxFileFlattenDirectoriesParameter.help");
+        parameter.hideWhen(FileImportJob::hasAuxFilesDisabled);
+        AUX_FILE_FLATTEN_DIRS_PARAMETER = parameter.build();
+    }
 
     /**
      * Defines a parent directory path where auxiliary files will be uploaded (if this job supports it).
      */
-    public static final Parameter<String> AUX_FILE_PARENT_DIRECTORY_PARAMETER = new StringParameter(
-            "auxFileParentDirectory",
-            "$FileImportJobFactory.auxFileParentDirectory").withDescription(
-            "$FileImportJobFactory.auxFileParentDirectory.help").build();
+    public static final Parameter<String> AUX_FILE_PARENT_DIRECTORY_PARAMETER;
+
+    static {
+        StringParameter parameter =
+                new StringParameter("auxFileParentDirectory", "$FileImportJobFactory.auxFileParentDirectory");
+        parameter.withDescription("$FileImportJobFactory.auxFileParentDirectory.help");
+        parameter.hideWhen(FileImportJob::hasAuxFilesDisabled);
+        AUX_FILE_PARENT_DIRECTORY_PARAMETER = parameter.build();
+    }
+
+    private static final String FILE_EXTENSION_ZIP = "zip";
 
     @Part
     private static VirtualFileSystem virtualFileSystem;
@@ -147,6 +164,11 @@ public abstract class FileImportJob extends ImportJob {
      */
     protected FileImportJob(ProcessContext process) {
         super(process);
+    }
+
+    private static boolean hasAuxFilesDisabled(Map<String, String> params) {
+        return FILE_PARAMETER.get(params).map(file -> FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())).orElse(false)
+               && AUX_FILE_MODE_PARAMETER.get(params).map(auxMode -> auxMode == AuxiliaryFileMode.IGNORE).orElse(false);
     }
 
     /**
@@ -262,7 +284,7 @@ public abstract class FileImportJob extends ImportJob {
      * This might be used e.g. if an XML file is being processed which is accompanied by some media files to
      * move them into the proper directory in the {@link sirius.biz.storage.layer3.VirtualFileSystem}.
      * <p>
-     * By default this is attempted if the {@link #determineAuxiliaryFilesDirectory()} returns a non-null result.
+     * By default, this is attempted if the {@link #determineAuxiliaryFilesDirectory()} returns a non-null result.
      * Otherwise, these files are simply ignored.
      *
      * @param extractedFile the extracted file which cannot be handled by the job itself
