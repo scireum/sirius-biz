@@ -462,13 +462,19 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                        .set(MongoBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
+            String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
+            if (Strings.isFilled(previousPhysicalObjectKey)) {
+                updater.set(MongoBlob.CONTENT_UPDATED, true);
+            } else {
+                updater.set(MongoBlob.CREATED, true);
+            }
+
             long numUpdated = updater.where(MongoBlob.ID, blob.getId())
                                      .where(MongoBlob.PHYSICAL_OBJECT_KEY, blob.getPhysicalObjectKey())
                                      .executeForOne(MongoBlob.class)
                                      .getModifiedCount();
             if (numUpdated == 1) {
                 // Also update in-memory to avoid an additional database fetch...
-                String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
                 blob.setPhysicalObjectKey(nextPhysicalId);
                 if (Strings.isFilled(filename)) {
                     blob.setFilename(filename);
