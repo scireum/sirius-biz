@@ -11,7 +11,6 @@ package sirius.biz.storage.layer2.jdbc;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
-import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
@@ -543,9 +542,9 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
             String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
             if (Strings.isFilled(previousPhysicalObjectKey)) {
-                updateStatement.set(MongoBlob.CONTENT_UPDATED, true);
+                updateStatement.set(SQLBlob.CONTENT_UPDATED, true);
             } else {
-                updateStatement.set(MongoBlob.CREATED, true);
+                updateStatement.set(SQLBlob.CREATED, true);
             }
 
             int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())
