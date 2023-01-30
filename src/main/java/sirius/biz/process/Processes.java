@@ -856,7 +856,7 @@ public class Processes {
         } catch (Exception e) {
             throw env.handle(e);
         } finally {
-            env.awaitCompletion();
+            env.awaitSideTaskCompletion();
             CallContext.getCurrent().resetLanguage();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
@@ -946,7 +946,7 @@ public class Processes {
         try {
             return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
         } catch (Exception e) {
-            Exceptions.handle(Log.APPLICATION, e);
+            Exceptions.handle(Log.SYSTEM, e);
             return false;
         }
     }
@@ -1116,7 +1116,7 @@ public class Processes {
             List<String> values = Arrays.asList(logEntry.getType().toString(),
                                                 NLS.toMachineString(logEntry.getTimestamp()),
                                                 logEntry.getMessage(),
-                                                logEntry.getMessageType(),
+                                                NLS.smartGet(logEntry.getMessageType()),
                                                 logEntry.getNode());
             return columnsAndValues.test(columns, values);
         });

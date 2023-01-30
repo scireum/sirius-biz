@@ -181,11 +181,8 @@ public class Importer implements Closeable {
     }
 
     /**
-     * Tries to find an instance of the given type based on the given data. Uses {@link #load(Class, Context)} if no
-     * matching entity was found.
-     * <p>
-     * This is a convenience method which utilizes {@link #tryFind(Class, Context)} but uses
-     * {@link #load(Class, Context)} to create a new entity if the lookup isn't successful.
+     * Tries to find an instance of the given type based on the given data. Uses {@link #load(Class, Context)} to
+     * update the entity afterwards. Note that a new entity is created if no matching one was found.
      *
      * @param type the type of entity to find
      * @param data the data used to describe the entity to search
