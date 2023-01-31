@@ -63,9 +63,6 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
                                                                                                              "$EntityImportSyncJobFactory.syncMode.help")
                                                                                                      .build();
 
-    public static final Parameter<String> SYNC_SOURCE_PARAMETER =
-            new StringParameter("syncSource", "$EntityImportSyncJobFactory.syncSource").withDescription(
-                    "$EntityImportSyncJobFactory.syncSource.help").build();
 
     private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
 
