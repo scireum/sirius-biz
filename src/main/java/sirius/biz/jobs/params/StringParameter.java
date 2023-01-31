@@ -18,6 +18,8 @@ import java.util.Optional;
  */
 public class StringParameter extends TextParameter<String, StringParameter> {
 
+    private String defaultValue;
+
     /**
      * Creates a new parameter with the given name and label.
      *
@@ -28,10 +30,23 @@ public class StringParameter extends TextParameter<String, StringParameter> {
         super(name, label);
     }
 
+    /**
+     * Specifies the default value to use.
+     *
+     * @param defaultValue the default value to use
+     * @return the parameter itself for fluent method calls
+     */
+    public StringParameter withDefault(String defaultValue) {
+        this.defaultValue = defaultValue;
+        return this;
+    }
+
     @Override
     protected String checkAndTransformValue(Value input) {
-        if (input.isEmptyString()) {
-            return null;
+        // We only assume the default value when no context was provided, represented by null data in Value.
+        // An empty string means the parameter was explicitly submitted empty.
+        if (input.getRawString() == null) {
+            return defaultValue;
         }
         return input.getString();
     }
