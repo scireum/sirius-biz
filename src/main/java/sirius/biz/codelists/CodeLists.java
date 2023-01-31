@@ -16,6 +16,7 @@ import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.Sirius;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
@@ -34,6 +35,7 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -351,6 +353,9 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
 
     @Nullable
     private E loadEntry(String codeListName, String code) {
+        if (!TaskContext.get().isActive()) {
+            return null;
+        }
         L orCreateCodelist = findOrCreateCodelist(codeListName);
         String effectiveCode = Strings.trim(code);
         E codeListEntry = queryEntry(orCreateCodelist, effectiveCode).queryFirst();
@@ -522,6 +527,9 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * @return a list of all avilable entries in the given code list, sorted by priority
      */
     public List<E> getEntries(@Nonnull String codeListName) {
+        if (!TaskContext.get().isActive()) {
+            return Collections.emptyList();
+        }
         L codeList = findOrCreateCodelist(codeListName);
         return createEntryQuery().eq(CodeListEntry.CODE_LIST, codeList)
                                  .orderAsc(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY))
@@ -537,6 +545,9 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * @return the entry associated with the code or an empty optional otherwise
      */
     public Optional<E> getEntry(@Nonnull String codeListName, String code) {
+        if (!TaskContext.get().isActive()) {
+            return Optional.empty();
+        }
         L codeList = findOrCreateCodelist(codeListName);
         return queryEntry(codeList, code).first();
     }
