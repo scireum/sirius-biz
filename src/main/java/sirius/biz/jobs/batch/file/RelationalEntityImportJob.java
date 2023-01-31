@@ -13,7 +13,6 @@ import sirius.biz.importer.txn.ImportTransactionHelper;
 import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
-import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenants;
 import sirius.db.mixing.BaseEntity;
@@ -63,7 +62,6 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
                                                                                                              "$EntityImportSyncJobFactory.syncMode.help")
                                                                                                      .build();
 
-
     private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
 
     @Part
@@ -80,6 +78,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     protected SyncMode mode;
     protected BiConsumer<ProcessContext, Q> queryTuner;
     private String syncSource;
+    private SyncSourceDeleteMode syncSourceDeleteMode;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -126,15 +125,17 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     }
 
     /**
-     * Specifies the source to use when initializing {@link ImportTransactionHelper import transactions}.
+     * Specifies the source and deletion mode to use when initializing {@link ImportTransactionHelper import transactions}.
      * <p>
      * This permits to fine tune which entities will be deleted if they remain unmarked during an import.
      *
-     * @param source the source used to filter entities to delete
+     * @param source               the source used to filter entities to delete
+     * @param syncSourceDeleteMode the mode
      * @return the job itself for fluent method calls
      */
-    public RelationalEntityImportJob<E, Q> withSource(String source) {
+    public RelationalEntityImportJob<E, Q> withSource(String source, SyncSourceDeleteMode syncSourceDeleteMode) {
         this.syncSource = source;
+        this.syncSourceDeleteMode = syncSourceDeleteMode;
         return this;
     }
 
