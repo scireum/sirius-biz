@@ -17,8 +17,8 @@
                     <t:infoLine class="tracing-info" labelKey="TraceData.created">
                         <div>@toUserString(trace.getCreatedAt())</div>
                         <div>@trace.getCreatedBy()</div>
-                        <div class="muted">@trace.getCreatedOn()</div>
-                        <div class="muted">@trace.getCreatedIn()</div>
+                        <div class="text-muted">@trace.getCreatedOn()</div>
+                        <div class="text-muted">@trace.getCreatedIn()</div>
                     </t:infoLine>
                 </div>
 
