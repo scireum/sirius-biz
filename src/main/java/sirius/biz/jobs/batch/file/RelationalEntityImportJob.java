@@ -141,7 +141,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
 
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
-        importTransactionHelper.start(syncSource);
+        importTransactionHelper.start(syncSource, syncSourceDeleteMode);
         try (InputStream in = inputSupplier.create()) {
             LineBasedProcessor.create(filename,
                                       in,
