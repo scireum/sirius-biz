@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 /**
  * Provides some metrics for {@link SQLTenant SQL based tenants}.
  */
-@Register
+@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLTenantMetricComputer extends TenantMetricComputer<SQLTenant> {
 
     /**

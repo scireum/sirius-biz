@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 /**
  * Provides some metrics for {@link MongoTenant MongoDB based tenants}.
  */
-@Register
+@Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 public class MongoTenantMetricComputer extends TenantMetricComputer<MongoTenant> {
 
     /**
