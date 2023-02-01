@@ -177,8 +177,8 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
         super.collectParameters(parameterCollector);
         parameterCollector.accept(RelationalEntityImportJob.SYNC_MODE_PARAMETER);
         if (enableSyncSourceParameter()) {
-            parameterCollector.accept(syncSourceParameter);
             parameterCollector.accept(SYNC_DELETE_MODE_PARAMETER);
+            parameterCollector.accept(syncSourceParameter);
         }
     }
 
