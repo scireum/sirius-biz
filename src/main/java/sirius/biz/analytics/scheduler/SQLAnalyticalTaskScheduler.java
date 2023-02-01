@@ -39,7 +39,7 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
     @Override
     protected void scheduleBatches(Class<? extends SQLEntity> type, Consumer<JSONObject> batchConsumer) {
         try {
-            if (Modifier.isAbstract(type.getModifiers())) {
+            if (Modifier.isAbstract(type.getModifiers()) || mixing.findDescriptor(type).isEmpty()) {
                 batchConsumer.accept(new JSONObject());
             } else {
                 batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batch -> {

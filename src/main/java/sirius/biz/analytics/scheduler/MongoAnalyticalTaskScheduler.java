@@ -39,7 +39,7 @@ public abstract class MongoAnalyticalTaskScheduler extends BaseAnalyticalTaskSch
     @Override
     protected void scheduleBatches(Class<? extends MongoEntity> type, Consumer<JSONObject> batchConsumer) {
         try {
-            if (Modifier.isAbstract(type.getModifiers())) {
+            if (Modifier.isAbstract(type.getModifiers()) || mixing.findDescriptor(type).isEmpty()) {
                 batchConsumer.accept(new JSONObject());
             } else {
                 batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batch -> {
