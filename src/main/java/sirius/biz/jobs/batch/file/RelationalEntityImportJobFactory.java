@@ -141,7 +141,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     }
 
     /**
-     * Builds the {@link #syncSourceParameter source} parameter with the provided default value.
+     * Builds the {@linkplain #syncSourceParameter source} parameter with the provided default value.
      *
      * @param defaultSource the source to use
      * @return a new parameter instance
