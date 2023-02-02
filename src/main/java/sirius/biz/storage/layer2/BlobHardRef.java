@@ -12,6 +12,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -64,6 +65,7 @@ public class BlobHardRef {
      * @return the referenced blob or <tt>null</tt> if there is no referenced blob
      */
     @Nullable
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public Blob getBlob() {
         if (blob == null && Strings.isFilled(key)) {
             blob = storage.getSpace(space).findByBlobKey(key).orElse(null);
@@ -149,6 +151,7 @@ public class BlobHardRef {
      * @return the filename, or <tt>null</tt> if either no blob or one without a filename is referenced
      */
     @Nullable
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getFilename() {
         if (isEmpty() || getBlob() == null) {
             return null;
@@ -177,6 +180,7 @@ public class BlobHardRef {
      * @return the key of the blob being referenced
      */
     @Nullable
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getKey() {
         return key;
     }
@@ -186,6 +190,7 @@ public class BlobHardRef {
      *
      * @return <tt>true</tt> if a reference is present, <tt>false</tt> otherwise
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean isFilled() {
         return Strings.isFilled(key);
     }
@@ -242,6 +247,7 @@ public class BlobHardRef {
      *
      * @return a builder to create a download or delivery URL
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public URLBuilder url() {
         if (blob != null) {
             return new URLBuilder(getStorageSpace(), blob);
