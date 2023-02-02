@@ -40,7 +40,7 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
     protected void scheduleBatches(Class<? extends SQLEntity> type, Consumer<JSONObject> batchConsumer) {
         try {
             if (Modifier.isAbstract(type.getModifiers())) {
-                // We use MongoEntity.class as place-holder to run global metric computers.
+                // We use SQLEntity.class as place-holder to run global metric computers.
                 // In this case we execute a simple run for "null"...
                 batchConsumer.accept(new JSONObject().fluentPut(BaseAnalyticalTaskScheduler.CONTEXT_MARKER_GLOBAL_ENTITY,
                                                                 true));
