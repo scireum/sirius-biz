@@ -22,6 +22,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
@@ -396,6 +397,7 @@ public class LoginData extends Composite {
         this.accountLocked = accountLocked;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getUsername() {
         return username;
     }
@@ -424,7 +426,7 @@ public class LoginData extends Composite {
         return passwordHash;
     }
 
-
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getGeneratedPassword() {
         return generatedPassword;
     }
@@ -433,6 +435,7 @@ public class LoginData extends Composite {
         this.generatedPassword = generatedPassword;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public int getNumberOfLogins() {
         return numberOfLogins;
     }
@@ -449,6 +452,7 @@ public class LoginData extends Composite {
         return lastPasswordChange;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public LocalDate getLastSeen() {
         return lastSeen;
     }
