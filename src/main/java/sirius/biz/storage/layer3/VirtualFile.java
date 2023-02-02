@@ -429,7 +429,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Tries to "touch" this file.
      * <p>
-     * This will attempt to set the {@link #lastModified() last modified date} to <tt>now</tt>. Note however, that
+     * This will attempt to set the {@linkplain #lastModified() last modified date} to <tt>now</tt>. Note however, that
      * only some underlying providers will support this. If the call is not supported, nothing will happen.
      */
     public void tryTouch() {
