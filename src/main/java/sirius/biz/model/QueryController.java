@@ -17,13 +17,16 @@ import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
+import sirius.db.mixing.properties.AmountProperty;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
@@ -209,7 +212,14 @@ public class QueryController extends BizController {
             output.beginObject("entity");
             output.property("id", entity.getId());
             for (Property property : determineVisibleProperties(descriptor)) {
-                output.property(property.getName(), property.getValue(entity));
+                if (property.is(AmountProperty.class)) {
+                    output.amountProperty(property.getName(),
+                                          Value.of(property.getValue(entity)).getAmount(),
+                                          NumberFormat.MACHINE_FIVE_DECIMAL_PLACES,
+                                          true);
+                } else {
+                    output.property(property.getName(), property.getValue(entity));
+                }
             }
             output.endObject();
         }
