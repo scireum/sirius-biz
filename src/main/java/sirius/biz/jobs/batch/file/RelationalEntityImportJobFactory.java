@@ -40,7 +40,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     /**
      * Defines the parameter used to collect the transaction source to set in imported {@linkplain ImportTransactionalEntity entities}.
      */
-    public final Parameter<String> syncSourceParameter = createSyncSourceParameter(setDefaultSource());
+    public final Parameter<String> syncSourceParameter = createSyncSourceParameter(getDefaultSource());
 
     /**
      * Contains the parameter which determines the {@link SyncSourceDeleteMode}.
@@ -160,7 +160,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     }
 
     /**
-     * Defines the default source to use for record deletion when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
+     * Sets the default source to use for record deletion when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
      * is set to {@link SyncMode#SYNC}.
      * <p>
      * By default, it uses the job name. Overwrite it if a custom name is needed.
@@ -168,7 +168,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
      * @return the source to initialize transactions
      * @see this.enableSyncSourceParameter()
      */
-    protected String setDefaultSource() {
+    protected String getDefaultSource() {
         return getName();
     }
 
