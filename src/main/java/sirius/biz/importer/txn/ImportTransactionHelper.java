@@ -157,8 +157,7 @@ public class ImportTransactionHelper extends ImportHelper {
         }
 
         if (deleteMode == SyncSourceDeleteMode.SAME_SOURCE_OR_EMPTY) {
-            query.where(query.filters()
-                             .or(query.filters().eq(sourceMapping, source), query.filters().eq(sourceMapping, null)));
+            query.where(query.filters().eqOrEmpty(sourceMapping, source));
         }
 
         query.delete(entityCallback);
