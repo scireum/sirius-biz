@@ -53,6 +53,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
@@ -300,7 +301,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             if (lastModified == 0) {
                 return null;
             } else {
-                return Instant.ofEpochMilli(lastModified).atOffset(ZoneOffset.UTC).toLocalDateTime();
+                return Instant.ofEpochMilli(lastModified).atZone(ZoneId.systemDefault()).toLocalDateTime();
             }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "lastModifiedSupplier");
