@@ -39,9 +39,12 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
     @Override
     protected void scheduleBatches(Class<? extends SQLEntity> type, Consumer<JSONObject> batchConsumer) {
         try {
-            if (Modifier.isAbstract(type.getModifiers()) || mixing.findDescriptor(type).isEmpty()) {
-                batchConsumer.accept(new JSONObject());
-            } else {
+            if (Modifier.isAbstract(type.getModifiers())) {
+                // We use MongoEntity.class as place-holder to run global metric computers.
+                // In this case we execute a simple run for "null"...
+                batchConsumer.accept(new JSONObject().fluentPut(BaseAnalyticalTaskScheduler.CONTEXT_MARKER_GLOBAL_ENTITY,
+                                                                true));
+            } else if (mixing.findDescriptor(type).isPresent()) {
                 batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batch -> {
                     batchConsumer.accept(batch);
                     return true;
@@ -80,10 +83,16 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
 
     @Override
     public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
-        if (!batchDescription.containsKey(BaseEntityBatchEmitter.TYPE)) {
+        if (batchDescription.containsKey(BaseAnalyticalTaskScheduler.CONTEXT_MARKER_GLOBAL_ENTITY)) {
+            // A global run was detected, execute with "null" and MongoEntity as type...
             executeEntity(null, SQLEntity.class, date, level);
-        } else {
-            batchEmitter.evaluateBatch(batchDescription, this::extendBatchQuery, e -> executeEntity(e,e.getClass(), date, level));
+        } else if (batchDescription.containsKey(BaseEntityBatchEmitter.TYPE)) {
+            // Note that we check for the presence of the TYPE, as (in case of some schedulers) we emit
+            // an empty batch, just to ensure that executors with the higher levels are executed, even if
+            // there are no tasks on the current level (see AnalyticalBatchExecutor.executeWork...)
+            batchEmitter.evaluateBatch(batchDescription,
+                                       this::extendBatchQuery,
+                                       e -> executeEntity(e, e.getClass(), date, level));
         }
     }
 }
