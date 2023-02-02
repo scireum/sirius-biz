@@ -372,6 +372,20 @@ public class LoginData extends Composite {
     }
 
     /**
+     * Returns the generated password if it should be displayed.
+     *
+     * @return the generated password, or <tt>null</tt> if it isn't allowed to be displayed
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public String getGeneratedPasswordIfDisplayed() {
+        if (isDisplayGeneratedPassword()) {
+            return generatedPassword;
+        }
+
+        return null;
+    }
+
+    /**
      * Can be used to disable auto password generation on save.
      * <p>
      * This only sets a flag that is not saved to database.
@@ -426,7 +440,6 @@ public class LoginData extends Composite {
         return passwordHash;
     }
 
-    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getGeneratedPassword() {
         return generatedPassword;
     }
