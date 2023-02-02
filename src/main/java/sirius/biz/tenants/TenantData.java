@@ -38,6 +38,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Settings;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.http.IPRange;
 import sirius.web.http.WebContext;
 
@@ -437,6 +438,7 @@ public class TenantData extends Composite implements Journaled {
         this.settings = null;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getName() {
         return name;
     }
@@ -461,6 +463,7 @@ public class TenantData extends Composite implements Journaled {
         this.accountNumber = accountNumber;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public InternationalAddressData getAddress() {
         return address;
     }

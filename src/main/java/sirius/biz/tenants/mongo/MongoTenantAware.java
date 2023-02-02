@@ -17,6 +17,7 @@ import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -48,6 +49,7 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
     private final MongoRef<MongoTenant> tenant = MongoRef.writeOnceOn(MongoTenant.class, MongoRef.OnDelete.REJECT);
 
     @Override
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public MongoRef<MongoTenant> getTenant() {
         return tenant;
     }

@@ -15,6 +15,7 @@ import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -40,6 +41,7 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
             SQLEntityRef.writeOnceOn(SQLTenant.class, SQLEntityRef.OnDelete.REJECT);
 
     @Override
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public SQLEntityRef<SQLTenant> getTenant() {
         return tenant;
     }
