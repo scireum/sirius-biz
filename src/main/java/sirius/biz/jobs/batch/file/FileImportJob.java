@@ -64,7 +64,10 @@ public abstract class FileImportJob extends ImportJob {
     static {
         EnumParameter<AuxiliaryFileMode> parameter =
                 new EnumParameter<>("auxFileMode", "$FileImportJobFactory.auxFileMode", AuxiliaryFileMode.class);
-        AUX_FILE_MODE_PARAMETER = parameter.withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE).markRequired().build();
+        AUX_FILE_MODE_PARAMETER = parameter.withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE)
+                                           .hideWhen(FileImportJob::hasNoArchiveFile)
+                                           .markRequired()
+                                           .build();
     }
 
     /**
@@ -167,8 +170,13 @@ public abstract class FileImportJob extends ImportJob {
     }
 
     private static boolean hasAuxFilesDisabled(Map<String, String> params) {
-        return FILE_PARAMETER.get(params).map(file -> FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())).orElse(false)
-               && AUX_FILE_MODE_PARAMETER.get(params).map(auxMode -> auxMode == AuxiliaryFileMode.IGNORE).orElse(false);
+        return hasNoArchiveFile(params) || AUX_FILE_MODE_PARAMETER.get(params)
+                                                                  .map(auxMode -> auxMode == AuxiliaryFileMode.IGNORE)
+                                                                  .orElse(false);
+    }
+
+    private static Boolean hasNoArchiveFile(Map<String, String> params) {
+        return FILE_PARAMETER.get(params).map(file -> !extractor.isArchiveFile(file.fileExtension())).orElse(true);
     }
 
     /**
