@@ -84,7 +84,7 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
     @Override
     public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
         if (batchDescription.containsKey(BaseAnalyticalTaskScheduler.CONTEXT_MARKER_GLOBAL_ENTITY)) {
-            // A global run was detected, execute with "null" and MongoEntity as type...
+            // A global run was detected, execute with "null" and SQLEntity as type...
             executeEntity(null, SQLEntity.class, date, level);
         } else if (batchDescription.containsKey(BaseEntityBatchEmitter.TYPE)) {
             // Note that we check for the presence of the TYPE, as (in case of some schedulers) we emit
