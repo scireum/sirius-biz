@@ -215,8 +215,8 @@ public class QueryController extends BizController {
                 if (property.is(AmountProperty.class)) {
                     output.amountProperty(property.getName(),
                                           Value.of(property.getValue(entity)).getAmount(),
-                                          NumberFormat.MACHINE_TWO_DECIMAL_PLACES,
-                                          false);
+                                          NumberFormat.MACHINE_FIVE_DECIMAL_PLACES,
+                                          true);
                 } else {
                     output.property(property.getName(), property.getValue(entity));
                 }
