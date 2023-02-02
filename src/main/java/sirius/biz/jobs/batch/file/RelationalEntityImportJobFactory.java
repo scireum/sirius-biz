@@ -45,14 +45,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     /**
      * Contains the parameter which determines the {@link SyncSourceDeleteMode}.
      */
-    public static final Parameter<SyncSourceDeleteMode> SYNC_DELETE_MODE_PARAMETER = new EnumParameter<>(
-            "syncSourceDeleteMode",
-            "$EntityImportSyncJobFactory.syncSourceDeleteMode",
-            SyncSourceDeleteMode.class).withDefault(SyncSourceDeleteMode.SAME_SOURCE)
-                                       .markRequired()
-                                       .withDescription("$EntityImportSyncJobFactory.syncSourceDeleteMode.help")
-                                       .hideWhen(RelationalEntityImportJobFactory::hideSyncSourceParameter)
-                                       .build();
+    public final Parameter<SyncSourceDeleteMode> syncSourceDeleteMode = createDeleteModeParameter();
 
     @Override
     protected DictionaryBasedImportJob createJob(ProcessContext process) {
@@ -75,8 +68,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
                                                              .withSource(process.getParameter(syncSourceParameter)
                                                                                 .orElse(null),
                                                                          enableSyncSourceParameter() ?
-                                                                         process.require(
-                                                                                 RelationalEntityImportJobFactory.SYNC_DELETE_MODE_PARAMETER) :
+                                                                         process.require(syncSourceDeleteMode) :
                                                                          SyncSourceDeleteMode.ALL);
     }
 
@@ -160,6 +152,22 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     }
 
     /**
+     * Builds the {@link #syncSourceParameter source} parameter with the provided default value.
+     *
+     * @return a new parameter instance
+     */
+    public static Parameter<SyncSourceDeleteMode> createDeleteModeParameter() {
+        return new EnumParameter<>("syncSourceDeleteMode",
+                                   "$EntityImportSyncJobFactory.syncSourceDeleteMode",
+                                   SyncSourceDeleteMode.class).withDefault(SyncSourceDeleteMode.SAME_SOURCE)
+                                                              .markRequired()
+                                                              .withDescription(
+                                                                      "$EntityImportSyncJobFactory.syncSourceDeleteMode.help")
+                                                              .hideWhen(RelationalEntityImportJobFactory::hideSyncSourceParameter)
+                                                              .build();
+    }
+
+    /**
      * Sets the default source to use for record deletion when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
      * is set to {@link SyncMode#SYNC}.
      * <p>
@@ -177,7 +185,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
         super.collectParameters(parameterCollector);
         parameterCollector.accept(RelationalEntityImportJob.SYNC_MODE_PARAMETER);
         if (enableSyncSourceParameter()) {
-            parameterCollector.accept(SYNC_DELETE_MODE_PARAMETER);
+            parameterCollector.accept(syncSourceDeleteMode);
             parameterCollector.accept(syncSourceParameter);
         }
     }
