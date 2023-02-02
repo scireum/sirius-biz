@@ -27,7 +27,6 @@ import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
-import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
 import java.util.Set;
@@ -104,7 +103,6 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     }
 
     @Override
-    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public TenantData getTenantData() {
         return tenantData;
     }
