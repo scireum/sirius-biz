@@ -85,7 +85,22 @@ public class URLBuilder {
      * Indicates if the {@linkplain #buildUrlResult() generated url} is a virtual, physical, the fallback url, or empty.
      */
     public enum UrlType {
-        EMPTY, PHYSICAL, VIRTUAL, FALLBACK
+        /**
+         * Requested variant does not exist, no fallback provided.
+         */
+        EMPTY,
+        /**
+         * Requested variant does not exist, but a fallback was provided and used.
+         */
+        FALLBACK,
+        /**
+         * Either explicitly requested, or the requested variant exists, but has no physical key yet.
+         */
+        VIRTUAL,
+        /**
+         * Requested variant exists and its conversion is completed.
+         */
+        PHYSICAL
     }
 
     /**
