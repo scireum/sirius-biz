@@ -181,6 +181,11 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
             event.getDescriptor().beforeSave(event);
             buffer.offer(event);
             bufferedEvents.incrementAndGet();
+        } catch (HandledException e) {
+            Log.BACKGROUND.WARN("An event was not recorded due to a before-save warning. Event: %s (%s): %s",
+                                event.toString(),
+                                event.getClass().getSimpleName(),
+                                e.getMessage());
         } catch (Exception e) {
             Exceptions.handle(Log.BACKGROUND, e);
         }
