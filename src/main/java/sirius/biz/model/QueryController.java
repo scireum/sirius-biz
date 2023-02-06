@@ -23,6 +23,7 @@ import sirius.db.mixing.query.constraints.Constraint;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -30,6 +31,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
@@ -124,8 +126,8 @@ public class QueryController extends BizController {
 
                 UserContext.message(Message.info()
                                            .withTextMessage(Strings.apply("Showing %s of %s results - Query took %sms",
-                                                                          result.size(),
-                                                                          numberOfEntities,
+                                                                          Amount.of(result.size()).toRoundedString(),
+                                                                          Amount.of(numberOfEntities).toRoundedString(),
                                                                           watch.elapsedMillis())));
             }
 
