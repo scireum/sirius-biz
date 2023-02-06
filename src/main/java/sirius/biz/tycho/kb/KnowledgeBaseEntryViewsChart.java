@@ -59,7 +59,8 @@ public class KnowledgeBaseEntryViewsChart extends TimeSeriesChartFactory<Knowled
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(KnowledgeBaseEntry ignoredEntry,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<KnowledgeBaseEntry>> executor) throws Exception {
         EventTimeSeriesComputer<KnowledgeBaseEntry, PageImpressionEvent> computer = new EventTimeSeriesComputer<>(

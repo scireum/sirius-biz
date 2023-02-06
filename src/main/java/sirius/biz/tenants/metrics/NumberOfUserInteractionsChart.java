@@ -64,7 +64,8 @@ public class NumberOfUserInteractionsChart extends TimeSeriesChartFactory<Object
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Object ignoredObject,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
         EventTimeSeriesComputer<Object, UserActivityEvent> computer =

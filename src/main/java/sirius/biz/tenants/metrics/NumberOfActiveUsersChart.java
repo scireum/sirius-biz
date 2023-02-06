@@ -44,7 +44,8 @@ public class NumberOfActiveUsersChart extends TimeSeriesChartFactory<Object> {
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Object ignoredObject,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
         executor.invoke(new MetricTimeSeriesComputer<>(GlobalTenantMetricComputer.METRIC_NUM_ACTIVE_USERS));
