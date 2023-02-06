@@ -20,6 +20,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.mails.Mails;
 
 import java.util.function.Consumer;
@@ -200,6 +201,7 @@ public class ContactData extends Composite {
                          .handle();
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getEmail() {
         return email;
     }
@@ -208,6 +210,7 @@ public class ContactData extends Composite {
         this.email = email;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getPhone() {
         return phone;
     }
@@ -216,6 +219,7 @@ public class ContactData extends Composite {
         this.phone = phone;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getFax() {
         return fax;
     }
@@ -224,6 +228,7 @@ public class ContactData extends Composite {
         this.fax = fax;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getMobile() {
         return mobile;
     }

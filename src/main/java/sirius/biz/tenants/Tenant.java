@@ -17,6 +17,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.di.transformers.Transformable;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import java.io.Serializable;
 
@@ -66,6 +67,7 @@ public interface Tenant<I extends Serializable>
      *
      * @return the tenant data composite which stores all values in a database independent manner.
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     TenantData getTenantData();
 
     /**

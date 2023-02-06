@@ -28,6 +28,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 
@@ -521,6 +522,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * @param codeListName the code list to fetch entries from
      * @return a list of all avilable entries in the given code list, sorted by priority
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public List<E> getEntries(@Nonnull String codeListName) {
         L codeList = findOrCreateCodelist(codeListName);
         return createEntryQuery().eq(CodeListEntry.CODE_LIST, codeList)

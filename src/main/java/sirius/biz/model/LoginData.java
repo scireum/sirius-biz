@@ -22,6 +22,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
@@ -371,6 +372,20 @@ public class LoginData extends Composite {
     }
 
     /**
+     * Returns the generated password if it should be displayed.
+     *
+     * @return the generated password, or <tt>null</tt> if it isn't allowed to be displayed
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public String getGeneratedPasswordIfDisplayed() {
+        if (isDisplayGeneratedPassword()) {
+            return generatedPassword;
+        }
+
+        return null;
+    }
+
+    /**
      * Can be used to disable auto password generation on save.
      * <p>
      * This only sets a flag that is not saved to database.
@@ -396,6 +411,7 @@ public class LoginData extends Composite {
         this.accountLocked = accountLocked;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getUsername() {
         return username;
     }
@@ -424,7 +440,6 @@ public class LoginData extends Composite {
         return passwordHash;
     }
 
-
     public String getGeneratedPassword() {
         return generatedPassword;
     }
@@ -433,6 +448,7 @@ public class LoginData extends Composite {
         this.generatedPassword = generatedPassword;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public int getNumberOfLogins() {
         return numberOfLogins;
     }
@@ -449,6 +465,7 @@ public class LoginData extends Composite {
         return lastPasswordChange;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public LocalDate getLastSeen() {
         return lastSeen;
     }

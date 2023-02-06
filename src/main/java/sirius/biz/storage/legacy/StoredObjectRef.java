@@ -11,6 +11,7 @@ package sirius.biz.storage.legacy;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import java.util.regex.Pattern;
 
@@ -233,6 +234,7 @@ public class StoredObjectRef {
      *
      * @return <tt>true</tt> if a reference or an URL is present, <tt>false</tt> otherwise
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean isFilled() {
         return Strings.isFilled(key);
     }
