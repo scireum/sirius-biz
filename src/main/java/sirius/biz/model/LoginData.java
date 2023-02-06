@@ -386,6 +386,16 @@ public class LoginData extends Composite {
     }
 
     /**
+     * Determines whether the generated password is filled.
+     *
+     * @return <tt>true</tt> if the generated password is filled, <tt>false</tt> otherwise
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public boolean isGeneratedPasswordFilled() {
+        return Strings.isFilled(generatedPassword);
+    }
+
+    /**
      * Can be used to disable auto password generation on save.
      * <p>
      * This only sets a flag that is not saved to database.
