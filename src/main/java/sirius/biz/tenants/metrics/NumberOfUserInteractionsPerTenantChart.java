@@ -65,7 +65,8 @@ public class NumberOfUserInteractionsPerTenantChart extends TimeSeriesChartFacto
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Tenant<?> ignoredTenant,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Tenant<?>>> executor) throws Exception {
         EventTimeSeriesComputer<Tenant<?>, UserActivityEvent> computer =

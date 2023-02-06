@@ -49,7 +49,8 @@ public class DashboardBrowserDistributionChart extends TimeSeriesChartFactory<Ob
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Object ignoredObject,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
         if (isComparisonPeriod) {

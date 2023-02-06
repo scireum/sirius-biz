@@ -36,7 +36,8 @@ public class NumberOfProcessesChart extends TimeSeriesChartFactory<Object> {
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Object ignoredObject,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
         executor.invoke(new MetricTimeSeriesComputer<>(ProcessesMonthlyMetrics.METRIC_NUM_PROCESSES).withDailyMetricName(

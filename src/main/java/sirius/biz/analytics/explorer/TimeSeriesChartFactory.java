@@ -62,14 +62,16 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
     /**
      * Executes the computers to generate the data for the chart.
      *
+     * @param object              the object to collect computers for
      * @param hasComparisonPeriod determines if a comparison period is requested
      * @param isComparisonPeriod  determines if we're currently executing the comparison period
      * @param executor            the executor which can be supplied with one or more {@link TimeSeriesComputer computers}
      * @throws Exception in case of any error while computing the chart data
      */
-    protected abstract void computers(boolean hasComparisonPeriod,
-                                      boolean isComparisonPeriod,
-                                      Callback<TimeSeriesComputer<O>> executor) throws Exception;
+    protected abstract void computers(O object,
+                             boolean hasComparisonPeriod,
+                             boolean isComparisonPeriod,
+                             Callback<TimeSeriesComputer<O>> executor) throws Exception;
 
     @Override
     protected void computeData(O object,
@@ -87,14 +89,14 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
         output.array(OUTPUT_LABELS, OUTPUT_RANGE, timeSeries.startDates().map(granularity::format).toList());
 
         // Run all "main" computers...
-        computers(comparisonPeriod != ComparisonPeriod.NONE, false, computer -> {
+        computers(object, comparisonPeriod != ComparisonPeriod.NONE, false, computer -> {
             computer.compute(object, timeSeries);
         });
 
         // Run the computers for the comparison period if necessary...
         TimeSeries comparisonTimeSeries = timeSeries.comparisonSeries(comparisonPeriod);
         if (comparisonPeriod != null && comparisonPeriod != ComparisonPeriod.NONE) {
-            computers(true, true, computer -> {
+            computers(object, true, true, computer -> {
                 computer.compute(object, comparisonTimeSeries);
             });
         }
