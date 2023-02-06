@@ -1,5 +1,7 @@
 <i:arg type="sirius.db.mixing.BaseEntity" name="entity"
        description="The entity for which a list of associated process links shall be generated."/>
+<i:arg type="String" name="referenceLabel" default="@entity.toString()"
+       description="The reference label for the query."/>
 
 <t:navbox labelKey="Process.associatedProcesses">
     <i:local name="processes" value="@part(sirius.biz.process.Processes.class).fetchAssociatedProcesses(entity)"/>
@@ -36,6 +38,6 @@
     <i:if test="processes.size() >= 5">
         <t:navboxLink icon="fas fa-external-link-alt fa-fw"
                       labelKey="NLS.more"
-                      url="@apply('/ps?reference=%s&reference-label=%s', urlEncode(entity.getUniqueName()), urlEncode(entity.toString()))"/>
+                      url="@apply('/ps?reference=%s&reference-label=%s', urlEncode(entity.getUniqueName()), urlEncode(referenceLabel))"/>
     </i:if>
 </t:navbox>
