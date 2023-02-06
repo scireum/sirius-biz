@@ -12,6 +12,7 @@ import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
@@ -36,7 +37,9 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
         List<Tuple<String, Cell>> additionalMetrics = new ArrayList<>();
 
         try {
-            computeReport(context, report, (name, value) -> additionalMetrics.add(Tuple.create(name, value)));
+            computeReport(context,
+                          report,
+                          (name, value) -> additionalMetrics.add(Tuple.create(NLS.smartGet(name), value)));
         } catch (Exception e) {
             UserContext.handle(e);
         }
@@ -61,7 +64,8 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
      * @param context                  the parameters provided by the user
      * @param report                   the report to populate
      * @param additionalMetricConsumer used to collect additional metrics (label and the value represented as cell).
-     *                                 This can be used to output averages, min and max values etc.
+     *                                 This can be used to output averages, min and max values etc. Note that the
+     *                                 name will be {@link NLS#smartGet(String) auto-translated}.
      * @throws Exception in case of an unexpected error which aborted the computations
      */
     protected abstract void computeReport(Map<String, String> context,

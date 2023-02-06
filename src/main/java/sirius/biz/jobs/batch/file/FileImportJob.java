@@ -14,6 +14,7 @@ import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
@@ -209,7 +210,7 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                errorContext.inContext(suppressFileNameInContext ? "" : FILE_LABEL,
+                ErrorContext.get().inContext(suppressFileNameInContext ? "" : FILE_LABEL,
                                        file.name(),
                                        () -> executeForStream(file.name(), fileHandle::getInputStream));
             }
@@ -275,7 +276,7 @@ public abstract class FileImportJob extends ImportJob {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
                                   .withContext("filename", extractedFile.getFilePath()));
-            errorContext.inContext(suppressFileNameInContext ? "" : FILE_LABEL,
+            ErrorContext.get().inContext(suppressFileNameInContext ? "" : FILE_LABEL,
                                    extractedFile.getFilePath(),
                                    () -> executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream));
             return true;

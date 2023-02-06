@@ -23,11 +23,17 @@ import java.io.OutputStream;
  * Provides a base class for jobs executed by subclasses of {@link BatchProcessJobFactory}.
  * <p>
  * As factories are static, jobs can be thought of parameter objects which are created for each job execution
- * and therefore carry all the satet required for it.
+ * and therefore carry all the state required for it.
  */
 public abstract class BatchJob implements Closeable {
 
     protected ProcessContext process;
+
+    /**
+     * @deprecated Caching the <tt>ErrorContext</tt> is sort of dangerous, as it might be shared across threads
+     * when using {@link ProcessContext#performInSideTask(UnitOfWork)}. Use {@link ErrorContext#get()} instead.
+     */
+    @Deprecated
     protected final ErrorContext errorContext;
 
     /**
