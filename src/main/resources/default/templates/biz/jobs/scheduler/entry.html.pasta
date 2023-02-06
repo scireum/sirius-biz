@@ -13,13 +13,11 @@
         </li>
     </i:block>
 
-    <i:if test="isFilled(entry.toString())">
-        <i:block name="page-header">
-            <t:pageHeader>
-                <i:block name="title">@entry.toString()</i:block>
-            </t:pageHeader>
-        </i:block>
-    </i:if>
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@entry.toString()</i:block>
+        </t:pageHeader>
+    </i:block>
 
     <t:editForm url="@apply('/jobs/scheduler/entry/%s', entry.getIdAsString())">
         <div class="row">

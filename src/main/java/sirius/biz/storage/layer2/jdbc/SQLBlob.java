@@ -57,7 +57,9 @@ import java.util.Optional;
 @Index(name = "blob_sort_by_last_modified", columns = {"spaceName", "deleted", "parent", "lastModified"})
 @Index(name = "blob_filename_lookup", columns = {"spaceName", "deleted", "filename", "parent", "committed"})
 @Index(name = "blob_reference_lookup", columns = {"spaceName", "deleted", "reference", "referenceDesignator"})
-@Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed")
+@Index(name = "blob_created_loop", columns = "created")
+@Index(name = "blob_renamed_loop", columns = "renamed")
+@Index(name = "blob_content_updated_loop", columns = "contentUpdated")
 @Index(name = "blob_deleted_loop", columns = "deleted")
 @Index(name = "blob_parent_changed_loop", columns = "parentChanged")
 @Index(name = "blob_delete_old_temporary_loop", columns = {"spaceName", "deleted", "lastModified", "temporary"})
@@ -204,10 +206,22 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     private boolean deleted;
 
     /**
-     * Stores if the blob was inserted or renamed.
+     * Stores if the blob was inserted.
      */
-    public static final Mapping CREATED_OR_RENAMED = Mapping.named("createdOrRenamed");
-    private boolean createdOrRenamed;
+    public static final Mapping CREATED = Mapping.named("created");
+    private boolean created;
+
+    /**
+     * Stores if the blob was renamed.
+     */
+    public static final Mapping RENAMED = Mapping.named("renamed");
+    private boolean renamed;
+
+    /**
+     * Stores if the blob's content was updated.
+     */
+    public static final Mapping CONTENT_UPDATED = Mapping.named("contentUpdated");
+    private boolean contentUpdated;
 
     /**
      * Stores if the blob was marked as hidden.
@@ -230,17 +244,30 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
         updateFilenameFields();
 
-        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION, PHYSICAL_OBJECT_KEY)) {
-            createdOrRenamed = true;
-        }
-
-        if (!isNew() && isChanged(PARENT)) {
-            parentChanged = true;
-        }
-
         if (deleted) {
-            createdOrRenamed = false;
+            // The blob has been deleted. Reset all other flags since its now pointless to trigger any BlobChangedHandler.
+            created = false;
+            renamed = false;
+            contentUpdated = false;
             parentChanged = false;
+            return;
+        }
+
+        if (isNew() || isCreated()) {
+            // New Blob entities have no physical object and won't be used by any loops until a blob is uploaded.
+            // Blobs still marked as created have not yet been processed by the BlobCreatedHandler, therefore
+            // it is pointless to set any other flag.
+            return;
+        }
+
+        if (isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+            renamed = true;
+        }
+        if (isChanged(PHYSICAL_OBJECT_KEY)) {
+            contentUpdated = true;
+        }
+        if (isChanged(PARENT)) {
+            parentChanged = true;
         }
     }
 
@@ -474,8 +501,16 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
         return deleted;
     }
 
-    public boolean isCreatedOrRenamed() {
-        return createdOrRenamed;
+    public boolean isCreated() {
+        return created;
+    }
+
+    public boolean isRenamed() {
+        return renamed;
+    }
+
+    public boolean isContentUpdated() {
+        return contentUpdated;
     }
 
     public boolean isParentChanged() {

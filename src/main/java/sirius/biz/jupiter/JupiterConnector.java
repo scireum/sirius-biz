@@ -35,7 +35,6 @@ import java.util.function.Supplier;
  */
 public class JupiterConnector {
 
-    private static final JupiterCommand CMD_SYS_MEM = new JupiterCommand("SYS.MEM");
     private static final JupiterCommand CMD_SET_CONFIG = new JupiterCommand("SYS.SET_CONFIG");
 
     /**
@@ -250,25 +249,6 @@ public class JupiterConnector {
 
     protected boolean isFallbackActive() {
         return fallbackActiveUntil > System.currentTimeMillis();
-    }
-
-    /**
-     * Determines the allocated memory of the connected Jupiter instance
-     *
-     * @return the allocated memory in bytes
-     */
-    protected long getAllocatedMemory() {
-        try {
-            return queryDirect(() -> "SYS.MEM", client -> {
-                client.sendCommand(CMD_SYS_MEM, "raw");
-                return client.getIntegerMultiBulkReply().get(0);
-            });
-        } catch (Exception e) {
-            // As the monitoring command was introduced later, we simply return 0 if an error occurs
-            // (which most probably indicates that the Jupiter version is too old).
-            Exceptions.ignore(e);
-            return 0;
-        }
     }
 
     @Override

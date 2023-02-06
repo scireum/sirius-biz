@@ -540,12 +540,18 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
+            String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
+            if (Strings.isFilled(previousPhysicalObjectKey)) {
+                updateStatement.set(SQLBlob.CONTENT_UPDATED, true);
+            } else {
+                updateStatement.set(SQLBlob.CREATED, true);
+            }
+
             int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())
                                             .where(SQLBlob.PHYSICAL_OBJECT_KEY, blob.getPhysicalObjectKey())
                                             .executeUpdate();
             if (numUpdated == 1) {
                 // Also update in-memory to avoid an additional database fetch...
-                String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
                 blob.setPhysicalObjectKey(nextPhysicalId);
                 if (Strings.isFilled(filename)) {
                     blob.setFilename(filename);

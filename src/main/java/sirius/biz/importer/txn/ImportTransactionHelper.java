@@ -11,12 +11,13 @@ package sirius.biz.importer.txn;
 import sirius.biz.importer.ImportHelper;
 import sirius.biz.importer.Importer;
 import sirius.biz.importer.ImporterContext;
+import sirius.biz.jobs.batch.file.SyncSourceDeleteMode;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
+import sirius.db.mixing.query.constraints.Constraint;
 import sirius.kernel.commons.Explain;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
@@ -42,6 +43,7 @@ public class ImportTransactionHelper extends ImportHelper {
 
     private long transactionId = NO_TRANSACTION;
     private String source;
+    private SyncSourceDeleteMode deleteMode = SyncSourceDeleteMode.ALL;
 
     /**
      * Creates a new instance.
@@ -68,14 +70,17 @@ public class ImportTransactionHelper extends ImportHelper {
     /**
      * Starts a new transaction by setting the internal transaction id to the current timestamp and a source.
      *
-     * @param source the source, later used to delete unmarked items of the same source
+     * @param source     the source, later used to delete unmarked items of the same source
+     * @param deleteMode the mode used to delete unmarked items depending on the given source
      * @return the helper itself for fluent method calls
      */
-    public ImportTransactionHelper start(String source) {
+    public ImportTransactionHelper start(String source, SyncSourceDeleteMode deleteMode) {
         start();
-        if (Strings.isFilled(source)) {
+        // The source is never initialized with an empty string but null instead.
+        if (source != null && !source.isBlank()) {
             this.source = source.trim();
         }
+        this.deleteMode = deleteMode;
         return this;
     }
 
@@ -110,6 +115,7 @@ public class ImportTransactionHelper extends ImportHelper {
     public void finish() {
         this.transactionId = NO_TRANSACTION;
         this.source = null;
+        this.deleteMode = SyncSourceDeleteMode.ALL;
     }
 
     /**
@@ -134,15 +140,26 @@ public class ImportTransactionHelper extends ImportHelper {
      */
     @SuppressWarnings({"unchecked", "java:S1905"})
     @Explain("This cast is actually necessary.")
-    public <E extends BaseEntity<?> & ImportTransactionalEntity> void deleteUnmarked(Class<E> entityType,
-                                                                                     Consumer<Query<?, E, ?>> queryExtender,
-                                                                                     @Nullable
-                                                                                     Consumer<E> entityCallback) {
-        Query<?, E, ?> query =
-                (Query<?, E, ?>) (Object) mixing.getDescriptor(entityType).getMapper().select(entityType);
+    public <E extends BaseEntity<?> & ImportTransactionalEntity, C extends Constraint> void deleteUnmarked(Class<E> entityType,
+                                                                                                           Consumer<Query<?, E, C>> queryExtender,
+                                                                                                           @Nullable
+                                                                                                           Consumer<E> entityCallback) {
+        Query<?, E, C> query =
+                (Query<?, E, C>) (Object) mixing.getDescriptor(entityType).getMapper().select(entityType);
         query.ne(ImportTransactionalEntity.IMPORT_TRANSACTION_DATA.inner(ImportTransactionData.TXN_ID),
                  getCurrentTransaction());
+
         queryExtender.accept(query);
+
+        Mapping sourceMapping = ImportTransactionalEntity.IMPORT_TRANSACTION_DATA.inner(ImportTransactionData.SOURCE);
+        if (deleteMode == SyncSourceDeleteMode.SAME_SOURCE) {
+            query.eq(sourceMapping, source);
+        }
+
+        if (deleteMode == SyncSourceDeleteMode.SAME_SOURCE_OR_EMPTY) {
+            query.where(query.filters().eqOrEmpty(sourceMapping, source));
+        }
+
         query.delete(entityCallback);
     }
 

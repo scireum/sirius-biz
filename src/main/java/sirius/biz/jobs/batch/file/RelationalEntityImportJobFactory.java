@@ -13,7 +13,9 @@ import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.jobs.infos.JobInfoCollector;
+import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.Query;
@@ -21,6 +23,8 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
+import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -32,6 +36,16 @@ import java.util.function.Consumer;
  */
 public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJobFactory {
+
+    /**
+     * Defines the parameter used to collect the transaction source to set in imported {@linkplain ImportTransactionalEntity entities}.
+     */
+    public final Parameter<String> syncSourceParameter = createSyncSourceParameter(getDefaultSource());
+
+    /**
+     * Contains the parameter which determines the {@link SyncSourceDeleteMode}.
+     */
+    public final Parameter<SyncSourceDeleteMode> syncSourceDeleteMode = createDeleteModeParameter();
 
     @Override
     protected DictionaryBasedImportJob createJob(ProcessContext process) {
@@ -51,8 +65,11 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
                                                    getName()).withDeleteQueryTuner(this::tuneDeleteQuery)
                                                              .withContextExtender(context -> context.putAll(
                                                                      parameterContext))
-                                                             .withSource(process.getParameter(RelationalEntityImportJob.SYNC_SOURCE_PARAMETER)
-                                                                                .orElse(collectSyncSource()));
+                                                             .withSource(process.getParameter(syncSourceParameter)
+                                                                                .orElse(null),
+                                                                         enableSyncSourceParameter() ?
+                                                                         process.require(syncSourceDeleteMode) :
+                                                                         SyncSourceDeleteMode.ALL);
     }
 
     protected void tuneDeleteQuery(ProcessContext processContext, Q query) {
@@ -110,7 +127,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     }
 
     /**
-     * Defines if the {@link RelationalEntityImportJob#SYNC_SOURCE_PARAMETER source} parameter should be included.
+     * Defines if the {@link #syncSourceParameter source} parameter should be included.
      * <p>
      * This parameter controls which records will be deleted when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
      * is set to {@link SyncMode#SYNC}.
@@ -124,16 +141,43 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     }
 
     /**
-     * Defines a fixed source to use for record deletion when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
+     * Builds the {@linkplain #syncSourceParameter source} parameter with the provided default value.
+     *
+     * @param defaultSource the source to use
+     * @return a new parameter instance
+     */
+    public static Parameter<String> createSyncSourceParameter(@Nullable String defaultSource) {
+        return new StringParameter("syncSource", "$EntityImportSyncJobFactory.syncSource").withDescription(
+                "$EntityImportSyncJobFactory.syncSource.help").withDefault(defaultSource).build();
+    }
+
+    /**
+     * Builds the {@link #syncSourceParameter source} parameter with the provided default value.
+     *
+     * @return a new parameter instance
+     */
+    public static Parameter<SyncSourceDeleteMode> createDeleteModeParameter() {
+        return new EnumParameter<>("syncSourceDeleteMode",
+                                   "$EntityImportSyncJobFactory.syncSourceDeleteMode",
+                                   SyncSourceDeleteMode.class).withDefault(SyncSourceDeleteMode.SAME_SOURCE)
+                                                              .markRequired()
+                                                              .withDescription(
+                                                                      "$EntityImportSyncJobFactory.syncSourceDeleteMode.help")
+                                                              .hideWhen(RelationalEntityImportJobFactory::hideSyncSourceParameter)
+                                                              .build();
+    }
+
+    /**
+     * Sets the default source to use for record deletion when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
      * is set to {@link SyncMode#SYNC}.
      * <p>
-     * Use this method when the source must be a fixed value, without exposing a parameter.
+     * By default, it uses the job name. Overwrite it if a custom name is needed.
      *
      * @return the source to initialize transactions
      * @see this.enableSyncSourceParameter()
      */
-    protected String collectSyncSource() {
-        return null;
+    protected String getDefaultSource() {
+        return getName();
     }
 
     @Override
@@ -141,7 +185,14 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
         super.collectParameters(parameterCollector);
         parameterCollector.accept(RelationalEntityImportJob.SYNC_MODE_PARAMETER);
         if (enableSyncSourceParameter()) {
-            parameterCollector.accept(RelationalEntityImportJob.SYNC_SOURCE_PARAMETER);
+            parameterCollector.accept(syncSourceDeleteMode);
+            parameterCollector.accept(syncSourceParameter);
         }
+    }
+
+    private static boolean hideSyncSourceParameter(Map<String, String> params) {
+        return RelationalEntityImportJob.SYNC_MODE_PARAMETER.get(params)
+                                                            .filter(syncMode -> syncMode != SyncMode.SYNC)
+                                                            .isPresent();
     }
 }

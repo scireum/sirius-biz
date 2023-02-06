@@ -23,6 +23,7 @@ import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Settings;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.security.Permissions;
 
 import javax.annotation.Nonnull;
@@ -123,6 +124,7 @@ public class PermissionData extends Composite {
      *                          {@link Permissions#hasPermission(String, Predicate)}
      * @return <tt>true</tt> if the <tt>permissionToCheck</tt> is fulfilled, <tt>false</tt> otherwise
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean hasPermission(String permissionToCheck) {
         return Permissions.hasPermission(permissionToCheck,
                                          permission -> getEffectivePermissions().contains(permission));

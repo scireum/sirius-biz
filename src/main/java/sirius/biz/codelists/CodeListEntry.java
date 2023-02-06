@@ -13,6 +13,7 @@ import sirius.db.mixing.Entity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import java.io.Serializable;
 
@@ -40,5 +41,6 @@ public interface CodeListEntry<I extends Serializable, L extends BaseEntity<I> &
 
     BaseEntityRef<I, L> getCodeList();
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     CodeListEntryData getCodeListEntryData();
 }

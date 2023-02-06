@@ -1724,7 +1724,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to create the requested variant if the variant dos not exist already.
+     * Tries to create the requested variant if the variant does not exist already.
      *
      * @param blob        the blob for which the variant is to be created
      * @param variantName the variant to generate
@@ -1752,7 +1752,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
 
             if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
-                // An optimistic lock error occurred (another thread or node attempted the same). So we backup,
+                // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
                 // wait a short and random amount of time and retry...
                 Wait.randomMillis(0, 150);
                 // A collision was detected and the given variant was removed, therefore we need to create the variant again.
@@ -1775,7 +1775,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to create the requested variant if the variant dos not exist already.
+     * Tries to create the requested variant if the variant does not exist already.
      *
      * @param blob        the blob for which the variant is to be created
      * @param variantName the variant to generate

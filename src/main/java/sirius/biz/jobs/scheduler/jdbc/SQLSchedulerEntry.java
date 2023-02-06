@@ -13,7 +13,6 @@ import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.mixing.annotations.TranslationSource;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
 /**
@@ -38,6 +37,6 @@ public class SQLSchedulerEntry extends SQLTenantAware implements SchedulerEntry 
 
     @Override
     public String toString() {
-        return Strings.isFilled(jobConfigData.getLabel()) ? jobConfigData.getLabel() : jobConfigData.getJobName();
+return jobConfigData.toString();
     }
 }

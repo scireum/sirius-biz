@@ -40,7 +40,7 @@ public abstract class FileExportJob extends BatchJob {
      * Contains the default parameter which specifies the destination of the export.
      * <p>
      * Note that even if another instance is used in {@link FileExportJobFactory#collectParameters(Consumer)}, this
-     * will still work out as long as the parameter names are the same. Therefore both parameters should be
+     * will still work out as long as the parameter names are the same. Therefore, both parameters should be
      * created using {@link #createDestinationParameter(List)}.
      */
     public static final Parameter<VirtualFile> DESTINATION_PARAMETER = createDestinationParameter(null);
