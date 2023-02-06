@@ -27,7 +27,14 @@
                         <small>
                             <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
                                 (@i18n("Process.isRunning"))
-                                <i:else>(@toSpokenDate(process.getCompleted()))</i:else>
+                                <i:else>
+                                    <i:if test="process.getCompleted() != null">
+                                        (@toSpokenDate(process.getCompleted()))
+                                        <i:else>
+                                            (@toSpokenDate(process.getCanceled()))
+                                        </i:else>
+                                    </i:if>
+                                </i:else>
                             </i:if>
                         </small>
                     </div>
