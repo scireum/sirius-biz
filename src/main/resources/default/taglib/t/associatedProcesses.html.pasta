@@ -1,7 +1,7 @@
 <i:arg type="sirius.db.mixing.BaseEntity" name="entity"
        description="The entity for which a list of associated process links shall be generated."/>
 <i:arg type="String" name="referenceLabel" default="@entity.toString()"
-       description="The reference label for the query."/>
+       description="The reference label to use when opening the filtered processes view."/>
 
 <t:navbox labelKey="Process.associatedProcesses">
     <i:local name="processes" value="@part(sirius.biz.process.Processes.class).fetchAssociatedProcesses(entity)"/>
