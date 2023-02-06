@@ -5,7 +5,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <t:editForm url="/system/query" class="row">
-            <div class="form-group col-9">
+            <div class="form-group col-xl-8 col-12">
                 <label>
                     Query
                 </label>
@@ -19,7 +19,7 @@
                     </div>
                 </div>
             </div>
-            <t:singleSelect class="col-2" name="class" label="Entity Type" suggestionUri="/system/query/autocomplete"
+            <t:singleSelect class="col-xl-3 col-9" name="class" label="Entity Type" suggestionUri="/system/query/autocomplete"
                             optional="true">
                 <i:if test="type != null">
                     <option value="@type.getName()" selected="selected">
@@ -27,7 +27,7 @@
                     </option>
                 </i:if>
             </t:singleSelect>
-            <t:textfield label="Limit" name="limit" value="@toUserString(limit)" class="col-1"/>
+            <t:textfield label="Limit" name="limit" value="@toUserString(limit)" class="col-xl-1 col-3"/>
         </t:editForm>
     </div>
 </div>
