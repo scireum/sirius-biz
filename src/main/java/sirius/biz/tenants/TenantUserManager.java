@@ -11,6 +11,7 @@ package sirius.biz.tenants;
 import com.typesafe.config.Config;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.UserActivityEvent;
+import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.SpyUser;
@@ -151,6 +152,21 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * @see LoginData#FINGERPRINT
      */
     private static final String SUFFIX_FINGERPRINT = "-fingerprint";
+
+    /**
+     * Contains the prefix added to the account number which is added as artificial role.
+     * <p>
+     * Therefore, each user of a tenant has the following additional role (if filled):
+     * {@code ROLE_PREFIX_ACCOUNT_NUMBER + tenant.getTenantData().getAccountNumber()}
+     */
+    public static final String ROLE_PREFIX_ACCOUNT_NUMBER = "tenant-";
+
+    /**
+     * Contains the prefix added to all performance flag when they're made visible as role.
+     * <p>
+     * This simplifies checking if a user or its tenant has a certain flag active.
+     */
+    public static final String ROLE_PREFIX_PERFORMANCE_FLAG = "performance-flag-";
 
     protected final String systemTenant;
     protected final boolean acceptApiTokens;
@@ -894,7 +910,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             roles.add(Tenant.PERMISSION_SYSTEM_TENANT);
         }
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
-            roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
+            roles.add(ROLE_PREFIX_ACCOUNT_NUMBER + tenant.getTenantData().getAccountNumber());
         }
 
         for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
@@ -904,6 +920,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         if (tenant.getMapper().select(tenant.getClass()).eq(Tenant.PARENT, tenant.getIdAsString()).exists()) {
             roles.add(PERMISSION_HAS_CHILDREN);
         }
+
+        tenant.getPerformanceData()
+              .activeFlags()
+              .map(PerformanceFlag::getName)
+              .map(flag -> ROLE_PREFIX_PERFORMANCE_FLAG + flag)
+              .forEach(roles::add);
 
         Set<String> transformedRoles = transformRoles(roles);
         tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(transformedRoles::remove);
