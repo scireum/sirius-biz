@@ -162,7 +162,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     public static final String ROLE_PREFIX_ACCOUNT_NUMBER = "tenant-";
 
     /**
-     * Contains the prefix added to all performance flag when they're made visible as role.
+     * Contains the prefix added to all performance flags when they're made visible as roles.
      * <p>
      * This simplifies checking if a user or its tenant has a certain flag active.
      */
