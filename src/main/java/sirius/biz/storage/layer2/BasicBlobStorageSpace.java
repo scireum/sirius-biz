@@ -167,7 +167,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
      * a separator one is used.
      */
-    private static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
+    public static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
 
     private static final String HEADER_VARIANT_SOURCE = "X-VariantSource";
     private static final String HEADER_VARIANT_COMPUTER = "X-VariantComputer";
@@ -1895,7 +1895,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     @SuppressWarnings("HttpUrlsUsage")
     @Explain("These are cluster internal URLs and thus http is acceptable.")
-    private Optional<URL> determineDelegateConversionUrl(String blobKey, String variant) {
+    public Optional<URL> determineDelegateConversionUrl(String blobKey, String variant) {
         if (conversionEnabled || conversionHosts.isEmpty()) {
             return Optional.empty();
         }
