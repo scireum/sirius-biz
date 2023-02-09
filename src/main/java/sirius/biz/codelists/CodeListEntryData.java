@@ -159,6 +159,7 @@ public class CodeListEntryData extends Composite {
         this.code = code;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getDescription() {
         return description;
     }
