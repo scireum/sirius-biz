@@ -48,6 +48,12 @@ public class StringParameter extends TextParameter<String, StringParameter> {
         if (input.getRawString() == null) {
             return defaultValue;
         }
+
+        // Always return null when no default value was used and the input is empty or null.
+        if (input.isEmptyString()) {
+            return null;
+        }
+
         return input.getString();
     }
 
