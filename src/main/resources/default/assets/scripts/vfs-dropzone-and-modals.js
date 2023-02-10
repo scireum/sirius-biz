@@ -357,7 +357,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
 
                 function hideIndicators() {
                     document.querySelectorAll(previewsContainer + ' .sirius-upload-hover').forEach(function (_indicator) {
-                        if (!_indicator.parentElement.querySelector('.dropzone-item')) {
+                        if (dropzone.getQueuedFiles().length + dropzone.getUploadingFiles().length === 0) {
                             _indicator.parentElement.classList.add('d-none');
                         }
                         _indicator.classList.remove('d-flex');
