@@ -356,7 +356,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 let _dropzoneIndicator = document.querySelector(previewsContainer + ' .sirius-upload-hover');
 
                 function hideIndicators() {
-                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                    document.querySelectorAll(previewsContainer + ' .sirius-upload-hover').forEach(function (_indicator) {
                         if (!_indicator.parentElement.querySelector('.dropzone-item')) {
                             _indicator.parentElement.classList.add('d-none');
                         }
