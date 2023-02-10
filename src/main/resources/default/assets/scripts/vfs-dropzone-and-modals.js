@@ -419,7 +419,6 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 if (file.previewElement) {
                     setTimeout(function () {
                         file.previewElement.remove();
-                        _outerContainer.classList.add('d-none');
                     }, 500);
                 }
                 if (response.error) {
