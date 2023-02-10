@@ -398,12 +398,11 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 _dropzoneIndicator.addEventListener('drop', function (event) {
                     event.preventDefault();
                 });
-                dropzone.on('sending', function () {
-                    hideIndicators();
-                });
-                dropzone.on('reset', function () {
-                    hideIndicators();
-                });
+                this.on('sending', hideIndicators);
+                this.on('reset', hideIndicators);
+                this.on('success', hideIndicators);
+                this.on('cancel', hideIndicators);
+                this.on('error', hideIndicators);
             }
             this.on('sending', function (file, xhr, formData) {
                 let value = _input.value;
