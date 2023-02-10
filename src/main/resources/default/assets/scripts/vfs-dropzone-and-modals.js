@@ -297,7 +297,9 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
         sendFileAsBody: true,
         parallelUploads: 1,
         maxFilesize: null,
-        maxFiles: 1,
+        // even though we only want 1 file, we allow multiple
+        // this avoids user errors when an existing upload should be replaced
+        maxFiles: null,
         dictMaxFilesExceeded: dictMaxFilesExceeded,
         acceptedFiles: allowedExtensions,
         previewTemplate: '' +
