@@ -377,12 +377,6 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 document.addEventListener('dragover', function (event) {
                     event.preventDefault();
                 });
-                document.addEventListener('dragend', function (event) {
-                    hideIndicators();
-                }, false);
-                document.addEventListener('drop', function (event) {
-                    hideIndicators();
-                }, false);
                 document.addEventListener('dragleave', function (event) {
                     if (sirius.isDragleaveEventLeavingWindow(event)) {
                         hideIndicators();
@@ -400,7 +394,10 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 _dropzoneIndicator.addEventListener('drop', function (event) {
                     event.preventDefault();
                 });
-                dropzone.on('drop', function () {
+                dropzone.on('sending', function () {
+                    hideIndicators();
+                });
+                dropzone.on('reset', function () {
                     hideIndicators();
                 });
             }
