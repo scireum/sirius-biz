@@ -96,8 +96,6 @@ public abstract class FileImportJob extends ImportJob {
         AUX_FILE_PARENT_DIRECTORY_PARAMETER = parameter.build();
     }
 
-    private static final String FILE_EXTENSION_ZIP = "zip";
-
     @Part
     private static VirtualFileSystem virtualFileSystem;
 
