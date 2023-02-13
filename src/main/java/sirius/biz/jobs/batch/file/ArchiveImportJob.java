@@ -46,7 +46,8 @@ public abstract class ArchiveImportJob extends FileImportJob {
      * in its factory.
      */
     public static final Parameter<VirtualFile> ZIP_FILE_PARAMETER =
-            FileImportJob.createFileParameter(Collections.singletonList(ZIP_FILE_EXTENSION));
+            FileImportJob.createFileParameter(Collections.singletonList(ZIP_FILE_EXTENSION),
+                                              "$ArchiveImportJob.file.help");
 
     private ZipFile zipFile;
 
