@@ -96,7 +96,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
 
     /**
      * Specifies one or more search fields which will be searched if a <tt>query</tt>
-     * if given in the <tt>WebContext</tt>.
+     * is given in the <tt>WebContext</tt>.
      *
      * @param searchFields the fields to search in
      * @return the helper itself for fluent method calls

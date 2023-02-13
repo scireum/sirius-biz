@@ -180,11 +180,6 @@ public class Jupiter implements MetricProvider {
     @Override
     public void gather(MetricsCollector metricsCollector) {
         if (getDefault().isConfigured()) {
-            metricsCollector.metric("jupiter_memory",
-                                    "jupiter-memory",
-                                    "Jupiter-Memory",
-                                    Metric.bytesToMebibytes(getDefault().getAllocatedMemory()),
-                                    Metric.UNIT_MIB);
             metricsCollector.metric("jupiter_fallback",
                                     "jupiter-fallback",
                                     "Jupiter Fallback",

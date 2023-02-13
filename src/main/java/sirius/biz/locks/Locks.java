@@ -8,6 +8,7 @@
 
 package sirius.biz.locks;
 
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -24,6 +25,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Provides a central framework to obtain and manage named locks.
@@ -31,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * These locks can either be distributed (via SQL or REDIS) or held locally. The implementation is provided via a
  * {@link LockManager}.
  * <p>
- * Note that the implementation provided by the {@link LockManager} are not guaranteed to be reentrant. Therefore
+ * Note that the implementation provided by the {@link LockManager} are not guaranteed to be reentrant. Therefore,
  * we keep a local map <tt>"localLocks"</tt> (lock name to thread id) to simulate this behaviour.
  */
 @Register(classes = {Locks.class, MetricProvider.class}, framework = Locks.FRAMEWORK_LOCKS)
@@ -118,21 +121,50 @@ public class Locks implements MetricProvider {
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
         if (localLockInfo == null || !Objects.equals(currentThreadId, localLockInfo.getFirst())) {
-            throw new IllegalStateException("The current thread doesn't hold the lock: " + lockName);
+            unlock(lockName);
+            Map<Long, Thread> liveThreadsById = getLiveThreadsById();
+            throw new IllegalStateException(Strings.apply("""
+                                                                  The current thread doesn't hold the lock: %s
+                                                                  Current thread:       %s
+                                                                  Owner thread of lock: %s""",
+                                                          lockName,
+                                                          Thread.currentThread(),
+                                                          liveThreadsById.get(localLockInfo.getFirst())));
         }
         return () -> transferLockToCurrentThread(lockName, currentThreadId);
     }
 
     private void transferLockToCurrentThread(String lockName, Long ownerThreadId) {
-        Long currentThreadId = Thread.currentThread().getId();
+        Thread currentThread = Thread.currentThread();
+        Long currentThreadId = currentThread.getId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
-        if (localLockInfo == null || !Objects.equals(ownerThreadId, localLockInfo.getFirst())) {
-            throw new IllegalStateException("Failed to transfer lock! The owner thread no longer holds the lock: "
-                                            + lockName);
+        if (localLockInfo == null || (!Objects.equals(ownerThreadId, localLockInfo.getFirst()) && !Objects.equals(
+                currentThreadId,
+                localLockInfo.getFirst()))) {
+            // We need to force unlocking here, as the owner thread won't unlock and target thread can't unlock.
+            unlock(lockName, true);
+            Map<Long, Thread> liveThreadsById = getLiveThreadsById();
+            throw new IllegalStateException(Strings.apply("""
+                                                                  Failed to transfer lock! The owner thread no longer holds the lock: %s
+                                                                  Target thread:               %s
+                                                                  Owner thread from parameter: %s
+                                                                  Owner thread of lock:        %s""",
+                                                          lockName,
+                                                          currentThread,
+                                                          liveThreadsById.get(ownerThreadId),
+                                                          liveThreadsById.get(localLockInfo.getFirst())));
         }
 
         localLockInfo.setFirst(currentThreadId);
+    }
+
+    @Nonnull
+    private static Map<Long, Thread> getLiveThreadsById() {
+        return Thread.getAllStackTraces()
+                     .keySet()
+                     .stream()
+                     .collect(Collectors.toMap(Thread::getId, Function.identity()));
     }
 
     private boolean acquireLockLocally(String lockName, Long currentThreadId) {
@@ -146,8 +178,7 @@ public class Locks implements MetricProvider {
             return false;
         }
 
-        // Already locked by this thread - increment the nesting level to handle the unlock
-        // calls properly...
+        // Already locked by this thread - increment the nesting level to handle unlock calls properly...
         localLockInfo.getSecond().incrementAndGet();
         return true;
     }
@@ -157,7 +188,7 @@ public class Locks implements MetricProvider {
      * <p>
      * See {@link #tryLock(String, Duration)} for details on acquiring a lock.
      * <p>
-     * If the lock cannot be acquired, nothing will happen (neighter the task will be execute nor an exception will be
+     * If the lock cannot be acquired, nothing will happen (neither the task will be executed nor an exception will be
      * thrown).
      *
      * @param lock           the name of the lock to acquire
@@ -190,7 +221,7 @@ public class Locks implements MetricProvider {
 
         return manager.isLocked(lock);
     }
-    
+
     /**
      * Determines if the given lock is currently locked by the current thread.
      *
@@ -230,10 +261,10 @@ public class Locks implements MetricProvider {
     }
 
     /**
-     * Determines if the lock is held by the appropriate thread and chckes the nesting level.
+     * Determines if the lock is held by the appropriate thread and checks the nesting level.
      *
      * @param lock the lock to check
-     * @return <tt>true</tt> if the unlock was local due to several nested locks or <tt>false</tt> if the lock
+     * @return <tt>true</tt> if unlock was local due to several nested locks or <tt>false</tt> if the lock
      * should be globally unlocked.
      */
     private boolean unlockLocally(String lock) {

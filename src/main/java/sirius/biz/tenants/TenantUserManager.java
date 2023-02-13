@@ -352,7 +352,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             U currentUser = originalUser.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
             modifiedUser.setId(currentUser.getId());
-            modifiedUser.getUserAccountData().getLang().setValue(currentUser.getUserAccountData().getLang().getValue());
+            modifiedUser.getUserAccountData()
+                        .getLanguage()
+                        .setValue(currentUser.getUserAccountData().getLanguage().getValue());
             modifiedUser.getUserAccountData()
                         .getLogin()
                         .setUsername(currentUser.getUserAccountData().getLogin().getUsername());
@@ -600,7 +602,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                                .withUsername(account.getUserAccountData().getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
                                .withTenantName(account.getTenant().fetchValue().getTenantData().getName())
-                               .withLang(computeLang(null, account.getUniqueName()))
+                               .withLanguage(computeLanguage(null, account.getUniqueName()))
                                .withPermissions(roles)
                                .withSettingsSupplier(user -> getUserSettings(getScopeSettings(), user))
                                .withUserSupplier(ignored -> account)
@@ -627,7 +629,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         UserInfo result = findUserByName(ctx, user);
         if (result == null) {
-            auditLog.negative("AuditLog.lockedOrNonexitentUserTriedLogin").forUser(null, user).log();
+            auditLog.negative("AuditLog.lockedOrNonexistentUserTriedLogin").forUser(null, user).log();
             return null;
         }
 
@@ -684,7 +686,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         long currentTimestampInDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis());
-        // Timestamps of tomorrow and yesterday should be valid too, to be more gracefull with nightly scripts utilizing
+        // Timestamps of tomorrow and yesterday should be valid too, to be more graceful with nightly scripts utilizing
         // the apiToken. If midnight passes while execution, the hashed apiToken would be suddenly invalid.
         for (int i = -1; i <= 1; i++) {
             long timestampToCheck = currentTimestampInDays + i;
@@ -984,7 +986,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * @return the list of supported languages
      */
     public List<String> getAvailableLanguageCodes() {
-        return Collections.unmodifiableList(availableLanguages);
+        return availableLanguages;
     }
 
     /**
@@ -1018,13 +1020,13 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Nonnull
     @Override
-    protected String computeLang(WebContext ctx, String userId) {
+    protected String computeLanguage(WebContext webContext, String userId) {
         U userAccount = fetchAccount(userId);
         if (userAccount == null) {
             return NLS.getDefaultLanguage();
         }
-        return Strings.firstFilled(userAccount.getUserAccountData().getLang().getValue(),
-                                   userAccount.getTenant().fetchValue().getTenantData().getLang().getValue(),
+        return Strings.firstFilled(userAccount.getUserAccountData().getLanguage().getValue(),
+                                   userAccount.getTenant().fetchValue().getTenantData().getLanguage().getValue(),
                                    NLS.getDefaultLanguage());
     }
 }

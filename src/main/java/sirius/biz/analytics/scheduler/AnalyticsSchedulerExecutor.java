@@ -58,6 +58,11 @@ public abstract class AnalyticsSchedulerExecutor implements DistributedTaskExecu
 
         if (batchBuffer.get() != null) {
             scheduleBatch(scheduler, date, level, true, batchBuffer.get());
+        } else {
+            // We did not generate any batches. Therefore, we need to emit an empty placeholder batch so that
+            // the AnalyticsBatchExecutor sees the "SCHEDULE_NEXT_LEVEL" flag. This completely empty batch will be
+            // filtered out later...
+            scheduleBatch(scheduler, date, level, true, new JSONObject());
         }
     }
 

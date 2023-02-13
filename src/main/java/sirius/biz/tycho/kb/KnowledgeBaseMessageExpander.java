@@ -31,7 +31,7 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
     @Override
     public String expand(String message) {
         message = LOCKED_KBA_PATTERN.matcher(message).replaceAll(match -> {
-            return knowledgeBase.resolve(NLS.getCurrentLang(), match.group(2), false).map(kba -> {
+            return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(2), false).map(kba -> {
                 return match.group(1) + Strings.apply("""
                                                               <span class="d-inline-flex flex-row align-items-baseline">
                                                                   <i class="fa fa-lightbulb"></i><a class="pl-1" href="/kba/%s/%s">%s</a>
@@ -43,7 +43,7 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
             }).orElse("");
         });
         return KBA_PATTERN.matcher(message).replaceAll(match -> {
-            return knowledgeBase.resolve(NLS.getCurrentLang(), match.group(1), true).map(kba -> {
+            return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(1), true).map(kba -> {
                 return Strings.apply("""
                                              <span class="d-inline-flex flex-row align-items-baseline">
                                                  <i class="fa fa-lightbulb"></i><a class="pl-1" href="/kba/%s/%s">%s</a>

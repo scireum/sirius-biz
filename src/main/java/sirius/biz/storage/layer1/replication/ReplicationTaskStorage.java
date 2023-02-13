@@ -70,6 +70,13 @@ public interface ReplicationTaskStorage {
     int countTotalNumberOfTasks();
 
     /**
+     * Computes the number of delayed / parked replication tasks.
+     *
+     * @return the number of delayed / parked replication tasks
+     */
+    int countNumberOfDelayedTasks();
+
+    /**
      * Computes the number of executable replication tasks.
      *
      * @return the number of executable replication tasks

@@ -10,7 +10,9 @@ package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.kernel.async.Future;
 import sirius.kernel.health.HandledException;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
@@ -79,6 +81,7 @@ public interface Blob {
      * @return the filename of the blob or <tt>null</tt> if no filename was assigned
      */
     @Nullable
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     String getFilename();
 
     /**
@@ -94,6 +97,7 @@ public interface Blob {
      *
      * @return the size in bytes
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     long getSize();
 
     /**
@@ -117,6 +121,14 @@ public interface Blob {
      * @return a handle to the data of this blob
      */
     Optional<FileHandle> download();
+
+    /**
+     * Tries to create the desired variant.
+     *
+     * @param variantName the name of the desired variant
+     * @return a future holding the conversion process
+     */
+    Future tryCreateVariant(String variantName);
 
     /**
      * Delivers the data of this blob into the given HTTP response.
@@ -255,5 +267,6 @@ public interface Blob {
      *
      * @return a builder to create a download or delivery URL
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     URLBuilder url();
 }

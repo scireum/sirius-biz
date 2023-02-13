@@ -38,6 +38,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Settings;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.http.IPRange;
 import sirius.web.http.WebContext;
 
@@ -263,11 +264,11 @@ public class TenantData extends Composite implements Journaled {
     /**
      * The language of the {@link Tenant}
      */
-    public static final Mapping LANG = Mapping.named("lang");
+    public static final Mapping LANGUAGE = Mapping.named("language");
     @NullAllowed
     @Autoloaded
     @Length(2)
-    private final LookupValue lang = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
+    private final LookupValue language = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
 
     @Part
     @Nullable
@@ -437,6 +438,7 @@ public class TenantData extends Composite implements Journaled {
         this.settings = null;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getName() {
         return name;
     }
@@ -461,6 +463,7 @@ public class TenantData extends Composite implements Journaled {
         this.accountNumber = accountNumber;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public InternationalAddressData getAddress() {
         return address;
     }
@@ -558,8 +561,13 @@ public class TenantData extends Composite implements Journaled {
         return journal;
     }
 
+    @Deprecated
     public LookupValue getLang() {
-        return lang;
+        return language;
+    }
+
+    public LookupValue getLanguage() {
+        return language;
     }
 
     public PackageData getPackageData() {

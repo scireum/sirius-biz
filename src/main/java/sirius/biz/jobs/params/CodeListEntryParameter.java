@@ -78,7 +78,7 @@ public class CodeListEntryParameter extends ParameterBuilder<CodeListEntry<?, ?>
                       .map(value -> new JSONObject().fluentPut("value", value.getCodeListEntryData().getCode())
                                                     .fluentPut("text",
                                                                value.getCodeListEntryData()
-                                                                    .getTranslatedValue(NLS.getCurrentLang())));
+                                                                    .getTranslatedValue(NLS.getCurrentLanguage())));
     }
 
     @SuppressWarnings("unchecked")

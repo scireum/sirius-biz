@@ -75,6 +75,8 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
     private final BiConsumer<O, SmartQuery<E>> queryCustomizer;
     private final Class<E> eventType;
 
+    private MetricTimeSeriesComputer<O> monthlyMetric;
+
     /**
      * Creates a new computer for the given event type which customizes the query based on a given object.
      *
@@ -109,6 +111,18 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
     }
 
     /**
+     * Permits to use a {@link sirius.biz.analytics.metrics.MonthlyMetricComputer} to utilizes pre-computed monthly
+     * {@linkplain sirius.biz.analytics.metrics.Metrics metrics} (if the {@link Granularity} is set to monthly as well.
+     *
+     * @param metricComputer the monthly metric computer to use
+     * @return the computer itself for fluent method calls
+     */
+    public EventTimeSeriesComputer<O, E> withMonthlyMetric(MetricTimeSeriesComputer<O> metricComputer) {
+        this.monthlyMetric = metricComputer;
+        return this;
+    }
+
+    /**
      * Extracts the date from a result row.
      * <p>
      * Note that the columns <tt>year</tt> and <tt>month</tt> must be present. If <tt>day</tt> is present, it will
@@ -125,6 +139,11 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
 
     @Override
     public void compute(@Nullable O object, TimeSeries timeSeries) throws Exception {
+        if (monthlyMetric != null && timeSeries.getGranularity() == Granularity.MONTH) {
+            monthlyMetric.compute(object, timeSeries);
+            return;
+        }
+
         SmartQuery<E> query = oma.select(eventType);
 
         if (queryCustomizer != null) {

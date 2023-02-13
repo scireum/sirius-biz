@@ -23,6 +23,7 @@ import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.IntegrityConstraintFailedException;
 import sirius.db.mixing.OptimisticLockException;
 import sirius.kernel.async.CallContext;
@@ -848,7 +849,7 @@ public class Processes {
         taskContext.setAdapter(env);
         try {
             if (env.isActive()) {
-                CallContext.getCurrent().resetLang();
+                CallContext.getCurrent().resetLanguage();
                 installUserOfProcess(userContext, env);
 
                 task.accept(env);
@@ -857,7 +858,7 @@ public class Processes {
             throw env.handle(e);
         } finally {
             env.awaitCompletion();
-            CallContext.getCurrent().resetLang();
+            CallContext.getCurrent().resetLanguage();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
 
@@ -1177,5 +1178,15 @@ public class Processes {
                });
 
         return Tuple.create(numProcesses.get(), (int) TimeUnit.SECONDS.toMinutes(computationDurationSeconds.get()));
+    }
+
+    /**
+     * Fetches a list of processes which hold a reference to the provided {@linkplain BaseEntity base entity}.
+     *
+     * @param baseEntity the entity for which all associated processes shall be fetched
+     * @return a list of processes who are associated with the provided entity
+     */
+    public List<Process> fetchAssociatedProcesses(BaseEntity<?> baseEntity) {
+        return queryProcessesForCurrentUser().eq(Process.REFERENCES, baseEntity.getUniqueName()).limit(5).queryList();
     }
 }

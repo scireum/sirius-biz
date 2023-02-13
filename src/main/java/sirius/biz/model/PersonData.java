@@ -21,6 +21,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -139,8 +140,9 @@ public class PersonData extends Composite {
      *
      * @return a short string (salutation, title and last name) used to address the person
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getAddressableName() {
-        return getAddressableName(NLS.getCurrentLang());
+        return getAddressableName(NLS.getCurrentLanguage());
     }
 
     /**
@@ -167,6 +169,7 @@ public class PersonData extends Composite {
      *
      * @return the first and lastname as string, or empty if the lastname is not filled.
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getShortName() {
         if (Strings.isEmpty(lastname)) {
             return "";
@@ -234,6 +237,7 @@ public class PersonData extends Composite {
      *
      * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getTranslatedSalutation() {
         return salutation.getTable().resolveName(salutation.getValue()).orElse(salutation.getValue());
     }
@@ -248,6 +252,7 @@ public class PersonData extends Composite {
         return salutation.getTable().resolveName(salutation.getValue(), langCode).orElse(salutation.getValue());
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getTitle() {
         return title;
     }
@@ -256,10 +261,12 @@ public class PersonData extends Composite {
         this.title = title;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public LookupValue getSalutation() {
         return salutation;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getFirstname() {
         return firstname;
     }
@@ -268,6 +275,7 @@ public class PersonData extends Composite {
         this.firstname = firstname;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getLastname() {
         return lastname;
     }

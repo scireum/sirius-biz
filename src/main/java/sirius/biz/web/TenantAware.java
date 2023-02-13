@@ -14,6 +14,7 @@ import sirius.db.mixing.Entity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import java.util.function.Supplier;
 
@@ -41,6 +42,7 @@ public interface TenantAware extends Entity {
      *
      * @return the tenant as reference which owns the entity
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     BaseEntityRef<?, ?> getTenant();
 
     /**

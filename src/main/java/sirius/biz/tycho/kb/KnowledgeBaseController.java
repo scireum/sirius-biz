@@ -43,18 +43,18 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kb")
     public void kb(WebContext webContext) {
-        langArticle(webContext, NLS.getCurrentLang(), KnowledgeBase.ROOT_CHAPTER_ID);
+        langArticle(webContext, NLS.getCurrentLanguage(), KnowledgeBase.ROOT_CHAPTER_ID);
     }
 
     /**
      * Renders the entry point of the knowledge base in the given language.
      *
      * @param webContext the current request to respond to
-     * @param lang       the language top open the knowledge base in
+     * @param language   the language top open the knowledge base in
      */
     @Routed("/kb/:1")
-    public void langKb(WebContext webContext, String lang) {
-        langArticle(webContext, lang, KnowledgeBase.ROOT_CHAPTER_ID);
+    public void langKb(WebContext webContext, String language) {
+        langArticle(webContext, language, KnowledgeBase.ROOT_CHAPTER_ID);
     }
 
     /**
@@ -65,32 +65,32 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kba/:1")
     public void article(WebContext webContext, String articleId) {
-        langArticle(webContext, NLS.getCurrentLang(), articleId);
+        langArticle(webContext, NLS.getCurrentLanguage(), articleId);
     }
 
     /**
      * Renders the requested article in the given language.
      *
      * @param webContext the current request to respond to
-     * @param lang       the language to render the article in
+     * @param language   the language to render the article in
      * @param articleId  the id or code of the article to render
      */
     @Routed("/kba/:1/:2")
-    public void langArticle(WebContext webContext, String lang, String articleId) {
-        langArticle(webContext, lang, articleId, null);
+    public void langArticle(WebContext webContext, String language, String articleId) {
+        langArticle(webContext, language, articleId, null);
     }
 
     /**
      * Renders the pre-authorized article in the given language.
      *
      * @param webContext the current request to respond to
-     * @param lang       the language to render the article in
+     * @param language   the language to render the article in
      * @param articleId  the id or code of the article to render
      * @param authKey    the authentication signature to verify
      */
     @Routed("/kba/:1/:2/:3")
-    public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
-        KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, true).orElse(null);
+    public void langArticle(WebContext webContext, String language, String articleId, String authKey) {
+        KnowledgeBaseArticle article = knowledgeBase.resolve(language, articleId, true).orElse(null);
         if (article == null) {
             webContext.respondWith().error(HttpResponseStatus.NOT_FOUND);
             return;
@@ -108,7 +108,10 @@ public class KnowledgeBaseController extends BizController {
         UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
         try {
             webContext.respondWith().template(article.getTemplatePath());
-            eventRecorder.record(new PageImpressionEvent().withUri("/kba/" + article.getLanguage() + "/" + article.getArticleId())
+            eventRecorder.record(new PageImpressionEvent().withUri("/kba/"
+                                                                   + article.getLanguage()
+                                                                   + "/"
+                                                                   + article.getArticleId())
                                                           .withAggregationUrl("/kba")
                                                           .withAction(article.getArticleId())
                                                           .withDataObject(article.getEntry().getUniqueName()));

@@ -55,7 +55,7 @@ public class XMLValidator {
         Schema schema = schemaFactory.newSchema(xsd);
 
         Validator validator = schema.newValidator();
-        String language = UserContext.getCurrentUser().getLang();
+        String language = UserContext.getCurrentUser().getLanguage();
         // Apply a workaround for using the english translations as those are not stored in an extra "en" resource
         // bundle but in the root one instead.
         Locale locale = Strings.areEqual(language, "en") ? Locale.ROOT : new Locale(language);
@@ -66,11 +66,11 @@ public class XMLValidator {
 
         try {
             validator.validate(xml);
-        } catch (SAXParseException e) {
+        } catch (SAXParseException exception) {
             // Cause of the exception is already logged via validator's error handler.
-            Exceptions.ignore(e);
-        } catch (IOException e) {
-            process.log(ProcessLog.error().withMessage(e.getMessage()));
+            Exceptions.ignore(exception);
+        } catch (IOException exception) {
+            process.log(ProcessLog.error().withMessage(exception.getMessage()));
             return false;
         }
 

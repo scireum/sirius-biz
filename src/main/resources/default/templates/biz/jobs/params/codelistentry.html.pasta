@@ -6,7 +6,7 @@
     <i:for var="value" type="sirius.biz.codelists.CodeListEntry"
            items="@param.as(sirius.biz.jobs.params.CodeListEntryParameter.class).getValues()">
         <option value="@value.getCodeListEntryData().getCode()" @selected="value == param.get(context).orElse(null)">
-            @value.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang())
+            @value.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLanguage())
         </option>
     </i:for>
 </i:invoke>

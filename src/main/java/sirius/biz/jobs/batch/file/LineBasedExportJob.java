@@ -28,13 +28,24 @@ public abstract class LineBasedExportJob extends FileExportJob {
     /**
      * Contains the parameter which select the export type.
      */
-    public static final Parameter<ExportFileType> FILE_TYPE_PARAMETER =
-            new EnumParameter<>("fileType", "$LineBasedExportJobFactory.fileType", ExportFileType.class).withDefault(
-                    ExportFileType.XLSX)
-                                                                                                        .withDescription(
-                                                                                                                "$LineBasedExportJobFactory.fileType.help")
-                                                                                                        .markRequired()
-                                                                                                        .build();
+    public static final Parameter<ExportFileType> FILE_TYPE_PARAMETER;
+
+    static {
+        EnumParameter<ExportFileType> parameter =
+                new EnumParameter<>("fileType", "$LineBasedExportJobFactory.fileType", ExportFileType.class);
+        parameter.withDefault(ExportFileType.XLSX);
+        parameter.withDescription("$LineBasedExportJobFactory.fileType.help");
+        parameter.hideWhen(params -> DESTINATION_PARAMETER.get(params)
+                                                          .filter(VirtualFile::isFile)
+                                                          .map(VirtualFile::fileExtension)
+                                                          .filter(Strings::isFilled)
+                                                          .flatMap(extension -> Value.of(extension.toUpperCase())
+                                                                                     .getEnum(ExportFileType.class))
+                                                          .isPresent());
+        parameter.markRequired();
+
+        FILE_TYPE_PARAMETER = parameter.build();
+    }
 
     /**
      * Used to write the generated rows in a format independent manner

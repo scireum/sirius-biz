@@ -1,5 +1,6 @@
 <i:arg name="trace" type="sirius.biz.protocol.TraceData"/>
 <i:arg name="journal" type="sirius.biz.protocol.JournalData" default=""/>
+<i:arg name="transactionData" type="sirius.biz.importer.txn.ImportTransactionData" default=""/>
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
@@ -16,8 +17,8 @@
                     <t:infoLine class="tracing-info" labelKey="TraceData.created">
                         <div>@toUserString(trace.getCreatedAt())</div>
                         <div>@trace.getCreatedBy()</div>
-                        <div class="muted">@trace.getCreatedOn()</div>
-                        <div class="muted">@trace.getCreatedIn()</div>
+                        <div class="text-muted">@trace.getCreatedOn()</div>
+                        <div class="text-muted">@trace.getCreatedIn()</div>
                     </t:infoLine>
                 </div>
 
@@ -31,9 +32,25 @@
                 </div>
             </div>
 
+            <i:if test="transactionData != null">
+                <div class="row">
+                    <div class="col-lg">
+                        <t:infoLine class="tracing-info" labelKey="ImportTransactionData.txnId">
+                            <div>@transactionData.getTxnId()</div>
+                        </t:infoLine>
+                    </div>
+
+                    <div class="col-lg">
+                        <t:infoLine class="tracing-info" labelKey="ImportTransactionData.source">
+                            <div>@transactionData.getSource()</div>
+                        </t:infoLine>
+                    </div>
+                </div>
+            </i:if>
+
             <i block="actions">
                 <i:if test="journal != null">
-                    <a href="@journal.getProtocolUri()"  role="button" class="btn btn-link">
+                    <a href="@journal.getProtocolUri()" role="button" class="btn btn-link">
                         <i class="fa fa-external-link-alt"></i> @i18n("JournalEntry.plural")
                     </a>
                 </i:if>

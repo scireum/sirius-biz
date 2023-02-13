@@ -200,6 +200,7 @@ public class ConversionEngine {
             }
 
             converter.performConversion(conversionProcess);
+
             FileHandle resultFileHandle = conversionProcess.getResultFileHandle();
             if (resultFileHandle == null || !resultFileHandle.exists() || resultFileHandle.getFile().length() == 0) {
                 if (resultFileHandle != null) {

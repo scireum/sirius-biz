@@ -5,7 +5,7 @@
 <i:pragma name="description">Provides a help button which links to the given knowledge base article.</i:pragma>
 
 <i:local name="referencedArticle"
-         value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(NLS.getCurrentLang(), code, true).orElse(null)"/>
+         value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(NLS.getCurrentLanguage(), code, true).orElse(null)"/>
 <i:if test="referencedArticle != null">
     <a class="btn btn-info ml-2 @class"
        target="_blank"

@@ -45,6 +45,8 @@ import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+import sirius.web.services.ApiResponsesFrom;
+import sirius.web.services.DefaultErrorResponsesJson;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.services.PublicService;
 
@@ -430,12 +432,7 @@ public class ProcessController extends BizController {
                                 ]
                             }
                             """)))
-    @ApiResponse(responseCode = "401",
-            description = "Missing authentication",
-            content = @Content(mediaType = "application/json"))
-    @ApiResponse(responseCode = "404",
-            description = "Unknown or inaccessible process",
-            content = @Content(mediaType = "application/json"))
+    @ApiResponsesFrom(DefaultErrorResponsesJson.class)
     @Parameter(name = "process",
             description = "The ID of the process to fetch",
             required = true,
