@@ -12,6 +12,7 @@ import sirius.biz.jobs.batch.ImportBatchProcessFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.util.ArchiveExtractor;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.std.Part;
 import sirius.web.security.UserContext;
 
@@ -51,7 +52,7 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
     /**
      * Can be overwritten to create a custom parameter to select the input file.
      * <p>
-     * Note that this should use {@link FileImportJob#createFileParameter(List)} to ensure that the custom
+     * Note that this should use {@link FileImportJob#createFileParameter(List, String)} to ensure that the custom
      * parameter and the one used to retrieve the value match properly.
      *
      * @return the effective parameter to select the import file
@@ -61,7 +62,20 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
         collectAcceptedFileExtensions(fileExtensions::add);
         fileExtensions.addAll(archiveExtractor.getSupportedFileExtensions());
 
-        return FileImportJob.createFileParameter(fileExtensions);
+        return FileImportJob.createFileParameter(fileExtensions, getFileParameterDescription());
+    }
+
+    /**
+     * Defines the description of the {@link FileImportJob#FILE_PARAMETER}.
+     * <p>
+     * Override this method in order to define a custom description, otherwise a default one is used
+     *
+     * @return the description in as a translatable resource.
+     */
+    @SuppressWarnings("squid:S3400")
+    @Explain("We want allow overriding the default description")
+    protected String getFileParameterDescription() {
+        return "$FileImportJobFactory.file.help";
     }
 
     /**
