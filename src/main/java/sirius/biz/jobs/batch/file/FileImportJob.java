@@ -65,6 +65,7 @@ public abstract class FileImportJob extends ImportJob {
         EnumParameter<AuxiliaryFileMode> parameter =
                 new EnumParameter<>("auxFileMode", "$FileImportJobFactory.auxFileMode", AuxiliaryFileMode.class);
         AUX_FILE_MODE_PARAMETER = parameter.withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE)
+                                           .withDescription("$FileImportJobFactory.auxFileMode.help")
                                            .hideWhen(FileImportJob::hasNoArchiveFile)
                                            .markRequired()
                                            .build();
