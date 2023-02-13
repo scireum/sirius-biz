@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -455,7 +455,7 @@ public class L3Uplink implements VFSRoot {
 
     private long lastModifiedSupplier(VirtualFile file) {
         return file.tryAs(Blob.class)
-                   .map(blob -> blob.getLastModified().toInstant(ZoneOffset.UTC).toEpochMilli())
+                   .map(blob -> blob.getLastModified().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                    .orElse(0L);
     }
 
