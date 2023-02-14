@@ -186,7 +186,7 @@ public abstract class FileImportJob extends ImportJob {
      * @return the parameter used to select the import file
      */
     public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions,
-                                                             String description) {
+                                                             @Nullable String description) {
         FileParameter result = new FileParameter("file", FILE_LABEL).filesOnly().withBasePath("/work");
         if (Strings.isFilled(description)) {
             result.withDescription(description);
