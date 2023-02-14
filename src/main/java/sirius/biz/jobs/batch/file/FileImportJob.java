@@ -52,9 +52,9 @@ public abstract class FileImportJob extends ImportJob {
      * <p>
      * Note that even if another instance is used in {@link FileImportJobFactory#collectParameters(Consumer)}, this
      * will still work out as long as the parameter names are the same. Therefore, both parameters should be
-     * created using {@link #createFileParameter(List)}.
+     * created using {@link #createFileParameter(List, String)}.
      */
-    public static final Parameter<VirtualFile> FILE_PARAMETER = createFileParameter(null);
+    public static final Parameter<VirtualFile> FILE_PARAMETER = createFileParameter(null, null);
 
     /**
      * Determines the mode in which auxiliary files are handled (if this job supports it).
@@ -65,6 +65,7 @@ public abstract class FileImportJob extends ImportJob {
         EnumParameter<AuxiliaryFileMode> parameter =
                 new EnumParameter<>("auxFileMode", "$FileImportJobFactory.auxFileMode", AuxiliaryFileMode.class);
         AUX_FILE_MODE_PARAMETER = parameter.withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE)
+                                           .withDescription("$FileImportJobFactory.auxFileMode.help")
                                            .hideWhen(FileImportJob::hasNoArchiveFile)
                                            .markRequired()
                                            .build();
@@ -95,8 +96,6 @@ public abstract class FileImportJob extends ImportJob {
         parameter.hideWhen(FileImportJob::hasAuxFilesDisabled);
         AUX_FILE_PARENT_DIRECTORY_PARAMETER = parameter.build();
     }
-
-    private static final String FILE_EXTENSION_ZIP = "zip";
 
     @Part
     private static VirtualFileSystem virtualFileSystem;
@@ -183,10 +182,15 @@ public abstract class FileImportJob extends ImportJob {
      * Helps to create a custom file parameter with an appropriate file extension filter.
      *
      * @param acceptedFileExtensions the file extensions to accept
+     * @param description            the description to use in the parameter
      * @return the parameter used to select the import file
      */
-    public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions) {
+    public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions,
+                                                             @Nullable String description) {
         FileParameter result = new FileParameter("file", FILE_LABEL).filesOnly().withBasePath("/work");
+        if (Strings.isFilled(description)) {
+            result.withDescription(description);
+        }
         if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
             result.withAcceptedExtensionsList(acceptedFileExtensions);
         }
