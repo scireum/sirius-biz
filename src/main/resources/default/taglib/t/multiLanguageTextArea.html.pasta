@@ -37,7 +37,7 @@
                        aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
                         <i class="fa fa-plus"></i>
                     </a>
-                    <ul class="dropdown-menu add-language-data"></ul>
+                    <ul class="dropdown-menu"></ul>
                 </li>
             </ul>
             <i:if test="isFilled(label)">
