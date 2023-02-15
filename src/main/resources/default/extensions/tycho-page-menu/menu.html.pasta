@@ -28,7 +28,7 @@
                 </li>
             </i:if>
             <i:if test="isFrameworkEnabled('biz.processes')">
-                <t:menuImageItem class="d-none d-xxl-inline"
+                <t:menuImageItem class="d-xxl-inline"
                                  icon="/images/icons/ps.png"
                                  activeIcon="/images/icons/ps-notif.png"
                                  active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
