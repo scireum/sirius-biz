@@ -28,7 +28,7 @@
                 </li>
             </i:if>
             <t:menuImageItem framework="biz.processes"
-                             class="d-xxl-inline"
+                             class="d-none d-xxl-inline"
                              icon="/images/icons/ps.png"
                              activeIcon="/images/icons/ps-notif.png"
                              active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
