@@ -29,7 +29,7 @@
             <ul class="nav nav-tabs mls-tab-list" role="tablist">
                 <li class="nav-item dropdown mls-toggle-language-button d-none" role="presentation">
                     <a class="nav-link dropdown-toggle mls-language-label" data-toggle="dropdown" href="#">Dropdown</a>
-                    <ul class="dropdown-menu toggle-language-data"></ul>
+                    <ul class="dropdown-menu dropdown-menu-right toggle-language-data"></ul>
                 </li>
 
                 <li class="dropdown mls-add-language-button d-none" role="presentation">
@@ -37,7 +37,7 @@
                        aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
                         <i class="fa fa-plus"></i>
                     </a>
-                    <ul class="dropdown-menu"></ul>
+                    <ul class="dropdown-menu dropdown-menu-right"></ul>
                 </li>
             </ul>
             <i:if test="isFilled(label)">
