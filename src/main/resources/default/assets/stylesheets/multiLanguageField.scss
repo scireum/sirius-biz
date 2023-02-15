@@ -94,19 +94,14 @@ input.form-control.mls-input {
     margin-left: 8px;
   }
 
-  .mls-add-language-button .dropdown-menu {
-    max-height: 140x;
+  .dropdown-menu {
+    max-height: 140px;
     overflow: auto;
   }
 
   .mls-toggle-language-button {
     a {
       color: #5e6468;
-    }
-
-    .dropdown-menu {
-      max-height: 140px;
-      overflow: auto;
     }
   }
 
