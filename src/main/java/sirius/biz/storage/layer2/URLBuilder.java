@@ -265,20 +265,6 @@ public class URLBuilder {
     }
 
     /**
-     * Makes this URL eternally valid (authenticated).
-     * <p>
-     * Note that this implies that a {@link #reusable() reusable} URL is generated.
-     *
-     * @return the builder itself for fluent method calls
-     * @deprecated can be replaced by {@link #reusable()} - which should have been invoked in the first place and which
-     * now automatically generates eternally valid URLs.
-     */
-    @Deprecated
-    public URLBuilder eternallyValid() {
-        return reusable();
-    }
-
-    /**
      * Makes this URL reusable.
      * <p>
      * Such URLs use a virtual access path so that these URLs remain constant for the same blob whereas physical URLs
@@ -295,14 +281,6 @@ public class URLBuilder {
     public URLBuilder reusable() {
         this.reusable = true;
         return this;
-    }
-
-    /**
-     * @deprecated use {@link #delayResolve()} which is the same method except for the typo in the name
-     */
-    @Deprecated
-    public URLBuilder delayResolved() {
-        return delayResolve();
     }
 
     /**
