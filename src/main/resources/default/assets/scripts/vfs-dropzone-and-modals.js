@@ -297,7 +297,9 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
         sendFileAsBody: true,
         parallelUploads: 1,
         maxFilesize: null,
-        maxFiles: 1,
+        // even though we only want 1 file, we allow multiple
+        // this avoids user errors when an existing upload should be replaced
+        maxFiles: null,
         dictMaxFilesExceeded: dictMaxFilesExceeded,
         acceptedFiles: allowedExtensions,
         previewTemplate: '' +
@@ -354,9 +356,11 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 let _dropzoneIndicator = document.querySelector(previewsContainer + ' .sirius-upload-hover');
 
                 function hideIndicators() {
-                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
-                        if (!_indicator.parentElement.querySelector('.dropzone-item')) {
-                            _indicator.parentElement.classList.add('d-none');
+                    document.querySelectorAll(previewsContainer + ' .sirius-upload-hover').forEach(function (_indicator) {
+                        if (dropzone.getQueuedFiles().length + dropzone.getUploadingFiles().length === 0) {
+                            setTimeout(function () {
+                                _indicator.parentElement.classList.add('d-none');
+                            }, 500);
                         }
                         _indicator.classList.remove('d-flex');
                         _indicator.classList.add('d-none');
@@ -377,12 +381,6 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 document.addEventListener('dragover', function (event) {
                     event.preventDefault();
                 });
-                document.addEventListener('dragend', function (event) {
-                    hideIndicators();
-                }, false);
-                document.addEventListener('drop', function (event) {
-                    hideIndicators();
-                }, false);
                 document.addEventListener('dragleave', function (event) {
                     if (sirius.isDragleaveEventLeavingWindow(event)) {
                         hideIndicators();
@@ -400,9 +398,11 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 _dropzoneIndicator.addEventListener('drop', function (event) {
                     event.preventDefault();
                 });
-                dropzone.on('drop', function () {
-                    hideIndicators();
-                });
+                this.on('sending', hideIndicators);
+                this.on('reset', hideIndicators);
+                this.on('success', hideIndicators);
+                this.on('cancel', hideIndicators);
+                this.on('error', hideIndicators);
             }
             this.on('sending', function (file, xhr, formData) {
                 let value = _input.value;
@@ -419,7 +419,6 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 if (file.previewElement) {
                     setTimeout(function () {
                         file.previewElement.remove();
-                        _outerContainer.classList.add('d-none');
                     }, 500);
                 }
                 if (response.error) {
