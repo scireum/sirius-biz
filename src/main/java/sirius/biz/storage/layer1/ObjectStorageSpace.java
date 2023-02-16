@@ -491,14 +491,13 @@ public abstract class ObjectStorageSpace {
      * data in their cache. These files therefore are piped through which may lead to increasingly large internal
      * buffers as an upstream storage like <b>S3</b> might send data faster than we pump through to slower clients
      * like mobile users. We therefore use a blocking/stream based approach in a thread pool of limited size. However,
-     * in the presence of a <tt>Range</tt> header, the date to transfer is most probably way smaller and also the stream
-     * implementation cannot satisfy such requests. We therefore only use this approach is a large file is expected and
+     * in the presence of a <tt>Range</tt> header, the data to transfer is most probably way smaller and also the stream
+     * implementation cannot satisfy such requests. We therefore only use this approach if a large file is expected and
      * no <tt>Range</tt> header is present.
      *
      * @param response          the response to handle
      * @param largeFileExpected a flag which determines if a large file is expected at all
-     * @return <tt>true</tt> if the delivery should be handled in a separate thread pool and a non-blocking fashion,
-     * <tt>false</tt> otherwise
+     * @return <tt>true</tt> if the delivery should be handled in a separate thread pool and a non-blocking fashion
      */
     private boolean shouldHandleAsLargeFile(Response response, boolean largeFileExpected) {
         return largeFileExpected && !response.getWebContext().getHeaderValue(HttpHeaderNames.RANGE).isFilled();
