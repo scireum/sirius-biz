@@ -53,7 +53,6 @@ public class URLBuilder {
     protected String filename;
     protected String baseURL;
     protected String addonText;
-    protected boolean eternallyValid;
     protected boolean reusable;
     protected boolean delayResolve;
     protected boolean forceDownload;
@@ -243,21 +242,25 @@ public class URLBuilder {
      * Note that this implies that a {@link #reusable() reusable} URL is generated.
      *
      * @return the builder itself for fluent method calls
+     * @deprecated can be replaced by {@link #reusable()} - which should have been invoked in the first place and which
+     * now automatically generates eternally valid URLs.
      */
+    @Deprecated
     public URLBuilder eternallyValid() {
-        this.eternallyValid = true;
-        return this;
+        return reusable();
     }
 
     /**
      * Makes this URL reusable.
      * <p>
-     * Such URLs use a virtual access path which are not as cacheable as physical ones (which are infinitely cached).
-     * On the other hand these URLs remain constant for the same blob whereas physical URLs change once the underlying
-     * blob is updated. Therefore, these URLs can be passed on to 3rd parties as they remain valid as long as the
-     * referenced blob "lives".
+     * Such URLs use a virtual access path so that these URLs remain constant for the same blob whereas physical URLs
+     * change once the underlying blob is updated. Therefore, these URLs can be passed on to 3rd parties as they remain
+     * valid as long as the referenced blob "lives".
      * <p>
-     * Note that the authentication of this URL is still limited unless {@link #eternallyValid()} is invoked.
+     * Note however, that these URLs (their responses) are not as cacheable as physical ones (which are infinitely
+     * cached). However, unless {@link #suppressCaching()} is invoked, we still try to keep them in cache for a limited
+     * time. We also redirect to the physical URL once the virtual one is requested (if possible). Therefore, a
+     * downstream proxy should still be able to leverage its caching capabilities.
      *
      * @return the builder itself for fluent method calls
      */
@@ -345,13 +348,8 @@ public class URLBuilder {
             return new UrlResult(Optional.empty(), UrlType.EMPTY);
         }
 
-        if (eternallyValid) {
-            // If a URL is eternally valid, there is no point of generating a physical URL, as this will be outdated
-            // as soon as the underlying blob contents change and not "live as long as the blob itself"...
-            return new UrlResult(Optional.of(createVirtualDeliveryUrl()), UrlType.VIRTUAL);
-        }
         if (reusable) {
-            // If the caller requested a reusable URL (one to be output and sent to 3rd parties, we probably also
+            // If the caller requested a reusable URL (one to be output and sent to 3rd parties), we probably also
             // want it to be valid as long as the "blob lives" and not to become obsolete once the blob contents
             // change...
             return new UrlResult(Optional.of(createVirtualDeliveryUrl()), UrlType.VIRTUAL);
@@ -552,7 +550,7 @@ public class URLBuilder {
     }
 
     private String computeAccessToken(String authToken) {
-        if (eternallyValid) {
+        if (reusable) {
             return utils.computeEternallyValidHash(authToken);
         } else {
             return utils.computeHash(authToken, 0);
