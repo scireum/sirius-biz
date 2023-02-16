@@ -65,6 +65,11 @@ input.form-control.mls-input {
     }
   }
 
+  .dropdown-menu {
+    max-height: 140px;
+    overflow: auto;
+  }
+
   .dropdown-item a {
     color: #495057;
   }
