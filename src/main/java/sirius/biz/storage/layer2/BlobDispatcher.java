@@ -395,21 +395,18 @@ public class BlobDispatcher implements WebDispatcher {
         Response response = request.respondWith();
 
         if (cacheable) {
+            response.cached();
+
             // If a virtual request is marked as cacheable, we try to redirect to the proper physical blob key
             // as this will remain in cache much longer (and the redirect itself will also be cached). The additional
             // HTTP round-trip for the redirect shouldn't hurt too much, as it is most probably optimized away due to
             // keep-alive. However, using a physical delivery with infinite cache settings will enable any downstream
             // reverse-proxies to maximize their cache utilization...
-            if (attemptRedirectToPhysical(response,
-                                          storageSpace,
-                                          blobKey,
-                                          variant,
-                                          filename,
-                                          download,
-                                          largeFileExpected)) {
+            URLBuilder.UrlResult urlResult =
+                    buildPhysicalRedirectUrl(storageSpace, blobKey, variant, filename, download, largeFileExpected);
+            if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
+                response.redirectTemporarily(urlResult.url());
                 return;
-            } else {
-                response.cached();
             }
         } else {
             response.notCached();
@@ -430,13 +427,12 @@ public class BlobDispatcher implements WebDispatcher {
                              request::markAsLongCall);
     }
 
-    private boolean attemptRedirectToPhysical(@Nullable Response response,
-                                              BlobStorageSpace storageSpace,
-                                              String blobKey,
-                                              String variant,
-                                              String filename,
-                                              boolean download,
-                                              boolean largeFileExpected) {
+    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace,
+                                                                 String blobKey,
+                                                                 String variant,
+                                                                 String filename,
+                                                                 boolean download,
+                                                                 boolean largeFileExpected) {
         URLBuilder urlBuilder = new URLBuilder(storageSpace, blobKey);
         if (download) {
             urlBuilder.asDownload(filename);
@@ -449,11 +445,6 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         URLBuilder.UrlResult urlResult = urlBuilder.buildUrlResult();
-        if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
-            response.cached().redirectTemporarily(urlResult.url());
-            return true;
-        }
-
-        return false;
+        return urlResult;
     }
 }
