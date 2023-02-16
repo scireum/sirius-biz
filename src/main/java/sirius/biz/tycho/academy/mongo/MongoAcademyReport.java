@@ -70,7 +70,9 @@ public class MongoAcademyReport extends AcademyReport {
                                        Tuple.create(COLUMN_SKIPPED, cells.of(skippedFacet.getNumTrue())),
                                        Tuple.create(COLUMN_RECOMMENDED, cells.of(recommendedFacet.getNumTrue())),
                                        Tuple.create(COLUMN_PERCENT_WATCHED,
-                                                    cells.of(percentWatchedFacet.getValue().fill(Amount.ZERO)))));
+                                                    cells.of(percentWatchedFacet.getValue()
+                                                                                .fill(Amount.ZERO)
+                                                                                .times(Amount.ONE_HUNDRED)))));
              });
     }
 
