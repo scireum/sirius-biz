@@ -47,7 +47,7 @@ public class MongoAcademyReport extends AcademyReport {
                  MongoBooleanFacet skippedFacet =
                          new MongoBooleanFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.SKIPPED));
                  MongoBooleanFacet recommendedFacet =
-                         new MongoBooleanFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.SKIPPED));
+                         new MongoBooleanFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.RECOMMENDED));
                  MongoAverageFacet percentWatchedFacet =
                          new MongoAverageFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PERCENT_WATCHED));
                  mango.select(MongoOnboardingVideo.class)
