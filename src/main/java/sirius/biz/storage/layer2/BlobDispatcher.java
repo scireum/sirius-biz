@@ -263,16 +263,12 @@ public class BlobDispatcher implements WebDispatcher {
     }
 
     private void installCompletionHook(String uri, WebContext request) {
-        String hook = request.get(PARAM_HOOK).asString();
-        if (Strings.isEmpty(hook)) {
-            return;
-        }
-
-        String payload = request.get(PARAM_PAYLOAD).asString();
-        request.getCompletionPromise().onSuccess(code -> {
-            if (code == HttpResponseStatus.OK.code()) {
-                executeHook(uri, hook, payload);
-            }
+        request.get(PARAM_HOOK).ifFilled(hook -> {
+            request.getCompletionPromise().onSuccess(code -> {
+                if (code == HttpResponseStatus.OK.code()) {
+                    executeHook(uri, hook.asString(), request.get(PARAM_PAYLOAD).asString());
+                }
+            });
         });
     }
 
