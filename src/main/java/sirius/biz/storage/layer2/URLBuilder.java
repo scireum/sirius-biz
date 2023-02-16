@@ -270,6 +270,14 @@ public class URLBuilder {
     }
 
     /**
+     * @deprecated use {@link #delayResolve()} which is the same method except for the typo in the name
+     */
+    @Deprecated
+    public URLBuilder delayResolved() {
+        return delayResolve();
+    }
+
+    /**
      * Instructs the system to use the virtual blob URL instead of resolving the physical URL.
      * <p>
      * This might be feasible, if the caller knows, that there is a great chance, that the URL being generated is
@@ -278,7 +286,7 @@ public class URLBuilder {
      *
      * @return the builder itself for fluent method calls
      */
-    public URLBuilder delayResolved() {
+    public URLBuilder delayResolve() {
         this.delayResolve = true;
         return this;
     }
