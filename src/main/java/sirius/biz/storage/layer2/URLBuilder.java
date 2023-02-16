@@ -61,6 +61,7 @@ public class URLBuilder {
     protected String payload;
     protected String fallbackUri;
     protected boolean largeFile;
+    protected boolean hasLargeFileCheck;
 
     @Part
     private static StorageUtils utils;
@@ -155,6 +156,10 @@ public class URLBuilder {
      * @see ConversionEngine
      */
     public URLBuilder withVariant(String variant) {
+        if (hasLargeFileCheck && Strings.isFilled(variant) && !Strings.areEqual(variant, VARIANT_RAW)) {
+            throw new IllegalStateException("enableLargeFileDetection() cannot be used along withVariant()!");
+        }
+
         this.variant = variant;
         this.cachedPhysicalKey = null;
 
@@ -198,10 +203,19 @@ public class URLBuilder {
      * <p>
      * This has to be enabled manually, as such large downloads are infrequent and require a lookup for the
      * filesize.
+     * <p>
+     * Note that this doesn't support selecting a specific variant, as we can only inspect the blob and its size
+     * itself. Use {@link #markAsLargeFile()} if a variant is requested.
      *
      * @return the builder itself for fluent method calls
      */
     public URLBuilder enableLargeFileDetection() {
+        if (Strings.isFilled(variant) && !VARIANT_RAW.equals(variant)) {
+            throw new IllegalStateException("enableLargeFileDetection() cannot be used along withVariant()!");
+        }
+
+        this.hasLargeFileCheck = true;
+
         if (Strings.isFilled(blobKey) && blob == null) {
             space.findByBlobKey(blobKey).ifPresent(resolvedBlob -> this.blob = resolvedBlob);
         }
@@ -209,6 +223,20 @@ public class URLBuilder {
             this.largeFile = true;
         }
 
+        return this;
+    }
+
+    /**
+     * Forcefully marks the underlying file is considered "too large to be cached".
+     * <p>
+     * This can be used if a variant is selected which is known to still be very large. Note that
+     * {@link #enableLargeFileDetection()} currently does not support variants to be selected, as we only inspect
+     * the blob itself.
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder markAsLargeFile() {
+        this.largeFile = true;
         return this;
     }
 
