@@ -607,12 +607,8 @@ public class ImportDictionary {
      * @return the normalized version of the field
      */
     protected static String normalize(String field) {
-        return field.toLowerCase()
-                    .replace("ä", "ae")
-                    .replace("ö", "oe")
-                    .replace("ü", "ue")
-                    .replace("ß", "ss")
-                    .replaceAll("[^\\p{L}0-9_]", "");
+        return Strings.reduceCharacters(field.toLowerCase())
+                    .replaceAll("[^\\p{L}\\d_]", "");
     }
 
     /**

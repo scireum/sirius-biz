@@ -10,6 +10,7 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Producer;
@@ -63,12 +64,12 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
         try (InputStream in = inputSupplier.create()) {
             LineBasedProcessor.create(filename, in, process.getParameter(IMPORT_ALL_SHEETS_PARAMETER).orElse(false))
                               .run((rowNumber, row) -> {
-                                  errorContext.withContext(ERROR_CONTEXT_ROW, rowNumber);
+                                  ErrorContext.get().withContext(ERROR_CONTEXT_ROW, rowNumber);
                                   this.handleRow(rowNumber, row);
-                                  errorContext.removeContext(ERROR_CONTEXT_ROW);
+                                  ErrorContext.get().removeContext(ERROR_CONTEXT_ROW);
                               }, error -> {
                                   process.handle(error);
-                                  errorContext.removeContext(ERROR_CONTEXT_ROW);
+                                  ErrorContext.get().removeContext(ERROR_CONTEXT_ROW);
 
                                   return true;
                               });

@@ -444,7 +444,6 @@ public class BlobDispatcher implements WebDispatcher {
             urlBuilder.markAsLargeFile();
         }
 
-        URLBuilder.UrlResult urlResult = urlBuilder.buildUrlResult();
-        return urlResult;
+        return urlBuilder.buildUrlResult();
     }
 }

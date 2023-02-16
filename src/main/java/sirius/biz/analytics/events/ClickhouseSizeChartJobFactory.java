@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.events;
 
-import sirius.biz.analytics.charts.Dataset;
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.interactive.LinearChartJobFactory;

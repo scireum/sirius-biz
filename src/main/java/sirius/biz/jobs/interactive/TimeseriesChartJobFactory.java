@@ -9,9 +9,10 @@
 package sirius.biz.jobs.interactive;
 
 import sirius.biz.analytics.charts.ComparisonPeriod;
-import sirius.biz.analytics.charts.Dataset;
 import sirius.biz.analytics.charts.Timeseries;
 import sirius.biz.analytics.charts.Unit;
+import sirius.biz.analytics.explorer.DataExplorerController;
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.LocalDateParameter;
@@ -27,7 +28,11 @@ import java.util.function.Consumer;
 
 /**
  * Renders a line chart representing a user defined {@link TimeseriesDataProvider timeseries}.
+ *
+ * @deprecated Use the {@link DataExplorerController Data-Explorer} for advanced
+ * charts and statistics.
  */
+@Deprecated
 public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory implements TimeseriesDataProvider {
 
     /**

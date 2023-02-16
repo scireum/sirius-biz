@@ -71,7 +71,7 @@ class ProcessEnvironment implements ProcessContext {
     private final RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     private final RateLimit stateUpdate = RateLimit.timeInterval(5, TimeUnit.SECONDS);
 
-    private final CombinedFuture barrier = new CombinedFuture();
+    private CombinedFuture barrier = new CombinedFuture();
     private Map<String, Average> timings;
     private Map<String, Average> adminTimings;
     private final Map<String, Integer> limitsPerType = new ConcurrentHashMap<>();
@@ -129,13 +129,22 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void addDebugTiming(String counter, long millis) {
-        addDebugTiming(counter, millis, false);
+        if (isDebugging()) {
+            addTiming(counter, millis, false);
+        }
     }
 
+    /**
+     * @param counter   the counter to increment
+     * @param millis    the current duration for the block being counted
+     * @param adminOnly whether to show the timing only to administrators instead of all users
+     * @deprecated see ProcessContext.addDebugTiming
+     */
     @Override
+    @Deprecated
     public void addDebugTiming(String counter, long millis, boolean adminOnly) {
         if (isDebugging()) {
-            addTiming(counter, millis, adminOnly);
+            addTiming(counter, millis, true);
         }
     }
 
@@ -458,8 +467,11 @@ class ProcessEnvironment implements ProcessContext {
         return future;
     }
 
-    protected void awaitCompletion() {
+    @Override
+    public void awaitSideTaskCompletion() {
         Future completionFuture = barrier.asFuture();
+        barrier = new CombinedFuture();
+
         if (!completionFuture.isCompleted()) {
             log(ProcessLog.info().withNLSKey("Process.awaitingSideTaskCompletion"));
             while (TaskContext.get().isActive()) {
