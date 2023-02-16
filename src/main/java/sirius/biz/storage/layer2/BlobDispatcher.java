@@ -214,7 +214,8 @@ public class BlobDispatcher implements WebDispatcher {
                             Files.getFilenameWithoutExtension(filename),
                             filename,
                             false,
-                            false);
+                            false,
+                            largeFileExpected);
             return DispatchDecision.DONE;
         }
 
@@ -226,7 +227,8 @@ public class BlobDispatcher implements WebDispatcher {
                             uriParts.at(4).asString(),
                             stripAdditionalText(uriParts.at(5).asString()),
                             true,
-                            false);
+                            false,
+                            largeFileExpected);
             return DispatchDecision.DONE;
         }
 
@@ -239,7 +241,8 @@ public class BlobDispatcher implements WebDispatcher {
                             Files.getFilenameWithoutExtension(filename),
                             filename,
                             false,
-                            true);
+                            true,
+                            largeFileExpected);
             return DispatchDecision.DONE;
         }
 
@@ -251,7 +254,8 @@ public class BlobDispatcher implements WebDispatcher {
                             uriParts.at(4).asString(),
                             stripAdditionalText(uriParts.at(5).asString()),
                             true,
-                            true);
+                            true,
+                            largeFileExpected);
             return DispatchDecision.DONE;
         }
 
@@ -384,7 +388,8 @@ public class BlobDispatcher implements WebDispatcher {
                                  String blobKey,
                                  String filename,
                                  boolean download,
-                                 boolean cacheable) {
+                                 boolean cacheable,
+                                 boolean largeFileExpected) {
         if (!utils.verifyHash(Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey, accessToken)) {
             request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
@@ -392,11 +397,28 @@ public class BlobDispatcher implements WebDispatcher {
 
         BlobStorageSpace storageSpace = blobStorage.getSpace(space);
         Response response = request.respondWith();
+
         if (cacheable) {
-            response.cached();
+            // If a virtual request is marked as cacheable, we try to redirect to the proper physical blob key
+            // as this will remain in cache much longer (and the redirect itself will also be cached). The additional
+            // HTTP round-trip for the redirect shouldn't hurt too much, as it is most probably optimized away due to
+            // keep-alive. However, using a physical delivery with infinite cache settings will enable any downstream
+            // reverse-proxies to maximize their cache utilization...
+            if (attemptRedirectToPhysical(response,
+                                          storageSpace,
+                                          blobKey,
+                                          variant,
+                                          filename,
+                                          download,
+                                          largeFileExpected)) {
+                return;
+            } else {
+                response.cached();
+            }
         } else {
             response.notCached();
         }
+
         if (download) {
             if (Strings.areEqual(filename, blobKey)) {
                 filename = storageSpace.resolveFilename(blobKey).orElse(filename);
@@ -410,5 +432,32 @@ public class BlobDispatcher implements WebDispatcher {
                              variant != null ? variant : URLBuilder.VARIANT_RAW,
                              response,
                              request::markAsLongCall);
+    }
+
+    private boolean attemptRedirectToPhysical(@Nullable Response response,
+                                              BlobStorageSpace storageSpace,
+                                              String blobKey,
+                                              String variant,
+                                              String filename,
+                                              boolean download,
+                                              boolean largeFileExpected) {
+        URLBuilder urlBuilder = new URLBuilder(storageSpace, blobKey);
+        if (download) {
+            urlBuilder.asDownload(filename);
+        }
+        if (Strings.isFilled(variant)) {
+            urlBuilder.withVariant(variant);
+        }
+        if (largeFileExpected) {
+            urlBuilder.markAsLargeFile();
+        }
+
+        URLBuilder.UrlResult urlResult = urlBuilder.buildUrlResult();
+        if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
+            response.cached().redirectTemporarily(urlResult.url());
+            return true;
+        }
+
+        return false;
     }
 }
