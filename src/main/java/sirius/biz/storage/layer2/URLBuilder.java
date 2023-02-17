@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
@@ -44,6 +45,8 @@ public class URLBuilder {
      * or {@link BlobHardRef#withFallbackUri(String)}.
      */
     public static final String IMAGE_FALLBACK_URI = "/assets/images/blob_image_fallback.png";
+
+    public static final String IMAGE_FAILED_URI = "/assets/images/blob_image_failed.png";
 
     protected BlobStorageSpace space;
     protected Blob blob;
@@ -392,6 +395,9 @@ public class URLBuilder {
      * @see #safeBuildURL(String)
      */
     public String buildImageURL() {
+        if (isConversionFailed()) {
+            return createBaseURL().append(IMAGE_FAILED_URI).toString();
+        }
         return safeBuildURL(IMAGE_FALLBACK_URI);
     }
 
@@ -403,6 +409,29 @@ public class URLBuilder {
      */
     public boolean isConversionExpected() {
         return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+    }
+
+    /**
+     * Determines if the conversion of the given variant has finally failed and therefore no further conversion attempts are made.
+     *
+     * @return <tt>true</tt> if the variant is failed, otherwise <tt>false</tt>.
+     */
+    public boolean isConversionFailed() {
+        if (!isFilled()
+            || Strings.areEqual(variant, VARIANT_RAW)
+            || Strings.isEmpty(variant)
+            || isConversionExpected()) {
+            return false;
+        }
+
+        if (blob != null) {
+            return blob.findVariant(variant).map(BlobVariant::isFailed).orElse(true);
+        }
+
+        return space.findByBlobKey(blobKey)
+                    .flatMap(b -> b.findVariant(variant))
+                    .map(BlobVariant::isFailed)
+                    .orElse(true);
     }
 
     /**
