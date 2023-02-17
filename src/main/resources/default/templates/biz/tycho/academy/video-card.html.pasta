@@ -8,7 +8,7 @@
         <img class="card-img-top" src="@video.fetchAcademyVideoData().getPreviewUrl()"/>
     </i:block>
     <i:block name="subtitle">
-        <i class="fa fa-film"></i> @video.fetchAcademyVideoData().generateDurationString()
+        <i class="fas fa-clock"></i> @video.fetchAcademyVideoData().generateDurationString()
     </i:block>
     <i:block name="actions">
         <i:if test="video.getOnboardingVideoData().isRecommended()">
