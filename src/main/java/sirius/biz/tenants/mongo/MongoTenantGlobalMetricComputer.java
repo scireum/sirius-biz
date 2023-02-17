@@ -54,14 +54,14 @@ public class MongoTenantGlobalMetricComputer extends MongoMonthlyGlobalMetricCom
                                                      .count());
         metrics.updateGlobalMonthlyMetric(GlobalTenantMetricComputer.METRIC_NUM_USERS,
                                           date,
-                                          (int) mango.selectFromSecondary(MongoTenant.class)
+                                          (int) mango.selectFromSecondary(MongoUserAccount.class)
                                                      .eq(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                            .inner(LoginData.ACCOUNT_LOCKED),
                                                          false)
                                                      .count());
         metrics.updateGlobalMonthlyMetric(GlobalTenantMetricComputer.METRIC_NUM_ACTIVE_USERS,
                                           date,
-                                          (int) mango.selectFromSecondary(MongoTenant.class)
+                                          (int) mango.selectFromSecondary(MongoUserAccount.class)
                                                      .eq(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                            .inner(LoginData.ACCOUNT_LOCKED),
                                                          false)
