@@ -395,7 +395,7 @@ public class URLBuilder {
      * @see #safeBuildURL(String)
      */
     public String buildImageURL() {
-        if (isConversionFailed()) {
+        if (hasConversionFailed()) {
             return createBaseURL().append(IMAGE_FAILED_URI).toString();
         }
         return safeBuildURL(IMAGE_FALLBACK_URI);
@@ -416,7 +416,7 @@ public class URLBuilder {
      *
      * @return <tt>true</tt> if the variant is failed, otherwise <tt>false</tt>.
      */
-    public boolean isConversionFailed() {
+    public boolean hasConversionFailed() {
         if (!isFilled()
             || Strings.areEqual(variant, VARIANT_RAW)
             || Strings.isEmpty(variant)
