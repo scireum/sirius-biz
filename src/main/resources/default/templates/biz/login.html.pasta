@@ -75,7 +75,7 @@
                     <i:for type="Tuple" var="technology" items="technologies">
                         <div class="p-4">
                             <a href="@technology.getSecond()" target="_blank">
-                                <img src="@technology.getFirst()" alt="@technology.getFirst()"
+                                <img src="@technology.getFirst()" alt="@technology.getSecond()"
                                      style="max-height: 32px"/>
                             </a>
                         </div>
