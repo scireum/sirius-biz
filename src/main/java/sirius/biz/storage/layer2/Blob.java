@@ -85,6 +85,14 @@ public interface Blob {
     String getFilename();
 
     /**
+     * Returns the file extension of the blob.
+     *
+     * @return the file extension of the blob or <tt>null</tt> if no file extension was assigned
+     */
+    @Nullable
+    String getFileExtension();
+
+    /**
      * Returns the full path to this blob (including its filename).
      *
      * @return the path to this blob or <tt>null</tt> if either there is no filename or no parent set

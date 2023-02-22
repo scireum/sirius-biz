@@ -478,6 +478,12 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
         return filename;
     }
 
+    @Nullable
+    @Override
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
     @Override
     public long getSize() {
         return size;
