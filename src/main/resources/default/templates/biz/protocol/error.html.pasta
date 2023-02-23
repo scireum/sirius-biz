@@ -19,7 +19,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <h5 class="card-title">@i18n("StoredIncident.message")</h5>
-            <pre class="mt-4 mb-0" style="white-space: normal">@incident.getMessage()</pre>
+            <pre class="mt-4 mb-0" style="white-space: pre-wrap">@incident.getMessage()</pre>
         </div>
     </div>
 
