@@ -404,6 +404,9 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 this.on('cancel', hideIndicators);
                 this.on('error', hideIndicators);
             }
+            sirius.warnOnUnload(function () {
+                return dropzone.getUploadingFiles().length + dropzone.getQueuedFiles().length;
+            });
             this.on('sending', function (file, xhr, formData) {
                 let value = _input.value;
 
