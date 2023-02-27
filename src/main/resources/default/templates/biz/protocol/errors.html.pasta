@@ -35,9 +35,9 @@
                                     <div class="col-md-4">@i18n("StoredIncident.user")</div>
                                 </div>
                                 <div class="row">
-                                    <div class="muted col-md-4">@i18n("StoredIncident.firstOccurrence")</div>
-                                    <div class="muted col-md-4">@i18n("StoredIncident.category")</div>
-                                    <div class="muted col-md-4">@i18n("StoredIncident.node")</div>
+                                    <div class="text-muted col-md-4">@i18n("StoredIncident.firstOccurrence")</div>
+                                    <div class="text-muted col-md-4">@i18n("StoredIncident.category")</div>
+                                    <div class="text-muted col-md-4">@i18n("StoredIncident.node")</div>
                                 </div>
                             </th>
                         </tr>
@@ -54,11 +54,11 @@
                                         <div class="col-md-4 text-muted text-small">@i.getUser()</div>
                                     </div>
                                     <div class="row">
-                                        <div class="muted col-md-4 text-muted text-small">
+                                        <div class="col-md-4 text-muted text-small">
                                             @toUserString(i.getFirstOccurrence())
                                         </div>
-                                        <div class="muted col-md-4 text-muted text-small">@i.getCategory()</div>
-                                        <div class="muted col-md-4 text-muted text-small">@i.getNode()</div>
+                                        <div class="col-md-4 text-muted text-small">@i.getCategory()</div>
+                                        <div class="col-md-4 text-muted text-small">@i.getNode()</div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 error-code">
