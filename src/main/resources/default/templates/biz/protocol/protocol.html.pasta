@@ -27,11 +27,12 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div>@i18n("JournalEntry.tod")</div>
-                                        <div>@i18n("JournalEntry.username") (@i18n("JournalEntry.userId"))</div>
+                                        <small class="text-muted">@i18n("JournalEntry.username")
+                                            (@i18n("JournalEntry.userId"))</small>
                                     </div>
                                     <div class="col-md-4">
                                         <div>@i18n("JournalEntry.targetName") (@i18n("JournalEntry.targetId"))</div>
-                                        <div>@i18n("JournalEntry.targetType")</div>
+                                        <small class="text-muted">@i18n("JournalEntry.targetType")</small>
                                     </div>
                                     <div class="col-md-4">@i18n("JournalEntry.subsystem")</div>
                                 </div>
