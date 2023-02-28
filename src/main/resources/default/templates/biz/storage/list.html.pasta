@@ -53,7 +53,7 @@
                             <tr>
                                 <th>
                                     @i18n("Model.name")<br>
-                                    <small class="muted">@i18n("Model.description")</small>
+                                    <small class="text-muted">@i18n("Model.description")</small>
                                 </th>
                                 <th class="text-right">
                                     @i18n("VirtualFile.size")
@@ -94,7 +94,7 @@
                                             </a>
                                         </div>
                                         <div>
-                                            <small class="muted">@child.description()</small>
+                                            <small class="text-muted">@child.description()</small>
                                         </div>
                                     </td>
                                     <td class="text-right">

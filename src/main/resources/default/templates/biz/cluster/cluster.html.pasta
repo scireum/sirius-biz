@@ -86,7 +86,7 @@
                                             </i:block>
                                         </i:switch>
                                     </div>
-                                    <div class="muted small">@jobInfo.getExecutionInfo()</div>
+                                    <div class="text-muted small">@jobInfo.getExecutionInfo()</div>
                                 </div>
                                 <div>
                                     <i:if test="jobInfo.isLocalOverwrite()">
@@ -214,7 +214,7 @@
                                                 </i:block>
                                             </i:switch>
                                         </div>
-                                        <div class="muted small">@jobInfo.getExecutionInfo()</div>
+                                        <div class="text-muted small">@jobInfo.getExecutionInfo()</div>
                                     </div>
                                     <div>
                                         <i:if test="jobInfo.isLocalOverwrite()">
