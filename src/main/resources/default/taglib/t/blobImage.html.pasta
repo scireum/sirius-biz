@@ -21,13 +21,15 @@
         <i:if test="urlBuilder.isConversionExpected()">
             <img class="lazy-image-js @imgClass"
                  style="@imgStyle"
-                 src="@urlBuilder.getFallbackUri().orElse(sirius.biz.storage.layer2.URLBuilder.IMAGE_FALLBACK_URI)"
-                 data-src="@urlBuilder.buildImageURL()"/>
+                 src="@urlBuilder.withFallbackUri(fallbackUri).buildFallbackURL()"
+                 data-src="@urlBuilder.buildURL().orElse('')"
+                 data-failed="@urlBuilder.withFallbackUri(sirius.biz.storage.layer2.URLBuilder.IMAGE_FAILED_URI).buildFallbackURL()"/>
             <i:else>
                 <img class="safe-image-js @imgClass"
                      style="@imgStyle"
                      data-fallback="@urlBuilder.getFallbackUri().orElse(sirius.biz.storage.layer2.URLBuilder.IMAGE_FALLBACK_URI)"
-                     src="@urlBuilder.buildImageURL()"/>
+                     src="@urlBuilder.buildImageURL()"
+                     data-failed="@urlBuilder.withFallbackUri(sirius.biz.storage.layer2.URLBuilder.IMAGE_FAILED_URI).buildFallbackURL()"/>
             </i:else>
         </i:if>
     </div>
