@@ -542,7 +542,12 @@ public class URLBuilder {
         }
     }
 
-    private StringBuilder createBaseURL() {
+    /**
+     * Creates the base url.
+     *
+     * @return a StringBuilder prefilled with the base url.
+     */
+    public StringBuilder createBaseURL() {
         StringBuilder result = new StringBuilder();
         if (Strings.isFilled(baseURL)) {
             result.append(baseURL);
