@@ -45,6 +45,11 @@ public class URLBuilder {
      */
     public static final String IMAGE_FALLBACK_URI = "/assets/images/blob_image_fallback.png";
 
+    /**
+     * Contains the default failed fallback image.
+     * <p>
+     * The image will be displayed if a conversion has finally failed.
+     */
     public static final String IMAGE_FAILED_URI = "/assets/images/blob_image_failed.png";
 
     protected BlobStorageSpace space;
