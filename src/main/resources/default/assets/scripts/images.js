@@ -3,6 +3,7 @@
 function loadImageLazily(_img) {
     const mainUrl = _img.dataset.src;
     const fallback = _img.getAttribute('src');
+    const failed = _img.dataset.failed;
     const _container = _img.parentNode;
     let waitTime = 500;
 
@@ -14,21 +15,27 @@ function loadImageLazily(_img) {
             return;
         }
 
-        const image = new Image();
-        image.src = mainUrl;
-        image.setAttribute('style', _img.getAttribute('style'));
-        image.setAttribute('class', _img.getAttribute('class'));
-        image.onload = function () {
-            _container.innerHTML = '';
-            _container.appendChild(image);
-        };
-
-        image.onerror = function () {
-            setTimeout(function () {
-                attemptLoad(remainingAttempts - 1);
-            }, waitTime);
-            waitTime += 500;
-        };
+        fetch(mainUrl).then(function (response) {
+            if (response.ok) {
+                return response.blob()
+            } else if (response.status === 500) {
+                _container.innerHTML = '';
+                _img.src = failed;
+                _container.appendChild(_img);
+            } else if (response.status === 503) {
+                setTimeout(function () {
+                    attemptLoad(remainingAttempts - 1);
+                }, waitTime);
+                waitTime += 500;
+            }
+            return null;
+        }).then(function (imageBlob) {
+            if (imageBlob) {
+                _container.innerHTML = '';
+                _img.src = URL.createObjectURL(imageBlob);
+                _container.appendChild(_img);
+            }
+        });
     }
 
     _container.innerHTML = '<i class="fa fa-sync-alt fa-spin"></i>';
@@ -51,5 +58,3 @@ sirius.ready(function () {
         loadImageSafely(_node);
     });
 });
-
-
