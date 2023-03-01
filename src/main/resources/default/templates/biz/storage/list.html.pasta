@@ -53,7 +53,7 @@
                             <tr>
                                 <th>
                                     @i18n("Model.name")<br>
-                                    <small class="muted">@i18n("Model.description")</small>
+                                    <small class="text-muted">@i18n("Model.description")</small>
                                 </th>
                                 <th class="text-right">
                                     @i18n("VirtualFile.size")
@@ -94,7 +94,7 @@
                                             </a>
                                         </div>
                                         <div>
-                                            <small class="muted">@child.description()</small>
+                                            <small class="text-muted">@child.description()</small>
                                         </div>
                                     </td>
                                     <td class="text-right">
@@ -156,7 +156,7 @@
                 <input type="hidden" id="rename-path" name="path"/>
                 <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
                        type="hidden"/>
-                <t:textfield id="rename-name" name="name" value="" labelKey="Model.name" class="input-required"/>
+                <t:textfield id="rename-name" name="name" value="" labelKey="Model.name" class="required"/>
             </fieldset>
         </t:modal>
     </form>
@@ -172,7 +172,8 @@
                 <input type="hidden" name="parent" value="@dir.path()"/>
                 <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
                        type="hidden"/>
-                <t:textfield id="directory-name" name="name" value="" labelKey="Model.name" class="input-required"/>
+                <t:textfield id="directory-name" name="name" value="" labelKey="Model.name" class="required"
+                             placeholder="@i18n('VFSController.createDirectory')"/>
             </fieldset>
         </t:modal>
     </form>
@@ -182,7 +183,7 @@
                 <input type="hidden" name="parent" value="@dir.path()"/>
                 <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
                        type="hidden"/>
-                <t:textfield id="file-name" name="name" value="" labelKey="Model.name" class="input-required"/>
+                <t:textfield id="file-name" name="name" value="" labelKey="Model.name" class="required"/>
             </fieldset>
         </t:modal>
     </form>

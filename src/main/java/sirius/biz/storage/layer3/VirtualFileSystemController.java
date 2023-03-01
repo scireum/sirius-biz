@@ -233,6 +233,9 @@ public class VirtualFileSystemController extends BizController {
         if (webContext.isSafePOST()) {
             try {
                 String name = webContext.get("name").asString();
+                if (Strings.isEmpty(name)) {
+                    name = NLS.get("VFSController.createDirectory");
+                }
                 VirtualFile newDirectory = parent.resolve(name);
                 newDirectory.createAsDirectory();
                 UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
@@ -364,7 +367,8 @@ public class VirtualFileSystemController extends BizController {
             out.property("sizeString", child.isDirectory() ? "" : NLS.formatSize(child.size()));
             out.property("lastModified", child.isDirectory() ? null : NLS.toMachineString(child.lastModifiedDate()));
             out.property("lastModifiedString", child.isDirectory() ? "" : NLS.toUserString(child.lastModifiedDate()));
-            out.property("lastModifiedSpokenString", child.isDirectory() ? "" : NLS.toSpokenDate(child.lastModifiedDate()));
+            out.property("lastModifiedSpokenString",
+                         child.isDirectory() ? "" : NLS.toSpokenDate(child.lastModifiedDate()));
         } finally {
             out.endObject();
         }

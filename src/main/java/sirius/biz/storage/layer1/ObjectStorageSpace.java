@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.ClosedChannelException;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
@@ -504,6 +505,11 @@ public abstract class ObjectStorageSpace {
     }
 
     private void handleDeliveryError(Response response, String objectId, Exception exception) {
+        if (exception instanceof ClosedChannelException || exception.getCause() instanceof ClosedChannelException) {
+            // If the user unexpectedly closes the connection, we do not need to log an error...
+            Exceptions.ignore(exception);
+            return;
+        }
         try {
             response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception ex) {

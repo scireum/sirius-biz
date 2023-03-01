@@ -37,6 +37,7 @@ import sirius.web.services.JSONStructuredOutput;
 import sirius.web.services.PublicService;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -125,7 +126,7 @@ public class ClusterController extends BasicController {
 
         out.property(RESPONSE_NAME, CallContext.getNodeName());
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
-        out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
+        out.property(RESPONSE_UPTIME, NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false));
 
         out.beginArray(RESPONSE_METRICS);
         for (Metric m : metrics.getMetrics()) {
@@ -159,7 +160,7 @@ public class ClusterController extends BasicController {
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
         out.property(RESPONSE_VERSION, Product.getProduct().getVersion());
         out.property(RESPONSE_DETAILED_VERSION, Product.getProduct().getDetails());
-        out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
+        out.property(RESPONSE_UPTIME, NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false));
         out.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
         out.property(RESPONSE_ACTIVE_BACKGROUND_TASKS, neighborhoodWatch.getActiveBackgroundTasks());
 

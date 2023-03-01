@@ -33,7 +33,7 @@
             '<thead>' +
             '   <tr>' +
             '       <th>@i18n("DatabaseController.reason")<br>' +
-            '           <small class="muted">@i18n("DatabaseController.sql")</small>' +
+            '           <small class="text-muted">@i18n("DatabaseController.sql")</small>' +
             '       </th>' +
             '       <th>@i18n("DatabaseController.realm")</th>' +
             '       <th></th>' +
@@ -57,7 +57,7 @@
             '">' +
             '       <div class="overflow-hidden text-small text-break whitespace-pre-line">' +
             '       {{reason}}' +
-            '           <br><small class="muted whitespace-pre-line">{{sql}}</small>' +
+            '           <br><small class="text-muted whitespace-pre-line">{{sql}}</small>' +
             '           <div class="card full-border border-sirius-red-dark error" style="display: none">' +
             '               <div class="card-body error-text">' +
             '               {{error}}' +

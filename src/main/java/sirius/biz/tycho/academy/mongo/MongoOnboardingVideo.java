@@ -43,6 +43,9 @@ import javax.annotation.Nullable;
 @Index(name = "owner_video_track_lookup",
         columns = {"onboardingVideoData_owner", "onboardingVideoData_deleted", "trackId"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "academy_video_lookup",
+        columns = {"academyVideo", "onboardingVideoData_deleted"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo {
 
     @Part
