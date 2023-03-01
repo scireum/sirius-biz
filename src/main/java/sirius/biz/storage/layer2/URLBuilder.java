@@ -45,6 +45,8 @@ public class URLBuilder {
      */
     public static final String IMAGE_FALLBACK_URI = "/assets/images/blob_image_fallback.png";
 
+    public static final String IMAGE_FAILED_URI = "/assets/images/blob_image_failed.png";
+
     protected BlobStorageSpace space;
     protected Blob blob;
     protected String blobKey;
