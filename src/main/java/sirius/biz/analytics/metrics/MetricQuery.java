@@ -204,6 +204,19 @@ public class MetricQuery {
                                                                    date.getDayOfMonth()).orElse(0)));
     }
 
+    /**
+     * Fetches the sum of {@linkplain #values(LocalDate, LocalDate) all metrics} starting from the <tt>startDate</tt> up
+     * until the <tt>untilDate</tt> is reached.
+     *
+     * @param startDate the first date to fetch metrics for
+     * @param untilDate the last date to fetch metrics for
+     * @return the sum of metrics fetched for the given period. Note that there are internal circuit breakers in case
+     * too many metrics would be requested. In this case a sum based on the limited list is returned.
+     */
+    public int sum(LocalDate startDate, LocalDate untilDate) {
+        return values(startDate, untilDate).stream().reduce(0, Integer::sum);
+    }
+
     private void assertParametersArePresent() {
         if (interval == null) {
             throw new IllegalStateException("No interval has been chosen for the metric query: " + this);
