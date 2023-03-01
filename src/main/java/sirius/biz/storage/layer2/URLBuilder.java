@@ -390,15 +390,6 @@ public class URLBuilder {
     }
 
     /**
-     * Builds the URL from the fallbackUri.
-     *
-     * @return the URL with the fallbackUri
-     */
-    public String buildFallbackURL() {
-        return createBaseURL().append(fallbackUri).toString();
-    }
-
-    /**
      * Builds the URL based on the given parameters or uses a generic fallback image if no blob or blob-key is
      * available.
      *
