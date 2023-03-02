@@ -8,7 +8,6 @@
 
 package sirius.biz.jobs.batch;
 
-import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.VirtualFile;
@@ -30,13 +29,6 @@ public abstract class BatchJob implements Closeable {
     protected ProcessContext process;
 
     /**
-     * @deprecated Caching the <tt>ErrorContext</tt> is sort of dangerous, as it might be shared across threads
-     * when using {@link ProcessContext#performInSideTask(UnitOfWork)}. Use {@link ErrorContext#get()} instead.
-     */
-    @Deprecated
-    protected final ErrorContext errorContext;
-
-    /**
      * Creates a new batch job for the given batch process.
      * <p>
      * As a batch job is created per execution, subclasses can define fields and fill those from parameters
@@ -46,7 +38,6 @@ public abstract class BatchJob implements Closeable {
      */
     protected BatchJob(ProcessContext process) {
         this.process = process;
-        this.errorContext = ErrorContext.get();
     }
 
     /**
@@ -97,6 +88,6 @@ public abstract class BatchJob implements Closeable {
      */
     @Override
     public void close() throws IOException {
-        // may be overwritten by sub-classes
+        // may be overwritten by subclasses
     }
 }
