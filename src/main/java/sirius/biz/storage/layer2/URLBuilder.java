@@ -45,6 +45,13 @@ public class URLBuilder {
      */
     public static final String IMAGE_FALLBACK_URI = "/assets/images/blob_image_fallback.png";
 
+    /**
+     * Contains the default failed fallback image.
+     * <p>
+     * The image will be displayed if a conversion has finally failed.
+     */
+    public static final String IMAGE_FAILED_URI = "/assets/images/blob_image_failed.png";
+
     protected BlobStorageSpace space;
     protected Blob blob;
     protected String blobKey;
@@ -526,7 +533,12 @@ public class URLBuilder {
         }
     }
 
-    private StringBuilder createBaseURL() {
+    /**
+     * Creates the base url.
+     *
+     * @return a StringBuilder prefilled with the base url.
+     */
+    public StringBuilder createBaseURL() {
         StringBuilder result = new StringBuilder();
         if (Strings.isFilled(baseURL)) {
             result.append(baseURL);

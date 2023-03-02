@@ -7,6 +7,8 @@
 <i:arg type="String" name="class" default="" description="Contains additional classes to apply."/>
 <i:arg type="boolean" name="skipEmpty" default="false"
        description="If set to true, an empty blob will be skipped entirely, instead of rendering the fallback image."/>
+<i:arg type="String" name="fallbackUri" default="@sirius.biz.storage.layer2.URLBuilder.IMAGE_FALLBACK_URI"
+       description="Contains the uri for a fallback image."/>
 
 <i:pragma name="description">
     Renders a BlobVariant image using the given URLBuilder. This will support waiting for conversions
@@ -19,13 +21,15 @@
         <i:if test="urlBuilder.isConversionExpected()">
             <img class="lazy-image-js @imgClass"
                  style="@imgStyle"
-                 src="@urlBuilder.getFallbackUri().orElse(sirius.biz.storage.layer2.URLBuilder.IMAGE_FALLBACK_URI)"
-                 data-src="@urlBuilder.buildImageURL()"/>
+                 src="@urlBuilder.createBaseURL().append(fallbackUri)"
+                 data-src="@urlBuilder.buildImageURL()"
+                 data-failed="@urlBuilder.createBaseURL().append(sirius.biz.storage.layer2.URLBuilder.IMAGE_FAILED_URI)"/>
             <i:else>
                 <img class="safe-image-js @imgClass"
                      style="@imgStyle"
-                     data-fallback="@urlBuilder.getFallbackUri().orElse(sirius.biz.storage.layer2.URLBuilder.IMAGE_FALLBACK_URI)"
-                     src="@urlBuilder.buildImageURL()"/>
+                     data-fallback="@urlBuilder.createBaseURL().append(fallbackUri)"
+                     src="@urlBuilder.buildImageURL()"
+                     data-failed="@urlBuilder.createBaseURL().append(sirius.biz.storage.layer2.URLBuilder.IMAGE_FAILED_URI)"/>
             </i:else>
         </i:if>
     </div>
