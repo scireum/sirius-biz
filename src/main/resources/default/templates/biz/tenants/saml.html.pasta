@@ -20,7 +20,7 @@
                                value="@part(sirius.web.security.SAMLHelper.class).generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
                     </form>
                     <a class="link"
-                       href="javascript:$('#@id').submit()">@tenant.getTenantData().getName()</a>
+                       href="javascript:document.getElementById('@id').submit()">@tenant.getTenantData().getName()</a>
                 </t:datacard>
             </i:for>
         </t:datacards>
