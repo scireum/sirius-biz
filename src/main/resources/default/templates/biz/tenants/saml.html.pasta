@@ -1,44 +1,36 @@
 <i:arg type="List" name="tenants"/>
 
-<w:page titleKey="SAMLController.loginViaSAML" ignoreDisasterMode="true">
+<t:page titleKey="SAMLController.loginViaSAML" ignoreDisasterMode="true">
     <i:block name="breadcrumbs">
         <li>
             <a href="/saml">@i18n("SAMLController.loginViaSAML")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="SAMLController.loginViaSAML"/>
+    <t:pageHeader titleKey="SAMLController.loginViaSAML"/>
 
-    <w:table data="tenants">
-        <thead>
-        <tr>
-            <th>
-                @i18n("Model.name")
-            </th>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
-            <tr>
-                <td>
+    <t:emptyCheck data="tenants">
+        <t:datacards size="small">
+            <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
+                <t:datacard>
                     <i:local name="id" value="@generateId()"/>
-                    <form class="samlForm" id="@id" method="post" action="@tenant.getTenantData().getSamlIssuerUrl()">
+                    <form class="samlForm" id="@id" method="post"
+                          action="@tenant.getTenantData().getSamlIssuerUrl()">
                         <input type="hidden" name="SAMLRequest"
                                value="@part(sirius.web.security.SAMLHelper.class).generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
                     </form>
+                    <a class="link"
+                       href="javascript:$('#@id').submit()">@tenant.getTenantData().getName()</a>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
 
-                    <a class="link" href="javascript:$('#@id').submit()">@tenant.getTenantData().getName()</a>
-                </td>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
-
-    <i:if test="tenants.size() == 1 && !user().isLoggedIn()">
-        <script type="text/javascript">
-            $(document).ready(function() {
-                $('form.samlForm').submit();
-            });
-        </script>
-    </i:if>
-</w:page>
+        <i:if test="tenants.size() == 1 && !user().isLoggedIn()">
+            <script type="text/javascript">
+                sirius.ready(function () {
+                    document.getElementsByClassName("samlForm").item(0).submit();
+                });
+            </script>
+        </i:if>
+    </t:emptyCheck>
+</t:page>
