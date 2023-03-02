@@ -21,7 +21,6 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -29,7 +28,6 @@ import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
-import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,17 +75,6 @@ public class ProcessLog extends SearchableEntity {
      * Defines a limit to log messages for a {@link #messageType} to 1000.
      */
     public static final int MESSAGE_TYPE_COUNT_HIGH = 1000;
-
-    /**
-     * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
-     * {@link #withHandledException(HandledException)}.
-     * <p>
-     * A message key is supposed to be {@link NLS#smartGet(String) smart translated}.
-     *
-     * @deprecated Use {@link #HINT_MESSAGE_TYPE} instead and apply the "$" manually
-     */
-    @Deprecated
-    public static final ExceptionHint HINT_MESSAGE_KEY = new ExceptionHint("messageKey");
 
     /**
      * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
@@ -456,29 +443,15 @@ public class ProcessLog extends SearchableEntity {
      */
     public ProcessLog withHandledException(HandledException handledException) {
         this.withMessage(handledException.getMessage());
-        obtainMessageKey(handledException).replaceEmptyWith(handledException.getHint(HINT_MESSAGE_TYPE))
-                                          .ifFilled(hintMessage -> {
-                                              int messageCount = handledException.getHint(HINT_MESSAGE_COUNT).asInt(0);
-                                              if (messageCount > 0) {
-                                                  this.withLimitedMessageType(hintMessage.getString(), messageCount);
-                                              } else {
-                                                  this.withMessageType(hintMessage.getString());
-                                              }
-                                          });
+        handledException.getHint(HINT_MESSAGE_TYPE).ifFilled(hintMessage -> {
+            int messageCount = handledException.getHint(HINT_MESSAGE_COUNT).asInt(0);
+            if (messageCount > 0) {
+                this.withLimitedMessageType(hintMessage.getString(), messageCount);
+            } else {
+                this.withMessageType(hintMessage.getString());
+            }
+        });
         return this;
-    }
-
-    private Value obtainMessageKey(@Nonnull HandledException handledException) {
-        Value messageKey = handledException.getHint(HINT_MESSAGE_KEY);
-        if (messageKey.isEmptyString()) {
-            return Value.EMPTY;
-        }
-
-        if (messageKey.startsWith("$")) {
-            return messageKey;
-        } else {
-            return Value.of("$").append("", messageKey);
-        }
     }
 
     /**
