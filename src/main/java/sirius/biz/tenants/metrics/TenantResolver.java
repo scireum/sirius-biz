@@ -8,7 +8,7 @@
 
 package sirius.biz.tenants.metrics;
 
-import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
+import sirius.biz.analytics.explorer.ChartObjectResolver;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.TenantUserManager;

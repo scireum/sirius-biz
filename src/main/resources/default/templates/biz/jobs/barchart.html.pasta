@@ -17,7 +17,7 @@
     <script type="text/javascript">
         sirius.ready(function () {
             const datasets = [];
-            @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
+            @for(sirius.biz.analytics.metrics.Dataset dataset : datasets) {
                 datasets.push({ label: '@dataset.getLabel()',
                                 data: [ @raw { @dataset.renderData() } ],
                                 axis: @raw { @dataset.renderAxisName() }});

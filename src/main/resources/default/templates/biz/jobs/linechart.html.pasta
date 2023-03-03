@@ -18,12 +18,12 @@
             sirius.ready(function () {
                 const datasets = [];
                 let dataset;
-                @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
+                @for(sirius.biz.analytics.metrics.Dataset dataset : datasets) {
                     dataset = { label: '@dataset.getLabel()',
                         data: [ @raw { @dataset.renderData() } ],
                         axis: @raw { @dataset.renderAxisName() }};
                     @if (dataset.isGray()) {
-                        dataset.color = '@sirius.biz.analytics.charts.Dataset.COLOR_GRAY';
+                        dataset.color = '@sirius.biz.analytics.metrics.Dataset.COLOR_GRAY';
                     }
                     datasets.push(dataset);
                 }

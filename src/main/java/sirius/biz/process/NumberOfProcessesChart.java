@@ -8,11 +8,11 @@
 
 package sirius.biz.process;
 
-import sirius.biz.analytics.charts.explorer.ChartFactory;
-import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.MetricTimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
-import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
+import sirius.biz.analytics.explorer.ChartFactory;
+import sirius.biz.analytics.explorer.ChartObjectResolver;
+import sirius.biz.analytics.explorer.MetricTimeSeriesComputer;
+import sirius.biz.analytics.explorer.TimeSeriesChartFactory;
+import sirius.biz.analytics.explorer.TimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.di.std.Register;
@@ -36,7 +36,8 @@ public class NumberOfProcessesChart extends TimeSeriesChartFactory<Object> {
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Object ignoredObject,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
         executor.invoke(new MetricTimeSeriesComputer<>(ProcessesMonthlyMetrics.METRIC_NUM_PROCESSES).withDailyMetricName(
