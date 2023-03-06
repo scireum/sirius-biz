@@ -77,7 +77,9 @@ public class ListUplinkConnectorsCommand implements Command {
         output.apply("I/A %-20s %-20s %-20s %12s", "CREATED", "BORROWED", "RETURNED", "BORROW-COUNT");
         output.separator();
         for (DefaultPooledObjectInfo info : pool.listAllObjects()) {
-            boolean active = info.getLastReturnTime() < info.getLastBorrowTime();
+            // When the object info is not returned on the first borrow the timings are the same, so we have to do some sanity checks here.
+            boolean active = info.getLastReturnTime() < info.getLastBorrowTime()
+                             && info.getLastReturnTime() > info.getCreateTime();
             output.apply("%-3s %-20s %-20s %-20s %12s",
                          active ? "A" : "I",
                          NLS.toUserString(Instant.ofEpochMilli(info.getCreateTime())),
