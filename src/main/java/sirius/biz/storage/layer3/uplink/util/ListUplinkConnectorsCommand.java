@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.layer3.uplink.util;
 
-import org.apache.commons.collections4.Put;
 import org.apache.commons.pool2.impl.DefaultPooledObjectInfo;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import sirius.kernel.commons.Values;
@@ -66,8 +65,11 @@ public class ListUplinkConnectorsCommand implements Command {
         try {
             output.apply("Draining pool: %s (%s)", config.host, config.user);
             pool.clear();
-        } catch (Exception e) {
-            output.apply("Draining of %s (%s) failed: %s", config.host, config.user, Exceptions.handle(e).getMessage());
+        } catch (Exception exception) {
+            output.apply("Draining of %s (%s) failed: %s",
+                         config.host,
+                         config.user,
+                         Exceptions.handle(exception).getMessage());
         }
     }
 
