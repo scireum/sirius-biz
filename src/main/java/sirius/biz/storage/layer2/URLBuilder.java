@@ -174,6 +174,19 @@ public class URLBuilder {
     }
 
     /**
+     * Make the URL an inline download url using the given filename.
+     *
+     * @param path the filename to send to the browser
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder asInline(String path) {
+        this.filename = Files.getFilenameAndExtension(path);
+        this.forceDownload = false;
+
+        return this;
+    }
+
+    /**
      * Make the URL a download url using the given filename.
      *
      * @param path the filename to send to the browser
