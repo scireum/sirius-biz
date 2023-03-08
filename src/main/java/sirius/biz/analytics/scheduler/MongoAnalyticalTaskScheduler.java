@@ -18,6 +18,7 @@ import sirius.kernel.health.Log;
 
 import java.lang.reflect.Modifier;
 import java.time.LocalDate;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -84,15 +85,24 @@ public abstract class MongoAnalyticalTaskScheduler extends BaseAnalyticalTaskSch
     @Override
     public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
         if (batchDescription.containsKey(BaseAnalyticalTaskScheduler.CONTEXT_MARKER_GLOBAL_ENTITY)) {
+            AnalyticalEngine.LOG.FINE("Executing global batch: " + batchDescription);
+
             // A global run was detected, execute with "null" and MongoEntity as type...
             executeEntity(null, MongoEntity.class, date, level);
         } else if (batchDescription.containsKey(BaseEntityBatchEmitter.TYPE)) {
+
             // Note that we check for the presence of the TYPE, as (in case of some schedulers) we emit
             // an empty batch, just to ensure that executors with the higher levels are executed, even if
             // there are no tasks on the current level (see AnalyticalBatchExecutor.executeWork...)
-            batchEmitter.evaluateBatch(batchDescription,
-                                       this::extendBatchQuery,
-                                       e -> executeEntity(e, e.getClass(), date, level));
+            AtomicInteger counter = new AtomicInteger();
+            batchEmitter.evaluateBatch(batchDescription, this::extendBatchQuery, e -> {
+                executeEntity(e, e.getClass(), date, level);
+                counter.incrementAndGet();
+            });
+
+            AnalyticalEngine.LOG.FINE("Executed %s entities for batch: " + batchDescription);
+        } else {
+            AnalyticalEngine.LOG.FINE("Skipped a completely empty batch: " + batchDescription);
         }
     }
 }
