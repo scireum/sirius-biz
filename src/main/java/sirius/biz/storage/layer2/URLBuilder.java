@@ -174,6 +174,17 @@ public class URLBuilder {
     }
 
     /**
+     * Specifies the name of the file.
+     *
+     * @param path the filename to send to the browser
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder withFileName(String path) {
+        this.filename = Files.getFilenameAndExtension(path);
+        return this;
+    }
+
+    /**
      * Make the URL a download url using the given filename.
      *
      * @param path the filename to send to the browser
