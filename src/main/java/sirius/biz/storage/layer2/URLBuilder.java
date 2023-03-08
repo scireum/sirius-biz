@@ -175,6 +175,8 @@ public class URLBuilder {
 
     /**
      * Make the URL an inline download url using the given filename.
+     * <p>
+     * Note: Should not be used with {@link #asDownload(String)} as it overwrites the inline behavior. Use either.
      *
      * @param path the filename to send to the browser
      * @return the builder itself for fluent method calls
@@ -188,6 +190,8 @@ public class URLBuilder {
 
     /**
      * Make the URL a download url using the given filename.
+     * <p>
+     * Note: Should not be used with {@link #asInline(String)} as it overwrites the inline behavior. Use either.
      *
      * @param path the filename to send to the browser
      * @return the builder itself for fluent method calls
