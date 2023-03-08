@@ -80,34 +80,38 @@ public abstract class AnalyticsBatchExecutor implements DistributedTaskExecutor 
     private void scheduleNextLevel(LocalDate date, int nextLevel, AnalyticsScheduler scheduler) {
         AnalyticalEngine.LOG.FINE("Scheduling level %s for %s (%s)...", nextLevel, scheduler.getName(), date);
         Timeout timeout = new Timeout(Duration.ofMinutes(30));
-        while (TaskContext.get().isActive()) {
-            boolean noOtherAnalyticsTasksRunning =
-                    namedRegions.isNamedRegionFree(determineRegionName(scheduler.getName()));
-            if (timeout.isReached() || noOtherAnalyticsTasksRunning) {
-                if (noOtherAnalyticsTasksRunning) {
-                    AnalyticalEngine.LOG.FINE("Successfully scheduled level %s for %s (%s).",
-                                              nextLevel,
-                                              scheduler.getName(),
-                                              date);
-                } else {
-                    AnalyticalEngine.LOG.WARN(
-                            "Scheduled level %s for %s (%s) even though some concurrent tasks seem to be running for named region %s (Timeout of 30m reached).",
-                            nextLevel,
-                            scheduler.getName(),
-                            date,
-                            determineRegionName(scheduler.getName()));
-                }
-
-                analyticalEngine.queueScheduler(scheduler, date, nextLevel);
-                return;
-            } else {
-                AnalyticalEngine.LOG.FINE(
-                        "Concurrent tasks are still running - waiting 15s before scheduling level  %s for %s (%s).",
-                        nextLevel,
-                        scheduler.getName(),
-                        date);
-                Wait.seconds(15);
-            }
+        boolean otherAnalyticsTasksRunning = !namedRegions.isNamedRegionFree(determineRegionName(scheduler.getName()));
+        while (otherAnalyticsTasksRunning && !timeout.isReached() && TaskContext.get().isActive()) {
+            AnalyticalEngine.LOG.FINE(
+                    "Concurrent tasks are still running - waiting 15s before scheduling level  %s for %s (%s).",
+                    nextLevel,
+                    scheduler.getName(),
+                    date);
+            Wait.seconds(15);
+            otherAnalyticsTasksRunning = !namedRegions.isNamedRegionFree(determineRegionName(scheduler.getName()));
         }
+
+        if (!otherAnalyticsTasksRunning) {
+            AnalyticalEngine.LOG.FINE("Successfully scheduled level %s for %s (%s).",
+                                      nextLevel,
+                                      scheduler.getName(),
+                                      date);
+        } else if (timeout.isReached()) {
+            AnalyticalEngine.LOG.WARN(
+                    "Scheduled level %s for %s (%s) even though some concurrent tasks seem to be running for named region %s (Timeout of 30m reached).",
+                    nextLevel,
+                    scheduler.getName(),
+                    date,
+                    determineRegionName(scheduler.getName()));
+        } else {
+            AnalyticalEngine.LOG.WARN(
+                    "Scheduled level %s for %s (%s) even though some concurrent tasks seem to be running for named region %s (System shutdown anticipated).",
+                    nextLevel,
+                    scheduler.getName(),
+                    date,
+                    determineRegionName(scheduler.getName()));
+        }
+
+        analyticalEngine.queueScheduler(scheduler, date, nextLevel);
     }
 }
