@@ -13,7 +13,6 @@ import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.kernel.async.Future;
 import sirius.kernel.health.HandledException;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
-import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -139,13 +138,6 @@ public interface Blob {
     Future tryCreateVariant(String variantName);
 
     /**
-     * Delivers the data of this blob into the given HTTP response.
-     *
-     * @param response the HTTP response to populate
-     */
-    void deliver(Response response);
-
-    /**
      * Determines if this blob is still marked as temporary.
      *
      * @return <tt>true</tt> if the blob is temporary, <tt>false</tt> otherwise
@@ -240,13 +232,11 @@ public interface Blob {
     /**
      * Creates an input stream which can be used to read the contents of this blob.
      * <p>
-     * Note that this might require downloading the blob from an external storage device into a local buffer. When
-     * responding to a HTTP request use {@link #deliver(Response)} which might be more efficient in this case. Use
-     * {@link #download()} to have full control over the downloaded file handle.
+     * Note that this might require downloading the blob from an external storage device into a local buffer.
+     * Use {@link #download()} to have full control over the downloaded file handle.
      *
      * @return an input stream providing the contents of this blob
      * @see #download()
-     * @see #deliver(Response)
      */
     InputStream createInputStream();
 

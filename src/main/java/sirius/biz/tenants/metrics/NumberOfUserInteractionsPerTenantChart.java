@@ -8,14 +8,14 @@
 
 package sirius.biz.tenants.metrics;
 
-import sirius.biz.analytics.charts.explorer.ChartFactory;
-import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.EventTimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
-import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.UserActivityEvent;
 import sirius.biz.analytics.events.UserData;
+import sirius.biz.analytics.explorer.ChartFactory;
+import sirius.biz.analytics.explorer.ChartObjectResolver;
+import sirius.biz.analytics.explorer.EventTimeSeriesComputer;
+import sirius.biz.analytics.explorer.TimeSeriesChartFactory;
+import sirius.biz.analytics.explorer.TimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantUserManager;
@@ -65,7 +65,8 @@ public class NumberOfUserInteractionsPerTenantChart extends TimeSeriesChartFacto
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Tenant<?> ignoredTenant,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Tenant<?>>> executor) throws Exception {
         EventTimeSeriesComputer<Tenant<?>, UserActivityEvent> computer =

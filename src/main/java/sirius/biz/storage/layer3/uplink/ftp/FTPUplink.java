@@ -480,9 +480,9 @@ public class FTPUplink extends ConfigBasedUplink {
                                     path,
                                     ftpConfig)
                             .handle();
+        } finally {
+            connector.safeClose();
         }
-
-        connector.safeClose();
     }
 
     private void completeFailedCommand(UplinkConnector<FTPClient> connector, String path, String command) {
@@ -509,9 +509,9 @@ public class FTPUplink extends ConfigBasedUplink {
                               ftpConfig)
                       .handle();
             connector.forceClose();
+        } finally {
+            connector.safeClose();
         }
-
-        connector.safeClose();
     }
 
     private OutputStream outputStreamSupplier(VirtualFile file) {

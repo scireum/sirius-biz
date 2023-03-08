@@ -1,29 +1,27 @@
-<i:arg type="sirius.web.security.SAMLResponse" name="response" />
+<i:arg type="sirius.web.security.SAMLResponse" name="response"/>
 
-<w:page titleKey="SAMLController.loginViaSAML" ignoreDisasterMode="true">
+<t:page titleKey="SAMLController.loginViaSAML" ignoreDisasterMode="true">
     <i:block name="breadcrumbs">
         <li>
             <a href="/saml">@i18n("SAMLController.loginViaSAML")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="SAMLController.samlRedirect"/>
-        <script type="text/javascript">
-            $(document).ready(function () {
-                let target = '@config("product.wondergemRoot")';
-
-                try {
-                    target = window.localStorage.getItem('samlPostLoginUri');
-                    if (target != null && target !== '') {
-                        window.location.replace(target);
-                        return;
-                    }
-                } catch (e) {
-                    console.log(e);
+    <t:pageHeader titleKey="SAMLController.samlRedirect"/>
+    <script type="text/javascript">
+        sirius.ready(function () {
+            let target = '@config("product.tychoRoot")';
+            try {
+                target = window.localStorage.getItem('samlPostLoginUri');
+                if (target != null && target !== '') {
+                    window.location.replace(target);
+                    return;
                 }
+            } catch (e) {
+                console.log(e);
+            }
 
-                window.location.replace('@config("product.wondergemRoot")');
-            });
-        </script>
-
-</w:page>
+            window.location.replace('@config("product.tychoRoot")');
+        });
+    </script>
+</t:page>

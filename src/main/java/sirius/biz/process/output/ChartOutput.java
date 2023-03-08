@@ -10,7 +10,7 @@ package sirius.biz.process.output;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import sirius.biz.analytics.charts.Dataset;
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogType;
