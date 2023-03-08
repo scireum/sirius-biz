@@ -100,9 +100,9 @@ public abstract class MongoAnalyticalTaskScheduler extends BaseAnalyticalTaskSch
                 counter.incrementAndGet();
             });
 
-            AnalyticalEngine.LOG.FINE("Executed %s entities for batch: " + batchDescription);
+            AnalyticalEngine.LOG.FINE("Executed %s entities for batch: %s", counter.get(), batchDescription);
         } else {
-            AnalyticalEngine.LOG.FINE("Skipped a completely empty batch: " + batchDescription);
+            AnalyticalEngine.LOG.FINE("Skipped a completely empty batch: %s", batchDescription);
         }
     }
 }
