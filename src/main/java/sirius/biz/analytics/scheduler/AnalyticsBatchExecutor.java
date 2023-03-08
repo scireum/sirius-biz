@@ -92,7 +92,7 @@ public abstract class AnalyticsBatchExecutor implements DistributedTaskExecutor 
                 } else {
                     AnalyticalEngine.LOG.WARN(
                             "Scheduled level %s for %s (%s) even though some concurrent tasks seem to be running for named region %s (Timeout of 30m reached).",
-                            nextLevel + 1,
+                            nextLevel,
                             scheduler.getName(),
                             date,
                             determineRegionName(scheduler.getName()));
