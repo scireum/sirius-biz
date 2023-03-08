@@ -179,6 +179,7 @@ public class URLBuilder {
      * @param path the filename to send to the browser
      * @return the builder itself for fluent method calls
      */
+    @Deprecated(forRemoval = true)
     public URLBuilder asDownload(String path) {
         this.filename = Files.getFilenameAndExtension(path);
         this.forceDownload = true;
