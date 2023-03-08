@@ -84,18 +84,18 @@ public abstract class AnalyticsBatchExecutor implements DistributedTaskExecutor 
             boolean noOtherAnalyticsTasksRunning =
                     namedRegions.isNamedRegionFree(determineRegionName(scheduler.getName()));
             if (timeout.isReached() || noOtherAnalyticsTasksRunning) {
-                if (!noOtherAnalyticsTasksRunning) {
+                if (noOtherAnalyticsTasksRunning) {
+                    AnalyticalEngine.LOG.FINE("Successfully scheduled level %s for %s (%s).",
+                                              nextLevel,
+                                              scheduler.getName(),
+                                              date);
+                } else {
                     AnalyticalEngine.LOG.WARN(
                             "Scheduled level %s for %s (%s) even though some concurrent tasks seem to be running for named region %s (Timeout of 30m reached).",
                             nextLevel + 1,
                             scheduler.getName(),
                             date,
                             determineRegionName(scheduler.getName()));
-                } else {
-                    AnalyticalEngine.LOG.FINE("Successfully scheduled level %s for %s (%s).",
-                                              nextLevel,
-                                              scheduler.getName(),
-                                              date);
                 }
 
                 analyticalEngine.queueScheduler(scheduler, date, nextLevel);
