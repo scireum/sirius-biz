@@ -435,7 +435,7 @@ public class BlobDispatcher implements WebDispatcher {
                                                                  boolean largeFileExpected) {
         URLBuilder urlBuilder = new URLBuilder(storageSpace, blobKey);
         if (download) {
-            urlBuilder.asDownload(filename);
+            urlBuilder.withFileName(filename).asDownload();
         }
         if (Strings.isFilled(variant)) {
             urlBuilder.withVariant(variant);

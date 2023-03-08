@@ -575,7 +575,8 @@ public class L3Uplink implements VFSRoot {
         file.as(Blob.class)
             .url()
             .enableLargeFileDetection()
-            .asDownload(file.name())
+            .withFileName(file.name())
+            .asDownload()
             .buildURL()
             .ifPresentOrElse(blobDeliveryUrl -> response.redirectTemporarily(blobDeliveryUrl),
                              () -> response.error(HttpResponseStatus.NOT_FOUND));
