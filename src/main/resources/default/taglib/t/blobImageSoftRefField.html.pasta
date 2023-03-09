@@ -1,0 +1,124 @@
+<i:arg type="sirius.biz.storage.layer2.BlobSoftRef" name="objectRef"/>
+<i:arg type="String" name="name"/>
+<i:arg name="labelKey" type="String" default=""/>
+<i:arg name="label" type="String" default="@i18n(labelKey)"/>
+<i:arg name="helpKey" type="String" default=""/>
+<i:arg name="help" type="String" default="@i18n(helpKey)"/>
+<i:arg type="String" name="value" default="@objectRef.getKey()"/>
+<i:arg type="String" name="id" default="@generateId('image-upload-%s')"/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
+<i:arg name="btnClass" type="String" default=""
+       description="Lists additional CSS classes to apply to the upload button."/>
+<i:arg type="String" name="defaultPreview" default="/assets/images/placeholder.png"/>
+<i:arg type="String" name="previewVariant" default="raw"/>
+<i:arg type="String" name="acceptedFiles" default=".jpg,.jpeg,.svg,.png,.gif"/>
+<i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
+<i:arg type="String" name="height" default="350px"/>
+<i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()" description="Allows the user to enter an URL as source of the blob."/>
+<i:arg type="String" name="formId" default="mainEditForm" description="The form this field belongs to."/>
+
+<i:local name="previewId" value="@generateId('image-upload-preview-%s')"/>
+<i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
+
+<div class="form-group @UserContext.get().signalFieldError(name) @class">
+    <i:if test="isFilled(label)">
+        <div>
+            <label><span>@label</span></label>
+        </div>
+    </i:if>
+    <div class="sirius-imageupload soft-blob-ref-field card shadow-sm mb-4 mt-1 @class">
+        <div @if (isFilled(height)) { style="height: @height" } id="@id">
+            <div class="sirius-upload-content h-100 d-flex flex-column">
+                <div class="img-preview d-flex justify-content-center align-items-center flex-grow-1 mb-4">
+                    <img class="mh-100 mw-100" id="@previewId" src="@currentImage"/>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-block" data-select-vfs>
+                    @i18n("StoredObject.uploadBtn")
+                </button>
+                <i:if test="@urlAllowed">
+                    <button type="button" class="btn btn-outline-secondary mt-2" data-popover>
+                        @i18n("StoredObject.specifyURL")
+                    </button>
+                </i:if>
+                <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
+                    @i18n("StoredObject.resetBtn")
+                </button>
+                <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
+            </div>
+        </div>
+    </div>
+    <i:if test="isFilled(help)">
+        <div>
+            <small class="form-text text-muted">
+                <i:raw>@expandMessage(help)</i:raw>
+            </small>
+        </div>
+    </i:if>
+    <i:if test="UserContext.get().hasError(name)">
+        <div>
+            <small class="error-block form-text">@UserContext.get().getFieldErrorMessage(name)</small>
+        </div>
+    </i:if>
+</div>
+
+<script type="text/javascript">
+    {
+        let outerDiv = document.querySelector('#___id');
+        sirius.ready(function () {
+            const urlButton = outerDiv.querySelector('[data-popover]');
+            const resetButton = outerDiv.querySelector('.btn-reset-js');
+            const uploadButton = outerDiv.querySelector('[data-select-vfs]');
+            const inputField = outerDiv.querySelector('input[type="hidden"]');
+            const img = outerDiv.querySelector('img');
+            uploadButton.addEventListener('click', function() {
+                let blobStorageSpace = '___objectRef.getPath()' || '___objectRef.getSpace()';
+
+                selectVFSFile({
+                    path: '/' + blobStorageSpace,
+                    allowDirectories: true,
+                    allowFiles: true,
+                    allowedExtensions: '___acceptedFiles',
+                    dictMaxFilesExceeded: '___i18n("VirtualFile.onlyOneFile")',
+                    modalTitle: '___i18n("VFSController.selectFile")'
+                }).then(function (selectedValue) {
+                    $.getJSON('/dasd/blob-info-for-path/___objectRef.getSpace()', {
+                        path: selectedValue.substring('/___objectRef.getSpace()'.length)
+                    }, function (json) {
+                        inputField.value = json.fileId;
+                        console.log(json);
+                        img.onerror = function() {
+                            img.src = '/assets/frontend/defaulticons/default-item.png';
+                        }
+                        img.src = json.downloadUrl;
+                        resetButton.classList.remove('d-none');
+                    });
+
+                });
+            });
+
+            if(___urlAllowed) {
+                initUrlUploadPopover(urlButton, outerDiv, resetButton, {
+                    label: '@i18n("StoredObject.URL")',
+                    ok: '@i18n("NLS.ok")',
+                    cancel: '@i18n("NLS.cancel")',
+                    errorMsg: '@i18n("StoredObject.specifyURL")'
+                });
+            }
+
+            if (img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
+                return;
+            }
+            
+            // if we have a variant preview, set up lazyloading...
+            img.dataset.src = img.src;
+            img.src = '___defaultPreview';
+            loadImageLazily(img);
+        });
+        outerDiv.querySelector('.btn-reset-js').onclick = function () {
+            outerDiv.querySelector('[name=___name]').value = '';
+            outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
+            outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
+        }
+    }
+</script>
