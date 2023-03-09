@@ -181,12 +181,26 @@ public class BlobDispatcher implements WebDispatcher {
         Values uriParts = Values.of(uri.split("/"));
         String type = uriParts.at(0).asString();
         if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(4).asString());
+            String physicalKey = stripAdditionalText(uriParts.at(4).asString());
             physicalDelivery(request,
                              uriParts.at(1).asString(),
                              uriParts.at(2).asString(),
                              uriParts.at(4).asString(),
-                             Files.getFilenameWithoutExtension(filename),
+                             Files.getFilenameWithoutExtension(physicalKey),
+                             largeFileExpected,
+                             physicalKey);
+
+            return DispatchDecision.DONE;
+        }
+
+        if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 6) {
+            String physicalKey = stripAdditionalText(uriParts.at(4).asString());
+            String filename = stripAdditionalText(uriParts.at(5).asString());
+            physicalDelivery(request,
+                             uriParts.at(1).asString(),
+                             uriParts.at(2).asString(),
+                             uriParts.at(4).asString(),
+                             Files.getFilenameWithoutExtension(physicalKey),
                              largeFileExpected,
                              filename);
 
