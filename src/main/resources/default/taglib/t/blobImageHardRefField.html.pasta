@@ -15,8 +15,6 @@
 <i:arg type="String" name="uploadUrl" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
 <i:arg type="String" name="height" default="350px"/>
-<i:arg type="boolean" name="urlAllowed" default="true" description="Allows the user to enter an URL as source of the blob."/>
-<i:arg type="String" name="formId" default="" description="The form this field belongs to."/>
 
 <i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
 
@@ -29,15 +27,14 @@
     <div @if (isFilled(height)) { style="height: @height" }>
         <t:imageUpload class="h-100" id="@id" uploadUrl="@uploadUrl" acceptedFiles="@acceptedFiles"
                        currentImage="@currentImage" btnClass="@btnClass">
-            <i:if test="@urlAllowed">
-                <button type="button" class="btn btn-outline-secondary mt-2" data-popover>
-                    @i18n("StoredObject.specifyURL")
-                </button>
-            </i:if>
+
             <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
                 @i18n("StoredObject.resetBtn")
             </button>
-            <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
+
+
+            <input type="hidden" name="@name" value="@value"/>
+
         </t:imageUpload>
     </div>
     <i:if test="isFilled(help)">
@@ -54,122 +51,111 @@
     </i:if>
 </div>
 
+
 <script type="text/javascript">
-    {
-        let outerDiv = document.querySelector('#___id');
+    let outerDiv = document.querySelector('#___id');
 
-        let _img = outerDiv.querySelector('.img-preview img');
-        sirius.ready(function () {
-            const urlButton = outerDiv.querySelector('[data-popover]');
-            const resetButton = outerDiv.querySelector('.btn-reset-js');
-            initUrlUploadPopover(urlButton, outerDiv, resetButton, {
-                label: '@i18n("StoredObject.URL")',
-                ok: '@i18n("NLS.ok")',
-                cancel: '@i18n("NLS.cancel")'});
-
-            if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
-                return;
-            }
-            // if we have a variant preview, set up lazyloading...
-            _img.dataset.src = _img.src;
-            _img.src = '___defaultPreview';
-            loadImageLazily(_img);
-        });
-
-        Dropzone.options[sirius.camelize('@id')].url = function (files) {
-            const uploadUrl = '@raw {@uploadUrl}';
-            let parameterIndicator = '?';
-            if (uploadUrl.indexOf('?') >= 0) {
-                parameterIndicator = '&';
-            }
-            return uploadUrl + parameterIndicator + 'filename=' + encodeURIComponent(files[0].name) + '&variant=___previewVariant';
+    let _img = outerDiv.querySelector('.img-preview img');
+    sirius.ready(function () {
+        if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
+            return;
         }
-        Dropzone.options[sirius.camelize('@id')].init = function () {
-            const dropzone = this;
-            let _dropzoneIndicator = document.querySelector('#' + '@id' + ' .sirius-upload-hover');
-            let _dropzoneContent = document.querySelector('#' + '@id' + ' .sirius-upload-content');
+        // if we have a variant preview, set up lazyloading...
+        _img.dataset.src = _img.src;
+        _img.src = '___defaultPreview';
+        loadImageLazily(_img);
+    });
 
-            function showIndicator() {
-                _dropzoneIndicator.classList.add('d-flex');
-                _dropzoneIndicator.classList.remove('d-none');
-                _dropzoneContent.classList.add('d-none');
-                _dropzoneContent.classList.remove('d-flex');
-            }
-
-            function hideIndicator() {
-                _dropzoneIndicator.classList.remove('d-flex');
-                _dropzoneIndicator.classList.add('d-none');
-                _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
-                _dropzoneContent.classList.remove('d-none');
-                _dropzoneContent.classList.add('d-flex');
-            }
-
-            document.addEventListener('dragenter', function (event) {
-                showIndicator();
-            }, false);
-            document.addEventListener('dragend', function (event) {
-                hideIndicator();
-            }, false);
-            document.addEventListener('dragleave', function (event) {
-                if (event.relatedTarget === null) {
-                    // left window
-                    hideIndicator();
-                }
-            }, false);
-            document.addEventListener('dragover', function (event) {
-                event.preventDefault();
-            });
-            document.addEventListener('drop', function (event) {
-                hideIndicator();
-            }, false);
-            _dropzoneIndicator.addEventListener('dragenter', function (event) {
-                _dropzoneIndicator.classList.add('sirius-upload-hover-active');
-            });
-            _dropzoneIndicator.addEventListener('dragleave', function (event) {
-                _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
-            });
-            _dropzoneContent.addEventListener('dragenter', function (event) {
-                showIndicator();
-            });
-            dropzone.on('drop', function () {
-                hideIndicator();
-            });
-            sirius.warnOnUnload(function () {
-                return dropzone.getUploadingFiles().length + dropzone.getQueuedFiles().length;
-            });
-            dropzone.on('success', function (file, response) {
-                if (response.error) {
-                    file.previewElement.classList.add('dz-error');
-                    file.previewElement.classList.remove('dz-success');
-                    const message = response.message || '___i18n("template.html.uploadFailed")';
-                    file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
-                    addErrorMessage(message);
-                } else if (sirius.isFilled(response.imageUrl)) {
-                    _img = outerDiv.querySelector('.img-preview img');
-                    if ('___previewVariant' === 'raw') {
-                        _img.src = response.imageUrl;
-                    } else {
-                        _img.src = '___defaultPreview';
-                        _img.dataset.src = response.imageUrl;
-                        loadImageLazily(_img);
-                    }
-                    if (sirius.isFilled(response.fileId)) {
-                        outerDiv.querySelector('[name=___name]').value = response.fileId;
-                        outerDiv.querySelector('.btn-reset-js').classList.remove('d-none');
-                    }
-                    setTimeout(function () {
-                        dropzone.removeFile(file);
-                    }, 800);
-                }
-            });
+    Dropzone.options[sirius.camelize('@id')].url = function (files) {
+        const uploadUrl = '@raw {@uploadUrl}';
+        let parameterIndicator = '?';
+        if (uploadUrl.indexOf('?') >= 0) {
+            parameterIndicator = '&';
         }
-        outerDiv.querySelector('.btn-reset-js').onclick = function () {
-            outerDiv.querySelector('[name=___name]').value = '';
-            outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
-            outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
-        }
+        return uploadUrl + parameterIndicator + 'filename=' + encodeURIComponent(files[0].name) + '&variant=___previewVariant';
     }
+    Dropzone.options[sirius.camelize('@id')].init = function () {
+        const dropzone = this;
+        let _dropzoneIndicator = document.querySelector('#' + '@id' + ' .sirius-upload-hover');
+        let _dropzoneContent = document.querySelector('#' + '@id' + ' .sirius-upload-content');
 
+        function showIndicator() {
+            _dropzoneIndicator.classList.add('d-flex');
+            _dropzoneIndicator.classList.remove('d-none');
+            _dropzoneContent.classList.add('d-none');
+            _dropzoneContent.classList.remove('d-flex');
+        }
 
+        function hideIndicator() {
+            _dropzoneIndicator.classList.remove('d-flex');
+            _dropzoneIndicator.classList.add('d-none');
+            _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
+            _dropzoneContent.classList.remove('d-none');
+            _dropzoneContent.classList.add('d-flex');
+        }
 
+        document.addEventListener('dragenter', function (event) {
+            showIndicator();
+        }, false);
+        document.addEventListener('dragend', function (event) {
+            hideIndicator();
+        }, false);
+        document.addEventListener('dragleave', function (event) {
+            if (event.relatedTarget === null) {
+                // left window
+                hideIndicator();
+            }
+        }, false);
+        document.addEventListener('dragover', function (event) {
+            event.preventDefault();
+        });
+        document.addEventListener('drop', function (event) {
+            hideIndicator();
+        }, false);
+        _dropzoneIndicator.addEventListener('dragenter', function (event) {
+            _dropzoneIndicator.classList.add('sirius-upload-hover-active');
+        });
+        _dropzoneIndicator.addEventListener('dragleave', function (event) {
+            _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
+        });
+        _dropzoneContent.addEventListener('dragenter', function (event) {
+            showIndicator();
+        });
+        dropzone.on('drop', function () {
+            hideIndicator();
+        });
+        sirius.warnOnUnload(function () {
+            return dropzone.getUploadingFiles().length + dropzone.getQueuedFiles().length;
+        });
+        dropzone.on('success', function (file, response) {
+            if (response.error) {
+                file.previewElement.classList.add('dz-error');
+                file.previewElement.classList.remove('dz-success');
+                const message = response.message || '___i18n("template.html.uploadFailed")';
+                file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
+                addErrorMessage(message);
+            } else if (sirius.isFilled(response.imageUrl)) {
+                _img = outerDiv.querySelector('.img-preview img');
+                if ('___previewVariant' === 'raw') {
+                    _img.src = response.imageUrl;
+                } else {
+                    _img.src = '___defaultPreview';
+                    _img.dataset.src = response.imageUrl;
+                    loadImageLazily(_img);
+                }
+                if (sirius.isFilled(response.fileId)) {
+                    outerDiv.querySelector('[name=___name]').value = response.fileId;
+                    outerDiv.querySelector('.btn-reset-js').classList.remove('d-none');
+                }
+                setTimeout(function () {
+                    dropzone.removeFile(file);
+                }, 800);
+            }
+        });
+    }
+    outerDiv.querySelector('.btn-reset-js').onclick = function () {
+        outerDiv.querySelector('[name=___name]').value = '';
+        outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
+        outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
+    }
 </script>
