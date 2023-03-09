@@ -8,11 +8,11 @@
 
 package sirius.biz.tenants.metrics;
 
-import sirius.biz.analytics.charts.explorer.ChartFactory;
-import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.MetricTimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
-import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
+import sirius.biz.analytics.explorer.ChartFactory;
+import sirius.biz.analytics.explorer.ChartObjectResolver;
+import sirius.biz.analytics.explorer.MetricTimeSeriesComputer;
+import sirius.biz.analytics.explorer.TimeSeriesChartFactory;
+import sirius.biz.analytics.explorer.TimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.process.ProcessController;
 import sirius.biz.process.Processes;
@@ -38,7 +38,8 @@ public class NumberOfProcessesPerTenantChart extends TimeSeriesChartFactory<Tena
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Tenant<?> ignoredTenant,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Tenant<?>>> executor) throws Exception {
         executor.invoke(new MetricTimeSeriesComputer<>(TenantMetricComputer.METRIC_NUM_PROCESSES));

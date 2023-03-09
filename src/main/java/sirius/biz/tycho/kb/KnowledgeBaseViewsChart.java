@@ -8,13 +8,13 @@
 
 package sirius.biz.tycho.kb;
 
-import sirius.biz.analytics.charts.explorer.ChartFactory;
-import sirius.biz.analytics.charts.explorer.ChartObjectResolver;
-import sirius.biz.analytics.charts.explorer.EventTimeSeriesComputer;
-import sirius.biz.analytics.charts.explorer.TimeSeriesChartFactory;
-import sirius.biz.analytics.charts.explorer.TimeSeriesComputer;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.PageImpressionEvent;
+import sirius.biz.analytics.explorer.ChartFactory;
+import sirius.biz.analytics.explorer.ChartObjectResolver;
+import sirius.biz.analytics.explorer.EventTimeSeriesComputer;
+import sirius.biz.analytics.explorer.TimeSeriesChartFactory;
+import sirius.biz.analytics.explorer.TimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.commons.Callback;
@@ -59,7 +59,8 @@ public class KnowledgeBaseViewsChart extends TimeSeriesChartFactory<Object> {
     }
 
     @Override
-    protected void computers(boolean hasComparisonPeriod,
+    protected void computers(Object ignoredObject,
+                             boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
         EventTimeSeriesComputer<Object, PageImpressionEvent> computer =

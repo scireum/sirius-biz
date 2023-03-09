@@ -8,8 +8,9 @@
 
 package sirius.biz.jobs.interactive;
 
-import sirius.biz.analytics.charts.Dataset;
 import sirius.biz.analytics.charts.Timeseries;
+import sirius.biz.analytics.explorer.DataExplorerController;
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.analytics.reports.Cell;
 import sirius.kernel.di.std.Named;
 
@@ -19,7 +20,11 @@ import java.util.function.BiConsumer;
 
 /**
  * Describes a provider which yields or fills a {@link Dataset dataset} for a given {@link Timeseries timeseries}.
+ *
+ * @deprecated Use the {@link DataExplorerController Data-Explorer} for advanced
+ * charts and statistics.
  */
+@Deprecated
 public interface TimeseriesDataProvider extends Named {
 
     /**

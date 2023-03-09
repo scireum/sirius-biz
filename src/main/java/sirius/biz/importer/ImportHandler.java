@@ -11,10 +11,13 @@ package sirius.biz.importer;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
+import sirius.kernel.health.HandledException;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Executes the operations provided by {@link Importer} for a specific type of entities.
@@ -64,6 +67,52 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      * @return a matching entity wrapped as optional or an empty optional if there is no matching entity
      */
     Optional<E> tryFindInCache(Context data);
+
+    /**
+     * Generates an appropriate message to signal that {@link #tryFind(Context)} was unable to resolve an entity
+     * based on the given data.
+     *
+     * @param referenceNumber       this is the reference number to complain about. May be empty, if no single reference
+     *                              number is available and only the context itself should be rendered
+     * @param data                  the additional context to provide
+     * @param relevantContextFields selects which fields out of <tt>data</tt> should be reported as context.
+     * @return a proper exception to be used in {@code tryFind(context).orElseThrow(() -> fail(key, context))}
+     */
+    HandledException fail(@Nullable String referenceNumber, @Nullable Context data, Object... relevantContextFields);
+
+    /**
+     * Records an equivalent message as {@link #fail(String, Context, Object...)} would generate in the surrounding
+     * {@link sirius.biz.process.ProcessContext}. If no process is available the warning is discarded.
+     * <p>
+     * This can be used to warn if a value could not be resolved like
+     * {@code tryFind(context).orElseGet(() -> warn(null, key, context))}
+     *
+     * @param defaultValue          the value to actually return
+     * @param referenceNumber       this is the reference number to complain about. May be empty, if no single reference
+     *                              number is available and only the context itself should be rendered
+     * @param data                  the additional context to provide
+     * @param relevantContextFields selects which fields out of <tt>data</tt> should be reported as context.
+     * @return the given default value to satisfy the contract of {@link Optional#orElseGet(Supplier)}
+     */
+    E warn(@Nullable E defaultValue,
+           @Nullable String referenceNumber,
+           @Nullable Context data,
+           Object... relevantContextFields);
+
+    /**
+     * Records an equivalent message as {@link #fail(String, Context, Object...)} would generate in the surrounding
+     * {@link sirius.biz.process.ProcessContext}. If no process is available the warning is discarded.
+     * <p>
+     * This can be used to warn if a value could not be resolved like
+     * {@code tryFind(context).orElseGet(() -> warn(key, context))}
+     *
+     * @param referenceNumber       this is the reference number to complain about. May be empty, if no single reference
+     *                              number is available and only the context itself should be rendered
+     * @param data                  the additional context to provide
+     * @param relevantContextFields selects which fields out of <tt>data</tt> should be reported as context.
+     * @return constantly <tt>null</tt> to satisfy the contract of {@link Optional#orElseGet(Supplier)}
+     */
+    E warn(@Nullable String referenceNumber, @Nullable Context data, Object... relevantContextFields);
 
     /**
      * Tries to find an entity using the supplied <tt>data</tt> - throws an exception if no matching entity was found.

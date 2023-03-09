@@ -114,8 +114,8 @@ public class ErrorContext implements SubContext {
         } catch (HandledException exception) {
             Exceptions.ErrorHandler forwarded =
                     Exceptions.createHandled().withDirectMessage(failureDescription.apply(exception.getMessage()));
-            exception.getHint(ProcessLog.HINT_MESSAGE_KEY)
-                     .ifFilled(key -> forwarded.hint(ProcessLog.HINT_MESSAGE_KEY, key));
+            exception.getHint(ProcessLog.HINT_MESSAGE_TYPE)
+                     .ifFilled(key -> forwarded.hint(ProcessLog.HINT_MESSAGE_TYPE, key));
             exception.getHint(ProcessLog.HINT_MESSAGE_COUNT)
                      .ifFilled(count -> forwarded.hint(ProcessLog.HINT_MESSAGE_COUNT, count));
             throw forwarded.handle();

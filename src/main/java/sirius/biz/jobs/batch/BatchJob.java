@@ -8,7 +8,6 @@
 
 package sirius.biz.jobs.batch;
 
-import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.VirtualFile;
@@ -23,12 +22,11 @@ import java.io.OutputStream;
  * Provides a base class for jobs executed by subclasses of {@link BatchProcessJobFactory}.
  * <p>
  * As factories are static, jobs can be thought of parameter objects which are created for each job execution
- * and therefore carry all the satet required for it.
+ * and therefore carry all the state required for it.
  */
 public abstract class BatchJob implements Closeable {
 
     protected ProcessContext process;
-    protected final ErrorContext errorContext;
 
     /**
      * Creates a new batch job for the given batch process.
@@ -40,7 +38,6 @@ public abstract class BatchJob implements Closeable {
      */
     protected BatchJob(ProcessContext process) {
         this.process = process;
-        this.errorContext = ErrorContext.get();
     }
 
     /**
@@ -91,6 +88,6 @@ public abstract class BatchJob implements Closeable {
      */
     @Override
     public void close() throws IOException {
-        // may be overwritten by sub-classes
+        // may be overwritten by subclasses
     }
 }

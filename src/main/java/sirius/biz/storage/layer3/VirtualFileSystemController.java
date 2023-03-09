@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
-import sirius.biz.storage.layer2.Blob;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
@@ -65,17 +64,7 @@ public class VirtualFileSystemController extends BizController {
         VirtualFile file = resolveToExistingFile(path);
 
         if (!file.isDirectory()) {
-            // Note that we violate our architectural layers here a bit, as we directly check for the presence of a
-            // Layer2 Blob. In this case, we can redirect to an optimized download URL. We *could* bury this in yet
-            // another interface, but for now, we directly resolve the Blob and create a URL this way...
-            file.tryAs(Blob.class)
-                .flatMap(blob -> file.as(Blob.class)
-                                     .url()
-                                     .enableLargeFileDetection()
-                                     .asDownload(file.name())
-                                     .buildURL())
-                .ifPresentOrElse(blobDeliveryUrl -> webContext.respondWith().redirectTemporarily(blobDeliveryUrl),
-                                 () -> file.deliverDownloadTo(webContext));
+            file.deliverDownloadTo(webContext);
         } else {
             webContext.respondWith()
                       .template("/templates/biz/storage/list.html.pasta",

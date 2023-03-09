@@ -572,12 +572,14 @@ public class L3Uplink implements VFSRoot {
     }
 
     private void tunnelHandler(VirtualFile file, Response response) {
-        Optional<Blob> blob = file.tryAs(Blob.class);
-        if (blob.isPresent()) {
-            blob.get().deliver(response);
-        } else {
-            response.error(HttpResponseStatus.NOT_FOUND);
-        }
+        file.as(Blob.class)
+            .url()
+            .enableLargeFileDetection()
+            .withFileName(file.name())
+            .asDownload()
+            .buildURL()
+            .ifPresentOrElse(blobDeliveryUrl -> response.redirectTemporarily(blobDeliveryUrl),
+                             () -> response.error(HttpResponseStatus.NOT_FOUND));
     }
 
     private boolean isWriteable(VirtualFile file) {

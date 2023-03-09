@@ -34,7 +34,6 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
-import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -317,14 +316,6 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     @Override
     public Future tryCreateVariant(String variantName) {
         return getStorageSpace().tryCreateVariant(this, variantName);
-    }
-
-    @Override
-    public void deliver(Response response) {
-        getStorageSpace().deliverPhysical(getBlobKey(),
-                                          getPhysicalObjectKey(),
-                                          response,
-                                          URLBuilder.isConsideredLarge(this));
     }
 
     @Override
