@@ -9,7 +9,7 @@
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
 <i:arg name="btnClass" type="String" default=""
        description="Lists additional CSS classes to apply to the upload button."/>
-<i:arg type="String" name="defaultPreview" default="/assets/frontend/defaulticons/default-item.png"/>
+<i:arg type="String" name="defaultPreview" default="/assets/images/blob_image_fallback.png"/>
 <i:arg type="String" name="previewVariant" default="raw"/>
 <i:arg type="String" name="acceptedFiles" default=".jpg,.jpeg,.svg,.png,.gif"/>
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>

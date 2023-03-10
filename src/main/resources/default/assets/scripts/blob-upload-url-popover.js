@@ -109,7 +109,7 @@ function initUrlUploadPopover(triggerElement, uploadContainer, resetButton, i18n
             let img = uploadContainer.querySelector('.img-preview img');
             img.setAttribute('src', url);
             img.onerror = function() {
-                img.setAttribute('src', '/assets/frontend/defaulticons/default-item.png');
+                img.setAttribute('src', '/assets/images/blob_image_failed.png');
             }
             uploadContainer.querySelector('input[name]').value = url;
             resetButton.classList.remove('d-none');
