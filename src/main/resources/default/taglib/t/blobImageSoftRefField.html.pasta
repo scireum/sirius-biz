@@ -34,15 +34,15 @@
                 </div>
 
                 <button type="button" class="btn btn-primary btn-block" data-select-vfs>
-                    @i18n("StoredObject.uploadBtn")
+                    @i18n("BlobRefField.uploadButton")
                 </button>
                 <i:if test="@urlAllowed">
                     <button type="button" class="btn btn-outline-secondary mt-2" data-popover>
-                        @i18n("StoredObject.specifyURL")
+                        @i18n("BlobRefField.specifyURL")
                     </button>
                 </i:if>
                 <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
-                    @i18n("StoredObject.resetBtn")
+                    @i18n("BlobRefField.resetButton")
                 </button>
                 <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
             </div>
@@ -99,10 +99,10 @@
 
             if(___urlAllowed) {
                 initUrlUploadPopover(urlButton, outerDiv, resetButton, {
-                    label: '@i18n("StoredObject.URL")',
+                    label: '@i18n("BlobRefField.URL")',
                     ok: '@i18n("NLS.ok")',
                     cancel: '@i18n("NLS.cancel")',
-                    errorMsg: '@i18n("StoredObject.specifyURL")'
+                    errorMsg: '@i18n("BlobRefField.malformedURL")'
                 });
             }
 
