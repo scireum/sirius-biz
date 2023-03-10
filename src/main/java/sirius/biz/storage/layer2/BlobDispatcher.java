@@ -191,7 +191,7 @@ public class BlobDispatcher implements WebDispatcher {
             String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             physicalDelivery(request,
                              uriParts.at(STORAGE_SPACE).asString(),
-                             uriParts.at(2).asString(),
+                             uriParts.at(ACCESS_TOKEN).asString(),
                              uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              Files.getFilenameWithoutExtension(physicalKey),
                              largeFileExpected,
@@ -205,7 +205,7 @@ public class BlobDispatcher implements WebDispatcher {
             String filename = stripAdditionalText(uriParts.at(5).asString());
             physicalDelivery(request,
                              uriParts.at(STORAGE_SPACE).asString(),
-                             uriParts.at(2).asString(),
+                             uriParts.at(ACCESS_TOKEN).asString(),
                              uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              Files.getFilenameWithoutExtension(physicalKey),
                              largeFileExpected,
@@ -217,7 +217,7 @@ public class BlobDispatcher implements WebDispatcher {
         if (Strings.areEqual(type, PHYSICAL_DOWNLOAD) && uriParts.length() == 6) {
             physicalDownload(request,
                              uriParts.at(STORAGE_SPACE).asString(),
-                             uriParts.at(2).asString(),
+                             uriParts.at(ACCESS_TOKEN).asString(),
                              uriParts.at(3).asString(),
                              uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              largeFileExpected,
@@ -230,7 +230,7 @@ public class BlobDispatcher implements WebDispatcher {
             String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             virtualDelivery(request,
                             uriParts.at(STORAGE_SPACE).asString(),
-                            uriParts.at(2).asString(),
+                            uriParts.at(ACCESS_TOKEN).asString(),
                             uriParts.at(3).asString(),
                             Files.getFilenameWithoutExtension(filename),
                             filename,
@@ -243,7 +243,7 @@ public class BlobDispatcher implements WebDispatcher {
         if (Strings.areEqual(type, VIRTUAL_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
                             uriParts.at(STORAGE_SPACE).asString(),
-                            uriParts.at(2).asString(),
+                            uriParts.at(ACCESS_TOKEN).asString(),
                             uriParts.at(3).asString(),
                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                             stripAdditionalText(uriParts.at(5).asString()),
@@ -257,7 +257,7 @@ public class BlobDispatcher implements WebDispatcher {
             String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             virtualDelivery(request,
                             uriParts.at(STORAGE_SPACE).asString(),
-                            uriParts.at(2).asString(),
+                            uriParts.at(ACCESS_TOKEN).asString(),
                             uriParts.at(3).asString(),
                             Files.getFilenameWithoutExtension(filename),
                             filename,
@@ -270,7 +270,7 @@ public class BlobDispatcher implements WebDispatcher {
         if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
                             uriParts.at(STORAGE_SPACE).asString(),
-                            uriParts.at(2).asString(),
+                            uriParts.at(ACCESS_TOKEN).asString(),
                             uriParts.at(3).asString(),
                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                             stripAdditionalText(uriParts.at(5).asString()),
