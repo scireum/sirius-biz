@@ -186,7 +186,7 @@ public class BlobDispatcher implements WebDispatcher {
         installCompletionHook(uri, request);
 
         Values uriParts = Values.of(uri.split("/"));
-        String type = uriParts.at(0).asString();
+        String type = uriParts.at(ACTION_TYPE).asString();
         if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 5) {
             String physicalKey = stripAdditionalText(uriParts.at(4).asString());
             physicalDelivery(request,
