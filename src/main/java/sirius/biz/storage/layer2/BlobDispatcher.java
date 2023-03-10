@@ -145,6 +145,13 @@ public class BlobDispatcher implements WebDispatcher {
     private static final String PARAM_HOOK = "hook";
     private static final String PARAM_PAYLOAD = "payload";
 
+    private static final int ACTION_TYPE = 0;
+    private static final int STORAGE_SPACE = 1;
+    private static final int ACCESS_TOKEN = 2;
+    private static final int BLOB_KEY = 3;
+    private static final int PHYSICAL_OBJECT_KEY = 4;
+    private static final int FILENAME = 5;
+
     @Part
     private BlobStorage blobStorage;
 
@@ -179,38 +186,51 @@ public class BlobDispatcher implements WebDispatcher {
         installCompletionHook(uri, request);
 
         Values uriParts = Values.of(uri.split("/"));
-        String type = uriParts.at(0).asString();
+        String type = uriParts.at(ACTION_TYPE).asString();
         if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(4).asString());
+            String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             physicalDelivery(request,
-                             uriParts.at(1).asString(),
-                             uriParts.at(2).asString(),
-                             uriParts.at(4).asString(),
-                             Files.getFilenameWithoutExtension(filename),
+                             uriParts.at(STORAGE_SPACE).asString(),
+                             uriParts.at(ACCESS_TOKEN).asString(),
+                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
+                             Files.getFilenameWithoutExtension(physicalKey),
                              largeFileExpected,
-                             filename);
+                             physicalKey);
+
+            return DispatchDecision.DONE;
+        }
+
+        if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 6) {
+            String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
+            physicalDelivery(request,
+                             uriParts.at(STORAGE_SPACE).asString(),
+                             uriParts.at(ACCESS_TOKEN).asString(),
+                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
+                             Files.getFilenameWithoutExtension(physicalKey),
+                             largeFileExpected,
+                             stripAdditionalText(uriParts.at(FILENAME).asString()));
 
             return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, PHYSICAL_DOWNLOAD) && uriParts.length() == 6) {
             physicalDownload(request,
-                             uriParts.at(1).asString(),
-                             uriParts.at(2).asString(),
-                             uriParts.at(3).asString(),
-                             uriParts.at(4).asString(),
+                             uriParts.at(STORAGE_SPACE).asString(),
+                             uriParts.at(ACCESS_TOKEN).asString(),
+                             uriParts.at(BLOB_KEY).asString(),
+                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              largeFileExpected,
-                             stripAdditionalText(uriParts.at(5).asString()));
+                             stripAdditionalText(uriParts.at(FILENAME).asString()));
 
             return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_DELIVERY) && uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(4).asString());
+            String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             virtualDelivery(request,
-                            uriParts.at(1).asString(),
-                            uriParts.at(2).asString(),
-                            uriParts.at(3).asString(),
+                            uriParts.at(STORAGE_SPACE).asString(),
+                            uriParts.at(ACCESS_TOKEN).asString(),
+                            uriParts.at(BLOB_KEY).asString(),
                             Files.getFilenameWithoutExtension(filename),
                             filename,
                             false,
@@ -221,11 +241,11 @@ public class BlobDispatcher implements WebDispatcher {
 
         if (Strings.areEqual(type, VIRTUAL_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
-                            uriParts.at(1).asString(),
-                            uriParts.at(2).asString(),
-                            uriParts.at(3).asString(),
-                            uriParts.at(4).asString(),
-                            stripAdditionalText(uriParts.at(5).asString()),
+                            uriParts.at(STORAGE_SPACE).asString(),
+                            uriParts.at(ACCESS_TOKEN).asString(),
+                            uriParts.at(BLOB_KEY).asString(),
+                            uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
+                            stripAdditionalText(uriParts.at(FILENAME).asString()),
                             true,
                             false,
                             largeFileExpected);
@@ -233,11 +253,11 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DELIVERY) && uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(4).asString());
+            String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             virtualDelivery(request,
-                            uriParts.at(1).asString(),
-                            uriParts.at(2).asString(),
-                            uriParts.at(3).asString(),
+                            uriParts.at(STORAGE_SPACE).asString(),
+                            uriParts.at(ACCESS_TOKEN).asString(),
+                            uriParts.at(BLOB_KEY).asString(),
                             Files.getFilenameWithoutExtension(filename),
                             filename,
                             false,
@@ -248,11 +268,11 @@ public class BlobDispatcher implements WebDispatcher {
 
         if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
-                            uriParts.at(1).asString(),
-                            uriParts.at(2).asString(),
-                            uriParts.at(3).asString(),
-                            uriParts.at(4).asString(),
-                            stripAdditionalText(uriParts.at(5).asString()),
+                            uriParts.at(STORAGE_SPACE).asString(),
+                            uriParts.at(ACCESS_TOKEN).asString(),
+                            uriParts.at(BLOB_KEY).asString(),
+                            uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
+                            stripAdditionalText(uriParts.at(FILENAME).asString()),
                             true,
                             true,
                             largeFileExpected);

@@ -491,11 +491,9 @@ public class URLBuilder {
         result.append(blobKey);
         result.append("/");
         if (forceDownload) {
-            result.append(physicalKey);
-            result.append("/");
-            appendAddonText(result);
-            result.append(Strings.urlEncode(Files.toSaneFileName(determineEffectiveFilename())
-                                                 .orElse(physicalKey + fetchUrlEncodedFileExtension())));
+            appendFilename(result, physicalKey, determineEffectiveFilename());
+        } else if (Strings.isFilled(filename)) {
+            appendFilename(result, physicalKey, filename);
         } else {
             appendAddonText(result);
             result.append(physicalKey);
@@ -505,6 +503,14 @@ public class URLBuilder {
         appendHook(result);
 
         return new UrlResult(result.toString(), UrlType.PHYSICAL);
+    }
+
+    private void appendFilename(StringBuilder result, String physicalKey, String filename) {
+        result.append(physicalKey);
+        result.append("/");
+        appendAddonText(result);
+        result.append(Strings.urlEncode(Files.toSaneFileName(filename)
+                                         .orElse(physicalKey + fetchUrlEncodedFileExtension())));
     }
 
     private String createVirtualDeliveryUrl() {
