@@ -145,6 +145,13 @@ public class BlobDispatcher implements WebDispatcher {
     private static final String PARAM_HOOK = "hook";
     private static final String PARAM_PAYLOAD = "payload";
 
+    private static final int ACTION_TYPE = 0;
+    private static final int STORAGE_SPACE = 1;
+    private static final int ACCESS_TOKEN = 2;
+    private static final int BLOB_KEY = 3;
+    private static final int PHYSICAL_OBJECT_KEY = 4;
+    private static final int FILENAME = 5;
+
     @Part
     private BlobStorage blobStorage;
 
