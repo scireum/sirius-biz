@@ -202,14 +202,13 @@ public class BlobDispatcher implements WebDispatcher {
 
         if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 6) {
             String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
-            String filename = stripAdditionalText(uriParts.at(5).asString());
             physicalDelivery(request,
                              uriParts.at(STORAGE_SPACE).asString(),
                              uriParts.at(ACCESS_TOKEN).asString(),
                              uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              Files.getFilenameWithoutExtension(physicalKey),
                              largeFileExpected,
-                             filename);
+                             stripAdditionalText(uriParts.at(FILENAME).asString()));
 
             return DispatchDecision.DONE;
         }
@@ -221,7 +220,7 @@ public class BlobDispatcher implements WebDispatcher {
                              uriParts.at(BLOB_KEY).asString(),
                              uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              largeFileExpected,
-                             stripAdditionalText(uriParts.at(5).asString()));
+                             stripAdditionalText(uriParts.at(FILENAME).asString()));
 
             return DispatchDecision.DONE;
         }
@@ -246,7 +245,7 @@ public class BlobDispatcher implements WebDispatcher {
                             uriParts.at(ACCESS_TOKEN).asString(),
                             uriParts.at(BLOB_KEY).asString(),
                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
-                            stripAdditionalText(uriParts.at(5).asString()),
+                            stripAdditionalText(uriParts.at(FILENAME).asString()),
                             true,
                             false,
                             largeFileExpected);
@@ -273,7 +272,7 @@ public class BlobDispatcher implements WebDispatcher {
                             uriParts.at(ACCESS_TOKEN).asString(),
                             uriParts.at(BLOB_KEY).asString(),
                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
-                            stripAdditionalText(uriParts.at(5).asString()),
+                            stripAdditionalText(uriParts.at(FILENAME).asString()),
                             true,
                             true,
                             largeFileExpected);
