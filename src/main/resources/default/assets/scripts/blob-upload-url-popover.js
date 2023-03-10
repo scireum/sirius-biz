@@ -65,7 +65,7 @@ function initUrlUploadPopover(triggerElement, uploadContainer, resetButton, i18n
     function buildOkButtonCol(body) {
         body.buttonOk = document.createElement('button');
         body.buttonOk.classList.add('btn', 'btn-block', 'btn-primary', 'btn-apply');
-        body.buttonOk.innerHTML = i18n.ok + ' <i class="fas fa-check"></i>';
+        body.buttonOk.innerHTML = i18n.ok + ' <i class="fa-solid fa-check"></i>';
         body.buttonOk.addEventListener('click', function (event) {
             event.preventDefault();
             updateURL(body.inputField.value);
@@ -79,7 +79,7 @@ function initUrlUploadPopover(triggerElement, uploadContainer, resetButton, i18n
     function buildCancelButtonCol(body) {
         body.buttonCancel = document.createElement('div');
         body.buttonCancel.classList.add('btn', 'btn-block', 'btn-close', 'btn-outline-secondary');
-        body.buttonCancel.innerHTML = i18n.cancel + ' <i class="fas fa-close"></i>';
+        body.buttonCancel.innerHTML = i18n.cancel + ' <i class="fa-solid fa-close"></i>';
         body.buttonCancel.addEventListener('click', function () {
             $(triggerElement).popover('toggle');
         });

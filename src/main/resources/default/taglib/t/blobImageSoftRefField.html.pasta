@@ -9,7 +9,7 @@
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
 <i:arg name="btnClass" type="String" default=""
        description="Lists additional CSS classes to apply to the upload button."/>
-<i:arg type="String" name="defaultPreview" default="/assets/images/placeholder.png"/>
+<i:arg type="String" name="defaultPreview" default="/assets/frontend/defaulticons/default-item.png"/>
 <i:arg type="String" name="previewVariant" default="raw"/>
 <i:arg type="String" name="acceptedFiles" default=".jpg,.jpeg,.svg,.png,.gif"/>
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
@@ -88,7 +88,7 @@
                         inputField.value = json.fileId;
                         console.log(json);
                         img.onerror = function() {
-                            img.src = '/assets/frontend/defaulticons/default-item.png';
+                            img.src = '___defaultPreview';
                         }
                         img.src = json.downloadUrl;
                         resetButton.classList.remove('d-none');
