@@ -505,11 +505,11 @@ public class URLBuilder {
         return new UrlResult(result.toString(), UrlType.PHYSICAL);
     }
 
-    private void appendFilename(StringBuilder sb, String physicalKey, String filename) {
-        sb.append(physicalKey);
-        sb.append("/");
-        appendAddonText(sb);
-        sb.append(Strings.urlEncode(Files.toSaneFileName(filename)
+    private void appendFilename(StringBuilder result, String physicalKey, String filename) {
+        result.append(physicalKey);
+        result.append("/");
+        appendAddonText(result);
+        result.append(Strings.urlEncode(Files.toSaneFileName(filename)
                                          .orElse(physicalKey + fetchUrlEncodedFileExtension())));
     }
 
