@@ -190,7 +190,7 @@ public class BlobDispatcher implements WebDispatcher {
         if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 5) {
             String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             physicalDelivery(request,
-                             uriParts.at(1).asString(),
+                             uriParts.at(STORAGE_SPACE).asString(),
                              uriParts.at(2).asString(),
                              uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              Files.getFilenameWithoutExtension(physicalKey),
@@ -204,7 +204,7 @@ public class BlobDispatcher implements WebDispatcher {
             String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             String filename = stripAdditionalText(uriParts.at(5).asString());
             physicalDelivery(request,
-                             uriParts.at(1).asString(),
+                             uriParts.at(STORAGE_SPACE).asString(),
                              uriParts.at(2).asString(),
                              uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              Files.getFilenameWithoutExtension(physicalKey),
@@ -216,7 +216,7 @@ public class BlobDispatcher implements WebDispatcher {
 
         if (Strings.areEqual(type, PHYSICAL_DOWNLOAD) && uriParts.length() == 6) {
             physicalDownload(request,
-                             uriParts.at(1).asString(),
+                             uriParts.at(STORAGE_SPACE).asString(),
                              uriParts.at(2).asString(),
                              uriParts.at(3).asString(),
                              uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
@@ -229,7 +229,7 @@ public class BlobDispatcher implements WebDispatcher {
         if (Strings.areEqual(type, VIRTUAL_DELIVERY) && uriParts.length() == 5) {
             String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             virtualDelivery(request,
-                            uriParts.at(1).asString(),
+                            uriParts.at(STORAGE_SPACE).asString(),
                             uriParts.at(2).asString(),
                             uriParts.at(3).asString(),
                             Files.getFilenameWithoutExtension(filename),
@@ -242,7 +242,7 @@ public class BlobDispatcher implements WebDispatcher {
 
         if (Strings.areEqual(type, VIRTUAL_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
-                            uriParts.at(1).asString(),
+                            uriParts.at(STORAGE_SPACE).asString(),
                             uriParts.at(2).asString(),
                             uriParts.at(3).asString(),
                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
@@ -256,7 +256,7 @@ public class BlobDispatcher implements WebDispatcher {
         if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DELIVERY) && uriParts.length() == 5) {
             String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             virtualDelivery(request,
-                            uriParts.at(1).asString(),
+                            uriParts.at(STORAGE_SPACE).asString(),
                             uriParts.at(2).asString(),
                             uriParts.at(3).asString(),
                             Files.getFilenameWithoutExtension(filename),
@@ -269,7 +269,7 @@ public class BlobDispatcher implements WebDispatcher {
 
         if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DOWNLOAD) && uriParts.length() == 6) {
             virtualDelivery(request,
-                            uriParts.at(1).asString(),
+                            uriParts.at(STORAGE_SPACE).asString(),
                             uriParts.at(2).asString(),
                             uriParts.at(3).asString(),
                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
