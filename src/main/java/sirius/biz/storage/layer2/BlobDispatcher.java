@@ -188,11 +188,11 @@ public class BlobDispatcher implements WebDispatcher {
         Values uriParts = Values.of(uri.split("/"));
         String type = uriParts.at(ACTION_TYPE).asString();
         if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 5) {
-            String physicalKey = stripAdditionalText(uriParts.at(4).asString());
+            String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             physicalDelivery(request,
                              uriParts.at(1).asString(),
                              uriParts.at(2).asString(),
-                             uriParts.at(4).asString(),
+                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              Files.getFilenameWithoutExtension(physicalKey),
                              largeFileExpected,
                              physicalKey);
@@ -201,12 +201,12 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 6) {
-            String physicalKey = stripAdditionalText(uriParts.at(4).asString());
+            String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             String filename = stripAdditionalText(uriParts.at(5).asString());
             physicalDelivery(request,
                              uriParts.at(1).asString(),
                              uriParts.at(2).asString(),
-                             uriParts.at(4).asString(),
+                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              Files.getFilenameWithoutExtension(physicalKey),
                              largeFileExpected,
                              filename);
@@ -219,7 +219,7 @@ public class BlobDispatcher implements WebDispatcher {
                              uriParts.at(1).asString(),
                              uriParts.at(2).asString(),
                              uriParts.at(3).asString(),
-                             uriParts.at(4).asString(),
+                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                              largeFileExpected,
                              stripAdditionalText(uriParts.at(5).asString()));
 
@@ -227,7 +227,7 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (Strings.areEqual(type, VIRTUAL_DELIVERY) && uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(4).asString());
+            String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             virtualDelivery(request,
                             uriParts.at(1).asString(),
                             uriParts.at(2).asString(),
@@ -245,7 +245,7 @@ public class BlobDispatcher implements WebDispatcher {
                             uriParts.at(1).asString(),
                             uriParts.at(2).asString(),
                             uriParts.at(3).asString(),
-                            uriParts.at(4).asString(),
+                            uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                             stripAdditionalText(uriParts.at(5).asString()),
                             true,
                             false,
@@ -254,7 +254,7 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DELIVERY) && uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(4).asString());
+            String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
             virtualDelivery(request,
                             uriParts.at(1).asString(),
                             uriParts.at(2).asString(),
@@ -272,7 +272,7 @@ public class BlobDispatcher implements WebDispatcher {
                             uriParts.at(1).asString(),
                             uriParts.at(2).asString(),
                             uriParts.at(3).asString(),
-                            uriParts.at(4).asString(),
+                            uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
                             stripAdditionalText(uriParts.at(5).asString()),
                             true,
                             true,
