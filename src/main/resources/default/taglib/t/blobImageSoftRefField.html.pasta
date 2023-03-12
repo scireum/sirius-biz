@@ -29,10 +29,12 @@
     <div class="sirius-imageupload soft-blob-ref-field card shadow-sm mb-4 mt-1 @class">
         <div @if (isFilled(height)) { style="height: @height" } id="@id">
             <div class="sirius-upload-content h-100 d-flex flex-column">
-                <div class="img-preview d-flex justify-content-center align-items-center flex-grow-1 mb-4">
+                <div class="img-preview d-flex justify-content-center align-items-center flex-grow-1 mb-1">
                     <img class="mh-100 mw-100" id="@previewId" src="@currentImage"/>
                 </div>
-
+                <div class="img-name text-align mb-2">
+                    <a href="@currentImage">@objectRef.getFilename()</a>
+                </div>
                 <button type="button" class="btn btn-primary btn-block" data-select-vfs>
                     @i18n("BlobRefField.uploadButton")
                 </button>
@@ -64,13 +66,14 @@
 
 <script type="text/javascript">
     {
-        let outerDiv = document.querySelector('#___id');
+        const outerDiv = document.querySelector('#___id');
         sirius.ready(function () {
             const urlButton = outerDiv.querySelector('[data-popover]');
             const resetButton = outerDiv.querySelector('.btn-reset-js');
             const uploadButton = outerDiv.querySelector('[data-select-vfs]');
             const inputField = outerDiv.querySelector('input[type="hidden"]');
             const img = outerDiv.querySelector('img');
+            const fileNameContainer = outerDiv.querySelector('.img-name');
             uploadButton.addEventListener('click', function() {
                 let blobStorageSpace = '___objectRef.getPath()' || '___objectRef.getSpace()';
 
@@ -86,19 +89,25 @@
                         path: selectedValue.substring('/___objectRef.getSpace()'.length)
                     }, function (json) {
                         inputField.value = json.fileId;
-                        console.log(json);
                         img.onerror = function() {
                             img.src = '___defaultPreview';
                         }
                         img.src = json.downloadUrl;
+                        fileNameContainer.innerHTML = '<a href="' + json.downloadUrl + '">' + json.filename + '</a>';
                         resetButton.classList.remove('d-none');
                     });
-
                 });
             });
 
+            resetButton.onclick = function () {
+                inputField.value = '';
+                img.src = '___defaultPreview';
+                resetButton.classList.add('d-none');
+                fileNameContainer.innerHTML = '';
+            }
+
             if(___urlAllowed) {
-                initUrlUploadPopover(urlButton, outerDiv, resetButton, {
+                initUrlUploadPopover(urlButton, outerDiv, resetButton, fileNameContainer, {
                     label: '@i18n("BlobRefField.URL")',
                     ok: '@i18n("NLS.ok")',
                     cancel: '@i18n("NLS.cancel")',
@@ -115,10 +124,5 @@
             img.src = '___defaultPreview';
             loadImageLazily(img);
         });
-        outerDiv.querySelector('.btn-reset-js').onclick = function () {
-            outerDiv.querySelector('[name=___name]').value = '';
-            outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
-            outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
-        }
     }
 </script>

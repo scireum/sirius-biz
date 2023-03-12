@@ -6,9 +6,10 @@
  * @param triggerElement The element (e.g. Button) that triggers the popover to enter an URL
  * @param uploadContainer The container the triggerElement and other components belongs to
  * @param resetButton The button that resets the upload field
+ * @param fileNameContainer The container that shows the filename
  * @param i18n Contains information about the label, the ok-Button and the cancel-Button of the popover
  */
-function initUrlUploadPopover(triggerElement, uploadContainer, resetButton, i18n) {
+function initUrlUploadPopover(triggerElement, uploadContainer, resetButton, fileNameContainer, i18n) {
     const body = buildBody(triggerElement, uploadContainer, resetButton);
     const container = buildContainer(triggerElement.parentElement);
     $(triggerElement).popover({
@@ -104,7 +105,7 @@ function initUrlUploadPopover(triggerElement, uploadContainer, resetButton, i18n
      *
      * @param url the new URL
      */
-    const updateURL = function (url) {
+    function updateURL(url) {
         if (url.startsWith('http://') || url.startsWith('https://')) {
             let img = uploadContainer.querySelector('.img-preview img');
             img.setAttribute('src', url);
@@ -114,11 +115,29 @@ function initUrlUploadPopover(triggerElement, uploadContainer, resetButton, i18n
             uploadContainer.querySelector('input[name]').value = url;
             resetButton.classList.remove('d-none');
             body.errorCol.innerHTML = '';
+            fileNameContainer.innerHTML = '<a href="' + url + '">' + fetchFileName(url) + ' <i class="fa-regular fa-arrow-up-right-from-square"></i></a>';
             $(triggerElement).popover('hide');
         } else {
             addErrorMessage(i18n.errorMsg);
         }
-    };
+    }
+
+    /**
+     * Fetches the name of the file from the URL.
+     *
+     * @param path to fetch the name from
+     * @returns {string|*} filename
+     */
+    function fetchFileName(path) {
+        if (path === 'undefined' || path === '') {
+            return '';
+        }
+        let pathParts = path.split("/");
+        if (pathParts.length === 1) {
+            return path;
+        }
+        return pathParts[pathParts.length - 1];
+    }
 
     /**
      * Adds an error message next to the input field.
