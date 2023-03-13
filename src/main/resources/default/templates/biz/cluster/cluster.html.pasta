@@ -26,7 +26,7 @@
                         </a>
                     </i:else>
                 </i:if>
-                <t:kbBtn code="V7FGJ" />
+                <t:kbBtn code="V7FGJ"/>
             </i:block>
         </t:pageHeader>
     </i:block>
@@ -35,7 +35,16 @@
         <t:heading>Nodes</t:heading>
         <t:datacards size="large">
             <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
-                <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())">
+                <t:datacard subTitle="@apply('Uptime %s',  node.getUptime())">
+                    <i:block name="title">
+                        @node.getNodeName()
+                        <i:local name="nodeUrl" value="node.buildNodeUrl()"/>
+                        <i:if test="isFilled(nodeUrl)">
+                            <a href="@nodeUrl" class="btn btn-link" target="_blank" title="Open Node-pinned Link">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                            </a>
+                        </i:if>
+                    </i:block>
                     <i:block name="actions">
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
@@ -129,7 +138,16 @@
         <t:heading>Nodes</t:heading>
         <t:datacards>
             <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
-                <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())">
+                <t:datacard subTitle="@apply('Uptime %s',  node.getUptime())">
+                    <i:block name="title">
+                        @node.getNodeName()
+                        <i:local name="nodeUrl" value="node.buildNodeUrl()"/>
+                        <i:if test="isFilled(nodeUrl)">
+                            <a href="@nodeUrl" class="btn btn-link" target="_blank" title="Open Node-pinned Link">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                            </a>
+                        </i:if>
+                    </i:block>
                     <i:block name="actions">
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
