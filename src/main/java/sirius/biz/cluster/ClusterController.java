@@ -126,7 +126,8 @@ public class ClusterController extends BasicController {
 
         out.property(RESPONSE_NAME, CallContext.getNodeName());
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
-        out.property(RESPONSE_UPTIME, NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false));
+        out.property(RESPONSE_UPTIME,
+                     NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false));
 
         out.beginArray(RESPONSE_METRICS);
         for (Metric m : metrics.getMetrics()) {
@@ -160,7 +161,8 @@ public class ClusterController extends BasicController {
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
         out.property(RESPONSE_VERSION, Product.getProduct().getVersion());
         out.property(RESPONSE_DETAILED_VERSION, Product.getProduct().getDetails());
-        out.property(RESPONSE_UPTIME, NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false));
+        out.property(RESPONSE_UPTIME,
+                     NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false));
         out.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
         out.property(RESPONSE_ACTIVE_BACKGROUND_TASKS, neighborhoodWatch.getActiveBackgroundTasks());
 
@@ -187,6 +189,7 @@ public class ClusterController extends BasicController {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void cluster(WebContext webContext) {
         List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
+        clusterInfo.sort(Comparator.comparing(BackgroundInfo::getNodeName));
         List<String> jobKeys = clusterInfo.stream()
                                           .flatMap(node -> node.getJobs().keySet().stream())
                                           .distinct()
