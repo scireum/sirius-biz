@@ -32,7 +32,7 @@
                 <div class="img-preview d-flex justify-content-center align-items-center flex-grow-1 mb-1">
                     <img class="mh-100 mw-100" id="@previewId" src="@currentImage"/>
                 </div>
-                <div class="img-name text-align mb-2">
+                <div class="img-name text-center mb-2">
                     <a href="@currentImage">@objectRef.getFilename()</a>
                 </div>
                 <button type="button" class="btn btn-primary btn-block" data-select-vfs>
@@ -66,15 +66,15 @@
 
 <script type="text/javascript">
     {
-        const outerDiv = document.querySelector('#___id');
+        const _outerDiv = document.querySelector('#___id');
         sirius.ready(function () {
-            const urlButton = outerDiv.querySelector('[data-popover]');
-            const resetButton = outerDiv.querySelector('.btn-reset-js');
-            const uploadButton = outerDiv.querySelector('[data-select-vfs]');
-            const inputField = outerDiv.querySelector('input[type="hidden"]');
-            const img = outerDiv.querySelector('img');
-            const fileNameContainer = outerDiv.querySelector('.img-name');
-            uploadButton.addEventListener('click', function() {
+            const _urlButton = _outerDiv.querySelector('[data-popover]');
+            const _resetButton = _outerDiv.querySelector('.btn-reset-js');
+            const _uploadButton = _outerDiv.querySelector('[data-select-vfs]');
+            const _inputField = _outerDiv.querySelector('input[type="hidden"]');
+            const _img = _outerDiv.querySelector('img');
+            const _fileNameContainer = _outerDiv.querySelector('.img-name');
+            _uploadButton.addEventListener('click', function() {
                 let blobStorageSpace = '___objectRef.getPath()' || '___objectRef.getSpace()';
 
                 selectVFSFile({
@@ -88,26 +88,26 @@
                     $.getJSON('/dasd/blob-info-for-path/___objectRef.getSpace()', {
                         path: selectedValue.substring('/___objectRef.getSpace()'.length)
                     }, function (json) {
-                        inputField.value = json.fileId;
-                        img.onerror = function() {
-                            img.src = '___defaultPreview';
+                        _inputField.value = json.fileId;
+                        _img.onerror = function() {
+                            _img.src = '___defaultPreview';
                         }
-                        img.src = json.downloadUrl;
-                        fileNameContainer.innerHTML = '<a href="' + json.downloadUrl + '">' + json.filename + '</a>';
-                        resetButton.classList.remove('d-none');
+                        _img.src = json.downloadUrl;
+                        _fileNameContainer.innerHTML = '<a href="' + json.downloadUrl + '">' + json.filename + '</a>';
+                        _resetButton.classList.remove('d-none');
                     });
                 });
             });
 
-            resetButton.onclick = function () {
-                inputField.value = '';
-                img.src = '___defaultPreview';
-                resetButton.classList.add('d-none');
-                fileNameContainer.innerHTML = '';
+            _resetButton.onclick = function () {
+                _inputField.value = '';
+                _img.src = '___defaultPreview';
+                _resetButton.classList.add('d-none');
+                _fileNameContainer.innerHTML = '';
             }
 
             if(___urlAllowed) {
-                initUrlUploadPopover(urlButton, outerDiv, resetButton, fileNameContainer, {
+                initUrlUploadPopover(_urlButton, _outerDiv, _resetButton, _fileNameContainer, {
                     label: '@i18n("BlobRefField.URL")',
                     ok: '@i18n("NLS.ok")',
                     cancel: '@i18n("NLS.cancel")',
@@ -115,14 +115,14 @@
                 });
             }
 
-            if (img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
+            if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
                 return;
             }
             
             // if we have a variant preview, set up lazyloading...
-            img.dataset.src = img.src;
-            img.src = '___defaultPreview';
-            loadImageLazily(img);
+            _img.dataset.src = _img.src;
+            _img.src = '___defaultPreview';
+            loadImageLazily(_img);
         });
     }
 </script>
