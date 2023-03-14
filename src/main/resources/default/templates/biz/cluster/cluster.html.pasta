@@ -26,7 +26,7 @@
                         </a>
                     </i:else>
                 </i:if>
-                <t:kbBtn code="V7FGJ" />
+                <t:kbBtn code="V7FGJ"/>
             </i:block>
         </t:pageHeader>
     </i:block>
@@ -129,7 +129,7 @@
         <t:heading>Nodes</t:heading>
         <t:datacards>
             <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
-                <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())">
+                <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())" link="@node.buildNodeUrl()">
                     <i:block name="actions">
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
