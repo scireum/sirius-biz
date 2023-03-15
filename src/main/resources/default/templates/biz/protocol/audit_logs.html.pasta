@@ -28,8 +28,8 @@
                                         <small class="text-muted">@i18n("AuditLogEntry.causedBy")</small>
                                     </div>
                                     <div class="col-md-4">
-                                        <div>@i18n("AuditLogEntry.user")</div>
-                                        <small class="text-muted">@i18n("AuditLogEntry.tenant")</small>
+                                        <div>@i18n("Model.userAccount")</div>
+                                        <small class="text-muted">@i18n("Model.tenant")</small>
                                     </div>
                                     <div class="col-md-2">@i18n("AuditLogEntry.ip")</div>
                                 </div>
