@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-35.0.1</sirius.kernel>
-        <sirius.web>dev-64.0.4</sirius.web>
-        <sirius.db>dev-46.0.0</sirius.db>
+        <sirius.kernel>dev-35.1.0</sirius.kernel>
+        <sirius.web>dev-64.1.1</sirius.web>
+        <sirius.db>dev-46.1.0</sirius.db>
     </properties>
 
     <repositories>
