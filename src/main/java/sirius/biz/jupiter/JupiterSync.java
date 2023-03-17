@@ -403,7 +403,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
         ObjectStore store = objectStores.getStore(uplinkStore);
         BucketName uplinkBucketName = store.getBucketName(getEffectiveUplinkBucket());
         store.listObjects(uplinkBucketName, null, object -> {
-            if (uplinkIgnoredPaths.stream().noneMatch(ignoredPath -> object.getKey().startsWith(ignoredPath))) {
+            if (object.getSize() > 0 && uplinkIgnoredPaths.stream()
+                                                          .noneMatch(ignoredPath -> object.getKey()
+                                                                                          .startsWith(ignoredPath))) {
                 handleUplinkFile(processContext,
                                  connection,
                                  repositoryFiles,
