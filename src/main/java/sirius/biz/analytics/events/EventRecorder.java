@@ -9,7 +9,9 @@
 package sirius.biz.analytics.events;
 
 import sirius.db.jdbc.Database;
+import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLQuery;
+import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.jdbc.batch.InsertQuery;
 import sirius.db.jdbc.schema.Schema;
@@ -28,6 +30,7 @@ import sirius.kernel.health.metrics.MetricsCollector;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -35,6 +38,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Responsible for collecting and storing {@link Event events} for analytical and statistical purposes.
@@ -79,6 +83,9 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
 
     @Part
     private Schema schema;
+
+    @Part
+    private OMA oma;
 
     private volatile boolean configured;
     private Database database;
@@ -156,6 +163,56 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         }
 
         return getDatabase().createQuery(sql).markAsLongRunning();
+    }
+
+    /**
+     * Counts the number of events which have occurred based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType  the type of events to query
+     * @param queryTuner the actual filter to apply. Note that {@link Event#EVENT_DATE} should be filtered, as otherwise
+     *                   the performance will be catastrophic.
+     * @param <E>        the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
+     */
+    public <E extends Event> int countEvents(Class<E> eventType, Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
+        SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS counter");
+        queryTuner.accept(query);
+
+        return query.asSQLQuery()
+                    .markAsLongRunning()
+                    .first()
+                    .flatMap(row -> row.getValue("counter").asOptionalInt())
+                    .orElse(0);
+    }
+
+    /**
+     * Counts the number of events which have occurred based on the given <tt>queryTuner</tt> and time range.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType  the type of events to query
+     * @param queryTuner the actual filter to apply
+     * @param <E>        the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
+     */
+    public <E extends Event> int countEventsInRange(Class<E> eventType,
+                                                    LocalDateTime startDate,
+                                                    LocalDateTime endDate,
+                                                    Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+        return countEvents(eventType, query -> {
+            query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
+            query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
+            queryTuner.accept(query);
+        });
     }
 
     /**
