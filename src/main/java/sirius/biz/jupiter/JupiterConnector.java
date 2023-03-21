@@ -12,12 +12,14 @@ import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import sirius.db.redis.RedisDB;
+import sirius.kernel.Sirius;
 import sirius.kernel.async.Operation;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Microtiming;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -78,6 +80,15 @@ public class JupiterConnector {
      */
     public boolean isConfigured() {
         return redis.isConfigured();
+    }
+
+    /**
+     * Returns the list of namespaces which are enabled for this connector.
+     *
+     * @return the list of enabled namespaces
+     */
+    public List<String> fetchEnabledNamespaces() {
+        return Sirius.getSettings().getExtension("jupiter.settings", getName()).getStringList("repository.namespaces");
     }
 
     /**
