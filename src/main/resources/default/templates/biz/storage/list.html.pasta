@@ -46,22 +46,22 @@
                     <t:filterbox page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
                 </i:block>
 
-                <div class="row">
-                    <t:datacard>
-                        <table class="table table-hover">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <table class="table table-hover" style="table-layout: fixed">
                             <thead>
                             <tr>
-                                <th>
+                                <th scope="col">
                                     @i18n("Model.name")<br>
-                                    <small class="text-muted">@i18n("Model.description")</small>
+                                    <small class="text-muted text-nowrap">@i18n("Model.description")</small>
                                 </th>
-                                <th class="text-right">
-                                    @i18n("VirtualFile.size")
+                                <th scope="col" class="text-right">
+                                    @i18n("VirtualFile.size")<br>
                                 </th>
-                                <th class="text-right">
-                                    @i18n("VirtualFile.lastModified")
+                                <th scope="col" class="text-right">
+                                    @i18n("VirtualFile.lastModified")<br>
                                 </th>
-                                <th>
+                                <th scope="col">
                                 </th>
                             </tr>
                             </thead>
@@ -79,7 +79,8 @@
                                     <td></td>
                                 </tr>
                             </i:if>
-                            <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child" items="children.getItems()">
+                            <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child"
+                                   items="children.getItems()">
                                 <tr>
                                     <td>
                                         <div>
@@ -142,11 +143,9 @@
                             </i:for>
                             </tbody>
                         </table>
-                        <i:block name="footer">
-                            <t:pagination page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
-                        </i:block>
-                    </t:datacard>
+                    </div>
                 </div>
+                <t:pagination page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
             </t:sidebar>
         </div>
     </div>
@@ -189,7 +188,7 @@
     </form>
     <script type="text/javascript">
         function renameFile(path, name) {
-            var modalElement = $("#rename-modal");
+            let modalElement = $("#rename-modal");
             modalElement.find("#rename-name").val(name);
             modalElement.find("#rename-path").val(path);
 
@@ -214,14 +213,14 @@
         }
 
         function createDirectory() {
-            var modalElement = $("#create-directory-modal");
+            let modalElement = $("#create-directory-modal");
             modalElement.on('shown.bs.modal', function () {
                 modalElement.find("#directory-name").focus();
             }).modal('show');
         }
 
         function createFile() {
-            var modalElement = $("#create-file-modal");
+            let modalElement = $("#create-file-modal");
             modalElement.on('shown.bs.modal', function () {
                 modalElement.find("#select-file-modal-search-filter").focus();
             }).modal('show');
