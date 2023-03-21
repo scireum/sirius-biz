@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.explorer.ChartFactory;
 import sirius.biz.analytics.explorer.ChartObjectResolver;
@@ -16,7 +16,9 @@ import sirius.biz.analytics.explorer.TimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.process.ProcessController;
 import sirius.biz.process.Processes;
+import sirius.biz.process.ProcessesMonthlyMetrics;
 import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -26,15 +28,16 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_NUM_PROCESSES}.
+ * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_PROCESS_DURATION} as well as
+ * {@link ProcessesMonthlyMetrics#METRIC_NUM_PROCESSES}.
  */
 @Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(ProcessController.PERMISSION_MANAGE_PROCESSES)
-public class NumberOfProcessesPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
+public class ProcessDurationPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Tenant<?>>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(ProcessDurationPerTenantChart.class);
+        referenceChartConsumer.accept(NumberOfProcessesPerTenantChart.class);
     }
 
     @Override
@@ -42,18 +45,18 @@ public class NumberOfProcessesPerTenantChart extends TimeSeriesChartFactory<Tena
                              boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Tenant<?>>> executor) throws Exception {
-        executor.invoke(new MetricTimeSeriesComputer<>(TenantMetricComputer.METRIC_NUM_PROCESSES));
+        executor.invoke(new MetricTimeSeriesComputer<>(TenantMetricComputer.METRIC_PROCESS_DURATION));
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return "TenantNumberOfProcesses";
+        return "TenantProcessDuration";
     }
 
     @Override
     public int getPriority() {
-        return 8020;
+        return 8030;
     }
 
     @Nullable

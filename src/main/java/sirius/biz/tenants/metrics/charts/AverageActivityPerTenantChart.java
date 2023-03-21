@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.explorer.ChartFactory;
 import sirius.biz.analytics.explorer.ChartObjectResolver;
@@ -18,6 +18,7 @@ import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccountController;
+import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
@@ -28,10 +29,10 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_NUM_ACTIVE_USERS} for a tenant.
+ * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_AVG_ACTIVITY} for a tenant.
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
-public class NumberOfActiveUsersPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
+public class AverageActivityPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
 
     @Override
     public boolean isAccessibleToCurrentUser() {
@@ -53,7 +54,7 @@ public class NumberOfActiveUsersPerTenantChart extends TimeSeriesChartFactory<Te
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Tenant<?>>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(NumberOfActiveUsersPerTenantChart.class);
+        referenceChartConsumer.accept(AverageActivityPerTenantChart.class);
     }
 
     @Override
@@ -61,17 +62,17 @@ public class NumberOfActiveUsersPerTenantChart extends TimeSeriesChartFactory<Te
                              boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Tenant<?>>> executor) throws Exception {
-        executor.invoke(new MetricTimeSeriesComputer<>(TenantMetricComputer.METRIC_NUM_ACTIVE_USERS));
+        executor.invoke(new MetricTimeSeriesComputer<>(TenantMetricComputer.METRIC_AVG_ACTIVITY));
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return "TenantNumberOfActiveUsers";
+        return "TenantAvgUserActivity";
     }
 
     @Override
     public int getPriority() {
-        return 9040;
+        return 9060;
     }
 }

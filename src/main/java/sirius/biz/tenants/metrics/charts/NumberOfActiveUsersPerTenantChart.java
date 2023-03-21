@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.explorer.ChartFactory;
 import sirius.biz.analytics.explorer.ChartObjectResolver;
@@ -16,10 +16,10 @@ import sirius.biz.analytics.explorer.TimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccountController;
-import sirius.biz.tycho.academy.OnboardingEngine;
+import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.kernel.commons.Callback;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -29,22 +29,13 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_AVG_ACTIVITY} for a tenant.
+ * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_NUM_ACTIVE_USERS} for a tenant.
  */
-@Register
-public class AverageEducationPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
-
-    @Part
-    @Nullable
-    private OnboardingEngine onboardingEngine;
+@Register(framework = Tenants.FRAMEWORK_TENANTS)
+public class NumberOfActiveUsersPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
 
     @Override
     public boolean isAccessibleToCurrentUser() {
-        // This is actually the simplest way to determine if either a JDBC or MongoDB based academy is available...
-        if (onboardingEngine == null) {
-            return false;
-        }
-
         UserInfo currentUser = UserContext.getCurrentUser();
         return currentUser.hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
                || currentUser.hasPermission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS);
@@ -63,7 +54,7 @@ public class AverageEducationPerTenantChart extends TimeSeriesChartFactory<Tenan
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Tenant<?>>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(AverageEducationPerTenantChart.class);
+        referenceChartConsumer.accept(NumberOfActiveUsersPerTenantChart.class);
     }
 
     @Override
@@ -71,17 +62,17 @@ public class AverageEducationPerTenantChart extends TimeSeriesChartFactory<Tenan
                              boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Tenant<?>>> executor) throws Exception {
-        executor.invoke(new MetricTimeSeriesComputer<>(TenantMetricComputer.METRIC_AVG_EDUCATION_LEVEL));
+        executor.invoke(new MetricTimeSeriesComputer<>(TenantMetricComputer.METRIC_NUM_ACTIVE_USERS));
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return "TenantAvgEducationLevel";
+        return "TenantNumberOfActiveUsers";
     }
 
     @Override
     public int getPriority() {
-        return 9070;
+        return 9040;
     }
 }

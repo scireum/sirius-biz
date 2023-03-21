@@ -9,7 +9,7 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
-import sirius.biz.tenants.metrics.UserAccountActivityMetricComputer;
+import sirius.biz.tenants.metrics.computers.UserAccountActivityMetricComputer;
 import sirius.kernel.di.std.Register;
 
 /**

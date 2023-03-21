@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.computers;
 
 /**
  * Provides some common constants used by both, {@link sirius.biz.tenants.jdbc.SQLTenantGlobalMetricComputer}

@@ -12,7 +12,7 @@ import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
-import sirius.biz.tenants.metrics.TenantMetricComputer;
+import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.db.mongo.Mango;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;

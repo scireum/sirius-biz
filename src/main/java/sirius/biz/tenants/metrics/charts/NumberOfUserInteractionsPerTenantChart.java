@@ -6,11 +6,14 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
+import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.analytics.events.UserActivityEvent;
+import sirius.biz.analytics.events.UserData;
 import sirius.biz.analytics.explorer.ChartFactory;
 import sirius.biz.analytics.explorer.ChartObjectResolver;
-import sirius.biz.analytics.explorer.MetricTimeSeriesComputer;
+import sirius.biz.analytics.explorer.EventTimeSeriesComputer;
 import sirius.biz.analytics.explorer.TimeSeriesChartFactory;
 import sirius.biz.analytics.explorer.TimeSeriesComputer;
 import sirius.biz.jobs.StandardCategories;
@@ -19,6 +22,7 @@ import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccountController;
 import sirius.kernel.commons.Callback;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -28,10 +32,14 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_AVG_ACTIVITY} for a tenant.
+ * Uses the {@link sirius.biz.analytics.events.UserActivityEvent} to compute the exact number of active users for a
+ * selected period and tenant.
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
-public class AverageActivityPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
+public class NumberOfUserInteractionsPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
+
+    @Part
+    private EventRecorder eventRecorder;
 
     @Override
     public boolean isAccessibleToCurrentUser() {
@@ -53,7 +61,7 @@ public class AverageActivityPerTenantChart extends TimeSeriesChartFactory<Tenant
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Tenant<?>>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(AverageActivityPerTenantChart.class);
+        referenceChartConsumer.accept(NumberOfActiveUsersPerTenantChart.class);
     }
 
     @Override
@@ -61,17 +69,24 @@ public class AverageActivityPerTenantChart extends TimeSeriesChartFactory<Tenant
                              boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Tenant<?>>> executor) throws Exception {
-        executor.invoke(new MetricTimeSeriesComputer<>(TenantMetricComputer.METRIC_AVG_ACTIVITY));
+        EventTimeSeriesComputer<Tenant<?>, UserActivityEvent> computer =
+                new EventTimeSeriesComputer<>(UserActivityEvent.class,
+                                              (tenant, query) -> query.eq(UserActivityEvent.USER_DATA.inner(UserData.TENANT_ID),
+                                                                          tenant.getIdAsString()));
+
+        computer.addAggregation(NumberOfUserInteractionsChart.AGGREGATION_EXPRESSION_USERS, null);
+
+        executor.invoke(computer);
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return "TenantAvgUserActivity";
+        return "TenantNumberOfUserInteractions";
     }
 
     @Override
     public int getPriority() {
-        return 9060;
+        return 9050;
     }
 }

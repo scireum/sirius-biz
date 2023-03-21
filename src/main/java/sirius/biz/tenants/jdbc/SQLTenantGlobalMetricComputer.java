@@ -12,7 +12,7 @@ import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.analytics.metrics.jdbc.SQLMonthlyGlobalMetricComputer;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
-import sirius.biz.tenants.metrics.GlobalTenantMetricComputer;
+import sirius.biz.tenants.metrics.computers.GlobalTenantMetricComputer;
 import sirius.kernel.di.std.Register;
 
 import java.time.LocalDate;

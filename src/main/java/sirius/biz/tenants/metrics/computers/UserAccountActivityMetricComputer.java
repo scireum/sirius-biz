@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.computers;
 
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.flags.PerformanceFlag;

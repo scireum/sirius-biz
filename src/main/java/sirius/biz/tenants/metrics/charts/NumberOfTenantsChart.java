@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.explorer.ChartFactory;
 import sirius.biz.analytics.explorer.ChartObjectResolver;
@@ -17,6 +17,7 @@ import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
+import sirius.biz.tenants.metrics.computers.GlobalTenantMetricComputer;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -26,11 +27,11 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Provides a chart showing the number of {@link GlobalTenantMetricComputer#METRIC_NUM_ACTIVE_USERS}.
+ * Provides a chart showing the number of {@link GlobalTenantMetricComputer#METRIC_NUM_TENANTS}.
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class NumberOfActiveUsersChart extends TimeSeriesChartFactory<Object> {
+public class NumberOfTenantsChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     protected boolean isMatchingChart(String uri, Object targetObject) {
@@ -40,7 +41,6 @@ public class NumberOfActiveUsersChart extends TimeSeriesChartFactory<Object> {
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Object>>> referenceChartConsumer) {
         referenceChartConsumer.accept(NumberOfActiveTenantsChart.class);
-        referenceChartConsumer.accept(NumberOfUserInteractionsChart.class);
     }
 
     @Override
@@ -48,18 +48,18 @@ public class NumberOfActiveUsersChart extends TimeSeriesChartFactory<Object> {
                              boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
-        executor.invoke(new MetricTimeSeriesComputer<>(GlobalTenantMetricComputer.METRIC_NUM_ACTIVE_USERS));
+        executor.invoke(new MetricTimeSeriesComputer<>(GlobalTenantMetricComputer.METRIC_NUM_TENANTS));
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return "GlobalNumberOfActiveUsers";
+        return "GlobalNumberOfTenants";
     }
 
     @Override
     public int getPriority() {
-        return 9020;
+        return 9000;
     }
 
     @Nullable

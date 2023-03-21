@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.events.UserActivityEvent;
 import sirius.biz.analytics.explorer.ChartFactory;
