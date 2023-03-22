@@ -34,6 +34,7 @@ public class MetricTimeSeriesComputer<E> implements TimeSeriesComputer<E> {
 
     private final String monthlyMetricName;
     private String dailyMetricName;
+    private String label;
     private Function<E, Object> projector;
 
     /**
@@ -57,6 +58,17 @@ public class MetricTimeSeriesComputer<E> implements TimeSeriesComputer<E> {
     }
 
     /**
+     * Specifies the label under which this time series is displayed in charts.
+     *
+     * @param label the label to be displayed
+     * @return the computer itself for fluent method calls
+     */
+    public MetricTimeSeriesComputer<E> withLabel(String label) {
+        this.label = label;
+        return this;
+    }
+
+    /**
      * Provides a projector to control what gets actually put into the <tt>of</tt> of {@link MetricQuery}.
      *
      * @param projector the projector which maps the selected chart entity to the actual value to query
@@ -70,7 +82,9 @@ public class MetricTimeSeriesComputer<E> implements TimeSeriesComputer<E> {
     @Override
     public void compute(E object, TimeSeries timeseries) throws Exception {
         TimeSeries effectiveTimeSeries = Strings.isFilled(dailyMetricName) ? timeseries : timeseries.toMonthlySeries();
-        TimeSeriesData data = effectiveTimeSeries.createDefaultData();
+        TimeSeriesData data = Strings.isFilled(label) ?
+                              effectiveTimeSeries.createData(label) :
+                              effectiveTimeSeries.createDefaultData();
         MetricQuery metricQuery = customizeQuery(project(object),
                                                  timeseries.getGranularity() == Granularity.DAY && Strings.isFilled(
                                                          dailyMetricName) ?
