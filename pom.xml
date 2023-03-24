@@ -17,8 +17,8 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-35.1.0</sirius.kernel>
-        <sirius.web>dev-64.1.1</sirius.web>
+        <sirius.kernel>dev-35.2.0</sirius.kernel>
+        <sirius.web>dev-64.1.5</sirius.web>
         <sirius.db>dev-46.1.0</sirius.db>
     </properties>
 
@@ -165,11 +165,6 @@
             <groupId>net.sf.sevenzipjbinding</groupId>
             <artifactId>sevenzipjbinding-all-platforms</artifactId>
             <version>16.02-2.01</version>
-        </dependency>
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>2.0</version>
         </dependency>
     </dependencies>
 </project>
