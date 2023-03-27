@@ -1,2 +1,2 @@
 <i:arg type="sirius.biz.jobs.infos.TextInfo" name="info"/>
-<w:subHeading label="@info.getText()"/>
+<t:heading label="@info.getText()"/>

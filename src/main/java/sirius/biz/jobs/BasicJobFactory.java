@@ -127,7 +127,7 @@ public abstract class BasicJobFactory implements JobFactory {
      * @param collector the collector used to supply additional info sections for a job
      */
     protected void collectJobInfos(JobInfoCollector collector) {
-        collector.addWell(getDetailDescription());
+        collector.addCard(getDetailDescription());
     }
 
     @Override
