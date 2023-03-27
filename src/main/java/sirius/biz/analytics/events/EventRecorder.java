@@ -179,10 +179,12 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @throws SQLException in case of a database error
      * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
      */
-    public <E extends Event> int countEvents(Class<E> eventType, Consumer<SmartQuery<E>> queryTuner)
+    public <E extends Event> int countEvents(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
         SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS counter");
-        queryTuner.accept(query);
+        if (queryTuner != null) {
+            queryTuner.accept(query);
+        }
 
         return query.asSQLQuery()
                     .markAsLongRunning()
@@ -207,11 +209,13 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     public <E extends Event> int countEventsInRange(Class<E> eventType,
                                                     LocalDateTime startDate,
                                                     LocalDateTime endDate,
-                                                    Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+                                                    @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
         return countEvents(eventType, query -> {
             query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
             query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
-            queryTuner.accept(query);
+            if (queryTuner != null) {
+                queryTuner.accept(query);
+            }
         });
     }
 
