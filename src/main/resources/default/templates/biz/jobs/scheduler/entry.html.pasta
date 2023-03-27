@@ -14,10 +14,11 @@
     </i:block>
 
     <i:block name="page-header">
-        <t:pageHeader>
-            <i:block name="title">@entry.toString()</i:block>
+        <t:pageHeader title="@entry.toString()">
             <i:block name="additionalActions">
-                <t:dropdownDeleteItem url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())"/>
+                <i:if test="!entry.isNew()">
+                    <t:dropdownDeleteItem url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())"/>
+                </i:if>
             </i:block>
         </t:pageHeader>
     </i:block>
