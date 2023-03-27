@@ -16,7 +16,8 @@
                              labelKey="CodeListData.autofill"
                              helpKey="CodeListData.autofill.help"
                              value="@codeList.getCodeListData().isAutofill()"/>
-            <t:textfield class="col-12" name="codeListData_description"
+            <t:textfield class="col-12"
+                         name="codeListData_description"
                          value="@codeList.getCodeListData().getDescription()"
                          labelKey="Model.description"/>
         </div>
