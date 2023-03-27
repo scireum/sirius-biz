@@ -15,6 +15,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Part;
@@ -94,7 +95,10 @@ public class Jupiter implements MetricProvider {
      */
     public JupiterConnector getDefault() {
         if (defaultConnection == null) {
-            defaultConnection = getConnector(DEFAULT_NAME);
+            defaultConnection = new JupiterConnector(this,
+                                                     DEFAULT_NAME,
+                                                     redis.getPool(DEFAULT_NAME),
+                                                     fallbackPools.computeIfAbsent(DEFAULT_NAME, this::fetchFallbackPool));
         }
 
         return defaultConnection;
@@ -103,10 +107,15 @@ public class Jupiter implements MetricProvider {
     /**
      * Provides a connector to the instance with the given name.
      *
-     * @param name the name of the connector to connect to.
+     * @param name the name of the connector to connect to. If an empty name is given, the default connector is
+     *             returned.
      * @return the connector to the instance with the given name
      */
-    public JupiterConnector getConnector(String name) {
+    public JupiterConnector getConnector(@Nullable String name) {
+        if (Strings.isEmpty(name) || DEFAULT_NAME.equals(name)) {
+            return getDefault();
+        }
+
         return new JupiterConnector(this,
                                     name,
                                     redis.getPool(name),
