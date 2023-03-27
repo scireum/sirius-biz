@@ -199,6 +199,8 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * This automatically marks the query as long-running.
      *
      * @param eventType  the type of events to query
+     * @param startDate  the start date of the range
+     * @param endDate    the end date of the range
      * @param queryTuner the actual filter to apply
      * @param <E>        the generic types of the entities to query
      * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
