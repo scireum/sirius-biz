@@ -206,7 +206,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
      * the API of {@link sirius.kernel.health.metrics.Metrics}.
      * @throws SQLException in case of a database error
-     * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
+     * @see #countEvents(Class, Consumer)
      */
     public <E extends Event> int countEventsInRange(Class<E> eventType,
                                                     LocalDateTime startDate,
