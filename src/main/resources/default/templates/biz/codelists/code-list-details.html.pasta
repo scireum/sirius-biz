@@ -1,31 +1,28 @@
 <i:arg type="sirius.biz.codelists.CodeList" name="codeList"/>
 
 <i:invoke template="/templates/biz/codelists/code-list.html.pasta" codeList="codeList" page="details">
-    <w:editForm url="@apply('/code-list/%s/details', codeList.getIdAsString())">
+    <t:editForm url="@apply('/code-list/%s/details', codeList.getIdAsString())">
         <div class="row">
-            <w:textfield name="codeListData_code"
+            <t:textfield name="codeListData_code"
                          value="@codeList.getCodeListData().getCode()"
                          labelKey="Model.code"
-                         required="true"
-                         span="4"/>
-            <w:textfield name="codeListData_name"
+                         class="required col-md-4"/>
+            <t:textfield name="codeListData_name"
                          value="@codeList.getCodeListData().getName()"
                          labelKey="Model.name"
-                         required="true"
-                         span="4"/>
-            <w:booleanSelect span="4"
+                         class="required col-md-4"/>
+            <t:booleanSelect class="col-md-4"
                              name="codeListData_autofill"
                              labelKey="CodeListData.autofill"
                              helpKey="CodeListData.autofill.help"
                              value="@codeList.getCodeListData().isAutofill()"/>
-        </div>
-        <div class="row">
-            <w:textfield span="12" name="codeListData_description" value="@codeList.getCodeListData().getDescription()"
+            <t:textfield class="col-12" name="codeListData_description"
+                         value="@codeList.getCodeListData().getDescription()"
                          labelKey="Model.description"/>
         </div>
-    </w:editForm>
 
-    <w:formBar backUrl="/code-lists">
-        <w:tracing trace="@codeList.getTrace()"/>
-    </w:formBar>
+        <t:formBar backButton="false">
+            <t:tracing trace="@codeList.getTrace()"/>
+        </t:formBar>
+    </t:editForm>
 </i:invoke>
