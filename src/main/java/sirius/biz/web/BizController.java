@@ -435,6 +435,7 @@ public class BizController extends BasicController {
                     assertTenant(tenantAware);
                 }
                 if (entity.getDescriptor().isComplexDelete() && processes != null) {
+                    entity.getDescriptor().getMapper().assertDeletable(entity);
                     deleteComplexEntity(entity);
                 } else {
                     entity.getDescriptor().getMapper().delete(entity);
