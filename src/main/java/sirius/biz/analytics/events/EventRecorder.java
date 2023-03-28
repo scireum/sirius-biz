@@ -179,10 +179,12 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @throws SQLException in case of a database error
      * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
      */
-    public <E extends Event> int countEvents(Class<E> eventType, Consumer<SmartQuery<E>> queryTuner)
+    public <E extends Event> int countEvents(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
         SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS counter");
-        queryTuner.accept(query);
+        if (queryTuner != null) {
+            queryTuner.accept(query);
+        }
 
         return query.asSQLQuery()
                     .markAsLongRunning()
@@ -197,21 +199,25 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * This automatically marks the query as long-running.
      *
      * @param eventType  the type of events to query
+     * @param startDate  the start date of the range
+     * @param endDate    the end date of the range
      * @param queryTuner the actual filter to apply
      * @param <E>        the generic types of the entities to query
      * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
      * the API of {@link sirius.kernel.health.metrics.Metrics}.
      * @throws SQLException in case of a database error
-     * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
+     * @see #countEvents(Class, Consumer)
      */
     public <E extends Event> int countEventsInRange(Class<E> eventType,
                                                     LocalDateTime startDate,
                                                     LocalDateTime endDate,
-                                                    Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+                                                    @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
         return countEvents(eventType, query -> {
             query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
             query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
-            queryTuner.accept(query);
+            if (queryTuner != null) {
+                queryTuner.accept(query);
+            }
         });
     }
 

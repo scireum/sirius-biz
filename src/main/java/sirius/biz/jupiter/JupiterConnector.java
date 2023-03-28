@@ -8,6 +8,8 @@
 
 package sirius.biz.jupiter;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
@@ -38,10 +40,11 @@ import java.util.function.Supplier;
 public class JupiterConnector {
 
     private static final JupiterCommand CMD_SET_CONFIG = new JupiterCommand("SYS.SET_CONFIG");
+    private static final JupiterCommand CMD_PYRUN = new JupiterCommand("PY.RUN");
 
     /**
      * If a failover is performed, we keep using the fallback instance for a certain amount of time to prevent
-     * constant switching back and forth in case of network problems (etc). This constant determines the interval
+     * constant switching back and forth in case of network problems (etc.). This constant determines the interval
      * before a failover back to the main instance is attempted.
      */
     private static final int FAILOVER_TRIGGER_REARM_INTERVAL = 60_000;
@@ -50,6 +53,8 @@ public class JupiterConnector {
      * Provides an upper bound of the expected runtime of a Jupiter command for monitoring purposes.
      */
     private static final Duration EXPECTED_JUPITER_COMMAND_RUNTIME = Duration.ofSeconds(10);
+    private static final String ERR_RESPONSE_UNKNOWN_KERNEL = "UNKNOWN_KERNEL";
+    private static final String ERROR_PREFIX = "ERROR:";
 
     private final String instanceName;
     private final RedisDB redis;
@@ -228,6 +233,34 @@ public class JupiterConnector {
             db.sendCommand(CMD_SET_CONFIG, configString);
             db.getStatusCodeReply();
         });
+    }
+
+    /**
+     * Invokes a running Python kernel using <tt>PY.RUN</tt>.
+     *
+     * @param kernel the name of the kernel to run
+     * @param input  the JSON object to send to the kernel
+     * @return the received JSON response
+     * @throws IllegalArgumentException if the given kernel is unknown
+     */
+    public JSONObject pyRun(String kernel, JSONObject input) {
+        String result = query(() -> "PY.RUN: " + kernel, db -> {
+            db.sendCommand(CMD_PYRUN, kernel, input.toJSONString());
+            return db.getBulkReply();
+        });
+
+        if (ERR_RESPONSE_UNKNOWN_KERNEL.equals(result)) {
+            throw new IllegalArgumentException("Unknown kernel: " + kernel);
+        } else if (result.startsWith(ERROR_PREFIX)) {
+            throw Exceptions.handle()
+                            .to(Jupiter.LOG)
+                            .withSystemErrorMessage("Error while running kernel %s: %s",
+                                                    kernel,
+                                                    result.substring(ERROR_PREFIX.length()))
+                            .handle();
+        } else {
+            return JSON.parseObject(result);
+        }
     }
 
     /**

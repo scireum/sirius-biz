@@ -18,7 +18,7 @@
                     <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
                         <span class="pr-2 text-black-75 text-small"><i class="fa fa-sync fa-spin"></i></span>
                     </i:if>
-                    <span>@process.getTitle()</span>
+                    <span class="text-truncate">@process.getTitle()</span>
                 </span>
             </i:block>
             <i:block name="actions">
@@ -26,7 +26,7 @@
                     <a id="disableAutoRefresh"
                        class="btn btn-outline-primary d-none"
                        href="#">
-                        <span class="d-none d-lg-inline-block">
+                        <span class="d-none d-lg-inline-block text-nowrap">
                             <i class="far fa-check-square"></i>
                             @i18n("Process.autoRefresh")
                         </span>
@@ -37,7 +37,7 @@
                     <a id="enableAutoRefresh"
                        class="btn btn-outline-secondary d-none"
                        href="#">
-                        <span class="d-none d-lg-inline-block">
+                        <span class="d-none d-lg-inline-block text-nowrap">
                             <i class="far fa-square"></i>
                             @i18n("Process.autoRefresh")
                         </span>
