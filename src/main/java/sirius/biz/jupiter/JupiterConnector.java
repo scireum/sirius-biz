@@ -54,8 +54,6 @@ public class JupiterConnector {
      */
     private static final Duration EXPECTED_JUPITER_COMMAND_RUNTIME = Duration.ofSeconds(10);
     private static final String ERR_RESPONSE_UNKNOWN_KERNEL = "UNKNOWN_KERNEL";
-    private static final String ERROR_PREFIX = "ERROR:";
-
     private final String instanceName;
     private final RedisDB redis;
     private final RedisDB fallbackRedis;
@@ -258,16 +256,17 @@ public class JupiterConnector {
 
         if (ERR_RESPONSE_UNKNOWN_KERNEL.equals(result)) {
             throw new IllegalArgumentException("Unknown kernel: " + kernel);
-        } else if (result.startsWith(ERROR_PREFIX)) {
+        }
+
+        JSONObject json = JSON.parseObject(result);
+        if (json.containsKey("error")) {
             throw Exceptions.handle()
                             .to(Jupiter.LOG)
-                            .withSystemErrorMessage("Error while running kernel %s: %s",
-                                                    kernel,
-                                                    result.substring(ERROR_PREFIX.length()))
+                            .withSystemErrorMessage("Error while running kernel %s: %s", kernel, json.toJSONString())
                             .handle();
-        } else {
-            return JSON.parseObject(result);
         }
+
+        return json;
     }
 
     /**
