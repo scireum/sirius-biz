@@ -186,8 +186,15 @@ public class JupiterConnector {
         try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
-        } catch (Exception e) {
-            throw Exceptions.handle(Jupiter.LOG, e);
+        } catch (Exception error) {
+            throw Exceptions.handle()
+                            .to(Jupiter.LOG)
+                            .error(error)
+                            .withSystemErrorMessage(
+                                    "The Jupiter instance %s failed to for command: '%s' - Error: %s (%s)",
+                                    instanceName,
+                                    description.get())
+                            .handle();
         }
     }
 
