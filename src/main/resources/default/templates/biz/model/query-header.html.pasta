@@ -10,7 +10,12 @@
                     Query
                 </label>
                 <div class="input-group">
-                    <input type="text" name="query" placeholder="Enter query here" class="form-control" value="@query"
+                    <input type="text"
+                           name="query"
+                           id="query"
+                           placeholder="Enter query here"
+                           class="form-control"
+                           value="@query"
                            autofocus/>
                     <div class="input-group-append" onclick="document.querySelector('form.edit-form').submit()">
                     <span class="btn btn-outline-secondary">
@@ -35,7 +40,12 @@
 <script type="text/javascript">
     sirius.ready(function () {
         const _editForm = document.querySelector('form.edit-form');
-        document.querySelector('form.edit-form').addEventListener('keydown', function (event) {
+        _editForm.addEventListener('submit', function (event) {
+            const queryString = _editForm.querySelector('#query').value;
+            const clazz = _editForm.querySelector('#singleselect-1-input').textContent.toUpperCase();
+            _editForm.action += '?query=' + queryString + '&class=' + clazz;
+        });
+        _editForm.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
                 _editForm.submit();
                 return false;
