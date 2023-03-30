@@ -17,7 +17,8 @@
                            class="form-control"
                            value="@query"
                            autofocus/>
-                    <div class="input-group-append" onclick="document.querySelector('form.edit-form').submit()">
+                    <div class="input-group-append"
+                         onclick="sirius.requestSubmitForm(document.querySelector('form.edit-form'))">
                     <span class="btn btn-outline-secondary">
                     <i class="fa fa-search"></i>
                     </span>
@@ -47,7 +48,7 @@
         });
         _editForm.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
-                _editForm.submit();
+                sirius.requestSubmitForm(_editForm);
                 return false;
             }
         });
