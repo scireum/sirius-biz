@@ -25,7 +25,10 @@
                     </div>
                 </div>
             </div>
-            <t:singleSelect class="col-xl-3 col-9" name="class" label="Entity Type" suggestionUri="/system/query/autocomplete"
+            <t:singleSelect class="col-xl-3 col-9"
+                            name="class"
+                            label="Entity Type"
+                            suggestionUri="/system/query/autocomplete"
                             optional="true">
                 <i:if test="type != null">
                     <option value="@type.getName()" selected="selected">
