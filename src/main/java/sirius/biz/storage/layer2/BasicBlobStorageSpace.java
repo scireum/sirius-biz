@@ -269,13 +269,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Caches the {@link Blob blobs} that belong to certain paths
      */
     protected static Cache<String, Blob> blobByPathCache = CacheManager.<Blob>createCoherentCache("storage-paths")
-                                                                       .addRemover(REMOVE_BY_FILENAME,
-                                                                                   (input, entry) -> entry.getValue()
-                                                                                                     == null
-                                                                                                     || Strings.areEqual(
-                                                                                           entry.getValue()
-                                                                                                .getFilename(),
-                                                                                           input));
+                                                                       .addValueBasedRemover(REMOVE_BY_FILENAME)
+                                                                       .removeIf((input, blob) -> blob == null
+                                                                                                  || Strings.areEqual(
+                                                                               blob.getFilename(),
+                                                                               input));
 
     protected final Extension config;
     protected final String description;
