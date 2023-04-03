@@ -76,7 +76,7 @@
             const _fileNameContainer = _outerDiv.querySelector('.img-name');
             _uploadButton.addEventListener('click', function() {
                 selectVFSFile({
-                    path: findParentFolder('___objectRef.getPath()', '___objectRef.getSpace()'),
+                    path: findParentDirectory('___objectRef.getPath()', '___objectRef.getSpace()'),
                     allowDirectories: true,
                     allowFiles: true,
                     allowedExtensions: '___acceptedFiles',
@@ -123,7 +123,7 @@
             loadImageLazily(_img);
         });
 
-        function findParentFolder(path, fallback) {
+        function findParentDirectory(path, fallback) {
             if (path === '') {
                 return '/' + fallback;
             }
