@@ -76,8 +76,8 @@ import java.util.Optional;
 @Index(name = "blob_content_updated_loop", columns = "contentUpdated", columnSettings = Mango.INDEX_ASCENDING)
 @Index(name = "blob_deleted_loop", columns = "deleted", columnSettings = Mango.INDEX_ASCENDING)
 @Index(name = "blob_parent_changed_loop", columns = "parentChanged", columnSettings = Mango.INDEX_ASCENDING)
-@Index(name = "blob_delete_old_temporary_loop",
-        columns = {"spaceName", "deleted", "lastModified", "temporary"},
+@Index(name = "blob_delete_temporary_loop",
+        columns = {"spaceName", "temporary", "deleted", "lastModified"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 @TranslationSource(Blob.class)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {

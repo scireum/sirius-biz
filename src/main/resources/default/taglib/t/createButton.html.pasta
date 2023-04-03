@@ -14,7 +14,7 @@
 </i:if>
 
 <i:if test="isFilled(contents)">
-    <t:dropdown class="@class" btnClass="btn btn-primary" icon="fa fa-plus" labelKey="Model.create">
+    <t:dropdown class="@class" btnClass="btn btn-primary" icon="fa fa-plus" labelKey="Model.create" labelClass="d-none d-xl-inline-block">
         <i:raw>@contents</i:raw>
     </t:dropdown>
 </i:if>

@@ -1,42 +1,44 @@
 <i:arg type="sirius.biz.codelists.CodeList" name="codeList"/>
 <i:arg type="String" name="page"/>
 
-<w:page titleKey="Model.codeList">
+<t:page titleKey="Model.codeList">
     <i:block name="breadcrumbs">
         <li>
             <a href="/code-lists">@i18n("CodeList.plural")</a>
         </li>
         <li>
-            <a href="/code-list/@codeList.getIdAsString()">@i18n("Model.codeList")</a>
+            <a href="/code-list/@codeList.getIdAsString()">@codeList.getCodeListData().toString()</a>
         </li>
     </i:block>
 
-    <w:pageHeader>@codeList.getCodeListData()</w:pageHeader>
+    <t:pageHeader title="@codeList.getCodeListData().toString()">
+        <i:block name="additionalActions">
+            <i:if test="!codeList.isNew()">
+                <t:dropdownDeleteItem url="@apply('/code-list/%s/delete', codeList.getIdAsString())"/>
+            </i:if>
+        </i:block>
+    </t:pageHeader>
 
-    <div class="row">
-        <i:if test="!codeList.isNew()">
-            <div class="col-md-3">
-                <w:navbox labelKey="Model.details">
+    <t:sidebar>
+        <i:block name="sidebar">
+            <i:if test="!codeList.isNew()">
+                <t:navbox labelKey="Model.details">
                     <li>
                         @codeList.getCodeListData().getName() (@codeList.getCodeListData().getCode())
                     </li>
-                    <li class="small muted">@codeList.getCodeListData().getDescription()</li>
-                    <li class="nav-header"></li>
-                    <w:navboxLink labelKey="Model.details"
+                    <li class="text-small text-muted text-break mb-4">@codeList.getCodeListData().getDescription()</li>
+                    <t:navboxLink labelKey="Model.details"
                                   url="@apply('/code-list/%s/details', codeList.getIdAsString())"
                                   active="page == 'details'"/>
-                    <w:navboxLink labelKey="CodeListEntry.plural"
+                    <t:navboxLink labelKey="CodeListEntry.plural"
                                   url="@apply('/code-list/%s', codeList.getIdAsString())"
                                   active="page == 'entries'"/>
-                </w:navbox>
+                </t:navbox>
+            </i:if>
 
-                <w:jobs target="codeList"/>
+            <t:jobs target="codeList"/>
+        </i:block>
 
-                <a href="/code-lists" class="btn btn-block">@i18n("NLS.back")</a>
-            </div>
-        </i:if>
-        <div class="col-md-9">
-            <i:render name="body"/>
-        </div>
-    </div>
-</w:page>
+        <i:render name="body"/>
+    </t:sidebar>
+</t:page>
