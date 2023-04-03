@@ -979,6 +979,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotRenameDuplicateName").handle();
         }
 
+        blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
         updateBlobName(blob, newName);
 
         blobKeyToFilenameCache.remove(blob.getBlobKey());
@@ -1127,6 +1128,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void updateContent(B blob, @Nullable String filename, File file) {
         String nextPhysicalId = keyGenerator.generateId();
         try {
+            if (Strings.isFilled(filename)) {
+                blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
+            }
             getPhysicalSpace().upload(nextPhysicalId, file);
             blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
@@ -1180,6 +1184,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void updateContent(B blob, String filename, InputStream data, long contentLength) {
         String nextPhysicalId = keyGenerator.generateId();
         try {
+            if (Strings.isFilled(filename)) {
+                blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
+            }
             getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
             blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
