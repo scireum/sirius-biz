@@ -127,7 +127,7 @@
             if (path === '') {
                 return '/' + fallback;
             }
-            return '/' + path.substring(0, path.lastIndexOf('/')+1);
+            return '/' + path.substring(0, path.lastIndexOf('/') + 1);
         }
     }
 </script>
