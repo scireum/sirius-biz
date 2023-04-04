@@ -1,4 +1,0 @@
-<i:arg type="sirius.biz.jobs.infos.TextInfo" name="info"/>
-<div class="well">
-    @info.getText()
-</div>

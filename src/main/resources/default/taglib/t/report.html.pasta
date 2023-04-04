@@ -2,12 +2,12 @@
 
 <t:emptyCheck data="report.getRows()">
     <div class="card mb-4">
-        <div class="card-body">
+        <div class="card-body table-responsive">
             <table class="table">
                 <thead>
                 <tr>
                     <i:for type="String" var="column" items="report.getLabels()">
-                        <th style="text-align: center">@column</th>
+                        <th class="text-nowrap">@column</th>
                     </i:for>
                 </tr>
                 </thead>
@@ -15,7 +15,7 @@
                 <i:for type="Map" var="row" items="report.getRows()">
                     <tr>
                         <i:for type="String" var="column" items="report.getColumns()">
-                            <td class="cell">
+                            <td>
                                 <i:raw>@row.get(column).as(sirius.biz.analytics.reports.Cell.class).render()</i:raw>
                             </td>
                         </i:for>

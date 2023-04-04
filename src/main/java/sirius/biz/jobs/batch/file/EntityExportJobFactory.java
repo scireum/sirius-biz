@@ -137,7 +137,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     @Override
     protected void collectJobInfos(JobInfoCollector collector) {
         super.collectJobInfos(collector);
-        collector.addTranslatedWell("EntityExportJobFactory.templateModes");
+        collector.addTranslatedCard("EntityExportJobFactory.templateModes");
         getDictionary().emitJobInfos(collector);
     }
 }

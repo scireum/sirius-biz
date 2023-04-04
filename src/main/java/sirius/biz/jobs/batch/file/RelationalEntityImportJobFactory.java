@@ -122,7 +122,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     @Override
     protected void collectJobInfos(JobInfoCollector collector) {
         super.collectJobInfos(collector);
-        collector.addTranslatedWell("EntityImportJobFactory.automaticMappings");
+        collector.addTranslatedCard("EntityImportJobFactory.automaticMappings");
         getDictionary().emitJobInfos(collector);
     }
 

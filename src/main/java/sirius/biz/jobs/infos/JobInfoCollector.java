@@ -88,31 +88,31 @@ public class JobInfoCollector {
     }
 
     /**
-     * Adds a {@link WellInfo well info}.
+     * Adds a {@link CardInfo well info}.
      *
-     * @param text the text to add as well
+     * @param text the text to add as card
      * @return the collector itself for fluent method calls
      */
-    public JobInfoCollector addWell(String text) {
+    public JobInfoCollector addCard(String text) {
         if (Strings.isEmpty(text)) {
             return this;
         }
 
-        return addInfo(new WellInfo(text));
+        return addInfo(new CardInfo(text));
     }
 
     /**
-     * Adds a {@link WellInfo text info} using a translated i18n key.
+     * Adds a {@link CardInfo text info} using a translated i18n key.
      *
      * @param i18nKey the key used to lookup the translated text
      * @return the collector itself for fluent method calls
      */
-    public JobInfoCollector addTranslatedWell(String i18nKey) {
-        return addWell(NLS.get(i18nKey));
+    public JobInfoCollector addTranslatedCard(String i18nKey) {
+        return addCard(NLS.get(i18nKey));
     }
 
     /**
-     * Adds a block of unsecaped HTML.
+     * Adds a block of unescaped HTML.
      *
      * @param html the html to add
      * @return the collector itself for fluent method calls
