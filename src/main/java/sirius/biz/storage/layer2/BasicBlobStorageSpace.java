@@ -1486,7 +1486,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Actually attempts to either lookup or create the requested variant.
+     * Actually attempts to either look up or create the requested variant.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1545,7 +1545,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (conversionEnabled && !retryLimitReached(variant)) {
-            // A variant exists and we should re-try to create it...
+            // A variant exists, and we should re-try to create it...
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
                 invokeConversionPipelineAsync(blob, variant);

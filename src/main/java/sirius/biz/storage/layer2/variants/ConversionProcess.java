@@ -16,7 +16,7 @@ import sirius.kernel.commons.Watch;
 /**
  * Covers the task of performing a conversion of a given {@link Blob} into a {@link BlobVariant} of the desired type.
  * <p>
- * This class is sort of a data transfer type as it wraps both, the input parameters as well as the output/result and
+ * This class is sort of a data transfer type as it wraps both, the input parameters and the output/result and
  * some performance metrics.
  */
 public class ConversionProcess {

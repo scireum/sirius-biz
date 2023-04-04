@@ -40,7 +40,7 @@ public interface Blob {
     /**
      * Returns the name of the {@link #getStorageSpace() storage space}.
      *
-     * @return the name of the stroage space in which this directory resides.
+     * @return the name of the storage space in which this directory resides.
      */
     String getSpaceName();
 
@@ -123,7 +123,7 @@ public interface Blob {
     LocalDateTime getLastTouched();
 
     /**
-     * Provides a on-disk copy of the data associated with this blob
+     * Provides an on-disk copy of the data associated with this blob
      *
      * @return a handle to the data of this blob
      */
@@ -187,7 +187,7 @@ public interface Blob {
      * Provides new content for this blob.
      * <p>
      * Also note that if a file is used to provide the new contents of this blob, use
-     * {@link #updateContent(String, File)} as this is likely way more efficient.
+     * {@link #updateContent(String, File)} as this way is likely more efficient.
      * <p>
      * Note that this blob object itself will also be updated with the appropriate metadata
      * (filename, size, lastModified).
@@ -200,7 +200,7 @@ public interface Blob {
     void updateContent(@Nullable String filename, InputStream data, long contentLength);
 
     /**
-     * Creates a output stream which can be used to update the contents of this blob.
+     * Creates an output stream which can be used to update the contents of this blob.
      * <p>
      * The data written into the output stream will be buffered locally and used to update the contents once the
      * stream is closed. Use {@link #updateContent(String, File)} if a file is used to update the contents or
@@ -215,7 +215,7 @@ public interface Blob {
     OutputStream createOutputStream(@Nullable String filename);
 
     /**
-     * Creates a output stream which can be used to update the contents of this blob.
+     * Creates an output stream which can be used to update the contents of this blob.
      * <p>
      * Stores the contents once the stream is closed just like {@link #createOutputStream(String)} but permits to add a callback
      * which is invoked once the blob has been updated.
