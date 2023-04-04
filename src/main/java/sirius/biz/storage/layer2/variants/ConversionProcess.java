@@ -13,6 +13,9 @@ import sirius.biz.storage.layer2.Blob;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Watch;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
 /**
  * Covers the task of performing a conversion of a given {@link Blob} into a {@link BlobVariant} of the desired type.
  * <p>
@@ -22,6 +25,7 @@ import sirius.kernel.commons.Watch;
 public class ConversionProcess {
 
     private final Blob blobToConvert;
+    private File fileToConvert;
     private final String variantName;
     private FileHandle fileHandle;
     private long queueDuration;
@@ -113,6 +117,52 @@ public class ConversionProcess {
      */
     public void withConversionResult(FileHandle fileHandle) {
         this.fileHandle = fileHandle;
+    }
+
+    /**
+     * Provides the file to use as input for the conversion.
+     * <p>
+     * This is useful when the file already exist in the file system, skipping a new download from storage.
+     *
+     * @param fileToConvert the file to use as input
+     * @return the object itself for fluent method calls
+     * @see #obtainInputFile()
+     */
+    public ConversionProcess withInputFile(File fileToConvert) {
+        this.fileToConvert = fileToConvert;
+        return this;
+    }
+
+    /**
+     * Returns a file handle to an input file for conversion.
+     * <p>
+     * This can either be a permanent file handle over a previously supplied file or a temporary one over a fresh
+     * downloaded file from the {@linkplain #blobToConvert blob}.
+     *
+     * @return a {@link FileHandle} to the file to use for conversion
+     * @throws Exception if a file cannot be obtained
+     */
+    public FileHandle obtainInputFile() throws Exception {
+        FileHandle inputFile = obtainFileToConvert();
+        if (inputFile == null) {
+            inputFile = download(() -> blobToConvert.download()
+                                                    .orElseThrow(() -> new FileNotFoundException(
+                                                            "Cannot obtain the file from blob key "
+                                                            + blobToConvert.getBlobKey())));
+        }
+        return inputFile;
+    }
+
+    private FileHandle obtainFileToConvert() throws FileNotFoundException {
+        if (fileToConvert == null) {
+            return null;
+        }
+
+        if (!fileToConvert.exists()) {
+            throw new FileNotFoundException("File " + fileToConvert.getPath() + " does not exist");
+        }
+
+        return FileHandle.permanentFileHandle(fileToConvert);
     }
 
     public FileHandle getResultFileHandle() {
