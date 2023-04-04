@@ -319,6 +319,11 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     }
 
     @Override
+    public Future tryCreateVariant(File inputFile, String variantName) {
+        return getStorageSpace().tryCreateVariant(this, inputFile, variantName);
+    }
+
+    @Override
     public void delete() {
         getStorageSpace().delete(this);
     }
