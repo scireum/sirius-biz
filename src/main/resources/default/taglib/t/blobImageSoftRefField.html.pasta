@@ -75,10 +75,8 @@
             const _img = _outerDiv.querySelector('img');
             const _fileNameContainer = _outerDiv.querySelector('.img-name');
             _uploadButton.addEventListener('click', function() {
-                let blobStorageSpace = '___objectRef.getPath()' || '___objectRef.getSpace()';
-
                 selectVFSFile({
-                    path: '/' + blobStorageSpace,
+                    path: findParentDirectory('___objectRef.getPath()', '___objectRef.getSpace()'),
                     allowDirectories: true,
                     allowFiles: true,
                     allowedExtensions: '___acceptedFiles',
@@ -124,5 +122,12 @@
             _img.src = '___defaultPreview';
             loadImageLazily(_img);
         });
+
+        function findParentDirectory(path, fallback) {
+            if (path === '') {
+                return '/' + fallback;
+            }
+            return '/' + path.substring(0, path.lastIndexOf('/') + 1);
+        }
     }
 </script>
