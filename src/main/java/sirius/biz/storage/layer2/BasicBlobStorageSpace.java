@@ -1641,13 +1641,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Spawns a thread which will actually invoke the appropriate conversion pipeline.
      *
-     * @param blob    the blob for which the variant is to be created
-     * @param variant the variant to generate
+     * @param blob      the blob for which the variant is to be created
+     * @param inputFile the file handle holding the file to use as input for the conversion
+     * @param variant   the variant to generate
      * @return a future holding the conversion process
      */
-    private Future invokeConversionPipelineAsync(B blob, File inputFile, V variant) {
+    private Future invokeConversionPipelineAsync(B blob, FileHandle inputFile, V variant) {
         ConversionProcess conversionProcess =
-                new ConversionProcess(blob, variant.getVariantName()).withInputFile(inputFile);
+                new ConversionProcess(blob, variant.getVariantName()).withInputFile(inputFile.getFile());
 
         Future future = conversionEngine.performConversion(conversionProcess);
         future.onSuccess(ignored -> {
@@ -1739,12 +1740,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Tries to create the requested variant if the variant does not exist already.
      *
      * @param blob        the blob for which the variant is to be created
-     * @param inputFile   the input file to use for the conversion
+     * @param inputFile   the file handle holding the file to use as input for the conversion
      * @param variantName the variant to generate
      * @param retries     the number of retries left
      * @return a future holding the conversion process
      */
-    private Future tryCreateVariant(B blob, File inputFile, String variantName, int retries) {
+    private Future tryCreateVariant(B blob, FileHandle inputFile, String variantName, int retries) {
         if (retries == 0) {
             Future future = new Future();
             future.fail(new IllegalStateException(Strings.apply(
@@ -1802,11 +1803,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Tries to create the requested variant if the variant does not exist already.
      *
      * @param blob        the blob for which the variant is to be created
-     * @param inputFile   the input file to use for the conversion
+     * @param inputFile   the file handle holding the file to use as input for the conversion
      * @param variantName the variant to generate
      * @return a future holding the conversion process
      */
-    public Future tryCreateVariant(B blob, File inputFile, String variantName) {
+    public Future tryCreateVariant(B blob, FileHandle inputFile, String variantName) {
         return tryCreateVariant(blob, inputFile, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
     }
 

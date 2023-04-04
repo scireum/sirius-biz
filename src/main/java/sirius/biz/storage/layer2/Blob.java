@@ -141,10 +141,10 @@ public interface Blob {
      * Tries to create the desired variant using the given input file, which bypasses the download from the blob.
      *
      * @param variantName the name of the desired variant
-     * @param inputFile   the file to use as input for the conversion
+     * @param inputFile   the file handle holding the file to use as input for the conversion
      * @return a future holding the conversion process
      */
-    Future tryCreateVariant(File inputFile, String variantName);
+    Future tryCreateVariant(FileHandle inputFile, String variantName);
 
     /**
      * Determines if this blob is still marked as temporary.
