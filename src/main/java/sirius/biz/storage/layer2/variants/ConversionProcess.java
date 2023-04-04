@@ -114,9 +114,11 @@ public class ConversionProcess {
      * Used by the {@link Converter} to supply the actual result of the conversion.
      *
      * @param fileHandle the file to use as variant
+     * @return the object itself for fluent method calls
      */
-    public void withConversionResult(FileHandle fileHandle) {
+    public ConversionProcess withConversionResult(FileHandle fileHandle) {
         this.fileHandle = fileHandle;
+        return this;
     }
 
     /**
