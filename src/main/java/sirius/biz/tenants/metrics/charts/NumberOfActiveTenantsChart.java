@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.explorer.ChartFactory;
 import sirius.biz.analytics.explorer.ChartObjectResolver;
@@ -17,6 +17,7 @@ import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
+import sirius.biz.tenants.metrics.computers.GlobalTenantMetricComputer;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;

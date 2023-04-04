@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.explorer.ChartFactory;
 import sirius.biz.analytics.explorer.ChartObjectResolver;
@@ -18,6 +18,7 @@ import sirius.biz.process.ProcessController;
 import sirius.biz.process.Processes;
 import sirius.biz.process.ProcessesMonthlyMetrics;
 import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -32,11 +33,11 @@ import java.util.function.Consumer;
  */
 @Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(ProcessController.PERMISSION_MANAGE_PROCESSES)
-public class ProcessDurationPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
+public class ProcessDurationForTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Tenant<?>>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(NumberOfProcessesPerTenantChart.class);
+        referenceChartConsumer.accept(NumberOfProcessesForTenantChart.class);
     }
 
     @Override

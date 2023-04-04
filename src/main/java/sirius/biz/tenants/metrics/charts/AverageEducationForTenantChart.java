@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.explorer.ChartFactory;
 import sirius.biz.analytics.explorer.ChartObjectResolver;
@@ -17,6 +17,7 @@ import sirius.biz.jobs.StandardCategories;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccountController;
+import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.biz.tycho.academy.OnboardingEngine;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.di.std.Part;
@@ -32,7 +33,7 @@ import java.util.function.Consumer;
  * Provides a chart showing the number of {@link TenantMetricComputer#METRIC_AVG_ACTIVITY} for a tenant.
  */
 @Register
-public class AverageEducationPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
+public class AverageEducationForTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
 
     @Part
     @Nullable
@@ -63,7 +64,7 @@ public class AverageEducationPerTenantChart extends TimeSeriesChartFactory<Tenan
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Tenant<?>>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(AverageEducationPerTenantChart.class);
+        referenceChartConsumer.accept(AverageEducationForTenantChart.class);
     }
 
     @Override

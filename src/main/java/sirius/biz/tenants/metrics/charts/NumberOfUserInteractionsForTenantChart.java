@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.metrics;
+package sirius.biz.tenants.metrics.charts;
 
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.UserActivityEvent;
@@ -36,7 +36,7 @@ import java.util.function.Consumer;
  * selected period and tenant.
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
-public class NumberOfUserInteractionsPerTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
+public class NumberOfUserInteractionsForTenantChart extends TimeSeriesChartFactory<Tenant<?>> {
 
     @Part
     private EventRecorder eventRecorder;
@@ -61,7 +61,7 @@ public class NumberOfUserInteractionsPerTenantChart extends TimeSeriesChartFacto
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Tenant<?>>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(NumberOfActiveUsersPerTenantChart.class);
+        referenceChartConsumer.accept(NumberOfActiveUsersForTenantChart.class);
     }
 
     @Override
