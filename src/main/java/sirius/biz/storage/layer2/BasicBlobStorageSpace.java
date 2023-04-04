@@ -1647,8 +1647,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return a future holding the conversion process
      */
     private Future invokeConversionPipelineAsync(B blob, FileHandle inputFile, V variant) {
-        ConversionProcess conversionProcess =
-                new ConversionProcess(blob, variant.getVariantName()).withInputFile(inputFile.getFile());
+        ConversionProcess conversionProcess = new ConversionProcess(blob, variant.getVariantName());
+        if (inputFile != null) {
+            conversionProcess.withInputFile(inputFile.getFile());
+        }
 
         Future future = conversionEngine.performConversion(conversionProcess);
         future.onSuccess(ignored -> {
