@@ -124,7 +124,7 @@ public class ConversionProcess {
     /**
      * Provides the file to use as input for the conversion.
      * <p>
-     * This is useful when the file already exist in the file system, skipping a new download from storage.
+     * This is useful when the file already exists in the file system, skipping a new download from storage.
      *
      * @param fileToConvert the file to use as input
      * @return the object itself for fluent method calls
@@ -138,8 +138,8 @@ public class ConversionProcess {
     /**
      * Returns a file handle to an input file for conversion.
      * <p>
-     * This can either be a permanent file handle over a previously supplied file or a temporary one over a fresh
-     * downloaded file from the {@linkplain #blobToConvert blob}.
+     * This can either be a permanent file handle pointing to a previously supplied file, or a temporary one
+     * pointing to a file freshly downloaded from the {@linkplain #blobToConvert blob}.
      *
      * @return a {@link FileHandle} to the file to use for conversion
      * @throws Exception if a file cannot be obtained
