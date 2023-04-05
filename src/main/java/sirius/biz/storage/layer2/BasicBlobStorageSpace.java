@@ -1486,7 +1486,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Actually attempts to either lookup or create the requested variant.
+     * Actually attempts to either look up or create the requested variant.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1545,10 +1545,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (conversionEnabled && !retryLimitReached(variant)) {
-            // A variant exists and we should re-try to create it...
+            // A variant exists, and we should re-try to create it...
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
-                invokeConversionPipelineAsync(blob, variant);
+                invokeConversionPipelineAsync(blob, null, variant);
                 return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
             } else {
                 // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
@@ -1641,12 +1641,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Spawns a thread which will actually invoke the appropriate conversion pipeline.
      *
-     * @param blob    the blob for which the variant is to be created
-     * @param variant the variant to generate
+     * @param blob      the blob for which the variant is to be created
+     * @param inputFile the file handle holding the file to use as input for the conversion
+     * @param variant   the variant to generate
      * @return a future holding the conversion process
      */
-    private Future invokeConversionPipelineAsync(B blob, V variant) {
+    private Future invokeConversionPipelineAsync(B blob, FileHandle inputFile, V variant) {
         ConversionProcess conversionProcess = new ConversionProcess(blob, variant.getVariantName());
+        if (inputFile != null) {
+            conversionProcess.withInputFile(inputFile.getFile());
+        }
+
         Future future = conversionEngine.performConversion(conversionProcess);
         future.onSuccess(ignored -> {
             try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
@@ -1728,7 +1733,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
             return false;
         } else {
-            invokeConversionPipelineAsync(blob, variant);
+            invokeConversionPipelineAsync(blob, null, variant);
             return true;
         }
     }
@@ -1737,11 +1742,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Tries to create the requested variant if the variant does not exist already.
      *
      * @param blob        the blob for which the variant is to be created
+     * @param inputFile   the file handle holding the file to use as input for the conversion
      * @param variantName the variant to generate
      * @param retries     the number of retries left
      * @return a future holding the conversion process
      */
-    private Future tryCreateVariant(B blob, String variantName, int retries) {
+    private Future tryCreateVariant(B blob, FileHandle inputFile, String variantName, int retries) {
         if (retries == 0) {
             Future future = new Future();
             future.fail(new IllegalStateException(Strings.apply(
@@ -1766,9 +1772,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 // wait a short and random amount of time and retry...
                 Wait.randomMillis(0, 150);
                 // A collision was detected and the given variant was removed, therefore we need to create the variant again.
-                return tryCreateVariant(blob, variantName, retries - 1);
+                return tryCreateVariant(blob, inputFile, variantName, retries - 1);
             } else {
-                return invokeConversionPipelineAsync(blob, variant);
+                return invokeConversionPipelineAsync(blob, inputFile, variant);
             }
         } else {
             // No variant is present and no conversion is possible -> give up
@@ -1792,7 +1798,19 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return a future holding the conversion process
      */
     public Future tryCreateVariant(B blob, String variantName) {
-        return tryCreateVariant(blob, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
+        return tryCreateVariant(blob, null, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
+    }
+
+    /**
+     * Tries to create the requested variant if the variant does not exist already.
+     *
+     * @param blob        the blob for which the variant is to be created
+     * @param inputFile   the file handle holding the file to use as input for the conversion
+     * @param variantName the variant to generate
+     * @return a future holding the conversion process
+     */
+    public Future tryCreateVariant(B blob, FileHandle inputFile, String variantName) {
+        return tryCreateVariant(blob, inputFile, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
     }
 
     /**

@@ -251,7 +251,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         updateFilenameFields();
 
         if (deleted) {
-            // The blob has been deleted. Reset all other flags since its now pointless to trigger any BlobChangedHandler.
+            // The blob has been deleted. Reset all other flags since it's now pointless to trigger any BlobChangedHandler.
             created = false;
             renamed = false;
             contentUpdated = false;
@@ -323,6 +323,11 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     @Override
     public Future tryCreateVariant(String variantName) {
         return getStorageSpace().tryCreateVariant(this, variantName);
+    }
+
+    @Override
+    public Future tryCreateVariant(FileHandle inputFile, String variantName) {
+        return getStorageSpace().tryCreateVariant(this, inputFile, variantName);
     }
 
     @Override
