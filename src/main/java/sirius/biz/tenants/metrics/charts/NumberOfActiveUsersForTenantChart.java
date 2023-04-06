@@ -73,6 +73,6 @@ public class NumberOfActiveUsersForTenantChart extends TimeSeriesChartFactory<Te
 
     @Override
     public int getPriority() {
-        return 9040;
+        return 9050;
     }
 }

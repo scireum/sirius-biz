@@ -89,6 +89,6 @@ public class NumberOfUserInteractionsChart extends TimeSeriesChartFactory<Object
 
     @Override
     public int getPriority() {
-        return 9030;
+        return 9040;
     }
 }
