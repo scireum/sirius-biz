@@ -40,6 +40,7 @@ public class NumberOfActiveUsersChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Object>>> referenceChartConsumer) {
+        referenceChartConsumer.accept(NumberOfUsersChart.class);
         referenceChartConsumer.accept(NumberOfActiveTenantsChart.class);
         referenceChartConsumer.accept(NumberOfUserInteractionsChart.class);
     }
