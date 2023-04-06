@@ -60,7 +60,7 @@ public class NumberOfUsersChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     public int getPriority() {
-        return 9030;
+        return 9020;
     }
 
     @Nullable
