@@ -83,6 +83,6 @@ public class AverageEducationForTenantChart extends TimeSeriesChartFactory<Tenan
 
     @Override
     public int getPriority() {
-        return 9070;
+        return 9080;
     }
 }

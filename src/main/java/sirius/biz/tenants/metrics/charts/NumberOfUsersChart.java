@@ -27,11 +27,11 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Provides a chart showing the number of {@link GlobalTenantMetricComputer#METRIC_NUM_ACTIVE_USERS}.
+ * Provides a chart showing the number of {@link GlobalTenantMetricComputer#METRIC_NUM_USERS}.
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-public class NumberOfActiveUsersChart extends TimeSeriesChartFactory<Object> {
+public class NumberOfUsersChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     protected boolean isMatchingChart(String uri, Object targetObject) {
@@ -40,9 +40,9 @@ public class NumberOfActiveUsersChart extends TimeSeriesChartFactory<Object> {
 
     @Override
     protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Object>>> referenceChartConsumer) {
-        referenceChartConsumer.accept(NumberOfUsersChart.class);
-        referenceChartConsumer.accept(NumberOfActiveTenantsChart.class);
+        referenceChartConsumer.accept(NumberOfActiveUsersChart.class);
         referenceChartConsumer.accept(NumberOfUserInteractionsChart.class);
+        referenceChartConsumer.accept(NumberOfTenantsChart.class);
     }
 
     @Override
@@ -50,18 +50,18 @@ public class NumberOfActiveUsersChart extends TimeSeriesChartFactory<Object> {
                              boolean hasComparisonPeriod,
                              boolean isComparisonPeriod,
                              Callback<TimeSeriesComputer<Object>> executor) throws Exception {
-        executor.invoke(new MetricTimeSeriesComputer<>(GlobalTenantMetricComputer.METRIC_NUM_ACTIVE_USERS));
+        executor.invoke(new MetricTimeSeriesComputer<>(GlobalTenantMetricComputer.METRIC_NUM_USERS));
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return "GlobalNumberOfActiveUsers";
+        return "GlobalNumberOfUsers";
     }
 
     @Override
     public int getPriority() {
-        return 9030;
+        return 9020;
     }
 
     @Nullable
