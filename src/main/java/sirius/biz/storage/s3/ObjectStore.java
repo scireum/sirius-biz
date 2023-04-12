@@ -714,7 +714,7 @@ public class ObjectStore {
         ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object %s to %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
             List<PartETag> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());
