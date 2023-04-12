@@ -21,12 +21,10 @@ import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.FileLock;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -79,11 +77,5 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
                                                Path dir,
                                                String handle) throws IOException {
         return new BridgeDirectoryStream(((BridgePath) dir).getVirtualFile(), (BridgeFileSystem) dir.getFileSystem());
-    }
-
-    @Override
-    public void renameFile(SftpSubsystemProxy subsystem, Path oldPath, Path newPath, Collection<CopyOption> opts)
-            throws IOException {
-        ((BridgePath) oldPath).getVirtualFile().rename(newPath.getFileName().toString());
     }
 }

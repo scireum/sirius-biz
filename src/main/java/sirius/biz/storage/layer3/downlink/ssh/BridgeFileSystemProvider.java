@@ -31,6 +31,7 @@ import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -90,7 +91,23 @@ class BridgeFileSystemProvider extends FileSystemProvider {
 
     @Override
     public void move(Path source, Path target, CopyOption... options) throws IOException {
-        ((BridgePath) source).getVirtualFile().transferTo(((BridgePath) target).getVirtualFile().parent()).move();
+        BridgePath sourceBridge = (BridgePath) source;
+        BridgePath targetBridge = (BridgePath) target;
+
+        boolean moveRequired = !Objects.equals(sourceBridge.getParent(), targetBridge.getParent());
+        boolean renameRequired = !Objects.equals(source.getFileName(), target.getFileName());
+
+        if (moveRequired && renameRequired) {
+            throw new UnsupportedOperationException("Cannot move and rename at the same time");
+        }
+
+        if (moveRequired) {
+            sourceBridge.getVirtualFile().transferTo(targetBridge.getVirtualFile().parent()).move();
+        }
+
+        if (renameRequired) {
+            sourceBridge.getVirtualFile().rename(target.getFileName().toString());
+        }
     }
 
     @Override
