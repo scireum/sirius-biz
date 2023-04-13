@@ -155,6 +155,18 @@ public class ConversionProcess {
         return inputFile;
     }
 
+    /**
+     * Returns the file name of the input file used for conversion.
+     *
+     * @return the file name of the supplied file or the {@link Blob#getFilename()}
+     */
+    public String getEffectiveFileName() {
+        if (fileToConvert != null) {
+            return fileToConvert.getName();
+        }
+        return getBlobToConvert().getFilename();
+    }
+
     private FileHandle obtainFileToConvert() throws FileNotFoundException {
         if (fileToConvert == null) {
             return null;
