@@ -155,7 +155,7 @@ public abstract class ObjectStorageSpace {
     /**
      * Creates a new cipher transformer which is used to encrypt data being written.
      *
-     * @return a cipher transfomer with the appropriate encryption / cipher settings
+     * @return a cipher transformer with the appropriate encryption / cipher settings
      */
     protected ByteBlockTransformer createEncrypter() {
         return new CipherTransformer(cipherProvider.createEncryptionCipher());
@@ -183,7 +183,7 @@ public abstract class ObjectStorageSpace {
     /**
      * Creates a new inflate transformer used when reading data.
      *
-     * @return a inflate transformer to use
+     * @return an inflate transformer to use
      */
     protected ByteBlockTransformer createInflater() {
         return new InflateTransformer();
@@ -328,7 +328,7 @@ public abstract class ObjectStorageSpace {
      *
      * @param objectId the object to download
      * @return a promise which is fulfilled with the downloaded data. Note that an empty optional is used to signal
-     * that the object with the given ID doesnt exist
+     * that the object with the given ID doesn't exist
      */
     public Promise<Optional<FileHandle>> downloadAsync(String objectId) {
         Promise<Optional<FileHandle>> promise = new Promise<>();
@@ -365,7 +365,7 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
-     * Downloads an provides the contents of the requested object.
+     * Downloads and provides the contents of the requested object.
      *
      * @param objectKey the id of the object
      * @return a handle to the given object or <tt>null</tt> if the object doesn't exist
@@ -378,13 +378,13 @@ public abstract class ObjectStorageSpace {
      * Downloads and provides the contents of the requested object asynchronous.
      *
      * @param objectKey the id of the object
-     * @return a a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
+     * @return a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
      * doesn't exist, the promise will be fulfilled with <tt>null</tt>.
      */
     protected abstract Promise<FileHandle> getDataAsync(String objectKey);
 
     /**
-     * Downloads an provides the contents of the requested object.
+     * Downloads and provides the contents of the requested object.
      *
      * @param objectKey   the id of the object
      * @param transformer the transform to apply when reading data
@@ -408,7 +408,7 @@ public abstract class ObjectStorageSpace {
      * Provides direct access to the contents of the requested object.
      *
      * @param objectId the physical storage key
-     * @return the contents a input stream
+     * @return the contents as input stream
      */
     public Optional<InputStream> getInputStream(String objectId) {
         try {
@@ -566,7 +566,7 @@ public abstract class ObjectStorageSpace {
      *
      * @param response       the response to populate
      * @param objectKey      the id of the object to deliver
-     * @param failureHandler a handler which cann be invoked if the download cannot be performed.
+     * @param failureHandler a handler which can be invoked if the download cannot be performed.
      *                       This will be supplied with the HTTP error code.
      * @throws IOException in case of an IO error
      */
@@ -639,7 +639,7 @@ public abstract class ObjectStorageSpace {
     public abstract void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException;
 
     /**
-     * Returns the configuration block which was used to setup this space.
+     * Returns the configuration block which was used to set up this space.
      *
      * @return the settings of this space
      */
@@ -650,7 +650,7 @@ public abstract class ObjectStorageSpace {
     /**
      * Specifies the replication space to use.
      * <p>
-     * This should be exlusively used by  the {@link ReplicationManager} to setup the replication framework.
+     * This should be exclusively used by  the {@link ReplicationManager} to set up the replication framework.
      *
      * @param replicationSpace the space to replicate all data to
      */

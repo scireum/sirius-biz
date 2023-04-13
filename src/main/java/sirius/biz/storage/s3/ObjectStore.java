@@ -106,7 +106,7 @@ public class ObjectStore {
     private static Tasks tasks;
 
     /**
-     * Provides some book keeping and monitoring for S3 up- and downloads.
+     * Provides some bookkeeping and monitoring for S3 up- and downloads.
      */
     private class MonitoringProgressListener implements S3ProgressListener {
 
@@ -398,13 +398,13 @@ public class ObjectStore {
     }
 
     /**
-     * Generates a presigned download URL for the given object.
+     * Generates a pre-signed download URL for the given object.
      * <p>
      * This can be used to {@link sirius.web.http.Response#tunnel(String)} the data to a client.
      *
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to generate the url for
-     * @return a presigned download URL for the object
+     * @return a pre-signed download URL for the object
      */
     public String objectUrl(BucketName bucket, String objectId) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket.getName(), objectId);
