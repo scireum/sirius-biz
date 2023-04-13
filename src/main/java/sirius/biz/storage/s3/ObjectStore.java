@@ -335,7 +335,7 @@ public class ObjectStore {
      * @param objectId the object to delete
      */
     public void deleteObject(BucketName bucket, String objectId) {
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object % from %s", objectId, bucket),
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object %s from %s", objectId, bucket),
                                                  Duration.ofMinutes(1))) {
             getClient().deleteObject(bucket.getName(), objectId);
         } catch (Exception e) {
@@ -423,7 +423,7 @@ public class ObjectStore {
      */
     public File download(BucketName bucket, String objectId) throws FileNotFoundException {
         File dest = null;
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object %s from %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
             dest = File.createTempFile("AMZS3", null);
@@ -478,7 +478,7 @@ public class ObjectStore {
      * @throws FileNotFoundException in case of an unknown object
      */
     public byte[] downloadInMemory(BucketName bucket, String objectId) throws FileNotFoundException {
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object %s from %s",
                                                                      objectId,
                                                                      bucket), Duration.ofSeconds(90))) {
             ensureBucketExists(bucket);
@@ -714,7 +714,7 @@ public class ObjectStore {
         ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object %s to %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
             List<PartETag> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());
