@@ -153,6 +153,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_RETENTION_DAYS = "retentionDays";
 
     /**
+     * Contains the name of the config keys used to determine the url validity in days.
+     */
+    private static final String CONFIG_KEY_URL_VALIDITY_DAYS = "urlValidityDays";
+
+    /**
      * Determines if touch tracking is active for this space.
      */
     private static final String CONFIG_KEY_TOUCH_TRACKING = "touchTracking";
@@ -283,6 +288,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected String baseUrl;
     protected boolean useNormalizedNames;
     protected int retentionDays;
+    protected int urlValidityDays;
     protected boolean touchTracking;
     protected boolean sortByLastModified;
     protected ObjectStorageSpace objectStorageSpace;
@@ -302,6 +308,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
         this.description = config.getRaw(CONFIG_KEY_DESCRIPTION).asString();
         this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
+        this.urlValidityDays = config.get(CONFIG_KEY_URL_VALIDITY_DAYS).asInt(StorageUtils.DEFAULT_URL_VALIDITY_DAYS);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
         this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
     }
@@ -343,6 +350,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Override
     public int getRetentionDays() {
         return retentionDays;
+    }
+
+    @Override
+    public int getUrlValidityDays() {
+        return urlValidityDays;
     }
 
     /**
