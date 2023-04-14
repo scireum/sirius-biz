@@ -46,7 +46,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     public static final String CONFIG_KEY_LAYER1_STORE = "store";
 
     /**
-     * Contains the bucket name within the S3 store to use. By default the name of the space will
+     * Contains the bucket name within the S3 store to use. By default, the name of the space will
      * be used.
      */
     private static final String CONFIG_KEY_LAYER1_BUCKET_NAME = "bucketName";
@@ -77,7 +77,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
         if (!objectStores.isConfigured(storeName)) {
             StorageUtils.LOG.WARN(
-                    "Layer 1/S3: Unknown or unconfigured object store '%s' used by space '%s'. Using system default.",
+                    "Layer 1/S3: Unknown or non-configured object store '%s' used by space '%s'. Using system default.",
                     storeName,
                     extension.getId());
             return objectStores.store();
@@ -192,8 +192,8 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     protected Promise<FileHandle> getDataAsync(String objectId, ByteBlockTransformer transformer) {
         Promise<FileHandle> result = new Promise<>();
 
-        // We cannot use the AWS TransferManager for an async download here, as we have to apply our transfomer.
-        // Therefore we run the whole task in a separate thread...
+        // We cannot use the AWS TransferManager for an async download here, as we have to apply our transformer.
+        // Therefore, we run the whole task in a separate thread...
         tasks.executor(ObjectStore.EXECUTOR_S3).fork(() -> {
             try {
                 result.success(getData(objectId, transformer));

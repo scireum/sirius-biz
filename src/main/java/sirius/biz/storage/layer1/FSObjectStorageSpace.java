@@ -48,7 +48,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     public static final String CONFIG_KEY_LAYER1_PATH = "path";
 
     /**
-     * Contains the base directory which will contain a sub directory per storage space.
+     * Contains the base directory which will contain a subdirectory per storage space.
      */
     public static final String CONFIG_KEY_LAYER1_BASE_DIR = "baseDir";
 

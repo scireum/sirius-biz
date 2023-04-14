@@ -155,6 +155,23 @@ public class ConversionProcess {
         return inputFile;
     }
 
+    /**
+     * Returns the file name of the input file used for conversion.
+     * <p>
+     * Files downloaded from external storage are temporary, with the .tmp extension. Conversions usually check if
+     * the file extension is relevant for the target format, so in this case we must fall back to the blob's file name.
+     * This will usually be the case for a recently downloaded file from a {@linkplain Blob} which will be chained
+     * into several conversions.
+     *
+     * @return the file name of the supplied file if it's not a tmp file or the {@link Blob#getFilename()}
+     */
+    public String getEffectiveFileName() {
+        if (fileToConvert != null && !fileToConvert.getName().endsWith(".tmp")) {
+            return fileToConvert.getName();
+        }
+        return getBlobToConvert().getFilename();
+    }
+
     private FileHandle obtainFileToConvert() throws FileNotFoundException {
         if (fileToConvert == null) {
             return null;
