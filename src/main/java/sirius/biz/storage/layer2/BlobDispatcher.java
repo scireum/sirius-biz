@@ -345,13 +345,20 @@ public class BlobDispatcher implements WebDispatcher {
                                   String physicalKey,
                                   boolean largeFileExpected,
                                   String filename) {
-        if (!utils.verifyHash(physicalKey, accessToken)) {
-            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+        if (checkHashInvalid(request, accessToken, physicalKey)) {
             return;
         }
 
         Response response = request.respondWith().infinitelyCached().named(filename);
         blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
+    }
+
+    private boolean checkHashInvalid(WebContext request, String accessToken, String physicalKey) {
+        if (!utils.verifyHash(physicalKey, accessToken)) {
+            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -372,8 +379,7 @@ public class BlobDispatcher implements WebDispatcher {
                                   String physicalKey,
                                   boolean largeFileExpected,
                                   String filename) {
-        if (!utils.verifyHash(physicalKey, accessToken)) {
-            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+        if (checkHashInvalid(request, accessToken, physicalKey)) {
             return;
         }
 
@@ -406,8 +412,8 @@ public class BlobDispatcher implements WebDispatcher {
                                  boolean download,
                                  boolean cacheable,
                                  boolean largeFileExpected) {
-        if (!utils.verifyHash(Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey, accessToken)) {
-            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+        String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
+        if (checkHashInvalid(request, accessToken, effectiveKey)) {
             return;
         }
 
