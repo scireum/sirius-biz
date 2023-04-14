@@ -345,13 +345,29 @@ public class BlobDispatcher implements WebDispatcher {
                                   String physicalKey,
                                   boolean largeFileExpected,
                                   String filename) {
-        if (!utils.verifyHash(physicalKey, accessToken)) {
-            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+        if (checkHashInvalid(request, accessToken, physicalKey, space)) {
             return;
         }
 
         Response response = request.respondWith().infinitelyCached().named(filename);
         blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
+    }
+
+    /**
+     * Checks if the provided accessToken is invalid.
+     *
+     * @param request     the request to handle
+     * @param accessToken the security token to verify
+     * @param physicalKey the physical object key used to determine which object should be delivered
+     * @param space       the space which is accessed
+     * @return <tt>true</tt> if the accessToken is invalid, <tt>false</tt> otherwise
+     */
+    private boolean checkHashInvalid(WebContext request, String accessToken, String physicalKey, String space) {
+        if (!utils.verifyHash(physicalKey, accessToken, blobStorage.getSpace(space).getUrlValidityDays())) {
+            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -372,8 +388,7 @@ public class BlobDispatcher implements WebDispatcher {
                                   String physicalKey,
                                   boolean largeFileExpected,
                                   String filename) {
-        if (!utils.verifyHash(physicalKey, accessToken)) {
-            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+        if (checkHashInvalid(request, accessToken, physicalKey, space)) {
             return;
         }
 
@@ -406,8 +421,8 @@ public class BlobDispatcher implements WebDispatcher {
                                  boolean download,
                                  boolean cacheable,
                                  boolean largeFileExpected) {
-        if (!utils.verifyHash(Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey, accessToken)) {
-            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+        String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
+        if (checkHashInvalid(request, accessToken, effectiveKey, space)) {
             return;
         }
 

@@ -43,6 +43,11 @@ import java.util.regex.Pattern;
 public class StorageUtils {
 
     /**
+     * Defines the default url validity time in days.
+     */
+    public static final int DEFAULT_URL_VALIDITY_DAYS = 2;
+
+    /**
      * Names the framework which must be enabled to activate the storage feature.
      */
     public static final String FRAMEWORK_STORAGE = "biz.storage";
@@ -88,11 +93,12 @@ public class StorageUtils {
     /**
      * Verifies the authentication hash for the given key.
      *
-     * @param key  the key to verify
-     * @param hash the hash to verify
+     * @param key          the key to verify
+     * @param hash         the hash to verify
+     * @param validityDays the number of days the hash should be valid into the past
      * @return <tt>true</tt> if the hash verifies the given object key, <tt>false</tt> otherwise
      */
-    public boolean verifyHash(String key, String hash) {
+    public boolean verifyHash(String key, String hash, int validityDays) {
         // Check for a hash for today...
         if (Strings.areEqual(hash, computeHash(key, 0))) {
             return true;
@@ -103,14 +109,31 @@ public class StorageUtils {
             return true;
         }
 
-        // Check for hashes up to two days of age...
-        for (int i = 1; i < 3; i++) {
-            if (Strings.areEqual(hash, computeHash(key, -i)) || Strings.areEqual(hash, computeHash(key, i))) {
+        // Check for hashes up to X days into the past...
+        for (int i = 1; i <= validityDays; i++) {
+            if (Strings.areEqual(hash, computeHash(key, -i))) {
+                return true;
+            }
+        }
+        // Check for hashes up to two days into the future...
+        for (int i = 1; i <= DEFAULT_URL_VALIDITY_DAYS; i++) {
+            if (Strings.areEqual(hash, computeHash(key, i))) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Verifies the authentication hash for the given key.
+     *
+     * @param key  the key to verify
+     * @param hash the hash to verify
+     * @return <tt>true</tt> if the hash verifies the given object key, <tt>false</tt> otherwise
+     */
+    public boolean verifyHash(String key, String hash) {
+        return verifyHash(key, hash, DEFAULT_URL_VALIDITY_DAYS);
     }
 
     /**
