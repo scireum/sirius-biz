@@ -347,4 +347,11 @@ public interface BlobStorageSpace {
      * @return the amount of days, 0 when indefinite
      */
     int getRetentionDays();
+
+    /**
+     * Defines for up to how many days a generated {@linkplain URLBuilder url} is valid.
+     *
+     * @return the amount of days
+     */
+    int getUrlValidityDays();
 }
