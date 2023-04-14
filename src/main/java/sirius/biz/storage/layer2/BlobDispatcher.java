@@ -345,7 +345,7 @@ public class BlobDispatcher implements WebDispatcher {
                                   String physicalKey,
                                   boolean largeFileExpected,
                                   String filename) {
-        if (checkHashInvalid(request, accessToken, physicalKey)) {
+        if (checkHashInvalid(request, accessToken, physicalKey, space)) {
             return;
         }
 
@@ -353,8 +353,17 @@ public class BlobDispatcher implements WebDispatcher {
         blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
     }
 
-    private boolean checkHashInvalid(WebContext request, String accessToken, String physicalKey) {
-        if (!utils.verifyHash(physicalKey, accessToken)) {
+    /**
+     * Checks if the provided accessToken is invalid.
+     *
+     * @param request     the request to handle
+     * @param accessToken the security token to verify
+     * @param physicalKey the physical object key used to determine which object should be delivered
+     * @param space       the space which is accessed
+     * @return <tt>true</tt> if the accessToken is invalid, <tt>false</tt> otherwise
+     */
+    private boolean checkHashInvalid(WebContext request, String accessToken, String physicalKey, String space) {
+        if (!utils.verifyHash(physicalKey, accessToken, blobStorage.getSpace(space).getUrlValidityDays())) {
             request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return true;
         }
@@ -379,7 +388,7 @@ public class BlobDispatcher implements WebDispatcher {
                                   String physicalKey,
                                   boolean largeFileExpected,
                                   String filename) {
-        if (checkHashInvalid(request, accessToken, physicalKey)) {
+        if (checkHashInvalid(request, accessToken, physicalKey, space)) {
             return;
         }
 
@@ -413,7 +422,7 @@ public class BlobDispatcher implements WebDispatcher {
                                  boolean cacheable,
                                  boolean largeFileExpected) {
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
-        if (checkHashInvalid(request, accessToken, effectiveKey)) {
+        if (checkHashInvalid(request, accessToken, effectiveKey, space)) {
             return;
         }
 
