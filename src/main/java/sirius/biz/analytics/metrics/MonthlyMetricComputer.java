@@ -66,9 +66,9 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
 
     private boolean isPastDate(LocalDate date) {
         if (suppressBestEffortScheduling()) {
-            return Period.between(LocalDate.now(), date).getMonths() >= 2;
+            return Period.between(date, LocalDate.now()).getMonths() >= 2;
         } else {
-            return Period.between(LocalDate.now(), date).getDays() >= 2;
+            return Period.between(date, LocalDate.now()).getDays() >= 2;
         }
     }
 

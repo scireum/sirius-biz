@@ -51,7 +51,7 @@ public abstract class MonthlyLargeMetricComputer<E extends BaseEntity<?>> implem
         compute(date,
                 date.withDayOfMonth(1).atStartOfDay(),
                 date.withDayOfMonth(date.lengthOfMonth()).plusDays(1).atStartOfDay().minusSeconds(1),
-                Period.between(LocalDate.now(), date).getMonths() >= 2,
+                Period.between(date, LocalDate.now()).getMonths() >= 2,
                 entity);
     }
 

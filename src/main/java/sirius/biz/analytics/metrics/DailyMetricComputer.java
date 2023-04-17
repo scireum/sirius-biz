@@ -49,7 +49,7 @@ public abstract class DailyMetricComputer<E extends BaseEntity<?>> implements An
         compute(date,
                 date.atStartOfDay(),
                 date.plusDays(1).atStartOfDay().minusSeconds(1),
-                Period.between(LocalDate.now(), date).getDays() >= 2,
+                Period.between(date, LocalDate.now()).getDays() >= 2,
                 entity);
     }
 
