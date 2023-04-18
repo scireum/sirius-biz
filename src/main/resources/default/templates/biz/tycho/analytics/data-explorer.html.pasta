@@ -11,12 +11,8 @@
     <i:block name="page-header">
         <t:pageHeader titleKey="DataExplorerController.title">
             <i:block name="actions">
-                <button type="button" id="addBtn" class="btn btn-link mr-2" onclick="openTypeSelector()">
-                    <i class="fa fa-plus"></i>
-                </button>
-                <button type="button" id="refreshBtn" class="btn btn-link mr-2"
-                        onclick="refresh()">
-                    <i class="fa fa-sync"></i>
+                <button type="button" id="addBtn" class="btn btn-primary mr-2" onclick="openTypeSelector()">
+                    <i class="fa fa-plus"></i> @i18n("DataExplorerController.addChart")
                 </button>
             </i:block>
             <i:block name="additionalActions">
