@@ -74,8 +74,8 @@ public class DataExplorerController extends BizController {
     public void explorer(WebContext webContext) {
         List<Action> actions = factories.stream()
                                         .filter(ChartFactory::isAccessibleToCurrentUser)
+                                        .sorted(Comparator.comparing(ChartFactory::getPriority))
                                         .map(this::toAction)
-                                        .sorted(Comparator.comparing(Action::getCategory))
                                         .toList();
 
         webContext.respondWith().template("/templates/biz/tycho/analytics/data-explorer.html.pasta", actions);
