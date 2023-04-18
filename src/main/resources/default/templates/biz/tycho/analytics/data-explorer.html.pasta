@@ -14,10 +14,6 @@
                 <button type="button" id="addBtn" class="btn btn-link mr-2" onclick="openTypeSelector()">
                     <i class="fa fa-plus"></i>
                 </button>
-                <button type="button" id="refreshBtn" class="btn btn-link mr-2"
-                        onclick="refresh()">
-                    <i class="fa fa-sync"></i>
-                </button>
             </i:block>
             <i:block name="additionalActions">
                 <t:dropdownItem
