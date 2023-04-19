@@ -26,7 +26,7 @@ import java.util.Map;
  */
 public class TimeSeriesData {
 
-    private final String label;
+    private String label;
     private final Granularity granularity;
     private final boolean comparisonTimeSeries;
     private final Map<LocalDate, Double> values = new HashMap<>();
@@ -81,5 +81,13 @@ public class TimeSeriesData {
 
     public boolean isComparisonTimeSeries() {
         return comparisonTimeSeries;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 }
