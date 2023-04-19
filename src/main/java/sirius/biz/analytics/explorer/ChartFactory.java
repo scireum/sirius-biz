@@ -300,4 +300,20 @@ public abstract class ChartFactory<O> implements Named, Priorized {
                                         ComparisonPeriod comparisonPeriod,
                                         Consumer<String> hints,
                                         JSONStructuredOutput output) throws Exception;
+
+    /**
+     * Computes the exportable time series for the given object.
+     * <p>
+     * If no time series can be computed, an empty list must be returned.
+     *
+     * @param object           the selected reference object
+     * @param timeSeries       the time series providing the start and end date, as well as the granularity
+     * @param comparisonPeriod the selected type of comparison period to provide
+     * @return one or more time series to be exported
+     * @throws Exception in case of any error when computing the chart data
+     */
+    protected abstract List<TimeSeriesData> computeExportableTimeSeries(O object,
+                                                                        TimeSeries timeSeries,
+                                                                        ComparisonPeriod comparisonPeriod)
+            throws Exception;
 }

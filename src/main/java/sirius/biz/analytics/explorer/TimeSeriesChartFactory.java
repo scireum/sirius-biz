@@ -10,6 +10,7 @@ package sirius.biz.analytics.explorer;
 
 import sirius.biz.analytics.metrics.Dataset;
 import sirius.kernel.commons.Callback;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
 import sirius.web.services.JSONStructuredOutput;
 
@@ -158,5 +159,30 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
                                                              .noneMatch(TimeSeriesData::isComparisonTimeSeries)) {
             hints.accept(NLS.get("TimeSeriesChartFactory.noComparisonSupported"));
         }
+    }
+
+    @Override
+    protected List<TimeSeriesData> computeExportableTimeSeries(O object,
+                                                               TimeSeries timeSeries,
+                                                               ComparisonPeriod comparisonPeriod) throws Exception {
+        String label = getChartLabel(object);
+        String subLabel = getChartSubLabel(object);
+
+        List<TimeSeriesData> result = new ArrayList<>();
+
+        // Enhance labels with the chart label and sub label so that the column names are more descriptive...
+        timeSeries.withDataConsumer(timeSeriesData -> {
+            if (Strings.isFilled(subLabel)) {
+                timeSeriesData.setLabel(label + " (" + subLabel + ") - " + timeSeriesData.getLabel());
+            } else {
+                timeSeriesData.setLabel(label + " - " + timeSeriesData.getLabel());
+            }
+            result.add(timeSeriesData);
+        });
+
+        TimeSeries comparisonTimeSeries = timeSeries.comparisonSeries(comparisonPeriod);
+        executeComputers(object, comparisonPeriod, timeSeries, comparisonTimeSeries);
+
+        return result;
     }
 }
