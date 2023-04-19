@@ -1497,14 +1497,14 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                  .flatMap(List::stream)
                                  .filter(path -> fileExtensionVerifier.test(Files.getFileExtension(path)))
                                  .findFirst()
-                                 .orElseGet(() -> queryStringDecoder.parameters()
-                                                                    .entrySet()
-                                                                    .stream()
-                                                                    .filter(entry -> queryParameterSelector.test(entry.getKey()))
-                                                                    .map(Map.Entry::getValue)
-                                                                    .flatMap(List::stream)
-                                                                    .findFirst()
-                                                                    .orElse(null));
+                                 .or(() -> queryStringDecoder.parameters()
+                                                             .entrySet()
+                                                             .stream()
+                                                             .filter(entry -> queryParameterSelector.test(entry.getKey()))
+                                                             .map(Map.Entry::getValue)
+                                                             .flatMap(List::stream)
+                                                             .findFirst())
+                                 .orElse(null);
     }
 
     private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URI url,
