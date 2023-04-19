@@ -220,7 +220,7 @@
                 '{{#hints}}' +
                 '   <div class="mt-1 text-small text-muted">' +
                 '       <i class="fas fa-info-circle"></i>' +
-                '       <span class="text-sirius-blue-dark">{{.}}</span>' +
+                '       <span class="text-sirius-yellow-dark">{{.}}</span>' +
                 '   </div>' +
                 '{{/hints}}' +
                 '<div class="mt-3 references-js">' +
