@@ -14,6 +14,9 @@
                 <button type="button" id="addBtn" class="btn btn-primary mr-2" onclick="openTypeSelector()">
                     <i class="fa fa-plus"></i> @i18n("DataExplorerController.addChart")
                 </button>
+                <button type="button" id="exportBtn" class="btn btn-link mr-2" onclick="exportCharts()">
+                    <i class="fa-solid fa-download"></i> @i18n("DataExplorerController.export")
+                </button>
             </i:block>
             <i:block name="additionalActions">
                 <t:dropdownItem
@@ -332,14 +335,35 @@
             if (comparisonPeriod !== "lastYear") {
                 searchParams.set("period", comparisonPeriod);
             }
+
+            let hasCharts = false;
             document.querySelectorAll('.chart-js').forEach(function (_chart) {
                 searchParams.append('chart', _chart.dataset.identifier);
+                hasCharts = true;
             });
+
+            if (hasCharts) {
+                sirius.show('#exportBtn');
+            } else {
+                sirius.hide('#exportBtn');
+            }
 
             const newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
             history.replaceState(null, '', newRelativePathQuery);
 
             updateAllReferences();
+        }
+
+        function exportCharts() {
+            const searchParams = new URLSearchParams();
+            searchParams.set("range", range);
+            searchParams.set("comparisonPeriod", comparisonPeriod);
+            document.querySelectorAll('.chart-js').forEach(function (_chart) {
+                searchParams.append('identifier', _chart.dataset.identifier);
+            });
+
+            const params = new URLSearchParams(window.location.search);
+            window.location = "/data-explorer/export?" + searchParams.toString();
         }
 
         function openTypeSelector() {
