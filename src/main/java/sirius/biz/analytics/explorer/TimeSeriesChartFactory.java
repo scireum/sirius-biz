@@ -10,6 +10,7 @@ package sirius.biz.analytics.explorer;
 
 import sirius.biz.analytics.metrics.Dataset;
 import sirius.kernel.commons.Callback;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
 import sirius.web.services.JSONStructuredOutput;
 
@@ -69,9 +70,9 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
      * @throws Exception in case of any error while computing the chart data
      */
     protected abstract void computers(O object,
-                             boolean hasComparisonPeriod,
-                             boolean isComparisonPeriod,
-                             Callback<TimeSeriesComputer<O>> executor) throws Exception;
+                                      boolean hasComparisonPeriod,
+                                      boolean isComparisonPeriod,
+                                      Callback<TimeSeriesComputer<O>> executor) throws Exception;
 
     @Override
     protected void computeData(O object,
@@ -88,18 +89,8 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
                         determineChartType(comparisonPeriod != null && comparisonPeriod != ComparisonPeriod.NONE));
         output.array(OUTPUT_LABELS, OUTPUT_RANGE, timeSeries.startDates().map(granularity::format).toList());
 
-        // Run all "main" computers...
-        computers(object, comparisonPeriod != ComparisonPeriod.NONE, false, computer -> {
-            computer.compute(object, timeSeries);
-        });
-
-        // Run the computers for the comparison period if necessary...
         TimeSeries comparisonTimeSeries = timeSeries.comparisonSeries(comparisonPeriod);
-        if (comparisonPeriod != null && comparisonPeriod != ComparisonPeriod.NONE) {
-            computers(object, true, true, computer -> {
-                computer.compute(object, comparisonTimeSeries);
-            });
-        }
+        executeComputers(object, comparisonPeriod, timeSeries, comparisonTimeSeries);
 
         // Output the collected data and determine if and how often we interpolate...
         output.beginArray(OUTPUT_DATASETS);
@@ -117,6 +108,23 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
 
         // Generated another hint, if a comparison period was requested, but none is present in the output...
         generateComparisonHint(comparisonPeriod, hints, data);
+    }
+
+    private void executeComputers(O object,
+                           ComparisonPeriod comparisonPeriod,
+                           TimeSeries timeSeries,
+                           TimeSeries comparisonTimeSeries) throws Exception {
+        // Run all "main" computers...
+        computers(object, comparisonPeriod != ComparisonPeriod.NONE, false, computer -> {
+            computer.compute(object, timeSeries);
+        });
+
+        // Run the computers for the comparison period if necessary...
+        if (comparisonPeriod != null && comparisonPeriod != ComparisonPeriod.NONE) {
+            computers(object, true, true, computer -> {
+                computer.compute(object, comparisonTimeSeries);
+            });
+        }
     }
 
     private void outputDataset(Dataset dataset, JSONStructuredOutput output) {
@@ -151,5 +159,30 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
                                                              .noneMatch(TimeSeriesData::isComparisonTimeSeries)) {
             hints.accept(NLS.get("TimeSeriesChartFactory.noComparisonSupported"));
         }
+    }
+
+    @Override
+    protected List<TimeSeriesData> computeExportableTimeSeries(O object,
+                                                               TimeSeries timeSeries,
+                                                               ComparisonPeriod comparisonPeriod) throws Exception {
+        String label = getChartLabel(object);
+        String subLabel = getChartSubLabel(object);
+
+        List<TimeSeriesData> result = new ArrayList<>();
+
+        // Enhance labels with the chart label and sub label so that the column names are more descriptive...
+        timeSeries.withDataConsumer(timeSeriesData -> {
+            if (Strings.isFilled(subLabel)) {
+                timeSeriesData.setLabel(label + " (" + subLabel + ") - " + timeSeriesData.getLabel());
+            } else {
+                timeSeriesData.setLabel(label + " - " + timeSeriesData.getLabel());
+            }
+            result.add(timeSeriesData);
+        });
+
+        TimeSeries comparisonTimeSeries = timeSeries.comparisonSeries(comparisonPeriod);
+        executeComputers(object, comparisonPeriod, timeSeries, comparisonTimeSeries);
+
+        return result;
     }
 }
