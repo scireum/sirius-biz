@@ -13,6 +13,8 @@ import sirius.kernel.async.CallContext;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.WebContext;
 
+import java.util.Optional;
+
 /**
  * Provides a helper to fetch the {@link sirius.biz.tycho.academy.OnboardingEngine academy} track or video or
  * the {@link sirius.biz.tycho.kb.KnowledgeBase kba} to link in the <tt>pageHeader</tt> of a Tycho page.
@@ -61,10 +63,18 @@ public class UserAssistant {
 
         return webContext.get(WEB_CONTEXT_SETTING_ACADEMY_TRACK)
                          .asOptionalString()
-                         .or(() -> Sirius.getSettings()
-                                         .get("user-assistant.academy-track." + webContext.getRequestedURI())
-                                         .asOptionalString())
+                         .or(() -> getSettingIfPresent("academy-track", webContext.getRequestedURI()))
                          .orElse(null);
+    }
+
+    private Optional<String> getSettingIfPresent(String type, String path) {
+        String setting = "user-assistant." + type + "." + path;
+
+        if (Sirius.getSettings().has(setting)) {
+            return Sirius.getSettings().get(setting).asOptionalString();
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -80,9 +90,7 @@ public class UserAssistant {
 
         return webContext.get(WEB_CONTEXT_SETTING_ACADEMY_VIDEO)
                          .asOptionalString()
-                         .or(() -> Sirius.getSettings()
-                                         .get("user-assistant.academy-video." + webContext.getRequestedURI())
-                                         .asOptionalString())
+                         .or(() -> getSettingIfPresent("academy-video", webContext.getRequestedURI()))
                          .orElse(null);
     }
 
@@ -99,6 +107,7 @@ public class UserAssistant {
 
         return webContext.get(WEB_CONTEXT_SETTING_KBA)
                          .asOptionalString()
+                         .or(() -> getSettingIfPresent("kba", webContext.getRequestedURI()))
                          .or(() -> Sirius.getSettings()
                                          .get("user-assistant.kba." + webContext.getRequestedURI())
                                          .asOptionalString())
