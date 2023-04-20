@@ -162,13 +162,15 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
     }
 
     @Override
-    protected List<TimeSeriesData> computeExportableTimeSeries(O object,
+    protected List<Dataset> computeExportableTimeSeries(O object,
                                                                TimeSeries timeSeries,
                                                                ComparisonPeriod comparisonPeriod) throws Exception {
         String label = getChartLabel(object);
         String subLabel = getChartSubLabel(object);
 
-        List<TimeSeriesData> result = new ArrayList<>();
+        TimeSeries comparisonTimeSeries = timeSeries.comparisonSeries(comparisonPeriod);
+
+        List<Dataset> result = new ArrayList<>();
 
         // Enhance labels with the chart label and sub label so that the column names are more descriptive...
         timeSeries.withDataConsumer(timeSeriesData -> {
@@ -177,10 +179,13 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
             } else {
                 timeSeriesData.setLabel(label + " - " + timeSeriesData.getLabel());
             }
-            result.add(timeSeriesData);
+            if (timeSeriesData.isComparisonTimeSeries()) {
+                result.add(timeSeriesData.toDataset(comparisonTimeSeries));
+            } else {
+                result.add(timeSeriesData.toDataset(timeSeries));
+            }
         });
 
-        TimeSeries comparisonTimeSeries = timeSeries.comparisonSeries(comparisonPeriod);
         executeComputers(object, comparisonPeriod, timeSeries, comparisonTimeSeries);
 
         return result;
