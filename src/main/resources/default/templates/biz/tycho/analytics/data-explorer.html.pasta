@@ -11,11 +11,15 @@
     <i:block name="page-header">
         <t:pageHeader titleKey="DataExplorerController.title">
             <i:block name="actions">
-                <button type="button" id="addBtn" class="btn btn-primary mr-2" onclick="openTypeSelector()">
-                    <i class="fa fa-plus"></i> @i18n("DataExplorerController.addChart")
+                <button type="button" id="addBtn" class="btn btn-primary mr-2" style="display: none"
+                        onclick="openTypeSelector()">
+                    <span><i class="fa fa-plus"></i></span>
+                    <span class="d-none ml-2 d-xl-inline-block">@i18n("DataExplorerController.addChart")</span>
                 </button>
-                <button type="button" id="exportBtn" class="btn btn-link mr-2" onclick="exportCharts()">
-                    <i class="fa-solid fa-download"></i> @i18n("DataExplorerController.export")
+                <button type="button" id="exportBtn" class="btn btn-link mr-2" style="display: none"
+                        onclick="exportCharts()">
+                    <span><i class="fa-solid fa-download"></i></span>
+                    <span class="d-none ml-2 d-xl-inline-block">@i18n("DataExplorerController.export")</span>
                 </button>
             </i:block>
             <i:block name="additionalActions">
