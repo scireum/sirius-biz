@@ -108,9 +108,6 @@ public class UserAssistant {
         return webContext.get(WEB_CONTEXT_SETTING_KBA)
                          .asOptionalString()
                          .or(() -> getSettingIfPresent("kba", webContext.getRequestedURI()))
-                         .or(() -> Sirius.getSettings()
-                                         .get("user-assistant.kba." + webContext.getRequestedURI())
-                                         .asOptionalString())
                          .orElse(null);
     }
 }
