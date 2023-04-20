@@ -8,6 +8,9 @@
 
 package sirius.biz.analytics.explorer;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.analytics.metrics.Dataset;
+import sirius.biz.jobs.batch.file.ExportXLSX;
 import sirius.biz.web.Action;
 import sirius.biz.web.BizController;
 import sirius.kernel.async.Future;
@@ -28,11 +31,13 @@ import sirius.web.security.LoginRequired;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Provides the UI of the <tt>Data-Explorer</tt>.
@@ -46,6 +51,7 @@ public class DataExplorerController extends BizController {
 
     private static final String PARAM_RANGE = "range";
     private static final String PARAM_COMPARISON_PERIOD = "comparisonPeriod";
+    private static final String PARAM_IDENTIFIER = "identifier";
 
     private static final String POOL_DATA_EXPLORER = "data-explorer";
 
@@ -74,8 +80,8 @@ public class DataExplorerController extends BizController {
     public void explorer(WebContext webContext) {
         List<Action> actions = factories.stream()
                                         .filter(ChartFactory::isAccessibleToCurrentUser)
+                                        .sorted(Comparator.comparing(ChartFactory::getPriority))
                                         .map(this::toAction)
-                                        .sorted(Comparator.comparing(Action::getCategory))
                                         .toList();
 
         webContext.respondWith().template("/templates/biz/tycho/analytics/data-explorer.html.pasta", actions);
@@ -112,12 +118,35 @@ public class DataExplorerController extends BizController {
      * @return a future used to signal when background processing has completed
      * @throws Exception in case of any error when generating the chart
      */
-    @SuppressWarnings("unchecked")
     @Routed("/data-explorer/api/load-chart")
     @InternalService
     @LoginRequired
     public Future chartApi(WebContext webContext, JSONStructuredOutput output) throws Exception {
-        Tuple<String, String> providerAndObject = Strings.split(webContext.require("identifier").asString(), ":");
+        String identifier = webContext.require(PARAM_IDENTIFIER).asString();
+        Tuple<ChartFactory<Object>, Object> providerAndObject = resolveProviderAndObject(identifier);
+
+        String range = webContext.require(PARAM_RANGE).asString();
+        ComparisonPeriod comparisonPeriod =
+                computeComparisonPeriod(webContext.require(PARAM_COMPARISON_PERIOD).asString());
+
+        return tasks.executor(POOL_DATA_EXPLORER).fork(() -> {
+            try {
+                providerAndObject.getFirst()
+                                 .generateOutput(providerAndObject.getSecond(),
+                                                 computeStart(range),
+                                                 computeEnd(range),
+                                                 computeGranularity(range),
+                                                 comparisonPeriod,
+                                                 output);
+            } catch (Exception error) {
+                throw Exceptions.handle(Log.APPLICATION, error);
+            }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private Tuple<ChartFactory<Object>, Object> resolveProviderAndObject(String identifier) {
+        Tuple<String, String> providerAndObject = Strings.split(identifier, ":");
         ChartFactory<Object> provider = globalContext.findPart(providerAndObject.getFirst(), ChartFactory.class);
 
         if (!provider.isAccessibleToCurrentUser()) {
@@ -133,22 +162,61 @@ public class DataExplorerController extends BizController {
                                                                      "DataExplorerController.unknownEntity"))
                                                              .handle());
 
+        return Tuple.create(provider, object);
+    }
+
+    @Routed("/data-explorer/export")
+    public void export(WebContext webContext) throws IOException {
         String range = webContext.require(PARAM_RANGE).asString();
+        TimeSeries timeSeries = new TimeSeries(computeStart(range), computeEnd(range), computeGranularity(range));
         ComparisonPeriod comparisonPeriod =
                 computeComparisonPeriod(webContext.require(PARAM_COMPARISON_PERIOD).asString());
 
-        return tasks.executor(POOL_DATA_EXPLORER).fork(() -> {
-            try {
-                provider.generateOutput(object,
-                                        computeStart(range),
-                                        computeEnd(range),
-                                        computeGranularity(range),
-                                        comparisonPeriod,
-                                        output);
-            } catch (Exception e) {
-                throw Exceptions.handle(Log.APPLICATION, e);
+        List<Dataset> timeSeriesData = webContext.getParameters(PARAM_IDENTIFIER)
+                                                 .stream()
+                                                 .flatMap(identifier -> exportTimeSeriesAsDatasets(identifier,
+                                                                                                   timeSeries,
+                                                                                                   comparisonPeriod))
+                                                 .toList();
+
+        try (ExportXLSX export = new ExportXLSX(() -> webContext.respondWith()
+                                                                .download("data-explorer.xlsx")
+                                                                .outputStream(HttpResponseStatus.OK, null))) {
+            export.addListRow(Stream.concat(Stream.of(NLS.get("DataExplorerController.dateColumn")), timeSeriesData.stream().map(Dataset::getLabel))
+                                    .toList());
+            List<String> dates = timeSeries.startDates().map(date -> timeSeries.getGranularity().format(date)).toList();
+            for (int index = 0; index < dates.size(); index++) {
+                final int rowIndex = index;
+                export.addListRow(Stream.concat(Stream.of(dates.get(rowIndex)),
+                                                timeSeriesData.stream()
+                                                              .map(dataset -> dataset.getValues().get(rowIndex)))
+                                        .toList());
             }
-        });
+        }
+    }
+
+    private Stream<Dataset> exportTimeSeriesAsDatasets(String identifier,
+                                                       TimeSeries timeSeries,
+                                                       ComparisonPeriod comparisonPeriod) {
+
+        try {
+            Tuple<ChartFactory<Object>, Object> providerAndObject = resolveProviderAndObject(identifier);
+            return providerAndObject.getFirst()
+                                    .computeExportableTimeSeries(providerAndObject.getSecond(),
+                                                                 timeSeries,
+                                                                 comparisonPeriod)
+                                    .stream()
+                                    .map(timeSeriesData -> timeSeriesData.toDataset(timeSeries));
+        } catch (Exception error) {
+            Exceptions.handle()
+                      .to(Log.BACKGROUND)
+                      .error(error)
+                      .withSystemErrorMessage("DataExplorerController: Failed to compute time series for %s: %s (%s)",
+                                              identifier)
+                      .handle();
+
+            return Stream.empty();
+        }
     }
 
     private ComparisonPeriod computeComparisonPeriod(String comparisonPeriod) {
