@@ -324,6 +324,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         return NLS.smartGet(description);
     }
 
+    @Nullable
+    @Override
+    public String getAcademyVideoTrackId() {
+        return config.getString("academyVideoTrackId");
+    }
+
+    @Nullable
+    @Override
+    public String getAcademyVideoCode() {
+        return config.getString("academyVideoCode");
+    }
+
+    @Nullable
+    @Override
+    public String getKnowledgeBaseArticleCode() {
+        return config.getString("kba");
+    }
+
     @Override
     public ObjectStorageSpace getPhysicalSpace() {
         if (objectStorageSpace == null) {
