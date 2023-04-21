@@ -205,8 +205,7 @@ public class DataExplorerController extends BizController {
                                     .computeExportableTimeSeries(providerAndObject.getSecond(),
                                                                  timeSeries,
                                                                  comparisonPeriod)
-                                    .stream()
-                                    .map(timeSeriesData -> timeSeriesData.toDataset(timeSeries));
+                                    .stream();
         } catch (Exception error) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)

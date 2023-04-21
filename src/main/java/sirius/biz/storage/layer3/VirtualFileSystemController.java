@@ -9,6 +9,8 @@
 package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
+import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
@@ -66,6 +68,17 @@ public class VirtualFileSystemController extends BizController {
         if (!file.isDirectory()) {
             file.deliverDownloadTo(webContext);
         } else {
+            // We sort of break layers here as using yet another interface doesn't provide much
+            // value.
+            file.tryAs(Blob.class).ifPresent(blob -> {
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_ACADEMY_TRACK,
+                                        blob.getStorageSpace().getAcademyVideoTrackId());
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_ACADEMY_VIDEO,
+                                        blob.getStorageSpace().getAcademyVideoCode());
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_KBA,
+                                        blob.getStorageSpace().getKnowledgeBaseArticleCode());
+            });
+
             webContext.respondWith()
                       .template("/templates/biz/storage/list.html.pasta",
                                 file,
