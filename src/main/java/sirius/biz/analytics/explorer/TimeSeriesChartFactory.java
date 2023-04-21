@@ -111,9 +111,9 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
     }
 
     private void executeComputers(O object,
-                           ComparisonPeriod comparisonPeriod,
-                           TimeSeries timeSeries,
-                           TimeSeries comparisonTimeSeries) throws Exception {
+                                  ComparisonPeriod comparisonPeriod,
+                                  TimeSeries timeSeries,
+                                  TimeSeries comparisonTimeSeries) throws Exception {
         // Run all "main" computers...
         computers(object, comparisonPeriod != ComparisonPeriod.NONE, false, computer -> {
             computer.compute(object, timeSeries);
@@ -162,27 +162,29 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
     }
 
     @Override
-    protected List<TimeSeriesData> computeExportableTimeSeries(O object,
-                                                               TimeSeries timeSeries,
-                                                               ComparisonPeriod comparisonPeriod) throws Exception {
+    protected List<Dataset> computeExportableTimeSeries(O object,
+                                                        TimeSeries timeSeries,
+                                                        ComparisonPeriod comparisonPeriod) throws Exception {
         String label = getChartLabel(object);
         String subLabel = getChartSubLabel(object);
 
-        List<TimeSeriesData> result = new ArrayList<>();
-
-        // Enhance labels with the chart label and sub label so that the column names are more descriptive...
-        timeSeries.withDataConsumer(timeSeriesData -> {
-            if (Strings.isFilled(subLabel)) {
-                timeSeriesData.setLabel(label + " (" + subLabel + ") - " + timeSeriesData.getLabel());
-            } else {
-                timeSeriesData.setLabel(label + " - " + timeSeriesData.getLabel());
-            }
-            result.add(timeSeriesData);
-        });
+        List<TimeSeriesData> data = new ArrayList<>();
+        timeSeries.withDataConsumer(data::add);
 
         TimeSeries comparisonTimeSeries = timeSeries.comparisonSeries(comparisonPeriod);
         executeComputers(object, comparisonPeriod, timeSeries, comparisonTimeSeries);
 
-        return result;
+        return data.stream().map(timeseriesData -> {
+            if (Strings.isFilled(subLabel)) {
+                timeseriesData.setLabel(label + " (" + subLabel + ") - " + timeseriesData.getLabel());
+            } else {
+                timeseriesData.setLabel(label + " - " + timeseriesData.getLabel());
+            }
+            if (timeseriesData.isComparisonTimeSeries()) {
+                return timeseriesData.toDataset(comparisonTimeSeries);
+            } else {
+                return timeseriesData.toDataset(timeSeries);
+            }
+        }).toList();
     }
 }

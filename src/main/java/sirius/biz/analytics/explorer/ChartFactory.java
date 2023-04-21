@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.explorer;
 
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Named;
@@ -312,8 +313,8 @@ public abstract class ChartFactory<O> implements Named, Priorized {
      * @return one or more time series to be exported
      * @throws Exception in case of any error when computing the chart data
      */
-    protected abstract List<TimeSeriesData> computeExportableTimeSeries(O object,
-                                                                        TimeSeries timeSeries,
-                                                                        ComparisonPeriod comparisonPeriod)
+    protected abstract List<Dataset> computeExportableTimeSeries(O object,
+                                                                 TimeSeries timeSeries,
+                                                                 ComparisonPeriod comparisonPeriod)
             throws Exception;
 }
