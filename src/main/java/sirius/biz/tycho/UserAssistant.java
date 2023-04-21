@@ -14,6 +14,7 @@ import sirius.kernel.di.std.Register;
 import sirius.web.http.WebContext;
 
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Provides a helper to fetch the {@link sirius.biz.tycho.academy.OnboardingEngine academy} track or video or
@@ -50,6 +51,8 @@ public class UserAssistant {
      */
     public static final String WEB_CONTEXT_SETTING_KBA = "UserAssistantKba";
 
+    private static final Pattern VALID_PATH = Pattern.compile("[a-zA-Z0-9\\-/_]+");
+
     /**
      * Determines the {@link sirius.biz.tycho.academy.OnboardingEngine academy} track to link to.
      *
@@ -68,6 +71,9 @@ public class UserAssistant {
     }
 
     private Optional<String> getSettingIfPresent(String type, String path) {
+        if (!VALID_PATH.matcher(path).matches()) {
+            return Optional.empty();
+        }
         String setting = "user-assistant." + type + "." + path;
 
         if (Sirius.getSettings().has(setting)) {
