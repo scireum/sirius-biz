@@ -50,6 +50,7 @@ public class UserAssistant {
      * @see WebContext#setAttribute(String, Object)
      */
     public static final String WEB_CONTEXT_SETTING_KBA = "UserAssistantKba";
+
     private static final Pattern VALID_PATH = Pattern.compile("[a-zA-Z0-9\\-/_]+");
 
     /**
