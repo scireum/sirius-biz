@@ -228,7 +228,7 @@
                 '   </div>' +
                 '{{/hints}}' +
                 '<div class="mt-3 references-js">' +
-                '   <div class="text-small mb-1">Weitere Diagramme:</div>' +
+                '   <div class="text-small mb-1">@i18n("DataExplorerController.references"):</div>' +
                 '   {{#references}}' +
                 '       <a class="btn btn-primary btn-sm mr-2 reference-js reference-visible-js" ' +
                 '          data-chart="{{identifier}}" href="javascript:addChart(\'{{identifier}}\')">' +
