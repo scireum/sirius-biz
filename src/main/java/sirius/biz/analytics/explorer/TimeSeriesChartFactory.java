@@ -111,9 +111,9 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
     }
 
     private void executeComputers(O object,
-                           ComparisonPeriod comparisonPeriod,
-                           TimeSeries timeSeries,
-                           TimeSeries comparisonTimeSeries) throws Exception {
+                                  ComparisonPeriod comparisonPeriod,
+                                  TimeSeries timeSeries,
+                                  TimeSeries comparisonTimeSeries) throws Exception {
         // Run all "main" computers...
         computers(object, comparisonPeriod != ComparisonPeriod.NONE, false, computer -> {
             computer.compute(object, timeSeries);
@@ -163,8 +163,8 @@ public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
 
     @Override
     protected List<Dataset> computeExportableTimeSeries(O object,
-                                                               TimeSeries timeSeries,
-                                                               ComparisonPeriod comparisonPeriod) throws Exception {
+                                                        TimeSeries timeSeries,
+                                                        ComparisonPeriod comparisonPeriod) throws Exception {
         String label = getChartLabel(object);
         String subLabel = getChartSubLabel(object);
 
