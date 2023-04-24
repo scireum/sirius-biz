@@ -164,7 +164,7 @@ public class JournalData extends Composite {
         try {
             JournalEntry entry = new JournalEntry();
             entry.setTod(LocalDateTime.now());
-            entry.setChanges(changes);
+            entry.setChanges(Strings.limit(changes, 30000, false)); // TODO SIRI-793: Remove this limit
             entry.setTargetId(targetId);
             entry.setContentIdentifier(contentIdentifier);
             entry.setTargetType(targetType);
