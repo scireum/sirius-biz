@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.regex.PatternSyntaxException;
 
 /**
- * Provides a {@link AddressData street address} along with a country code to be emdedded in entities or mixins.
+ * Provides a {@link AddressData street address} along with a country code to be embedded in entities or mixins.
  * <p>
  * Note that just like {@link AddressData} this doesn't perform any validations or verifications unless explicitly
  * told to do so.

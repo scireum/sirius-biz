@@ -191,7 +191,7 @@ public class PersonData extends Composite {
     }
 
     /**
-     * Generates a string representation of the full name, tranlated corresponding to the given language code.
+     * Generates a string representation of the full name, translated corresponding to the given language code.
      *
      * @param langCode the language code to translate to
      * @return the full name (if filled)
@@ -233,7 +233,7 @@ public class PersonData extends Composite {
     }
 
     /**
-     * Returns the value (translated name) of the saluation.
+     * Returns the value (translated name) of the salutation.
      *
      * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
      */

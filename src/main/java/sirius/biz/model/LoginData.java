@@ -35,7 +35,7 @@ import java.util.List;
  * Stores a username and encrypted password along with some trace data to support logins which can be embedded into
  * other entities or mixins.
  * <p>
- * Note that no uniqueness constraint is placed on the username as the context of unqiueness has to be decided by the
+ * Note that no uniqueness constraint is placed on the username as the context of uniqueness has to be decided by the
  * outside class.
  * <p>
  * An example of an actual user is {@link sirius.biz.tenants.UserAccount}.
@@ -100,8 +100,8 @@ public class LoginData extends Composite {
     /**
      * Contains a generated string which is put into each client session of the user.
      * <p>
-     * Once the user deciedes to change the password or to log out on all devices,
-     * the fingerprint is updated and all sessions containing the old finderprint
+     * Once the user decides to change the password or to log out on all devices,
+     * the fingerprint is updated and all sessions containing the old fingerprint
      * are considered invalid.
      */
     public static final Mapping FINGERPRINT = Mapping.named("fingerprint");
@@ -122,7 +122,7 @@ public class LoginData extends Composite {
     private String generatedPassword;
 
     /**
-     * Provides an API TOKEN which is crypthgraphically created and can be used as password for technical integrations
+     * Provides an API TOKEN which is cryptographically created and can be used as password for technical integrations
      */
     public static final Mapping API_TOKEN = Mapping.named("apiToken");
     @Trim
@@ -158,7 +158,7 @@ public class LoginData extends Composite {
     /**
      * Records the timestamp of the last login via an external system.
      * <p>
-     * When using external identity poviders, like SAML, we want to keep track when the last login via this happened
+     * When using external identity providers, like SAML, we want to keep track when the last login via this happened
      * as we probably want to enforce regular validations (logins).
      */
     public static final Mapping LAST_EXTERNAL_LOGIN = Mapping.named("lastExternalLogin");
@@ -257,7 +257,7 @@ public class LoginData extends Composite {
     }
 
     /**
-     * Verifys the given password if it meets the length requirement and is equal to its confirmation.
+     * Verifies the given password if it meets the length requirement and is equal to its confirmation.
      *
      * @param password          the password to check for
      * @param confirmation      the confirmation password to check for
@@ -333,7 +333,7 @@ public class LoginData extends Composite {
      * <p>
      * Note that this value is transient and therefore not saved to the database.
      *
-     * @return the currently applied password in cleatext
+     * @return the currently applied password in cleartext
      */
     public String getCleartextPassword() {
         return cleartextPassword;
