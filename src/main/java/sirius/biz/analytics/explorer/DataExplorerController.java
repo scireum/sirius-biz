@@ -122,6 +122,9 @@ public class DataExplorerController extends BizController {
     @InternalService
     @LoginRequired
     public Future chartApi(WebContext webContext, JSONStructuredOutput output) throws Exception {
+        // Some charts might take their time, therefore we don't want automatic timeouts here...
+        webContext.markAsLongCall();
+
         String identifier = webContext.require(PARAM_IDENTIFIER).asString();
         Tuple<ChartFactory<Object>, Object> providerAndObject = resolveProviderAndObject(identifier);
 
@@ -165,6 +168,12 @@ public class DataExplorerController extends BizController {
         return Tuple.create(provider, object);
     }
 
+    /**
+     * Provides a route to export charts as MS Excel file.
+     *
+     * @param webContext the request to respond to
+     * @throws IOException in case of an IO error while writing the Excel response
+     */
     @Routed("/data-explorer/export")
     public void export(WebContext webContext) throws IOException {
         String range = webContext.require(PARAM_RANGE).asString();
@@ -182,8 +191,8 @@ public class DataExplorerController extends BizController {
         try (ExportXLSX export = new ExportXLSX(() -> webContext.respondWith()
                                                                 .download("data-explorer.xlsx")
                                                                 .outputStream(HttpResponseStatus.OK, null))) {
-            export.addListRow(Stream.concat(Stream.of(NLS.get("DataExplorerController.dateColumn")), timeSeriesData.stream().map(Dataset::getLabel))
-                                    .toList());
+            export.addListRow(Stream.concat(Stream.of(NLS.get("DataExplorerController.dateColumn")),
+                                            timeSeriesData.stream().map(Dataset::getLabel)).toList());
             List<String> dates = timeSeries.startDates().map(date -> timeSeries.getGranularity().format(date)).toList();
             for (int index = 0; index < dates.size(); index++) {
                 final int rowIndex = index;
