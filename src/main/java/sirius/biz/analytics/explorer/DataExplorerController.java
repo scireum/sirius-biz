@@ -122,6 +122,9 @@ public class DataExplorerController extends BizController {
     @InternalService
     @LoginRequired
     public Future chartApi(WebContext webContext, JSONStructuredOutput output) throws Exception {
+        // Some charts might take their time, therefore we don't want automatic timeouts here...
+        webContext.markAsLongCall();
+
         String identifier = webContext.require(PARAM_IDENTIFIER).asString();
         Tuple<ChartFactory<Object>, Object> providerAndObject = resolveProviderAndObject(identifier);
 
