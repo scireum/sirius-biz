@@ -113,12 +113,12 @@
                                                      value="@part(Jobs.class).getMatchingInteractiveJobs(CallContext.getCurrent().get(WebContext.class).getRequest().uri(), child)"/>
                                             <i:if test="child.canRename()">
                                                 <t:dropdownItem
-                                                        url="@apply('javascript:renameFile(\'%s\', \'%s\')', child.path(), child.name())"
+                                                        url="@apply('javascript:renameFile(\'%s\', \'%s\')', child.path().replace('\'', '\\\''), child.name().replace('\'', '\\\''))"
                                                         icon="fa fa-tag" labelKey="VFSController.rename"/>
                                             </i:if>
                                             <i:if test="child.canMove()">
                                                 <t:dropdownItem
-                                                        url="@apply('javascript:moveFile(\'%s\')', child.path())"
+                                                        url="@apply('javascript:moveFile(\'%s\')', child.path().replace('\'', '\\\''))"
                                                         icon="fa fa-arrow-right" labelKey="VFSController.move"/>
                                             </i:if>
                                             <i:for type="Tuple" var="linkAndJob" items="jobs">
@@ -129,7 +129,7 @@
                                             </i:for>
                                             <i:if test="!child.isDirectory()">
                                                 <t:dropdownItem
-                                                        url="@apply('javascript:copyToClipboard(\'%s\')', child.path())"
+                                                        url="@apply('javascript:copyToClipboard(\'%s\')', child.path().replace('\'', '\\\''))"
                                                         icon="fa fa-copy" labelKey="VFSController.copyPath"/>
                                             </i:if>
                                             <i:if test="child.canDelete()">
