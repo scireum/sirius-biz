@@ -228,7 +228,8 @@ public class ConversionEngine {
         String blobTenantId = conversionProcess.getBlobToConvert().getTenantId();
         if (processes != null && tenants != null && Strings.isFilled(blobTenantId)) {
             processes.executeInStandbyProcess("conversion",
-                                              () -> NLS.get("ConversionEngine.processTitle"), blobTenantId,
+                                              () -> NLS.get("ConversionEngine.processTitle"),
+                                              blobTenantId,
                                               () -> tenants.fetchCachedTenantName(blobTenantId),
                                               processContext -> createStandbyProcessLogEntry(conversionProcess,
                                                                                              processContext,
