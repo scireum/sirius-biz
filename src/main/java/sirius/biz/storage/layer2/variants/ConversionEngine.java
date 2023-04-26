@@ -225,12 +225,11 @@ public class ConversionEngine {
     }
 
     private void recordErrorInStandbyProcess(ConversionProcess conversionProcess, Exception exception) {
-        if (processes != null && tenants != null) {
+        String blobTenantId = conversionProcess.getBlobToConvert().getTenantId();
+        if (processes != null && tenants != null && Strings.isFilled(blobTenantId)) {
             processes.executeInStandbyProcess("conversion",
-                                              () -> NLS.get("ConversionEngine.processTitle"),
-                                              conversionProcess.getBlobToConvert().getTenantId(),
-                                              () -> tenants.fetchCachedTenantName(conversionProcess.getBlobToConvert()
-                                                                                                   .getTenantId()),
+                                              () -> NLS.get("ConversionEngine.processTitle"), blobTenantId,
+                                              () -> tenants.fetchCachedTenantName(blobTenantId),
                                               processContext -> createStandbyProcessLogEntry(conversionProcess,
                                                                                              processContext,
                                                                                              exception.getMessage()));
