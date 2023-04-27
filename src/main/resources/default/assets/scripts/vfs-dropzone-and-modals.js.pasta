@@ -281,7 +281,7 @@ function createDropzone(dropzoneId, config, _modal, resolve) {
                             $(_modal).modal('hide');
                         }
                         file.previewElement.remove();
-                    }, 500);
+                    }, 1000);
                 }
                 if (response.error) {
                     file.previewElement.classList.add('dz-error');
