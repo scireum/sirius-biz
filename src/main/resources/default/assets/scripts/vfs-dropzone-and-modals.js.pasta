@@ -131,6 +131,7 @@ function selectVFSFile(config) {
                         maxFilesize: null,
                         maxFiles: 1,
                         dictMaxFilesExceeded: config.dictMaxFilesExceeded,
+                        dictInvalidFileType: "___i18n('BaseFileParameter.invalidFileExtension')",
                         acceptedFiles: config.allowedExtensions,
                         previewTemplate: '' +
                             '<div class="dropzone-item">\n' +
@@ -156,7 +157,7 @@ function selectVFSFile(config) {
                         previewsContainer: '#select-file-modal .upload-box-js .dropzone-items',
                         clickable: '#select-file-modal .upload-box-js .dropzone-select',
                         error: function (file, message) {
-                            errorHandler(file, message, _modal);
+                            errorHandler(file, message, config.allowedExtensions, _modal);
                         },
                         init: function () {
                             const dropzone = this;
@@ -281,6 +282,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
         // this avoids user errors when an existing upload should be replaced
         maxFiles: null,
         dictMaxFilesExceeded: dictMaxFilesExceeded,
+        dictInvalidFileType: "___i18n('BaseFileParameter.invalidFileExtension')",
         acceptedFiles: allowedExtensions,
         previewTemplate: '' +
             '<div class="dropzone-item">\n' +
@@ -306,7 +308,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
         previewsContainer: '#sirius-upload-progress-' + localId,
         clickable: '#sirius-upload-progress-' + localId,
         error: function (file, message) {
-            errorHandler(file, message, null)
+            errorHandler(file, message, allowedExtensions, null)
         },
         init: function () {
             const dropzone = this;
@@ -404,7 +406,10 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
     });
 }
 
-function errorHandler(file, message, _modal) {
+function errorHandler(file, message, allowedExtensions, _modal) {
+    const nameSubstitution = "${name}";
+    const extensionsSubstitution = "${extensions}";
+
     if (file.status === Dropzone.CANCELED) {
         // no need to show error to the user
         return;
@@ -414,6 +419,10 @@ function errorHandler(file, message, _modal) {
 
         if (typeof message !== 'string' && message.message) {
             message = message.message;
+        }
+
+        if (message.includes(nameSubstitution) && message.includes(extensionsSubstitution)) {
+            message = message.replace(nameSubstitution, file.name).replace(extensionsSubstitution, allowedExtensions);
         }
 
         file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
