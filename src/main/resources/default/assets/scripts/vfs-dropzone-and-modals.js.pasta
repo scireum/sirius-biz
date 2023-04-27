@@ -157,7 +157,7 @@ function selectVFSFile(config) {
                         previewsContainer: '#select-file-modal .upload-box-js .dropzone-items',
                         clickable: '#select-file-modal .upload-box-js .dropzone-select',
                         error: function (file, message) {
-                            errorHandler(file, message, config.allowedExtensions, _modal);
+                            errorHandler(file, message, config.allowedExtensions, config.input, _modal);
                         },
                         init: function () {
                             const dropzone = this;
@@ -224,8 +224,6 @@ function selectVFSFile(config) {
                                 if (response.error) {
                                     file.previewElement.classList.add('dz-error');
                                     file.previewElement.classList.remove('dz-success');
-                                    clearMessages();
-                                    addErrorMessage(response.message);
                                 } else {
                                     resolve(response.file);
                                 }
@@ -308,7 +306,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
         previewsContainer: '#sirius-upload-progress-' + localId,
         clickable: '#sirius-upload-progress-' + localId,
         error: function (file, message) {
-            errorHandler(file, message, allowedExtensions, null)
+            errorHandler(file, message, allowedExtensions, _input, null)
         },
         init: function () {
             const dropzone = this;
@@ -390,8 +388,6 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
                 if (response.error) {
                     file.previewElement.classList.add('dz-error');
                     file.previewElement.classList.remove('dz-success');
-                    clearMessages();
-                    addErrorMessage(response.message);
                 } else {
                     _input.value = response.file;
                     sirius.dispatchEvent("change", _input);
@@ -406,7 +402,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
     });
 }
 
-function errorHandler(file, message, allowedExtensions, _modal) {
+function errorHandler(file, message, allowedExtensions, _input, _modal) {
     const nameSubstitution = "${name}";
     const extensionsSubstitution = "${extensions}";
 
@@ -414,6 +410,10 @@ function errorHandler(file, message, allowedExtensions, _modal) {
         // no need to show error to the user
         return;
     }
+
+    // clear the value of the input field if an error occurred
+    _input.value = "";
+
     if (file.previewElement) {
         file.previewElement.classList.add('dz-error');
 
@@ -427,14 +427,11 @@ function errorHandler(file, message, allowedExtensions, _modal) {
 
         file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
 
-        clearMessages();
-        addErrorMessage(message);
         setTimeout(function () {
             if (_modal) {
                 $(_modal).modal('hide');
             }
             file.previewElement.remove();
         }, 500);
-
     }
 }
