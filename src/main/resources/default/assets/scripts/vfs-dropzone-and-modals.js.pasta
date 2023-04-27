@@ -428,10 +428,9 @@ function errorHandler(file, message, allowedExtensions, _input, _modal) {
         file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
 
         setTimeout(function () {
-            if (_modal) {
-                $(_modal).modal('hide');
+            if (!_modal) {
+                file.previewElement.remove();
             }
-            file.previewElement.remove();
-        }, 500);
+        }, 5000);
     }
 }
