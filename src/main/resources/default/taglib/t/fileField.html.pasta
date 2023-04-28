@@ -72,6 +72,8 @@
                     value = value.substr(0, value.lastIndexOf("/"))
                 }
                 selectVFSFile({
+                    _input: _input,
+                    basePath: '___basePath',
                     path: value,
                     allowDirectories: ___allowDirectories,
                     allowFiles: ___allowFiles,
