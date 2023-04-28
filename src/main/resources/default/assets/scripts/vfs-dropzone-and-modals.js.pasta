@@ -149,7 +149,7 @@ function fetchPathFromInput(basePath, _input) {
     if (path == null || path === '') {
         path = basePath;
     } else {
-        path = path.substr(0, path.lastIndexOf("/"))
+        path = path.substr(0, path.lastIndexOf("/"));
     }
 
     return path;
