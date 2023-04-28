@@ -47,7 +47,7 @@ public abstract class MonthlyLargeMetricComputer<E extends BaseEntity<?>> implem
     }
 
     @Override
-    public final void compute(LocalDate date, E entity) throws Exception {
+    public final void compute(LocalDate date, E entity, boolean bestEffort) throws Exception {
         compute(date,
                 date.withDayOfMonth(1).atStartOfDay(),
                 date.withDayOfMonth(date.lengthOfMonth()).plusDays(1).atStartOfDay().minusSeconds(1),

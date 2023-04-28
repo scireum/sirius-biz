@@ -45,7 +45,7 @@ public abstract class DailyMetricComputer<E extends BaseEntity<?>> implements An
     }
 
     @Override
-    public final void compute(LocalDate date, E entity) throws Exception {
+    public final void compute(LocalDate date, E entity, boolean bestEffort) throws Exception {
         compute(date,
                 date.atStartOfDay(),
                 date.plusDays(1).atStartOfDay().minusSeconds(1),
