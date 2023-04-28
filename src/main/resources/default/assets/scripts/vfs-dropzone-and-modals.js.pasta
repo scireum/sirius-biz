@@ -6,7 +6,7 @@ function selectVFSFile(config) {
         return config.pathRestriction === undefined || child.path.startsWith(config.pathRestriction);
     }
 
-    function createRow(child, _modal, resolve, changeDirectory) {
+    function createRow(child, modal, resolve, changeDirectory) {
         const _self = this;
         child.icon = child.directory ? "fa-folder-open" : "fa-file";
 
@@ -20,7 +20,7 @@ function selectVFSFile(config) {
             if (this.dataset.dir === "true") {
                 changeDirectory(this.dataset.path);
             } else {
-                $(_modal).modal("hide");
+                modal.hide();
                 resolve(this.dataset.path);
             }
         });
@@ -38,16 +38,17 @@ function selectVFSFile(config) {
     }
 
     return new Promise(function (resolve, reject) {
-        const _modal = document.getElementById("select-file-modal");
-        const _table = _modal.querySelector('.select-file-table-js');
-        const _searchForm = _modal.querySelector('.search-form-js input');
+        const _modalElement = document.getElementById("select-file-modal");
+        const _table = _modalElement.querySelector('.select-file-table-js');
+        const _searchForm = _modalElement.querySelector('.search-form-js input');
+        const modal = new bootstrap.Modal(_modalElement);
         const pageSize = 25;
 
         document.querySelector("#select-file-modal .modal-title").textContent = config.modalTitle;
 
         _searchForm.value = "";
 
-        const pagination = new Pagination(_modal.querySelector(".pagination-controls-js"), pageSize, function (page, pagination) {
+        const pagination = new Pagination(_modalElement.querySelector(".pagination-controls-js"), pageSize, function (page, pagination) {
             if (page <= 0) {
                 pagination._previousBtn.classList.add("disabled");
             } else {
@@ -72,7 +73,7 @@ function selectVFSFile(config) {
                 for (let i = 0; i < numItems; i++) {
                     let child = json.children[i];
                     if (filter(child)) {
-                        _table.appendChild(createRow(child, _modal, resolve, function (newPath) {
+                        _table.appendChild(createRow(child, modal, resolve, function (newPath) {
                             config.path = newPath;
                             _searchForm.value = "";
                             pagination.reset();
@@ -81,7 +82,7 @@ function selectVFSFile(config) {
                 }
                 pagination.setPageLabel((page * pageSize + 1) + " - " + (page * pageSize + numItems));
 
-                _modal.querySelector(".search-result-js").style.display = _searchForm.value ? "block" : "none";
+                _modalElement.querySelector(".search-result-js").style.display = _searchForm.value ? "block" : "none";
 
                 if (json.children.length <= pageSize) {
                     pagination._nextBtn.classList.add("disabled");
@@ -89,7 +90,7 @@ function selectVFSFile(config) {
                     pagination._nextBtn.classList.remove("disabled");
                 }
 
-                const _breadcrumbs = _modal.querySelector('.breadcrumb-js');
+                const _breadcrumbs = _modalElement.querySelector('.breadcrumb-js');
                 _breadcrumbs.textContent = '';
                 for (let i = 0; i < json.path.length; i++) {
                     const element = json.path[i];
@@ -107,7 +108,7 @@ function selectVFSFile(config) {
                     });
                     _breadcrumbs.appendChild(_folderBreadcrumb);
                 }
-                const _uploadBox = _modal.querySelector('.upload-box-js');
+                const _uploadBox = _modalElement.querySelector('.upload-box-js');
                 if (config.allowFiles && json.canCreateChildren) {
                     _uploadBox.classList.remove('d-none');
                     _uploadBox.classList.add('dropzone');
@@ -116,7 +117,7 @@ function selectVFSFile(config) {
                     }
                     config.clickable = '#select-file-modal .upload-box-js .dropzone-select';
                     config.previewsContainer = '#select-file-modal .upload-box-js .dropzone-items';
-                    vfsModalDropzone = createDropzone("#select-file-modal .dropzone-drop-area-js", config, _modal, resolve);
+                    vfsModalDropzone = createDropzone("#select-file-modal .dropzone-drop-area-js", config, modal, resolve);
                 } else {
                     _uploadBox.classList.add('d-none');
                     _uploadBox.classList.remove('dropzone');
@@ -125,21 +126,21 @@ function selectVFSFile(config) {
 
         });
 
-        replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), 'click', function () {
+        replaceEventHandlers(_modalElement.querySelector('.search-form-js .search-btn-js'), 'click', function () {
             pagination.reset();
         });
-        replaceEventHandlers(_modal.querySelector('.search-form-js'), 'submit', function (event) {
+        replaceEventHandlers(_modalElement.querySelector('.search-form-js'), 'submit', function (event) {
             event.preventDefault();
             pagination.reset();
         });
-        replaceEventHandlers(_modal.querySelector('.ok-btn-js'), 'click', function () {
-            $(_modal).modal('hide');
+        replaceEventHandlers(_modalElement.querySelector('.ok-btn-js'), 'click', function () {
+            modal.hide();
             resolve(config.path);
         });
 
-        _modal.querySelector('.ok-btn-js').parentElement.style.display = config.allowDirectories ? 'inline-block' : 'none';
+        _modalElement.querySelector('.ok-btn-js').parentElement.style.display = config.allowDirectories ? 'inline-block' : 'none';
 
-        $(_modal).modal('show');
+        modal.show();
     });
 }
 
@@ -155,7 +156,7 @@ function fetchPathFromInput(basePath, _input) {
     return path;
 }
 
-function createDropzone(dropzoneId, config, _modal, resolve) {
+function createDropzone(dropzoneId, config, modal, resolve) {
     const path = config.path ? config.path : fetchPathFromInput(config.basePath, config._input);
 
     return new Dropzone(dropzoneId, {
@@ -195,11 +196,11 @@ function createDropzone(dropzoneId, config, _modal, resolve) {
             return '/fs/upload?filename=' + encodeURIComponent(files[0].name) + '&path=' + path;
         },
         error: function (file, message) {
-            errorHandler(file, message, config.allowedExtensions, config._input, _modal);
+            errorHandler(file, message, config.allowedExtensions, config._input, modal);
         },
         init: function () {
             const dropzone = this;
-            let previewsContainer = !_modal ? dropzoneId : "#select-file-modal .upload-box-js #sirius-upload-progress";
+            let previewsContainer = !modal ? dropzoneId : "#select-file-modal .upload-box-js #sirius-upload-progress";
             let _outerContainer = document.querySelector(previewsContainer);
 
             if (previewsContainer) {
@@ -222,8 +223,8 @@ function createDropzone(dropzoneId, config, _modal, resolve) {
                             _indicator.classList.add('d-flex');
                             _indicator.classList.remove('d-none');
                         });
-                    } else if (_modal) {
-                        _modal.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                    } else if (modal) {
+                        modal._element.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
                             _indicator.classList.add('d-flex');
                             _indicator.classList.remove('d-none');
                         });
@@ -269,8 +270,8 @@ function createDropzone(dropzoneId, config, _modal, resolve) {
             this.on('success', function (file, response) {
                 if (file.previewElement) {
                     setTimeout(function () {
-                        if (_modal) {
-                            $(_modal).modal('hide');
+                        if (modal) {
+                            modal.hide();
                         }
                         file.previewElement.remove();
                     }, 1000);
@@ -310,7 +311,7 @@ function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dic
     createDropzone(dropzoneId, config, null, null);
 }
 
-function errorHandler(file, message, allowedExtensions, _input, _modal) {
+function errorHandler(file, message, allowedExtensions, _input, modal) {
     const nameSubstitution = "${name}";
     const extensionsSubstitution = "${extensions}";
 
@@ -336,7 +337,7 @@ function errorHandler(file, message, allowedExtensions, _input, _modal) {
         file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
 
         setTimeout(function () {
-            if (!_modal) {
+            if (!modal) {
                 file.previewElement.remove();
             }
         }, 5000);
