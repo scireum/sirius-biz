@@ -31,9 +31,11 @@ public class SQLTenantGlobalMetricComputer extends SQLMonthlyGlobalMetricCompute
     }
 
     @Override
-    public void compute(LocalDate date, LocalDateTime startOfPeriod, LocalDateTime endOfPeriod, boolean pastDate)
-            throws Exception {
-        if (pastDate) {
+    public void compute(LocalDate date,
+                        LocalDateTime startOfPeriod,
+                        LocalDateTime endOfPeriod,
+                        boolean periodOutsideOfCurrentInterest) throws Exception {
+        if (periodOutsideOfCurrentInterest) {
             // This is an actual observation and not calculated from recorded data. Therefore, we cannot compute this
             // for past dates...
             return;

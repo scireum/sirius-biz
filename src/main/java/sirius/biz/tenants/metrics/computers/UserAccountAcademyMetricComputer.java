@@ -60,7 +60,7 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
     public void compute(LocalDate date,
                         LocalDateTime startOfPeriod,
                         LocalDateTime endOfPeriod,
-                        boolean pastDate,
+                        boolean periodOutsideOfCurrentInterest,
                         E userAccount) throws Exception {
         long totalVideos = queryEligibleOnboardingVideos(userAccount).count();
 
@@ -81,7 +81,7 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
         int educationLevel = (int) (watchedVideos * 100 / totalVideos);
         metrics.updateMonthlyMetric(userAccount, METRIC_USER_EDUCATION_LEVEL, date, educationLevel);
 
-        if (!pastDate) {
+        if (!periodOutsideOfCurrentInterest) {
             userAccount.getPerformanceData()
                        .modify()
                        .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
