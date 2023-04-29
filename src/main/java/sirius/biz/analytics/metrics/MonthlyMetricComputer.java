@@ -53,6 +53,7 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
      * @return <tt>true</tt> to suppress the best effort scheduling, <tt>false</tt> otherwise (default)
      */
     public boolean suppressBestEffortScheduling() {
+        // todo: do we need this? has anyone ever used it?
         return false;
     }
 
