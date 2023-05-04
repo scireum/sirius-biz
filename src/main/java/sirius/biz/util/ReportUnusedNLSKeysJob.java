@@ -17,6 +17,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.kernel.commons.Json;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
@@ -81,16 +82,15 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
 
         clusterManager.callEachNode("/system/nls/unused/" + clusterManager.getClusterAPIToken())
                       .forEach(missingKeysOfNode -> {
-                          Set<String> keysOfNode = missingKeysOfNode.getJSONArray("unused")
-                                                                    .stream()
-                                                                    .map(Object::toString)
-                                                                    .collect(Collectors.toSet());
+                          Set<String> keysOfNode = Json.streamEntries(missingKeysOfNode.withArray("/unused"))
+                                                       .map(Object::toString)
+                                                       .collect(Collectors.toSet());
 
                           process.log(ProcessLog.info()
                                                 .withFormattedMessage("Received %s keys from %s",
                                                                       keysOfNode.size(),
-                                                                      missingKeysOfNode.getString(
-                                                                              InterconnectClusterManager.RESPONSE_NODE_NAME)));
+                                                                      missingKeysOfNode.get(InterconnectClusterManager.RESPONSE_NODE_NAME)
+                                                                                       .asText()));
                           missingKeys.retainAll(keysOfNode);
                       });
 
@@ -119,5 +119,4 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
     public String getCategory() {
         return StandardCategories.MONITORING;
     }
-
 }

@@ -8,10 +8,10 @@
 
 package sirius.biz.cluster;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.redis.Redis;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -24,6 +24,7 @@ import sirius.web.http.WebContext;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 /**
  * Provides a distributed cache to store not yet shown user messages.
@@ -45,14 +46,13 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
 
     @Override
     public void put(String key, List<Message> value) {
-        JSONArray array = new JSONArray();
+        ArrayNode array = Json.createArray();
         for (Message message : value) {
-            array.add(new JSONObject().fluentPut(FIELD_HTML, message.getHtml())
-                                      .fluentPut(FIELD_TYPE, message.getType()));
+            array.add(Json.createObject().put(FIELD_HTML, message.getHtml()).put(FIELD_TYPE, message.getType().name()));
         }
 
         redis.exec(() -> "Write to RedisUserMessageCache",
-                   jedis -> jedis.setex(CACHE_NAME + key, DEFAULT_TTL, array.toJSONString()));
+                   jedis -> jedis.setex(CACHE_NAME + key, DEFAULT_TTL, Json.write(array)));
     }
 
     @Override
@@ -67,13 +67,13 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
             return Collections.emptyList();
         }
 
-        return JSON.parseArray(json)
-                   .stream()
-                   .map(JSONObject.class::cast)
-                   .map(object -> new Message(Value.of(object.getString(FIELD_TYPE))
-                                                   .getEnum(MessageLevel.class)
-                                                   .orElse(MessageLevel.INFO), object.getString(FIELD_HTML)))
-                   .toList();
+        return StreamSupport.stream(Json.parseArray(json).spliterator(), false)
+                            .map(ObjectNode.class::cast)
+                            .map(object -> new Message(Value.of(object.get(FIELD_TYPE).asText())
+                                                            .getEnum(MessageLevel.class)
+                                                            .orElse(MessageLevel.INFO),
+                                                       object.get(FIELD_HTML).asText()))
+                            .toList();
     }
 
     @Override

@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work
 
-import com.alibaba.fastjson.JSONObject
+import sirius.kernel.commons.Json
 import sirius.db.redis.Redis
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
@@ -22,13 +22,13 @@ class FifoQueueSpec extends BaseSpecification {
         when:
         def fifo = new LocalFifoQueue()
         and:
-        fifo.offer(new JSONObject().fluentPut("value", 10))
-        fifo.offer(new JSONObject().fluentPut("value", 20))
-        fifo.offer(new JSONObject().fluentPut("value", 30))
+        fifo.offer(Json.createObject().put("value", 10))
+        fifo.offer(Json.createObject().put("value", 20))
+        fifo.offer(Json.createObject().put("value", 30))
         then:
-        fifo.poll().get("value") == 10
-        fifo.poll().get("value") == 20
-        fifo.poll().get("value") == 30
+        fifo.poll().get("value").asInt() == 10
+        fifo.poll().get("value").asInt() == 20
+        fifo.poll().get("value").asInt() == 30
         fifo.poll() == null
     }
 
@@ -37,13 +37,13 @@ class FifoQueueSpec extends BaseSpecification {
         when:
         def fifo = new RedisFifoQueue(redis, "fifo_test")
         and:
-        fifo.offer(new JSONObject().fluentPut("value", 10))
-        fifo.offer(new JSONObject().fluentPut("value", 20))
-        fifo.offer(new JSONObject().fluentPut("value", 30))
+        fifo.offer(Json.createObject().put("value", 10))
+        fifo.offer(Json.createObject().put("value", 20))
+        fifo.offer(Json.createObject().put("value", 30))
         then:
-        fifo.poll().get("value") == 10
-        fifo.poll().get("value") == 20
-        fifo.poll().get("value") == 30
+        fifo.poll().get("value").asInt() == 10
+        fifo.poll().get("value").asInt() == 20
+        fifo.poll().get("value").asInt() == 30
         fifo.poll() == null
     }
 

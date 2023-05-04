@@ -8,9 +8,10 @@
 
 package sirius.biz.cluster;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -100,27 +101,28 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     }
 
     protected void sendPing() {
-        interconnect.dispatch(getName(), new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_PING));
+        interconnect.dispatch(getName(), Json.createObject().put(MESSAGE_TYPE, TYPE_PING));
     }
 
     @Override
-    public void handleEvent(JSONObject event) {
-        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_PING)) {
+    public void handleEvent(ObjectNode event) {
+        if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_PING)) {
             lastPing = LocalDateTime.now();
             interconnect.dispatch(getName(),
-                                  new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_PONG)
-                                                  .fluentPut(MESSAGE_NAME, CallContext.getNodeName())
-                                                  .fluentPut(MESSAGE_ADDRESS, getLocalAddress()));
-        } else if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_PONG)) {
-            String address = event.getString(MESSAGE_ADDRESS);
+                                  Json.createObject()
+                                      .put(MESSAGE_TYPE, TYPE_PONG)
+                                      .put(MESSAGE_NAME, CallContext.getNodeName())
+                                      .put(MESSAGE_ADDRESS, getLocalAddress()));
+        } else if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_PONG)) {
+            String address = event.get(MESSAGE_ADDRESS).asText();
             if (!Strings.areEqual(address, getLocalAddress()) && Strings.isFilled(address)) {
-                String nodeName = event.getString(MESSAGE_NAME);
+                String nodeName = event.get(MESSAGE_NAME).asText();
                 if (!Strings.areEqual(members.put(nodeName, address), address)) {
                     Cluster.LOG.INFO("Discovered a new node: %s - %s", nodeName, address);
                 }
             }
-        } else if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_KILL)) {
-            members.remove(event.getString(MESSAGE_NAME));
+        } else if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_KILL)) {
+            members.remove(event.get(MESSAGE_NAME).asText());
         }
     }
 
@@ -149,8 +151,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
      * @param name the name of the node to remove as member
      */
     public void killNode(String name) {
-        interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_KILL).fluentPut(MESSAGE_NAME, name));
+        interconnect.dispatch(getName(), Json.createObject().put(MESSAGE_TYPE, TYPE_KILL).put(MESSAGE_NAME, name));
     }
 
     /**
@@ -161,11 +162,11 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
      * @param uri the uri to invoke
      * @return the JSON per node as stream
      */
-    public Stream<JSONObject> callEachNode(String uri) {
+    public Stream<ObjectNode> callEachNode(String uri) {
         return members.entrySet().stream().map(e -> callNode(e.getKey(), e.getValue(), uri));
     }
 
-    private JSONObject callNode(String nodeName, String endpoint, String uri) {
+    private ObjectNode callNode(String nodeName, String endpoint, String uri) {
         try {
             JSONCall call = JSONCall.to(new URI(endpoint + uri));
 
@@ -173,17 +174,18 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
             call.getOutcall().setConnectTimeout(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS);
             call.getOutcall().setReadTimeout(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS);
 
-            JSONObject result = call.getInput();
+            ObjectNode result = call.getInput();
             result.put(RESPONSE_NODE_NAME, nodeName);
-            if (result.getBoolean(RESPONSE_ERROR) == null) {
+            if (!result.has(RESPONSE_ERROR)) {
                 result.put(RESPONSE_ERROR, false);
             }
 
             return result;
         } catch (Exception e) {
-            return new JSONObject().fluentPut(RESPONSE_NODE_NAME, nodeName)
-                                   .fluentPut(RESPONSE_ERROR, true)
-                                   .fluentPut(RESPONSE_ERROR_MESAGE, e.getMessage());
+            return Json.createObject()
+                       .put(RESPONSE_NODE_NAME, nodeName)
+                       .put(RESPONSE_ERROR, true)
+                       .put(RESPONSE_ERROR_MESAGE, e.getMessage());
         }
     }
 
@@ -201,26 +203,26 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
                                                                             .toList();
     }
 
-    private NodeInfo parseNodeState(JSONObject response) {
+    private NodeInfo parseNodeState(ObjectNode response) {
         NodeInfo result = new NodeInfo();
-        result.setName(response.getString(RESPONSE_NODE_NAME));
-        if (response.getBooleanValue(RESPONSE_ERROR)) {
+        result.setName(response.get(RESPONSE_NODE_NAME).asText());
+        if (response.get(RESPONSE_ERROR).asBoolean()) {
             result.setNodeState(MetricState.RED);
             return result;
         }
 
-        result.setNodeState(MetricState.valueOf(response.getString(ClusterController.RESPONSE_NODE_STATE)));
-        result.setUptime(response.getString(ClusterController.RESPONSE_UPTIME));
+        result.setNodeState(MetricState.valueOf(response.get(ClusterController.RESPONSE_NODE_STATE).asText()));
+        result.setUptime(response.get(ClusterController.RESPONSE_UPTIME).asText());
 
-        JSONArray nodeMetrics = response.getJSONArray(ClusterController.RESPONSE_METRICS);
+        ArrayNode nodeMetrics = response.withArray(ClusterController.RESPONSE_METRICS);
         for (int i = 0; i < nodeMetrics.size(); i++) {
             try {
-                JSONObject metric = (JSONObject) nodeMetrics.get(i);
-                Metric m = new Metric(metric.getString(ClusterController.RESPONSE_CODE),
-                                      metric.getString(ClusterController.RESPONSE_LABEL),
-                                      metric.getDoubleValue(ClusterController.RESPONSE_VALUE),
-                                      MetricState.valueOf(metric.getString(ClusterController.RESPONSE_STATE)),
-                                      metric.getString(ClusterController.RESPONSE_UNIT));
+                ObjectNode metric = (ObjectNode) nodeMetrics.get(i);
+                Metric m = new Metric(metric.get(ClusterController.RESPONSE_CODE).asText(),
+                                      metric.get(ClusterController.RESPONSE_LABEL).asText(),
+                                      metric.get(ClusterController.RESPONSE_VALUE).asDouble(),
+                                      MetricState.valueOf(metric.get(ClusterController.RESPONSE_STATE).asText()),
+                                      metric.get(ClusterController.RESPONSE_UNIT).asText());
                 result.getMetrics().add(m);
             } catch (Exception e) {
                 Exceptions.handle(Cluster.LOG, e);

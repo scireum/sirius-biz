@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.metrics.mongo;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.analytics.metrics.MetricsGuaranteedBatchExecutor;
 import sirius.biz.analytics.metrics.MetricsGuaranteedSchedulerExecutor;
 import sirius.biz.analytics.metrics.MonthlyLargeMetricComputer;
@@ -65,7 +65,7 @@ public class MongoMonthlyLargeMetricsScheduler extends MongoAnalyticalTaskSchedu
     }
 
     @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
+    public void executeBatch(ObjectNode batchDescription, LocalDate date, int level) {
         super.executeBatch(batchDescription, date.minusMonths(1), level);
     }
 }

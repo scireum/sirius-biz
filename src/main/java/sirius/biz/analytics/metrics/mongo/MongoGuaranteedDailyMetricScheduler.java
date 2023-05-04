@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.metrics.mongo;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.analytics.metrics.DailyMetricComputer;
 import sirius.biz.analytics.metrics.MetricsGuaranteedBatchExecutor;
 import sirius.biz.analytics.metrics.MetricsGuaranteedSchedulerExecutor;
@@ -60,7 +60,7 @@ public class MongoGuaranteedDailyMetricScheduler extends MongoAnalyticalTaskSche
     }
 
     @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
+    public void executeBatch(ObjectNode batchDescription, LocalDate date, int level) {
         super.executeBatch(batchDescription, date.minusDays(1), level);
     }
 }

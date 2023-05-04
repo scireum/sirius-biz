@@ -8,10 +8,10 @@
 
 package sirius.biz.codelists;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.jupiter.IDBTable;
 import sirius.biz.jupiter.Jupiter;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -152,7 +152,8 @@ class IDBLookupTable extends LookupTable {
                       .withSystemErrorMessage(
                               "Error on fetch translated field with code '%s' field '%s' lang '%s' table '%s': %s (%s)",
                               code,
-                              targetField, language,
+                              targetField,
+                              language,
                               table.getName())
                       .handle();
             return Optional.empty();
@@ -241,8 +242,11 @@ class IDBLookupTable extends LookupTable {
 
     private <T> Optional<T> fetchObjectFromIDB(Class<T> type, String code) {
         try {
-            return table.query().lookupPaths(codeField).searchValue(code).singleRow(COL_SOURCE)
-                        .map(row -> makeObject(type, JSON.parseObject(row.at(0).asString())));
+            return table.query()
+                        .lookupPaths(codeField)
+                        .searchValue(code)
+                        .singleRow(COL_SOURCE)
+                        .map(row -> makeObject(type, Json.parseObject(row.at(0).asString())));
         } catch (Exception e) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
@@ -256,9 +260,9 @@ class IDBLookupTable extends LookupTable {
         }
     }
 
-    protected <T> T makeObject(Class<T> type, JSONObject jsonData) {
+    protected <T> T makeObject(Class<T> type, ObjectNode jsonData) {
         try {
-            Constructor<T> constructor = type.getConstructor(JSONObject.class);
+            Constructor<T> constructor = type.getConstructor(ObjectNode.class);
             return constructor.newInstance(jsonData);
         } catch (Exception e) {
             throw new IllegalArgumentException(
@@ -284,7 +288,8 @@ class IDBLookupTable extends LookupTable {
                       .to(Jupiter.LOG)
                       .error(e)
                       .withSystemErrorMessage("Error on suggest searchterm '%s' lang '%s' table '%s': %s (%s)",
-                                              searchTerm, language,
+                                              searchTerm,
+                                              language,
                                               table.getName())
                       .handle();
             return Stream.empty();
@@ -335,7 +340,7 @@ class IDBLookupTable extends LookupTable {
         }
         if (row.at(4).isFilled()) {
             try {
-                entry.withSource(JSON.parseObject(row.at(4).asString()));
+                entry.withSource(Json.parseObject(row.at(4).asString()));
             } catch (Exception e) {
                 Exceptions.ignore(e);
             }

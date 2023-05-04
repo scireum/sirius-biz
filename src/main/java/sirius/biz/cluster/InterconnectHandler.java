@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.di.std.Named;
 
 /**
@@ -22,5 +22,5 @@ public interface InterconnectHandler extends Named {
      *
      * @param event the event to process
      */
-    void handleEvent(JSONObject event);
+    void handleEvent(ObjectNode event);
 }

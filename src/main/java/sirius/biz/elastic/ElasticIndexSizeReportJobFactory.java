@@ -8,7 +8,8 @@
 
 package sirius.biz.elastic;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
 import sirius.biz.jobs.StandardCategories;
@@ -59,24 +60,24 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
     }
 
     private void determineClusterHealth(BiConsumer<String, Cell> additionalMetricConsumer) {
-        JSONObject clusterHealth = elastic.getLowLevelClient().clusterHealth();
+        ObjectNode clusterHealth = elastic.getLowLevelClient().clusterHealth();
         additionalMetricConsumer.accept("State", determineClusterStatus(clusterHealth));
         additionalMetricConsumer.accept("Number of Nodes",
-                                        cells.rightAligned(clusterHealth.getIntValue("number_of_nodes")));
+                                        cells.rightAligned(clusterHealth.get("number_of_nodes").asInt()));
         additionalMetricConsumer.accept("Active Shards",
-                                        cells.rightAligned(clusterHealth.getIntValue("active_shards")));
+                                        cells.rightAligned(clusterHealth.get("active_shards").asInt()));
         additionalMetricConsumer.accept("Relocating Shards",
-                                        cells.rightAligned(clusterHealth.getIntValue("relocating_shards")));
+                                        cells.rightAligned(clusterHealth.get("relocating_shards").asInt()));
         additionalMetricConsumer.accept("Initializing Shards",
-                                        cells.rightAligned(clusterHealth.getIntValue("initializing_shards")));
+                                        cells.rightAligned(clusterHealth.get("initializing_shards").asInt()));
         additionalMetricConsumer.accept("Unassigned Shards",
-                                        cells.rightAligned(clusterHealth.getIntValue("unassigned_shards")));
+                                        cells.rightAligned(clusterHealth.get("unassigned_shards").asInt()));
         additionalMetricConsumer.accept("Pending Tasks Shards",
-                                        cells.rightAligned(clusterHealth.getIntValue("number_of_pending_tasks")));
+                                        cells.rightAligned(clusterHealth.get("number_of_pending_tasks").asInt()));
     }
 
-    private Cell determineClusterStatus(JSONObject clusterHealth) {
-        String status = clusterHealth.getString("status");
+    private Cell determineClusterStatus(ObjectNode clusterHealth) {
+        String status = clusterHealth.get("status").asText();
         if (Strings.areEqual(status, "green")) {
             return cells.green(status);
         }
@@ -91,8 +92,8 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
     }
 
     private void outputIndexSizes(Report report) {
-        JSONObject indexStats = elastic.getLowLevelClient().indexStats();
-        JSONObject indices = indexStats.getJSONObject("indices");
+        ObjectNode indexStats = elastic.getLowLevelClient().indexStats();
+        ObjectNode indices = indexStats.withObject("/indices");
         report.addColumn("name", "Index");
         report.addColumn("docs", "Primary Docs");
         report.addColumn("size", "Primary Size");
@@ -100,10 +101,11 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
         report.addColumn("total_size", "Total Size");
         report.addColumn("shards", "Shards");
         report.addColumn("replicas", "Replicas");
-        for (String indexName : indices.keySet()) {
-            JSONObject total = indices.getJSONObject(indexName).getJSONObject("total");
-            JSONObject primaries = indices.getJSONObject(indexName).getJSONObject("primaries");
-            JSONObject settings = elastic.getLowLevelClient().indexSettings(indexName).getJSONObject(indexName);
+        for (Map.Entry<String, JsonNode> entry : indices.properties()) {
+            String indexName = entry.getKey();
+            ObjectNode total = indices.withObject(indexName).withObject("total");
+            ObjectNode primaries = indices.withObject(indexName).withObject("primaries");
+            ObjectNode settings = elastic.getLowLevelClient().indexSettings(indexName).withObject(indexName);
             report.addCells(cells.of(indexName),
                             cells.rightAligned(JSONPath.queryValue(primaries, "docs.count").asLong(0)),
                             cells.rightAligned(NLS.formatSize(JSONPath.queryValue(primaries, "store.size_in_bytes")

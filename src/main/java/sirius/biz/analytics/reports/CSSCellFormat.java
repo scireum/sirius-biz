@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.ContentHelper;
 
@@ -25,14 +25,17 @@ public class CSSCellFormat implements CellFormat {
     protected static final String KEY_VALUE = "value";
 
     @Override
-    public String format(JSONObject data) {
-        return "<div class=\"" + ContentHelper.escapeXML(data.getString(KEY_CLASSES)) + "\">" + ContentHelper.escapeXML(
-                data.getString(KEY_VALUE)) + "</div>";
+    public String format(ObjectNode data) {
+        return "<div class=\""
+               + ContentHelper.escapeXML(data.get(KEY_CLASSES).asText())
+               + "\">"
+               + ContentHelper.escapeXML(data.get(KEY_VALUE).asText())
+               + "</div>";
     }
 
     @Override
-    public String rawValue(JSONObject data) {
-        return data.getString(KEY_VALUE);
+    public String rawValue(ObjectNode data) {
+        return data.get(KEY_VALUE).asText();
     }
 
     @Nonnull

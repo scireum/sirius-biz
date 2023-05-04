@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedQueueInfo;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.db.redis.Redis;
@@ -18,6 +18,7 @@ import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Orchestration;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.Initializable;
@@ -116,16 +117,17 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     }
 
     @Override
-    public void handleEvent(JSONObject event) {
-        String name = event.getString(MESSAGE_NAME);
-        boolean enabled = event.getBooleanValue(MESSAGE_ENABLED);
-        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_GLOBAL)) {
+    public void handleEvent(ObjectNode event) {
+        String name = event.get(MESSAGE_NAME).asText();
+        boolean enabled = event.get(MESSAGE_ENABLED).asBoolean();
+        if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_GLOBAL)) {
             globallyEnabledState.put(name, enabled);
             return;
         }
 
-        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_LOCAL)
-            && Strings.areEqual(event.getString(MESSAGE_NODE), CallContext.getNodeName())) {
+        if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_LOCAL) && Strings.areEqual(event.get(MESSAGE_NODE)
+                                                                                                    .asText(),
+                                                                                               CallContext.getNodeName())) {
             if (enabled) {
                 localOverwrite.put(name, true);
             } else {
@@ -133,8 +135,9 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             }
         }
 
-        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_BLEED)
-            && Strings.areEqual(event.getString(MESSAGE_NODE), CallContext.getNodeName())) {
+        if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_BLEED) && Strings.areEqual(event.get(MESSAGE_NODE)
+                                                                                                    .asText(),
+                                                                                               CallContext.getNodeName())) {
             bleeding = enabled;
         }
     }
@@ -177,9 +180,10 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         }
 
         interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_GLOBAL)
-                                              .fluentPut(MESSAGE_NAME, name)
-                                              .fluentPut(MESSAGE_ENABLED, enabled));
+                              Json.createObject()
+                                  .put(MESSAGE_TYPE, TYPE_GLOBAL)
+                                  .put(MESSAGE_NAME, name)
+                                  .put(MESSAGE_ENABLED, enabled));
     }
 
     /**
@@ -191,10 +195,11 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
      */
     public void changeLocalOverwrite(String node, String name, boolean overwritten) {
         interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_LOCAL)
-                                              .fluentPut(MESSAGE_NODE, node)
-                                              .fluentPut(MESSAGE_NAME, name)
-                                              .fluentPut(MESSAGE_ENABLED, overwritten));
+                              Json.createObject()
+                                  .put(MESSAGE_TYPE, TYPE_LOCAL)
+                                  .put(MESSAGE_NODE, node)
+                                  .put(MESSAGE_NAME, name)
+                                  .put(MESSAGE_ENABLED, overwritten));
     }
 
     /**
@@ -224,10 +229,11 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
      */
     public void changeBleeding(String node, boolean bleed) {
         interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_BLEED)
-                                              .fluentPut(MESSAGE_NODE, node)
-                                              .fluentPut(MESSAGE_NAME, TYPE_BLEED)
-                                              .fluentPut(MESSAGE_ENABLED, bleed));
+                              Json.createObject()
+                                  .put(MESSAGE_TYPE, TYPE_BLEED)
+                                  .put(MESSAGE_NODE, node)
+                                  .put(MESSAGE_NAME, TYPE_BLEED)
+                                  .put(MESSAGE_ENABLED, bleed));
     }
 
     @Override
@@ -266,8 +272,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         try {
             String syncName = BACKGROUND_LOOP_PREFIX + name;
             SynchronizeType type = syncSettings.getOrDefault(syncName, SynchronizeType.LOCAL);
-            if (type == SynchronizeType.CLUSTER
-                && redis.isConfigured()) {
+            if (type == SynchronizeType.CLUSTER && redis.isConfigured()) {
                 redis.unlock(syncName);
             }
 
@@ -453,7 +458,9 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         BackgroundInfo result = new BackgroundInfo(CallContext.getNodeName(),
                                                    isBleeding(),
                                                    getActiveBackgroundTasks(),
-                                                   NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false),
+                                                   NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()),
+                                                                       true,
+                                                                       false),
                                                    Product.getProduct().getVersion(),
                                                    Product.getProduct().getDetails());
 
@@ -469,9 +476,9 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         return result;
     }
 
-    private BackgroundInfo parseBackgroundInfos(JSONObject jsonObject) {
-        if (jsonObject.getBooleanValue(InterconnectClusterManager.RESPONSE_ERROR)) {
-            return new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
+    private BackgroundInfo parseBackgroundInfos(ObjectNode jsonObject) {
+        if (jsonObject.get(InterconnectClusterManager.RESPONSE_ERROR).asBoolean()) {
+            return new BackgroundInfo(jsonObject.get(InterconnectClusterManager.RESPONSE_NODE_NAME).asText(),
                                       false,
                                       0,
                                       "-",
@@ -479,23 +486,24 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                                       "-");
         }
 
-        BackgroundInfo result = new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
-                                                   jsonObject.getBooleanValue(ClusterController.RESPONSE_BLEEDING),
-                                                   jsonObject.getIntValue(ClusterController.RESPONSE_ACTIVE_BACKGROUND_TASKS),
-                                                   jsonObject.getString(ClusterController.RESPONSE_UPTIME),
-                                                   jsonObject.getString(ClusterController.RESPONSE_VERSION),
-                                                   jsonObject.getString(ClusterController.RESPONSE_DETAILED_VERSION));
-        jsonObject.getJSONArray(ClusterController.RESPONSE_JOBS).forEach(job -> {
+        BackgroundInfo result =
+                new BackgroundInfo(jsonObject.get(InterconnectClusterManager.RESPONSE_NODE_NAME).asText(),
+                                   jsonObject.get(ClusterController.RESPONSE_BLEEDING).asBoolean(),
+                                   jsonObject.get(ClusterController.RESPONSE_ACTIVE_BACKGROUND_TASKS).asInt(),
+                                   jsonObject.get(ClusterController.RESPONSE_UPTIME).asText(),
+                                   jsonObject.get(ClusterController.RESPONSE_VERSION).asText(),
+                                   jsonObject.get(ClusterController.RESPONSE_DETAILED_VERSION).asText());
+        jsonObject.withArray(ClusterController.RESPONSE_JOBS).forEach(job -> {
             try {
-                JSONObject jobJson = (JSONObject) job;
-                String name = jobJson.getString(ClusterController.RESPONSE_NAME);
+                String name = job.get(ClusterController.RESPONSE_NAME).asText();
                 result.jobs.put(name,
                                 new BackgroundJobInfo(name,
-                                                      jobJson.getString(ClusterController.RESPONSE_DESCRIPTION),
-                                                      SynchronizeType.valueOf(jobJson.getString(ClusterController.RESPONSE_LOCAL)),
-                                                      jobJson.getBooleanValue(ClusterController.RESPONSE_LOCAL_OVERWRITE),
-                                                      jobJson.getBooleanValue(ClusterController.RESPONSE_GLOBALLY_ENABLED),
-                                                      jobJson.getString(ClusterController.RESPONSE_EXECUTION_INFO)));
+                                                      job.get(ClusterController.RESPONSE_DESCRIPTION).asText(),
+                                                      SynchronizeType.valueOf(job.get(ClusterController.RESPONSE_LOCAL)
+                                                                                 .asText()),
+                                                      job.get(ClusterController.RESPONSE_LOCAL_OVERWRITE).asBoolean(),
+                                                      job.get(ClusterController.RESPONSE_GLOBALLY_ENABLED).asBoolean(),
+                                                      job.get(ClusterController.RESPONSE_EXECUTION_INFO).asText()));
             } catch (Exception e) {
                 Exceptions.handle(Cluster.LOG, e);
             }

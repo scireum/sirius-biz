@@ -8,8 +8,9 @@
 
 package sirius.biz.codelists;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -528,7 +529,7 @@ public abstract class LookupTable {
      * <p>
      * The system will try to use a cache if possible.
      *
-     * @param type the type of value to instantiate (Must accept a JSONObject in its constructor)
+     * @param type the type of value to instantiate (Must accept a jackson ObjectNode in its constructor)
      * @param code the leading code used to determine which value to load
      * @param <T>  the generic type of the object to fetch
      * @return the object for the given code, or an empty optional if the code is unknown
@@ -545,7 +546,7 @@ public abstract class LookupTable {
     /**
      * Fetches the given object based on the data in the lookup table - without using any cache.
      *
-     * @param type the type of value to instantiate (Must accept a JSONObject in its constructor)
+     * @param type the type of value to instantiate (Must accept a jackson ObjectNode in its constructor)
      * @param code the leading code used to determine which value to load
      * @param <T>  the generic type of the object to fetch
      * @return the object for the given code, or an empty optional if the code is unknown
@@ -572,10 +573,10 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the parsed translation map. Note that this also gracefully handles simple string values
      */
-    public static Map<String, String> parseTranslationTable(JSONObject root, String path) {
+    public static Map<String, String> parseTranslationTable(ObjectNode root, String path) {
         Value translations = JSONPath.queryValue(root, path);
-        if (translations.is(JSONObject.class)) {
-            return ((JSONObject) translations.get()).entrySet()
+        if (translations.is(ObjectNode.class)) {
+            return ((ObjectNode) translations.get()).properties()
                                                     .stream()
                                                     .collect(Collectors.toMap(Map.Entry::getKey,
                                                                               entry -> String.valueOf(entry.getValue())));
@@ -587,7 +588,7 @@ public abstract class LookupTable {
     /**
      * Resolves the translation for a given language using a translation table.
      * <p>
-     * This table can be built / parsed using {@link #parseTranslationTable(JSONObject, String)}.
+     * This table can be built / parsed using {@link #parseTranslationTable(ObjectNode, String)}.
      *
      * @param table    the table used to look up the value
      * @param language the language to translate to or <tt>null</tt> to use the current language
@@ -612,10 +613,10 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the string list found in the JSON, or an empty list if there is none
      */
-    public static List<String> parseStringList(JSONObject root, String path) {
+    public static List<String> parseStringList(ObjectNode root, String path) {
         Value value = JSONPath.queryValue(root, path);
-        if (value.is(JSONArray.class)) {
-            return transformArrayToStringList(value.get(JSONArray.class, null));
+        if (value.is(ArrayNode.class)) {
+            return transformArrayToStringList(value.get(ArrayNode.class, null));
         } else if (value.is(String.class) && !value.isEmptyString()) {
             return Collections.singletonList(value.asString());
         } else {
@@ -623,8 +624,8 @@ public abstract class LookupTable {
         }
     }
 
-    private static List<String> transformArrayToStringList(JSONArray array) {
-        return array.stream().filter(Strings::isFilled).map(String::valueOf).toList();
+    private static List<String> transformArrayToStringList(ArrayNode array) {
+        return Json.streamEntries(array).filter(Strings::isFilled).map(String::valueOf).toList();
     }
 
     /**
@@ -636,10 +637,10 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the string map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, String> parseStringMap(JSONObject root, String path) {
+    public static Map<String, String> parseStringMap(ObjectNode root, String path) {
         Value value = JSONPath.queryValue(root, path);
-        if (value.is(JSONObject.class)) {
-            return ((JSONObject) value.get()).entrySet()
+        if (value.is(ObjectNode.class)) {
+            return ((ObjectNode) value.get()).properties()
                                              .stream()
                                              .filter(entry -> Strings.isFilled(entry.getValue()))
                                              .collect(Collectors.toMap(Map.Entry::getKey,
@@ -658,21 +659,21 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, List<String>> parseStringListMap(JSONObject root, String path) {
+    public static Map<String, List<String>> parseStringListMap(ObjectNode root, String path) {
         Value value = JSONPath.queryValue(root, path);
-        if (value.is(JSONObject.class)) {
-            return ((JSONObject) value.get()).entrySet()
+        if (value.is(ObjectNode.class)) {
+            return ((ObjectNode) value.get()).properties()
                                              .stream()
-                                             .filter(entry -> entry.getValue() instanceof JSONArray)
+                                             .filter(entry -> entry.getValue() instanceof ArrayNode)
                                              .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((JSONArray) entry.getValue())));
+                                                                       entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
         } else {
             return Collections.emptyMap();
         }
     }
 
     /**
-     * Parses and extracts an inner map (of strings to JSONObjects) from a JSON object.
+     * Parses and extracts an inner map (of strings to jackson ObjectNodes) from a JSON object.
      * <p>
      * This can be used when processing JSON in order to build an object for {@link #fetchObject(Class, String)}.
      *
@@ -680,14 +681,14 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, JSONObject> parseMap(JSONObject root, String path) {
+    public static Map<String, ObjectNode> parseMap(ObjectNode root, String path) {
         Value value = JSONPath.queryValue(root, path);
-        if (value.is(JSONObject.class)) {
-            return ((JSONObject) value.get()).entrySet()
+        if (value.is(ObjectNode.class)) {
+            return ((ObjectNode) value.get()).properties()
                                              .stream()
-                                             .filter(entry -> entry.getValue() instanceof JSONObject)
+                                             .filter(entry -> entry.getValue() instanceof ObjectNode)
                                              .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> (JSONObject) entry.getValue()));
+                                                                       entry -> (ObjectNode) entry.getValue()));
         } else {
             return Collections.emptyMap();
         }

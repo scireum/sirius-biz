@@ -26,7 +26,7 @@ class AutoloadControllerSpec extends BaseSpecification {
                                   .withParameter("listField", ["listItem1", "listItem2"])
                                   .execute()
         then:
-        def id = response.getContentAsJson().get("id")
+        def id = response.getContentAsJson().get("id").asText()
         id != null
         and:
         AutoLoadEntity entity = mango.find(AutoLoadEntity.class, id).get()
@@ -51,7 +51,7 @@ class AutoloadControllerSpec extends BaseSpecification {
                                   .withParameter("listField", ["listItem3", "listItem4"])
                                   .execute()
         then:
-        def id = response.getContentAsJson().get("id")
+        def id = response.getContentAsJson().get("id").asText()
         id != null
         and:
         AutoLoadEntity entity1 = mango.find(AutoLoadEntity.class, id).get()
