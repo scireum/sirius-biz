@@ -90,9 +90,9 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
     public void compute(LocalDate date,
                         LocalDateTime startOfPeriod,
                         LocalDateTime endOfPeriod,
-                        boolean pastDate,
+                        boolean periodOutsideOfCurrentInterest,
                         T tenant) throws Exception {
-        if (pastDate) {
+        if (periodOutsideOfCurrentInterest) {
             // This is an actual observation and not calculated from recorded data. Therefore, we cannot compute this
             // for past dates...
             return;

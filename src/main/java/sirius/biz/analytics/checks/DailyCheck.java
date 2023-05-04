@@ -29,7 +29,7 @@ import java.time.LocalDate;
 public abstract class DailyCheck<E extends BaseEntity<?>> implements AnalyticalTask<E> {
 
     @Override
-    public void compute(LocalDate date, E entity) {
+    public void compute(LocalDate date, E entity, boolean bestEffort) {
         execute(entity);
     }
 

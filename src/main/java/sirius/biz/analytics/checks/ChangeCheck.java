@@ -30,7 +30,7 @@ import java.time.LocalDate;
 public abstract class ChangeCheck<E extends BaseEntity<?> & Traced> implements AnalyticalTask<E> {
 
     @Override
-    public void compute(LocalDate date, E entity) {
+    public void compute(LocalDate date, E entity, boolean bestEffort) {
         execute(entity);
     }
 

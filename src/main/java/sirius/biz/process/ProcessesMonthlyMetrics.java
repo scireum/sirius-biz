@@ -39,8 +39,10 @@ public class ProcessesMonthlyMetrics extends SQLMonthlyGlobalMetricComputer {
     private Processes processes;
 
     @Override
-    protected void compute(LocalDate date, LocalDateTime startOfPeriod, LocalDateTime endOfPeriod, boolean pastDate)
-            throws Exception {
+    protected void compute(LocalDate date,
+                           LocalDateTime startOfPeriod,
+                           LocalDateTime endOfPeriod,
+                           boolean periodOutsideOfCurrentInterest) throws Exception {
         Tuple<Integer, Integer> processMetrics =
                 processes.computeProcessMetrics(startOfPeriod.toLocalDate(), endOfPeriod.toLocalDate(), null);
         metrics.updateGlobalMonthlyMetric(METRIC_NUM_PROCESSES, date, processMetrics.getFirst());

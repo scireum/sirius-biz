@@ -40,13 +40,13 @@ public abstract class SQLDailyGlobalMetricComputer extends DailyMetricComputer<S
     public final void compute(LocalDate date,
                               LocalDateTime startOfPeriod,
                               LocalDateTime endOfPeriod,
-                              boolean pastDate,
+                              boolean periodOutsideOfCurrentInterest,
                               SQLEntity entity) throws Exception {
-        compute(date, startOfPeriod, endOfPeriod, pastDate);
+        compute(date, startOfPeriod, endOfPeriod, periodOutsideOfCurrentInterest);
     }
 
     protected abstract void compute(LocalDate date,
                                     LocalDateTime startOfPeriod,
                                     LocalDateTime endOfPeriod,
-                                    boolean pastDate) throws Exception;
+                                    boolean periodOutsideOfCurrentInterest) throws Exception;
 }
