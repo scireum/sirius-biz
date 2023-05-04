@@ -26,9 +26,11 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
+import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.security.UserContext;
 import sirius.web.services.ApiResponsesFrom;
 import sirius.web.services.DefaultErrorResponsesJson;
 import sirius.web.services.InternalService;
@@ -76,7 +78,16 @@ public class JobsController extends BizController {
     @Routed("/job/:1")
     @LoginRequired
     public void job(WebContext webContext, String jobType) {
-        jobs.findFactory(jobType, JobFactory.class).startInteractively(webContext);
+        try {
+            jobs.findFactory(jobType, JobFactory.class).startInteractively(webContext);
+        } catch (IllegalArgumentException exception) {
+            UserContext.get()
+                       .addMessage(Message.error()
+                                          .withTextMessage(NLS.fmtr("JobsController.unknownJob")
+                                                              .set("jobType", jobType)
+                                                              .format()));
+            webContext.respondWith().redirectToGet("/jobs");
+        }
     }
 
     /**
