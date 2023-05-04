@@ -192,8 +192,8 @@ public class AddressData extends Composite {
 
     @Override
     public String toString() {
-        return Formatter.create("[${steet} ][${zip} ]${city}")
-                        .set("steet", street)
+        return Formatter.create("[${street} ][${zip} ]${city}")
+                        .set("street", street)
                         .set("zip", zip)
                         .set("city", city)
                         .smartFormat();

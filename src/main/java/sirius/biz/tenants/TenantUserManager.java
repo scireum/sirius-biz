@@ -384,6 +384,10 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                         .addAll(currentUser.getUserAccountData().getPermissions().getPermissions().modify());
             modifiedUser.getUserAccountData()
                         .getPerson()
+                        .getSalutation()
+                        .setValue(currentUser.getUserAccountData().getPerson().getSalutation().getValue());
+            modifiedUser.getUserAccountData()
+                        .getPerson()
                         .setFirstname(currentUser.getUserAccountData().getPerson().getFirstname());
             modifiedUser.getUserAccountData()
                         .getPerson()
