@@ -45,6 +45,12 @@
                                                target="_blank">
                                                 <i class="fa fa-external-link-alt"></i> Query
                                             </a>
+                                            <i:if test="sirius.biz.tenants.Tenant.class.isAssignableFrom(reference.getReferencedType())">
+                                                <a href="/tenants/select/@reference.getValue(entity)"
+                                                   target="_blank">
+                                                    <i class="fa fa-external-link-alt"></i> Select
+                                                </a>
+                                            </i:if>
                                             </span>
                                         </i:if>
                                         <i:else>
