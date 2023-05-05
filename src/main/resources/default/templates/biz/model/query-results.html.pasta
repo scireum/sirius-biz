@@ -17,6 +17,14 @@
         <t:datacards size="x-large">
             <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
                 <t:datacard title="@entity.getIdAsString()" subTitle="@entity.getClass().getName()">
+                    <i:block name="actions">
+                        <i:if test="@sirius.biz.tenants.Tenant.class.isAssignableFrom(entity.getClass())">
+                            <t:dropdownItem icon="fa fa-external-link-alt"
+                                            label="Select"
+                                            url="@apply('/tenants/select/%s', entity.getId())"
+                                            linkTarget="_blank"/>
+                        </i:if>
+                    </i:block>
                     <table class="table table-hover table-sm">
                         <thead>
                         <tr>
