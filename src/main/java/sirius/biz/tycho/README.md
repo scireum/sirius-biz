@@ -8,4 +8,5 @@ frameworks:
 
 * [OpenSearch](search/README.md)
 * [Knowledge Base](kb/README.md)
-
+* [Video Academies](academy/README.md)
+* [Smart Values](smart/README.md)

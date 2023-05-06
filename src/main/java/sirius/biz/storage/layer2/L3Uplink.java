@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -283,11 +283,8 @@ public class L3Uplink implements VFSRoot {
                                      Limit limit,
                                      List<VirtualFile> children,
                                      BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper) {
-            Page<? extends Blob> blobPage = blobPageHelper.withStart(limit.getItemsToSkip())
-                                                          .withPageSize(limit.getRemainingItems() != null ?
-                                                                        limit.getRemainingItems() :
-                                                                        limit.getMaxItems())
-                                                          .asPage();
+            Page<? extends Blob> blobPage =
+                    blobPageHelper.withStart(limit.getItemsToSkip()).withPageSize(limit.getMaxItems()).asPage();
             blobPage.getItems()
                     .stream()
                     .filter(blob -> Strings.isFilled(blob.getFilename()))
@@ -458,7 +455,7 @@ public class L3Uplink implements VFSRoot {
 
     private long lastModifiedSupplier(VirtualFile file) {
         return file.tryAs(Blob.class)
-                   .map(blob -> blob.getLastModified().toInstant(ZoneOffset.UTC).toEpochMilli())
+                   .map(blob -> blob.getLastModified().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                    .orElse(0L);
     }
 
@@ -575,12 +572,14 @@ public class L3Uplink implements VFSRoot {
     }
 
     private void tunnelHandler(VirtualFile file, Response response) {
-        Optional<Blob> blob = file.tryAs(Blob.class);
-        if (blob.isPresent()) {
-            blob.get().deliver(response);
-        } else {
-            response.error(HttpResponseStatus.NOT_FOUND);
-        }
+        file.as(Blob.class)
+            .url()
+            .enableLargeFileDetection()
+            .withFileName(file.name())
+            .asDownload()
+            .buildURL()
+            .ifPresentOrElse(blobDeliveryUrl -> response.redirectTemporarily(blobDeliveryUrl),
+                             () -> response.error(HttpResponseStatus.NOT_FOUND));
     }
 
     private boolean isWriteable(VirtualFile file) {

@@ -94,12 +94,13 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
                                 .stream()
                                 .filter(video -> checkPermission(entity,
                                                                  video.getAcademyVideoData().getRequiredPermission()))
-                                .filter(video -> checkPermission(entity, video.getAcademyVideoData().getRequiredFeature()))
+                                .filter(video -> checkPermission(entity,
+                                                                 video.getAcademyVideoData().getRequiredFeature()))
                                 .forEach(video -> {
-                                    OnboardingVideo onboardingVideo =
-                                            onboardingEngine.createOrUpdateOnboardingVideo(entity.getUniqueName(),
-                                                                                           video,
-                                                                                           syncToken);
+                                    OnboardingVideo onboardingVideo = onboardingEngine.createOrUpdateOnboardingVideo(
+                                            entity.getUniqueName(),
+                                            video,
+                                            syncToken);
                                     updateCounters(video, onboardingVideo.getOnboardingVideoData());
                                 });
 
@@ -148,13 +149,10 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
         }
 
         protected void persistStatistics() {
-            if (entity instanceof Traced) {
-                ((Traced) entity).getTrace().setSilent(true);
+            if (entity instanceof Traced traced) {
+                traced.getTrace().setSilent(true);
             }
             entity.getDescriptor().getMapper().update(entity);
         }
     }
-
 }
-
-

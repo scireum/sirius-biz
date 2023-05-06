@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Executes on a daily basis and invokes all {@link AnalyticsScheduler schedulers} (daily or once per month).
@@ -124,8 +123,7 @@ public class AnalyticalEngine implements EveryDay {
     }
 
     protected void initialize() {
-        activeSchedulers =
-                schedulers.getParts().stream().filter(AnalyticsScheduler::isActive).collect(Collectors.toList());
+        activeSchedulers = schedulers.getParts().stream().filter(AnalyticsScheduler::isActive).toList();
 
         if (flags == null && activeSchedulers.stream()
                                              .anyMatch(scheduler -> scheduler.getInterval()

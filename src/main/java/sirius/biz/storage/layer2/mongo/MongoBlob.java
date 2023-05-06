@@ -29,11 +29,11 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
+import sirius.kernel.async.Future;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
-import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -71,11 +71,13 @@ import java.util.Optional;
 @Index(name = "blob_reference_lookup",
         columns = {"spaceName", "deleted", "reference", "referenceDesignator"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
-@Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed", columnSettings = Mango.INDEX_ASCENDING)
+@Index(name = "blob_created_loop", columns = "created", columnSettings = Mango.INDEX_ASCENDING)
+@Index(name = "blob_renamed_loop", columns = "renamed", columnSettings = Mango.INDEX_ASCENDING)
+@Index(name = "blob_content_updated_loop", columns = "contentUpdated", columnSettings = Mango.INDEX_ASCENDING)
 @Index(name = "blob_deleted_loop", columns = "deleted", columnSettings = Mango.INDEX_ASCENDING)
 @Index(name = "blob_parent_changed_loop", columns = "parentChanged", columnSettings = Mango.INDEX_ASCENDING)
-@Index(name = "blob_delete_old_temporary_loop",
-        columns = {"spaceName", "deleted", "lastModified", "temporary"},
+@Index(name = "blob_delete_temporary_loop",
+        columns = {"spaceName", "temporary", "deleted", "lastModified"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 @TranslationSource(Blob.class)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
@@ -210,10 +212,22 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private boolean deleted;
 
     /**
-     * Stores if the blob was inserted or renamed.
+     * Stores if the blob was inserted.
      */
-    public static final Mapping CREATED_OR_RENAMED = Mapping.named("createdOrRenamed");
-    private boolean createdOrRenamed;
+    public static final Mapping CREATED = Mapping.named("created");
+    private boolean created;
+
+    /**
+     * Stores if the blob was renamed.
+     */
+    public static final Mapping RENAMED = Mapping.named("renamed");
+    private boolean renamed;
+
+    /**
+     * Stores if the blob's content was updated.
+     */
+    public static final Mapping CONTENT_UPDATED = Mapping.named("contentUpdated");
+    private boolean contentUpdated;
 
     /**
      * Stores if the blob was marked as hidden.
@@ -236,17 +250,30 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
         updateFilenameFields();
 
-        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
-            createdOrRenamed = true;
-        }
-
-        if (!isNew() && isChanged(PARENT)) {
-            parentChanged = true;
-        }
-
         if (deleted) {
-            createdOrRenamed = false;
+            // The blob has been deleted. Reset all other flags since it's now pointless to trigger any BlobChangedHandler.
+            created = false;
+            renamed = false;
+            contentUpdated = false;
             parentChanged = false;
+            return;
+        }
+
+        if (isNew() || isCreated()) {
+            // New Blob entities have no physical object and won't be used by any loops until a blob is uploaded.
+            // Blobs still marked as created have not yet been processed by the BlobCreatedHandler, therefore
+            // it is pointless to set any other flag.
+            return;
+        }
+
+        if (isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+            renamed = true;
+        }
+        if (isChanged(PHYSICAL_OBJECT_KEY)) {
+            contentUpdated = true;
+        }
+        if (isChanged(PARENT)) {
+            parentChanged = true;
         }
     }
 
@@ -294,11 +321,13 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     }
 
     @Override
-    public void deliver(Response response) {
-        getStorageSpace().deliverPhysical(getBlobKey(),
-                                          getPhysicalObjectKey(),
-                                          response,
-                                          URLBuilder.isConsideredLarge(this));
+    public Future tryCreateVariant(String variantName) {
+        return getStorageSpace().tryCreateVariant(this, variantName);
+    }
+
+    @Override
+    public Future tryCreateVariant(FileHandle inputFile, String variantName) {
+        return getStorageSpace().tryCreateVariant(this, inputFile, variantName);
     }
 
     @Override
@@ -448,6 +477,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         return filename;
     }
 
+    @Nullable
+    @Override
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
     @Override
     public long getSize() {
         return size;
@@ -471,8 +506,16 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         return deleted;
     }
 
-    public boolean isCreatedOrRenamed() {
-        return createdOrRenamed;
+    public boolean isCreated() {
+        return created;
+    }
+
+    public boolean isRenamed() {
+        return renamed;
+    }
+
+    public boolean isContentUpdated() {
+        return contentUpdated;
     }
 
     public boolean isParentChanged() {

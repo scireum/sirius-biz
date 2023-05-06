@@ -10,6 +10,7 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
@@ -65,14 +66,19 @@ public class VirtualFileSystemController extends BizController {
         VirtualFile file = resolveToExistingFile(path);
 
         if (!file.isDirectory()) {
-            // Note that we violate our architectural layers here a bit, as we directly check for the presence of a
-            // Layer2 Blob. In this case, we can redirect to an optimized download URL. We *could* bury this in yet
-            // another interface, but for now, we directly resolve the Blob and create a URL this way...
-            file.tryAs(Blob.class)
-                .flatMap(blob -> file.as(Blob.class).url().enableLargeFileDetection().asDownload(file.name()).buildURL())
-                .ifPresentOrElse(blobDeliveryUrl -> webContext.respondWith().redirectTemporarily(blobDeliveryUrl),
-                                 () -> file.deliverDownloadTo(webContext));
+            file.deliverDownloadTo(webContext);
         } else {
+            // We sort of break layers here as using yet another interface doesn't provide much
+            // value.
+            file.tryAs(Blob.class).ifPresent(blob -> {
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_ACADEMY_TRACK,
+                                        blob.getStorageSpace().getAcademyVideoTrackId());
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_ACADEMY_VIDEO,
+                                        blob.getStorageSpace().getAcademyVideoCode());
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_KBA,
+                                        blob.getStorageSpace().getKnowledgeBaseArticleCode());
+            });
+
             webContext.respondWith()
                       .template("/templates/biz/storage/list.html.pasta",
                                 file,
@@ -240,6 +246,9 @@ public class VirtualFileSystemController extends BizController {
         if (webContext.isSafePOST()) {
             try {
                 String name = webContext.get("name").asString();
+                if (Strings.isEmpty(name)) {
+                    name = NLS.get("VFSController.createDirectory");
+                }
                 VirtualFile newDirectory = parent.resolve(name);
                 newDirectory.createAsDirectory();
                 UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
@@ -371,6 +380,8 @@ public class VirtualFileSystemController extends BizController {
             out.property("sizeString", child.isDirectory() ? "" : NLS.formatSize(child.size()));
             out.property("lastModified", child.isDirectory() ? null : NLS.toMachineString(child.lastModifiedDate()));
             out.property("lastModifiedString", child.isDirectory() ? "" : NLS.toUserString(child.lastModifiedDate()));
+            out.property("lastModifiedSpokenString",
+                         child.isDirectory() ? "" : NLS.toSpokenDate(child.lastModifiedDate()));
         } finally {
             out.endObject();
         }

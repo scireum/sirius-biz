@@ -19,9 +19,11 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableProcessOutputType;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.IntegrityConstraintFailedException;
 import sirius.db.mixing.OptimisticLockException;
 import sirius.kernel.async.CallContext;
@@ -31,8 +33,11 @@ import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
@@ -42,7 +47,6 @@ import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
-import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -57,13 +61,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Provides the central facility to create and use {@link Process processes}.
@@ -205,6 +210,9 @@ public class Processes {
                process -> process.getState() == ProcessState.TERMINATED,
                process -> process.setState(ProcessState.RUNNING));
         log(processId, ProcessLog.info().withNLSKey("Processes.restarted").withContext("reason", reason));
+
+        // we need to wait for elastic to propagate process state changes if running on a different machine
+        Wait.seconds(2);
     }
 
     /**
@@ -534,19 +542,22 @@ public class Processes {
     /**
      * Marks a process as completed.
      *
-     * @param processId    the process to update
-     * @param timings      timings which have been collected and not yet committed
-     * @param adminTimings timings which have been collected and not yet committed and only administrators should see
+     * @param processId                the process to update
+     * @param timings                  timings which have been collected and not yet committed
+     * @param adminTimings             timings which have been collected and not yet committed and only administrators should see
+     * @param computationTimeInSeconds the computation time of the last step being recorded for this process
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean markCompleted(String processId,
                                     @Nullable Map<String, Average> timings,
-                                    @Nullable Map<String, Average> adminTimings) {
+                                    @Nullable Map<String, Average> adminTimings,
+                                    int computationTimeInSeconds) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             if (process.getState() != ProcessState.STANDBY) {
                 process.setErrorneous(process.isErrorneous() || !TaskContext.get().isActive());
                 process.setState(ProcessState.TERMINATED);
                 process.setCompleted(LocalDateTime.now());
+                process.setComputationTime(process.getComputationTime() + computationTimeInSeconds);
                 process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
             }
 
@@ -822,6 +833,8 @@ public class Processes {
      * @param complete  <tt>true</tt> to mark the process as completed once the task is done, <tt>false</tt> otherwise
      * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
+    @SuppressWarnings("java:S2440")
+    @Explain("This is a false positive as this is our execution environment, not the one of Java")
     private void execute(String processId, Consumer<ProcessContext> task, boolean complete) {
         awaitProcess(processId);
         TaskContext taskContext = TaskContext.get();
@@ -830,25 +843,32 @@ public class Processes {
         TaskContextAdapter taskContextAdapterBackup = taskContext.getAdapter();
         UserInfo userInfoBackup = userContext.getUser();
 
+        Watch watch = Watch.start();
         ProcessEnvironment env = new ProcessEnvironment(processId);
         taskContext.setJob(processId);
         taskContext.setAdapter(env);
         try {
             if (env.isActive()) {
-                CallContext.getCurrent().resetLang();
+                CallContext.getCurrent().resetLanguage();
                 installUserOfProcess(userContext, env);
+
                 task.accept(env);
             }
         } catch (Exception e) {
             throw env.handle(e);
         } finally {
-            env.awaitCompletion();
-            CallContext.getCurrent().resetLang();
+            env.awaitSideTaskCompletion();
+            CallContext.getCurrent().resetLanguage();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
+
+            int computationTimeInSeconds = (int) watch.elapsed(TimeUnit.SECONDS, false);
             if (complete) {
-                env.markCompleted();
+                env.markCompleted(computationTimeInSeconds);
             } else {
+                modify(processId,
+                       process -> process.getState() != ProcessState.STANDBY || computationTimeInSeconds >= 10,
+                       process -> process.setComputationTime(process.getComputationTime() + computationTimeInSeconds));
                 env.flushTimings();
             }
         }
@@ -919,51 +939,17 @@ public class Processes {
     }
 
     /**
-     * Generates a JSON representation of the given process.
-     *
-     * @param processId the process to output
-     * @param out       the target to write the JSON to
-     */
-    public void outputAsJSON(String processId, JSONStructuredOutput out) {
-        Process process = fetchProcessForUser(processId).orElseThrow(() -> Exceptions.createHandled()
-                                                                                     .withSystemErrorMessage(
-                                                                                             "Unknown process id: %s",
-                                                                                             processId)
-                                                                                     .handle());
-        out.property("id", processId);
-        out.property("title", process.getTitle());
-        out.property("state", process.getState());
-        out.property("started", process.getStarted());
-        out.property("completed", process.getCompleted());
-        out.property("errorneous", process.isErrorneous());
-        out.property("processType", process.getProcessType());
-        out.property("stateMessage", process.getStateMessage());
-        out.beginArray("counters");
-        for (String counter : process.getPerformanceCounters().data().keySet()) {
-            out.beginObject("counter");
-            out.property("name", counter);
-            out.property("counter", process.getPerformanceCounters().get(counter).orElse(0));
-            out.property("avg", process.getTimings().get(counter).orElse(0));
-            out.endObject();
-        }
-        out.endArray();
-        out.beginArray("links");
-        for (ProcessLink link : process.getLinks()) {
-            out.beginObject("link");
-            out.property("label", link.getLabel());
-            out.property("uri", link.getUri());
-            out.endObject();
-        }
-        out.endArray();
-    }
-
-    /**
      * Determines if the current user has any active processes.
      *
      * @return <tt>true</tt> if there are any active processes visible for the current user, <tt>false</tt> otherwise
      */
     public boolean hasActiveProcesses() {
-        return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
+        try {
+            return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
+        } catch (Exception e) {
+            Exceptions.handle(Log.SYSTEM, e);
+            return false;
+        }
     }
 
     /**
@@ -1131,7 +1117,7 @@ public class Processes {
             List<String> values = Arrays.asList(logEntry.getType().toString(),
                                                 NLS.toMachineString(logEntry.getTimestamp()),
                                                 logEntry.getMessage(),
-                                                logEntry.getMessageType(),
+                                                NLS.smartGet(logEntry.getMessageType()),
                                                 logEntry.getNode());
             return columnsAndValues.test(columns, values);
         });
@@ -1148,7 +1134,7 @@ public class Processes {
         createLogsQuery(processOutput, process).iterate(logEntry -> {
             List<String> values = columns.stream()
                                          .map(column -> cells.rawValue(logEntry.getContext().get(column).orElse(null)))
-                                         .collect(Collectors.toList());
+                                         .toList();
             return columnsAndValues.test(columns, values);
         });
     }
@@ -1164,5 +1150,43 @@ public class Processes {
         }
 
         return logsQuery;
+    }
+
+    /**
+     * Obtains some process metrics for the given period.
+     *
+     * @param startOfPeriod the start date of the period to query
+     * @param endOfPeriod   the end date of the period to query
+     * @param tenant        the tenant to filter on (if present)
+     * @return a tuple containing the number of processes and the total execution time in minutes. Note that we
+     * collect all processes which {@link Process#COMPLETED} date is within the given period.
+     */
+    public Tuple<Integer, Integer> computeProcessMetrics(LocalDate startOfPeriod,
+                                                         LocalDate endOfPeriod,
+                                                         @Nullable Tenant<?> tenant) {
+        AtomicInteger numProcesses = new AtomicInteger(0);
+        AtomicLong computationDurationSeconds = new AtomicLong(0);
+        elastic.select(Process.class)
+               .where(Elastic.FILTERS.gte(Process.COMPLETED, startOfPeriod.atStartOfDay()))
+               .where(Elastic.FILTERS.lt(Process.COMPLETED, endOfPeriod.plusDays(1).atStartOfDay()))
+               .eq(Process.STATE, ProcessState.TERMINATED)
+               .eqIgnoreNull(Process.TENANT_ID, tenant != null ? tenant.getIdAsString() : null)
+               .streamBlockwise()
+               .forEach(process -> {
+                   numProcesses.incrementAndGet();
+                   computationDurationSeconds.addAndGet(process.getComputationTime());
+               });
+
+        return Tuple.create(numProcesses.get(), (int) TimeUnit.SECONDS.toMinutes(computationDurationSeconds.get()));
+    }
+
+    /**
+     * Fetches a list of processes which hold a reference to the provided {@linkplain BaseEntity base entity}.
+     *
+     * @param baseEntity the entity for which all associated processes shall be fetched
+     * @return a list of processes who are associated with the provided entity
+     */
+    public List<Process> fetchAssociatedProcesses(BaseEntity<?> baseEntity) {
+        return queryProcessesForCurrentUser().eq(Process.REFERENCES, baseEntity.getUniqueName()).limit(5).queryList();
     }
 }

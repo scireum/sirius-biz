@@ -9,13 +9,13 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
-import sirius.biz.tenants.UserAccountActivityMetricComputer;
+import sirius.biz.tenants.metrics.computers.UserAccountActivityMetricComputer;
 import sirius.kernel.di.std.Register;
 
 /**
  * Provides the actual <tt>user-activity</tt> computer for {@link SQLUserAccount}.
  */
-@Register
+@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLUserAccountActivityMetricComputer extends UserAccountActivityMetricComputer<SQLUserAccount> {
 
     /**

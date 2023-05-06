@@ -8,6 +8,11 @@
 
 package sirius.biz.cluster;
 
+import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.health.Exceptions;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +21,10 @@ import java.util.Map;
  * Contains information about all background jobs or processes running on a node.
  */
 public class BackgroundInfo {
+
+    @ConfigValue("product.baseUrl")
+    private static String productBaseUrl;
+
     private final String nodeName;
     private final boolean bleeding;
     private final String uptime;
@@ -36,6 +45,27 @@ public class BackgroundInfo {
         this.version = version;
         this.detailedVersion = detailedVersion;
         this.activeBackgroundTasks = activeBackgroundTasks;
+    }
+
+    /**
+     * Builds the node-pinned URL for this node.
+     *
+     * @return the node-pinned URL for this node
+     */
+    public String buildNodeUrl() {
+        try {
+            URI baseUri = new URI(productBaseUrl);
+            return new URI(baseUri.getScheme(),
+                           baseUri.getUserInfo(),
+                           nodeName + "." + baseUri.getHost(),
+                           baseUri.getPort(),
+                           null,
+                           null,
+                           null).toString();
+        } catch (URISyntaxException exception) {
+            Exceptions.ignore(exception);
+        }
+        return "";
     }
 
     /**
@@ -67,7 +97,6 @@ public class BackgroundInfo {
     public String getDetailedVersion() {
         return detailedVersion;
     }
-
 
     public int getActiveBackgroundTasks() {
         return activeBackgroundTasks;

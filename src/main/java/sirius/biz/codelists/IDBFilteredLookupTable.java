@@ -48,18 +48,18 @@ class IDBFilteredLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performResolveName(String code, String lang) {
+    protected Optional<String> performResolveName(String code, String language) {
         if (performContains(code)) {
-            return baseTable.performResolveName(code, lang);
+            return baseTable.performResolveName(code, language);
         } else {
             return Optional.empty();
         }
     }
 
     @Override
-    protected Optional<String> performResolveDescription(@Nonnull String code, String lang) {
+    protected Optional<String> performResolveDescription(@Nonnull String code, String language) {
         if (performContains(code)) {
-            return baseTable.performResolveDescription(code, lang);
+            return baseTable.performResolveDescription(code, language);
         } else {
             return Optional.empty();
         }
@@ -75,9 +75,9 @@ class IDBFilteredLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performFetchTranslatedField(String code, String targetField, String lang) {
+    protected Optional<String> performFetchTranslatedField(String code, String targetField, String language) {
         if (performContains(code)) {
-            return baseTable.performFetchTranslatedField(code, targetField, lang);
+            return baseTable.performFetchTranslatedField(code, targetField, language);
         } else {
             return Optional.empty();
         }
@@ -108,32 +108,32 @@ class IDBFilteredLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang) {
-        return baseTable.performSuggest(Limit.UNLIMITED, searchTerm, lang)
+    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
+        return baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language)
                         .filter(pair -> performContains(pair.getCode()))
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
-    public Stream<LookupTableEntry> scan(String lang, Limit limit) {
-        return baseTable.scan(lang, Limit.UNLIMITED)
+    public Stream<LookupTableEntry> scan(String language, Limit limit) {
+        return baseTable.scan(language, Limit.UNLIMITED)
                         .filter(pair -> performContains(pair.getCode()))
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
-        return baseTable.performSearch(searchTerm, Limit.UNLIMITED, lang)
+    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
+        return baseTable.performSearch(searchTerm, Limit.UNLIMITED, language)
                         .filter(pair -> performContains(pair.getCode()))
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
-    protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
-        return baseTable.query(lang, lookupPath, lookupValue).filter(pair -> performContains(pair.getCode()));
+    protected Stream<LookupTableEntry> performQuery(String language, String lookupPath, String lookupValue) {
+        return baseTable.query(language, lookupPath, lookupValue).filter(pair -> performContains(pair.getCode()));
     }
 
     @Override

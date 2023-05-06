@@ -63,7 +63,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Represents a S3 compatible object store which is commonly obtained via {@link ObjectStores}.
@@ -107,7 +106,7 @@ public class ObjectStore {
     private static Tasks tasks;
 
     /**
-     * Provides some book keeping and monitoring for S3 up- and downloads.
+     * Provides some bookkeeping and monitoring for S3 up- and downloads.
      */
     private class MonitoringProgressListener implements S3ProgressListener {
 
@@ -292,7 +291,7 @@ public class ObjectStore {
      * @return a list of all buckets in the given store
      */
     public List<String> listBuckets() {
-        return getClient().listBuckets().stream().map(Bucket::getName).collect(Collectors.toList());
+        return getClient().listBuckets().stream().map(Bucket::getName).toList();
     }
 
     /**
@@ -336,7 +335,7 @@ public class ObjectStore {
      * @param objectId the object to delete
      */
     public void deleteObject(BucketName bucket, String objectId) {
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object % from %s", objectId, bucket),
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object %s from %s", objectId, bucket),
                                                  Duration.ofMinutes(1))) {
             getClient().deleteObject(bucket.getName(), objectId);
         } catch (Exception e) {
@@ -399,13 +398,13 @@ public class ObjectStore {
     }
 
     /**
-     * Generates a presigned download URL for the given object.
+     * Generates a pre-signed download URL for the given object.
      * <p>
      * This can be used to {@link sirius.web.http.Response#tunnel(String)} the data to a client.
      *
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to generate the url for
-     * @return a presigned download URL for the object
+     * @return a pre-signed download URL for the object
      */
     public String objectUrl(BucketName bucket, String objectId) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket.getName(), objectId);
@@ -424,7 +423,7 @@ public class ObjectStore {
      */
     public File download(BucketName bucket, String objectId) throws FileNotFoundException {
         File dest = null;
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object %s from %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
             dest = File.createTempFile("AMZS3", null);
@@ -479,7 +478,7 @@ public class ObjectStore {
      * @throws FileNotFoundException in case of an unknown object
      */
     public byte[] downloadInMemory(BucketName bucket, String objectId) throws FileNotFoundException {
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object %s from %s",
                                                                      objectId,
                                                                      bucket), Duration.ofSeconds(90))) {
             ensureBucketExists(bucket);
@@ -715,7 +714,7 @@ public class ObjectStore {
         ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object %s to %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
             List<PartETag> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());
@@ -727,14 +726,19 @@ public class ObjectStore {
                                       eTags.size());
             }
 
-            getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
-                                                                                   objectId,
-                                                                                   multipartUpload.getUploadId(),
-                                                                                   eTags));
+            if (eTags.isEmpty()) {
+                // If the input stream had no contents, attempting to complete the multipart upload will error out.
+                // Therefore, we abort it and put an empty string, creating an object with 0 bytes
+                abortMultipartUpload(bucket, objectId, multipartUpload);
+                getClient().putObject(bucket.getName(), objectId, "");
+            } else {
+                getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
+                                                                                       objectId,
+                                                                                       multipartUpload.getUploadId(),
+                                                                                       eTags));
+            }
         } catch (Exception e) {
-            getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
-                                                                             objectId,
-                                                                             multipartUpload.getUploadId()));
+            abortMultipartUpload(bucket, objectId, multipartUpload);
             if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
                 throw Exceptions.createHandled()
                                 .error(e)
@@ -751,6 +755,14 @@ public class ObjectStore {
                                                     bucket.getName())
                             .handle();
         }
+    }
+
+    private void abortMultipartUpload(BucketName bucket,
+                                      String objectId,
+                                      InitiateMultipartUploadResult multipartUpload) {
+        getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
+                                                                         objectId,
+                                                                         multipartUpload.getUploadId()));
     }
 
     @Nonnull

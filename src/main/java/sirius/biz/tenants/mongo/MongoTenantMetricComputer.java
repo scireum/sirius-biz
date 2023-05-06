@@ -10,9 +10,9 @@ package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.model.LoginData;
-import sirius.biz.tenants.TenantMetricComputer;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
+import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.db.mongo.Mango;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 /**
  * Provides some metrics for {@link MongoTenant MongoDB based tenants}.
  */
-@Register
+@Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 public class MongoTenantMetricComputer extends TenantMetricComputer<MongoTenant> {
 
     /**

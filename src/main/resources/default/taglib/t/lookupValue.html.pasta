@@ -19,25 +19,30 @@
 <t:singleSelect name="@name" label="@label" help="@help" optional="@optional" readonly="@readonly" id="@id"
                 allowCustomEntries="@allowCustomEntries" class="@class"
                 suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s', table, value.getDisplay(), value.getExtendedDisplay())">
-        <i:block name="addon">
-            <i:if test="showSelectionButton">
-                <a class="btn btn-outline-secondary" id="@id-addon"><i class="fa fa-bolt"></i></a>
-            </i:if>
-        </i:block>
-        <i:block name="script">
-            <i:if test="showSelectionButton">
-                const helper = document.getElementById('___id-addon');
-                helper.addEventListener('click', function () {
-                    new LookupTableInfo({
-                        tableName: '___table',
-                        labelFormat: '___value.getDisplay()',
-                        codeCallback: function (code, name) {
-                            autocomplete.val({value: code, text: name});
-                        }
-                    });
+    <i:block name="addon">
+        <i:if test="showSelectionButton">
+            <a class="btn btn-outline-secondary" id="@id-addon"><i class="fa fa-bolt"></i></a>
+        </i:if>
+    </i:block>
+    <i:block name="script">
+        <i:if test="showSelectionButton">
+            const helper = document.getElementById('___id-addon');
+            helper.addEventListener('click', function () {
+                new LookupTableInfo({
+                    tableName: '___table',
+                    labelFormat: '___value.getDisplay()',
+                    codeCallback: function (code, name) {
+                        autocomplete.val({value: code, text: name});
+                    }
                 });
-            </i:if>
-        </i:block>
+            });
+        </i:if>
+        <i:render name="script"/>
+    </i:block>
+    <i:block name="autocompleteOptions">
+        <i:render name="autocompleteOptions"/>
+    </i:block>
+
     <i:if test="Strings.isFilled(value.getValue())">
         <option value="@value.getValue()" selected>
             @value.resolveDisplayString()

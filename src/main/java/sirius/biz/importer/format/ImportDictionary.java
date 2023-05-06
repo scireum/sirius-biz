@@ -34,7 +34,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Defines a record or dataset by declaring which fields are expected.
@@ -286,8 +285,7 @@ public class ImportDictionary {
 
         AtomicBoolean problemDetected = new AtomicBoolean(false);
 
-        Values headerFields =
-                Values.of(header.asList().stream().map(String::valueOf).map(String::trim).collect(Collectors.toList()));
+        Values headerFields = Values.of(header.asList().stream().map(String::valueOf).map(String::trim).toList());
 
         Values mappingValues = Values.of(mappingFunction);
         AtomicInteger mappingIndex = new AtomicInteger(0);
@@ -609,12 +607,8 @@ public class ImportDictionary {
      * @return the normalized version of the field
      */
     protected static String normalize(String field) {
-        return field.toLowerCase()
-                    .replace("ä", "ae")
-                    .replace("ö", "oe")
-                    .replace("ü", "ue")
-                    .replace("ß", "ss")
-                    .replaceAll("[^\\p{L}0-9_]", "");
+        return Strings.reduceCharacters(field.toLowerCase())
+                    .replaceAll("[^\\p{L}\\d_]", "");
     }
 
     /**

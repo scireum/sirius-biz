@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Base class for all controllers which operate on entities.
@@ -68,6 +67,11 @@ public class BizController extends BasicController {
      * doesn't submit anything back to the server.
      */
     private static final String CHECKBOX_PRESENCE_MARKER = "_marker";
+
+    /**
+     * Defines the executor used to delete complex entities.
+     */
+    private static final String COMPLEX_DELETION_EXECUTOR = "complex-deletes";
 
     @Part
     protected Mixing mixing;
@@ -296,7 +300,7 @@ public class BizController extends BasicController {
                                       .filter(property -> shouldAutoload(webContext, property))
                                       .map(Property::getName)
                                       .map(Mapping::named)
-                                      .collect(Collectors.toList());
+                                      .toList();
 
         load(webContext, entity, columns);
     }
@@ -329,8 +333,8 @@ public class BizController extends BasicController {
     }
 
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
-        if (property instanceof ComplexLoadProperty) {
-            return ((ComplexLoadProperty) property).loadFromWebContext(webContext, entity);
+        if (property instanceof ComplexLoadProperty complexLoadProperty) {
+            return complexLoadProperty.loadFromWebContext(webContext, entity);
         } else {
             String propertyName = property.getName();
             if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
@@ -362,10 +366,10 @@ public class BizController extends BasicController {
     }
 
     private void ensureTenantMatch(BaseEntity<?> entity, Property property) {
-        if ((entity instanceof TenantAware) && property instanceof BaseEntityRefProperty) {
+        if ((entity instanceof TenantAware tenantAwareEntity) && property instanceof BaseEntityRefProperty) {
             Object loadedEntity = property.getValue(entity);
-            if (loadedEntity instanceof TenantAware) {
-                ((TenantAware) entity).assertSameTenant(property::getLabel, (TenantAware) loadedEntity);
+            if (loadedEntity instanceof TenantAware tenantAwareLoadedEntity) {
+                tenantAwareEntity.assertSameTenant(property::getLabel, tenantAwareLoadedEntity);
             }
         }
     }
@@ -432,10 +436,11 @@ public class BizController extends BasicController {
     public void deleteEntity(WebContext webContext, Optional<? extends BaseEntity<?>> optionalEntity) {
         if (webContext.isSafePOST()) {
             optionalEntity.ifPresent(entity -> {
-                if (entity instanceof TenantAware) {
-                    assertTenant((TenantAware) entity);
+                if (entity instanceof TenantAware tenantAware) {
+                    assertTenant(tenantAware);
                 }
                 if (entity.getDescriptor().isComplexDelete() && processes != null) {
+                    entity.getDescriptor().getMapper().assertDeletable(entity);
                     deleteComplexEntity(entity);
                 } else {
                     entity.getDescriptor().getMapper().delete(entity);
@@ -453,7 +458,7 @@ public class BizController extends BasicController {
                                                                  "fa-trash",
                                                                  PersistencePeriod.THREE_MONTHS,
                                                                  Collections.emptyMap());
-        tasks.defaultExecutor().fork(() -> processes.execute(processId, process -> {
+        tasks.executor(COMPLEX_DELETION_EXECUTOR).fork(() -> processes.execute(processId, process -> {
             process.log(ProcessLog.info()
                                   .withNLSKey("BizController.startDelete")
                                   .withContext("entity", String.valueOf(entity)));
@@ -635,8 +640,8 @@ public class BizController extends BasicController {
      * @param exception the exception to handle
      */
     protected void handle(Exception exception) {
-        if (exception.getCause() instanceof InvalidFieldException) {
-            UserContext.get().addFieldError(((InvalidFieldException) exception.getCause()).getField(), "");
+        if (exception.getCause() instanceof InvalidFieldException invalidFieldException) {
+            UserContext.get().addFieldError(invalidFieldException.getField(), "");
         }
 
         UserContext.handle(exception);

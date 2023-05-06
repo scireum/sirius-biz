@@ -19,6 +19,7 @@ import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -50,6 +51,8 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
      */
     public static final String END_ID = "endId";
 
+    private static final String EXPECTED_COUNT = "expectedCount";
+
     @Part
     protected Mixing mixing;
 
@@ -77,9 +80,11 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
                 queryExtender.accept(query);
             }
 
+            AtomicInteger counter = new AtomicInteger();
             ValueHolder<I> nextLimit = ValueHolder.of(null);
             query.orderAsc(BaseEntity.ID).limit(batchSize).iterateAll(e -> {
                 nextLimit.set(e.getId());
+                counter.incrementAndGet();
             });
 
             if (nextLimit.get() == null) {
@@ -88,6 +93,7 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
 
             JSONObject batch = new JSONObject();
             batch.put(TYPE, Mixing.getNameForType(type));
+            batch.put(EXPECTED_COUNT, counter.get());
             batch.put(START_ID, lastLimit.get());
             batch.put(END_ID, nextLimit.get());
             if (!batchConsumer.test(batch)) {

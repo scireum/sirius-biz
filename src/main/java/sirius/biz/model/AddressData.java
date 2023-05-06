@@ -19,6 +19,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -125,6 +126,7 @@ public class AddressData extends Composite {
      * @return <tt>true</tt> if there is at leas one field filled and at least one field left empty.
      * <tt>false</tt> otherwise.
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean isPartiallyFilled() {
         return isAnyFieldEmpty() && !areAllFieldsEmpty();
     }
@@ -164,6 +166,7 @@ public class AddressData extends Composite {
      *
      * @return <tt>true</tt> if at least one field is empty, <tt>false</tt> otherwise
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean isAnyFieldEmpty() {
         return Strings.isEmpty(street) || Strings.isEmpty(zip) || Strings.isEmpty(city);
     }
@@ -173,6 +176,7 @@ public class AddressData extends Composite {
      *
      * @return <tt>true</tt> all fields are empty, <tt>false</tt> otherwise
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean areAllFieldsEmpty() {
         return Strings.isEmpty(street) && Strings.isEmpty(zip) && Strings.isEmpty(city);
     }
@@ -188,8 +192,8 @@ public class AddressData extends Composite {
 
     @Override
     public String toString() {
-        return Formatter.create("[${steet} ][${zip} ]${city}")
-                        .set("steet", street)
+        return Formatter.create("[${street} ][${zip} ]${city}")
+                        .set("street", street)
                         .set("zip", zip)
                         .set("city", city)
                         .smartFormat();
@@ -217,6 +221,7 @@ public class AddressData extends Composite {
         return Objects.hash(street, zip, city);
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getStreet() {
         return street;
     }
@@ -225,6 +230,7 @@ public class AddressData extends Composite {
         this.street = street;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getZip() {
         return zip;
     }
@@ -233,6 +239,7 @@ public class AddressData extends Composite {
         this.zip = zip;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getCity() {
         return city;
     }

@@ -22,9 +22,9 @@ public interface JupiterConfigUpdater {
     /**
      * Invoked to contribute to the config in <tt>config</tt> for the given instance.
      *
-     * @param instance     the name of the instance which is to be configured
+     * @param connector    the instance which is to be configured
      * @param systemConfig the extension / settings block for this instance in the system config
      * @param config       the config to contribute to
      */
-    void emitConfig(String instance, Extension systemConfig, Map<String, Object> config);
+    void emitConfig(JupiterConnector connector, Extension systemConfig, Map<String, Object> config);
 }

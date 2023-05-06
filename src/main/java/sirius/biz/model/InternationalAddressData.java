@@ -20,6 +20,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -27,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.regex.PatternSyntaxException;
 
 /**
- * Provides a {@link AddressData street address} along with a country code to be emdedded in entities or mixins.
+ * Provides a {@link AddressData street address} along with a country code to be embedded in entities or mixins.
  * <p>
  * Note that just like {@link AddressData} this doesn't perform any validations or verifications unless explicitly
  * told to do so.
@@ -215,6 +216,7 @@ public class InternationalAddressData extends AddressData {
      *
      * @return the value for <tt>country</tt> from the <tt>countries</tt> code list
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getTranslatedCountry() {
         return country.getTable().resolveName(country.getValue()).orElse(country.getValue());
     }

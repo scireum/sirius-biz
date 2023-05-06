@@ -16,6 +16,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.GlobalContext;
+import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -38,6 +39,7 @@ import java.util.function.Consumer;
  * Note that this is actually entity agnostic. The target entities are determined by subclassing
  * {@link RecomputeOnboardingVideosCheck}.
  */
+@AutoRegister
 public abstract class OnboardingEngine {
 
     private static final String ACADEMY_VIDEOS_FETCHED_FLAG = "fetched";

@@ -81,7 +81,7 @@ public class SQLTenantImportHandler extends SQLEntityImportHandler<SQLTenant> {
         collector.accept(100, SQLTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER));
         collector.accept(110, SQLTenant.TENANT_DATA.inner(TenantData.NAME));
         collector.accept(120, SQLTenant.TENANT_DATA.inner(TenantData.FULL_NAME));
-        collector.accept(130, SQLTenant.TENANT_DATA.inner(TenantData.LANG));
+        collector.accept(130, SQLTenant.TENANT_DATA.inner(TenantData.LANGUAGE));
         collector.accept(140, SQLTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET));
         collector.accept(150, SQLTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.ZIP));
         collector.accept(160, SQLTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY));

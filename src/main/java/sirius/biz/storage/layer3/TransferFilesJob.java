@@ -8,9 +8,11 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
@@ -68,10 +70,13 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     }
 
     private final Parameter<VirtualFile> sourceParameter =
-            new FileOrDirectoryParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").markRequired().build();
+            new FileParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").filesAndDirectories()
+                                                                                .markRequired()
+                                                                                .build();
     private final Parameter<VirtualFile> destinationParameter =
-            new FileOrDirectoryParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").markRequired()
-                                                                                                     .build();
+            new FileParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").filesAndDirectories()
+                                                                                          .markRequired()
+                                                                                          .build();
     private final Parameter<TransferMode> modeParameter =
             new EnumParameter<>(MODE_PARAMETER_NAME, "$TransferFilesJob.mode", TransferMode.class).withDefault(
                     TransferMode.COPY).markRequired().build();
@@ -81,6 +86,16 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
 
     @Part
     private VirtualFileSystem virtualFileSystem;
+
+    @Override
+    public String getIcon() {
+        return "far fa-copy";
+    }
+
+    @Override
+    public int getPriority() {
+        return 5100;
+    }
 
     @Override
     protected void execute(ProcessContext process) throws Exception {
@@ -137,5 +152,10 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     @Override
     public String getName() {
         return NAME;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.MISC;
     }
 }

@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.interactive;
 
-import sirius.biz.analytics.charts.Dataset;
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.analytics.reports.Cell;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
@@ -39,7 +39,7 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-area-chart";
+        return "fas fa-chart-area";
     }
 
     @Override

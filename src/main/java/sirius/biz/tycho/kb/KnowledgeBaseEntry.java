@@ -30,6 +30,7 @@ public class KnowledgeBaseEntry extends SearchableEntity {
      * Contains the five-letter code of this article.
      */
     public static final Mapping ARTICLE_ID = Mapping.named("articleId");
+    @SearchContent
     private String articleId;
 
     /**
@@ -79,8 +80,8 @@ public class KnowledgeBaseEntry extends SearchableEntity {
     /**
      * Contains the two-letter language code of this article.
      */
-    public static final Mapping LANG = Mapping.named("lang");
-    private String lang;
+    public static final Mapping LANGUAGE = Mapping.named("language");
+    private String language;
 
     /**
      * Contains the title of this article.
@@ -107,6 +108,11 @@ public class KnowledgeBaseEntry extends SearchableEntity {
      */
     public static final Mapping SYNC_ID = Mapping.named("syncId");
     private String syncId;
+
+    @Override
+    public String toString() {
+        return getArticleId() + ": " + getTitle();
+    }
 
     /**
      * Checks if the permissions required by this article are met.
@@ -137,12 +143,22 @@ public class KnowledgeBaseEntry extends SearchableEntity {
         this.chapter = chapter;
     }
 
+    @Deprecated
     public String getLang() {
-        return lang;
+        return language;
     }
 
+    @Deprecated
     public void setLang(String lang) {
-        this.lang = lang;
+        this.language = lang;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public String getTitle() {

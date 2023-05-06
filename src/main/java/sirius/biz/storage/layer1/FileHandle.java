@@ -65,7 +65,7 @@ public class FileHandle implements Closeable {
      * Provides access to the underlying file.
      * <p>
      * This has to be handled with absolute care as one might not know if the file is a temporary copy or if
-     * it represents the permanently stored file. Therefore modifying this file in any way is strictly prohibited.
+     * it represents the permanently stored file. Therefore, modifying this file in any way is strictly prohibited.
      *
      * @return the underlying file
      */
@@ -78,7 +78,7 @@ public class FileHandle implements Closeable {
      * <p>
      * Note that this stream must not be accessed after {@link #close()} hase been called.
      *
-     * @return an stream reading from the file
+     * @return a stream reading from the file
      * @throws FileNotFoundException in case of a non-existing file
      */
     public InputStream getInputStream() throws FileNotFoundException {

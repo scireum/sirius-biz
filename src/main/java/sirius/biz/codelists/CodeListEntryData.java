@@ -27,6 +27,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.nls.NLS;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
 
@@ -72,8 +73,7 @@ public class CodeListEntryData extends Composite {
     @AutoImport
     @Autoloaded
     @PrefixSearchContent
-    private final MultiLanguageString value = new MultiLanguageString().withFallback()
-                                                                       .withConditionName("code-lists");
+    private final MultiLanguageString value = new MultiLanguageString().withFallback().withConditionName("code-lists");
 
     /**
      * Contains the additional value associated with the code of this entry.
@@ -83,8 +83,8 @@ public class CodeListEntryData extends Composite {
     @AutoImport
     @Autoloaded
     @PrefixSearchContent
-    private final MultiLanguageString additionalValue = new MultiLanguageString().withFallback()
-                                                                                 .withConditionName("code-lists");
+    private final MultiLanguageString additionalValue =
+            new MultiLanguageString().withFallback().withConditionName("code-lists");
 
     /**
      * Contains a description of the value or the entry.
@@ -122,21 +122,23 @@ public class CodeListEntryData extends Composite {
     /**
      * Fetches the translation of the value for the given language.
      *
-     * @param lang the language to translate to
+     * @param language the language to translate to
      * @return the value for the given language or the fallback value
      */
-    public String getTranslatedValue(String lang) {
-        return value.getText(lang).map(NLS::smartGet).orElse(null);
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public String getTranslatedValue(String language) {
+        return value.getText(language).map(NLS::smartGet).orElse(null);
     }
 
     /**
      * Fetches the translation of the additional value for the given language.
      *
-     * @param lang the language to translate to
+     * @param language the language to translate to
      * @return the additional value for the given language or the fallback value
      */
-    public String getTranslatedAdditionalValue(String lang) {
-        return additionalValue.getText(lang).map(NLS::smartGet).orElse(null);
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public String getTranslatedAdditionalValue(String language) {
+        return additionalValue.getText(language).map(NLS::smartGet).orElse(null);
     }
 
     @Override
@@ -148,6 +150,7 @@ public class CodeListEntryData extends Composite {
         return code;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getCode() {
         return code;
     }
@@ -156,6 +159,7 @@ public class CodeListEntryData extends Composite {
         this.code = code;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getDescription() {
         return description;
     }

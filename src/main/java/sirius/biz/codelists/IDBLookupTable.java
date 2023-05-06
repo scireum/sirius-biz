@@ -86,16 +86,16 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performResolveName(String code, String lang) {
-        return performFetchTranslatedField(code, nameField, lang);
+    protected Optional<String> performResolveName(String code, String language) {
+        return performFetchTranslatedField(code, nameField, language);
     }
 
     @Override
-    protected Optional<String> performResolveDescription(String code, String lang) {
+    protected Optional<String> performResolveDescription(String code, String language) {
         if (Strings.isEmpty(descriptionField)) {
             return Optional.empty();
         }
-        return performFetchTranslatedField(code, descriptionField, lang);
+        return performFetchTranslatedField(code, descriptionField, language);
     }
 
     @Override
@@ -128,7 +128,7 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performFetchTranslatedField(String code, String targetField, String lang) {
+    protected Optional<String> performFetchTranslatedField(String code, String targetField, String language) {
         try {
             return jupiter.fetchFromSmallCache(CACHE_PREFIX_FETCH_TRANSLATED_FIELD
                                                + table.getName()
@@ -137,11 +137,11 @@ class IDBLookupTable extends LookupTable {
                                                + "-"
                                                + targetField
                                                + "-"
-                                               + lang,
+                                               + language,
                                                () -> table.query()
                                                           .lookupPaths(codeField)
                                                           .searchValue(code)
-                                                          .translate(lang)
+                                                          .translate(language)
                                                           .singleRow(targetField)
                                                           .map(row -> row.at(0).asString())
                                                           .filter(Strings::isFilled));
@@ -152,8 +152,7 @@ class IDBLookupTable extends LookupTable {
                       .withSystemErrorMessage(
                               "Error on fetch translated field with code '%s' field '%s' lang '%s' table '%s': %s (%s)",
                               code,
-                              targetField,
-                              lang,
+                              targetField, language,
                               table.getName())
                       .handle();
             return Optional.empty();
@@ -269,12 +268,12 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang) {
+    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
         try {
             return table.query()
                         .searchInAllFields()
                         .searchValue(searchTerm)
-                        .translate(lang)
+                        .translate(language)
                         .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED)
                         .filter(row -> row.at(3).asLong(0) != 1L)
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
@@ -285,8 +284,7 @@ class IDBLookupTable extends LookupTable {
                       .to(Jupiter.LOG)
                       .error(e)
                       .withSystemErrorMessage("Error on suggest searchterm '%s' lang '%s' table '%s': %s (%s)",
-                                              searchTerm,
-                                              lang,
+                                              searchTerm, language,
                                               table.getName())
                       .handle();
             return Stream.empty();
@@ -294,36 +292,36 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    public Stream<LookupTableEntry> scan(String lang, Limit limit) {
+    public Stream<LookupTableEntry> scan(String language, Limit limit) {
         try {
             return table.query()
-                        .translate(lang)
+                        .translate(language)
                         .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
                         .map(this::processSearchOrScanRow);
         } catch (Exception e) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
                       .error(e)
-                      .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", lang, table.getName())
+                      .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", language, table.getName())
                       .handle();
             return Stream.empty();
         }
     }
 
     @Override
-    public Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
+    public Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
         try {
             return table.query()
                         .searchInAllFields()
                         .searchValue(searchTerm)
-                        .translate(lang)
+                        .translate(language)
                         .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
                         .map(this::processSearchOrScanRow);
         } catch (Exception e) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
                       .error(e)
-                      .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", lang, table.getName())
+                      .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", language, table.getName())
                       .handle();
             return Stream.empty();
         }
@@ -361,10 +359,10 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
+    protected Stream<LookupTableEntry> performQuery(String language, String lookupPath, String lookupValue) {
         try {
             return table.query()
-                        .translate(lang)
+                        .translate(language)
                         .lookupPaths(lookupPath)
                         .searchValue(lookupValue)
                         .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
@@ -378,7 +376,7 @@ class IDBLookupTable extends LookupTable {
                       .error(e)
                       .withSystemErrorMessage(
                               "Error on lookup scan lang '%s' lookupPath '%s' lookupValue '%s' table '%s': %s (%s)",
-                              lang,
+                              language,
                               lookupPath,
                               lookupValue,
                               table.getName())

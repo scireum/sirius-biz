@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs;
 
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
@@ -15,7 +16,6 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.BlobStorageSpace;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.SingularVFSRoot;
 import sirius.biz.storage.layer3.TmpRoot;
 import sirius.biz.storage.layer3.VirtualFileSystem;
@@ -97,7 +97,7 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
     /**
      * Returns the description for the standby process which is used to start the job.
      * <p>
-     * Starting jobs happens in a standy process so that we can log any problems and provide some debiggung capabilities.
+     * Starting jobs happens in a standby process so that we can log any problems and provide some debugging capabilities.
      *
      * @return the description to be used in
      * {@link Processes#executeInStandbyProcessForCurrentTenant(String, Supplier, Consumer)}
@@ -144,7 +144,8 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
     private String findFileParameter(JobFactory jobToRun) {
         return jobToRun.getParameters()
                        .stream()
-                       .filter(p -> FileParameter.class.isAssignableFrom(p.getBuilderType()))
+                       .filter(p -> p.getBuilder() instanceof FileParameter fileParameter
+                                    && fileParameter.isFilesOnly())
                        .map(Parameter::getName)
                        .findFirst()
                        .orElse(null);

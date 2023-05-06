@@ -20,7 +20,6 @@ import sirius.kernel.di.std.Part;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Permits to select a {@link Database} out of the whitelisted (<tt>jdbc.selectableDatabases</tt>) databases known to
@@ -54,9 +53,7 @@ public class DatabaseParameter extends SelectParameter<Database, DatabaseParamet
 
     @Override
     public List<Tuple<String, String>> getValues() {
-        return selectableDatabases.stream()
-                                  .map(database -> Tuple.create(database, database))
-                                  .collect(Collectors.toList());
+        return selectableDatabases.stream().map(database -> Tuple.create(database, database)).toList();
     }
 
     @Override

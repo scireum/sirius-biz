@@ -8,11 +8,13 @@
 
 package sirius.biz.codelists;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.jobs.params.ParameterBuilder;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -22,6 +24,8 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
 
     @Part
     private static LookupTables lookupTables;
+
+    private boolean customValuesAccepted = false;
 
     private final String lookupTable;
     private LookupValue.Display display = LookupValue.Display.CODE_AND_NAME;
@@ -49,6 +53,16 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
         return this;
     }
 
+    /**
+     * Specifies that custom values are accepted as well.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public LookupTableParameter withCustomValues() {
+        this.customValuesAccepted = true;
+        return this;
+    }
+
     @Override
     protected String getTemplateName() {
         return "/templates/biz/jobs/params/lookuptable.html.pasta";
@@ -59,12 +73,24 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
         if (input.isEmptyString()) {
             return null;
         }
-        return lookupTables.fetchTable(lookupTable)
-                           .normalizeInput(input.getString())
-                           .orElseThrow(() -> Exceptions.createHandled()
-                                                        .withNLSKey("LookupTableParameter.invalidValue")
-                                                        .set("value", input.asString())
-                                                        .handle());
+        Optional<String> result = lookupTables.fetchTable(lookupTable).normalizeInput(input.getString());
+
+        if (customValuesAccepted) {
+            return result.orElse(input.getString());
+        } else {
+            return result.orElseThrow(() -> Exceptions.createHandled()
+                                                      .withNLSKey("LookupValue.invalidValue")
+                                                      .set("value", input.asString())
+                                                      .handle());
+        }
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(this::createLookupValue)
+                      .map(value -> new JSONObject().fluentPut("value", value.getValue())
+                                                    .fluentPut("text", value.resolveDisplayString()));
     }
 
     @Override
@@ -80,6 +106,8 @@ public class LookupTableParameter extends ParameterBuilder<String, LookupTablePa
      */
     public LookupValue createLookupValue(String currentValue) {
         LookupValue lookupValue = new LookupValue(lookupTable,
+                                                  customValuesAccepted ?
+                                                  LookupValue.CustomValues.ACCEPT :
                                                   LookupValue.CustomValues.REJECT,
                                                   display,
                                                   display,

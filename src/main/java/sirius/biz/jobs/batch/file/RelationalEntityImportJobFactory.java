@@ -13,7 +13,9 @@ import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.jobs.infos.JobInfoCollector;
+import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.Query;
@@ -21,17 +23,29 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
+import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * Provides a base implementation for batch jobs which synchronize a set of entities based on line based files using a
+ * Provides a base implementation for batch jobs which synchronize a set of entities based on line-based files using a
  * {@link sirius.biz.importer.ImportHandler}.
  *
  * @param <E> the type of entities being imported by this job
- * @param <Q> the generic type of queries for the entities being procesed
+ * @param <Q> the generic type of queries for the entities being processed
  */
 public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJobFactory {
+
+    /**
+     * Defines the parameter used to collect the transaction source to set in imported {@linkplain ImportTransactionalEntity entities}.
+     */
+    public final Parameter<String> syncSourceParameter = createSyncSourceParameter(getDefaultSource());
+
+    /**
+     * Contains the parameter which determines the {@link SyncSourceDeleteMode}.
+     */
+    public final Parameter<SyncSourceDeleteMode> syncSourceDeleteMode = createDeleteModeParameter();
 
     @Override
     protected DictionaryBasedImportJob createJob(ProcessContext process) {
@@ -50,7 +64,12 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
                                                    process,
                                                    getName()).withDeleteQueryTuner(this::tuneDeleteQuery)
                                                              .withContextExtender(context -> context.putAll(
-                                                                     parameterContext));
+                                                                     parameterContext))
+                                                             .withSource(process.getParameter(syncSourceParameter)
+                                                                                .orElse(null),
+                                                                         enableSyncSourceParameter() ?
+                                                                         process.require(syncSourceDeleteMode) :
+                                                                         SyncSourceDeleteMode.ALL);
     }
 
     protected void tuneDeleteQuery(ProcessContext processContext, Q query) {
@@ -90,7 +109,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     protected abstract Class<E> getImportType();
 
     /**
-     * Adds the possibility to enhance a dicitonary during the setup of the job
+     * Adds the possibility to enhance a dictionary during the setup of the job
      *
      * @param importer   the current importer which can be asked to provide a dictionary for an entity
      * @param dictionary the dictionary to enhance
@@ -103,13 +122,77 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     @Override
     protected void collectJobInfos(JobInfoCollector collector) {
         super.collectJobInfos(collector);
-        collector.addTranslatedWell("EntityImportJobFactory.automaticMappings");
+        collector.addTranslatedCard("EntityImportJobFactory.automaticMappings");
         getDictionary().emitJobInfos(collector);
+    }
+
+    /**
+     * Defines if the {@link #syncSourceParameter source} parameter should be included.
+     * <p>
+     * This parameter controls which records will be deleted when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
+     * is set to {@link SyncMode#SYNC}.
+     * By default, no source is collected and all records will be deleted, which were not
+     * {@link sirius.biz.importer.txn.ImportTransactionHelper#mark(ImportTransactionalEntity) marked}.
+     *
+     * @return <tt>true</tt> to enable the source parameter, <tt>false</tt> otherwise.
+     */
+    protected boolean enableSyncSourceParameter() {
+        return false;
+    }
+
+    /**
+     * Builds the {@linkplain #syncSourceParameter source} parameter with the provided default value.
+     *
+     * @param defaultSource the source to use
+     * @return a new parameter instance
+     */
+    public static Parameter<String> createSyncSourceParameter(@Nullable String defaultSource) {
+        return new StringParameter("syncSource", "$EntityImportSyncJobFactory.syncSource").withDescription(
+                "$EntityImportSyncJobFactory.syncSource.help").withDefault(defaultSource).build();
+    }
+
+    /**
+     * Builds the {@link #syncSourceParameter source} parameter with the provided default value.
+     *
+     * @return a new parameter instance
+     */
+    public static Parameter<SyncSourceDeleteMode> createDeleteModeParameter() {
+        return new EnumParameter<>("syncSourceDeleteMode",
+                                   "$EntityImportSyncJobFactory.syncSourceDeleteMode",
+                                   SyncSourceDeleteMode.class).withDefault(SyncSourceDeleteMode.SAME_SOURCE)
+                                                              .markRequired()
+                                                              .withDescription(
+                                                                      "$EntityImportSyncJobFactory.syncSourceDeleteMode.help")
+                                                              .hideWhen(RelationalEntityImportJobFactory::hideSyncSourceParameter)
+                                                              .build();
+    }
+
+    /**
+     * Sets the default source to use for record deletion when {@link RelationalEntityImportJob#SYNC_MODE_PARAMETER}
+     * is set to {@link SyncMode#SYNC}.
+     * <p>
+     * By default, it uses the job name. Overwrite it if a custom name is needed.
+     *
+     * @return the source to initialize transactions
+     * @see this.enableSyncSourceParameter()
+     */
+    protected String getDefaultSource() {
+        return getName();
     }
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
         parameterCollector.accept(RelationalEntityImportJob.SYNC_MODE_PARAMETER);
+        if (enableSyncSourceParameter()) {
+            parameterCollector.accept(syncSourceDeleteMode);
+            parameterCollector.accept(syncSourceParameter);
+        }
+    }
+
+    private static boolean hideSyncSourceParameter(Map<String, String> params) {
+        return RelationalEntityImportJob.SYNC_MODE_PARAMETER.get(params)
+                                                            .filter(syncMode -> syncMode != SyncMode.SYNC)
+                                                            .isPresent();
     }
 }

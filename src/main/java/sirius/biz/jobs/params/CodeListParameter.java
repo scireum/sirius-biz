@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeLists;
 import sirius.kernel.commons.Value;
@@ -15,6 +16,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -49,6 +51,13 @@ public class CodeListParameter extends ParameterBuilder<CodeList, CodeListParame
     @Override
     protected String checkAndTransformValue(Value input) {
         return resolveFromString(input).map(codeList -> codeList.getCodeListData().getCode()).orElse(null);
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", value.getCodeListData().getCode())
+                                                    .fluentPut("text", value.getCodeListData().getCode()));
     }
 
     @Override

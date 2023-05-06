@@ -15,7 +15,7 @@ public abstract class DougnutChartJobFactory extends SingleDatasetChartJobFactor
 
     @Override
     public String getIcon() {
-        return "fa-pie-chart";
+        return "fas fa-chart-pie";
     }
 
     @Override

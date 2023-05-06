@@ -11,6 +11,7 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.tenants.Tenants;
@@ -104,7 +105,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         }
 
         E entity = findAndLoad(context);
-        errorContext.performImport(entity::toString, () -> {
+        ErrorContext.get().performImport(entity::toString, () -> {
             if (shouldSkip(entity)) {
                 process.incCounter("EntityImportJob.rowIgnored");
                 return;
@@ -144,7 +145,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * Overwrite this method do add additional parameters to the <tt>context</tt>.
      *
      * @param context the context containing all relevant data
-     * @return the entity which was either found in he database or create using the given data
+     * @return the entity which was either found in the database or create using the given data
      */
     protected E findAndLoad(Context context) {
         return importer.findAndLoad(type, context);

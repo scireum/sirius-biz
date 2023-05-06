@@ -10,9 +10,9 @@ package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.model.LoginData;
-import sirius.biz.tenants.TenantMetricComputer;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
+import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 /**
  * Provides some metrics for {@link SQLTenant SQL based tenants}.
  */
-@Register
+@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLTenantMetricComputer extends TenantMetricComputer<SQLTenant> {
 
     /**

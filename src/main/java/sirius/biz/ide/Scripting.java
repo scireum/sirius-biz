@@ -31,6 +31,7 @@ import sirius.pasta.noodle.compiler.CompilationContext;
 import sirius.pasta.noodle.compiler.CompileException;
 import sirius.pasta.noodle.compiler.NoodleCompiler;
 import sirius.pasta.noodle.compiler.SourceCodeInfo;
+import sirius.pasta.noodle.sandbox.SandboxMode;
 import sirius.web.health.Cluster;
 import sirius.web.security.UserContext;
 
@@ -125,7 +126,8 @@ public class Scripting implements InterconnectHandler {
      * @throws HandledException if the given script cannot be compiled
      */
     public String submitScript(String script, @Nullable String targetNode) {
-        CompilationContext compilationContext = new CompilationContext(SourceCodeInfo.forInlineCode(script));
+        CompilationContext compilationContext =
+                new CompilationContext(SourceCodeInfo.forInlineCode(script, SandboxMode.DISABLED));
         NoodleCompiler compiler = new NoodleCompiler(compilationContext);
         compiler.compileScript();
 
@@ -241,7 +243,8 @@ public class Scripting implements InterconnectHandler {
 
     private Callable compileScript(JSONObject event) throws CompileException {
         CompilationContext compilationContext =
-                new CompilationContext(SourceCodeInfo.forInlineCode(event.getString(TASK_SCRIPT)));
+                new CompilationContext(SourceCodeInfo.forInlineCode(event.getString(TASK_SCRIPT),
+                                                                    SandboxMode.DISABLED));
         NoodleCompiler compiler = new NoodleCompiler(compilationContext);
         Callable callable = compiler.compileScript();
         compilationContext.processCollectedErrors();

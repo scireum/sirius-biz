@@ -19,6 +19,7 @@ import sirius.pasta.noodle.compiler.CompilationContext;
 import sirius.pasta.noodle.compiler.CompileException;
 import sirius.pasta.noodle.compiler.NoodleCompiler;
 import sirius.pasta.noodle.compiler.SourceCodeInfo;
+import sirius.pasta.noodle.sandbox.SandboxMode;
 import sirius.pasta.tagliatelle.compiler.TemplateCompiler;
 import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
@@ -121,7 +122,8 @@ public class ScriptingController extends BizController {
                 String script = webContext.get(PARAM_SCRIPT).asString();
                 String targetNode = webContext.get(PARAM_NODE).asString();
 
-                CompilationContext compilationContext = new CompilationContext(SourceCodeInfo.forInlineCode(script));
+                CompilationContext compilationContext =
+                        new CompilationContext(SourceCodeInfo.forInlineCode(script, SandboxMode.DISABLED));
                 NoodleCompiler compiler = new NoodleCompiler(compilationContext);
                 compiler.compileScript();
                 compilationContext.processCollectedErrors();
@@ -147,7 +149,8 @@ public class ScriptingController extends BizController {
     public void compile(WebContext webContext, JSONStructuredOutput output) {
         if (webContext.isSafePOST()) {
             String script = webContext.get(PARAM_SCRIPT).asString();
-            CompilationContext compilationContext = new CompilationContext(SourceCodeInfo.forInlineCode(script));
+            CompilationContext compilationContext =
+                    new CompilationContext(SourceCodeInfo.forInlineCode(script, SandboxMode.DISABLED));
             NoodleCompiler compiler = new NoodleCompiler(compilationContext);
             compiler.compileScript();
             TemplateCompiler.reportAsJson(compilationContext.getErrors(), output);

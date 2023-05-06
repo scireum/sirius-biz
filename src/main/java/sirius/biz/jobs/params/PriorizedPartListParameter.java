@@ -37,8 +37,9 @@ public class PriorizedPartListParameter<E extends Priorized> extends PartListPar
      *
      * @return the list of parts implementing the common superclass part sorted by priority
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<E> getValues() {
-        return globalContext.getPriorizedParts(type);
+        return (Collection<E>) globalContext.getPriorizedParts(type);
     }
 }

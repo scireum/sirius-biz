@@ -8,6 +8,7 @@
 
 package sirius.biz.elastic;
 
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -105,5 +106,15 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     public String getName() {
         return "move-index-alias";
+    }
+
+    @Override
+    public int getPriority() {
+        return 10210;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.SYSTEM_ADMINISTRATION;
     }
 }

@@ -8,7 +8,6 @@
 
 package sirius.biz.analytics.metrics.mongo;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.analytics.metrics.DailyMetricComputer;
 import sirius.biz.analytics.metrics.MetricsGuaranteedBatchExecutor;
 import sirius.biz.analytics.metrics.MetricsGuaranteedSchedulerExecutor;
@@ -19,13 +18,12 @@ import sirius.biz.analytics.scheduler.ScheduleInterval;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
-import java.time.LocalDate;
 
 /**
  * Provides the executor which is responsible for scheduling {@link DailyMetricComputer} instances which refer
  * to {@link sirius.db.mongo.MongoEntity mongo entities} on a daily basis.
  */
-@Register(framework = MongoMetrics.FRAMEWORK_MONGO_METRICS)
+@Register
 public class MongoGuaranteedDailyMetricScheduler extends MongoAnalyticalTaskScheduler {
 
     @Override
@@ -57,10 +55,5 @@ public class MongoGuaranteedDailyMetricScheduler extends MongoAnalyticalTaskSche
     @Override
     public String getName() {
         return "mongo-metrics-daily";
-    }
-
-    @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
-        super.executeBatch(batchDescription, date.minusDays(1), level);
     }
 }

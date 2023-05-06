@@ -12,7 +12,7 @@
 <i:arg name="adminOnly" type="boolean" default="false"/>
 <i:arg name="id" type="String" default="@generateId()"/>
 <i:arg name="tabIndex" type="String" default=""/>
-<i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
+<i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLanguage()"/>
 <i:arg name="validLanguages" type="java.util.Collection" default="@value.getValidLanguages()"/>
 <i:arg name="languageManagementEnabled"
        type="boolean"
@@ -110,4 +110,3 @@
                      help="@help"/>
     </i:else>
 </i:if>
-

@@ -8,10 +8,13 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -55,6 +58,16 @@ public class BooleanParameter extends ParameterBuilder<Boolean, BooleanParameter
             return Boolean.TRUE.toString();
         }
         return NLS.toMachineString(input.asBoolean());
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", Objects.toString(value))
+                                                    .fluentPut("text",
+                                                               NLS.get(Boolean.TRUE.equals(value) ?
+                                                                       "NLS.yes" :
+                                                                       "NLS.no")));
     }
 
     /**

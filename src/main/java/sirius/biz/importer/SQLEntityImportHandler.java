@@ -88,7 +88,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
                          .map(Property::getName)
                          .map(Mapping::named)
                          .filter(mapping -> !SQLEntity.ID.equals(mapping))
-                         .collect(Collectors.toList());
+                         .toList();
     }
 
     @Override
@@ -246,7 +246,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
                                                           .withDirectMessage(entity.getDescriptor()
                                                                                    .createCannotSaveMessage(exception.getMessage()))
                                                           .handle();
-            throw enhanceExceptionWithHints(handledException, entity);
+            throw enhanceExceptionWithHints(handledException);
         }
     }
 

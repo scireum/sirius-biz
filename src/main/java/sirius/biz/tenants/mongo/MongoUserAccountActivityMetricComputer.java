@@ -9,13 +9,13 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
-import sirius.biz.tenants.UserAccountActivityMetricComputer;
+import sirius.biz.tenants.metrics.computers.UserAccountActivityMetricComputer;
 import sirius.kernel.di.std.Register;
 
 /**
  * Measures the activity index for all {@link MongoUserAccount user accounts}.
  */
-@Register
+@Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 public class MongoUserAccountActivityMetricComputer extends UserAccountActivityMetricComputer<MongoUserAccount> {
 
     public static final PerformanceFlag ACTIVE_USER =

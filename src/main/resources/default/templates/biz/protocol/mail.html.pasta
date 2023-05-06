@@ -1,6 +1,6 @@
 <i:arg type="sirius.biz.protocol.MailProtocol" name="mail" />
 
-<w:page title="@mail.getSubject()">
+<t:page title="@mail.getSubject()">
     <i:block name="breadcrumbs">
         <li>
             <a href="/system/mails">@i18n("MailProtocol.plural")</a>
@@ -10,42 +10,79 @@
         </li>
     </i:block>
 
-    <w:pageHeader title="@mail.getSubject()" />
+    <i:block name="page-header">
+        <t:pageHeader title="@mail.getSubject()">
+            <i:if test="mail.isSuccess()">
+                <t:dot color="green">@i18n("MailProtocol.success")</t:dot>
+                <i:else>
+                    <t:dot color="red">@i18n("MailProtocol.failed")</t:dot>
+                </i:else>
+            </i:if>
+            <t:tag color="blue">@mail.getType()</t:tag>
+        </t:pageHeader>
+    </i:block>
 
-    <div class="row">
-        <w:textfield name="" value="@toUserString(mail.isSuccess())" labelKey="MailProtocol.success" readonly="true" />
-        <w:textfield name="" value="@toUserString(mail.getTod())" labelKey="MailProtocol.tod" readonly="true" />
-    </div>
-    <div class="row">
-        <w:textfield name="" value="@mail.getMessageId()" labelKey="MailProtocol.messageId" readonly="true" />
-        <w:textfield name="" value="@mail.getType()" labelKey="MailProtocol.type" readonly="true"/>
-    </div>
-    <div class="row">
-        <w:textfield name="" value="@mail.getSender()" labelKey="MailProtocol.sender" readonly="true" />
-        <w:textfield name="" value="@mail.getSenderName()" labelKey="MailProtocol.senderName" readonly="true" />
-    </div>
-    <div class="row">
-        <w:textfield name="" value="@mail.getReceiver()" labelKey="MailProtocol.receiver" readonly="true" />
-        <w:textfield name="" value="@mail.getReceiverName()" labelKey="MailProtocol.receiverName" readonly="true" />
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <w:heading labelKey="MailProtocol.text" />
-            <div class="well">
-                <pre class="plain">@mail.getTextContent()</pre>
-            </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@i18n("Model.details")</h5>
+            <table class="table mt-4">
+                <thead>
+                <tr>
+                    <th>
+                        @i18n("MailProtocol.name")
+                    </th>
+                    <th>
+                        @i18n("MailProtocol.value")
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>@i18n("MailProtocol.tod")</td>
+                    <td>@toUserString(mail.getTod())</td>
+                </tr>
+                <tr>
+                    <td>@i18n("MailProtocol.messageId")</td>
+                    <td>@mail.getMessageId()</td>
+                </tr>
+                <tr>
+                    <td>@i18n("MailProtocol.type")</td>
+                    <td>@mail.getType()</td>
+                </tr>
+                <tr>
+                    <td>@i18n("MailProtocol.sender")</td>
+                    <td>@mail.getSender()</td>
+                </tr>
+                <tr>
+                    <td>@i18n("MailProtocol.senderName")</td>
+                    <td>@mail.getSenderName()</td>
+                </tr>
+                <tr>
+                    <td>@i18n("MailProtocol.receiver")</td>
+                    <td>@mail.getReceiver()</td>
+                </tr>
+                <tr>
+                    <td>@i18n("MailProtocol.receiverName")</td>
+                    <td>@mail.getReceiverName()</td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <w:heading labelKey="MailProtocol.html" />
-            <div class="well">
-                <pre class="plain">@mail.getHtmlContent()</pre>
-            </div>
+
+    <div class="card mt-2 mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@i18n("MailProtocol.text")</h5>
+            <pre class="mt-4 mb-0" style="max-height: 400px; overflow-y: auto">@mail.getTextContent()</pre>
         </div>
     </div>
 
-    <div class="form-actions">
-        <a href="/system/mails" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@i18n("MailProtocol.html")</h5>
+            <pre class="mt-4 mb-0" style="max-height: 400px; overflow-y: auto">@mail.getHtmlContent()</pre>
+        </div>
     </div>
-</w:page>
+
+    <t:formBar btnLabel=""/>
+</t:page>

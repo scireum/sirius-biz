@@ -200,6 +200,7 @@ public class ConversionEngine {
             }
 
             converter.performConversion(conversionProcess);
+
             FileHandle resultFileHandle = conversionProcess.getResultFileHandle();
             if (resultFileHandle == null || !resultFileHandle.exists() || resultFileHandle.getFile().length() == 0) {
                 if (resultFileHandle != null) {
@@ -224,12 +225,12 @@ public class ConversionEngine {
     }
 
     private void recordErrorInStandbyProcess(ConversionProcess conversionProcess, Exception exception) {
-        if (processes != null && tenants != null) {
+        String blobTenantId = conversionProcess.getBlobToConvert().getTenantId();
+        if (processes != null && tenants != null && Strings.isFilled(blobTenantId)) {
             processes.executeInStandbyProcess("conversion",
                                               () -> NLS.get("ConversionEngine.processTitle"),
-                                              conversionProcess.getBlobToConvert().getTenantId(),
-                                              () -> tenants.fetchCachedTenantName(conversionProcess.getBlobToConvert()
-                                                                                                   .getTenantId()),
+                                              blobTenantId,
+                                              () -> tenants.fetchCachedTenantName(blobTenantId),
                                               processContext -> createStandbyProcessLogEntry(conversionProcess,
                                                                                              processContext,
                                                                                              exception.getMessage()));

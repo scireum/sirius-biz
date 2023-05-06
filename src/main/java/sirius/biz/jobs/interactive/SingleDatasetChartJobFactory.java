@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.interactive;
 
-import sirius.biz.analytics.charts.Dataset;
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.analytics.reports.Cell;
 import sirius.kernel.commons.Tuple;
 import sirius.web.http.WebContext;
@@ -59,7 +59,7 @@ public abstract class SingleDatasetChartJobFactory extends InteractiveJobFactory
      * Computes the chart data based on the given parameters.
      *
      * @param context                  the parameters provided by the user
-     * @param valueConsumer            used to collect datapoints (label and value) to render as chart
+     * @param valueConsumer            used to collect data-points (label and value) to render as chart
      * @param additionalMetricConsumer used to collect additional metrics (label and the value represented as cell).
      *                                 This can be used to output averages, min and max values etc.
      * @throws Exception in case of an unexpected error which aborted the computations

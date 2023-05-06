@@ -9,7 +9,7 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
-import sirius.biz.tenants.UserAccountAcademyMetricComputer;
+import sirius.biz.tenants.metrics.computers.UserAccountAcademyMetricComputer;
 import sirius.biz.tycho.academy.jdbc.SQLOnboardingEngine;
 import sirius.biz.tycho.academy.jdbc.SQLOnboardingVideo;
 import sirius.db.jdbc.OMA;

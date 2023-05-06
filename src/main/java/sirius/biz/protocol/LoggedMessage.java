@@ -72,15 +72,15 @@ public class LoggedMessage extends SearchableEntity {
      */
     public String getRowClass() {
         if ("ERROR".equals(getLevel())) {
-            return "danger";
+            return "sci-left-border-red";
         }
         if ("WARN".equals(getLevel())) {
-            return "warning";
+            return "sci-left-border-yellow";
         }
         if ("DEBUG".equals(getLevel())) {
-            return "";
+            return "sci-left-border-gray";
         }
-        return "info";
+        return "sci-left-border-blue";
     }
 
     public String getMessage() {

@@ -60,7 +60,8 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         pageHelper.withContext(ctx);
         pageHelper.addBooleanFacet(SchedulerEntry.SCHEDULER_DATA.inner(SchedulerData.ENABLED).getName(),
                                    NLS.get("SchedulerData.enabled"));
-        pageHelper.withSearchFields(QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.JOB_NAME)));
+        pageHelper.withSearchFields(QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.JOB_NAME)),
+                                    QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.LABEL)));
 
         ctx.respondWith().template("/templates/biz/jobs/scheduler/entries.html.pasta", pageHelper.asPage());
     }
@@ -170,6 +171,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         AutocompleteHelper.handle(ctx, (query, result) -> {
             jobs.getAvailableJobs(query)
                 .filter(JobFactory::canStartInBackground)
+                .limit(AutocompleteHelper.DEFAULT_LIMIT)
                 .forEach(factory -> result.accept(AutocompleteHelper.suggest(factory.getName())
                                                                     .withFieldLabel(factory.getLabel())
                                                                     .withCompletionDescription(factory.getDescription())));

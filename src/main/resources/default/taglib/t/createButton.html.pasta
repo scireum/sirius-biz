@@ -8,12 +8,13 @@
 
 <i:if test="isFilled(url)">
     <a class="btn btn-primary @class" href="@url">
-        <i class="fa fa-plus"></i> @i18n("Model.create")
+        <span><i class="fa fa-plus"></i></span>
+        <span class="d-none d-xl-inline-block">@i18n("Model.create")</span>
     </a>
 </i:if>
 
 <i:if test="isFilled(contents)">
-    <t:dropdown class="@class" btnClass="btn btn-primary" icon="fa fa-plus" labelKey="Model.create">
+    <t:dropdown class="@class" btnClass="btn btn-primary" icon="fa fa-plus" labelKey="Model.create" labelClass="d-none d-xl-inline-block">
         <i:raw>@contents</i:raw>
     </t:dropdown>
 </i:if>

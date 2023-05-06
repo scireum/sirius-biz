@@ -12,7 +12,7 @@
 <i:arg name="adminOnly" type="boolean" default="false"/>
 <i:arg name="id" type="String" default="@generateId()"/>
 <i:arg name="tabIndex" type="String" default=""/>
-<i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
+<i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLanguage()"/>
 <i:arg name="validLanguages" type="java.util.Collection" default="@value.getValidLanguages()"/>
 <i:arg name="languageManagementEnabled"
        type="boolean"
@@ -33,7 +33,7 @@
                 <ul class="nav nav-tabs mls-tab-list" role="tablist">
                     <li class="dropdown mls-toggle-language-button hidden" role="presentation">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="tab">Dropdown</a>
-                        <ul class="dropdown-menu toggle-language-data"></ul>
+                        <ul class="dropdown-menu dropdown-menu-right toggle-language-data"></ul>
                     </li>
 
                     <li class="dropdown mls-add-language-button hidden" role="presentation">
@@ -41,7 +41,7 @@
                            aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
                             <i class="fa fa-plus"></i>
                         </a>
-                        <ul class="dropdown-menu add-language-data"></ul>
+                        <ul class="dropdown-menu dropdown-menu-right"></ul>
                     </li>
                 </ul>
             </div>

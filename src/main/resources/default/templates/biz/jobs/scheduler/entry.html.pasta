@@ -1,6 +1,6 @@
 <i:arg type="sirius.biz.jobs.scheduler.SchedulerEntry" name="entry"/>
 
-<w:page titleKey="SchedulerEntry.plural">
+<t:page titleKey="SchedulerEntry.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
@@ -13,53 +13,59 @@
         </li>
     </i:block>
 
-    <w:pageHeader title="@entry.toString()"/>
+    <i:block name="page-header">
+        <t:pageHeader title="@entry.toString()">
+            <i:block name="additionalActions">
+                <i:if test="!entry.isNew()">
+                    <t:dropdownDeleteItem url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())"/>
+                </i:if>
+            </i:block>
+        </t:pageHeader>
+    </i:block>
 
-    <w:editForm url="@apply('/jobs/scheduler/entry/%s', entry.getIdAsString())">
+    <t:editForm url="@apply('/jobs/scheduler/entry/%s', entry.getIdAsString())">
         <div class="row">
-            <w:textfield name="jobName"
+            <t:textfield class="col-md"
+                         name="jobConfigData_jobName"
                          labelKey="JobConfigData.job"
                          value="@entry.getJobConfigData().getJobFactory().getLabel()"
                          readonly="true"/>
             <input type="hidden" name="job" value="@entry.getJobConfigData().getJob()"/>
-            <w:textfield name="jobConfigData_label"
+            <t:textfield class="col-md"
+                         name="jobConfigData_label"
                          labelKey="JobConfigData.label"
                          helpKey="JobConfigData.label.help"
                          value="@entry.getJobConfigData().getLabel()"/>
-        </div>
-        <div class="row">
-            <w:autocompleteSingleSelect span="6"
-                                        name="schedulerData_userId"
-                                        labelKey="SchedulerData.userId"
-                                        helpKey="SchedulerData.userId.help"
-                                        required="true"
-                                        serviceUri="/user-accounts/autocomplete">
+            <t:singleSelect class="col-md required"
+                            name="schedulerData_userId"
+                            labelKey="SchedulerData.userId"
+                            helpKey="SchedulerData.userId.help"
+                            suggestionUri="/user-accounts/autocomplete">
                 <i:if test="isFilled(entry.getSchedulerData().getUserId())">
                     <option value="@entry.getSchedulerData().getUserId()" selected="selected">
                         @entry.getSchedulerData().getUserName()
                     </option>
                 </i:if>
-            </w:autocompleteSingleSelect>
-            <w:booleanSelect span="6"
+            </t:singleSelect>
+        </div>
+        <div class="row">
+            <t:booleanSelect class="col-md required"
                              name="schedulerData_enabled"
                              labelKey="SchedulerData.enabled"
                              helpKey="SchedulerData.enabled.help"
                              trueLabelKey="SchedulerData.enabled.true"
                              falseLabelKey="SchedulerData.enabled.false"
                              value="@entry.getSchedulerData().isEnabled()"/>
-        </div>
-        <div class="row">
-            <w:textfield span="6"
+            <t:textfield class="col-md"
                          name="schedulerData_runs"
                          labelKey="SchedulerData.runs"
                          helpKey="SchedulerData.runs.help"
                          value="@toUserString(entry.getSchedulerData().getRuns())"/>
-            <w:singleSelect span="6"
+            <t:singleSelect class="col-md"
                             name="jobConfigData_customPersistencePeriod"
                             labelKey="JobConfigData.customPersistencePeriod"
                             helpKey="JobConfigData.customPersistencePeriod.help"
-                            optional="true"
-                            required="false">
+                            optional="true">
                 <i:for var="period"
                        type="sirius.biz.process.PersistencePeriod"
                        items="@enumValues(sirius.biz.process.PersistencePeriod.class)">
@@ -68,51 +74,55 @@
                         @period.toString()
                     </option>
                 </i:for>
-            </w:singleSelect>
+            </t:singleSelect>
         </div>
 
-        <w:subHeading labelKey="SchedulerController.planning"/>
+        <t:heading labelKey="SchedulerController.planning"/>
         <div class="row">
-            <w:textfield name="schedulerData_year"
+            <t:textfield class="col-md"
+                         name="schedulerData_year"
                          labelKey="SchedulerData.year"
                          helpKey="SchedulerData.year.help"
                          value="@entry.getSchedulerData().getYear()"/>
-            <w:textfield name="schedulerData_month"
+            <t:textfield class="col-md"
+                         name="schedulerData_month"
                          labelKey="SchedulerData.month"
                          helpKey="SchedulerData.month.help"
                          value="@entry.getSchedulerData().getMonth()"/>
-        </div>
-        <div class="row">
-            <w:textfield name="schedulerData_dayOfMonth"
+            <t:textfield class="col-md"
+                         name="schedulerData_dayOfMonth"
                          labelKey="SchedulerData.dayOfMonth"
                          helpKey="SchedulerData.dayOfMonth.help"
                          value="@entry.getSchedulerData().getDayOfMonth()"/>
-            <w:textfield name="schedulerData_dayOfWeek"
+        </div>
+        <div class="row">
+            <t:textfield class="col-md"
+                         name="schedulerData_dayOfWeek"
                          labelKey="SchedulerData.dayOfWeek"
                          helpKey="SchedulerData.dayOfWeek.help"
                          value="@entry.getSchedulerData().getDayOfWeek()"/>
-        </div>
-        <div class="row">
-            <w:textfield name="schedulerData_hourOfDay"
+            <t:textfield class="col-md"
+                         name="schedulerData_hourOfDay"
                          labelKey="SchedulerData.hourOfDay"
                          helpKey="SchedulerData.hourOfDay.help"
                          value="@entry.getSchedulerData().getHourOfDay()"/>
-            <w:textfield name="schedulerData_minute"
+            <t:textfield class="col-md"
+                         name="schedulerData_minute"
                          labelKey="SchedulerData.minute"
                          helpKey="SchedulerData.minute.help"
                          value="@entry.getSchedulerData().getMinute()"/>
         </div>
-        <w:subHeading labelKey="SchedulerController.parameters"/>
+        <t:heading labelKey="SchedulerController.parameters"/>
         <div class="row">
-            <i:for type="sirius.biz.jobs.params.Parameter" var="param"
+            <i:for type="sirius.biz.jobs.params.Parameter"
+                   var="param"
                    items="entry.getJobConfigData().getJobFactory().getParameters()">
-                <i:dynamicInvoke template="@param.getEffectiveTemplateName(entry.getJobConfigData().getConfigMap())"
+                <i:dynamicInvoke template="@param.getTemplateName()"
                                  param="@param"
                                  context="@entry.getJobConfigData().getConfigMap()"/>
             </i:for>
         </div>
-    </w:editForm>
 
-    <w:formBar backUrl="/jobs/scheduler"/>
-
-</w:page>
+        <t:formBar/>
+    </t:editForm>
+</t:page>

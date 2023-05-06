@@ -8,16 +8,20 @@
 
 package sirius.biz.jupiter;
 
-import redis.clients.jedis.Client;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import sirius.db.redis.RedisDB;
+import sirius.kernel.Sirius;
 import sirius.kernel.async.Operation;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Microtiming;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -25,7 +29,7 @@ import java.util.function.Supplier;
 /**
  * Permits to access a <b>Jupiter</b> instance.
  * <p>
- * This connector is in charge of taking of about the connection management. It also permits to failover to
+ * This connector is in charge of taking of about the connection management. It also permits failing over to
  * a fallback instance in case the main instance isn't reachable.
  * <p>
  * If a failover is performed, we will continue to use the fallback for up to 60s before we attempt to switch
@@ -36,10 +40,11 @@ import java.util.function.Supplier;
 public class JupiterConnector {
 
     private static final JupiterCommand CMD_SET_CONFIG = new JupiterCommand("SYS.SET_CONFIG");
+    private static final JupiterCommand CMD_PYRUN = new JupiterCommand("PY.RUN");
 
     /**
      * If a failover is performed, we keep using the fallback instance for a certain amount of time to prevent
-     * constant switching back and forth in case of network problems (etc). This constant determines the interval
+     * constant switching back and forth in case of network problems (etc.). This constant determines the interval
      * before a failover back to the main instance is attempted.
      */
     private static final int FAILOVER_TRIGGER_REARM_INTERVAL = 60_000;
@@ -48,7 +53,7 @@ public class JupiterConnector {
      * Provides an upper bound of the expected runtime of a Jupiter command for monitoring purposes.
      */
     private static final Duration EXPECTED_JUPITER_COMMAND_RUNTIME = Duration.ofSeconds(10);
-
+    private static final String ERR_RESPONSE_UNKNOWN_KERNEL = "UNKNOWN_KERNEL";
     private final String instanceName;
     private final RedisDB redis;
     private final RedisDB fallbackRedis;
@@ -81,6 +86,15 @@ public class JupiterConnector {
     }
 
     /**
+     * Returns the list of namespaces which are enabled for this connector.
+     *
+     * @return the list of enabled namespaces
+     */
+    public List<String> fetchEnabledNamespaces() {
+        return Sirius.getSettings().getExtension("jupiter.settings", getName()).getStringList("repository.namespaces");
+    }
+
+    /**
      * Executes one or more commands and returns a value of the given type.
      * <p>
      * If a HA option is present in <tt>jupiter.ha</tt>, the given fallback pool is used in case the main
@@ -91,7 +105,7 @@ public class JupiterConnector {
      * @param <T>         the generic type of the result
      * @return a result computed by <tt>task</tt>
      */
-    public <T> T query(Supplier<String> description, Function<Client, T> task) {
+    public <T> T query(Supplier<String> description, Function<Connection, T> task) {
         if (fallbackRedis == null) {
             return queryDirect(description, task);
         }
@@ -115,7 +129,7 @@ public class JupiterConnector {
     }
 
     private <T> T performWithFailover(Supplier<String> description,
-                                      Function<Client, T> task,
+                                      Function<Connection, T> task,
                                       RedisDB main,
                                       RedisDB fallback,
                                       Runnable executeOnFailover) {
@@ -130,7 +144,7 @@ public class JupiterConnector {
         }
     }
 
-    private <T> T performWithoutFailover(Supplier<String> description, Function<Client, T> task, RedisDB redis) {
+    private <T> T performWithoutFailover(Supplier<String> description, Function<Connection, T> task, RedisDB redis) {
         try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
@@ -139,7 +153,7 @@ public class JupiterConnector {
         }
     }
 
-    private <T> T perform(Supplier<String> description, Jedis jedis, Function<Client, T> task) {
+    private <T> T perform(Supplier<String> description, Jedis jedis, Function<Connection, T> task) {
         Watch watch = Watch.start();
         try {
             return task.apply(jedis.getClient());
@@ -166,12 +180,19 @@ public class JupiterConnector {
      * @param <T>         the generic type of the result
      * @return a result computed by <tt>task</tt>
      */
-    public <T> T queryDirect(Supplier<String> description, Function<Client, T> task) {
+    public <T> T queryDirect(Supplier<String> description, Function<Connection, T> task) {
         try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
-        } catch (Exception e) {
-            throw Exceptions.handle(Jupiter.LOG, e);
+        } catch (Exception error) {
+            throw Exceptions.handle()
+                            .to(Jupiter.LOG)
+                            .error(error)
+                            .withSystemErrorMessage(
+                                    "The Jupiter instance %s failed to for command: '%s' - Error: %s (%s)",
+                                    instanceName,
+                                    description.get())
+                            .handle();
         }
     }
 
@@ -184,7 +205,7 @@ public class JupiterConnector {
      * @param description a description of the actions performed used for debugging and tracing
      * @param task        the actual task to perform using redis
      */
-    public void exec(Supplier<String> description, Consumer<Client> task) {
+    public void exec(Supplier<String> description, Consumer<Connection> task) {
         query(description, client -> {
             task.accept(client);
             return null;
@@ -200,7 +221,7 @@ public class JupiterConnector {
      * @param description a description of the actions performed used for debugging and tracing
      * @param task        the actual task to perform using redis
      */
-    public void execDirect(Supplier<String> description, Consumer<Client> task) {
+    public void execDirect(Supplier<String> description, Consumer<Connection> task) {
         queryDirect(description, client -> {
             task.accept(client);
             return null;
@@ -217,6 +238,35 @@ public class JupiterConnector {
             db.sendCommand(CMD_SET_CONFIG, configString);
             db.getStatusCodeReply();
         });
+    }
+
+    /**
+     * Invokes a running Python kernel using <tt>PY.RUN</tt>.
+     *
+     * @param kernel the name of the kernel to run
+     * @param input  the JSON object to send to the kernel
+     * @return the received JSON response
+     * @throws IllegalArgumentException if the given kernel is unknown
+     */
+    public JSONObject pyRun(String kernel, JSONObject input) {
+        String result = query(() -> "PY.RUN: " + kernel, db -> {
+            db.sendCommand(CMD_PYRUN, kernel, input.toJSONString());
+            return db.getBulkReply();
+        });
+
+        if (ERR_RESPONSE_UNKNOWN_KERNEL.equals(result)) {
+            throw new IllegalArgumentException("Unknown kernel: " + kernel);
+        }
+
+        JSONObject json = JSON.parseObject(result);
+        if (json.containsKey("error")) {
+            throw Exceptions.handle()
+                            .to(Jupiter.LOG)
+                            .withSystemErrorMessage("Error while running kernel %s: %s", kernel, json.toJSONString())
+                            .handle();
+        }
+
+        return json;
     }
 
     /**
@@ -245,6 +295,10 @@ public class JupiterConnector {
      */
     public InfoGraphDB idb() {
         return new InfoGraphDB(this);
+    }
+
+    protected boolean isFallbackActive() {
+        return fallbackActiveUntil > System.currentTimeMillis();
     }
 
     @Override

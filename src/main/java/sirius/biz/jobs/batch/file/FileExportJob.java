@@ -9,10 +9,10 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.BatchJob;
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -40,7 +40,7 @@ public abstract class FileExportJob extends BatchJob {
      * Contains the default parameter which specifies the destination of the export.
      * <p>
      * Note that even if another instance is used in {@link FileExportJobFactory#collectParameters(Consumer)}, this
-     * will still work out as long as the parameter names are the same. Therefore both parameters should be
+     * will still work out as long as the parameter names are the same. Therefore, both parameters should be
      * created using {@link #createDestinationParameter(List)}.
      */
     public static final Parameter<VirtualFile> DESTINATION_PARAMETER = createDestinationParameter(null);
@@ -69,9 +69,8 @@ public abstract class FileExportJob extends BatchJob {
      * @return the parameter used as destination
      */
     public static Parameter<VirtualFile> createDestinationParameter(@Nullable List<String> acceptedFileExtensions) {
-        FileOrDirectoryParameter result =
-                new FileOrDirectoryParameter("destination", "$FileExportJobFactory.destination").withDescription(
-                        "$FileExportJobFactory.destination.help").withBasePath("/work");
+        FileParameter result = new FileParameter("destination", "$FileExportJobFactory.destination").withDescription(
+                "$FileExportJobFactory.destination.help").withBasePath("/work").filesAndDirectories();
         if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
             result.withAcceptedExtensionsList(acceptedFileExtensions);
         }
@@ -146,18 +145,6 @@ public abstract class FileExportJob extends BatchJob {
      */
     private boolean shouldUseProvidedOutputDirectory() {
         return destination.exists() && destination.isDirectory();
-    }
-    
-    /**
-     * Determines the effective file name to use.
-     *
-     * @param suffix an optional suffix to append to the name to generate a unique file name
-     * @return a full file name including the file extension
-     * @deprecated use {@link #determineEffectiveFilename(String, boolean)} instead.
-     */
-    @Deprecated
-    protected String determineEffectiveFilename(String suffix) {
-        return determineEffectiveFilename(suffix, true);
     }
 
     /**

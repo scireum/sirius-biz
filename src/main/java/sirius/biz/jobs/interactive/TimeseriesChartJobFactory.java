@@ -9,9 +9,10 @@
 package sirius.biz.jobs.interactive;
 
 import sirius.biz.analytics.charts.ComparisonPeriod;
-import sirius.biz.analytics.charts.Dataset;
 import sirius.biz.analytics.charts.Timeseries;
 import sirius.biz.analytics.charts.Unit;
+import sirius.biz.analytics.explorer.DataExplorerController;
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.LocalDateParameter;
@@ -27,7 +28,11 @@ import java.util.function.Consumer;
 
 /**
  * Renders a line chart representing a user defined {@link TimeseriesDataProvider timeseries}.
+ *
+ * @deprecated Use the {@link DataExplorerController Data-Explorer} for advanced
+ * charts and statistics.
  */
+@Deprecated
 public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory implements TimeseriesDataProvider {
 
     /**
@@ -55,9 +60,8 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
      * Determines the desired comparison period for the timeseries.
      */
     public static final Parameter<ComparisonPeriod> PARAM_COMPARISON_PERIOD = new EnumParameter<>("comparisonPeriod",
-                                                                                                  "$TimeseriesChartJobFactory.comparisonPeriod",
-                                                                                                  ComparisonPeriod.class)
-            .build();
+                                                                                                  "$TimeSeriesChartJobFactory.comparisonPeriod",
+                                                                                                  ComparisonPeriod.class).build();
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
@@ -79,13 +83,13 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
         Timeseries timeseries = new Timeseries(start.atStartOfDay(), end.atStartOfDay().plusDays(1), unit, 35, 50);
         labelConsumer.accept(timeseries.getLabels());
 
-        Dataset currentDataset = new Dataset(NLS.get("TimeseriesChartJobFactory.currentPeriod"));
+        Dataset currentDataset = new Dataset(NLS.get("TimeSeriesChartJobFactory.currentPeriod"));
         provideData(timeseries, context, currentDataset, Optional.of(additionalMetricConsumer));
         datasetConsumer.accept(currentDataset);
 
         ComparisonPeriod period = PARAM_COMPARISON_PERIOD.get(context).orElse(null);
         if (period != null) {
-            Dataset comparedDataset = new Dataset(NLS.get("TimeseriesChartJobFactory.comparisonPeriod"));
+            Dataset comparedDataset = new Dataset(NLS.get("TimeSeriesChartJobFactory.comparisonPeriod"));
             provideData(timeseries.computeComparisonPeriod(period), context, comparedDataset, Optional.empty());
             datasetConsumer.accept(comparedDataset);
         }

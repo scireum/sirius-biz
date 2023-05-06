@@ -20,6 +20,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.mails.Mails;
 
 import java.util.function.Consumer;
@@ -37,9 +38,15 @@ import java.util.regex.Pattern;
 public class ContactData extends Composite {
 
     /**
+     * Matches a part of a phone number like <tt>55 55</tt> or <tt>55</tt>.
+     */
+    private static final String NUMERIC_PART = "( *\\d+)*+";
+
+    /**
      * Validates a phone number.
      */
-    public static final Pattern VALID_PHONE_NUMBER = Pattern.compile("\\+?\\d+( \\d+)*( */( *\\d+)+)?( *-( *\\d+)+)?");
+    public static final Pattern VALID_PHONE_NUMBER =
+            Pattern.compile("\\+?\\d+" + NUMERIC_PART + "( */" + NUMERIC_PART + ")?( *-" + NUMERIC_PART + ")?");
 
     /**
      * Contains an email address.
@@ -194,6 +201,7 @@ public class ContactData extends Composite {
                          .handle();
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getEmail() {
         return email;
     }
@@ -202,6 +210,7 @@ public class ContactData extends Composite {
         this.email = email;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getPhone() {
         return phone;
     }
@@ -210,6 +219,7 @@ public class ContactData extends Composite {
         this.phone = phone;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getFax() {
         return fax;
     }
@@ -218,6 +228,7 @@ public class ContactData extends Composite {
         this.fax = fax;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getMobile() {
         return mobile;
     }

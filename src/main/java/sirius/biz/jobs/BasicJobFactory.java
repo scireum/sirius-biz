@@ -8,10 +8,14 @@
 
 package sirius.biz.jobs;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.infos.JobInfoCollector;
+import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.presets.JobPresets;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
@@ -24,28 +28,27 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
 import sirius.web.http.QueryString;
 import sirius.web.http.WebContext;
-import sirius.web.security.Permission;
+import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Provides a robust base implementation of {@link JobFactory} which performs all the heavy lifting.
  */
 public abstract class BasicJobFactory implements JobFactory {
-
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     /**
      * Contains the {@link TaskContext#setSystem(String) system string} for jobs.
@@ -61,6 +64,23 @@ public abstract class BasicJobFactory implements JobFactory {
      * rendered nicely.
      */
     private static final String PARAM_UPDATE_ONLY = "updateOnly";
+
+    /**
+     * Defines the permission needed for bypassing log limitation.
+     *
+     * @see #LIMIT_LOG_MESSAGES_PARAMETER
+     */
+    public static final String FEATURE_BYPASS_PROCESS_LOG_LIMITS = "feature-bypass-process-log-limits";
+
+    /**
+     * Declares a boolean parameter that determines if log messages with a set limit should actually be limited.
+     *
+     * @see sirius.biz.process.logs.ProcessLog#withLimitedMessageType(String, int)
+     * @see sirius.biz.process.ProcessContext#log(ProcessLog)
+     */
+    public static final Parameter<Boolean> LIMIT_LOG_MESSAGES_PARAMETER =
+            new BooleanParameter("limitLogMessages", "$BasicJobFactory.limitLogMessages").withDescription(
+                    "$BasicJobFactory.limitLogMessages.help").withDefaultTrue().build();
 
     @Part
     @Nullable
@@ -107,14 +127,23 @@ public abstract class BasicJobFactory implements JobFactory {
      * @param collector the collector used to supply additional info sections for a job
      */
     protected void collectJobInfos(JobInfoCollector collector) {
-        collector.addWell(getDetailDescription());
+        collector.addCard(getDetailDescription());
     }
 
     @Override
-    public List<String> getRequiredPermissions() {
-        return Arrays.stream(getClass().getAnnotationsByType(Permission.class))
-                     .map(Permission::value)
-                     .collect(Collectors.toList());
+    public boolean isAccessibleToCurrentUser() {
+        return UserContext.getCurrentUser().hasPermissions(getRequiredPermissions().toArray(String[]::new));
+    }
+
+    /**
+     * Fetches the permissions required by this job.
+     * <p>
+     * By default, we pick up all {@link sirius.web.security.Permission} annotations on the job class.
+     *
+     * @return a set of all required permissions for this job
+     */
+    protected Set<String> getRequiredPermissions() {
+        return Permissions.computePermissionsFromAnnotations(getClass());
     }
 
     @Override
@@ -153,7 +182,7 @@ public abstract class BasicJobFactory implements JobFactory {
             return null;
         }
 
-        if (!UserContext.getCurrentUser().hasPermissions(getRequiredPermissions().toArray(EMPTY_STRING_ARRAY))) {
+        if (!isAccessibleToCurrentUser()) {
             return null;
         }
 
@@ -200,11 +229,11 @@ public abstract class BasicJobFactory implements JobFactory {
 
     @Override
     public void startInteractively(WebContext request) {
-        checkPermissions();
+        enforceAccessibility();
         setupTaskContext();
 
         AtomicBoolean submit = new AtomicBoolean(request.isSafePOST() && !request.get(PARAM_UPDATE_ONLY).asBoolean());
-        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), error -> {
+        Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), (param, error) -> {
             UserContext.message(Message.error(error));
             submit.set(false);
         });
@@ -229,9 +258,9 @@ public abstract class BasicJobFactory implements JobFactory {
 
     @Override
     public String startInBackground(Function<String, Value> parameterProvider) {
-        checkPermissions();
+        enforceAccessibility();
         setupTaskContext();
-        Map<String, String> context = buildAndVerifyContext(parameterProvider, true, error -> {
+        Map<String, String> context = buildAndVerifyContext(parameterProvider, true, (param, error) -> {
             throw error;
         });
 
@@ -260,28 +289,24 @@ public abstract class BasicJobFactory implements JobFactory {
         taskContext.setJob("kernel");
     }
 
-    /**
-     * Enforces the permissions specified by this job.
-     *
-     * You cannot override this method, because it should behave consistently with {@link #getRequiredPermissions()}.
-     * Please add all required permissions there.
-     */
-    protected final void checkPermissions() {
-        UserInfo currentUser = UserContext.getCurrentUser();
-        getRequiredPermissions().forEach(currentUser::assertPermission);
+    protected final void enforceAccessibility() {
+        if (!isAccessibleToCurrentUser()) {
+            throw Exceptions.createHandled().withDirectMessage(NLS.get("BasicJobFactory.unauthorized")).handle();
+        }
     }
 
     @Override
     public Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
                                                      boolean enforceRequiredParameters,
-                                                     Consumer<HandledException> errorConsumer) {
+                                                     BiConsumer<Parameter<?>, HandledException> errorConsumer) {
         Map<String, String> context = new HashMap<>();
         for (Parameter<?> parameter : getParameters()) {
             try {
                 Value contextValue = parameterProvider.apply(parameter.getName());
                 String value = parameter.checkAndTransform(contextValue);
                 if (enforceRequiredParameters && Strings.isEmpty(value) && parameter.isRequired()) {
-                    errorConsumer.accept(Exceptions.createHandled()
+                    errorConsumer.accept(parameter,
+                                         Exceptions.createHandled()
                                                    .withNLSKey("Parameter.required")
                                                    .set("name", parameter.getLabel())
                                                    .handle());
@@ -290,10 +315,53 @@ public abstract class BasicJobFactory implements JobFactory {
                     context.put(parameter.getName(), value);
                 }
             } catch (HandledException e) {
-                errorConsumer.accept(e);
+                errorConsumer.accept(parameter, e);
             }
         }
 
         return context;
+    }
+
+    @Override
+    public JSON computeRequiredParameterUpdates(WebContext webContext) {
+        Map<String, Exception> errorByParameter = new HashMap<>();
+        Map<String, String> parameterContext = buildAndVerifyContext(webContext::get, false, (parameter, exception) -> {
+            errorByParameter.put(parameter.getName(), exception);
+        });
+        return computeRequiredParameterUpdates(parameterContext, errorByParameter);
+    }
+
+    @Override
+    public JSON computeRequiredParameterUpdates(Map<String, String> parameterContext) {
+        return computeRequiredParameterUpdates(parameterContext, Collections.emptyMap());
+    }
+
+    private JSON computeRequiredParameterUpdates(Map<String, String> parameterContext,
+                                                 Map<String, Exception> errorByParameter) {
+        JSONObject json = new JSONObject();
+        getParameters().forEach(parameter -> {
+            JSONObject update = new JSONObject();
+            update.put("visible", parameter.isVisible(parameterContext));
+            update.put("clear", parameter.needsClear(parameterContext));
+            parameter.updateValue(parameterContext).ifPresent(val -> update.put("updatedValue", val));
+            Optional<Message> validation = parameter.validate(parameterContext);
+            if (errorByParameter.containsKey(parameter.getName())) {
+                validation = Optional.of(Message.error()
+                                                .withTextMessage(errorByParameter.get(parameter.getName())
+                                                                                 .getLocalizedMessage()));
+            }
+            validation.ifPresent(message -> {
+                // pretty hacky to split css classes, but it works, and unless we change the Message type there is no
+                // good way around it. The intention is, to reduce "alert-danger" to "danger", so we can use it in the
+                // frontend in a more flexible way.
+                String bootstrapStyle = message.getType().getCssClass().split("-")[1];
+                update.put("validation",
+                           new JSONObject().fluentPut("type", message.getType().name())
+                                           .fluentPut("style", bootstrapStyle)
+                                           .fluentPut("html", message.getHtml()));
+            });
+            json.put(parameter.getName(), update);
+        });
+        return json;
     }
 }

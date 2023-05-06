@@ -13,10 +13,10 @@ import sirius.db.mixing.Mapping;
 
 public class ESMultiLanguageStringEntity extends ElasticEntity {
 
-    public static final Mapping MULTI_LANG = Mapping.named("multiLang");
-    private final MultiLanguageString multiLang = new MultiLanguageString();
+    public static final Mapping MULTI_LANGUAGE = Mapping.named("multiLanguage");
+    private final MultiLanguageString multiLanguage = new MultiLanguageString();
 
-    public MultiLanguageString getMultiLang() {
-        return multiLang;
+    public MultiLanguageString getMultiLanguage() {
+        return multiLanguage;
     }
 }

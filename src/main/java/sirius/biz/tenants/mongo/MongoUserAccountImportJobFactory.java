@@ -8,7 +8,9 @@
 
 package sirius.biz.tenants.mongo;
 
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
+import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Part;
@@ -16,7 +18,8 @@ import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 
 import javax.annotation.Nonnull;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Provides an import job for {@link MongoUserAccount user accounts} stored in MongoDB.
@@ -34,10 +37,18 @@ public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    public List<String> getRequiredPermissions() {
-        List<String> requiredPermissions = super.getRequiredPermissions();
-        requiredPermissions.add(UserAccountController.getUserManagementPermission());
-        return requiredPermissions;
+    public int getPriority() {
+        return 9100;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.USERS_AND_TENANTS;
+    }
+
+    @Override
+    public Set<String> getRequiredPermissions() {
+        return Collections.singleton(UserAccountController.getUserManagementPermission());
     }
 
     @Override
@@ -47,6 +58,6 @@ public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
-        return queryString.path().startsWith("/user-account");
+        return targetObject instanceof Class<?> type && UserAccount.class.isAssignableFrom(type);
     }
 }

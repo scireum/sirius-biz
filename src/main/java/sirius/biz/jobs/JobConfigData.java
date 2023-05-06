@@ -84,6 +84,18 @@ public class JobConfigData extends Composite {
     @Part
     private static Jobs jobs;
 
+    @Override
+    public String toString() {
+        if (Strings.isFilled(getLabel())) {
+            return getLabel();
+        }
+        if (Strings.isFilled(getJobName())) {
+            return getJobName();
+        }
+
+        return getJobFactory().getLabel();
+    }
+
     @BeforeSave
     protected void updateConfig() {
         if (configMap != null) {
@@ -91,7 +103,7 @@ public class JobConfigData extends Composite {
         }
 
         if (Strings.isFilled(job)) {
-            jobName = getJobFactory().getName();
+            jobName = getJobFactory().getLabel();
         }
     }
 
@@ -155,9 +167,9 @@ public class JobConfigData extends Composite {
     public void loadFromContext(WebContext ctx) {
         // Check all parameters here to notify the user about config short comings...
         ValueHolder<HandledException> errorHolder = new ValueHolder<>(null);
-        Map<String, String> data = getJobFactory().buildAndVerifyContext(ctx::get, true, ex -> {
+        Map<String, String> data = getJobFactory().buildAndVerifyContext(ctx::get, true, (parameter, exception) -> {
             if (errorHolder.get() == null) {
-                errorHolder.accept(ex);
+                errorHolder.accept(exception);
             }
         });
 

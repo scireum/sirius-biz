@@ -11,16 +11,18 @@ package sirius.biz.tycho.kb;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.PageImpressionEvent;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
-
-import java.util.Optional;
 
 /**
  * Provides the UI of the knowledge base.
@@ -41,18 +43,18 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kb")
     public void kb(WebContext webContext) {
-        langArticle(webContext, NLS.getCurrentLang(), KnowledgeBase.ROOT_CHAPTER_ID);
+        langArticle(webContext, NLS.getCurrentLanguage(), KnowledgeBase.ROOT_CHAPTER_ID);
     }
 
     /**
      * Renders the entry point of the knowledge base in the given language.
      *
      * @param webContext the current request to respond to
-     * @param lang       the language top open the knowledge base in
+     * @param language   the language top open the knowledge base in
      */
     @Routed("/kb/:1")
-    public void langKb(WebContext webContext, String lang) {
-        langArticle(webContext, lang, KnowledgeBase.ROOT_CHAPTER_ID);
+    public void langKb(WebContext webContext, String language) {
+        langArticle(webContext, language, KnowledgeBase.ROOT_CHAPTER_ID);
     }
 
     /**
@@ -63,25 +65,48 @@ public class KnowledgeBaseController extends BizController {
      */
     @Routed("/kba/:1")
     public void article(WebContext webContext, String articleId) {
-        langArticle(webContext, NLS.getCurrentLang(), articleId);
+        langArticle(webContext, NLS.getCurrentLanguage(), articleId);
     }
 
     /**
      * Renders the requested article in the given language.
      *
      * @param webContext the current request to respond to
-     * @param lang       the language to render the article in
+     * @param language   the language to render the article in
      * @param articleId  the id or code of the article to render
      */
     @Routed("/kba/:1/:2")
-    public void langArticle(WebContext webContext, String lang, String articleId) {
-        renderArticleIfPresent(webContext, knowledgeBase.resolve(lang, articleId, false));
+    public void langArticle(WebContext webContext, String language, String articleId) {
+        langArticle(webContext, language, articleId, null);
     }
 
-    private void renderArticleIfPresent(WebContext webContext, Optional<KnowledgeBaseArticle> articleOptional) {
-        if (articleOptional.isPresent()) {
-            KnowledgeBaseArticle article = articleOptional.get();
-            UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
+    /**
+     * Renders the pre-authorized article in the given language.
+     *
+     * @param webContext the current request to respond to
+     * @param language   the language to render the article in
+     * @param articleId  the id or code of the article to render
+     * @param authKey    the authentication signature to verify
+     */
+    @Routed("/kba/:1/:2/:3")
+    public void langArticle(WebContext webContext, String language, String articleId, String authKey) {
+        KnowledgeBaseArticle article = knowledgeBase.resolve(language, articleId, true).orElse(null);
+        if (article == null) {
+            webContext.respondWith().error(HttpResponseStatus.NOT_FOUND);
+            return;
+        }
+
+        if (!article.getEntry().checkPermissions() && !checkAuthKey(article, authKey)) {
+            if (!UserContext.getCurrentUser().isLoggedIn()) {
+                webContext.respondWith().template("/templates/biz/login.html.pasta", webContext.getRequest().uri());
+            } else {
+                throw Exceptions.createHandled().withNLSKey("KnowledgeBase.missingPermission").handle();
+            }
+            return;
+        }
+
+        UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
+        try {
             webContext.respondWith().template(article.getTemplatePath());
             eventRecorder.record(new PageImpressionEvent().withUri("/kba/"
                                                                    + article.getLanguage()
@@ -90,30 +115,33 @@ public class KnowledgeBaseController extends BizController {
                                                           .withAggregationUrl("/kba")
                                                           .withAction(article.getArticleId())
                                                           .withDataObject(article.getEntry().getUniqueName()));
-        } else {
-            webContext.respondWith().error(HttpResponseStatus.NOT_FOUND);
+        } finally {
+            UserContext.getHelper(KBHelper.class).clearCurrentArticle();
         }
     }
 
-    /**
-     * Renders the pre-authorized article in the given language.
-     *
-     * @param webContext the current request to respond to
-     * @param lang       the language to render the article in
-     * @param articleId  the id or code of the article to render
-     * @param authKey    the authentication signature to verify
-     */
-    @Routed("/kba/:1/:2/:3")
-    public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
-        renderArticleIfPresent(webContext,
-                               knowledgeBase.resolve(lang, articleId, true)
-                                            .filter(article -> checkArticlePermission(article, authKey)));
+    private boolean checkAuthKey(KnowledgeBaseArticle article, String authKey) {
+        if (Strings.isEmpty(authKey)) {
+            return false;
+        }
+        return Strings.areEqual(article.computeAuthenticationSignature(true), authKey)
+               || Strings.areEqual(article.computeAuthenticationSignature(false), authKey);
     }
 
-    private boolean checkArticlePermission(KnowledgeBaseArticle article, String authKey) {
-        return article.getEntry().checkPermissions()
-               || Strings.areEqual(article.computeAuthenticationSignature(true),
-                                   authKey)
-               || Strings.areEqual(article.computeAuthenticationSignature(false), authKey);
+    /**
+     * Provides an autocompletion for KB articles.
+     *
+     * @param webContext the current request
+     */
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
+    @Routed(value = "/kb/autocomplete", priority = 99)
+    public void articlesAutocomplete(final WebContext webContext) {
+        AutocompleteHelper.handle(webContext, (query, result) -> {
+            knowledgeBase.query(null, query, AutocompleteHelper.DEFAULT_LIMIT).forEach(article -> {
+                result.accept(AutocompleteHelper.suggest(article.getEntry().getIdAsString())
+                                                .withCompletionLabel(article.getArticleId() + ": " + article.getTitle())
+                                                .withCompletionDescription(article.getDescription()));
+            });
+        });
     }
 }

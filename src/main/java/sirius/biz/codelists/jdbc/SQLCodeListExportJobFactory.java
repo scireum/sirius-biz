@@ -12,6 +12,7 @@ import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.importer.ImportContext;
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -41,6 +42,16 @@ public class SQLCodeListExportJobFactory
     @Override
     public String getName() {
         return "export-sql-code-list-entries";
+    }
+
+    @Override
+    public int getPriority() {
+        return 5210;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.MISC;
     }
 
     @Override

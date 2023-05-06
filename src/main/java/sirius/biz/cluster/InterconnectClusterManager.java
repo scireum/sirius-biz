@@ -34,7 +34,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -199,7 +198,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
         return callEachNode("/system/cluster/state/" + getClusterAPIToken()).map(this::parseNodeState)
                                                                             .sorted(Comparator.comparing(NodeInfo::getName))
-                                                                            .collect(Collectors.toList());
+                                                                            .toList();
     }
 
     private NodeInfo parseNodeState(JSONObject response) {

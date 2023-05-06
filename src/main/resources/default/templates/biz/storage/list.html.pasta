@@ -46,22 +46,22 @@
                     <t:filterbox page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
                 </i:block>
 
-                <div class="row">
-                    <t:datacard>
-                        <table class="table table-hover">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <table class="table table-hover" style="table-layout: fixed">
                             <thead>
                             <tr>
-                                <th>
+                                <th scope="col">
                                     @i18n("Model.name")<br>
-                                    <small class="muted">@i18n("Model.description")</small>
+                                    <small class="text-muted text-nowrap">@i18n("Model.description")</small>
                                 </th>
-                                <th class="text-right">
-                                    @i18n("VirtualFile.size")
+                                <th scope="col" class="text-right">
+                                    @i18n("VirtualFile.size")<br>
                                 </th>
-                                <th class="text-right">
-                                    @i18n("VirtualFile.lastModified")
+                                <th scope="col" class="text-right">
+                                    @i18n("VirtualFile.lastModified")<br>
                                 </th>
-                                <th>
+                                <th scope="col">
                                 </th>
                             </tr>
                             </thead>
@@ -79,7 +79,8 @@
                                     <td></td>
                                 </tr>
                             </i:if>
-                            <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child" items="children.getItems()">
+                            <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child"
+                                   items="children.getItems()">
                                 <tr>
                                     <td>
                                         <div>
@@ -94,7 +95,7 @@
                                             </a>
                                         </div>
                                         <div>
-                                            <small class="muted">@child.description()</small>
+                                            <small class="text-muted">@child.description()</small>
                                         </div>
                                     </td>
                                     <td class="text-right">
@@ -112,12 +113,12 @@
                                                      value="@part(Jobs.class).getMatchingInteractiveJobs(CallContext.getCurrent().get(WebContext.class).getRequest().uri(), child)"/>
                                             <i:if test="child.canRename()">
                                                 <t:dropdownItem
-                                                        url="@apply('javascript:renameFile(\'%s\', \'%s\')', child.path(), child.name())"
+                                                        url="@apply('javascript:renameFile(\'%s\', \'%s\')', child.path().replace('\'', '\\\''), child.name().replace('\'', '\\\''))"
                                                         icon="fa fa-tag" labelKey="VFSController.rename"/>
                                             </i:if>
                                             <i:if test="child.canMove()">
                                                 <t:dropdownItem
-                                                        url="@apply('javascript:moveFile(\'%s\')', child.path())"
+                                                        url="@apply('javascript:moveFile(\'%s\')', child.path().replace('\'', '\\\''))"
                                                         icon="fa fa-arrow-right" labelKey="VFSController.move"/>
                                             </i:if>
                                             <i:for type="Tuple" var="linkAndJob" items="jobs">
@@ -128,7 +129,7 @@
                                             </i:for>
                                             <i:if test="!child.isDirectory()">
                                                 <t:dropdownItem
-                                                        url="@apply('javascript:copyToClipboard(\'%s\')', child.path())"
+                                                        url="@apply('javascript:copyToClipboard(\'%s\')', child.path().replace('\'', '\\\''))"
                                                         icon="fa fa-copy" labelKey="VFSController.copyPath"/>
                                             </i:if>
                                             <i:if test="child.canDelete()">
@@ -142,11 +143,9 @@
                             </i:for>
                             </tbody>
                         </table>
-                        <i:block name="footer">
-                            <t:pagination page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
-                        </i:block>
-                    </t:datacard>
+                    </div>
                 </div>
+                <t:pagination page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
             </t:sidebar>
         </div>
     </div>
@@ -156,7 +155,7 @@
                 <input type="hidden" id="rename-path" name="path"/>
                 <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
                        type="hidden"/>
-                <t:textfield id="rename-name" name="name" value="" labelKey="Model.name" class="input-required"/>
+                <t:textfield id="rename-name" name="name" value="" labelKey="Model.name" class="required"/>
             </fieldset>
         </t:modal>
     </form>
@@ -172,7 +171,8 @@
                 <input type="hidden" name="parent" value="@dir.path()"/>
                 <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
                        type="hidden"/>
-                <t:textfield id="directory-name" name="name" value="" labelKey="Model.name" class="input-required"/>
+                <t:textfield id="directory-name" name="name" value="" labelKey="Model.name" class="required"
+                             placeholder="@i18n('VFSController.createDirectory')"/>
             </fieldset>
         </t:modal>
     </form>
@@ -182,13 +182,13 @@
                 <input type="hidden" name="parent" value="@dir.path()"/>
                 <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
                        type="hidden"/>
-                <t:textfield id="file-name" name="name" value="" labelKey="Model.name" class="input-required"/>
+                <t:textfield id="file-name" name="name" value="" labelKey="Model.name" class="required"/>
             </fieldset>
         </t:modal>
     </form>
     <script type="text/javascript">
         function renameFile(path, name) {
-            var modalElement = $("#rename-modal");
+            let modalElement = $("#rename-modal");
             modalElement.find("#rename-name").val(name);
             modalElement.find("#rename-path").val(path);
 
@@ -213,14 +213,14 @@
         }
 
         function createDirectory() {
-            var modalElement = $("#create-directory-modal");
+            let modalElement = $("#create-directory-modal");
             modalElement.on('shown.bs.modal', function () {
                 modalElement.find("#directory-name").focus();
             }).modal('show');
         }
 
         function createFile() {
-            var modalElement = $("#create-file-modal");
+            let modalElement = $("#create-file-modal");
             modalElement.on('shown.bs.modal', function () {
                 modalElement.find("#select-file-modal-search-filter").focus();
             }).modal('show');

@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.mongo;
 
+import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.TenantController;
 import sirius.db.mongo.MongoQuery;
@@ -29,6 +30,17 @@ public class MongoTenantExportJobFactory extends EntityExportJobFactory<MongoTen
     public String getName() {
         return "export-mongo-tenants";
     }
+
+    @Override
+    public int getPriority() {
+        return 9200;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.USERS_AND_TENANTS;
+    }
+
 
     @Override
     protected Class<MongoTenant> getExportType() {

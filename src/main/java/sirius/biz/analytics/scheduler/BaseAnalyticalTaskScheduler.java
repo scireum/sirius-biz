@@ -28,6 +28,16 @@ import java.util.function.Consumer;
  */
 abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements AnalyticsScheduler {
 
+    /**
+     * Marks a generated placeholder batches for global tasks.
+     * <p>
+     * Global tasks (to be executed once and not per entity) as commonly created against
+     * {@link sirius.db.mongo.MongoEntity} or {@link sirius.db.jdbc.SQLEntity} respectively. These neither can nor need
+     * to create any batches of entities. Rather, an empty batch is created which has this marker enabled. This is
+     * picked up be the appropriate batch executor and a single run is performed.
+     */
+    protected static final String CONTEXT_MARKER_GLOBAL_ENTITY = "markerGlobalEntity";
+
     @Part
     protected GlobalContext context;
 
@@ -161,7 +171,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
     private void executeTaskForEntity(B entity, Class<?> type, LocalDate date, AnalyticalTask<?> task) {
         Watch watch = Watch.start();
         try {
-            ((AnalyticalTask<B>) task).compute(date, entity);
+            ((AnalyticalTask<B>) task).compute(date, entity, useBestEffortScheduling());
         } catch (Exception ex) {
             Exceptions.handle()
                       .to(AnalyticalEngine.LOG)

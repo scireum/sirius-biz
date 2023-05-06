@@ -43,7 +43,7 @@ public class SQLOnboardingVideo extends SQLEntity implements OnboardingVideo {
 
     public static final Mapping ACADEMY_VIDEO = Mapping.named("academyVideo");
     private final SQLEntityRef<SQLAcademyVideo> academyVideo =
-            SQLEntityRef.on(SQLAcademyVideo.class, BaseEntityRef.OnDelete.IGNORE);
+            SQLEntityRef.on(SQLAcademyVideo.class, BaseEntityRef.OnDelete.IGNORE).weak();
 
     /**
      * Contains the track id, this video is part of.

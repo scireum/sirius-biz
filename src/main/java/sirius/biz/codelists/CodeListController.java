@@ -198,6 +198,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
         AutocompleteHelper.handle(webContext, (query, result) -> {
             BasePageHelper<L, ?, ?, ?> pageHelper = getListsAsPage();
             pageHelper.withContext(webContext);
+            applyCodeListSearchFields(pageHelper);
 
             pageHelper.asPage().getItems().forEach(codeList -> {
                 CodeListData codeListData = codeList.getCodeListData();

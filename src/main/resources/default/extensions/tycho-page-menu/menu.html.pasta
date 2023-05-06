@@ -34,7 +34,6 @@
                              active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
                              link="/ps"
                              permission="permission-view-processes"/>
-
             <t:menuImageDropdownItem icon="@user().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/user_avatar_d.png')"
                                      label="@format('<b>${user}</b>[<br>${tenant}]').set('user', currentUserName()).set('tenant', user().getTenantName()).smartFormat()"
                                      smallLabel="@currentUserName()"
@@ -43,7 +42,6 @@
             </t:menuImageDropdownItem>
             <t:menuImageDropdownItem icon="/images/icons/server.png"
                                      activeIcon="/images/icons/server-notif.png"
-                                     smallLabel="System Einstellungen"
                                      active="part(sirius.web.health.Cluster.class).isAlarmPresent()">
                 <i:extensions target="biz-tycho-menu" point="system"/>
             </t:menuImageDropdownItem>

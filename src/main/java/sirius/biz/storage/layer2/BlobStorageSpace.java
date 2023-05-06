@@ -42,6 +42,32 @@ public interface BlobStorageSpace {
     String getDescription();
 
     /**
+     * Provides the <tt>academyTrackId</tt> if present in the config block.
+     *
+     * @return the track id of the video {@link sirius.biz.tycho.academy.OnboardingEngine academy} to show when
+     * browsing this space.
+     */
+    @Nullable
+    String getAcademyVideoTrackId();
+
+    /**
+     * Provides the <tt>academyVideoCode</tt> if present in the config block.
+     *
+     * @return the code of the video within the {@link sirius.biz.tycho.academy.OnboardingEngine academy} to show when
+     * browsing this space.
+     */
+    @Nullable
+    String getAcademyVideoCode();
+
+    /**
+     * Provides the <tt>kba</tt> if present in the config block.
+     *
+     * @returns the code of the {@link sirius.biz.tycho.kb.KnowledgeBase kba} to show when browsing this space.
+     */
+    @Nullable
+    String getKnowledgeBaseArticleCode();
+
+    /**
      * Returns the associated layer 1 space which actually stores the data.
      *
      * @return the associated physical storage space
@@ -347,4 +373,11 @@ public interface BlobStorageSpace {
      * @return the amount of days, 0 when indefinite
      */
     int getRetentionDays();
+
+    /**
+     * Defines for up to how many days a generated {@linkplain URLBuilder url} is valid.
+     *
+     * @return the amount of days
+     */
+    int getUrlValidityDays();
 }

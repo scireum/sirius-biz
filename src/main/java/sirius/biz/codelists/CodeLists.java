@@ -28,6 +28,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 
@@ -225,7 +226,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
             Extension ext = getCodeListConfig(codeListName);
             boolean isGlobal = ext.get(CONFIG_KEY_GLOBAL).asBoolean();
             if (isGlobal && ext.get(CONFIG_KEY_AUTOFILL).asBoolean()) {
-                LOG.WARN("The code list %s is 'global' and has 'autofill' enabled. This is a dangerous combination!");
+                LOG.WARN("The code list '%s' is 'global' and has 'autofill' enabled. This is a dangerous combination!",
+                         codeListName);
             }
             return isGlobal;
         });
@@ -291,11 +293,13 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      *
      * @param codeListName the code list to search in
      * @param code         the code to lookup
-     * @param lang         the language code to lookup
+     * @param language     the language code to lookup
      * @return the value and the additional value in the given language associated with the given code, wrapped as tuple
      */
-    public Tuple<String, String> getTranslatedValues(@Nonnull String codeListName, @Nonnull String code, String lang) {
-        return tryGetTranslatedValues(codeListName, code, lang).orElseGet(() -> Tuple.create(code, null));
+    public Tuple<String, String> getTranslatedValues(@Nonnull String codeListName,
+                                                     @Nonnull String code,
+                                                     String language) {
+        return tryGetTranslatedValues(codeListName, code, language).orElseGet(() -> Tuple.create(code, null));
     }
 
     /**
@@ -303,36 +307,36 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      *
      * @param codeListName the code list to search in
      * @param code         the code to lookup
-     * @param lang         the language code to lookup
+     * @param language     the language code to lookup
      * @return the value and the additional value in the given language associated with the given code or the code
      * itself and <tt>null</tt> (if {@link CodeListData#AUTO_FILL} is <tt>true</tt>) or an empty optional otherwise
      */
     public Optional<Tuple<String, String>> tryGetTranslatedValues(@Nonnull String codeListName,
                                                                   @Nullable String code,
-                                                                  @Nullable String lang) {
+                                                                  @Nullable String language) {
         if (Strings.isEmpty(code)) {
             return Optional.empty();
         }
-        if (Strings.isEmpty(lang)) {
+        if (Strings.isEmpty(language)) {
             return tryGetValues(codeListName, code);
         }
         return getCurrentTenant(codeListName).flatMap(tenant -> fetchTranslatedValueFromCache(tenant,
                                                                                               codeListName,
                                                                                               code,
-                                                                                              lang));
+                                                                                              language));
     }
 
     private Optional<Tuple<String, String>> fetchTranslatedValueFromCache(@Nonnull Tenant<?> tenant,
                                                                           String codeListName,
                                                                           String code,
-                                                                          String lang) {
-        return valueCache.get(tenant.getIdAsString() + codeListName + "|" + code + "|" + lang,
-                              ignored -> loadTranslatedValues(codeListName, code, lang)).asOptional();
+                                                                          String language) {
+        return valueCache.get(tenant.getIdAsString() + codeListName + "|" + code + "|" + language,
+                              ignored -> loadTranslatedValues(codeListName, code, language)).asOptional();
     }
 
     @Nonnull
-    private ValueHolder<Tuple<String, String>> loadTranslatedValues(String codeListName, String code, String lang) {
-        if (Strings.isEmpty(lang)) {
+    private ValueHolder<Tuple<String, String>> loadTranslatedValues(String codeListName, String code, String language) {
+        if (Strings.isEmpty(language)) {
             return loadValues(codeListName, code);
         }
 
@@ -341,8 +345,9 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
             return ValueHolder.of(null);
         }
 
-        return ValueHolder.of(Tuple.create(codeListEntry.getCodeListEntryData().getTranslatedValue(lang),
-                                           codeListEntry.getCodeListEntryData().getTranslatedAdditionalValue(lang)));
+        return ValueHolder.of(Tuple.create(codeListEntry.getCodeListEntryData().getTranslatedValue(language),
+                                           codeListEntry.getCodeListEntryData()
+                                                        .getTranslatedAdditionalValue(language)));
     }
 
     @Nullable
@@ -394,22 +399,22 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      *
      * @param codeListName the code list to search in
      * @param code         the code to lookup
-     * @param lang         the language code to lookup
+     * @param language     the language code to lookup
      * @return the value in the given language associated with the code or either the code itself
      * (if {@link CodeListData#AUTO_FILL} is <tt>true</tt>) or an empty optional otherwise
      */
     public Optional<String> tryGetTranslatedValue(@Nonnull String codeListName,
                                                   @Nullable String code,
-                                                  @Nullable String lang) {
+                                                  @Nullable String language) {
         if (Strings.isEmpty(code)) {
             return Optional.empty();
         }
 
-        if (Strings.isEmpty(lang)) {
+        if (Strings.isEmpty(language)) {
             return tryGetValue(codeListName, code);
         }
 
-        return tryGetTranslatedValues(codeListName, code, lang).map(Tuple::getFirst);
+        return tryGetTranslatedValues(codeListName, code, language).map(Tuple::getFirst);
     }
 
     /**
@@ -433,11 +438,11 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      *
      * @param codeListName the code list to search in
      * @param code         the code to lookup
-     * @param lang         the language code to lookup
+     * @param language     the language code to lookup
      * @return the translated value in the given language associated with the code or the code itself if no value exists
      */
-    public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code, @Nullable String lang) {
-        return tryGetTranslatedValue(codeListName, code, lang).orElse(code);
+    public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code, @Nullable String language) {
+        return tryGetTranslatedValue(codeListName, code, language).orElse(code);
     }
 
     /**
@@ -451,7 +456,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      */
     @Nullable
     public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code) {
-        return getTranslatedValue(codeListName, code, NLS.getCurrentLang());
+        return getTranslatedValue(codeListName, code, NLS.getCurrentLanguage());
     }
 
     /**
@@ -517,6 +522,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * @param codeListName the code list to fetch entries from
      * @return a list of all avilable entries in the given code list, sorted by priority
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public List<E> getEntries(@Nonnull String codeListName) {
         L codeList = findOrCreateCodelist(codeListName);
         return createEntryQuery().eq(CodeListEntry.CODE_LIST, codeList)

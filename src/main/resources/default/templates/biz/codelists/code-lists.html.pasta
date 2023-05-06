@@ -1,55 +1,33 @@
 <i:arg type="Page" name="lists"/>
-<w:page titleKey="CodeList.plural">
+<t:page titleKey="CodeList.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/code-lists">@i18n("CodeList.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="CodeList.plural"/>
+    <t:pageHeader titleKey="CodeList.plural"/>
 
-    <w:tableSearchHeader page="lists" baseUrl="/code-lists">
-        <a class="btn btn-primary" href="/code-list/new">@i18n("Model.create")</a>
-    </w:tableSearchHeader>
+    <t:searchHeader page="lists" baseUrl="/code-lists">
+        <t:createButton url="/code-list/new"/>
+    </t:searchHeader>
 
-    <w:table data="lists">
-        <thead>
-        <tr>
-            <th>
-                @i18n("Model.code")<br>
-                <small class="muted">@i18n("Model.id")</small>
-            </th>
-            <th>
-                @i18n("Model.name")
-            </th>
-            <th>
-                @i18n("Model.description")
-            </th>
-            <th class="col-md-2"/>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.codelists.CodeList" var="list" items="lists.getItems()">
-            <tr>
-                <td>
-                    <a class="link" href="/code-list/@list.getIdAsString()">@list.getCodeListData().getCode()</a><br>
-                    <small class="muted">@list.getIdAsString()</small>
-                </td>
-                <td>
-                    @list.getCodeListData().getName()
-                </td>
-                <td>
-                    @list.getCodeListData().getDescription()
-                </td>
-                <td class="col-md-2 align-center">
-                    <w:deleteLink url="@apply('/code-list/%s/delete', list.getIdAsString())"
-                                  page="lists"/>
-                </td>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
-
-    <w:pagination page="lists" baseUrl="/code-lists" />
-
-</w:page>
+    <t:emptyCheck data="lists">
+        <t:datacards>
+            <i:for type="sirius.biz.codelists.CodeList" var="list" items="lists.getItems()">
+                <t:datacard title="@list.getCodeListData().getCode()"
+                            subTitle="@list.getCodeListData().getName()"
+                            link="@apply('/code-list/%s', list.getIdAsString())">
+                    <i:block name="actions">
+                        <t:dropdownDeleteItem
+                                url="@apply('/code-list/%s/delete', list.getIdAsString())"/>
+                    </i:block>
+                    <t:inlineInfo labelKey="Model.description" value="@list.getCodeListData().getDescription()"/>
+                    <t:inlineInfo labelKey="CodeListData.autofill"
+                                  value="@NLS.toUserString(list.getCodeListData().isAutofill())"/>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
+    </t:emptyCheck>
+    <t:pagination page="lists" baseUrl="/code-lists"/>
+</t:page>

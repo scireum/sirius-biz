@@ -13,15 +13,19 @@ import sirius.biz.storage.layer2.Blob;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Watch;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
 /**
  * Covers the task of performing a conversion of a given {@link Blob} into a {@link BlobVariant} of the desired type.
  * <p>
- * This class is sort of a data transfer type as it wraps both, the input parameters as well as the output/result and
+ * This class is sort of a data transfer type as it wraps both, the input parameters and the output/result and
  * some performance metrics.
  */
 public class ConversionProcess {
 
     private final Blob blobToConvert;
+    private File fileToConvert;
     private final String variantName;
     private FileHandle fileHandle;
     private long queueDuration;
@@ -110,9 +114,74 @@ public class ConversionProcess {
      * Used by the {@link Converter} to supply the actual result of the conversion.
      *
      * @param fileHandle the file to use as variant
+     * @return the object itself for fluent method calls
      */
-    public void withConversionResult(FileHandle fileHandle) {
+    public ConversionProcess withConversionResult(FileHandle fileHandle) {
         this.fileHandle = fileHandle;
+        return this;
+    }
+
+    /**
+     * Provides the file to use as input for the conversion.
+     * <p>
+     * This is useful when the file already exists in the file system, skipping a new download from storage.
+     *
+     * @param fileToConvert the file to use as input
+     * @return the object itself for fluent method calls
+     * @see #obtainInputFile()
+     */
+    public ConversionProcess withInputFile(File fileToConvert) {
+        this.fileToConvert = fileToConvert;
+        return this;
+    }
+
+    /**
+     * Returns a file handle to an input file for conversion.
+     * <p>
+     * This can either be a permanent file handle pointing to a previously supplied file, or a temporary one
+     * pointing to a file freshly downloaded from the {@linkplain #blobToConvert blob}.
+     *
+     * @return a {@link FileHandle} to the file to use for conversion
+     * @throws Exception if a file cannot be obtained
+     */
+    public FileHandle obtainInputFile() throws Exception {
+        FileHandle inputFile = obtainFileToConvert();
+        if (inputFile == null) {
+            inputFile = download(() -> blobToConvert.download()
+                                                    .orElseThrow(() -> new FileNotFoundException(
+                                                            "Cannot obtain the file from blob key "
+                                                            + blobToConvert.getBlobKey())));
+        }
+        return inputFile;
+    }
+
+    /**
+     * Returns the file name of the input file used for conversion.
+     * <p>
+     * Files downloaded from external storage are temporary, with the .tmp extension. Conversions usually check if
+     * the file extension is relevant for the target format, so in this case we must fall back to the blob's file name.
+     * This will usually be the case for a recently downloaded file from a {@linkplain Blob} which will be chained
+     * into several conversions.
+     *
+     * @return the file name of the supplied file if it's not a tmp file or the {@link Blob#getFilename()}
+     */
+    public String getEffectiveFileName() {
+        if (fileToConvert != null && !fileToConvert.getName().endsWith(".tmp")) {
+            return fileToConvert.getName();
+        }
+        return getBlobToConvert().getFilename();
+    }
+
+    private FileHandle obtainFileToConvert() throws FileNotFoundException {
+        if (fileToConvert == null) {
+            return null;
+        }
+
+        if (!fileToConvert.exists()) {
+            throw new FileNotFoundException("File " + fileToConvert.getPath() + " does not exist");
+        }
+
+        return FileHandle.permanentFileHandle(fileToConvert);
     }
 
     public FileHandle getResultFileHandle() {

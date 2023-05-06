@@ -1,0 +1,496 @@
+<i:arg type="List" name="actions"/>
+
+<t:page titleKey="DataExplorerController.title">
+
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/data-explorer">@i18n("DataExplorerController.title")</a>
+        </li>
+    </i:block>
+
+    <i:block name="page-header">
+        <t:pageHeader titleKey="DataExplorerController.title">
+            <i:block name="actions">
+                <button type="button" id="addBtn" class="btn btn-primary mr-2" style="display: none"
+                        onclick="openTypeSelector()">
+                    <span><i class="fa fa-plus"></i></span>
+                    <span class="d-none ml-2 d-xl-inline-block">@i18n("DataExplorerController.addChart")</span>
+                </button>
+                <button type="button" id="exportBtn" class="btn btn-link mr-2" style="display: none"
+                        onclick="exportCharts()">
+                    <span><i class="fa-solid fa-download"></i></span>
+                    <span class="d-none ml-2 d-xl-inline-block">@i18n("DataExplorerController.export")</span>
+                </button>
+            </i:block>
+            <i:block name="additionalActions">
+                <t:dropdownItem
+                        framework="biz.jobs"
+                        permission="permission-execute-jobs"
+                        url="/jobs"
+                        icon="fas fa-external-link-alt"
+                        labelKey="JobFactory.plural"/>
+            </i:block>
+        </t:pageHeader>
+    </i:block>
+
+    <!--@ This is the UI to select a chart (either because none is present or a new one is to be added) -->
+    <div id="typeSelector">
+        <t:actions actions="actions">
+            <button type="button" id="cancelBtn" class="btn btn-link mr-2" onclick="hideTypeSelector()">
+                <i class="fa fa-times"></i>
+            </button>
+        </t:actions>
+        <div class="bt-gray mt-4 pt-3 mb-4" id="backBtn">
+            <a href="javascript:hideTypeSelector()" class="btn btn-outline-secondary back-button">
+                <i class="fa fa-times"></i>
+                @i18n("NLS.cancel")
+            </a>
+        </div>
+    </div>
+
+    <!--@ This is the UI which renders the chart(s) -->
+    <div id="chartsView">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-2">
+                        <div class="mb-2 text-small text-muted">@i18n("DataExplorerController.period")</div>
+                        <div class="btn-group">
+                            <button type="button"
+                                    class="range-select-js btn btn-primary"
+                                    data-range="last12Months"
+                                    onclick="changeRange('last12Months')">
+                                @i18n("DataExplorerController.last12Months")
+                            </button>
+                            <button type="button"
+                                    class="range-select-js btn btn-outline-primary"
+                                    data-range="last30Days"
+                                    onclick="changeRange('last30Days')">
+                                @i18n("DataExplorerController.last30Days")
+                            </button>
+                            <button type="button"
+                                    class="range-select-js btn btn-outline-primary"
+                                    data-range="last90Days"
+                                    onclick="changeRange('last90Days')">
+                                @i18n("DataExplorerController.last90Days")
+                            </button>
+                            <button type="button"
+                                    class="range-select-js btn btn-outline-primary"
+                                    data-range="lastMonth"
+                                    onclick="changeRange('lastMonth')">
+                                @i18n("DataExplorerController.lastMonth")
+                            </button>
+                            <button type="button"
+                                    class="range-select-js btn btn-outline-primary"
+                                    data-range="lastYear"
+                                    onclick="changeRange('lastYear')">
+                                @i18n("DataExplorerController.lastYear")
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 mb-2">
+                        <div class="mb-2 text-small text-muted">@i18n("DataExplorerController.comparisonPeriod")</div>
+                        <div class="btn-group">
+                            <button type="button"
+                                    class="period-select-js btn btn-outline-primary"
+                                    data-period="none"
+                                    onclick="changePeriod('none')">@i18n("DataExplorerController.periodOff")
+                            </button>
+                            <button type="button"
+                                    class="period-select-js btn btn-primary"
+                                    data-period="lastYear"
+                                    onclick="changePeriod('lastYear')">@i18n("DataExplorerController.periodLastYear")
+                            </button>
+                            <button type="button"
+                                    class="period-select-js btn btn-outline-primary"
+                                    data-period="lastMonth"
+                                    onclick="changePeriod('lastMonth')">@i18n("DataExplorerController.periodLastMonth")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="charts">
+
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        let range = 'last12Months';
+        let comparisonPeriod = 'lastYear';
+
+        // Maps typs of charts to their actual JS callbacks...
+        const CHART_TYPES = {
+            'line': lineChartType,
+            'area': areaChartType
+        };
+
+        // Tries to find the chart DIV with the given identifier (TYPE or TYPE:OBJECT).
+        function findChart(identifier) {
+            return document.querySelector('.chart-js[data-identifier=\'' + identifier + '\']');
+        }
+
+        // Adds or updates the chart for the given identifier.
+        function addChart(identifier) {
+            $('#select-entity-modal').modal('hide');
+
+            const _existingChart = findChart(identifier);
+            if (_existingChart) {
+                hideTypeSelector();
+
+                return recompute(_existingChart);
+            }
+
+            const _charts = document.getElementById("charts");
+            const _chart = document.createElement('DIV');
+            _chart.dataset.identifier = identifier;
+            _chart.classList.add('chart-js', 'card', 'mb-4');
+            _chart.style['min-height'] = '300px';
+            _chart.innerHTML =
+                '<button type="button" data-chart="' + identifier + '" ' +
+                '        style="position: absolute; right: 0.5rem; top: 0.5rem;"' +
+                '        class="btn btn-link" onclick="closeChart(event.target)">' +
+                '   <i class="fa fa-times"></i>' +
+                '</button>' +
+                '<div class="card-body d-flex flex-column"></div>';
+            _charts.appendChild(_chart);
+
+            hideTypeSelector();
+            updateUrl();
+
+            return recompute(_chart);
+        }
+
+        // Recomputes the given / underlying chart.
+        function recompute(_chart) {
+            _chart.querySelector('.card-body').innerHTML =
+                '<div class="d-flex flex-column flex-grow-1 justify-content-around align-items-center text-muted" ' +
+                '     style="font-size: 32px">' +
+                '   <i class="fa fa-spinner fa-spin"></i>' +
+                '</div>';
+            return sirius.getJSON('/data-explorer/api/load-chart', {
+                identifier: _chart.dataset.identifier,
+                range: range,
+                comparisonPeriod: comparisonPeriod,
+            }).then(function (json) {
+                if (json.error) {
+                    fail(_chart, json.message);
+                    return;
+                }
+                const chartType = CHART_TYPES[json.type];
+                if (!chartType) {
+                    fail(_chart, 'Unknown chart type: ' + json.type);
+                    return;
+                }
+
+                randomizeCharts(_chart.dataset.identifier);
+                chartType(_chart, json);
+                updateReferences(_chart);
+            });
+        }
+
+        function fail(_chart, message) {
+            _chart.querySelector('.card-body').innerHTML =
+                '<div class="msg-js d-flex flex-column flex-grow-1 justify-content-around align-items-center t  ext-muted text-small"></div>';
+            _chart.querySelector('.msg-js').textContent = message;
+        }
+
+        function lineChartType(_chart, json) {
+            renderCardBody(_chart, json);
+            lineChart(_chart.querySelector('canvas'), json.labels, json.datasets);
+        }
+
+        function areaChartType(_chart, json) {
+            renderCardBody(_chart, json);
+            areaChart(_chart.querySelector('canvas'), json.labels, json.datasets);
+        }
+
+        function renderCardBody(_chart, json) {
+            _chart.querySelector('.card-body').innerHTML = Mustache.render(
+                '<div style="max-width: 90%">' +
+                '   <div class="text-uppercase text-muted">{{label}}</div>' +
+                '   {{#subLabel}}' +
+                '      <div class="text-small text-muted">{{subLabel}}</div>' +
+                '   {{/subLabel}}' +
+                '</div>' +
+                '<div class="mt-2">' +
+                '   <canvas style="display: block" height="300"></canvas>' +
+                '</div>\n' +
+                '{{#description}}' +
+                '   <div class="mt-3 text-small text-muted">{{description}}</div>' +
+                '{{/description}}' +
+                '{{#hints}}' +
+                '   <div class="mt-1 text-small text-muted">' +
+                '       <i class="fas fa-info-circle"></i>' +
+                '       <span class="text-sirius-yellow-dark">{{.}}</span>' +
+                '   </div>' +
+                '{{/hints}}' +
+                '<div class="mt-3 references-js">' +
+                '   <div class="text-small mb-1">@i18n("DataExplorerController.references"):</div>' +
+                '   {{#references}}' +
+                '       <a class="btn btn-primary btn-sm mr-2 reference-js reference-visible-js" ' +
+                '          data-chart="{{identifier}}" href="javascript:addChart(\'{{identifier}}\')">' +
+                '           <i class="fa fa-plus"></i> {{label}}' +
+                '       </a>' +
+                '   {{/references}}' +
+                '</div>', json);
+        }
+
+        // Updates the cross-references of the given chart.
+        function updateReferences(_chart) {
+            _chart.querySelectorAll('.reference-js').forEach(function (_reference) {
+                if (findChart(_reference.dataset.chart) == null) {
+                    sirius.show(_reference);
+                    _reference.classList.add('reference-visible-js');
+                } else {
+                    sirius.hide(_reference);
+                    _reference.classList.remove('reference-visible-js');
+                }
+            });
+
+            if (_chart.querySelectorAll('.reference-visible-js').length > 0) {
+                sirius.show(_chart.querySelector('.references-js'));
+            } else {
+                sirius.hide(_chart.querySelector('.references-js'));
+            }
+        }
+
+        // Updates the visibility of all chart cross-references based on which are currently visible.
+        function updateAllReferences() {
+            document.querySelectorAll('.chart-js').forEach(updateReferences);
+        }
+
+        function closeChart(_closeBtn) {
+            let _chart = _closeBtn;
+            while (!_chart.classList.contains('chart-js') && _chart !== null) {
+                _chart = _chart.parentNode;
+            }
+
+            if (_chart !== null) {
+                _chart.parentNode.removeChild(_chart);
+
+                if (document.querySelectorAll('.chart-js').length === 0) {
+                    openTypeSelector();
+                }
+
+                updateUrl();
+            }
+        }
+
+        // Used to call the callback for each element in a list, but while awaiting the completion of each returned
+        // promise. This is mainly done so that whe don't overload a server by recomputing all charts at once.
+        function performForEach(index, list, asyncCallback) {
+            if (index < list.length) {
+                asyncCallback(list[index]).then(function () {
+                    performForEach(index + 1, list, asyncCallback);
+                });
+            }
+        }
+
+        function refresh() {
+            updateUrl();
+            performForEach(0, document.querySelectorAll('.chart-js'), recompute);
+        }
+
+        function changeRange(newRange) {
+            if (range !== newRange && sirius.isFilled(newRange)) {
+                range = newRange;
+
+                document.querySelectorAll('.range-select-js').forEach(function (_btn) {
+                    if (_btn.dataset.range === range) {
+                        _btn.classList.remove('btn-outline-primary');
+                        _btn.classList.add('btn-primary');
+                    } else {
+                        _btn.classList.add('btn-outline-primary');
+                        _btn.classList.remove('btn-primary');
+                    }
+                });
+
+                refresh();
+            }
+        }
+
+        function changePeriod(newPeriod) {
+            if (comparisonPeriod !== newPeriod && sirius.isFilled(newPeriod)) {
+                comparisonPeriod = newPeriod;
+
+                document.querySelectorAll('.period-select-js').forEach(function (_btn) {
+                    if (_btn.dataset.period === comparisonPeriod) {
+                        _btn.classList.remove('btn-outline-primary');
+                        _btn.classList.add('btn-primary');
+                    } else {
+                        _btn.classList.add('btn-outline-primary');
+                        _btn.classList.remove('btn-primary');
+                    }
+                });
+
+                refresh();
+            }
+        }
+
+        // Updates the query string based on the currently visible charts, so that a link can be bookmarked.
+        function updateUrl() {
+            const searchParams = new URLSearchParams();
+            if (range !== "last12Months") {
+                searchParams.set("range", range);
+            }
+            if (comparisonPeriod !== "lastYear") {
+                searchParams.set("period", comparisonPeriod);
+            }
+
+            let hasCharts = false;
+            document.querySelectorAll('.chart-js').forEach(function (_chart) {
+                searchParams.append('chart', _chart.dataset.identifier);
+                hasCharts = true;
+            });
+
+            if (hasCharts) {
+                sirius.show('#exportBtn');
+            } else {
+                sirius.hide('#exportBtn');
+            }
+
+            const newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
+            history.replaceState(null, '', newRelativePathQuery);
+
+            updateAllReferences();
+        }
+
+        function exportCharts() {
+            const searchParams = new URLSearchParams();
+            searchParams.set("range", range);
+            searchParams.set("comparisonPeriod", comparisonPeriod);
+            document.querySelectorAll('.chart-js').forEach(function (_chart) {
+                searchParams.append('identifier', _chart.dataset.identifier);
+            });
+
+            const params = new URLSearchParams(window.location.search);
+            window.location = "/data-explorer/export?" + searchParams.toString();
+        }
+
+        function openTypeSelector() {
+            sirius.hide('#chartsView');
+            sirius.hide('#addBtn');
+            sirius.hide('#refreshBtn');
+            sirius.show('#typeSelector');
+
+            if (document.querySelectorAll('.chart-js').length === 0) {
+                sirius.hide('#backBtn');
+                sirius.hide('#cancelBtn');
+            } else {
+                sirius.show('#backBtn');
+                sirius.show('#cancelBtn');
+            }
+
+            document.getElementById('actionsQueryField').focus();
+        }
+
+        function hideTypeSelector() {
+            if (document.querySelectorAll('.chart-js').length > 0) {
+                sirius.show('#chartsView');
+                sirius.show('#addBtn');
+                sirius.show('#refreshBtn');
+                sirius.hide('#typeSelector');
+            }
+        }
+
+        sirius.ready(function () {
+            openTypeSelector();
+
+            const params = new URLSearchParams(window.location.search);
+            changeRange(params.get('range'));
+            changePeriod(params.get('period'));
+            performForEach(0, params.getAll('chart'), addChart);
+        });
+    </script>
+
+    <!--@ Contains the modal used to select an entity for a chart -->
+    <t:modal name="select-entity-modal" class="modal-lg modal-full-height"
+             titleKey="DataExplorerController.selectEntity">
+
+        <div class="input-group">
+            <input type="text" id="entityQueryField"
+                   class="form-control"
+                   placeholder="@i18n('NLS.searchkey')" autofocus/>
+            <div class="input-group-append">
+                <a class="btn btn-outline-secondary">
+                    <i class="fa fa-search"></i>
+                </a>
+            </div>
+        </div>
+
+        <div id="entityResults" class="mt-4 mb-2">
+
+        </div>
+
+        <i:block name="footer">
+            <button class="btn btn-secondary" data-dismiss="modal">@i18n("NLS.cancel")</button>
+        </i:block>
+    </t:modal>
+
+    <!-- This whole block controls the entity selection process -->
+    <script type="text/javascript">
+        function selectEntity(chartType, uri) {
+            sirius.getJSON(uri, {}).then(function (json) {
+                if (json.completions.length === 1) {
+                    addChart(chartType + ':' + json.completions[0].value);
+                    return;
+                }
+
+                const _entityQueryField = document.getElementById('entityQueryField');
+                _entityQueryField.dataset.chartType = chartType;
+                _entityQueryField.dataset.uri = uri;
+                _entityQueryField.value = '';
+                fetchEntitySuggestions().then(function () {
+                    $('#select-entity-modal').modal('show');
+                });
+            });
+        }
+
+        sirius.ready(function () {
+            let timer = null;
+            document.getElementById('entityQueryField').addEventListener('keyup', function (event) {
+                if (timer != null) {
+                    window.clearTimeout(timer);
+                }
+                timer = window.setTimeout(function () {
+                    const actions = document.querySelectorAll('.action-js');
+                    if (event.keyCode === 13 && document.getElementById('entityResults').querySelector('.entity-js').length === 1) {
+                        document.getElementById('entityResults').querySelector('.entity-js a').click();
+                        return;
+                    } else if (event.keyCode === 27) {
+                        event.target.value = '';
+                    }
+
+                    fetchEntitySuggestions();
+                }, 150);
+            });
+
+            $('#select-entity-modal').on('shown.bs.modal', function (e) {
+                document.getElementById('entityQueryField').focus();
+            })
+        });
+
+
+        function fetchEntitySuggestions() {
+            const _entityQueryField = document.getElementById('entityQueryField');
+            const chartType = document.getElementById('entityQueryField').dataset.chartType;
+            const uri = document.getElementById('entityQueryField').dataset.uri;
+            const _entityResults = document.getElementById('entityResults');
+            _entityResults.innerHTML = '';
+            return sirius.getJSON(uri,
+                {query: _entityQueryField.value}).then(function (json) {
+                _entityResults.innerHTML = Mustache.render(
+                    '{{#completions}}' +
+                    '    <div class="pt-2 pb-2 bt-gray">' +
+                    '       <div><a href="javascript:addChart(\'' + chartType + ':{{value}}\')">{{completionLabel}}</a></div>' +
+                    '       <div class="text-small text-muted">{{completionDescription}}</div>' +
+                    '   </div>' +
+                    '{{/completions}}', json);
+            });
+        }
+    </script>
+
+</t:page>

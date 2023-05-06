@@ -22,6 +22,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
@@ -34,7 +35,7 @@ import java.util.List;
  * Stores a username and encrypted password along with some trace data to support logins which can be embedded into
  * other entities or mixins.
  * <p>
- * Note that no uniqueness constraint is placed on the username as the context of unqiueness has to be decided by the
+ * Note that no uniqueness constraint is placed on the username as the context of uniqueness has to be decided by the
  * outside class.
  * <p>
  * An example of an actual user is {@link sirius.biz.tenants.UserAccount}.
@@ -99,8 +100,8 @@ public class LoginData extends Composite {
     /**
      * Contains a generated string which is put into each client session of the user.
      * <p>
-     * Once the user deciedes to change the password or to log out on all devices,
-     * the fingerprint is updated and all sessions containing the old finderprint
+     * Once the user decides to change the password or to log out on all devices,
+     * the fingerprint is updated and all sessions containing the old fingerprint
      * are considered invalid.
      */
     public static final Mapping FINGERPRINT = Mapping.named("fingerprint");
@@ -121,7 +122,7 @@ public class LoginData extends Composite {
     private String generatedPassword;
 
     /**
-     * Provides an API TOKEN which is crypthgraphically created and can be used as password for technical integrations
+     * Provides an API TOKEN which is cryptographically created and can be used as password for technical integrations
      */
     public static final Mapping API_TOKEN = Mapping.named("apiToken");
     @Trim
@@ -157,7 +158,7 @@ public class LoginData extends Composite {
     /**
      * Records the timestamp of the last login via an external system.
      * <p>
-     * When using external identity poviders, like SAML, we want to keep track when the last login via this happened
+     * When using external identity providers, like SAML, we want to keep track when the last login via this happened
      * as we probably want to enforce regular validations (logins).
      */
     public static final Mapping LAST_EXTERNAL_LOGIN = Mapping.named("lastExternalLogin");
@@ -256,7 +257,7 @@ public class LoginData extends Composite {
     }
 
     /**
-     * Verifys the given password if it meets the length requirement and is equal to its confirmation.
+     * Verifies the given password if it meets the length requirement and is equal to its confirmation.
      *
      * @param password          the password to check for
      * @param confirmation      the confirmation password to check for
@@ -332,7 +333,7 @@ public class LoginData extends Composite {
      * <p>
      * Note that this value is transient and therefore not saved to the database.
      *
-     * @return the currently applied password in cleatext
+     * @return the currently applied password in cleartext
      */
     public String getCleartextPassword() {
         return cleartextPassword;
@@ -371,6 +372,30 @@ public class LoginData extends Composite {
     }
 
     /**
+     * Returns the generated password if it should be displayed.
+     *
+     * @return the generated password, or <tt>null</tt> if it isn't allowed to be displayed
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public String getGeneratedPasswordIfDisplayed() {
+        if (isDisplayGeneratedPassword()) {
+            return generatedPassword;
+        }
+
+        return null;
+    }
+
+    /**
+     * Determines whether the generated password is filled.
+     *
+     * @return <tt>true</tt> if the generated password is filled, <tt>false</tt> otherwise
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public boolean isGeneratedPasswordFilled() {
+        return Strings.isFilled(generatedPassword);
+    }
+
+    /**
      * Can be used to disable auto password generation on save.
      * <p>
      * This only sets a flag that is not saved to database.
@@ -396,6 +421,7 @@ public class LoginData extends Composite {
         this.accountLocked = accountLocked;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getUsername() {
         return username;
     }
@@ -424,7 +450,6 @@ public class LoginData extends Composite {
         return passwordHash;
     }
 
-
     public String getGeneratedPassword() {
         return generatedPassword;
     }
@@ -433,6 +458,7 @@ public class LoginData extends Composite {
         this.generatedPassword = generatedPassword;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public int getNumberOfLogins() {
         return numberOfLogins;
     }
@@ -449,6 +475,7 @@ public class LoginData extends Composite {
         return lastPasswordChange;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public LocalDate getLastSeen() {
         return lastSeen;
     }

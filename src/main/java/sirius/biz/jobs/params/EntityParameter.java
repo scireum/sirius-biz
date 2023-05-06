@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
 import sirius.db.es.Elastic;
@@ -20,6 +21,7 @@ import sirius.db.mongo.Mango;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -53,6 +55,9 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     @Nullable
     protected static Tenants<?, ?, ?> tenants;
 
+    @Part
+    private static GlobalContext globalContext;
+
     private EntityDescriptor descriptor;
 
     /**
@@ -84,14 +89,53 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     }
 
     /**
+     * The type of {@link Autocompleter} to use for this parameter.
+     * <p>
+     * Note that this autocompleter needs to be @{@link sirius.kernel.di.std.Register registered} to be available
+     * to the framework.
+     *
+     * @return the type of autocompleter to use or <tt>null</tt> if there is none or a custom url via
+     * {@link #getCustomAutocompleteUri()} is being used.
+     */
+    @Nullable
+    protected Class<? extends Autocompleter<V>> getAutocompleter() {
+        return null;
+    }
+
+    /**
+     * Returns the custom autocompletion URL used to determine suggestions for inputs provided by the user.
+     *
+     * @return the autocomplete URL used to provide suggestions for user input. Note that this is only needed, if no
+     * {@link #getAutocompleter() autocompleter} is provided (which is the preferred way).
+     */
+    @Nullable
+    protected String getCustomAutocompleteUri() {
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Optional<? extends Autocompleter<V>> findAutocompleter() {
+        return Optional.ofNullable(getAutocompleter())
+                       .flatMap(type -> globalContext.getParts(Autocompleter.class)
+                                                     .stream()
+                                                     .filter(type::isInstance)
+                                                     .map(autocompleter -> (Autocompleter<V>) autocompleter)
+                                                     .findFirst());
+    }
+
+    /**
      * Returns the autocompletion URL used to determine suggestions for inputs provided by the user.
      *
      * @return the autocomplete URL used to provide suggestions for user input
      */
-    public abstract String getAutocompleteUri();
+    public final String getAutocompleteUrl() {
+        return findAutocompleter().map(Autocompleter::getName)
+                                  .map(name -> "/jobs/parameter-autocomplete/" + name)
+                                  .orElseGet(this::getCustomAutocompleteUri);
+    }
 
     /**
-     * Returns the type of entities represented by this paramter.
+     * Returns the type of entities represented by this parameter.
      *
      * @return the type of entities represented by this
      */
@@ -128,7 +172,14 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the label or textual representation to use for the given entity
      */
     protected String createLabel(V entity) {
-        return entity.toString();
+        return findAutocompleter().map(autocompleter -> autocompleter.toLabel(entity)).orElseGet(entity::toString);
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", value.getIdAsString())
+                                                    .fluentPut("text", createLabel(value)));
     }
 
     @Override
@@ -167,8 +218,8 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @param entity the entity to check
      */
     protected void assertAccess(V entity) {
-        if (entity instanceof TenantAware) {
-            tenants.assertTenant((TenantAware) entity);
+        if (entity instanceof TenantAware tenantAware) {
+            tenants.assertTenant(tenantAware);
         }
     }
 

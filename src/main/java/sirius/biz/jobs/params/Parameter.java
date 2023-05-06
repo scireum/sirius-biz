@@ -13,6 +13,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.Message;
 
 import java.util.Map;
 import java.util.Optional;
@@ -57,11 +58,42 @@ public class Parameter<V> extends Composable {
     /**
      * Determines if the parameter is currently visible.
      *
-     * @param context the context containing all parameter values
+     * @param parameterContext the context containing all parameter values
      * @return <tt>true</tt> if the parameter is visible, <tt>false</tt> otherwise
      */
-    public boolean isVisible(Map<String, String> context) {
-        return delegate.isVisible(context);
+    public boolean isVisible(Map<String, String> parameterContext) {
+        return delegate.isVisible(parameterContext);
+    }
+
+    /**
+     * Checks whether the parameter value should be cleared in the frontend.
+     *
+     * @param parameterContext the values of all parameters
+     * @return true when the parameter value should be cleared
+     */
+    public boolean needsClear(Map<String, String> parameterContext) {
+        return delegate.needsClear(parameterContext);
+    }
+
+    /**
+     * Checks whether the parameter value should be updated to a new value.
+     *
+     * @param parameterContext the values of all parameters
+     * @return an Optional, filled with the new value if the value should be updated
+     */
+    public Optional<?> updateValue(Map<String, String> parameterContext) {
+        return delegate.computeValueUpdate(parameterContext);
+    }
+
+    /**
+     * Validates the value of the parameter.
+     *
+     * @param parameterContext the values of all parameters
+     * @return a message containing a displayable info-, warning- or error-message, or an empty optional if no such
+     * message should be displayed
+     */
+    public Optional<Message> validate(Map<String, String> parameterContext) {
+        return delegate.validate(parameterContext);
     }
 
     /**
@@ -71,19 +103,6 @@ public class Parameter<V> extends Composable {
      */
     public String getTemplateName() {
         return delegate.getTemplateName();
-    }
-
-    /**
-     * Returns the name of the template used to render the parameter in the UI.
-     * <p>
-     * Similar to {@link #getTemplateName()}, but this method considers the visibility
-     * of the parameter and delivers an alternative template in case the parameter should be hidden.
-     *
-     * @param context the context containing all parameter values
-     * @return the name or path of the template used to render the parameter
-     */
-    public String getEffectiveTemplateName(Map<String, String> context) {
-        return delegate.getEffectiveTemplateName(context);
     }
 
     /**
@@ -100,11 +119,11 @@ public class Parameter<V> extends Composable {
     /**
      * Reads and resolves the value for this parameter from the given context.
      *
-     * @param context the context to read the parameter value from
+     * @param parameterContext the context to read the parameter value from
      * @return the resolved value wrapped as optional or an empty optional if there is no value available
      */
-    public Optional<V> get(Map<String, String> context) {
-        return delegate.get(context);
+    public Optional<V> get(Map<String, String> parameterContext) {
+        return delegate.get(parameterContext);
     }
 
     /**
@@ -112,12 +131,12 @@ public class Parameter<V> extends Composable {
      * <p>
      * Fails if no value could be resolved from the given context.
      *
-     * @param context the context to read the parameter value from
+     * @param parameterContext the context to read the parameter value from
      * @return the resolved value
      * @throws sirius.kernel.health.HandledException if no value for this parameter is available in the given context
      */
-    public V require(Map<String, String> context) {
-        return delegate.require(context);
+    public V require(Map<String, String> parameterContext) {
+        return delegate.require(parameterContext);
     }
 
     /**
@@ -171,15 +190,16 @@ public class Parameter<V> extends Composable {
      * @return the type of the builder which was used to create this parameter.
      */
     @SuppressWarnings("unchecked")
-    public Class<? extends ParameterBuilder<?, ?>> getBuilderType() {
-        return (Class<? extends ParameterBuilder<?, ?>>) delegate.getClass();
+    public Class<? extends ParameterBuilder<V, ?>> getBuilderType() {
+        return (Class<? extends ParameterBuilder<V, ?>>) delegate.getClass();
     }
 
     /**
      * Provides access to the underlying builder of this parameter.
+     *
      * @return the builder which was used for this parameter
      */
-    public ParameterBuilder<?, ?> getBuilder() {
+    public ParameterBuilder<V, ?> getBuilder() {
         return delegate;
     }
 }

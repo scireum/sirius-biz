@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -72,7 +72,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-cogs";
+        return "fa fa-cogs";
     }
 
     @Override
@@ -99,7 +99,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     @Override
     public Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
                                                      boolean enforceRequiredParameters,
-                                                     Consumer<HandledException> errorConsumer) {
+                                                     BiConsumer<Parameter<?>, HandledException> errorConsumer) {
         Map<String, String> context =
                 super.buildAndVerifyContext(parameterProvider, enforceRequiredParameters, errorConsumer);
 
@@ -164,8 +164,11 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @param processId the id of the process which has been created
      */
     protected void addLinkToJob(String processId) {
-        processes.addLink(processId,
-                          new ProcessLink().withLabel("$BatchProcessJobFactory.jobLink").withUri("/job/" + getName()));
+        if (canStartInteractive()) {
+            processes.addLink(processId,
+                              new ProcessLink().withLabel("$BatchProcessJobFactory.jobLink")
+                                               .withUri("/job/" + getName()));
+        }
     }
 
     private void createAndScheduleDistributedTask(String processId) {

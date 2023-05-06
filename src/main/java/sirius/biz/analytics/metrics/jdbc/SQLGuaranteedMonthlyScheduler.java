@@ -8,7 +8,6 @@
 
 package sirius.biz.analytics.metrics.jdbc;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.analytics.metrics.MetricsGuaranteedBatchExecutor;
 import sirius.biz.analytics.metrics.MetricsGuaranteedSchedulerExecutor;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
@@ -19,13 +18,12 @@ import sirius.biz.analytics.scheduler.ScheduleInterval;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
-import java.time.LocalDate;
 
 /**
  * Provides the executor which is responsible for scheduling {@link MonthlyMetricComputer} instances which refer
  * to {@link sirius.db.jdbc.SQLEntity sql entities} on a monthly basis.
  */
-@Register(framework = SQLMetrics.FRAMEWORK_JDBC_METRICS)
+@Register
 public class SQLGuaranteedMonthlyScheduler extends SQLAnalyticalTaskScheduler {
 
     @Override
@@ -57,10 +55,5 @@ public class SQLGuaranteedMonthlyScheduler extends SQLAnalyticalTaskScheduler {
     @Override
     public String getName() {
         return "sql-metrics-monthly";
-    }
-
-    @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
-        super.executeBatch(batchDescription, date.minusMonths(1), level);
     }
 }

@@ -84,6 +84,3 @@ Provides an abstraction layer for virtual file systems which can be accessed via
 Contains a thin abstraction layer for AWS compatible S3 object stores.
 * [Code lists](src/main/java/sirius/biz/codelists)\
 Permits to manage and access code lists which are either stored in **JDBC** databases or **MongoDB**.
-* [IBM i5 access](src/main/java/sirius/biz/i5)\
-Contains a mapping framework which permits to map records exchanged with an IBM i5 to Java classes. Also provides
-and connection pool and some metrics for i5 connections using **jt400**.

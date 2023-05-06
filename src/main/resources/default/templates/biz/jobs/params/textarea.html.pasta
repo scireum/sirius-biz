@@ -1,11 +1,23 @@
 <i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
-<w:textarea span="12"
-            smallSpan="12"
+<i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
+<t:textarea class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
             rows="3"
             name="@param.getName()"
             label="@param.getLabel()"
             help="@param.getDescription()"
-            value="@toUserString(param.get(context).orElse(null))"
-            required="@param.isRequired()"/>
+            value="@toUserString(param.get(context).orElse(null))"/>
+
+<script>
+    sirius.ready(function () {
+        const _elem = sirius.querySelector(".param-___param.getName()");
+        const _input = _elem.querySelector("textarea");
+        _elem.addEventListener("clear", function () {
+            _input.value = null;
+        });
+        _elem.addEventListener("updated-value", function (event) {
+            _input.value = event.detail;
+        });
+    });
+</script>

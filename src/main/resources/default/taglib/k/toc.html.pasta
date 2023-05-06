@@ -1,0 +1,12 @@
+<i:arg type="String" name="headingKey" default="KnowledgeBase.tableOfContent.heading" description="Contains the i18n key for a localised heading." />
+<i:arg type="String" name="heading" default="@i18n(headingKey)" description="Contains the heading, defaulting to a localised generic string like &quot;Table of Content&quot;."/>
+
+<i:pragma name="description">
+    Renders a table of content uniformly.
+</i:pragma>
+
+<k:section heading="@heading" anchor="toc">
+    <ul class="mt-3">
+        <i:render name="body"/>
+    </ul>
+</k:section>

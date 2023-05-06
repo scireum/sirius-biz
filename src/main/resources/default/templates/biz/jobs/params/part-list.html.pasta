@@ -1,15 +1,9 @@
-<i:arg name="param" type="sirius.biz.jobs.params.Parameter" />
-<i:arg name="context" type="Map" />
+<i:arg name="param" type="sirius.biz.jobs.params.Parameter"/>
+<i:arg name="context" type="Map"/>
 
-<w:singleSelect span="12"
-                smallSpan="12"
-                name="@param.getName()"
-                label="@param.getLabel()"
-                help="@param.getDescription()"
-                optional="@!param.isRequired()"
-                required="@param.isRequired()">
+<i:invoke template="/templates/biz/jobs/params/paramSingleSelect.html.pasta" param="param" context="context"
+          optional="!param.isRequired()">
     <i:for var="value" type="Object" items="@param.as(sirius.biz.jobs.params.PartListParameter.class).getValues()">
         <option value="@value.getClass().getName()" @selected="value == param.get(context).orElse(null)">@value</option>
     </i:for>
-</w:singleSelect>
-
+</i:invoke>

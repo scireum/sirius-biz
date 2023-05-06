@@ -65,19 +65,32 @@ public class ListUplinkConnectorsCommand implements Command {
         try {
             output.apply("Draining pool: %s (%s)", config.host, config.user);
             pool.clear();
-        } catch (Exception e) {
-            output.apply("Draining of %s (%s) failed: %s", config.host, config.user, Exceptions.handle(e).getMessage());
+        } catch (Exception exception) {
+            output.apply("Draining of %s (%s) failed: %s",
+                         config.host,
+                         config.user,
+                         Exceptions.handle(exception).getMessage());
         }
     }
 
     private void outputPool(Output output,
                             UplinkConnectorConfig<?> config,
                             GenericObjectPool<UplinkConnector<?>> pool) {
-        output.apply("%s (%s)", config.host, config.user);
+        output.apply("%s (%s - %s)", config.label, config.host, config.user);
+        output.blankLine();
+        output.apply("TOTAL: created: %s, borrowed: %s, returned: %s, destroyed: %s",
+                     pool.getCreatedCount(),
+                     pool.getBorrowedCount(),
+                     pool.getReturnedCount(),
+                     pool.getDestroyedCount());
+        output.apply("CURRENTLY: active: %s, idle: %s", pool.getNumActive(), pool.getNumIdle());
+        output.blankLine();
         output.apply("I/A %-20s %-20s %-20s %12s", "CREATED", "BORROWED", "RETURNED", "BORROW-COUNT");
         output.separator();
         for (DefaultPooledObjectInfo info : pool.listAllObjects()) {
-            boolean active = info.getLastReturnTime() < info.getLastBorrowTime();
+            // When the object info is not returned on the first borrow the timings are the same, so we have to do some sanity checks here.
+            boolean active = info.getLastReturnTime() < info.getLastBorrowTime()
+                             && info.getLastReturnTime() > info.getCreateTime();
             output.apply("%-3s %-20s %-20s %-20s %12s",
                          active ? "A" : "I",
                          NLS.toUserString(Instant.ofEpochMilli(info.getCreateTime())),
@@ -89,7 +102,7 @@ public class ListUplinkConnectorsCommand implements Command {
                 output.blankLine();
             }
         }
-
+        output.separator();
         output.blankLine();
     }
 }

@@ -48,7 +48,7 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
     private UserAccountController<?, ?, ?> userAccountController;
 
     /**
-     * Shows a page where an account can change the user informations, e.g. mail, name, ...
+     * Shows a page where an account can change the user information, e.g. mail, name, ...
      *
      * @param ctx the current request
      */

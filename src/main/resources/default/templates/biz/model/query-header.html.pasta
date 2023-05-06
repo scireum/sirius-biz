@@ -5,21 +5,30 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <t:editForm url="/system/query" class="row">
-            <div class="form-group col-9">
+            <div class="form-group col-xl-8 col-12">
                 <label>
                     Query
                 </label>
                 <div class="input-group">
-                    <input type="text" name="query" placeholder="Enter query here" class="form-control" value="@query"
+                    <input type="text"
+                           name="query"
+                           id="query"
+                           placeholder="Enter query here"
+                           class="form-control"
+                           value="@query"
                            autofocus/>
-                    <div class="input-group-append" onclick="document.querySelector('form.edit-form').submit()">
+                    <div class="input-group-append"
+                         onclick="sirius.requestSubmitForm(document.querySelector('form.edit-form'))">
                     <span class="btn btn-outline-secondary">
                     <i class="fa fa-search"></i>
                     </span>
                     </div>
                 </div>
             </div>
-            <t:singleSelect class="col-2" name="class" label="Entity Type" suggestionUri="/system/query/autocomplete"
+            <t:singleSelect class="col-xl-3 col-9"
+                            name="class"
+                            label="Entity Type"
+                            suggestionUri="/system/query/autocomplete"
                             optional="true">
                 <i:if test="type != null">
                     <option value="@type.getName()" selected="selected">
@@ -27,7 +36,7 @@
                     </option>
                 </i:if>
             </t:singleSelect>
-            <t:textfield label="Limit" name="limit" value="@toUserString(limit)" class="col-1"/>
+            <t:textfield label="Limit" name="limit" id="limit" value="@toUserString(limit)" class="col-xl-1 col-3"/>
         </t:editForm>
     </div>
 </div>
@@ -35,9 +44,15 @@
 <script type="text/javascript">
     sirius.ready(function () {
         const _editForm = document.querySelector('form.edit-form');
-        document.querySelector('form.edit-form').addEventListener('keydown', function (event) {
+        _editForm.addEventListener('submit', function (event) {
+            const queryString = _editForm.querySelector('#query').value;
+            const clazz = _editForm.querySelector('#singleselect-1-input').textContent.toUpperCase();
+            const limit = _editForm.querySelector('#limit').value;
+            _editForm.action += '?query=' + queryString + '&class=' + clazz + `&limit=` + limit;
+        });
+        _editForm.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
-                _editForm.submit();
+                sirius.requestSubmitForm(_editForm);
                 return false;
             }
         });

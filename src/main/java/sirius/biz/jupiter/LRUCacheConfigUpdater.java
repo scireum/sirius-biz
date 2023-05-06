@@ -27,7 +27,7 @@ public class LRUCacheConfigUpdater implements JupiterConfigUpdater {
     private static final String KEY_CACHES = "caches";
 
     @Override
-    public void emitConfig(String instance, Extension systemConfig, Map<String, Object> config) {
+    public void emitConfig(JupiterConnector connector, Extension systemConfig, Map<String, Object> config) {
         if (!systemConfig.has(KEY_CACHES)) {
             return;
         }

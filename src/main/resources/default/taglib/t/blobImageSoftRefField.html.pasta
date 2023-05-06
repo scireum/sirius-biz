@@ -1,0 +1,133 @@
+<i:arg type="sirius.biz.storage.layer2.BlobSoftRef" name="objectRef"/>
+<i:arg type="String" name="name"/>
+<i:arg name="labelKey" type="String" default=""/>
+<i:arg name="label" type="String" default="@i18n(labelKey)"/>
+<i:arg name="helpKey" type="String" default=""/>
+<i:arg name="help" type="String" default="@i18n(helpKey)"/>
+<i:arg type="String" name="value" default="@objectRef.getKey()"/>
+<i:arg type="String" name="id" default="@generateId('image-upload-%s')"/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
+<i:arg name="btnClass" type="String" default=""
+       description="Lists additional CSS classes to apply to the upload button."/>
+<i:arg type="String" name="defaultPreview" default="/assets/images/blob_image_fallback.png"/>
+<i:arg type="String" name="previewVariant" default="raw"/>
+<i:arg type="String" name="acceptedFiles" default=".jpg,.jpeg,.svg,.png,.gif"/>
+<i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
+<i:arg type="String" name="height" default="350px"/>
+<i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()" description="Allows the user to enter an URL as source of the blob."/>
+<i:arg type="String" name="formId" default="mainEditForm" description="The form this field belongs to."/>
+
+<i:local name="previewId" value="@generateId('image-upload-preview-%s')"/>
+<i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
+
+<div class="form-group @UserContext.get().signalFieldError(name) @class">
+    <i:if test="isFilled(label)">
+        <div>
+            <label><span>@label</span></label>
+        </div>
+    </i:if>
+    <div class="sirius-imageupload soft-blob-ref-field card shadow-sm mb-4 mt-1 @class">
+        <div @if (isFilled(height)) { style="height: @height" } id="@id">
+            <div class="sirius-upload-content h-100 d-flex flex-column">
+                <div class="img-preview d-flex justify-content-center align-items-center flex-grow-1 mb-1">
+                    <img class="mh-100 mw-100" id="@previewId" src="@currentImage"/>
+                </div>
+                <div class="img-name text-center mb-2">
+                    <a href="@currentImage">@objectRef.getFilename()</a>
+                </div>
+                <button type="button" class="btn btn-primary btn-block" data-select-vfs>
+                    @i18n("BlobRefField.uploadButton")
+                </button>
+                <i:if test="@urlAllowed">
+                    <button type="button" class="btn btn-outline-secondary mt-2" data-popover>
+                        @i18n("BlobRefField.specifyURL")
+                    </button>
+                </i:if>
+                <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
+                    @i18n("BlobRefField.resetButton")
+                </button>
+                <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
+            </div>
+        </div>
+    </div>
+    <i:if test="isFilled(help)">
+        <div>
+            <small class="form-text text-muted">
+                <i:raw>@expandMessage(help)</i:raw>
+            </small>
+        </div>
+    </i:if>
+    <i:if test="UserContext.get().hasError(name)">
+        <div>
+            <small class="error-block form-text">@UserContext.get().getFieldErrorMessage(name)</small>
+        </div>
+    </i:if>
+</div>
+
+<script type="text/javascript">
+    {
+        const _outerDiv = document.querySelector('#___id');
+        sirius.ready(function () {
+            const _urlButton = _outerDiv.querySelector('[data-popover]');
+            const _resetButton = _outerDiv.querySelector('.btn-reset-js');
+            const _uploadButton = _outerDiv.querySelector('[data-select-vfs]');
+            const _inputField = _outerDiv.querySelector('input[type="hidden"]');
+            const _img = _outerDiv.querySelector('img');
+            const _fileNameContainer = _outerDiv.querySelector('.img-name');
+            _uploadButton.addEventListener('click', function() {
+                selectVFSFile({
+                    path: findParentDirectory('___objectRef.getPath()', '___objectRef.getSpace()'),
+                    allowDirectories: true,
+                    allowFiles: true,
+                    allowedExtensions: '___acceptedFiles',
+                    dictMaxFilesExceeded: '___i18n("VirtualFile.onlyOneFile")',
+                    modalTitle: '___i18n("VFSController.selectFile")'
+                }).then(function (selectedValue) {
+                    $.getJSON('/dasd/blob-info-for-path/___objectRef.getSpace()', {
+                        path: selectedValue.substring('/___objectRef.getSpace()'.length)
+                    }, function (json) {
+                        _inputField.value = json.fileId;
+                        _img.onerror = function() {
+                            _img.src = '___defaultPreview';
+                        }
+                        _img.src = json.downloadUrl;
+                        _fileNameContainer.innerHTML = '<a href="' + json.downloadUrl + '">' + json.filename + '</a>';
+                        _resetButton.classList.remove('d-none');
+                    });
+                });
+            });
+
+            _resetButton.onclick = function () {
+                _inputField.value = '';
+                _img.src = '___defaultPreview';
+                _resetButton.classList.add('d-none');
+                _fileNameContainer.innerHTML = '';
+            }
+
+            if(___urlAllowed) {
+                initUrlUploadPopover(_urlButton, _outerDiv, _resetButton, _fileNameContainer, {
+                    label: '@i18n("BlobRefField.URL")',
+                    ok: '@i18n("NLS.ok")',
+                    cancel: '@i18n("NLS.cancel")',
+                    errorMsg: '@i18n("BlobRefField.malformedURL")'
+                });
+            }
+
+            if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
+                return;
+            }
+            
+            // if we have a variant preview, set up lazyloading...
+            _img.dataset.src = _img.src;
+            _img.src = '___defaultPreview';
+            loadImageLazily(_img);
+        });
+
+        function findParentDirectory(path, fallback) {
+            if (path === '') {
+                return '/' + fallback;
+            }
+            return '/' + path.substring(0, path.lastIndexOf('/') + 1);
+        }
+    }
+</script>

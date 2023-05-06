@@ -1,4 +1,0 @@
-<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
-<i:arg type="Map" name="context"/>
-
-<input type="hidden" name="@param.getName()" value="@context.getOrDefault(param.getName(), null)"/>

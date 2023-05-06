@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.params;
 
+import com.alibaba.fastjson.JSONObject;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -15,6 +16,7 @@ import sirius.kernel.nls.NLS;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -73,6 +75,13 @@ public class PartListParameter<E> extends ParameterBuilder<E, PartListParameter<
         }
 
         return partName;
+    }
+
+    @Override
+    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
+        return updater.apply(parameterContext)
+                      .map(value -> new JSONObject().fluentPut("value", value.getClass().getName())
+                                                    .fluentPut("text", value.toString()));
     }
 
     @Override

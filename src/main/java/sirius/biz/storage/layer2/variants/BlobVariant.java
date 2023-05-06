@@ -78,7 +78,7 @@ public interface BlobVariant {
     int getNumAttempts();
 
     /**
-     * Determines if the conversion has ultimately failed as the max number of attempts has been reached.
+     * Determines if the conversion has ultimately failed, or the max number of attempts has been reached.
      *
      * @return <tt>true</tt> if the conversion is considered failed, <tt>false</tt> otherwise
      */

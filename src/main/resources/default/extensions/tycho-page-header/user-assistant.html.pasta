@@ -1,0 +1,19 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="100"/>
+
+<i:switch test="@point">
+    <i:block name="help">
+        <i:local name="academyTrack" value="@part(sirius.biz.tycho.UserAssistant.class).fetchAcademyTrack()"/>
+        <i:if test="isFilled(academyTrack)">
+            <t:videoAcademyTrackBtn trackId="@academyTrack"/>
+        </i:if>
+        <i:local name="videoCode" value="@part(sirius.biz.tycho.UserAssistant.class).fetchAcademyVideo()"/>
+        <i:if test="isFilled(videoCode)">
+            <t:videoAcademyBtn code="@videoCode"/>
+        </i:if>
+        <i:local name="kba" value="@part(sirius.biz.tycho.UserAssistant.class).fetchKba()"/>
+        <i:if test="isFilled(kba)">
+            <t:kbBtn code="@kba"/>
+        </i:if>
+    </i:block>
+</i:switch>

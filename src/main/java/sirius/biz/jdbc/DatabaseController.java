@@ -38,6 +38,7 @@ import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
+import java.sql.Array;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -93,7 +94,7 @@ public class DatabaseController extends BasicController {
         // Only display selectable databases which are properly configured...
         List<String> availableDatabases = selectableDatabases.stream()
                                                              .filter(name -> databases.getDatabases().contains(name))
-                                                             .collect(Collectors.toList());
+                                                             .toList();
         ctx.respondWith().template("/templates/biz/model/sql.html.pasta", availableDatabases, defaultDatabase);
     }
 
@@ -238,6 +239,14 @@ public class DatabaseController extends BasicController {
 
         if (value.getClass().isArray()) {
             return Arrays.stream((Object[]) value).map(NLS::toUserString).collect(Collectors.joining(", "));
+        }
+
+        if (value instanceof Array sqlArrayValue) {
+            try {
+                return Arrays.stream((Object[]) sqlArrayValue.getArray()).map(NLS::toUserString).collect(Collectors.joining(", "));
+            } catch (SQLException e) {
+                Exceptions.ignore(e);
+            }
         }
 
         return NLS.toUserString(value);

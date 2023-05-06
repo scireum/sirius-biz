@@ -90,11 +90,11 @@ public class ArchiveHelper {
                                 false,
                                 new LocalArchiveExtractCallback(archive, filter, progressAndStopProvider));
             }
-        } catch (SevenZipException e) {
-            if (e.getCause() instanceof HandledException) {
-                throw (HandledException) e.getCause();
+        } catch (SevenZipException exception) {
+            if (exception.getCause() instanceof HandledException handledException) {
+                throw handledException;
             }
-            throw e;
+            throw exception;
         }
     }
 

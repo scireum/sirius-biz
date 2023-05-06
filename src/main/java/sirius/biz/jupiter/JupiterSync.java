@@ -25,6 +25,7 @@ import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
 import sirius.kernel.Startable;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
@@ -44,7 +45,9 @@ import sirius.kernel.timer.EndOfDayTask;
 import javax.annotation.Nullable;
 import java.io.OutputStream;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,19 +96,6 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
     @ConfigValue("jupiter.syncRepository")
     private List<String> syncRepository;
-
-    @ConfigValue("jupiter.repository.uplink.store")
-    private String uplinkStore;
-
-    @ConfigValue("jupiter.repository.uplink.bucket")
-    private String uplinkBucket;
-
-    @ConfigValue("jupiter.repository.uplink.test-bucket")
-    @Nullable
-    private String uplinkTestBucket;
-
-    @ConfigValue("jupiter.repository.uplink.ignoredPaths")
-    private List<String> uplinkIgnoredPaths;
 
     @ConfigValue("jupiter.repository.localSpaceName")
     private String localRepoSpaceName;
@@ -279,7 +269,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
             Map<String, Object> config = new HashMap<>();
             Extension systemConfig = Sirius.getSettings().getExtension("jupiter.settings", connection.getName());
             for (JupiterConfigUpdater updater : updaters) {
-                updater.emitConfig(connection.getName(), systemConfig, config);
+                updater.emitConfig(connection, systemConfig, config);
             }
 
             String configString = asYaml(config);
@@ -339,14 +329,21 @@ public class JupiterSync implements Startable, EndOfDayTask {
             Set<String> filesToDelete =
                     repositoryFiles.stream().map(RepositoryFile::getName).collect(Collectors.toSet());
 
-            syncLocalRepository(processContext, connection, repositoryFiles, filesToDelete);
-            syncUplinkRepository(processContext, connection, repositoryFiles, filesToDelete);
+            // We need to buffer our update tasks, as we want to delete old files, before loading new ones, so that
+            // moves of loaders etc. work properly...
+            List<Runnable> updateTasks = new ArrayList<>();
+
+            syncLocalRepository(processContext, connection, repositoryFiles, updateTasks::add, filesToDelete);
+            syncUplinkRepositories(processContext, connection, repositoryFiles, updateTasks::add, filesToDelete);
 
             for (String file : filesToDelete) {
                 processContext.log(ProcessLog.info()
                                              .withFormattedMessage("Deleting %s for %s", file, connection.getName()));
                 connection.repository().delete(file);
             }
+
+            // Execute update tasks after deletes so that a loader being moved doesn't delete itself after its update...
+            executeUpdates(processContext, updateTasks);
 
             processContext.debug(ProcessLog.info()
                                            .withFormattedMessage(
@@ -362,33 +359,77 @@ public class JupiterSync implements Startable, EndOfDayTask {
         }
     }
 
+    private void executeUpdates(ProcessContext processContext, List<Runnable> updateTasks) {
+        for (Runnable runnable : updateTasks) {
+            try {
+                runnable.run();
+            } catch (Exception ex) {
+                processContext.handle(ex);
+            }
+        }
+    }
+
+    private void syncUplinkRepositories(ProcessContext processContext,
+                                        JupiterConnector connection,
+                                        List<RepositoryFile> repositoryFiles,
+                                        Consumer<Runnable> updateTaskConsumer,
+                                        Set<String> filesToDelete) {
+        Set<String> enabledNamespaces = new HashSet<>(connection.fetchEnabledNamespaces());
+        for (Extension uplinkStore : Sirius.getSettings().getExtensions("jupiter.repository.uplinks")) {
+            String store = uplinkStore.get("store").asString();
+            String bucket = getEffectiveUplinkBucket(uplinkStore);
+            List<String> requiredNamespace = uplinkStore.getStringList("requiredNamespaces");
+            if (!requiredNamespace.isEmpty() && requiredNamespace.stream().noneMatch(enabledNamespaces::contains)) {
+                processContext.debug(ProcessLog.info()
+                                               .withFormattedMessage(
+                                                       "Skipping uplink checks for %s / %s as none of the required namespaces is enabled.",
+                                                       uplinkStore.getId(),
+                                                       connection.getName()));
+            } else if (Strings.isEmpty(store) || Strings.isEmpty(bucket) || !objectStores.isConfigured(store)) {
+                processContext.debug(ProcessLog.info()
+                                               .withFormattedMessage(
+                                                       "Skipping uplink checks for %s / %s as no repository or bucket is configured.",
+                                                       uplinkStore.getId(),
+                                                       connection.getName()));
+            } else {
+                syncUplinkRepository(processContext,
+                                     connection,
+                                     repositoryFiles,
+                                     updateTaskConsumer,
+                                     filesToDelete,
+                                     uplinkStore);
+            }
+        }
+    }
+
     private void syncUplinkRepository(ProcessContext processContext,
                                       JupiterConnector connection,
                                       List<RepositoryFile> repositoryFiles,
-                                      Set<String> filesToDelete) {
-        if (Strings.isEmpty(uplinkStore) || Strings.isEmpty(getEffectiveUplinkBucket())) {
-            processContext.debug(ProcessLog.info()
-                                           .withFormattedMessage(
-                                                   "Skipping uplink checks for %s as no repository or bucket is configured.",
-                                                   connection.getName()));
-            return;
-        }
+                                      Consumer<Runnable> updateTaskConsumer,
+                                      Set<String> filesToDelete,
+                                      Extension uplinkStore) {
+        String store = uplinkStore.get("store").asString();
+        String bucket = getEffectiveUplinkBucket(uplinkStore);
 
         processContext.debug(ProcessLog.info()
-                                       .withFormattedMessage("Checking uplink repository (%s in %s) for %s...",
-                                                             getEffectiveUplinkBucket(),
-                                                             uplinkStore,
+                                       .withFormattedMessage("Checking uplink repository %s (%s in %s) for %s...",
+                                                             uplinkStore.getId(),
+                                                             bucket,
+                                                             store,
                                                              connection.getName()));
 
-        ObjectStore store = objectStores.getStore(uplinkStore);
-        BucketName uplinkBucketName = store.getBucketName(getEffectiveUplinkBucket());
-        store.listObjects(uplinkBucketName, null, object -> {
-            if (uplinkIgnoredPaths.stream().noneMatch(ignoredPath -> object.getKey().startsWith(ignoredPath))) {
+        ObjectStore objectStore = objectStores.getStore(store);
+        BucketName uplinkBucketName = objectStore.getBucketName(bucket);
+        objectStore.listObjects(uplinkBucketName, null, object -> {
+            if (object.getSize() > 0 && uplinkStore.getStringList("ignoredPaths")
+                                                   .stream()
+                                                   .noneMatch(ignoredPath -> object.getKey().startsWith(ignoredPath))) {
                 handleUplinkFile(processContext,
                                  connection,
                                  repositoryFiles,
+                                 updateTaskConsumer,
                                  filesToDelete,
-                                 store,
+                                 objectStore,
                                  uplinkBucketName,
                                  object);
             }
@@ -397,17 +438,20 @@ public class JupiterSync implements Startable, EndOfDayTask {
         });
     }
 
-    private String getEffectiveUplinkBucket() {
-        if (!Sirius.isProd() && Strings.isFilled(uplinkTestBucket)) {
-            return uplinkTestBucket;
+    private String getEffectiveUplinkBucket(Extension uplinkStore) {
+        if (!Sirius.isProd() && Strings.isFilled(uplinkStore.getString("testBucket"))) {
+            return uplinkStore.getString("testBucket");
         }
 
-        return uplinkBucket;
+        return uplinkStore.getString("bucket");
     }
 
+    @SuppressWarnings("java:S107")
+    @Explain("In this case using 8 parameters is the simplest way to extract this block of logic.")
     private void handleUplinkFile(ProcessContext processContext,
                                   JupiterConnector connection,
                                   List<RepositoryFile> repositoryFiles,
+                                  Consumer<Runnable> updateTaskConsumer,
                                   Set<String> filesToDelete,
                                   ObjectStore store,
                                   BucketName uplinkBucketName,
@@ -425,11 +469,13 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                                                     .atZone(ZoneId.systemDefault())
                                                                     .toLocalDateTime())) {
             String url = store.objectUrl(uplinkBucketName, object.getKey());
-            processContext.log(ProcessLog.info()
-                                         .withFormattedMessage("Fetching %s for %s as it is new or updated...",
-                                                               effectiveFileName,
-                                                               connection.getName()));
-            connection.repository().fetchUrl(effectiveFileName, url, false);
+            updateTaskConsumer.accept(() -> {
+                processContext.log(ProcessLog.info()
+                                             .withFormattedMessage("Fetching %s for %s as it is new or updated...",
+                                                                   effectiveFileName,
+                                                                   connection.getName()));
+                connection.repository().fetchUrl(effectiveFileName, url, false);
+            });
         } else {
             processContext.debug(ProcessLog.info()
                                            .withFormattedMessage("Skipping %s for %s as it is unchanged...",
@@ -443,6 +489,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
     private void syncLocalRepository(ProcessContext processContext,
                                      JupiterConnector connection,
                                      List<RepositoryFile> repositoryFiles,
+                                     Consumer<Runnable> updateTaskConsumer,
                                      Set<String> filesToDelete) {
         if (blobStorage == null || tenants == null || Strings.isEmpty(localRepoSpaceName)) {
             processContext.debug(ProcessLog.info()
@@ -460,7 +507,13 @@ public class JupiterSync implements Startable, EndOfDayTask {
         try {
             Directory root = blobStorage.getSpace(localRepoSpaceName)
                                         .getRoot(tenants.getTenantUserManager().getSystemTenantId());
-            visitLocalDirectory(processContext, null, root, connection, repositoryFiles, filesToDelete);
+            visitLocalDirectory(processContext,
+                                null,
+                                root,
+                                connection,
+                                repositoryFiles,
+                                updateTaskConsumer,
+                                filesToDelete);
         } catch (Exception e) {
             processContext.handle(Exceptions.handle()
                                             .error(e)
@@ -477,6 +530,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                      Directory currentDirectory,
                                      JupiterConnector connection,
                                      List<RepositoryFile> repositoryFiles,
+                                     Consumer<Runnable> updateTaskConsumer,
                                      Set<String> filesToDelete) {
         String effectivePrefix = Value.of(prefix).asString();
 
@@ -484,6 +538,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
             handleLocalFile(processContext,
                             connection,
                             repositoryFiles,
+                            updateTaskConsumer,
                             filesToDelete,
                             effectivePrefix + "/" + child.getFilename(),
                             child);
@@ -495,6 +550,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                 directory,
                                 connection,
                                 repositoryFiles,
+                                updateTaskConsumer,
                                 filesToDelete);
             return true;
         });
@@ -503,6 +559,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
     private void handleLocalFile(ProcessContext processContext,
                                  JupiterConnector connection,
                                  List<RepositoryFile> repositoryFiles,
+                                 Consumer<Runnable> updateTaskConsumer,
                                  Set<String> filesToDelete,
                                  String effectiveFileName,
                                  Blob child) {
@@ -521,12 +578,13 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                       "Unable to build blob download url for: %s (%s)",
                                       effectiveFileName,
                                       child.getBlobKey())));
-
-            processContext.log(ProcessLog.info()
-                                         .withFormattedMessage("Fetching %s for %s as it is new or updated...",
-                                                               effectiveFileName,
-                                                               connection.getName()));
-            connection.repository().fetchUrl(effectiveFileName, url, false);
+            updateTaskConsumer.accept(() -> {
+                processContext.log(ProcessLog.info()
+                                             .withFormattedMessage("Fetching %s for %s as it is new or updated...",
+                                                                   effectiveFileName,
+                                                                   connection.getName()));
+                connection.repository().fetchUrl(effectiveFileName, url, false);
+            });
         } else {
             processContext.debug(ProcessLog.info()
                                            .withFormattedMessage("Skipping %s for %s as it is unchanged...",

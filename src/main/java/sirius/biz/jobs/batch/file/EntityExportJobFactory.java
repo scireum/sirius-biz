@@ -39,7 +39,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
         parameterCollector.accept(EntityExportJob.TEMPLATE_FILE_PARAMETER);
     }
 
-    @SuppressWarnings("squid:S2095")
+    @SuppressWarnings({"squid:S2095", "resource"})
     @Explain("The job must not be closed here as it is returned and managed by the caller.")
     @Override
     protected EntityExportJob<E, Q> createJob(ProcessContext process) {
@@ -73,7 +73,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     /**
      * Permits to return a custom file name when exporting the entity.
      * <p>
-     * Otherwise the "end user friendly" plural of the entity is used as target file name
+     * Otherwise, the "end-user friendly" plural of the entity is used as target file name
      */
     protected String getCustomFileName() {
         return null;
@@ -137,7 +137,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     @Override
     protected void collectJobInfos(JobInfoCollector collector) {
         super.collectJobInfos(collector);
-        collector.addTranslatedWell("EntityExportJobFactory.templateModes");
+        collector.addTranslatedCard("EntityExportJobFactory.templateModes");
         getDictionary().emitJobInfos(collector);
     }
 }
