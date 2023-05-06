@@ -65,3 +65,8 @@ dependencies {
     implementation("net.sf.sevenzipjbinding:sevenzipjbinding-all-platforms:16.02-2.01")
 }
 
+sonarqube {
+    properties {
+        property("sonar.sourceEncoding", "UTF-8")
+    }
+}
