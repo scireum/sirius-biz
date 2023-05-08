@@ -30,7 +30,7 @@ steps:
   - name: cron_unit_tests
     image: scireum/sirius-build-jdk18
     commands:
-      -./gradlew clean test
+      - ./gradlew clean test
     volumes: *scireum_volumes
     when:
       event:
