@@ -19,6 +19,9 @@
                 <t:datacard title="@entity.getIdAsString()" subTitle="@entity.getClass().getName()">
                     <i:block name="actions">
                         <i:if test="@sirius.biz.tenants.Tenant.class.isAssignableFrom(entity.getClass())">
+                            <i:local name="tenantId" value="@String.valueOf(entity.getId())"/>
+                            <t:smartValue type="tenant" payload="@tenantId"
+                                          label="@part(sirius.biz.tenants.Tenants.class).fetchCachedTenantName(tenantId)"/>
                             <t:dropdownItem icon="fa fa-external-link-alt"
                                             label="Select"
                                             url="@apply('/tenants/select/%s', entity.getId())"
@@ -45,6 +48,20 @@
                                         <i:local name="reference"
                                                  value="property.as(sirius.db.mixing.properties.BaseEntityRefProperty.class)"/>
                                         <i:if test="@isFilled(reference.getValue(entity))">
+                                            <i:if test="sirius.biz.tenants.Tenant.class.isAssignableFrom(reference.getReferencedType())">
+                                                <i:local name="tenantId"
+                                                         value="@String.valueOf(reference.getValue(entity))"/>
+                                                <t:smartValue type="tenant" payload="@tenantId"
+                                                              label="@part(sirius.biz.tenants.Tenants.class).fetchCachedTenantName(tenantId)"/>
+                                                -
+                                            </i:if>
+                                            <i:if test="sirius.biz.tenants.UserAccount.class.isAssignableFrom(reference.getReferencedType())">
+                                                <i:local name="userId"
+                                                         value="@String.valueOf(reference.getValue(entity))"/>
+                                                <t:smartValue type="user-account" payload="@userId"
+                                                              label="@part(sirius.biz.tenants.Tenants.class).fetchCachedUserName(userId)"/>
+                                                -
+                                            </i:if>
                                             @reference.getValue(entity)
                                             <span class="text-muted">(@reference.getReferencedDescriptor().getType().getName())</span>
                                             <span class="pl-2 pr-2">-</span>
@@ -53,12 +70,6 @@
                                                target="_blank">
                                                 <i class="fa fa-external-link-alt"></i> Query
                                             </a>
-                                            <i:if test="sirius.biz.tenants.Tenant.class.isAssignableFrom(reference.getReferencedType())">
-                                                <a href="/tenants/select/@reference.getValue(entity)"
-                                                   target="_blank">
-                                                    <i class="fa fa-external-link-alt"></i> Select
-                                                </a>
-                                            </i:if>
                                             </span>
                                         </i:if>
                                         <i:else>
