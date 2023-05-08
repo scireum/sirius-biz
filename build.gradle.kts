@@ -39,7 +39,7 @@ dependencies {
 
     implementation("net.sf.jt400:jt400:10.7")
 
-    implementation("ru.yandex.clickhouse:clickhouse-jdbc:0.3.2-patch11")
+    implementation("com.clickhouse:clickhouse-jdbc:0.3.2-patch11")
     // Required as the version brought by clickhouse-jdbc contains security issues
     implementation("commons-codec:commons-codec:1.13")
     // Required as the version brought by clickhouse-jdbc contains security issues
