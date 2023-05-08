@@ -79,6 +79,9 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      */
     private static final int MAX_EVENTS_PER_PROCESS = 16 * 1024;
 
+    private static final String AGGREGATION_COUNTER = "counter";
+    private static final String AGGREGATION_DISTINCT_COUNT = "distinctCount";
+
     private LocalDateTime lastProcessed;
     private final AtomicInteger bufferedEvents = new AtomicInteger();
     private final Queue<Event> buffer = new ConcurrentLinkedQueue<>();
@@ -183,7 +186,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      */
     public <E extends Event> int countEvents(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
-        SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS counter");
+        SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS " + AGGREGATION_COUNTER);
         if (queryTuner != null) {
             queryTuner.accept(query);
         }
@@ -191,7 +194,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         return query.asSQLQuery()
                     .markAsLongRunning()
                     .first()
-                    .flatMap(row -> row.getValue("counter").asOptionalInt())
+                    .flatMap(row -> row.getValue(AGGREGATION_COUNTER).asOptionalInt())
                     .orElse(0);
     }
 
@@ -242,8 +245,9 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
                                                              @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
         SmartQuery<E> query = oma.select(eventType)
-                                 .aggregationField(Strings.apply("COUNT(DISTINCT %s) as distinctCount",
-                                                                 mapping.getName()));
+                                 .aggregationField(Strings.apply("COUNT(DISTINCT %s) as %s",
+                                                                 mapping.getName(),
+                                                                 AGGREGATION_DISTINCT_COUNT));
         if (queryTuner != null) {
             queryTuner.accept(query);
         }
@@ -251,7 +255,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         return query.asSQLQuery()
                     .markAsLongRunning()
                     .first()
-                    .flatMap(row -> row.getValue("distinctCount").asOptionalInt())
+                    .flatMap(row -> row.getValue(AGGREGATION_DISTINCT_COUNT).asOptionalInt())
                     .orElse(0);
     }
 
