@@ -16,17 +16,22 @@
     <t:emptyCheck data="@entities">
         <t:datacards size="x-large">
             <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
-                <t:datacard title="@entity.getIdAsString()" subTitle="@entity.getClass().getName()">
-                    <i:block name="actions">
+                <t:datacard subTitle="@entity.getClass().getName()">
+                    <i:block name="title">
                         <i:if test="@sirius.biz.tenants.Tenant.class.isAssignableFrom(entity.getClass())">
                             <i:local name="tenantId" value="@String.valueOf(entity.getId())"/>
                             <t:smartValue type="tenant" payload="@tenantId"
                                           label="@part(sirius.biz.tenants.Tenants.class).fetchCachedTenantName(tenantId)"/>
-                            <t:dropdownItem icon="fa fa-external-link-alt"
-                                            label="Select"
-                                            url="@apply('/tenants/select/%s', entity.getId())"
-                                            linkTarget="_blank"/>
+                            -
                         </i:if>
+                        <i:if test="sirius.biz.tenants.UserAccount.class.isAssignableFrom(entity.getClass())">
+                            <i:local name="userId"
+                                     value="@String.valueOf(entity.getId())"/>
+                            <t:smartValue type="user-account" payload="@userId"
+                                          label="@part(sirius.biz.tenants.Tenants.class).fetchCachedUserName(userId)"/>
+                            -
+                        </i:if>
+                        @entity.getIdAsString()
                     </i:block>
                     <table class="table table-hover table-sm">
                         <thead>
