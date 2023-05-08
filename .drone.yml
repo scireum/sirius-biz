@@ -19,7 +19,7 @@ steps:
   - name: compile
     image: scireum/sirius-build-jdk18
     commands:
-      -./gradlew clean assemble
+      - ./gradlew clean assemble
     volumes: *scireum_volumes
     when:
       branch:
