@@ -1696,16 +1696,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             markConversionFailure(variant, conversionProcess);
             eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                           .withConversionError(conversionException));
-
-            throw Exceptions.handle()
-                            .error(conversionException)
-                            .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
-                                                    variant.getVariantName(),
-                                                    variant.getIdAsString(),
-                                                    blob.getBlobKey(),
-                                                    blob.getFilename())
-                            .handle();
         });
         return future;
     }
