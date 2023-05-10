@@ -18,7 +18,7 @@ import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Parts;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -56,7 +56,7 @@ public class VirtualFileSystemController extends BizController {
     @Part
     private VirtualFileSystem vfs;
 
-    @Parts(FileQuickActionProvider.class)
+    @PriorityParts(FileQuickActionProvider.class)
     private PartCollection<FileQuickActionProvider> quickActionProviders;
 
     /**
