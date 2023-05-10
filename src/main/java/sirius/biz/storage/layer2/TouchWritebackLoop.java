@@ -75,6 +75,11 @@ public class TouchWritebackLoop extends BackgroundLoop {
         return 1d / 30;
     }
 
+    @Override
+    public double maxRuntimeInSeconds() {
+        return 600d;
+    }
+
     @Nullable
     @Override
     protected String doWork() throws Exception {
