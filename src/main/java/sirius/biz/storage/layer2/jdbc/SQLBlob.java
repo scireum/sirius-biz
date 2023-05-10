@@ -222,12 +222,6 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     public static final Mapping CONTENT_UPDATED = Mapping.named("contentUpdated");
     private boolean contentUpdated;
 
-    /**
-     * Stores if the blob was marked as hidden.
-     */
-    public static final Mapping HIDDEN = Mapping.named("hidden");
-    private boolean hidden;
-
     @Part
     @Nullable
     private static BlobStorage layer2;
@@ -517,14 +511,6 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     public boolean isParentChanged() {
         return parentChanged;
-    }
-
-    public boolean isHidden() {
-        return hidden;
-    }
-
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
     }
 
     @Override
