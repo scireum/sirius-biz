@@ -15,7 +15,7 @@ import sirius.kernel.di.std.Priorized;
 import java.util.function.Consumer;
 
 /**
- * Represents a provider for file based quick actions.
+ * Represents a provider which provides link based quick actions which are associated with a file.
  * <p>
  * A provider needs to wear a {@link sirius.kernel.di.std.Register} annotation in order to be discovered by the
  * framework.
