@@ -56,8 +56,7 @@ public class JobFileQuickActionProvider implements FileQuickActionProvider {
     @Override
     public void computeQuickAction(VirtualFile virtualFile, Consumer<QuickAction> consumer) {
         String uri = CallContext.getCurrent().get(WebContext.class).getRequest().uri();
-        getAvailableJobs().filter(JobFactory::canStartInteractive)
-                          .filter(jobFactory -> jobFactory.generatePresetUrl(uri, virtualFile) != null)
+        getAvailableJobs().filter(jobFactory -> jobFactory.generatePresetUrl(uri, virtualFile) != null)
                           .forEach(jobFactory -> consumer.accept(new QuickAction().withIcon("fa fa-cogs")
                                                                                   .withLabel(jobFactory.getLabel())
                                                                                   .withUrl(jobFactory.generatePresetUrl(
