@@ -66,6 +66,6 @@ public class JobFileQuickActionProvider implements FileQuickActionProvider {
 
     @Override
     public int getPriority() {
-        return 0;
+        return 90;
     }
 }
