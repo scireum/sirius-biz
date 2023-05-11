@@ -168,19 +168,19 @@ public class Scripting implements InterconnectHandler {
 
     @Override
     public void handleEvent(ObjectNode event) {
-        if (TASK_TYPE_MSG.equals(event.get(TASK_TYPE).asText())) {
+        if (TASK_TYPE_MSG.equals(event.path(TASK_TYPE).asText())) {
             handleMessageTask(event);
-        } else if (TASK_TYPE_EXEC.equals(event.get(TASK_TYPE).asText())) {
+        } else if (TASK_TYPE_EXEC.equals(event.path(TASK_TYPE).asText())) {
             tasks.defaultExecutor().start(() -> handleExecTask(event));
         }
     }
 
     private void handleMessageTask(ObjectNode event) {
         synchronized (messages) {
-            messages.add(new TranscriptMessage(event.get(TASK_NODE).asText(),
-                                               event.get(TASK_JOB).asText(),
-                                               event.get(TASK_TIMESTAMP).asLong(),
-                                               event.get(TASK_MESSAGE).asText()));
+            messages.add(new TranscriptMessage(event.path(TASK_NODE).asText(null),
+                                               event.path(TASK_JOB).asText(null),
+                                               event.path(TASK_TIMESTAMP).asLong(),
+                                               event.path(TASK_MESSAGE).asText(null)));
             if (messages.size() > MAX_MESSAGES) {
                 messages.remove(0);
             }
@@ -199,8 +199,8 @@ public class Scripting implements InterconnectHandler {
     }
 
     private void handleExecTask(ObjectNode event) {
-        String nodeName = event.get(TASK_NODE).asText();
-        String jobNumber = event.get(TASK_JOB).asText();
+        String nodeName = event.path(TASK_NODE).asText(null);
+        String jobNumber = event.path(TASK_JOB).asText(null);
         if (!ALL_NODES.equals(nodeName) && !Strings.areEqual(CallContext.getNodeName(), nodeName)) {
             return;
         }
@@ -245,7 +245,7 @@ public class Scripting implements InterconnectHandler {
 
     private Callable compileScript(ObjectNode event) throws CompileException {
         CompilationContext compilationContext =
-                new CompilationContext(SourceCodeInfo.forInlineCode(event.get(TASK_SCRIPT).asText(),
+                new CompilationContext(SourceCodeInfo.forInlineCode(event.path(TASK_SCRIPT).asText(null),
                                                                     SandboxMode.DISABLED));
         NoodleCompiler compiler = new NoodleCompiler(compilationContext);
         Callable callable = compiler.compileScript();

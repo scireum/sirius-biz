@@ -8,6 +8,7 @@
 
 package sirius.biz.cluster;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.async.CallContext;
@@ -106,23 +107,24 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     @Override
     public void handleEvent(ObjectNode event) {
-        if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_PING)) {
+        String messageType = event.path(MESSAGE_TYPE).asText(null);
+        if (Strings.areEqual(messageType, TYPE_PING)) {
             lastPing = LocalDateTime.now();
             interconnect.dispatch(getName(),
                                   Json.createObject()
                                       .put(MESSAGE_TYPE, TYPE_PONG)
                                       .put(MESSAGE_NAME, CallContext.getNodeName())
                                       .put(MESSAGE_ADDRESS, getLocalAddress()));
-        } else if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_PONG)) {
-            String address = event.get(MESSAGE_ADDRESS).asText();
+        } else if (Strings.areEqual(messageType, TYPE_PONG)) {
+            String address = event.path(MESSAGE_ADDRESS).asText(null);
             if (!Strings.areEqual(address, getLocalAddress()) && Strings.isFilled(address)) {
-                String nodeName = event.get(MESSAGE_NAME).asText();
+                String nodeName = event.path(MESSAGE_NAME).asText(null);
                 if (!Strings.areEqual(members.put(nodeName, address), address)) {
                     Cluster.LOG.INFO("Discovered a new node: %s - %s", nodeName, address);
                 }
             }
-        } else if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_KILL)) {
-            members.remove(event.get(MESSAGE_NAME).asText());
+        } else if (Strings.areEqual(messageType, TYPE_KILL)) {
+            members.remove(event.path(MESSAGE_NAME).asText(null));
         }
     }
 
@@ -205,27 +207,32 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     private NodeInfo parseNodeState(ObjectNode response) {
         NodeInfo result = new NodeInfo();
-        result.setName(response.get(RESPONSE_NODE_NAME).asText());
-        if (response.get(RESPONSE_ERROR).asBoolean()) {
+        Json.tryValueString(response, RESPONSE_NODE_NAME).ifPresent(result::setName);
+        if (response.path(RESPONSE_ERROR).asBoolean()) {
             result.setNodeState(MetricState.RED);
             return result;
         }
 
-        result.setNodeState(MetricState.valueOf(response.get(ClusterController.RESPONSE_NODE_STATE).asText()));
-        result.setUptime(response.get(ClusterController.RESPONSE_UPTIME).asText());
+        result.setNodeState(MetricState.valueOf(Json.tryValueString(response, ClusterController.RESPONSE_NODE_STATE)
+                                                    .orElse(null)));
+        Json.tryValueString(response, ClusterController.RESPONSE_UPTIME).ifPresent(result::setUptime);
 
-        ArrayNode nodeMetrics = response.withArray(ClusterController.RESPONSE_METRICS);
+        ArrayNode nodeMetrics = Json.getArray(response, ClusterController.RESPONSE_METRICS);
         for (int i = 0; i < nodeMetrics.size(); i++) {
             try {
-                ObjectNode metric = (ObjectNode) nodeMetrics.get(i);
-                Metric m = new Metric(metric.get(ClusterController.RESPONSE_CODE).asText(),
-                                      metric.get(ClusterController.RESPONSE_LABEL).asText(),
-                                      metric.get(ClusterController.RESPONSE_VALUE).asDouble(),
-                                      MetricState.valueOf(metric.get(ClusterController.RESPONSE_STATE).asText()),
-                                      metric.get(ClusterController.RESPONSE_UNIT).asText());
-                result.getMetrics().add(m);
-            } catch (Exception e) {
-                Exceptions.handle(Cluster.LOG, e);
+                ObjectNode jsonMetric = (ObjectNode) nodeMetrics.get(i);
+                Metric metric =
+                        new Metric(Json.tryValueString(jsonMetric, ClusterController.RESPONSE_CODE).orElse(null),
+                                   Json.tryValueString(jsonMetric, ClusterController.RESPONSE_LABEL).orElse(null),
+                                   Json.tryGet(jsonMetric, ClusterController.RESPONSE_VALUE)
+                                       .map(JsonNode::asDouble)
+                                       .orElse(null),
+                                   MetricState.valueOf(Json.tryValueString(jsonMetric, ClusterController.RESPONSE_STATE)
+                                                           .orElse(null)),
+                                   Json.tryValueString(jsonMetric, ClusterController.RESPONSE_UNIT).orElse(null));
+                result.getMetrics().add(metric);
+            } catch (Exception exception) {
+                Exceptions.handle(Cluster.LOG, exception);
             }
         }
 

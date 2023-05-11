@@ -8,6 +8,8 @@
 
 package sirius.biz.codelists;
 
+import com.fasterxml.jackson.core.JsonPointer;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Json;
@@ -16,7 +18,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
-import sirius.web.util.JSONPath;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -573,22 +574,25 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the parsed translation map. Note that this also gracefully handles simple string values
      */
-    public static Map<String, String> parseTranslationTable(ObjectNode root, String path) {
-        Value translations = JSONPath.queryValue(root, path);
-        if (translations.is(ObjectNode.class)) {
-            return ((ObjectNode) translations.get()).properties()
-                                                    .stream()
-                                                    .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                              entry -> String.valueOf(entry.getValue())));
-        } else {
-            return Collections.singletonMap("xx", translations.asString());
-        }
+    public static Map<String, String> parseTranslationTable(ObjectNode root, JsonPointer path) {
+        return Json.tryGetAt(root, path).map(translations -> {
+            if (translations.isObject()) {
+                return ((ObjectNode) translations).properties()
+                                                  .stream()
+                                                  .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                            entry -> entry.getValue().asText()));
+            } else {
+                return Collections.singletonMap("xx", translations.asText());
+            }
+        }).orElseGet(() -> {
+            return Collections.singletonMap("xx", "");
+        });
     }
 
     /**
      * Resolves the translation for a given language using a translation table.
      * <p>
-     * This table can be built / parsed using {@link #parseTranslationTable(ObjectNode, String)}.
+     * This table can be built / parsed using {@link #parseTranslationTable(ObjectNode, JsonPointer)}.
      *
      * @param table    the table used to look up the value
      * @param language the language to translate to or <tt>null</tt> to use the current language
@@ -613,19 +617,23 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the string list found in the JSON, or an empty list if there is none
      */
-    public static List<String> parseStringList(ObjectNode root, String path) {
-        Value value = JSONPath.queryValue(root, path);
-        if (value.is(ArrayNode.class)) {
-            return transformArrayToStringList(value.get(ArrayNode.class, null));
-        } else if (value.is(String.class) && !value.isEmptyString()) {
-            return Collections.singletonList(value.asString());
+    public static List<String> parseStringList(ObjectNode root, JsonPointer path) {
+        Optional<JsonNode> optionalJsonNode = Json.tryGetAt(root, path);
+        if (optionalJsonNode.isEmpty()) {
+            return Collections.emptyList();
+        }
+        JsonNode jsonNode = optionalJsonNode.get();
+        if (jsonNode.isArray()) {
+            return transformArrayToStringList((ArrayNode) jsonNode);
+        } else if (jsonNode.isTextual() && !jsonNode.isNull() && !jsonNode.isEmpty()) {
+            return Collections.singletonList(jsonNode.asText());
         } else {
             return Collections.emptyList();
         }
     }
 
     private static List<String> transformArrayToStringList(ArrayNode array) {
-        return Json.streamEntries(array).filter(Strings::isFilled).map(String::valueOf).toList();
+        return Json.streamEntries(array).filter(Strings::isFilled).map(JsonNode::asText).toList();
     }
 
     /**
@@ -637,14 +645,18 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the string map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, String> parseStringMap(ObjectNode root, String path) {
-        Value value = JSONPath.queryValue(root, path);
-        if (value.is(ObjectNode.class)) {
-            return ((ObjectNode) value.get()).properties()
-                                             .stream()
-                                             .filter(entry -> Strings.isFilled(entry.getValue()))
-                                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> String.valueOf(entry.getValue())));
+    public static Map<String, String> parseStringMap(ObjectNode root, JsonPointer path) {
+        Optional<JsonNode> optionalJsonNode = Json.tryGetAt(root, path);
+        if (optionalJsonNode.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        JsonNode jsonNode = optionalJsonNode.get();
+        if (jsonNode.isObject()) {
+            return ((ObjectNode) jsonNode).properties()
+                                          .stream()
+                                          .filter(entry -> Strings.isFilled(entry.getValue()))
+                                          .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                    entry -> entry.getValue().asText()));
         } else {
             return Collections.emptyMap();
         }
@@ -659,14 +671,18 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, List<String>> parseStringListMap(ObjectNode root, String path) {
-        Value value = JSONPath.queryValue(root, path);
-        if (value.is(ObjectNode.class)) {
-            return ((ObjectNode) value.get()).properties()
-                                             .stream()
-                                             .filter(entry -> entry.getValue() instanceof ArrayNode)
-                                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
+    public static Map<String, List<String>> parseStringListMap(ObjectNode root, JsonPointer path) {
+        Optional<JsonNode> optionalJsonNode = Json.tryGetAt(root, path);
+        if (optionalJsonNode.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        JsonNode jsonNode = optionalJsonNode.get();
+        if (jsonNode.isObject()) {
+            return ((ObjectNode) jsonNode).properties()
+                                          .stream()
+                                          .filter(entry -> entry.getValue() instanceof ArrayNode)
+                                          .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                    entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
         } else {
             return Collections.emptyMap();
         }
@@ -681,14 +697,18 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, ObjectNode> parseMap(ObjectNode root, String path) {
-        Value value = JSONPath.queryValue(root, path);
-        if (value.is(ObjectNode.class)) {
-            return ((ObjectNode) value.get()).properties()
-                                             .stream()
-                                             .filter(entry -> entry.getValue() instanceof ObjectNode)
-                                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> (ObjectNode) entry.getValue()));
+    public static Map<String, ObjectNode> parseMap(ObjectNode root, JsonPointer path) {
+        Optional<JsonNode> optionalJsonNode = Json.tryGetAt(root, path);
+        if (optionalJsonNode.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        JsonNode jsonNode = optionalJsonNode.get();
+        if (jsonNode.isObject()) {
+            return ((ObjectNode) jsonNode).properties()
+                                          .stream()
+                                          .filter(entry -> entry.getValue() instanceof ObjectNode)
+                                          .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                    entry -> (ObjectNode) entry.getValue()));
         } else {
             return Collections.emptyMap();
         }

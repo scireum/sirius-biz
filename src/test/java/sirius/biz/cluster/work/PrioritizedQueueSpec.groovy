@@ -26,9 +26,9 @@ class PrioritizedQueueSpec extends BaseSpecification {
         queue.offer(20, Json.createObject().put("value", 20))
         queue.offer(10, Json.createObject().put("value", 10))
         then:
-        queue.poll().get("value").asInt() == 10
-        queue.poll().get("value").asInt() == 20
-        queue.poll().get("value").asInt() == 30
+        queue.poll().path("value").asInt() == 10
+        queue.poll().path("value").asInt() == 20
+        queue.poll().path("value").asInt() == 30
         queue.poll() == null
     }
 
@@ -41,9 +41,9 @@ class PrioritizedQueueSpec extends BaseSpecification {
         queue.offer(20, Json.createObject().put("value", 20))
         queue.offer(10, Json.createObject().put("value", 10))
         then:
-        queue.poll().get("value").asInt() == 10
-        queue.poll().get("value").asInt() == 20
-        queue.poll().get("value").asInt() == 30
+        queue.poll().path("value").asInt() == 10
+        queue.poll().path("value").asInt() == 20
+        queue.poll().path("value").asInt() == 30
         queue.poll() == null
     }
 

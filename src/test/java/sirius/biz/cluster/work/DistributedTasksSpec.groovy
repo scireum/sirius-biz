@@ -37,7 +37,7 @@ class DistributedTasksSpec extends BaseSpecification {
 
         @Override
         void executeWork(ObjectNode context) throws Exception {
-            if (context.get("test").asText() == "test") {
+            if (context.path("test").asText() == "test") {
                 fifoSynchronizer.success()
             }
         }
@@ -53,8 +53,8 @@ class DistributedTasksSpec extends BaseSpecification {
         @Override
         void executeWork(ObjectNode context) throws Exception {
             Wait.seconds(2)
-            prioritizedValues.add(context.get("value").asInt())
-            if (context.get("value").asInt() == 30) {
+            prioritizedValues.add(context.path("value").asInt())
+            if (context.path("value").asInt() == 30) {
                 fifoSynchronizer.success()
             }
         }

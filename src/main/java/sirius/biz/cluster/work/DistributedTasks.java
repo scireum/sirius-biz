@@ -155,12 +155,12 @@ public class DistributedTasks implements MetricProvider {
         protected void execute() {
             try {
                 DistributedTaskExecutor exec =
-                        ctx.getPart(task.get(KEY_EXECUTOR).asText(), DistributedTaskExecutor.class);
+                        ctx.getPart(task.required(KEY_EXECUTOR).asText(), DistributedTaskExecutor.class);
                 tryExecute(exec);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage("The system failed to execute the DistributedTask '%s' with: %s (%s)",
                                                   Json.write(task));
             }
@@ -179,7 +179,7 @@ public class DistributedTasks implements MetricProvider {
                                   Json.write(task))
                           .handle();
             } finally {
-                releasePenaltyToken(queue.getName(), task.get(KEY_PENALTY_TOKEN).asText());
+                releasePenaltyToken(queue.getName(), task.path(KEY_PENALTY_TOKEN).asText(null));
                 releaseConcurrencyToken(queue.getConcurrencyToken());
             }
         }

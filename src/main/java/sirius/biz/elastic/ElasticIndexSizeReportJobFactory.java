@@ -17,12 +17,12 @@ import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
-import sirius.web.util.JSONPath;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -63,21 +63,21 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
         ObjectNode clusterHealth = elastic.getLowLevelClient().clusterHealth();
         additionalMetricConsumer.accept("State", determineClusterStatus(clusterHealth));
         additionalMetricConsumer.accept("Number of Nodes",
-                                        cells.rightAligned(clusterHealth.get("number_of_nodes").asInt()));
+                                        cells.rightAligned(clusterHealth.path("number_of_nodes").asInt()));
         additionalMetricConsumer.accept("Active Shards",
-                                        cells.rightAligned(clusterHealth.get("active_shards").asInt()));
+                                        cells.rightAligned(clusterHealth.path("active_shards").asInt()));
         additionalMetricConsumer.accept("Relocating Shards",
-                                        cells.rightAligned(clusterHealth.get("relocating_shards").asInt()));
+                                        cells.rightAligned(clusterHealth.path("relocating_shards").asInt()));
         additionalMetricConsumer.accept("Initializing Shards",
-                                        cells.rightAligned(clusterHealth.get("initializing_shards").asInt()));
+                                        cells.rightAligned(clusterHealth.path("initializing_shards").asInt()));
         additionalMetricConsumer.accept("Unassigned Shards",
-                                        cells.rightAligned(clusterHealth.get("unassigned_shards").asInt()));
+                                        cells.rightAligned(clusterHealth.path("unassigned_shards").asInt()));
         additionalMetricConsumer.accept("Pending Tasks Shards",
-                                        cells.rightAligned(clusterHealth.get("number_of_pending_tasks").asInt()));
+                                        cells.rightAligned(clusterHealth.path("number_of_pending_tasks").asInt()));
     }
 
     private Cell determineClusterStatus(ObjectNode clusterHealth) {
-        String status = clusterHealth.get("status").asText();
+        String status = clusterHealth.path("status").asText();
         if (Strings.areEqual(status, "green")) {
             return cells.green(status);
         }
@@ -93,7 +93,7 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
 
     private void outputIndexSizes(Report report) {
         ObjectNode indexStats = elastic.getLowLevelClient().indexStats();
-        ObjectNode indices = indexStats.withObject("/indices");
+        ObjectNode indices = Json.getObject(indexStats, "/indices");
         report.addColumn("name", "Index");
         report.addColumn("docs", "Primary Docs");
         report.addColumn("size", "Primary Size");
@@ -103,18 +103,23 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
         report.addColumn("replicas", "Replicas");
         for (Map.Entry<String, JsonNode> entry : indices.properties()) {
             String indexName = entry.getKey();
-            ObjectNode total = indices.withObject(indexName).withObject("total");
-            ObjectNode primaries = indices.withObject(indexName).withObject("primaries");
-            ObjectNode settings = elastic.getLowLevelClient().indexSettings(indexName).withObject(indexName);
+            ObjectNode index = Json.getObject(indices, indexName);
+            ObjectNode total = Json.getObject(index, "total");
+            ObjectNode primaries = Json.getObject(index, "primaries");
+            ObjectNode settings = Json.getObject(elastic.getLowLevelClient().indexSettings(indexName), indexName);
             report.addCells(cells.of(indexName),
-                            cells.rightAligned(JSONPath.queryValue(primaries, "docs.count").asLong(0)),
-                            cells.rightAligned(NLS.formatSize(JSONPath.queryValue(primaries, "store.size_in_bytes")
-                                                                      .asLong(0))),
-                            cells.rightAligned(JSONPath.queryValue(total, "docs.count").asLong(0)),
-                            cells.rightAligned(NLS.formatSize(JSONPath.queryValue(total, "store.size_in_bytes")
-                                                                      .asLong(0))),
-                            cells.rightAligned(JSONPath.queryValue(settings, "settings.index.number_of_shards")),
-                            cells.rightAligned(JSONPath.queryValue(settings, "settings.index.number_of_replicas")));
+                            cells.rightAligned(primaries.path("docs").path("count").asLong()),
+                            cells.rightAligned(NLS.formatSize(primaries.path("store").path("size_in_bytes").asLong())),
+                            cells.rightAligned(total.path("docs").path("count").asLong()),
+                            cells.rightAligned(NLS.formatSize(total.path("store").path("size_in_bytes").asLong())),
+                            cells.rightAligned(settings.path("settings")
+                                                       .path("index")
+                                                       .path("number_of_shards")
+                                                       .asLong()),
+                            cells.rightAligned(settings.path("settings")
+                                                       .path("index")
+                                                       .path("number_of_replicas")
+                                                       .asLong()));
         }
     }
 

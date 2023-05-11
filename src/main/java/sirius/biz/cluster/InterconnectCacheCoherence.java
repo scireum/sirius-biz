@@ -75,22 +75,22 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
 
     @Override
     public void handleEvent(ObjectNode event) {
-        String type = event.get(MESSAGE_TYPE).asText();
-        String cache = event.get(MESSAGE_CACHE).asText();
+        String type = Json.tryValueString(event, MESSAGE_TYPE).orElse(null);
+        String cache = Json.tryValueString(event, MESSAGE_CACHE).orElse(null);
 
         // Ignore our own messages, as we already have executed them...
-        if (Strings.areEqual(CallContext.getNodeName(), event.get(MESSAGE_NODE).asText())) {
+        if (Strings.areEqual(CallContext.getNodeName(), Json.tryValueString(event, MESSAGE_NODE).orElse(null))) {
             return;
         }
 
         if (Strings.areEqual(type, TYPE_CLEAR)) {
             CacheManager.clearCoherentCacheLocally(cache);
         } else if (Strings.areEqual(type, TYPE_REMOVE)) {
-            String key = event.get(MESSAGE_KEY).asText();
+            String key = Json.tryValueString(event, MESSAGE_KEY).orElse(null);
             CacheManager.removeCoherentCacheKeyLocally(cache, key);
         } else if (Strings.areEqual(type, TYPE_REMOVE_ALL)) {
-            String discriminator = event.get(MESSAGE_DISCRIMINATOR).asText();
-            String testValue = event.get(MESSAGE_TEST_VALUE).asText();
+            String discriminator = Json.tryValueString(event, MESSAGE_DISCRIMINATOR).orElse(null);
+            String testValue = Json.tryValueString(event, MESSAGE_TEST_VALUE).orElse(null);
             CacheManager.coherentCacheRemoveAllLocally(cache, discriminator, testValue);
         }
     }

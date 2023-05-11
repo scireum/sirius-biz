@@ -25,8 +25,8 @@ public class SparklineCellFormat implements CellFormat {
 
     @Override
     public String format(ObjectNode data) {
-        String value = data.get(KEY_VALUE).asText();
-        String values = data.get(KEY_VALUES).asText();
+        String value = data.path(KEY_VALUE).asText();
+        String values = data.path(KEY_VALUES).asText();
 
         StringBuilder sb = new StringBuilder("<div class=\"text-right\">");
         sb.append(value);
@@ -40,7 +40,7 @@ public class SparklineCellFormat implements CellFormat {
 
     @Override
     public String rawValue(ObjectNode data) {
-        return data.get(KEY_VALUE).asText();
+        return data.path(KEY_VALUE).asText(null);
     }
 
     @Nonnull

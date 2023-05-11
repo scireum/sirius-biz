@@ -82,14 +82,14 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
 
         clusterManager.callEachNode("/system/nls/unused/" + clusterManager.getClusterAPIToken())
                       .forEach(missingKeysOfNode -> {
-                          Set<String> keysOfNode = Json.streamEntries(missingKeysOfNode.withArray("/unused"))
+                          Set<String> keysOfNode = Json.streamEntries(Json.getArray(missingKeysOfNode, "unused"))
                                                        .map(Object::toString)
                                                        .collect(Collectors.toSet());
 
                           process.log(ProcessLog.info()
                                                 .withFormattedMessage("Received %s keys from %s",
                                                                       keysOfNode.size(),
-                                                                      missingKeysOfNode.get(InterconnectClusterManager.RESPONSE_NODE_NAME)
+                                                                      missingKeysOfNode.path(InterconnectClusterManager.RESPONSE_NODE_NAME)
                                                                                        .asText()));
                           missingKeys.retainAll(keysOfNode);
                       });

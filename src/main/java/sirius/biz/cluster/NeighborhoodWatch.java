@@ -118,16 +118,16 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
     @Override
     public void handleEvent(ObjectNode event) {
-        String name = event.get(MESSAGE_NAME).asText();
-        boolean enabled = event.get(MESSAGE_ENABLED).asBoolean();
-        if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_GLOBAL)) {
+        String name = event.path(MESSAGE_NAME).asText(null);
+        boolean enabled = event.path(MESSAGE_ENABLED).asBoolean();
+        String messageType = event.path(MESSAGE_TYPE).asText(null);
+        if (Strings.areEqual(messageType, TYPE_GLOBAL)) {
             globallyEnabledState.put(name, enabled);
             return;
         }
 
-        if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_LOCAL) && Strings.areEqual(event.get(MESSAGE_NODE)
-                                                                                                    .asText(),
-                                                                                               CallContext.getNodeName())) {
+        String messsageNode = event.path(MESSAGE_NODE).asText(null);
+        if (Strings.areEqual(messageType, TYPE_LOCAL) && Strings.areEqual(messsageNode, CallContext.getNodeName())) {
             if (enabled) {
                 localOverwrite.put(name, true);
             } else {
@@ -135,9 +135,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             }
         }
 
-        if (Strings.areEqual(event.get(MESSAGE_TYPE).asText(), TYPE_BLEED) && Strings.areEqual(event.get(MESSAGE_NODE)
-                                                                                                    .asText(),
-                                                                                               CallContext.getNodeName())) {
+        if (Strings.areEqual(messageType, TYPE_BLEED) && Strings.areEqual(messsageNode, CallContext.getNodeName())) {
             bleeding = enabled;
         }
     }
@@ -477,8 +475,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     }
 
     private BackgroundInfo parseBackgroundInfos(ObjectNode jsonObject) {
-        if (jsonObject.get(InterconnectClusterManager.RESPONSE_ERROR).asBoolean()) {
-            return new BackgroundInfo(jsonObject.get(InterconnectClusterManager.RESPONSE_NODE_NAME).asText(),
+        if (jsonObject.path(InterconnectClusterManager.RESPONSE_ERROR).asBoolean()) {
+            return new BackgroundInfo(jsonObject.path(InterconnectClusterManager.RESPONSE_NODE_NAME).asText(null),
                                       false,
                                       0,
                                       "-",
@@ -487,25 +485,26 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         }
 
         BackgroundInfo result =
-                new BackgroundInfo(jsonObject.get(InterconnectClusterManager.RESPONSE_NODE_NAME).asText(),
-                                   jsonObject.get(ClusterController.RESPONSE_BLEEDING).asBoolean(),
-                                   jsonObject.get(ClusterController.RESPONSE_ACTIVE_BACKGROUND_TASKS).asInt(),
-                                   jsonObject.get(ClusterController.RESPONSE_UPTIME).asText(),
-                                   jsonObject.get(ClusterController.RESPONSE_VERSION).asText(),
-                                   jsonObject.get(ClusterController.RESPONSE_DETAILED_VERSION).asText());
-        jsonObject.withArray(ClusterController.RESPONSE_JOBS).forEach(job -> {
+                new BackgroundInfo(jsonObject.path(InterconnectClusterManager.RESPONSE_NODE_NAME).asText(null),
+                                   jsonObject.path(ClusterController.RESPONSE_BLEEDING).asBoolean(),
+                                   jsonObject.path(ClusterController.RESPONSE_ACTIVE_BACKGROUND_TASKS).asInt(),
+                                   jsonObject.path(ClusterController.RESPONSE_UPTIME).asText(null),
+                                   jsonObject.path(ClusterController.RESPONSE_VERSION).asText(null),
+                                   jsonObject.path(ClusterController.RESPONSE_DETAILED_VERSION).asText(null));
+        Json.getArray(jsonObject, ClusterController.RESPONSE_JOBS).forEach(job -> {
             try {
-                String name = job.get(ClusterController.RESPONSE_NAME).asText();
+                String name = job.required(ClusterController.RESPONSE_NAME).asText();
                 result.jobs.put(name,
                                 new BackgroundJobInfo(name,
-                                                      job.get(ClusterController.RESPONSE_DESCRIPTION).asText(),
-                                                      SynchronizeType.valueOf(job.get(ClusterController.RESPONSE_LOCAL)
-                                                                                 .asText()),
-                                                      job.get(ClusterController.RESPONSE_LOCAL_OVERWRITE).asBoolean(),
-                                                      job.get(ClusterController.RESPONSE_GLOBALLY_ENABLED).asBoolean(),
-                                                      job.get(ClusterController.RESPONSE_EXECUTION_INFO).asText()));
-            } catch (Exception e) {
-                Exceptions.handle(Cluster.LOG, e);
+                                                      job.path(ClusterController.RESPONSE_DESCRIPTION).asText(null),
+                                                      SynchronizeType.valueOf(job.path(ClusterController.RESPONSE_LOCAL)
+                                                                                 .asText(null)),
+                                                      job.path(ClusterController.RESPONSE_LOCAL_OVERWRITE).asBoolean(),
+                                                      job.path(ClusterController.RESPONSE_GLOBALLY_ENABLED).asBoolean(),
+                                                      job.path(ClusterController.RESPONSE_EXECUTION_INFO)
+                                                         .asText(null)));
+            } catch (Exception exception) {
+                Exceptions.handle(Cluster.LOG, exception);
             }
         });
 

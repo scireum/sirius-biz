@@ -30,11 +30,11 @@ public class TrendCellFormat implements CellFormat {
 
     @Override
     public String format(ObjectNode data) {
-        String classes = data.get(KEY_CLASSES).asText();
-        String value = data.get(KEY_VALUE).asText();
-        String trend = data.get(KEY_TREND).asText();
-        String hint = data.get(KEY_HINT).asText();
-        String icon = data.get(KEY_ICON).asText();
+        String classes = data.path(KEY_CLASSES).asText();
+        String value = data.path(KEY_VALUE).asText();
+        String trend = data.path(KEY_TREND).asText();
+        String hint = data.path(KEY_HINT).asText();
+        String icon = data.path(KEY_ICON).asText();
 
         StringBuilder sb = new StringBuilder("<div class=\"text-right\"");
         if (Strings.isFilled(hint)) {
@@ -80,7 +80,7 @@ public class TrendCellFormat implements CellFormat {
 
     @Override
     public String rawValue(ObjectNode data) {
-        return data.get(KEY_VALUE).asText();
+        return data.path(KEY_VALUE).asText(null);
     }
 
     @Nonnull

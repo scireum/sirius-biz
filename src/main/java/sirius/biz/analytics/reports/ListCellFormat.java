@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Json;
 import sirius.kernel.di.std.Register;
@@ -38,7 +39,7 @@ public class ListCellFormat implements CellFormat {
 
     @Override
     public String rawValue(ObjectNode data) {
-        return data.get((KEY_VALUES)).asText();
+        return Json.tryGetArray(data, KEY_VALUES).map(JsonNode::asText).orElse(null);
     }
 
     @Nonnull

@@ -24,6 +24,7 @@ import sirius.web.templates.ContentHelper;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -361,20 +362,18 @@ public class Cells {
     }
 
     protected String renderJSON(ObjectNode data) {
-        CellFormat cell = context.getPart(data.get(KEY_TYPE).asText(), CellFormat.class);
-        if (cell != null) {
-            return cell.format(data);
-        } else {
-            return "";
-        }
+        return findCellFormat(data).map(cell -> cell.format(data)).orElse("");
     }
 
     protected String renderRaw(ObjectNode data) {
-        CellFormat cell = context.getPart(data.get(KEY_TYPE).asText(), CellFormat.class);
-        if (cell != null) {
-            return cell.rawValue(data);
-        } else {
-            return "";
+        return findCellFormat(data).map(cell -> cell.rawValue(data)).orElse("");
+    }
+
+    private Optional<CellFormat> findCellFormat(ObjectNode data) {
+        String type = Json.tryValueString(data, KEY_TYPE).orElse("");
+        if (Strings.isEmpty(type)) {
+            return Optional.empty();
         }
+        return Optional.ofNullable(context.getPart(type, CellFormat.class));
     }
 }

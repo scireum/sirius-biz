@@ -96,7 +96,7 @@ public class Interconnect implements Subscriber {
     }
 
     private void dispatchLocally(ObjectNode event) {
-        String type = event.get(HANDLER).asText();
+        String type = event.path(HANDLER).asText();
         if (Strings.isEmpty(type)) {
             throw new IllegalArgumentException("handler must not be empty!");
         }

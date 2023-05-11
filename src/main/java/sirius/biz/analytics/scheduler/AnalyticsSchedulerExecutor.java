@@ -38,11 +38,11 @@ public abstract class AnalyticsSchedulerExecutor implements DistributedTaskExecu
 
     @Override
     public void executeWork(ObjectNode context) throws Exception {
-        String schedulerName = context.get(AnalyticalEngine.CONTEXT_SCHEDULER_NAME).asText();
+        String schedulerName = context.path(AnalyticalEngine.CONTEXT_SCHEDULER_NAME).asText();
         LocalDate date =
-                Value.of(NLS.parseMachineString(LocalDate.class, context.get(AnalyticalEngine.CONTEXT_DATE).asText()))
+                Value.of(NLS.parseMachineString(LocalDate.class, context.path(AnalyticalEngine.CONTEXT_DATE).asText()))
                      .asLocalDate(LocalDate.now());
-        int level = context.get(AnalyticalEngine.CONTEXT_LEVEL).asInt();
+        int level = context.path(AnalyticalEngine.CONTEXT_LEVEL).asInt();
         AnalyticsScheduler scheduler = globalContext.findPart(schedulerName, AnalyticsScheduler.class);
 
         // Note that this code might, at first sight, look overly complex. The batchBuffer is essentially used, to

@@ -46,7 +46,7 @@ public class MetricsApiController extends BizController {
     public void fetchMetrics(WebContext webContext, JSONStructuredOutput output) {
         ObjectNode jsonContent = webContext.getJSONContent();
         output.beginArray("tasks");
-        for (Object obj : jsonContent.withArray("tasks")) {
+        for (Object obj : Json.getArray(jsonContent, "tasks")) {
             if (obj instanceof ObjectNode object) {
                 fetchMetric(object, output);
             }
@@ -56,7 +56,7 @@ public class MetricsApiController extends BizController {
 
     private void fetchMetric(ObjectNode obj, JSONStructuredOutput output) {
         // For now, there are only "KeyMetrics" which may be lazy-loaded, but we might add some more in the future...
-        if ("KeyMetric".equals(obj.get("type").asText())) {
+        if ("KeyMetric".equals(obj.path("type").asText())) {
             fetchKeyMetric(obj, output);
         } else {
             output.beginObject("task").endObject();
@@ -65,9 +65,9 @@ public class MetricsApiController extends BizController {
 
     private void fetchKeyMetric(ObjectNode obj, JSONStructuredOutput output) {
         try {
-            KeyMetric metric = keyMetrics.resolveKeyMetric(obj.get("provider").asText(),
-                                                           obj.get("target").asText(),
-                                                           obj.get("metric").asText());
+            KeyMetric metric = keyMetrics.resolveKeyMetric(obj.path("provider").asText(null),
+                                                           obj.path("target").asText(null),
+                                                           obj.path("metric").asText(null));
             metric.writeJson(output);
         } catch (Exception e) {
             Exceptions.handle()

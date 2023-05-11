@@ -27,15 +27,15 @@ public class CSSCellFormat implements CellFormat {
     @Override
     public String format(ObjectNode data) {
         return "<div class=\""
-               + ContentHelper.escapeXML(data.get(KEY_CLASSES).asText())
+               + ContentHelper.escapeXML(data.path(KEY_CLASSES).asText())
                + "\">"
-               + ContentHelper.escapeXML(data.get(KEY_VALUE).asText())
+               + ContentHelper.escapeXML(data.path(KEY_VALUE).asText())
                + "</div>";
     }
 
     @Override
     public String rawValue(ObjectNode data) {
-        return data.get(KEY_VALUE).asText();
+        return data.path(KEY_VALUE).asText(null);
     }
 
     @Nonnull

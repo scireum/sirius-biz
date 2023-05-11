@@ -45,18 +45,18 @@ public abstract class AnalyticsBatchExecutor implements DistributedTaskExecutor 
 
     @Override
     public void executeWork(ObjectNode context) throws Exception {
-        String schedulerName = context.get(AnalyticalEngine.CONTEXT_SCHEDULER_NAME).asText();
+        String schedulerName = context.path(AnalyticalEngine.CONTEXT_SCHEDULER_NAME).asText();
         LocalDate date =
-                Value.of(NLS.parseMachineString(LocalDate.class, context.get(AnalyticalEngine.CONTEXT_DATE).asText()))
+                Value.of(NLS.parseMachineString(LocalDate.class, context.path(AnalyticalEngine.CONTEXT_DATE).asText()))
                      .asLocalDate(LocalDate.now());
-        int level = context.get(AnalyticalEngine.CONTEXT_LEVEL).asInt();
+        int level = context.path(AnalyticalEngine.CONTEXT_LEVEL).asInt();
 
         AnalyticsScheduler scheduler = globalContext.findPart(schedulerName, AnalyticsScheduler.class);
         namedRegions.inNamedRegion(determineRegionName(schedulerName), () -> {
             scheduler.executeBatch(context, date, level);
         });
 
-        if (context.get(AnalyticalEngine.CONTEXT_LAST).asBoolean() && level < scheduler.getMaxLevel()) {
+        if (context.path(AnalyticalEngine.CONTEXT_LAST).asBoolean() && level < scheduler.getMaxLevel()) {
             scheduleNextLevel(date, level + 1, scheduler);
         }
     }

@@ -28,15 +28,15 @@ public class LinkCellFormat implements CellFormat {
     @Override
     public String format(ObjectNode data) {
         return "<a href=\""
-               + ContentHelper.escapeXML(data.get(KEY_URL).asText())
+               + ContentHelper.escapeXML(data.path(KEY_URL).asText())
                + "\" classes=\"link\" target=\"_blank\">"
-               + ContentHelper.escapeXML(data.get(KEY_VALUE).asText())
+               + ContentHelper.escapeXML(data.path(KEY_VALUE).asText())
                + "</a>";
     }
 
     @Override
     public String rawValue(ObjectNode data) {
-        StringBuilder linkUrl = new StringBuilder(data.get(KEY_URL).asText());
+        StringBuilder linkUrl = new StringBuilder(data.path(KEY_URL).asText());
         if (!linkUrl.toString().startsWith("http") && linkUrl.toString().startsWith("/")) {
             linkUrl.insert(0, BizController.getBaseUrl());
         }

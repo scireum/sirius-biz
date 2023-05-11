@@ -26,9 +26,9 @@ class FifoQueueSpec extends BaseSpecification {
         fifo.offer(Json.createObject().put("value", 20))
         fifo.offer(Json.createObject().put("value", 30))
         then:
-        fifo.poll().get("value").asInt() == 10
-        fifo.poll().get("value").asInt() == 20
-        fifo.poll().get("value").asInt() == 30
+        fifo.poll().path("value").asInt() == 10
+        fifo.poll().path("value").asInt() == 20
+        fifo.poll().path("value").asInt() == 30
         fifo.poll() == null
     }
 
@@ -41,9 +41,9 @@ class FifoQueueSpec extends BaseSpecification {
         fifo.offer(Json.createObject().put("value", 20))
         fifo.offer(Json.createObject().put("value", 30))
         then:
-        fifo.poll().get("value").asInt() == 10
-        fifo.poll().get("value").asInt() == 20
-        fifo.poll().get("value").asInt() == 30
+        fifo.poll().path("value").asInt() == 10
+        fifo.poll().path("value").asInt() == 20
+        fifo.poll().path("value").asInt() == 30
         fifo.poll() == null
     }
 

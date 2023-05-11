@@ -110,7 +110,7 @@ public class MongoReplicationTaskStorage
 
     @Override
     public void executeBatch(ObjectNode batch) {
-        String txnId = batch.get(TRANSACTION_ID).asText();
+        String txnId = batch.path(TRANSACTION_ID).asText();
         if (Strings.isFilled(txnId)) {
             MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
             query.eq(MongoReplicationTask.FAILED, false);
