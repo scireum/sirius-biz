@@ -171,7 +171,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
     private void executeTaskForEntity(B entity, Class<?> type, LocalDate date, AnalyticalTask<?> task) {
         Watch watch = Watch.start();
         try {
-            ((AnalyticalTask<B>) task).compute(date, entity);
+            ((AnalyticalTask<B>) task).compute(date, entity, useBestEffortScheduling());
         } catch (Exception ex) {
             Exceptions.handle()
                       .to(AnalyticalEngine.LOG)

@@ -74,7 +74,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
     public void compute(LocalDate date,
                         LocalDateTime startOfPeriod,
                         LocalDateTime endOfPeriod,
-                        boolean pastDate,
+                        boolean periodOutsideOfCurrentInterest,
                         U entity) throws Exception {
         LocalDate lowerLimit = date.minusDays(observationPeriodDays);
 
@@ -96,7 +96,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
         int activityRateInPercent = numberOfActiveDays * 100 / observationPeriodDays;
         metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, date, activityRateInPercent);
 
-        if (!pastDate) {
+        if (!periodOutsideOfCurrentInterest) {
             entity.getPerformanceData()
                   .modify()
                   .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)
