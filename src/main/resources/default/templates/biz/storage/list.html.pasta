@@ -1,3 +1,4 @@
+<i:arg type="sirius.biz.storage.layer3.VirtualFileSystemController" name="controller"/>
 <i:arg type="sirius.biz.storage.layer3.VirtualFile" name="dir"/>
 <i:arg type="List" name="path"/>
 <i:arg type="Page" name="children"/>
@@ -109,8 +110,6 @@
                                     <td class="text-right">
                                         <t:additionalActions labelKey="template.html.additionalActions"
                                                              labelClass="d-none d-xl-inline-block">
-                                            <i:local name="jobs"
-                                                     value="@part(Jobs.class).getMatchingInteractiveJobs(CallContext.getCurrent().get(WebContext.class).getRequest().uri(), child)"/>
                                             <i:if test="child.canRename()">
                                                 <t:dropdownItem
                                                         url="@apply('javascript:renameFile(\'%s\', \'%s\')', child.path().replace('\'', '\\\''), child.name().replace('\'', '\\\''))"
@@ -121,17 +120,17 @@
                                                         url="@apply('javascript:moveFile(\'%s\')', child.path().replace('\'', '\\\''))"
                                                         icon="fa fa-arrow-right" labelKey="VFSController.move"/>
                                             </i:if>
-                                            <i:for type="Tuple" var="linkAndJob" items="jobs">
-                                                <i:local name="job"
-                                                         value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
-                                                <t:dropdownItem url="@linkAndJob.getFirst().toString()"
-                                                                icon="fa fa-cogs" label="@job.getLabel()"/>
-                                            </i:for>
                                             <i:if test="!child.isDirectory()">
                                                 <t:dropdownItem
                                                         url="@apply('javascript:copyToClipboard(\'%s\')', child.path().replace('\'', '\\\''))"
                                                         icon="fa fa-copy" labelKey="VFSController.copyPath"/>
                                             </i:if>
+                                            <i:local name ="quickActions" value="@controller.resolveQuickActionsForFile(child)"/>
+                                            <i:for type="sirius.biz.tycho.QuickAction" var="quickAction" items="quickActions">
+                                                <t:dropdownItem url="@quickAction.getUrl()"
+                                                                icon="@quickAction.getIcon()"
+                                                                label="@quickAction.getLabel()"/>
+                                            </i:for>
                                             <i:if test="child.canDelete()">
                                                 <t:dropdownDeleteItem
                                                         url="@apply('/fs/delete?path=%s', urlEncode(child.path()))"
