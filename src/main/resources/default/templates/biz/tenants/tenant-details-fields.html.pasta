@@ -10,7 +10,7 @@
 <div class="row">
     <w:textfield name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
                  labelKey="TenantData.accountNumber"/>
-    <w:singleSelect name="tenantData_language" labelKey="Model.lang" required="true">
+    <w:singleSelect name="tenantData_language" labelKey="Model.language" required="true">
         <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
             <option value="@language.getFirst()"
                     @selected="language.getFirst() == tenant.getTenantData().getLanguage().getValue()">
