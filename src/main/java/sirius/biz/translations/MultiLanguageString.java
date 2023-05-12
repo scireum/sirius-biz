@@ -8,7 +8,6 @@
 
 package sirius.biz.translations;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.mixing.types.SafeMap;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Json;
@@ -429,11 +428,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @return Multilanguage map as a JSON object
      */
     public String getAsJSON() {
-        ObjectNode jsonObject = Json.createObject();
-        if (data != null) {
-            data.forEach(jsonObject::put);
-        }
-        return Json.write(jsonObject);
+        return Json.write(Json.convertFromMap(data));
     }
 
     @Override
