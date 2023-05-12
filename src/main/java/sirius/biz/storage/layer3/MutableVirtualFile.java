@@ -185,6 +185,28 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
+     * Determines if the file is read-only.
+     *
+     * @param readOnlyFlagSupplier the supplier which determines if the given file is read-only
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withReadOnlyFlagSupplier(Predicate<VirtualFile> readOnlyFlagSupplier) {
+        this.readOnlyFlagSupplier = readOnlyFlagSupplier;
+        return this;
+    }
+
+    /**
+     * Sets the read-only flag of a file.
+     *
+     * @param readOnlyHandler the handler which renames the given file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withReadOnlyHandler(BiPredicate<VirtualFile, Boolean> readOnlyHandler) {
+        this.readOnlyHandler = readOnlyHandler;
+        return this;
+    }
+
+    /**
      * Marks this file as existing directory.
      *
      * @return the file itself for fluent method calls

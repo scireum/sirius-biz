@@ -93,6 +93,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected ToLongFunction<VirtualFile> sizeSupplier;
     protected Predicate<VirtualFile> directoryFlagSupplier;
     protected Predicate<VirtualFile> existsFlagSupplier;
+    protected Predicate<VirtualFile> readOnlyFlagSupplier;
+    protected BiPredicate<VirtualFile, Boolean> readOnlyHandler;
     protected Predicate<VirtualFile> canCreateChildrenHandler;
     protected Predicate<VirtualFile> canCreateDirectoryHandler;
     protected Predicate<VirtualFile> createDirectoryHandler;
@@ -410,6 +412,24 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
+     * Tries to set the read-only flag of this file.
+     *
+     * @param readOnly the value of the read-only flag
+     * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
+     */
+    public boolean setReadOnly(boolean readOnly) {
+        try {
+            if (readOnlyHandler == null) {
+                return false;
+            }
+
+            return readOnlyHandler.test(this, readOnly);
+        } catch (Exception exception) {
+            throw handleErrorInCallback(exception, "readOnlyHandler");
+        }
+    }
+
+    /**
      * Renames this file.
      *
      * @param newName the new name of the file
@@ -457,6 +477,23 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return false;
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "existsFlagSupplier");
+        }
+    }
+
+    /**
+     * Determines if the file is read-only.
+     *
+     * @return <tt>true</tt> if the file is read-only, <tt>false</tt> otherwise
+     */
+    public boolean readOnly() {
+        try {
+            if (readOnlyFlagSupplier != null) {
+                return readOnlyFlagSupplier.test(this);
+            }
+
+            return false;
+        } catch (Exception exception) {
+            throw handleErrorInCallback(exception, "readOnlyFlagSupplier");
         }
     }
 

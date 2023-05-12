@@ -476,6 +476,24 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
+    protected void updateBlobReadOnlyFlag(SQLBlob blob, boolean readOnly) {
+        try {
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.READ_ONLY, readOnly)
+               .where(SQLBlob.ID, blob.getId())
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occurred, when marking the read-only flag of blob '%s': %s (%s)",
+                              blob.getBlobKey())
+                      .handle();
+        }
+    }
+
+    @Override
     protected void updateBlobParent(SQLBlob blob, SQLDirectory newParent) {
         blob.getParentRef().setValue(newParent);
         oma.update(blob);
