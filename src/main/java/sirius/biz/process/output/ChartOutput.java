@@ -8,12 +8,13 @@
 
 package sirius.biz.process.output;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogType;
+import sirius.kernel.commons.Json;
 
 import java.util.List;
 
@@ -56,19 +57,19 @@ public class ChartOutput {
      * @param datasets the datasets representing the lines to draw
      */
     public void addLineChart(List<String> labels, List<Dataset> datasets) {
-        JSONObject chart = new JSONObject();
+        ObjectNode chart = Json.createObject();
         chart.put(KEY_TYPE, TYPE_LINE);
-        chart.put(KEY_LABELS, labels);
-        JSONArray lines = new JSONArray();
-        chart.put(KEY_LINES, lines);
+        chart.putPOJO(KEY_LABELS, labels);
+        ArrayNode lines = Json.createArray();
+        chart.set(KEY_LINES, lines);
         for (Dataset dataset : datasets) {
-            JSONObject data = new JSONObject();
+            ObjectNode data = Json.createObject();
             data.put(KEY_LABEL, dataset.getLabel());
-            data.put(KEY_DATA, dataset.getValues());
+            data.putPOJO(KEY_DATA, dataset.getValues());
             lines.add(data);
         }
 
-        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withMessage(chart.toJSONString()));
+        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withMessage(Json.write(chart)));
     }
 
     /**
@@ -78,19 +79,19 @@ public class ChartOutput {
      * @param datasets the datasets representing the bars to draw
      */
     public void addBarChart(List<String> labels, List<Dataset> datasets) {
-        JSONObject chart = new JSONObject();
+        ObjectNode chart = Json.createObject();
         chart.put(KEY_TYPE, TYPE_BAR);
-        chart.put(KEY_LABELS, labels);
-        JSONArray bars = new JSONArray();
-        chart.put(KEY_BARS, bars);
+        chart.putPOJO(KEY_LABELS, labels);
+        ArrayNode bars = Json.createArray();
+        chart.set(KEY_BARS, bars);
         for (Dataset dataset : datasets) {
-            JSONObject data = new JSONObject();
+            ObjectNode data = Json.createObject();
             data.put(KEY_LABEL, dataset.getLabel());
-            data.put(KEY_DATA, dataset.getValues());
+            data.putPOJO(KEY_DATA, dataset.getValues());
             bars.add(data);
         }
 
-        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withMessage(chart.toJSONString()));
+        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withMessage(Json.write(chart)));
     }
 
     /**
@@ -100,12 +101,12 @@ public class ChartOutput {
      * @param dataset the dataset representing the areas to draw
      */
     public void addPolarAreaChart(List<String> labels, Dataset dataset) {
-        JSONObject chart = new JSONObject();
+        ObjectNode chart = Json.createObject();
         chart.put(KEY_TYPE, TYPE_POLAR_AREA);
-        chart.put(KEY_LABELS, labels);
-        chart.put(KEY_DATA, dataset.getValues());
+        chart.putPOJO(KEY_LABELS, labels);
+        chart.putPOJO(KEY_DATA, dataset.getValues());
 
-        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withMessage(chart.toJSONString()));
+        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withMessage(Json.write(chart)));
     }
 
     /**
@@ -115,11 +116,11 @@ public class ChartOutput {
      * @param dataset the dataset representing the size of each slice
      */
     public void addDougnutChart(List<String> labels, Dataset dataset) {
-        JSONObject chart = new JSONObject();
+        ObjectNode chart = Json.createObject();
         chart.put(KEY_TYPE, TYPE_DOUGNUT);
-        chart.put(KEY_LABELS, labels);
-        chart.put(KEY_DATA, dataset.getValues());
+        chart.putPOJO(KEY_LABELS, labels);
+        chart.putPOJO(KEY_DATA, dataset.getValues());
 
-        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withMessage(chart.toJSONString()));
+        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withMessage(Json.write(chart)));
     }
 }

@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.di.std.Named;
 
 /**
@@ -22,7 +22,7 @@ public interface CellFormat extends Named {
      * @param data the cell described as JSON
      * @return a HTML string which represents the rendered result
      */
-    String format(JSONObject data);
+    String format(ObjectNode data);
 
     /**
      * The raw value of a cell as String.
@@ -30,5 +30,5 @@ public interface CellFormat extends Named {
      * @param data the cell described as JSON
      * @return a String containing the format-less value
      */
-    String rawValue(JSONObject data);
+    String rawValue(ObjectNode data);
 }

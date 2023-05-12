@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Explain;
 
 import javax.annotation.Nonnull;
@@ -20,16 +20,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 class LocalFifoQueue implements FifoQueue {
 
-    private final ConcurrentLinkedQueue<JSONObject> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<ObjectNode> queue = new ConcurrentLinkedQueue<>();
 
     @Override
-    public void offer(@Nonnull JSONObject task) {
+    public void offer(@Nonnull ObjectNode task) {
         queue.offer(task);
     }
 
     @Nullable
     @Override
-    public JSONObject poll() {
+    public ObjectNode poll() {
         return queue.poll();
     }
 

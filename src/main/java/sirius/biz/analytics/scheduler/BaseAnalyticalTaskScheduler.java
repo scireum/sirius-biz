@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.MultiMap;
@@ -85,14 +85,14 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
 
     @SuppressWarnings("unchecked")
     @Override
-    public void scheduleBatches(Consumer<JSONObject> batchConsumer) {
+    public void scheduleBatches(Consumer<ObjectNode> batchConsumer) {
         getTasks().keySet()
                   .stream()
                   .filter(type -> getMinimalTargetType().isAssignableFrom(type))
                   .forEach(type -> scheduleBatchesForType(batchConsumer, (Class<? extends B>) type));
     }
 
-    private void scheduleBatchesForType(Consumer<JSONObject> batchConsumer, Class<? extends B> type) {
+    private void scheduleBatchesForType(Consumer<ObjectNode> batchConsumer, Class<? extends B> type) {
         Watch watch = Watch.start();
         if (AnalyticalEngine.LOG.isFINE()) {
             AnalyticalEngine.LOG.FINE("Scheduling batches for type '%s' in '%s'...", type.getSimpleName(), getName());
@@ -118,7 +118,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
      * @param type          the type of entities to schedule
      * @param batchConsumer the consumer which will distribute the batches across the cluster
      */
-    protected abstract void scheduleBatches(Class<? extends B> type, Consumer<JSONObject> batchConsumer);
+    protected abstract void scheduleBatches(Class<? extends B> type, Consumer<ObjectNode> batchConsumer);
 
     private MultiMap<Class<?>, AnalyticalTask<?>> getTasks() {
         if (tasks == null) {

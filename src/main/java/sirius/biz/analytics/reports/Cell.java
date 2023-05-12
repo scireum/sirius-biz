@@ -8,7 +8,8 @@
 
 package sirius.biz.analytics.reports;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
@@ -40,7 +41,7 @@ public class Cell {
      *
      * @param value the json description to render
      */
-    public Cell(JSONObject value) {
+    public Cell(ObjectNode value) {
         this.value = value;
     }
 
@@ -62,7 +63,7 @@ public class Cell {
      * @return a JSON string representing this cell
      */
     public String serializeToString() {
-        return value instanceof JSONObject object ? object.toJSONString() : (String) value;
+        return value instanceof ObjectNode object ? Json.write(object) : (String) value;
     }
 
     /**
@@ -71,7 +72,7 @@ public class Cell {
      * @return a HTML string which represents the rendered result
      */
     public String render() {
-        if (value instanceof JSONObject object) {
+        if (value instanceof ObjectNode object) {
             return cells.renderJSON(object);
         } else {
             return cells.render(serializeToString());

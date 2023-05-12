@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.batch;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.BasicJobFactory;
 import sirius.biz.jobs.Jobs;
@@ -37,16 +37,16 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
     private Jobs jobs;
 
     @Override
-    public void executeWork(JSONObject context) throws Exception {
-        String factoryId = context.getString(BatchProcessJobFactory.CONTEXT_JOB_FACTORY);
+    public void executeWork(ObjectNode context) throws Exception {
+        String factoryId = context.path(BatchProcessJobFactory.CONTEXT_JOB_FACTORY).asText(null);
 
         setupTaskContext(factoryId);
 
         if (shouldExecutePartially()) {
-            processes.partiallyExecute(context.getString(BatchProcessJobFactory.CONTEXT_PROCESS),
+            processes.partiallyExecute(context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null),
                                        process -> partiallyExecuteInProcess(factoryId, process));
         } else {
-            processes.execute(context.getString(BatchProcessJobFactory.CONTEXT_PROCESS),
+            processes.execute(context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null),
                               process -> executeInProcess(factoryId, process));
         }
     }
