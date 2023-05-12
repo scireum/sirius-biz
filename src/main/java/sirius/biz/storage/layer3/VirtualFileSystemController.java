@@ -101,7 +101,9 @@ public class VirtualFileSystemController extends BizController {
      */
     public List<QuickAction> resolveQuickActionsForFile(VirtualFile virtualFile) {
         List<QuickAction> quickActionList = new ArrayList<>();
-        quickActionProviders.forEach(provider -> provider.computeQuickAction(virtualFile, quickActionList::add));
+        for (FileQuickActionProvider provider : quickActionProviders) {
+            provider.computeQuickAction(virtualFile, quickActionList::add);
+        }
         return quickActionList;
     }
 

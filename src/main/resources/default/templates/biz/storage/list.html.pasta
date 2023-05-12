@@ -125,12 +125,14 @@
                                                         url="@apply('javascript:copyToClipboard(\'%s\')', child.path().replace('\'', '\\\''))"
                                                         icon="fa fa-copy" labelKey="VFSController.copyPath"/>
                                             </i:if>
-                                            <i:local name ="quickActions" value="@controller.resolveQuickActionsForFile(child)"/>
-                                            <i:for type="sirius.biz.tycho.QuickAction" var="quickAction" items="quickActions">
-                                                <t:dropdownItem url="@quickAction.getUrl()"
-                                                                icon="@quickAction.getIcon()"
-                                                                label="@quickAction.getLabel()"/>
-                                            </i:for>
+                                            <i:local name="quickActions" value="@controller.resolveQuickActionsForFile(child)"/>
+                                            <i:if test="quickActions != null">
+                                                <i:for type="sirius.biz.tycho.QuickAction" var="quickAction" items="quickActions">
+                                                    <t:dropdownItem url="@quickAction.getUrl()"
+                                                                    icon="@quickAction.getIcon()"
+                                                                    label="@quickAction.getLabel()"/>
+                                                </i:for>
+                                            </i:if>
                                             <i:if test="child.canDelete()">
                                                 <t:dropdownDeleteItem
                                                         url="@apply('/fs/delete?path=%s', urlEncode(child.path()))"
