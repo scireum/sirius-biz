@@ -171,6 +171,12 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     private boolean temporary;
 
     /**
+     * Stores if the blob is marked as read-only.
+     */
+    public static final Mapping READ_ONLY = Mapping.named("readOnly");
+    private boolean readOnly;
+
+    /**
      * Contains the size (in bytes) of the blob data.
      */
     public static final Mapping SIZE = Mapping.named("size");
@@ -520,5 +526,15 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     public void setLastTouched(LocalDateTime lastTouched) {
         this.lastTouched = lastTouched;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    @Override
+    public void setReadOnly(boolean readOnly) {
+        getStorageSpace().setReadOnly(this, readOnly);
     }
 }
