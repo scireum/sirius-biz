@@ -680,7 +680,7 @@ public abstract class LookupTable {
         if (jsonNode.isObject()) {
             return ((ObjectNode) jsonNode).properties()
                                           .stream()
-                                          .filter(entry -> entry.getValue() instanceof ArrayNode)
+                                          .filter(entry -> entry.getValue().isArray())
                                           .collect(Collectors.toMap(Map.Entry::getKey,
                                                                     entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
         } else {
@@ -706,7 +706,7 @@ public abstract class LookupTable {
         if (jsonNode.isObject()) {
             return ((ObjectNode) jsonNode).properties()
                                           .stream()
-                                          .filter(entry -> entry.getValue() instanceof ObjectNode)
+                                          .filter(entry -> entry.getValue().isObject())
                                           .collect(Collectors.toMap(Map.Entry::getKey,
                                                                     entry -> (ObjectNode) entry.getValue()));
         } else {
