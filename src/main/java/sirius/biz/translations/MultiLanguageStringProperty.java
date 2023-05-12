@@ -252,9 +252,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @Override
     @SuppressWarnings("unchecked")
     protected Object transformToElastic(Object object) {
-        ObjectNode texts = Json.createObject();
-        ((Map<String, String>) object).forEach(texts::put);
-        return texts;
+        return Json.convertFromMap((Map<String, String>) object);
     }
 
     @Override

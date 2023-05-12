@@ -625,15 +625,15 @@ public abstract class LookupTable {
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isArray()) {
             return transformArrayToStringList((ArrayNode) jsonNode);
-        } else if (jsonNode.isTextual() && !jsonNode.isNull() && !jsonNode.isEmpty()) {
-            return Collections.singletonList(jsonNode.asText());
+        } else if (jsonNode.isTextual() && Strings.isFilled(jsonNode.asText())) {
+            return Collections.singletonList(jsonNode.asText(null));
         } else {
             return Collections.emptyList();
         }
     }
 
     private static List<String> transformArrayToStringList(ArrayNode array) {
-        return Json.streamEntries(array).filter(Strings::isFilled).map(JsonNode::asText).toList();
+        return Json.streamEntries(array).map(JsonNode::asText).filter(Strings::isFilled).toList();
     }
 
     /**
@@ -654,7 +654,7 @@ public abstract class LookupTable {
         if (jsonNode.isObject()) {
             return ((ObjectNode) jsonNode).properties()
                                           .stream()
-                                          .filter(entry -> Strings.isFilled(entry.getValue()))
+                                          .filter(entry -> Strings.isFilled(entry.getValue().asText()))
                                           .collect(Collectors.toMap(Map.Entry::getKey,
                                                                     entry -> entry.getValue().asText()));
         } else {
@@ -680,7 +680,7 @@ public abstract class LookupTable {
         if (jsonNode.isObject()) {
             return ((ObjectNode) jsonNode).properties()
                                           .stream()
-                                          .filter(entry -> entry.getValue() instanceof ArrayNode)
+                                          .filter(entry -> entry.getValue().isArray())
                                           .collect(Collectors.toMap(Map.Entry::getKey,
                                                                     entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
         } else {
@@ -706,7 +706,7 @@ public abstract class LookupTable {
         if (jsonNode.isObject()) {
             return ((ObjectNode) jsonNode).properties()
                                           .stream()
-                                          .filter(entry -> entry.getValue() instanceof ObjectNode)
+                                          .filter(entry -> entry.getValue().isObject())
                                           .collect(Collectors.toMap(Map.Entry::getKey,
                                                                     entry -> (ObjectNode) entry.getValue()));
         } else {
