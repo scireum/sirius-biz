@@ -38,6 +38,7 @@ import sirius.web.http.WebContext;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -224,7 +225,14 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @Override
     @SuppressWarnings("unchecked")
     protected Object transformToMongo(Object object) {
-        return Json.convertFromMap((Map<String, String>) object);
+        List<Document> texts = new ArrayList<>();
+        ((Map<String, String>) object).forEach((language, text) -> {
+            Document doc = new Document();
+            doc.put(LANGUAGE_PROPERTY, language);
+            doc.put(TEXT_PROPERTY, text);
+            texts.add(doc);
+        });
+        return texts;
     }
 
     @Override
@@ -244,9 +252,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @Override
     @SuppressWarnings("unchecked")
     protected Object transformToElastic(Object object) {
-        ObjectNode texts = Json.createObject();
-        ((Map<String, String>) object).forEach(texts::put);
-        return texts;
+        return Json.convertFromMap((Map<String, String>) object);
     }
 
     @Override
