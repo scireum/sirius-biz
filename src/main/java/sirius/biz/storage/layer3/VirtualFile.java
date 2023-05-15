@@ -330,7 +330,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canDelete() {
         try {
-            if (deleteHandler == null) {
+            if (deleteHandler == null || readOnly()) {
                 return false;
             }
 
@@ -379,7 +379,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canRename() {
         try {
-            if (renameHandler == null) {
+            if (renameHandler == null || readOnly()) {
                 return false;
             }
 
@@ -1018,7 +1018,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if the file is writeable, <tt>false</tt> otherwise
      */
     public boolean isWriteable() {
-        return !isDirectory() && canCreateOutputStream();
+        return !isDirectory() && !readOnly() && canCreateOutputStream();
     }
 
     /**
@@ -1175,7 +1175,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if the file can (probably) be moved, <tt>false</tt> otherwise
      */
     public boolean canMove() {
-        return canDelete() && (isDirectory() || canCreateInputStream());
+        return !readOnly() && canDelete() && (isDirectory() || canCreateInputStream());
     }
 
     /**
