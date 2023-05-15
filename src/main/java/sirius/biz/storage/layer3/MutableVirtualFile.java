@@ -28,7 +28,7 @@ import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 
 /**
- * Represents the mutable version of a {@link VirtualFile} which can be used to provide all necessarry callbacks.
+ * Represents the mutable version of a {@link VirtualFile} which can be used to provide all necessary callbacks.
  */
 public class MutableVirtualFile extends VirtualFile {
 
