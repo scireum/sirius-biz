@@ -35,6 +35,7 @@ import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -214,7 +215,8 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                ErrorContext.get().inContext(suppressFileNameInContext ? "" : FILE_LABEL,
+                ErrorContext.get()
+                            .inContext(suppressFileNameInContext ? "" : FILE_LABEL,
                                        file.name(),
                                        () -> executeForStream(file.name(), fileHandle::getInputStream));
             }
@@ -231,6 +233,14 @@ public abstract class FileImportJob extends ImportJob {
         } else {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        process.getParameter(FILE_PARAMETER)
+               .filter(VirtualFile::exists)
+               .filter(VirtualFile::readOnly)
+               .ifPresent(virtualFile -> virtualFile.setReadOnly(false));
     }
 
     /**
@@ -280,7 +290,8 @@ public abstract class FileImportJob extends ImportJob {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
                                   .withContext("filename", extractedFile.getFilePath()));
-            ErrorContext.get().inContext(suppressFileNameInContext ? "" : FILE_LABEL,
+            ErrorContext.get()
+                        .inContext(suppressFileNameInContext ? "" : FILE_LABEL,
                                    extractedFile.getFilePath(),
                                    () -> executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream));
             return true;
