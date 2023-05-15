@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.ComparableTuple;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -23,14 +23,14 @@ import java.util.concurrent.PriorityBlockingQueue;
 class LocalPrioritizedQueue implements PrioritizedQueue {
 
     private final String queueName;
-    private final PriorityBlockingQueue<ComparableTuple<Long, JSONObject>> queue = new PriorityBlockingQueue<>();
+    private final PriorityBlockingQueue<ComparableTuple<Long, ObjectNode>> queue = new PriorityBlockingQueue<>();
 
     LocalPrioritizedQueue(String queueName) {
         this.queueName = queueName;
     }
 
     @Override
-    public void offer(long priority, @Nonnull JSONObject task) {
+    public void offer(long priority, @Nonnull ObjectNode task) {
         if (!queue.offer(ComparableTuple.create(priority, task))) {
             throw Exceptions.handle()
                             .to(Log.BACKGROUND)
@@ -41,8 +41,8 @@ class LocalPrioritizedQueue implements PrioritizedQueue {
 
     @Nullable
     @Override
-    public JSONObject poll() {
-        ComparableTuple<Long, JSONObject> head = queue.poll();
+    public ObjectNode poll() {
+        ComparableTuple<Long, ObjectNode> head = queue.poll();
         if (head != null) {
             return head.getSecond();
         } else {

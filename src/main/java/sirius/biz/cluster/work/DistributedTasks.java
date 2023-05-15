@@ -8,13 +8,14 @@
 
 package sirius.biz.cluster.work;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.NeighborhoodWatch;
 import sirius.db.redis.Redis;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.AsyncExecutor;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -144,23 +145,24 @@ public class DistributedTasks implements MetricProvider {
     protected class DistributedTask {
 
         private final DistributedQueueInfo queue;
-        private final JSONObject task;
+        private final ObjectNode task;
 
-        protected DistributedTask(DistributedQueueInfo queue, JSONObject task) {
+        protected DistributedTask(DistributedQueueInfo queue, ObjectNode task) {
             this.queue = queue;
             this.task = task;
         }
 
         protected void execute() {
             try {
-                DistributedTaskExecutor exec = ctx.getPart(task.getString(KEY_EXECUTOR), DistributedTaskExecutor.class);
+                DistributedTaskExecutor exec =
+                        ctx.getPart(task.required(KEY_EXECUTOR).asText(), DistributedTaskExecutor.class);
                 tryExecute(exec);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage("The system failed to execute the DistributedTask '%s' with: %s (%s)",
-                                                  task.toJSONString());
+                                                  Json.write(task));
             }
         }
 
@@ -174,10 +176,10 @@ public class DistributedTasks implements MetricProvider {
                           .withSystemErrorMessage(
                                   "The DistributedTaskExecutor '%s' failed with: %s (%s) for the task '%s'",
                                   exec.getClass().getName(),
-                                  task.toJSONString())
+                                  Json.write(task))
                           .handle();
             } finally {
-                releasePenaltyToken(queue.getName(), task.getString(KEY_PENALTY_TOKEN));
+                releasePenaltyToken(queue.getName(), task.path(KEY_PENALTY_TOKEN).asText(null));
                 releaseConcurrencyToken(queue.getConcurrencyToken());
             }
         }
@@ -249,7 +251,7 @@ public class DistributedTasks implements MetricProvider {
      * @param executor the executor which will eventually execute the work item.
      * @param data     the data to supply to the executor
      */
-    public void submitFIFOTask(Class<? extends DistributedTaskExecutor> executor, JSONObject data) {
+    public void submitFIFOTask(Class<? extends DistributedTaskExecutor> executor, ObjectNode data) {
         String queueName = getQueueName(executor);
 
         DistributedQueueInfo info = getQueueInfo(queueName);
@@ -353,7 +355,7 @@ public class DistributedTasks implements MetricProvider {
      */
     public void submitPrioritizedTask(Class<? extends DistributedTaskExecutor> executor,
                                       String penaltyToken,
-                                      JSONObject data) {
+                                      ObjectNode data) {
         String queueName = getQueueName(executor);
         DistributedQueueInfo info = getQueueInfo(queueName);
 
@@ -496,7 +498,7 @@ public class DistributedTasks implements MetricProvider {
         }
 
         try {
-            JSONObject task = fetchTask(queue);
+            ObjectNode task = fetchTask(queue);
 
             if (task != null) {
                 return new DistributedTask(queue, task);
@@ -570,7 +572,7 @@ public class DistributedTasks implements MetricProvider {
      * is no work available
      */
     @Nullable
-    private JSONObject fetchTask(DistributedQueueInfo queue) {
+    private ObjectNode fetchTask(DistributedQueueInfo queue) {
         if (queue.isPrioritized()) {
             PrioritizedQueue prioritizedQueue = prioritizedQueues.get(queue.getName());
             if (prioritizedQueue == null) {

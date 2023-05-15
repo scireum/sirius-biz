@@ -8,14 +8,14 @@
 
 package sirius.biz.process.output;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.process.Process;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.web.ElasticPageHelper;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
+import sirius.kernel.commons.Json;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -60,8 +60,8 @@ public class ChartProcessOutputType implements ProcessOutputType {
     public String parseChartData(ProcessLog chart) {
         try {
             // We decode and re-encode here to ensure that only proper data is output into the HTML page
-            JSONObject obj = JSON.parseObject(chart.getMessage());
-            return obj.toJSONString();
+            ObjectNode obj = Json.parseObject(chart.getMessage());
+            return Json.write(obj);
         } catch (Exception e) {
             Exceptions.ignore(e);
             return "{}";

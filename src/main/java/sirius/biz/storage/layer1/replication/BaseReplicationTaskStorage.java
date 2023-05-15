@@ -8,11 +8,11 @@
 
 package sirius.biz.storage.layer1.replication;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.BaseQuery;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -75,7 +75,7 @@ public abstract class BaseReplicationTaskStorage<T extends BaseEntity<?>, Q exte
 
             if (tasksFound.get()) {
                 distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class,
-                                                new JSONObject().fluentPut(TRANSACTION_ID, transactionId));
+                                                Json.createObject().put(TRANSACTION_ID, transactionId));
             } else {
                 return scheduledTasks.get();
             }

@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.ContentHelper;
@@ -29,12 +29,12 @@ public class TrendCellFormat implements CellFormat {
     protected static final String KEY_HINT = "hint";
 
     @Override
-    public String format(JSONObject data) {
-        String classes = data.getString(KEY_CLASSES);
-        String value = data.getString(KEY_VALUE);
-        String trend = data.getString(KEY_TREND);
-        String hint = data.getString(KEY_HINT);
-        String icon = data.getString(KEY_ICON);
+    public String format(ObjectNode data) {
+        String classes = data.path(KEY_CLASSES).asText();
+        String value = data.path(KEY_VALUE).asText();
+        String trend = data.path(KEY_TREND).asText();
+        String hint = data.path(KEY_HINT).asText();
+        String icon = data.path(KEY_ICON).asText();
 
         StringBuilder sb = new StringBuilder("<div class=\"text-right\"");
         if (Strings.isFilled(hint)) {
@@ -79,8 +79,8 @@ public class TrendCellFormat implements CellFormat {
     }
 
     @Override
-    public String rawValue(JSONObject data) {
-        return data.getString(KEY_VALUE);
+    public String rawValue(ObjectNode data) {
+        return data.path(KEY_VALUE).asText(null);
     }
 
     @Nonnull

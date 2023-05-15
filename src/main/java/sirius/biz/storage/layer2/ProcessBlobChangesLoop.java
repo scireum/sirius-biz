@@ -56,7 +56,7 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
 
     @Override
     public double maxRuntimeInSeconds() {
-        return 600d;
+        return 900d;
     }
 
     @Nullable

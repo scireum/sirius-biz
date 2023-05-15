@@ -8,9 +8,9 @@
 
 package sirius.biz.jobs.params;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeLists;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
@@ -56,8 +56,9 @@ public class CodeListParameter extends ParameterBuilder<CodeList, CodeListParame
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> new JSONObject().fluentPut("value", value.getCodeListData().getCode())
-                                                    .fluentPut("text", value.getCodeListData().getCode()));
+                      .map(value -> Json.createObject()
+                                        .put("value", value.getCodeListData().getCode())
+                                        .put("text", value.getCodeListData().getCode()));
     }
 
     @Override

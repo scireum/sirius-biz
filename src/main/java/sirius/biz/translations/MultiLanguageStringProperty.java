@@ -8,8 +8,7 @@
 
 package sirius.biz.translations;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.bson.Document;
 import sirius.biz.web.ComplexLoadProperty;
 import sirius.db.es.ESPropertyInfo;
@@ -26,6 +25,7 @@ import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyFactory;
 import sirius.db.mixing.properties.BaseMapProperty;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -239,9 +239,9 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     protected Object transformFromElastic(Value object) {
         Map<String, String> result = new HashMap<>();
         Object value = object.get();
-        if (value instanceof JSONObject jsonObject) {
-            jsonObject.forEach((language, text) -> {
-                if (text instanceof String string) {
+        if (value instanceof LinkedHashMap<?, ?> map) {
+            map.forEach((key, text) -> {
+                if (key instanceof String language && text instanceof String string) {
                     result.put(language, string);
                 }
             });
@@ -252,9 +252,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @Override
     @SuppressWarnings("unchecked")
     protected Object transformToElastic(Object object) {
-        JSONObject texts = new JSONObject();
-        texts.putAll(((Map<String, String>) object));
-        return texts;
+        return Json.convertFromMap((Map<String, String>) object);
     }
 
     @Override
@@ -268,9 +266,9 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         }
 
         if (Strings.isFilled(fallbackAndMap.getSecond())) {
-            JSON.parseObject(fallbackAndMap.getSecond()).forEach((key, value) -> {
-                texts.put(key, value.toString());
-            });
+            Json.parseObject(fallbackAndMap.getSecond())
+                .properties()
+                .forEach(entry -> texts.put(entry.getKey(), entry.getValue().asText()));
         }
 
         return texts;
@@ -286,13 +284,13 @@ public class MultiLanguageStringProperty extends BaseMapProperty
 
         StringBuilder data = new StringBuilder(texts.getOrDefault(MultiLanguageString.FALLBACK_KEY, ""));
         if (i18nEnabled && (texts.size() > 1 || !texts.containsKey(MultiLanguageString.FALLBACK_KEY))) {
-            JSONObject textMap = new JSONObject();
+            ObjectNode textMap = Json.createObject();
             texts.entrySet()
                  .stream()
                  .filter(entry -> !MultiLanguageString.FALLBACK_KEY.equals(entry.getKey()))
                  .forEach(entry -> textMap.put(entry.getKey(), entry.getValue()));
             data.append(I18N_MAP_SEPARATOR);
-            data.append(textMap.toJSONString());
+            data.append(Json.write(textMap));
         }
 
         return data.toString();
@@ -304,7 +302,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     }
 
     @Override
-    public void describeProperty(JSONObject description) {
+    public void describeProperty(ObjectNode description) {
         description.put(IndexMappings.MAPPING_TYPE, "object");
         description.put(IndexMappings.MAPPING_DYNAMIC, true);
         transferOption(IndexMappings.MAPPING_ENABLED, getAnnotation(IndexMode.class), IndexMode::indexed, description);
