@@ -143,6 +143,14 @@
                                                         url="@apply('/fs/delete?path=%s', urlEncode(child.path()))"
                                                         page="children"/>
                                             </i:if>
+                                            <t:permission permission="flag-system-administrator">
+                                                <i:if test="child.readOnly()">
+                                                    <t:dropdownItem
+                                                            url="@apply('/fs/unlock?path=%s', urlEncode(child.path()))"
+                                                            icon="fa fa-lock-open"
+                                                            labelKey="VirtualFile.unlock"/>
+                                                </i:if>
+                                            </t:permission>
                                         </t:additionalActions>
                                     </td>
                                 </tr>

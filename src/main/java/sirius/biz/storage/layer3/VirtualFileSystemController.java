@@ -39,6 +39,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static sirius.biz.tenants.TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR;
+
 /**
  * Provides a web based UI for the {@link VirtualFileSystem}.
  */
@@ -309,6 +311,30 @@ public class VirtualFileSystemController extends BizController {
                     UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.moved")));
                 }
             }
+        } catch (Exception e) {
+            UserContext.handle(e);
+        }
+
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+    }
+
+    /**
+     * Moves the given file or directory to a new parent directory.
+     *
+     * @param webContext the request to handle
+     */
+    @LoginRequired
+    @Routed("/fs/unlock")
+    @Permission(PERMISSION_SYSTEM_ADMINISTRATOR)
+    public void unlock(WebContext webContext) {
+        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        if (!file.exists()) {
+            webContext.respondWith().redirectToGet("/fs");
+            return;
+        }
+
+        try {
+            file.setReadOnly(false);
         } catch (Exception e) {
             UserContext.handle(e);
         }
