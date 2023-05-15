@@ -374,6 +374,9 @@ public class VirtualFileSystemController extends BizController {
         if (webContext.get("onlyDirectories").asBoolean()) {
             search.withOnlyDirectories();
         }
+        if (webContext.get("skipReadOnlyFiles").asBoolean()) {
+            search.skipReadOnlyFiles();
+        }
         search.withPrefixFilter(webContext.get("filter").asString());
         webContext.get("extensions").ifFilled(extensionString -> {
             Arrays.stream(extensionString.asString().split(","))

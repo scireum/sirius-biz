@@ -30,6 +30,7 @@ import java.util.function.Predicate;
 public class FileSearch {
 
     private boolean onlyDirectories;
+    private boolean skipReadOnlyFiles;
     private String prefixFilter;
     private Set<String> fileExtensionFilters;
     private Limit limit = Limit.UNLIMITED;
@@ -87,7 +88,7 @@ public class FileSearch {
      * Adds a file extension to filter on.
      * <p>
      * Once added, only files with the given extension will be accepted. Note that this method can be invoked multiple
-     * time to accept several file extensions.
+     * times to accept several file extensions.
      * <p>
      * Note that this filter doesn't apply to directories.
      *
@@ -104,6 +105,16 @@ public class FileSearch {
 
         this.fileExtensionFilters.add(fileExtension.trim().toLowerCase());
 
+        return this;
+    }
+
+    /**
+     * Skips files marked as read-only when returning results.
+     *
+     * @return the search itself for fluent method calls
+     */
+    public FileSearch skipReadOnlyFiles() {
+        this.skipReadOnlyFiles = true;
         return this;
     }
 
@@ -193,6 +204,10 @@ public class FileSearch {
 
     private boolean matchesFiltering(VirtualFile file) {
         if (onlyDirectories && !file.isDirectory()) {
+            return false;
+        }
+
+        if (skipReadOnlyFiles && file.readOnly()) {
             return false;
         }
 
