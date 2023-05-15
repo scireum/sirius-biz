@@ -82,14 +82,19 @@
                             </i:if>
                             <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child"
                                    items="children.getItems()">
-                                <tr>
+                                <tr class="@if (child.readOnly()) {text-muted} else {}">
                                     <td>
                                         <div>
                                             <a class="link" href="/fs?path=@urlEncode(child.path())">
                                                 <i:if test="child.isDirectory()">
                                                     <i class="fa fa-folder-open"></i>
                                                     <i:else>
-                                                        <i class="fa fa-file"></i>
+                                                        <i:if test="child.readOnly()">
+                                                            <i class="fa fa-lock"></i>
+                                                            <i:else>
+                                                                <i class="fa fa-file"></i>
+                                                            </i:else>
+                                                        </i:if>
                                                     </i:else>
                                                 </i:if>
                                                 @child.name()
@@ -125,8 +130,10 @@
                                                         url="@apply('javascript:copyToClipboard(\'%s\')', child.path().replace('\'', '\\\''))"
                                                         icon="fa fa-copy" labelKey="VFSController.copyPath"/>
                                             </i:if>
-                                            <i:local name ="quickActions" value="@controller.resolveQuickActionsForFile(child)"/>
-                                            <i:for type="sirius.biz.tycho.QuickAction" var="quickAction" items="quickActions">
+                                            <i:local name="quickActions"
+                                                     value="@controller.resolveQuickActionsForFile(child)"/>
+                                            <i:for type="sirius.biz.tycho.QuickAction" var="quickAction"
+                                                   items="quickActions">
                                                 <t:dropdownItem url="@quickAction.getUrl()"
                                                                 icon="@quickAction.getIcon()"
                                                                 label="@quickAction.getLabel()"/>
