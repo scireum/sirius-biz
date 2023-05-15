@@ -82,22 +82,22 @@
                             </i:if>
                             <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child"
                                    items="children.getItems()">
-                                <tr class="@if (child.readOnly()) {text-muted} else {}">
+                                <tr>
                                     <td>
                                         <div>
                                             <a class="link" href="/fs?path=@urlEncode(child.path())">
                                                 <i:if test="child.isDirectory()">
                                                     <i class="fa fa-folder-open"></i>
                                                     <i:else>
-                                                        <i:if test="child.readOnly()">
-                                                            <i class="fa fa-lock"></i>
-                                                            <i:else>
-                                                                <i class="fa fa-file"></i>
-                                                            </i:else>
-                                                        </i:if>
+                                                        <i class="fa fa-file"></i>
                                                     </i:else>
                                                 </i:if>
                                                 @child.name()
+                                                <i:if test="child.readOnly()">
+                                                    <div>
+                                                        <t:tag color="orange">@i18n("VirtualFile.readOnly")</t:tag>
+                                                    </div>
+                                                </i:if>
                                             </a>
                                         </div>
                                         <div>
