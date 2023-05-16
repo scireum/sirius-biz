@@ -8,8 +8,8 @@
 
 package sirius.biz.jobs;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.BooleanParameter;
@@ -17,6 +17,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.presets.JobPresets;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -323,7 +324,7 @@ public abstract class BasicJobFactory implements JobFactory {
     }
 
     @Override
-    public JSON computeRequiredParameterUpdates(WebContext webContext) {
+    public JsonNode computeRequiredParameterUpdates(WebContext webContext) {
         Map<String, Exception> errorByParameter = new HashMap<>();
         Map<String, String> parameterContext = buildAndVerifyContext(webContext::get, false, (parameter, exception) -> {
             errorByParameter.put(parameter.getName(), exception);
@@ -332,18 +333,18 @@ public abstract class BasicJobFactory implements JobFactory {
     }
 
     @Override
-    public JSON computeRequiredParameterUpdates(Map<String, String> parameterContext) {
+    public JsonNode computeRequiredParameterUpdates(Map<String, String> parameterContext) {
         return computeRequiredParameterUpdates(parameterContext, Collections.emptyMap());
     }
 
-    private JSON computeRequiredParameterUpdates(Map<String, String> parameterContext,
-                                                 Map<String, Exception> errorByParameter) {
-        JSONObject json = new JSONObject();
+    private JsonNode computeRequiredParameterUpdates(Map<String, String> parameterContext,
+                                                     Map<String, Exception> errorByParameter) {
+        ObjectNode json = Json.createObject();
         getParameters().forEach(parameter -> {
-            JSONObject update = new JSONObject();
+            ObjectNode update = Json.createObject();
             update.put("visible", parameter.isVisible(parameterContext));
             update.put("clear", parameter.needsClear(parameterContext));
-            parameter.updateValue(parameterContext).ifPresent(val -> update.put("updatedValue", val));
+            parameter.updateValue(parameterContext).ifPresent(val -> update.putPOJO("updatedValue", val));
             Optional<Message> validation = parameter.validate(parameterContext);
             if (errorByParameter.containsKey(parameter.getName())) {
                 validation = Optional.of(Message.error()
@@ -355,12 +356,13 @@ public abstract class BasicJobFactory implements JobFactory {
                 // good way around it. The intention is, to reduce "alert-danger" to "danger", so we can use it in the
                 // frontend in a more flexible way.
                 String bootstrapStyle = message.getType().getCssClass().split("-")[1];
-                update.put("validation",
-                           new JSONObject().fluentPut("type", message.getType().name())
-                                           .fluentPut("style", bootstrapStyle)
-                                           .fluentPut("html", message.getHtml()));
+                update.set("validation",
+                           Json.createObject()
+                               .put("type", message.getType().name())
+                               .put("style", bootstrapStyle)
+                               .put("html", message.getHtml()));
             });
-            json.put(parameter.getName(), update);
+            json.set(parameter.getName(), update);
         });
         return json;
     }

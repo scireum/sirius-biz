@@ -20,6 +20,7 @@ import sirius.db.es.Elastic;
 import sirius.db.es.IndexMappings;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -85,9 +86,8 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
         String destination = process.require(destinationParameter);
         EntityDescriptor ed = process.require(entityDescriptorParameter);
 
-        process.log(elastic.getLowLevelClient()
-                           .createOrMoveAlias(elastic.determineReadAlias(ed), destination)
-                           .toJSONString());
+        process.log(Json.write(elastic.getLowLevelClient()
+                                      .createOrMoveAlias(elastic.determineReadAlias(ed), destination)));
 
         String effectiveIndex = elastic.determineEffectiveIndex(ed);
         process.log(Strings.apply("Setting dynamic mapping mode to 'strict' for index '%s'.", effectiveIndex));

@@ -8,7 +8,8 @@
 
 package sirius.biz.tycho;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import sirius.kernel.commons.Json;
 
 /**
  * Represents a secondary action which can be attached to a data object.
@@ -73,8 +74,8 @@ public class QuickAction {
      *
      * @return a JSON representation of this action
      */
-    public JSONObject toJson() {
-        JSONObject result = new JSONObject();
+    public ObjectNode toJson() {
+        ObjectNode result = Json.createObject();
         result.put("label", label);
         result.put("icon", icon);
         result.put("url", url);

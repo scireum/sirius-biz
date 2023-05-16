@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * Provides a facility to execute a query into a set of batch descriptions.
  * <p>
  * These batches are described using JSON and can be evaluated into an iterator of entities using
- * {@link #evaluateBatch(JSONObject, Consumer, Consumer)}.
+ * {@link #evaluateBatch(ObjectNode, Consumer, Consumer)}.
  */
 @Register(classes = SQLEntityBatchEmitter.class)
 public class SQLEntityBatchEmitter

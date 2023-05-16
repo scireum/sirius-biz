@@ -8,8 +8,9 @@
 
 package sirius.biz.tycho.metrics;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Json;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -43,36 +44,36 @@ public class MetricsApiController extends BizController {
     @InternalService
     @Routed("/tycho/metrics/api")
     public void fetchMetrics(WebContext webContext, JSONStructuredOutput output) {
-        JSONObject jsonContent = webContext.getJSONContent();
+        ObjectNode jsonContent = webContext.getJSONContent();
         output.beginArray("tasks");
-        for (Object obj : jsonContent.getJSONArray("tasks")) {
-            if (obj instanceof JSONObject object) {
+        for (Object obj : Json.getArray(jsonContent, "tasks")) {
+            if (obj instanceof ObjectNode object) {
                 fetchMetric(object, output);
             }
         }
         output.endArray();
     }
 
-    private void fetchMetric(JSONObject obj, JSONStructuredOutput output) {
+    private void fetchMetric(ObjectNode obj, JSONStructuredOutput output) {
         // For now, there are only "KeyMetrics" which may be lazy-loaded, but we might add some more in the future...
-        if ("KeyMetric".equals(obj.getString("type"))) {
+        if ("KeyMetric".equals(obj.path("type").asText())) {
             fetchKeyMetric(obj, output);
         } else {
             output.beginObject("task").endObject();
         }
     }
 
-    private void fetchKeyMetric(JSONObject obj, JSONStructuredOutput output) {
+    private void fetchKeyMetric(ObjectNode obj, JSONStructuredOutput output) {
         try {
-            KeyMetric metric = keyMetrics.resolveKeyMetric(obj.getString("provider"),
-                                                           obj.getString("target"),
-                                                           obj.getString("metric"));
+            KeyMetric metric = keyMetrics.resolveKeyMetric(obj.path("provider").asText(null),
+                                                           obj.path("target").asText(null),
+                                                           obj.path("metric").asText(null));
             metric.writeJson(output);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(Log.APPLICATION)
                       .error(e)
-                      .withSystemErrorMessage("Failed to fetch key metric for: %s - %s (%s)", obj.toJSONString())
+                      .withSystemErrorMessage("Failed to fetch key metric for: %s - %s (%s)", Json.write(obj))
                       .handle();
         }
     }

@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer1.replication;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.di.std.Framework;
@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 
 /**
  * Responsible to transfering batches of replication tasks back to
- * {@link ReplicationTaskStorage#executeBatch(JSONObject)}.
+ * {@link ReplicationTaskStorage#executeBatch(ObjectNode)}.
  *
  * @see ReplicationTaskStorage
  */
@@ -40,7 +40,7 @@ public class ReplicationTaskExecutor implements DistributedTaskExecutor {
     }
 
     @Override
-    public void executeWork(JSONObject context) throws Exception {
+    public void executeWork(ObjectNode context) throws Exception {
         taskStorage.executeBatch(context);
     }
 }
