@@ -487,11 +487,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean readOnly() {
         try {
-            if (readOnlyFlagSupplier != null) {
-                return readOnlyFlagSupplier.test(this);
+            if (readOnlyFlagSupplier == null) {
+                return false;
             }
 
-            return false;
+            return readOnlyFlagSupplier.test(this);
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "readOnlyFlagSupplier");
         }
@@ -643,11 +643,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            if (canCreateChildrenHandler != null) {
-                return canCreateChildrenHandler.test(this);
+            if (canCreateChildrenHandler == null) {
+                return true;
             }
 
-            return true;
+            return canCreateChildrenHandler.test(this);
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "canCreateChildrenHandler");
         }
