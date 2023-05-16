@@ -8,11 +8,11 @@
 
 package sirius.biz.cluster.work;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import redis.clients.jedis.Jedis;
 import sirius.db.KeyGenerator;
 import sirius.db.redis.Redis;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -44,7 +44,7 @@ class RedisPrioritizedQueue implements PrioritizedQueue {
     }
 
     @Override
-    public void offer(long priority, @Nonnull JSONObject task) {
+    public void offer(long priority, @Nonnull ObjectNode task) {
         redis.exec(() -> Strings.apply("Add to prioritized queue %s", queueName), db -> {
             String taskId = storeTask(db, task);
             db.zadd(getRedisQueueName(), priority, taskId);
@@ -59,10 +59,10 @@ class RedisPrioritizedQueue implements PrioritizedQueue {
         return "distributed_prioritized_queue_" + queueName;
     }
 
-    private String storeTask(Jedis db, JSONObject task) {
+    private String storeTask(Jedis db, ObjectNode task) {
         int retries = MAX_ATTEMPTS_TO_GENERATE_UNIQUE_TASK_ID;
         String taskMap = getRedisTaskMapKeyName();
-        String taskData = task.toJSONString();
+        String taskData = Json.write(task);
         while (retries-- > 0) {
             String id = keyGen.generateId();
             if (db.hsetnx(taskMap, id, taskData) == REDIS_RESPONSE_SUCCESS) {
@@ -78,11 +78,11 @@ class RedisPrioritizedQueue implements PrioritizedQueue {
 
     @Nullable
     @Override
-    public JSONObject poll() {
+    public ObjectNode poll() {
         String taskData = pollFromRedis();
 
         if (taskData != null) {
-            return JSON.parseObject(taskData);
+            return Json.parseObject(taskData);
         } else {
             return null;
         }

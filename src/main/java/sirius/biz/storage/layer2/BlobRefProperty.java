@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer2;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.es.ESPropertyInfo;
 import sirius.db.es.IndexMappings;
 import sirius.db.es.annotations.IndexMode;
@@ -120,7 +120,7 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
     }
 
     @Override
-    public void describeProperty(JSONObject description) {
+    public void describeProperty(ObjectNode description) {
         description.put(IndexMappings.MAPPING_TYPE, "keyword");
         transferOption(IndexMappings.MAPPING_STORED, getAnnotation(IndexMode.class), IndexMode::stored, description);
         transferOption(IndexMappings.MAPPING_INDEX, getAnnotation(IndexMode.class), IndexMode::indexed, description);

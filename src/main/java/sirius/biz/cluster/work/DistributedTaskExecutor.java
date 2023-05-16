@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Represents an executor which performs tasks which have been queued via {@link DistributedTasks}.
@@ -30,7 +30,7 @@ public interface DistributedTaskExecutor {
      *
      * @param context the description of the task as JSON
      * @throws Exception in case of an error while processing the task. Note that no retry will be performed for a
-     * failed task.
+     *                   failed task.
      */
-    void executeWork(JSONObject context) throws Exception;
+    void executeWork(ObjectNode context) throws Exception;
 }

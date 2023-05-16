@@ -8,12 +8,12 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.analytics.flags.ExecutionFlags;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
@@ -218,9 +218,10 @@ public class AnalyticalEngine implements EveryDay {
         }
 
         cluster.submitFIFOTask(executor,
-                               new JSONObject().fluentPut(CONTEXT_SCHEDULER_NAME, scheduler.getName())
-                                               .fluentPut(CONTEXT_LEVEL, level)
-                                               .fluentPut(CONTEXT_DATE, contextDate));
+                               Json.createObject()
+                                   .put(CONTEXT_SCHEDULER_NAME, scheduler.getName())
+                                   .put(CONTEXT_LEVEL, level)
+                                   .putPOJO(CONTEXT_DATE, contextDate));
     }
 
     /**

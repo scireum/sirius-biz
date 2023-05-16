@@ -8,11 +8,11 @@
 
 package sirius.biz.cluster;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.redis.Redis;
 import sirius.db.redis.Subscriber;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -58,7 +58,7 @@ public class Interconnect implements Subscriber {
      * @param handler the handler to send the event to
      * @param event   the JSON data to publish
      */
-    public void dispatch(String handler, JSONObject event) {
+    public void dispatch(String handler, ObjectNode event) {
         event.put(HANDLER, handler);
 
         if (!redis.isConfigured()) {
@@ -66,7 +66,7 @@ public class Interconnect implements Subscriber {
             return;
         }
 
-        String msg = event.toJSONString();
+        String msg = Json.write(event);
         if (LOG.isFINE()) {
             LOG.FINE("Sending message: " + msg);
         }
@@ -88,15 +88,15 @@ public class Interconnect implements Subscriber {
             if (LOG.isFINE()) {
                 LOG.FINE("Received message: " + message);
             }
-            JSONObject msgAsJSON = JSON.parseObject(message);
+            ObjectNode msgAsJSON = Json.parseObject(message);
             dispatchLocally(msgAsJSON);
         } catch (Exception e) {
             Exceptions.handle(LOG, e);
         }
     }
 
-    private void dispatchLocally(JSONObject event) {
-        String type = event.getString(HANDLER);
+    private void dispatchLocally(ObjectNode event) {
+        String type = event.path(HANDLER).asText();
         if (Strings.isEmpty(type)) {
             throw new IllegalArgumentException("handler must not be empty!");
         }

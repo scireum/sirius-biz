@@ -8,11 +8,10 @@
 
 package sirius.biz.analytics.reports;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONException;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Amount;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
@@ -25,6 +24,7 @@ import sirius.web.templates.ContentHelper;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -62,7 +62,7 @@ public class Cells {
             return new Cell(Strings.toString((value)));
         }
 
-        if (value instanceof JSONObject object) {
+        if (value instanceof ObjectNode object) {
             return new Cell(object);
         }
 
@@ -80,9 +80,10 @@ public class Cells {
             return of(value);
         }
 
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-right")
-                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, CSSCellFormat.TYPE)
+                            .put(CSSCellFormat.KEY_CLASSES, "text-right")
+                            .put(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
     /**
@@ -96,9 +97,10 @@ public class Cells {
             return of(value);
         }
 
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-bold")
-                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, CSSCellFormat.TYPE)
+                            .put(CSSCellFormat.KEY_CLASSES, "text-bold")
+                            .put(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
     /**
@@ -108,8 +110,9 @@ public class Cells {
      * @return a cell containing the given values
      */
     public Cell list(List<String> values) {
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, ListCellFormat.TYPE)
-                                        .fluentPut(ListCellFormat.KEY_VALUES, values));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, ListCellFormat.TYPE)
+                            .putPOJO(ListCellFormat.KEY_VALUES, values));
     }
 
     /**
@@ -119,9 +122,10 @@ public class Cells {
      * @return a cell which is colored green
      */
     public Cell green(Object value) {
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-sirius-green")
-                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, CSSCellFormat.TYPE)
+                            .put(CSSCellFormat.KEY_CLASSES, "text-sirius-green")
+                            .put(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
     /**
@@ -131,9 +135,10 @@ public class Cells {
      * @return a cell which is colored red
      */
     public Cell yellow(Object value) {
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-sirius-yellow")
-                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, CSSCellFormat.TYPE)
+                            .put(CSSCellFormat.KEY_CLASSES, "text-sirius-yellow")
+                            .put(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
     /**
@@ -143,9 +148,10 @@ public class Cells {
      * @return a cell which is colored red
      */
     public Cell red(Object value) {
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-sirius-red")
-                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, CSSCellFormat.TYPE)
+                            .put(CSSCellFormat.KEY_CLASSES, "text-sirius-red")
+                            .put(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
     /**
@@ -162,9 +168,10 @@ public class Cells {
 
         String color = computeCellColor(value);
 
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
-                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "text-right " + color)
-                                        .fluentPut(CSSCellFormat.KEY_VALUE, safeFormat(value, formatter)));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, CSSCellFormat.TYPE)
+                            .put(CSSCellFormat.KEY_CLASSES, "text-right " + color)
+                            .put(CSSCellFormat.KEY_VALUE, safeFormat(value, formatter)));
     }
 
     private String computeCellColor(Amount value) {
@@ -197,12 +204,12 @@ public class Cells {
 
         String color = computeCellColor(delta);
 
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, TrendCellFormat.TYPE)
-                                        .fluentPut(TrendCellFormat.KEY_CLASSES, color)
-                                        .fluentPut(TrendCellFormat.KEY_HINT,
-                                                   safeFormat(value, formatter) + " / " + safeFormat(comparisonValue,
-                                                                                                     formatter))
-                                        .fluentPut(TrendCellFormat.KEY_TREND, delta.toString(NumberFormat.PERCENT).get()));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, TrendCellFormat.TYPE)
+                            .put(TrendCellFormat.KEY_CLASSES, color)
+                            .put(TrendCellFormat.KEY_HINT,
+                                 safeFormat(value, formatter) + " / " + safeFormat(comparisonValue, formatter))
+                            .put(TrendCellFormat.KEY_TREND, delta.toString(NumberFormat.PERCENT).getString()));
     }
 
     /**
@@ -221,13 +228,13 @@ public class Cells {
 
         String color = computeCellColor(delta);
 
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, TrendCellFormat.TYPE)
-                                        .fluentPut(TrendCellFormat.KEY_CLASSES, color)
-                                        .fluentPut(TrendCellFormat.KEY_HINT,
-                                                   safeFormat(value, formatter) + " / " + safeFormat(comparisonValue,
-                                                                                                     formatter))
-                                        .fluentPut(TrendCellFormat.KEY_VALUE, safeFormat(value, formatter))
-                                        .fluentPut(TrendCellFormat.KEY_TREND, delta.toString(NumberFormat.PERCENT).get()));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, TrendCellFormat.TYPE)
+                            .put(TrendCellFormat.KEY_CLASSES, color)
+                            .put(TrendCellFormat.KEY_HINT,
+                                 safeFormat(value, formatter) + " / " + safeFormat(comparisonValue, formatter))
+                            .put(TrendCellFormat.KEY_VALUE, safeFormat(value, formatter))
+                            .put(TrendCellFormat.KEY_TREND, delta.toString(NumberFormat.PERCENT).getString()));
     }
 
     /**
@@ -253,11 +260,12 @@ public class Cells {
 
         String color = computeCellColor(delta);
 
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, TrendCellFormat.TYPE)
-                                        .fluentPut(TrendCellFormat.KEY_HINT, delta.toString(NumberFormat.PERCENT))
-                                        .fluentPut(TrendCellFormat.KEY_VALUE, safeFormat(value, formatter))
-                                        .fluentPut(TrendCellFormat.KEY_CLASSES, color)
-                                        .fluentPut(TrendCellFormat.KEY_ICON, icon));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, TrendCellFormat.TYPE)
+                            .put(TrendCellFormat.KEY_HINT, delta.toString(NumberFormat.PERCENT).getString())
+                            .put(TrendCellFormat.KEY_VALUE, safeFormat(value, formatter))
+                            .put(TrendCellFormat.KEY_CLASSES, color)
+                            .put(TrendCellFormat.KEY_ICON, icon));
     }
 
     /**
@@ -272,9 +280,10 @@ public class Cells {
             return of(value);
         }
 
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, LinkCellFormat.TYPE)
-                                        .fluentPut(LinkCellFormat.KEY_URL, url)
-                                        .fluentPut(LinkCellFormat.KEY_VALUE, NLS.toUserString(value)));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, LinkCellFormat.TYPE)
+                            .put(LinkCellFormat.KEY_URL, url)
+                            .put(LinkCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
     /**
@@ -290,14 +299,13 @@ public class Cells {
             return of(value);
         }
 
-        return new Cell(new JSONObject().fluentPut(KEY_TYPE, SparklineCellFormat.TYPE)
-                                        .fluentPut(SparklineCellFormat.KEY_VALUES,
-                                                   sparkline.stream()
-                                                            .map(v -> v.isEmpty() ?
-                                                                      "0" :
-                                                                      String.valueOf(v.getAmount().doubleValue()))
-                                                            .collect(Collectors.joining(",")))
-                                        .fluentPut(SparklineCellFormat.KEY_VALUE, safeFormat(value, formatter)));
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, SparklineCellFormat.TYPE)
+                            .put(SparklineCellFormat.KEY_VALUES,
+                                 sparkline.stream()
+                                          .map(v -> v.isEmpty() ? "0" : String.valueOf(v.getAmount().doubleValue()))
+                                          .collect(Collectors.joining(",")))
+                            .put(SparklineCellFormat.KEY_VALUE, safeFormat(value, formatter)));
     }
 
     /**
@@ -322,13 +330,11 @@ public class Cells {
             return "";
         }
 
-        if (JSONValidator.from(cellValue).validate()) {
-            try {
-                JSONObject data = JSON.parseObject(cellValue);
-                return renderJSON(data);
-            } catch (JSONException e) {
-                Exceptions.ignore(e);
-            }
+        try {
+            ObjectNode data = Json.tryParseObject(cellValue);
+            return renderJSON(data);
+        } catch (JsonProcessingException exception) {
+            Exceptions.ignore(exception);
         }
 
         return ContentHelper.escapeXML(cellValue);
@@ -345,33 +351,29 @@ public class Cells {
             return "";
         }
 
-        if (JSONValidator.from(cellValue).validate()) {
-            try {
-                JSONObject data = JSON.parseObject(cellValue);
-                return renderRaw(data);
-            } catch (JSONException e) {
-                Exceptions.ignore(e);
-            }
+        try {
+            ObjectNode data = Json.tryParseObject(cellValue);
+            return renderRaw(data);
+        } catch (JsonProcessingException exception) {
+            Exceptions.ignore(exception);
         }
 
         return cellValue;
     }
 
-    protected String renderJSON(JSONObject data) {
-        CellFormat cell = context.getPart(data.getString(KEY_TYPE), CellFormat.class);
-        if (cell != null) {
-            return cell.format(data);
-        } else {
-            return "";
-        }
+    protected String renderJSON(ObjectNode data) {
+        return findCellFormat(data).map(cell -> cell.format(data)).orElse("");
     }
 
-    protected String renderRaw(JSONObject data) {
-        CellFormat cell = context.getPart(data.getString(KEY_TYPE), CellFormat.class);
-        if (cell != null) {
-            return cell.rawValue(data);
-        } else {
-            return "";
+    protected String renderRaw(ObjectNode data) {
+        return findCellFormat(data).map(cell -> cell.rawValue(data)).orElse("");
+    }
+
+    private Optional<CellFormat> findCellFormat(ObjectNode data) {
+        String type = Json.tryValueString(data, KEY_TYPE).orElse("");
+        if (Strings.isEmpty(type)) {
+            return Optional.empty();
         }
+        return Optional.ofNullable(context.getPart(type, CellFormat.class));
     }
 }

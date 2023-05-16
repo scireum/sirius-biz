@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,7 +27,7 @@ interface PrioritizedQueue {
      * @param priority the priority of this work item
      * @param task     the task description of the work item
      */
-    void offer(long priority, @Nonnull JSONObject task);
+    void offer(long priority, @Nonnull ObjectNode task);
 
     /**
      * Pulls the next work item, which is the one with the lowest priority.
@@ -35,7 +35,7 @@ interface PrioritizedQueue {
      * @return the work item to process or <tt>null</tt> to indicate that the queue is empty
      */
     @Nullable
-    JSONObject poll();
+    ObjectNode poll();
 
     /**
      * Returns the number of elements in the queue.

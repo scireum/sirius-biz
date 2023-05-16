@@ -8,13 +8,12 @@
 
 package sirius.biz.cluster.work
 
-import com.alibaba.fastjson.JSONObject
+import com.fasterxml.jackson.databind.node.ObjectNode
 import org.junit.jupiter.api.Tag
-import sirius.biz.cluster.work.DistributedTaskExecutor
-import sirius.biz.cluster.work.DistributedTasks
 import sirius.kernel.BaseSpecification
 import sirius.kernel.Tags
 import sirius.kernel.async.Future
+import sirius.kernel.commons.Json
 import sirius.kernel.commons.Wait
 import sirius.kernel.di.std.Part
 
@@ -37,8 +36,8 @@ class DistributedTasksSpec extends BaseSpecification {
         }
 
         @Override
-        void executeWork(JSONObject context) throws Exception {
-            if (context.get("test") == "test") {
+        void executeWork(ObjectNode context) throws Exception {
+            if (context.path("test").asText() == "test") {
                 fifoSynchronizer.success()
             }
         }
@@ -52,10 +51,10 @@ class DistributedTasksSpec extends BaseSpecification {
         }
 
         @Override
-        void executeWork(JSONObject context) throws Exception {
+        void executeWork(ObjectNode context) throws Exception {
             Wait.seconds(2)
-            prioritizedValues.add(context.get("value"))
-            if (context.get("value") == 30) {
+            prioritizedValues.add(context.path("value").asInt())
+            if (context.path("value").asInt() == 30) {
                 fifoSynchronizer.success()
             }
         }
@@ -65,7 +64,7 @@ class DistributedTasksSpec extends BaseSpecification {
         setup:
         fifoSynchronizer = new Future()
         when:
-        distributedTasks.submitFIFOTask(FifoTestExecutor.class, new JSONObject().fluentPut("test", "test"))
+        distributedTasks.submitFIFOTask(FifoTestExecutor.class, Json.createObject().put("test", "test"))
         then:
         fifoSynchronizer.await(Duration.ofSeconds(15))
     }
@@ -77,15 +76,15 @@ class DistributedTasksSpec extends BaseSpecification {
         when:
         distributedTasks.submitPrioritizedTask(PrioritizedTestExecutor.class,
                                                "Token1",
-                                               new JSONObject().fluentPut("value", 10))
+                                               Json.createObject().put("value", 10))
         Wait.seconds(1)
         distributedTasks.submitPrioritizedTask(PrioritizedTestExecutor.class,
                                                "Token1",
-                                               new JSONObject().fluentPut("value", 30))
+                                               Json.createObject().put("value", 30))
         Wait.seconds(1)
         distributedTasks.submitPrioritizedTask(PrioritizedTestExecutor.class,
                                                "Token2",
-                                               new JSONObject().fluentPut("value", 20))
+                                               Json.createObject().put("value", 20))
         then:
         fifoSynchronizer.await(Duration.ofSeconds(15))
         and:

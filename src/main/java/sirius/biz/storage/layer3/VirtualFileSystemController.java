@@ -16,7 +16,6 @@ import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
@@ -57,7 +56,7 @@ public class VirtualFileSystemController extends BizController {
     private VirtualFileSystem vfs;
 
     @PriorityParts(FileQuickActionProvider.class)
-    private PartCollection<FileQuickActionProvider> quickActionProviders;
+    private List<FileQuickActionProvider> quickActionProviders;
 
     /**
      * Lists all children of a given directory.

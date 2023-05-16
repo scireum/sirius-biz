@@ -1,6 +1,6 @@
 package sirius.biz.jobs.params;
 
-import com.alibaba.fastjson.JSONObject;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -62,8 +62,9 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> new JSONObject().fluentPut("value", value)
-                                                    .fluentPut("text", NLS.smartGet(entries.get(value))));
+                      .map(value -> Json.createObject()
+                                        .put("value", value)
+                                        .put("text", NLS.smartGet(entries.get(value))));
     }
 
     @Override

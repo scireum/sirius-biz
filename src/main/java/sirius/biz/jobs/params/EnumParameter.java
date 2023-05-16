@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.params;
 
-import com.alibaba.fastjson.JSONObject;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
@@ -93,8 +93,7 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> new JSONObject().fluentPut("value", value.name())
-                                                    .fluentPut("text", value.toString()));
+                      .map(value -> Json.createObject().put("value", value.name()).put("text", value.toString()));
     }
 
     @Override
