@@ -153,7 +153,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
             process.log(ProcessLog.info().withNLSKey("ExtractArchiveJob.deletingArchive"));
             sourceFile.delete();
         } else if (sourceFile.readOnly()) {
-            sourceFile.setReadOnly(false);
+            sourceFile.updateReadOnlyFlag(false);
         }
     }
 

@@ -417,7 +417,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @param readOnly the value of the read-only flag
      * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
      */
-    public boolean setReadOnly(boolean readOnly) {
+    public boolean updateReadOnlyFlag(boolean readOnly) {
         try {
             if (readOnlyHandler == null) {
                 return false;

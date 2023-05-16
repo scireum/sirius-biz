@@ -334,7 +334,7 @@ public class VirtualFileSystemController extends BizController {
         }
 
         try {
-            file.setReadOnly(false);
+            file.updateReadOnlyFlag(false);
         } catch (Exception e) {
             UserContext.handle(e);
         }

@@ -240,7 +240,7 @@ public abstract class FileImportJob extends ImportJob {
         process.getParameter(FILE_PARAMETER)
                .filter(VirtualFile::exists)
                .filter(VirtualFile::readOnly)
-               .ifPresent(virtualFile -> virtualFile.setReadOnly(false));
+               .ifPresent(virtualFile -> virtualFile.updateReadOnlyFlag(false));
     }
 
     /**

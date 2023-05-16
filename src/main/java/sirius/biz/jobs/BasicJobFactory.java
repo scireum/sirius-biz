@@ -180,7 +180,7 @@ public abstract class BasicJobFactory implements JobFactory {
     protected void lockFiles(Map<String, String> context) {
         List<VirtualFile> filesToLock = new ArrayList<>();
         collectFilesToLock(context, filesToLock::add);
-        filesToLock.forEach(virtualFile -> virtualFile.setReadOnly(true));
+        filesToLock.forEach(virtualFile -> virtualFile.updateReadOnlyFlag(true));
     }
 
     @Nullable
