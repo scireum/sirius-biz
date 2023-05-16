@@ -17,7 +17,7 @@ import java.util.Optional;
  */
 public class SelectStringParameter extends SelectParameter<String, SelectStringParameter> {
 
-    protected final Map<String, String> entries = new LinkedHashMap<>();
+    private final Map<String, String> entries = new LinkedHashMap<>();
 
     /**
      * Creates a new parameter with the given name and label.
