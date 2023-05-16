@@ -319,7 +319,7 @@ public class VirtualFileSystemController extends BizController {
     }
 
     /**
-     * Moves the given file or directory to a new parent directory.
+     * Sets the read-only flag of the given file to false.
      *
      * @param webContext the request to handle
      */
