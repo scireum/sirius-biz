@@ -43,8 +43,8 @@ dependencies {
     // Required as the version brought by clickhouse-jdbc contains security issues
     implementation("commons-codec:commons-codec:1.13")
     // Required as the version brought by clickhouse-jdbc contains security issues
-    implementation("com.fasterxml.jackson.core:jackson-core:2.14.0-rc1")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.14.0-rc1")
+    implementation("com.fasterxml.jackson.core:jackson-core")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
 
     implementation("org.apache.ftpserver:ftpserver-core:1.2.0")
 
