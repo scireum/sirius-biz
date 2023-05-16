@@ -329,8 +329,22 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if this file can be deleted or <tt>false</tt> otherwise
      */
     public boolean canDelete() {
+        return canDelete(false);
+    }
+
+    /**
+     * Determines if this file can (probably) be deleted.
+     *
+     * @param force if <tt>true</tt>, we signalize the file can potentially be deleted even if it is read-only
+     * @return <tt>true</tt> if this file can be deleted or <tt>false</tt> otherwise
+     */
+    public boolean canDelete(boolean force) {
         try {
-            if (deleteHandler == null || readOnly()) {
+            if (readOnly() && !force) {
+                return false;
+            }
+
+            if (deleteHandler == null) {
                 return false;
             }
 
@@ -347,11 +361,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Tries to delete this file.
      *
+     * @param force if <tt>true</tt> the file will be deleted even if it is read-only
      * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
      */
-    public boolean tryDelete() {
+    public boolean tryDelete(boolean force) {
         try {
-            if (!canDelete()) {
+            if (!canDelete(force)) {
                 return false;
             }
 
@@ -367,7 +382,20 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @throws HandledException if the file cannot be deleted
      */
     public void delete() {
-        if (!tryDelete()) {
+        if (!tryDelete(false)) {
+            throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotDelete").set("file", path()).handle();
+        }
+    }
+
+    /**
+     * Deletes this file, also if it's read-only.
+     * <p>
+     * Depending on the underlying storage, a deletion is not always possible if the file is set as read-only.
+     *
+     * @throws HandledException if the file cannot be deleted
+     */
+    public void forceDelete() {
+        if (!tryDelete(true)) {
             throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotDelete").set("file", path()).handle();
         }
     }

@@ -143,7 +143,7 @@ class BridgeFile implements FtpFile {
     @Override
     public boolean delete() {
         if (doesExist()) {
-            return file.tryDelete();
+            return file.tryDelete(false);
         }
 
         return true;
