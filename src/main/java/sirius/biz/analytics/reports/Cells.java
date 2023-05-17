@@ -112,7 +112,7 @@ public class Cells {
     public Cell list(List<String> values) {
         return new Cell(Json.createObject()
                             .put(KEY_TYPE, ListCellFormat.TYPE)
-                            .putPOJO(ListCellFormat.KEY_VALUES, values));
+                            .set(ListCellFormat.KEY_VALUES, Json.createArray(values)));
     }
 
     /**
