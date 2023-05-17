@@ -56,12 +56,12 @@ dependencies {
     // Required as the version provided by jcifs has security issues
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
-    implementation("com.amazonaws:aws-java-sdk-s3:1.12.272")
+    api("com.amazonaws:aws-java-sdk-s3:1.12.272")
     implementation("javax.xml.bind:jaxb-api:2.3.1")
     implementation("commons-io:commons-io:2.11.0")
     implementation("commons-net:commons-net:3.9.0")
     implementation("com.rometools:rome:1.18.0")
-    implementation("net.sf.sevenzipjbinding:sevenzipjbinding:16.02-2.01")
+    api("net.sf.sevenzipjbinding:sevenzipjbinding:16.02-2.01")
     implementation("net.sf.sevenzipjbinding:sevenzipjbinding-all-platforms:16.02-2.01")
 }
 
