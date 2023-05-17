@@ -84,7 +84,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     @Override
     public void executeWork(ObjectNode context) throws Exception {
-        processes.execute(context.path(CONTEXT_PROCESS).asText(null), process -> executeInProcess(context, process));
+        String processId = context.path(CONTEXT_PROCESS).asText(null);
+        processes.purgeProcessFromFirstLevelCache(processId);
+        processes.execute(processId, process -> executeInProcess(context, process));
     }
 
     private void executeInProcess(ObjectNode context, ProcessContext processContext) {
