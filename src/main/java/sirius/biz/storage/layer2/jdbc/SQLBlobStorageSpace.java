@@ -487,7 +487,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .to(StorageUtils.LOG)
                       .error(exception)
                       .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occurred, when marking the read-only flag of blob '%s' to %s: %s (%s)",
+                              "Layer 2/SQL: An error occurred, when updating the read-only flag of blob '%s' to %s: %s (%s)",
                               blob.getBlobKey(),
                               readOnly)
                       .handle();
