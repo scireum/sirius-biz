@@ -5,7 +5,6 @@ import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
@@ -43,9 +42,7 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      */
     public SelectStringParameter withEntry(String key, String value) {
         if (this.entriesProvider != null) {
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Entries can not be added when an entries provider is set.")
-                            .handle();
+            throw new IllegalStateException("Entries can not be added when an entries provider is set.");
         }
 
         this.entries.put(key, value);
@@ -60,10 +57,7 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      */
     public SelectStringParameter withEntriesProvider(Supplier<Map<String, String>> entriesProvider) {
         if (!entries.isEmpty()) {
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage(
-                                    "An entry provider can not be set after entries have already been added.")
-                            .handle();
+            throw new IllegalStateException("An entry provider can not be set after entries have already been added.");
         }
 
         if (!(entriesProvider instanceof CachingSupplier)) {
