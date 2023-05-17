@@ -50,7 +50,9 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
     }
 
     /**
-     * Sets a provider that provides the entries.
+     * Sets a provider that generates the collection of selectable entries.
+     * <p>
+     * Use this to lazily initialize the entries. A {@link CachingSupplier} can be used to cache the entries.
      *
      * @param entriesProvider the provider that returns list of entries
      * @return the parameter itself for fluent method calls
