@@ -476,7 +476,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected void updateBlobReadOnlyFlag(SQLBlob blob, boolean readOnly) {
+    public void updateBlobReadOnlyFlag(SQLBlob blob, boolean readOnly) {
         try {
             oma.updateStatement(SQLBlob.class)
                .set(SQLBlob.READ_ONLY, readOnly)

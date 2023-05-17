@@ -1017,16 +1017,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Sets the read-only flag of the blob to the given value.
-     *
-     * @param blob     the blob to rename
-     * @param readOnly the new value to use
-     */
-    public void setReadOnly(B blob, boolean readOnly) {
-        updateBlobReadOnlyFlag(blob, readOnly);
-    }
-
-    /**
      * Effectively updates the blob name after all checks have been passed.
      *
      * @param blob    the blob to rename
@@ -1040,7 +1030,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param blob     the blob to rename
      * @param readOnly the new value to use
      */
-    protected abstract void updateBlobReadOnlyFlag(B blob, boolean readOnly);
+    public abstract void updateBlobReadOnlyFlag(B blob, boolean readOnly);
 
     /**
      * Performs a download / fetch of the given blob to make its data locally accessible.

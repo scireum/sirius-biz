@@ -535,6 +535,6 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Override
     public void setReadOnly(boolean readOnly) {
-        getStorageSpace().setReadOnly(this, readOnly);
+        getStorageSpace().updateBlobReadOnlyFlag(this, readOnly);
     }
 }

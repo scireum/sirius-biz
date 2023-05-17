@@ -405,7 +405,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected void updateBlobReadOnlyFlag(MongoBlob blob, boolean readOnly) {
+    public void updateBlobReadOnlyFlag(MongoBlob blob, boolean readOnly) {
         mongo.update()
              .set(MongoBlob.READ_ONLY, readOnly)
              .where(MongoBlob.ID, blob.getId())
