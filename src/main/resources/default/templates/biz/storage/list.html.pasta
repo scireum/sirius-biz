@@ -133,7 +133,8 @@
                                             <i:if test="!child.readOnly()">
                                                 <i:local name="quickActions"
                                                          value="@controller.resolveQuickActionsForFile(child)"/>
-                                                <i:for type="sirius.biz.tycho.QuickAction" var="quickAction"
+                                                <i:for type="sirius.biz.tycho.QuickAction"
+                                                       var="quickAction"
                                                        items="quickActions">
                                                     <t:dropdownItem url="@quickAction.getUrl()"
                                                                     icon="@quickAction.getIcon()"
