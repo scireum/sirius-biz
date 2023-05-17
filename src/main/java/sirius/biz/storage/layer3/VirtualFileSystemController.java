@@ -10,6 +10,7 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tycho.QuickAction;
 import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
@@ -38,8 +39,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
-import static sirius.biz.tenants.TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR;
 
 /**
  * Provides a web based UI for the {@link VirtualFileSystem}.
@@ -325,7 +324,7 @@ public class VirtualFileSystemController extends BizController {
      */
     @LoginRequired
     @Routed("/fs/unlock")
-    @Permission(PERMISSION_SYSTEM_ADMINISTRATOR)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     public void unlock(WebContext webContext) {
         VirtualFile file = vfs.resolve(webContext.get("path").asString());
         if (!file.exists()) {
