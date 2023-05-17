@@ -60,10 +60,6 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
             throw new IllegalStateException("An entry provider can not be set after entries have already been added.");
         }
 
-        if (!(entriesProvider instanceof CachingSupplier)) {
-            entriesProvider = new CachingSupplier<>(entriesProvider);
-        }
-
         this.entriesProvider = entriesProvider;
         return self();
     }
