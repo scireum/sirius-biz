@@ -2,15 +2,96 @@
 <i:arg type="sirius.biz.tenants.UserAccountController" name="controller"/>
 
 <i:invoke template="/templates/biz/tenants/user-account.html.pasta" account="account" page="details">
-    <w:editForm url="@apply('/user-account/%s', account.getIdAsString())">
-        <i:invoke template="/templates/biz/tenants/user-account-details-fields.html.pasta" account="account"
-                  controller="controller"/>
-    </w:editForm>
+    <t:editForm url="@apply('/user-account/%s', account.getIdAsString())">
+        <div class="row">
+            <t:textfield name="userAccountData_email" value="@account.getUserAccountData().getEmail()"
+                         labelKey="Model.email"
+                         class="col-12 col-md-6 required"
+                         helpKey="UserAccount.email.help"/>
+            <t:textfield class="col-12 col-md-6" name="userAccountData_login_username"
+                         value="@account.getUserAccountData().getLogin().getUsername()"
+                         labelKey="LoginData.username"
+                         helpKey="UserAccount.username.help"/>
+        </div>
 
-    <w:formBar>
-        <w:tracing trace="account.getTrace()" journal="account.getJournal()"/>
-    </w:formBar>
+        <div class="row">
+            <t:lookupValue class="col-12 col-md-3" name="userAccountData_person_salutation"
+                           value="@account.getUserAccountData().getPerson().getSalutation()"
+                           optional="true"
+                           labelKey="PersonData.salutation"/>
+            <t:textfield class="col-12 col-md-3" name="userAccountData_person_title"
+                         value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>
+            <t:textfield class="col-12 col-md-6" name="userAccountData_person_firstname"
+                         value="@account.getUserAccountData().getPerson().getFirstname()"
+                         labelKey="PersonData.firstname"/>
+        </div>
+        <div class="row">
+            <t:textfield class="col-12 col-md-6" name="userAccountData_person_lastname"
+                         value="@account.getUserAccountData().getPerson().getLastname()"
+                         labelKey="PersonData.lastname"/>
+            <t:singleSelect class="col-12 col-md-6" name="userAccountData_language" labelKey="Model.lang">
+                <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
+                    <option value="@language.getFirst()"
+                            @selected="language.getFirst() == account.getUserAccountData().getLanguage().getValue()">
+                        @language.getSecond()
+                    </option>
+                </i:for>
+            </t:singleSelect>
+        </div>
+
+        <i:extensions target="user-account-details" point="below-details" account="account"/>
+
+        <div class="row">
+            <div class="col-md-6">
+                <t:heading labelKey="Model.security"/>
+                <div class="row">
+                    <t:booleanSelect class="col" name="userAccountData_login_accountLocked"
+                                     value="account.getUserAccountData().getLogin().isAccountLocked()"
+                                     labelKey="LoginData.accountLocked"
+                                     helpKey="LoginData.accountLocked.help"/>
+                </div>
+                <i:if test="!controller.getSubScopes().isEmpty()">
+                    <div class="row">
+                        <t:singleSelect class="col" name="userAccountData_subScopes"
+                                        labelKey="UserAccountData.subScopes"
+                                        helpKey="UserAccountData.subScopes.help"
+                                        optional="true">
+                            <i:for var="subScope"
+                                   type="String"
+                                   items="@controller.getSubScopes()">
+                                <option value="@subScope"
+                                        @selected="account.getUserAccountData().getSubScopes().contains(subScope)">
+                                    @controller.getSubScopeName(subScope)
+                                </option>
+                            </i:for>
+                        </t:singleSelect>
+                    </div>
+                </i:if>
+            </div>
+            <div class="col-md-6">
+                <t:heading labelKey="UserAccount.roles"/>
+                <i:for type="String" var="role" items="controller.getRoles()">
+                    <div class="form-check">
+                        <label>
+                            <input class="form-check-input" type="checkbox" name="roles" value="@role"
+                                   @checked="account.getUserAccountData().getPermissions().getPermissions().contains(role)"/>
+                            <label class="form-check-label">
+                                @controller.getRoleName(role)
+                            </label>
+                            <small class="form-text text-muted">@controller.getRoleDescription(role)</small>
+                        </label>
+                    </div>
+                </i:for>
+            </div>
+        </div>
+
+        <i:extensions target="user-account-details" point="bottom" account="account"/>
+
+        <t:formBar backButton="false">
+            <t:tracing trace="account.getTrace()" journal="account.getJournal()"/>
+        </t:formBar>
+    </t:editForm>
+
 
     <i:extensions target="user-account-details" point="below-form" account="account"/>
 </i:invoke>
-
