@@ -8,7 +8,7 @@
 
 package sirius.biz.process;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.analytics.reports.Cells;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.batch.ExportBatchProcessFactory;
@@ -22,8 +22,8 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableProcessOutputType;
 import sirius.db.es.Elastic;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -83,16 +83,19 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
     }
 
     @Override
-    public void executeWork(JSONObject context) throws Exception {
-        processes.execute(context.getString(CONTEXT_PROCESS), process -> executeInProcess(context, process));
+    public void executeWork(ObjectNode context) throws Exception {
+        String processId = context.path(CONTEXT_PROCESS).asText(null);
+        processes.purgeProcessFromFirstLevelCache(processId);
+        processes.execute(processId, process -> executeInProcess(context, process));
     }
 
-    private void executeInProcess(JSONObject context, ProcessContext processContext) {
-        String outputName = context.getString(CONTEXT_OUTPUT);
+    private void executeInProcess(ObjectNode context, ProcessContext processContext) {
+        String outputName = context.path(CONTEXT_OUTPUT).asText(null);
         ProcessOutput processOutput = Strings.isFilled(outputName) ?
                                       processContext.fetchOutput(outputName)
-                                                    .orElseThrow(() -> new IllegalArgumentException(Strings.apply("Unknown output: %s",
-                                                                                                    outputName))) :
+                                                    .orElseThrow(() -> new IllegalArgumentException(Strings.apply(
+                                                            "Unknown output: %s",
+                                                            outputName))) :
                                       null;
         try (LineBasedExport export = createExport(processContext,
                                                    fetchExportFileType(context),
@@ -133,8 +136,10 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
         processContext.log(ProcessLog.success().withNLSKey("ExportLogsAsFileTaskExecutor.completed"));
     }
 
-    private ExportFileType fetchExportFileType(JSONObject context) {
-        return Value.of(context.get(CONTEXT_FORMAT)).getEnum(ExportFileType.class).orElse(ExportFileType.XLSX);
+    private ExportFileType fetchExportFileType(ObjectNode context) {
+        return Json.convertToValue(context.get(CONTEXT_FORMAT))
+                   .getEnum(ExportFileType.class)
+                   .orElse(ExportFileType.XLSX);
     }
 
     private LineBasedExport createExport(ProcessContext processContext, ExportFileType type, String name)

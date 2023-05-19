@@ -10,12 +10,14 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tycho.QuickAction;
 import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -53,6 +55,9 @@ public class VirtualFileSystemController extends BizController {
     @Part
     private VirtualFileSystem vfs;
 
+    @PriorityParts(FileQuickActionProvider.class)
+    private List<FileQuickActionProvider> quickActionProviders;
+
     /**
      * Lists all children of a given directory.
      *
@@ -81,10 +86,23 @@ public class VirtualFileSystemController extends BizController {
 
             webContext.respondWith()
                       .template("/templates/biz/storage/list.html.pasta",
+                                this,
                                 file,
                                 file.pathList(),
                                 computeChildrenAsPage(webContext, file));
         }
+    }
+
+    /**
+     * Resolves quick actions which are applicable for the provided file.
+     *
+     * @param virtualFile the file for which the quick actions have to be resolved for
+     * @return a list of quick actions applicable for the file
+     */
+    public List<QuickAction> resolveQuickActionsForFile(VirtualFile virtualFile) {
+        List<QuickAction> quickActionList = new ArrayList<>();
+        quickActionProviders.forEach(provider -> provider.computeQuickAction(virtualFile, quickActionList::add));
+        return quickActionList;
     }
 
     private VirtualFile resolveToExistingFile(String path) {

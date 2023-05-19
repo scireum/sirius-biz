@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Named;
 
@@ -25,7 +25,7 @@ import java.util.function.Consumer;
  * <p>
  * This is a two stage process, {@link #scheduleBatches(Consumer)} emits a list of JSON specification which can
  * be used as descriptions in {@link sirius.biz.cluster.work.DistributedTasks}. Once being executed, the description
- * is forwarded to {@link #executeBatch(JSONObject, LocalDate, int)} which collects all entities of the specified
+ * is forwarded to {@link #executeBatch(ObjectNode, LocalDate, int)} which collects all entities of the specified
  * batch. In most implementations the scheduler will then pick all matching {@link AnalyticalTask analytical tasks} and
  * executes them on the entity.
  */
@@ -40,7 +40,7 @@ public interface AnalyticsScheduler extends Named {
     Class<? extends AnalyticsSchedulerExecutor> getExecutorForScheduling();
 
     /**
-     * Determines the executor to be used to invoke {@link #executeBatch(JSONObject, LocalDate, int)}.
+     * Determines the executor to be used to invoke {@link #executeBatch(ObjectNode, LocalDate, int)}.
      *
      * @return the executor which is in charge of executing the scheduled batches
      */
@@ -66,13 +66,13 @@ public interface AnalyticsScheduler extends Named {
 
     /**
      * Emits several JSON objects which each describe a batch of appropriate size to be resolved by
-     * {@link #executeBatch(JSONObject, LocalDate, int))}.
+     * {@link #executeBatch(ObjectNode, LocalDate, int))}.
      * <p>
      * Note that the emitted JSON should be small - i.e. not contain a list or IDs but rather a start and end filter.
      *
      * @param batchConsumer the consumer used to process the emitted batches
      */
-    void scheduleBatches(Consumer<JSONObject> batchConsumer);
+    void scheduleBatches(Consumer<ObjectNode> batchConsumer);
 
     /**
      * Resolves a batch emitted by {@link #scheduleBatches(Consumer)} and executes all appropriate work for all
@@ -82,7 +82,7 @@ public interface AnalyticsScheduler extends Named {
      * @param date             the date for which the execution was scheduled
      * @param level            the level ({@link AnalyticalTask#getLevel()}) to execute
      */
-    void executeBatch(JSONObject batchDescription, LocalDate date, int level);
+    void executeBatch(ObjectNode batchDescription, LocalDate date, int level);
 
     /**
      * Determines if this scheduler is active.

@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticEntity;
 import sirius.db.es.ElasticQuery;
@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * Provides a facility to execute a query into a set of batch descriptions.
  * <p>
  * These batches are described using JSON and can be evaluated into an iterator of entities using
- * {@link #evaluateBatch(JSONObject, Consumer, Consumer)}.
+ * {@link #evaluateBatch(ObjectNode, Consumer, Consumer)}.
  */
 @Register(classes = ElasticEntityBatchEmitter.class)
 public class ElasticEntityBatchEmitter

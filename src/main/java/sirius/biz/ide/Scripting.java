@@ -8,7 +8,7 @@
 
 package sirius.biz.ide;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.Interconnect;
 import sirius.biz.cluster.InterconnectHandler;
 import sirius.biz.tenants.Tenants;
@@ -16,6 +16,7 @@ import sirius.kernel.async.CallContext;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Hasher;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
@@ -106,12 +107,12 @@ public class Scripting implements InterconnectHandler {
      */
     public void logInTranscript(String jobNumber, String message) {
         interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(TASK_TYPE, TASK_TYPE_MSG)
-                                              .fluentPut(TASK_MESSAGE,
-                                                         Strings.limit(message, MAX_TRANSCRIPT_MESSAGE_LENGTH, true))
-                                              .fluentPut(TASK_TIMESTAMP, System.currentTimeMillis())
-                                              .fluentPut(TASK_NODE, CallContext.getNodeName())
-                                              .fluentPut(TASK_JOB, jobNumber));
+                              Json.createObject()
+                                  .put(TASK_TYPE, TASK_TYPE_MSG)
+                                  .put(TASK_MESSAGE, Strings.limit(message, MAX_TRANSCRIPT_MESSAGE_LENGTH, true))
+                                  .put(TASK_TIMESTAMP, System.currentTimeMillis())
+                                  .put(TASK_NODE, CallContext.getNodeName())
+                                  .put(TASK_JOB, jobNumber));
     }
 
     /**
@@ -156,29 +157,30 @@ public class Scripting implements InterconnectHandler {
                                       UserContext.getCurrentUser().getUserName()));
 
         interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(TASK_TYPE, TASK_TYPE_EXEC)
-                                              .fluentPut(TASK_SCRIPT, script)
-                                              .fluentPut(TASK_NODE, targetNode)
-                                              .fluentPut(TASK_JOB, jobNumber));
+                              Json.createObject()
+                                  .put(TASK_TYPE, TASK_TYPE_EXEC)
+                                  .put(TASK_SCRIPT, script)
+                                  .put(TASK_NODE, targetNode)
+                                  .put(TASK_JOB, jobNumber));
 
         return jobNumber;
     }
 
     @Override
-    public void handleEvent(JSONObject event) {
-        if (TASK_TYPE_MSG.equals(event.getString(TASK_TYPE))) {
+    public void handleEvent(ObjectNode event) {
+        if (TASK_TYPE_MSG.equals(event.path(TASK_TYPE).asText())) {
             handleMessageTask(event);
-        } else if (TASK_TYPE_EXEC.equals(event.getString(TASK_TYPE))) {
+        } else if (TASK_TYPE_EXEC.equals(event.path(TASK_TYPE).asText())) {
             tasks.defaultExecutor().start(() -> handleExecTask(event));
         }
     }
 
-    private void handleMessageTask(JSONObject event) {
+    private void handleMessageTask(ObjectNode event) {
         synchronized (messages) {
-            messages.add(new TranscriptMessage(event.getString(TASK_NODE),
-                                               event.getString(TASK_JOB),
-                                               event.getLong(TASK_TIMESTAMP),
-                                               event.getString(TASK_MESSAGE)));
+            messages.add(new TranscriptMessage(event.path(TASK_NODE).asText(null),
+                                               event.path(TASK_JOB).asText(null),
+                                               event.path(TASK_TIMESTAMP).asLong(),
+                                               event.path(TASK_MESSAGE).asText(null)));
             if (messages.size() > MAX_MESSAGES) {
                 messages.remove(0);
             }
@@ -196,9 +198,9 @@ public class Scripting implements InterconnectHandler {
         }
     }
 
-    private void handleExecTask(JSONObject event) {
-        String nodeName = event.getString(TASK_NODE);
-        String jobNumber = event.getString(TASK_JOB);
+    private void handleExecTask(ObjectNode event) {
+        String nodeName = event.path(TASK_NODE).asText(null);
+        String jobNumber = event.path(TASK_JOB).asText(null);
         if (!ALL_NODES.equals(nodeName) && !Strings.areEqual(CallContext.getNodeName(), nodeName)) {
             return;
         }
@@ -220,7 +222,7 @@ public class Scripting implements InterconnectHandler {
         }
     }
 
-    private void handleTaskForNode(JSONObject event, String jobNumber) {
+    private void handleTaskForNode(ObjectNode event, String jobNumber) {
         Watch watch = Watch.start();
         logInTranscript(jobNumber,
                         Strings.apply("Starting execution on %s (Thread Id: %s / Thread Name: %s)",
@@ -241,9 +243,9 @@ public class Scripting implements InterconnectHandler {
         logInTranscript(jobNumber, Strings.apply("Execution completed (%s)", watch.duration()));
     }
 
-    private Callable compileScript(JSONObject event) throws CompileException {
+    private Callable compileScript(ObjectNode event) throws CompileException {
         CompilationContext compilationContext =
-                new CompilationContext(SourceCodeInfo.forInlineCode(event.getString(TASK_SCRIPT),
+                new CompilationContext(SourceCodeInfo.forInlineCode(event.path(TASK_SCRIPT).asText(null),
                                                                     SandboxMode.DISABLED));
         NoodleCompiler compiler = new NoodleCompiler(compilationContext);
         Callable callable = compiler.compileScript();

@@ -29,7 +29,7 @@
             <t:textfield class="col-12 col-md-6" name="userAccountData_person_lastname"
                          value="@account.getUserAccountData().getPerson().getLastname()"
                          labelKey="PersonData.lastname"/>
-            <t:singleSelect class="col-12 col-md-6" name="userAccountData_language" labelKey="Model.lang">
+            <t:singleSelect class="col-12 col-md-6" name="userAccountData_language" labelKey="Model.language">
                 <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
                     <option value="@language.getFirst()"
                             @selected="language.getFirst() == account.getUserAccountData().getLanguage().getValue()">

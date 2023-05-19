@@ -51,6 +51,11 @@ public class ReplicationBackgroundLoop extends BackgroundLoop {
         return Sirius.isStartedAsTest() ? EVERY_TWO_SECONDS : EVERY_THIRTY_SECONDS;
     }
 
+    @Override
+    public double maxRuntimeInSeconds() {
+        return 900d;
+    }
+
     @Nullable
     @Override
     protected String doWork() throws Exception {

@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>10.1.1</version>
+        <version>10.2.0</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-35.3.0</sirius.kernel>
-        <sirius.web>dev-64.10.0</sirius.web>
-        <sirius.db>dev-46.4.0</sirius.db>
+        <sirius.kernel>dev-35.7.0</sirius.kernel>
+        <sirius.web>dev-66.0.0</sirius.web>
+        <sirius.db>dev-48.0.0</sirius.db>
     </properties>
 
     <repositories>
@@ -67,12 +67,10 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.14.0-rc1</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.14.0-rc1</version>
         </dependency>
 
         <dependency>

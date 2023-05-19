@@ -8,14 +8,14 @@
 
 package sirius.biz.jupiter;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import sirius.db.redis.RedisDB;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.Operation;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Microtiming;
@@ -248,9 +248,9 @@ public class JupiterConnector {
      * @return the received JSON response
      * @throws IllegalArgumentException if the given kernel is unknown
      */
-    public JSONObject pyRun(String kernel, JSONObject input) {
+    public ObjectNode pyRun(String kernel, ObjectNode input) {
         String result = query(() -> "PY.RUN: " + kernel, db -> {
-            db.sendCommand(CMD_PYRUN, kernel, input.toJSONString());
+            db.sendCommand(CMD_PYRUN, kernel, Json.write(input));
             return db.getBulkReply();
         });
 
@@ -258,11 +258,11 @@ public class JupiterConnector {
             throw new IllegalArgumentException("Unknown kernel: " + kernel);
         }
 
-        JSONObject json = JSON.parseObject(result);
-        if (json.containsKey("error")) {
+        ObjectNode json = Json.parseObject(result);
+        if (json.has("error")) {
             throw Exceptions.handle()
                             .to(Jupiter.LOG)
-                            .withSystemErrorMessage("Error while running kernel %s: %s", kernel, json.toJSONString())
+                            .withSystemErrorMessage("Error while running kernel %s: %s", kernel, Json.write(json))
                             .handle();
         }
 

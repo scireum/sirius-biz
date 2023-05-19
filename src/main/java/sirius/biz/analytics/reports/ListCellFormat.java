@@ -8,7 +8,8 @@
 
 package sirius.biz.analytics.reports;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import sirius.kernel.commons.Json;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.ContentHelper;
 
@@ -24,9 +25,9 @@ public class ListCellFormat implements CellFormat {
     protected static final String KEY_VALUES = "values";
 
     @Override
-    public String format(JSONObject data) {
+    public String format(ObjectNode data) {
         StringBuilder sb = new StringBuilder("<ul>");
-        for (String value : data.getJSONArray(KEY_VALUES).toJavaList(String.class)) {
+        for (String value : Json.convertToList(Json.getArray(data, KEY_VALUES), String.class)) {
             sb.append("<li>");
             sb.append(ContentHelper.escapeXML(value));
             sb.append("</li>");
@@ -36,8 +37,8 @@ public class ListCellFormat implements CellFormat {
     }
 
     @Override
-    public String rawValue(JSONObject data) {
-        return data.getJSONArray((KEY_VALUES)).toString();
+    public String rawValue(ObjectNode data) {
+        return Json.tryGetArray(data, KEY_VALUES).map(Json::write).orElse(null);
     }
 
     @Nonnull

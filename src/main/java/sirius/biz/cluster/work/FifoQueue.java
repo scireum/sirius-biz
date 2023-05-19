@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -23,7 +23,7 @@ interface FifoQueue {
      *
      * @param task the task description to add to the queue
      */
-    void offer(@Nonnull JSONObject task);
+    void offer(@Nonnull ObjectNode task);
 
     /**
      * Polls the "oldest" work item from the queue.
@@ -31,7 +31,7 @@ interface FifoQueue {
      * @return the work item to process or <tt>null</tt> to indicate that the queue is empty
      */
     @Nullable
-    JSONObject poll();
+    ObjectNode poll();
 
     /**
      * Returns the number of elements in the queue.

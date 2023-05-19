@@ -8,9 +8,9 @@
 
 package sirius.biz.cluster.work;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.redis.Redis;
+import sirius.kernel.commons.Json;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,17 +33,17 @@ class RedisFifoQueue implements FifoQueue {
     }
 
     @Override
-    public void offer(@Nonnull JSONObject task) {
-        redis.pushToQueue(getRedisQueueName(), task.toJSONString());
+    public void offer(@Nonnull ObjectNode task) {
+        redis.pushToQueue(getRedisQueueName(), Json.write(task));
     }
 
     @Nullable
     @Override
-    public JSONObject poll() {
+    public ObjectNode poll() {
         String data = redis.pollQueue(getRedisQueueName());
 
         if (data != null) {
-            return JSON.parseObject(data);
+            return Json.parseObject(data);
         }
 
         return null;

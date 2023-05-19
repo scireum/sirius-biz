@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import sirius.biz.jobs.batch.BatchProcessJobFactory;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.web.Autoloaded;
@@ -20,6 +20,7 @@ import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
@@ -99,7 +100,12 @@ public class JobConfigData extends Composite {
     @BeforeSave
     protected void updateConfig() {
         if (configMap != null) {
-            configuration = JSON.toJSONString(configMap);
+            try {
+                configuration = Json.MAPPER.writeValueAsString(configMap);
+            } catch (JsonProcessingException exception) {
+                Exceptions.handle(exception);
+                configuration = Json.write(Json.createObject());
+            }
         }
 
         if (Strings.isFilled(job)) {
@@ -136,8 +142,9 @@ public class JobConfigData extends Composite {
         if (configMap == null) {
             configMap = new HashMap<>();
             if (configuration != null) {
-                JSON.parseObject(configuration)
-                    .forEach((key, value) -> configMap.put(key, value == null ? null : value.toString()));
+                Json.parseObject(configuration)
+                    .properties()
+                    .forEach(entry -> configMap.put(entry.getKey(), entry.getValue().asText(null)));
             }
         }
 

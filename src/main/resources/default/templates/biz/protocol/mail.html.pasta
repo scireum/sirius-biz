@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.protocol.MailProtocol" name="mail" />
+<i:arg type="sirius.biz.protocol.MailProtocol" name="mail"/>
 
 <t:page title="@mail.getSubject()">
     <i:block name="breadcrumbs">
@@ -81,6 +81,16 @@
         <div class="card-body">
             <h5 class="card-title">@i18n("MailProtocol.html")</h5>
             <pre class="mt-4 mb-0" style="max-height: 400px; overflow-y: auto">@mail.getHtmlContent()</pre>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@i18n("MailProtocol.preview")</h5>
+            <iframe srcdoc="@mail.getHtmlContent()"
+                    class="mt-4 mb-0 shadow-sm border border-secondary"
+                    style="width: 100%; height: 800px; overflow-y: auto">
+            </iframe>
         </div>
     </div>
 

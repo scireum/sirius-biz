@@ -58,7 +58,7 @@
                                  labelKey="PersonData.lastname"/>
                 </div>
                 <div class="row">
-                    <t:singleSelect class="col-12 col-md-6" name="userAccountData_language" labelKey="Model.lang">
+                    <t:singleSelect class="col-12 col-md-6" name="userAccountData_language" labelKey="Model.language">
                         <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
                             <option value="@language.getFirst()"
                                     @selected="language.getFirst() == userAccount.getUserAccountData().getLanguage().getValue()">

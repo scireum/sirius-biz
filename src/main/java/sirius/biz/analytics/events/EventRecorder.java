@@ -15,10 +15,12 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.jdbc.batch.InsertQuery;
 import sirius.db.jdbc.schema.Schema;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Realm;
 import sirius.kernel.Sirius;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -76,6 +78,9 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * Determines the max number of events to process in one insertion run.
      */
     private static final int MAX_EVENTS_PER_PROCESS = 16 * 1024;
+
+    private static final String AGGREGATION_COUNTER = "counter";
+    private static final String AGGREGATION_DISTINCT_COUNT = "distinctCount";
 
     private LocalDateTime lastProcessed;
     private final AtomicInteger bufferedEvents = new AtomicInteger();
@@ -181,7 +186,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      */
     public <E extends Event> int countEvents(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
-        SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS counter");
+        SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS " + AGGREGATION_COUNTER);
         if (queryTuner != null) {
             queryTuner.accept(query);
         }
@@ -189,7 +194,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         return query.asSQLQuery()
                     .markAsLongRunning()
                     .first()
-                    .flatMap(row -> row.getValue("counter").asOptionalInt())
+                    .flatMap(row -> row.getValue(AGGREGATION_COUNTER).asOptionalInt())
                     .orElse(0);
     }
 
@@ -219,6 +224,39 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
                 queryTuner.accept(query);
             }
         });
+    }
+
+    /**
+     * Counts the number of distinct values in the given mapping of events which have occurred based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType  the type of events to query
+     * @param mapping    the mapping to count distinct values for
+     * @param queryTuner the actual filter to apply. Note that {@link Event#EVENT_DATE} should be filtered, as otherwise
+     *                   the performance will be catastrophic.
+     * @param <E>        the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event> int countDistinctValuesInEvents(Class<E> eventType,
+                                                             Mapping mapping,
+                                                             @Nullable Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
+        SmartQuery<E> query = oma.select(eventType)
+                                 .aggregationField(Strings.apply("COUNT(DISTINCT %s) as %s",
+                                                                 mapping.getName(),
+                                                                 AGGREGATION_DISTINCT_COUNT));
+        if (queryTuner != null) {
+            queryTuner.accept(query);
+        }
+
+        return query.asSQLQuery()
+                    .markAsLongRunning()
+                    .first()
+                    .flatMap(row -> row.getValue(AGGREGATION_DISTINCT_COUNT).asOptionalInt())
+                    .orElse(0);
     }
 
     /**
