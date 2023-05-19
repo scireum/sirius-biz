@@ -209,7 +209,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
-        this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
+        this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(false);
         this.availableLanguages = scope.getDisplayLanguages().stream().toList();
     }
 
