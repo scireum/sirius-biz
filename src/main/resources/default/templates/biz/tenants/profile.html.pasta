@@ -1,109 +1,80 @@
 <i:arg name="userAccount" type="sirius.biz.tenants.UserAccount"/>
 <i:arg name="controller" type="sirius.biz.tenants.UserAccountController"/>
 
-<w:page titleKey="ProfileController.myProfile">
-    <w:pageHeader titleKey="ProfileController.userProfile"/>
-
+<t:page titleKey="ProfileController.myProfile">
+    <i:block name="page-header">
+        <t:pageHeader title="@userAccount.getUserAccountData().toString()">
+            <i:block name="additionalActions">
+                <t:dropdownItem labelKey="Model.password.set"
+                                icon="fa-solid fa-key"
+                                url="/profile/password"/>
+                <t:dropdownItem
+                        class="danger confirm-link-js"
+                        labelKey="LoginData.changeFingerprint"
+                        icon="fa-solid fa-arrow-right-from-bracket"
+                        url="/profile/changeFingerprint"/>
+            </i:block>
+        </t:pageHeader>
+    </i:block>
     <i:block name="breadcrumbs">
         <li>
             <a href="/profile">@i18n("ProfileController.myProfile")</a>
         </li>
     </i:block>
 
-    <div class="row">
-        <div class="col-md-3">
-            <w:infobox titleKey="Model.details">
-                <w:infoboxElement labelKey="LoginData.username"
-                                  value="@userAccount.getUserAccountData().getLogin().getUsername()"/>
-                <i:if test="userAccount.getUserAccountData().hasName()">
-                    <w:infoboxElement labelKey="Model.name" value="@userAccount.getUserAccountData().getPerson()"/>
-                </i:if>
-                <w:infoboxElement labelKey="Model.email" value="@userAccount.getUserAccountData().getEmail()"/>
-
-                <i:if test="@userAccount.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
-                    <w:infoboxElement labelKey="LoginData.generatedPassword"
-                                      value="@userAccount.getUserAccountData().getLogin().getGeneratedPassword()"/>
-
-                    <i:else>
-                        <i:if test="isFilled(userAccount.getUserAccountData().getLogin().getGeneratedPassword())">
-                            <w:infoboxElement labelKey="LoginData.generatedPassword"
-                                              value="@i18n('LoginData.password.hiddenGeneratedShort')"/>
-                        </i:if>
-                    </i:else>
-                </i:if>
-
-                <w:infoboxElement labelKey="LoginData.apiToken"
-                                  value="@userAccount.getUserAccountData().getLogin().getApiToken()"/>
-
-                <i:extensions target="profile" point="sidebar-infos" account="userAccount"/>
-            </w:infobox>
-
-            <i:extensions target="profile" point="sidebar-additional" account="userAccount"/>
-
-            <w:jobs target="userAccount"/>
-
-            <w:rateLimitBox>
-                <w:rateLimitsPerType type="user" scope="userAccount.getIdAsString()"/>
-            </w:rateLimitBox>
-        </div>
-        <div class="col-md-9">
-            <w:editForm url="/profile">
+    <t:editForm url="/profile">
+        <div class="row">
+            <div class="col-9">
                 <div class="row">
-                    <w:textfield span="12"
+                    <t:textfield class="col-12 col-md-6"
+                                 name="userAccountData_login_username"
+                                 value="@userAccount.getUserAccountData().getLogin().getUsername()"
+                                 labelKey="LoginData.username"
+                                 readonly="true"/>
+                    <t:textfield class="col-12 col-md-6"
                                  name="userAccountData_email"
                                  value="@userAccount.getUserAccountData().getEmail()"
                                  labelKey="Model.email"
                                  readonly="true"/>
                 </div>
                 <div class="row">
-                    <w:codelistSelect
-                            span="6"
-                            name="userAccountData_person_salutation"
-                            value="@userAccount.getUserAccountData().getPerson().getSalutation().getValue()"
-                            labelKey="PersonData.salutation"
-                            list="salutations"
-                            optional="true"/>
-                    <w:textfield span="6"
+                    <t:lookupValue class="col-12 col-md-6" name="userAccountData_person_salutation"
+                                   value="@userAccount.getUserAccountData().getPerson().getSalutation()"
+                                   optional="true"
+                                   labelKey="PersonData.salutation"/>
+                    <t:textfield class="col-12 col-md-6"
                                  name="userAccountData_person_title"
                                  value="@userAccount.getUserAccountData().getPerson().getTitle()"
                                  labelKey="PersonData.title"/>
                 </div>
                 <div class="row">
-                    <w:textfield span="6"
+                    <t:textfield class="col-12 col-md-6"
                                  name="userAccountData_person_firstname"
                                  value="@userAccount.getUserAccountData().getPerson().getFirstname()"
                                  labelKey="PersonData.firstname"/>
-                    <w:textfield span="6"
+                    <t:textfield class="col-12 col-md-6"
                                  name="userAccountData_person_lastname"
                                  value="@userAccount.getUserAccountData().getPerson().getLastname()"
                                  labelKey="PersonData.lastname"/>
                 </div>
                 <div class="row">
-                    <w:singleSelect name="userAccountData_language" labelKey="Model.lang" required="true">
+                    <t:singleSelect class="col-12 col-md-6" name="userAccountData_language" labelKey="Model.lang">
                         <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
                             <option value="@language.getFirst()"
                                     @selected="language.getFirst() == userAccount.getUserAccountData().getLanguage().getValue()">
                                 @language.getSecond()
                             </option>
                         </i:for>
-                    </w:singleSelect>
+                    </t:singleSelect>
                 </div>
 
                 <i:extensions target="profile" point="details" account="userAccount"/>
-            </w:editForm>
+            </div>
+            <div class="col-3">
+                <i:extensions target="profile" point="sidebar" account="userAccount"/>
+            </div>
         </div>
-        <div class="col-md-4">
-            <i:extensions target="profile" point="image" account="@userAccount"/>
-        </div>
-    </div>
 
-
-    <w:formBar>
-        <div class="pull-right">
-            <a class="btn" href="/profile/password">@i18n("Model.password.set")</a>
-            <a class="btn btn-danger" href="/profile/changeFingerprint">@i18n("LoginData.changeFingerprint")</a>
-        </div>
-    </w:formBar>
-
-    <i:extensions target="profile" point="below-form" account="@userAccount"/>
-</w:page>
+        <t:formBar/>
+    </t:editForm>
+</t:page>
