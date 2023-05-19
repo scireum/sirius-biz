@@ -125,7 +125,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                 getUsersAsPage(webContext).addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                         .inner(LoginData.ACCOUNT_LOCKED)
                                                                                         .toString(),
-                                                           NLS.get("LoginData.accountLocked")).asPage();
+                                                           NLS.get("LoginData.accountLocked")).withTotalCount().asPage();
 
         webContext.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", accounts, getUserClass());
     }
