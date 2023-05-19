@@ -1,89 +1,74 @@
 <i:arg type="Page" name="tenants"/>
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
-<w:page titleKey="Tenant.plural">
+<t:page titleKey="Tenant.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/tenants">@i18n("Tenant.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="Tenant.plural"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="Tenant.plural"/>
+    </i:block>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:sidebarKeyMetrics target="sirius.biz.tenants.Tenant.class"/>
+            <t:filterbox page="tenants" baseUrl="/tenants"/>
+            <t:jobs target="sirius.biz.tenants.Tenant.class"/>
+            <t:charts target="sirius.biz.tenants.Tenant.class"/>
+            <i:extensions target="tenants" point="sidebar" page="tenants"/>
+        </i:block>
 
-    <div class="row">
-        <i:if test="@tenants.hasFacets()">
-            <div class="col-md-3">
-                <w:filterbox page="tenants" baseUrl="/tenants"/>
-                <w:jobs target="tenants"/>
-                <i:extensions target="tenants" point="sidebar" page="tenants"/>
-            </div>
-        </i:if>
-        <div class="@if (tenants.hasFacets()) { col-md-9 } else { col-md-12 }">
-            <w:tableSearchHeader page="tenants" baseUrl="/tenants">
-                <a class="btn btn-primary" href="/tenant/new">@i18n("Model.create")</a>
-            </w:tableSearchHeader>
+        <t:searchHeader page="tenants" baseUrl="/tenants">
+            <t:createButton url="/tenant/new"/>
+        </t:searchHeader>
 
-            <w:table data="tenants">
-                <thead>
-                <tr>
-                    <i:extensions target="tenants" page="tenants" point="first-column-head"/>
-                    <th>
-                        @i18n("TenantData.name")<br>
-                        <small class="muted">@i18n("Model.id")</small>
-                    </th>
-                    <th>
-                        <div>@i18n("TenantData.fullName")</div>
-                        <div>@i18n("TenantData.accountNumber")</div>
-                    </th>
-                    <th>
-                        @i18n("AddressData.street")<br>
-                        @i18n("AddressData.zip") @i18n("AddressData.city")
-                    </th>
-                    <i:extensions target="tenants" page="tenants" point="last-column-head"/>
-                    <th/>
-                </tr>
-                </thead>
-                <tbody>
+        <t:emptyCheck data="tenants">
+            <t:datacards>
                 <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
-                    <tr>
-                        <i:extensions target="tenants" page="tenants" tenant="tenant"
-                                      point="first-column"/>
-                        <td class="title">
-                            <a class="link" href="/tenant/@tenant.getIdAsString()">@tenant.getTenantData().getName()</a><br>
-                            <small class="muted">@tenant.getIdAsString()</small>
-                        </td>
-                        <td>
-                            <div>@tenant.getTenantData().getFullName()</div>
-                            <div>@tenant.getTenantData().getAccountNumber()</div>
-                        </td>
-                        <td>
-                            @tenant.getTenantData().getAddress().getStreet()<br>
-                            @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
-                        </td>
-                        <i:extensions target="tenants" page="tenants" tenant="tenant"
-                                      point="last-column"/>
-                        <td class="col-md-2 align-center">
-                            <w:permission permission="permission-select-tenant">
-                                <div>
-                                    <a class="link" href="/tenants/select/@tenant.getIdAsString()">
-                                        <i class="fa fa-building"></i>
-                                        @i18n("TenantController.select")
-                                    </a>
-                                </div>
-                            </w:permission>
-                            <div>
-                                <i class="fa fa-trash"></i>
-                                <a href="@controller.getDeleteLink(tenant.getIdAsString())" class="link link-red">
-                                    @i18n("NLS.delete")
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                </i:for>
-                </tbody>
-            </w:table>
+                    <t:datacard subTitle="@tenant.getTenantData().getAccountNumber()"
+                                link="@apply('/tenant/%s', tenant.getIdAsString())">
+                        <i:block name="header">
+                            <i:extensions target="tenants" page="tenants" tenant="tenant"
+                                          point="card-header"/>
+                        </i:block>
+                        <i:block name="title">
+                            <t:country country="@tenant.getTenantData().getAddress().getCountry().getValue()">
+                                @tenant.getTenantData().getName()
+                            </t:country>
+                        </i:block>
+                        <i:block name="actions">
+                            <t:dropdownItem labelKey="TenantController.select"
+                                            icon="fa fa-building"
+                                            url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
+                            <i:extensions target="tenants" page="tenants" tenant="tenant"
+                                          point="card-actions"/>
+                            <t:dropdownDeleteItem url="@controller.getDeleteLink(tenant.getIdAsString())"/>
+                        </i:block>
+                        <i:extensions target="tenants" page="tenants" tenant="tenant" point="card-top"/>
 
-            <w:pagination page="tenants" baseUrl="/tenants"/>
-        </div>
-    </div>
-</w:page>
+                        <div class="mb-2">
+                            <i:if test="tenant.getTenantData().getFullName() != tenant.getTenantData().getName()">
+                                <div>@tenant.getTenantData().getFullName()</div>
+                            </i:if>
+                            <div>@tenant.getTenantData().getAddress().getStreet()</div>
+                            <div>@tenant.getTenantData().getAddress().getZip()
+                                @tenant.getTenantData().getAddress().getCity()
+                            </div>
+                        </div>
+                        <i:extensions target="tenants" page="tenants" tenant="tenant"
+                                      point="card-bottom"/>
+
+                        <i:block name="footer">
+                            <i:extensions target="tenants" page="tenants" tenant="tenant"
+                                          point="card-footer"/>
+                        </i:block>
+                    </t:datacard>
+                </i:for>
+            </t:datacards>
+
+            <t:pagination page="tenants" baseUrl="/tenants"/>
+        </t:emptyCheck>
+    </t:sidebar>
+</t:page>

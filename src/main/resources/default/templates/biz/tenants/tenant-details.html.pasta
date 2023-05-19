@@ -2,49 +2,56 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="details">
-    <w:editForm url="@apply('/tenant/%s', tenant.getIdAsString())">
+    <t:editForm url="@apply('/tenant/%s', tenant.getIdAsString())">
         <div class="row">
-            <w:textfield name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="TenantData.name"
-                         required="true"/>
-            <w:textfield name="tenantData_fullName" value="@tenant.getTenantData().getFullName()"
+            <t:textfield class="col-12 col-md-6 required"
+                         name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="TenantData.name"/>
+            <t:textfield class="col-12 col-md-6"
+                         name="tenantData_fullName" value="@tenant.getTenantData().getFullName()"
                          labelKey="TenantData.fullName"/>
         </div>
         <div class="row">
-            <w:textfield name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
+            <t:textfield class="col-12 col-md-6"
+                         name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
                          labelKey="TenantData.accountNumber"/>
-            <w:singleSelect name="tenantData_language" labelKey="Model.lang" required="true">
+            <t:singleSelect class="col-12 col-md-6 required"
+                            name="tenantData_language" labelKey="Model.lang">
                 <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
                     <option value="@language.getFirst()"
                             @selected="language.getFirst() == tenant.getTenantData().getLanguage().getValue()">
                         @language.getSecond()
                     </option>
                 </i:for>
-            </w:singleSelect>
+            </t:singleSelect>
         </div>
 
         <i:extensions target="tenant-details" point="below-details" tenant="tenant" controller="controller"/>
 
-        <w:subHeading labelKey="Model.address"/>
+        <t:heading labelKey="Model.address"/>
         <div class="row">
-            <w:textfield span="12" name="tenantData_address_street" value="@tenant.getTenantData().getAddress().getStreet()"
+            <t:textfield class="col-12" name="tenantData_address_street"
+                         value="@tenant.getTenantData().getAddress().getStreet()"
                          labelKey="AddressData.street"/>
         </div>
         <div class="row">
-            <w:textfield span="2" name="tenantData_address_zip" value="@tenant.getTenantData().getAddress().getZip()"
+            <t:textfield class="col-12 col-md-3" name="tenantData_address_zip"
+                         value="@tenant.getTenantData().getAddress().getZip()"
                          labelKey="AddressData.zip"/>
-            <w:textfield name="tenantData_address_city" value="@tenant.getTenantData().getAddress().getCity()"
+            <t:textfield class="col-12 col-md-4" name="tenantData_address_city"
+                         value="@tenant.getTenantData().getAddress().getCity()"
                          labelKey="AddressData.city"/>
-            <w:codelistSelect span="4" list="countries" name="tenantData_address_country"
-                              value="@tenant.getTenantData().getAddress().getCountry().getValue()"
-                              labelKey="InternationalAddressData.country"/>
+            <t:lookupValue class="col-12 col-md-5" name="tenantData_address_country"
+                           value="@tenant.getTenantData().getAddress().getCountry()"
+                           optional="true"
+                           labelKey="InternationalAddressData.country"/>
         </div>
 
         <i:extensions target="tenant-details" point="bottom" tenant="tenant" controller="controller"/>
-    </w:editForm>
 
-    <w:formBar>
-        <w:tracing trace="tenant.getTrace()" journal="tenant.getJournal()"/>
-    </w:formBar>
+        <t:formBar>
+            <t:tracing trace="tenant.getTrace()" journal="tenant.getJournal()"/>
+        </t:formBar>
+    </t:editForm>
 
     <i:extensions target="tenant-details" point="below-form" tenant="tenant" controller="controller"/>
 </i:invoke>

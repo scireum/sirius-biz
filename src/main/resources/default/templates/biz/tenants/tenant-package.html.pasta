@@ -2,12 +2,13 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="package">
-    <w:editForm url="@apply('/tenant/%s/package', tenant.getIdAsString())">
+    <t:editForm url="@apply('/tenant/%s/package', tenant.getIdAsString())">
         <i:invoke template="/templates/biz/packages/packages-and-upgrades.html.pasta" scope="tenant"
                   packageData="@tenant.getTenantData().getPackageData()" packages="controller.getPackages()"/>
 
         <i:extensions target="tenant-package" point="bottom" tenant="tenant" controller="controller"/>
-    </w:editForm>
 
-    <w:formBar/>
+        <t:formBar backButton="false"/>
+    </t:editForm>
+
 </i:invoke>
