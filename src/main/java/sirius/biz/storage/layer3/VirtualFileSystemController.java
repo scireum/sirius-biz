@@ -10,6 +10,7 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tycho.QuickAction;
 import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
@@ -317,6 +318,30 @@ public class VirtualFileSystemController extends BizController {
     }
 
     /**
+     * Sets the read-only flag of the given file to false.
+     *
+     * @param webContext the request to handle
+     */
+    @LoginRequired
+    @Routed("/fs/unlock")
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    public void unlock(WebContext webContext) {
+        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        if (!file.exists()) {
+            webContext.respondWith().redirectToGet("/fs");
+            return;
+        }
+
+        try {
+            file.updateReadOnlyFlag(false);
+        } catch (Exception e) {
+            UserContext.handle(e);
+        }
+
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+    }
+
+    /**
      * Provides a JSON API which lists the contents of a given directory.
      * <p>
      * This is used by the selectVFSFile or selectVFSDirectory JavaScript calls/modals.
@@ -347,6 +372,9 @@ public class VirtualFileSystemController extends BizController {
         FileSearch search = FileSearch.iterateAll(child -> outputFile(out, child.name(), child));
         if (webContext.get("onlyDirectories").asBoolean()) {
             search.withOnlyDirectories();
+        }
+        if (webContext.get("skipReadOnlyFiles").asBoolean()) {
+            search.skipReadOnlyFiles();
         }
         search.withPrefixFilter(webContext.get("filter").asString());
         webContext.get("extensions").ifFilled(extensionString -> {

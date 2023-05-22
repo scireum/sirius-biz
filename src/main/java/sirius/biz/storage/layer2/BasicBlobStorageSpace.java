@@ -1025,6 +1025,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract void updateBlobName(B blob, String newName);
 
     /**
+     * Effectively updates the blob read-only flag after all checks have been passed.
+     *
+     * @param blob     the blob to rename
+     * @param readOnly the new value to use
+     */
+    public abstract void updateBlobReadOnlyFlag(B blob, boolean readOnly);
+
+    /**
      * Performs a download / fetch of the given blob to make its data locally accessible.
      *
      * @param blob the blob to fetch the data for

@@ -125,6 +125,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
                                                    getCurrentOrRootUser(),
                                                    determinePersistencePeriod(context),
                                                    context);
+        lockFiles(context);
         logScheduledMessage(processId);
         addLinkToJob(processId);
         createAndScheduleDistributedTask(processId);
