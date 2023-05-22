@@ -74,7 +74,7 @@ public class TenantData extends Composite implements Journaled {
     private boolean canAccessParent = false;
 
     /**
-     * Determines the interval in days, after which a user needs to login again.
+     * Determines the interval in days, after which a user needs to log-in again.
      */
     public static final Mapping LOGIN_INTERVAL_DAYS = Mapping.named("loginIntervalDays");
     @Autoloaded
@@ -83,7 +83,7 @@ public class TenantData extends Composite implements Journaled {
     private Integer loginIntervalDays;
 
     /**
-     * Determines the interval in days, after which a user needs to login again, via an external system.
+     * Determines the interval in days, after which a user needs to log-in again, via an external system.
      * <p>
      * Note that this is only enforced if {@link UserAccountData#isExternalLoginRequired()} is <tt>true</tt>.
      */
