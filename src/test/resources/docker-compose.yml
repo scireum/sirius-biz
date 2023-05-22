@@ -27,7 +27,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
     hostname: mariadb
   clickhouse:
-    image: clickhouse/clickhouse-server:22.5-alpine
+    image: clickhouse/clickhouse-server:23.4.2.11-alpine
     ports:
       - "8123"
       - "9000"
