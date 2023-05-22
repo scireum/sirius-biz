@@ -8,10 +8,12 @@
 
 package sirius.biz.tenants.jdbc;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.codelists.LookupValue;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tycho.academy.OnboardingData;
@@ -19,11 +21,18 @@ import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 import sirius.web.controller.Message;
 
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -85,6 +94,46 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
         }
 
         return userIcon.asOptional();
+    }
+
+    @Override
+    public Value readPreference(String key) {
+        return Value.of(getUserAccountData().getUserPreferences().get(key));
+    }
+
+    @Override
+    public void updatePreference(String key, Object value) {
+        try {
+            Map<String, Object> newPreferences = new HashMap<>(getUserAccountData().getUserPreferences());
+            if (Strings.isEmpty(value)) {
+                newPreferences.remove(key);
+                if (newPreferences.isEmpty()) {
+                    oma.updateStatement(SQLUserAccount.class)
+                       .set(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES), null)
+                       .where(SQLUserAccount.ID, id)
+                       .executeUpdate();
+                    TenantUserManager.flushCacheForUserAccount(this);
+                }
+
+                return;
+            }
+
+            newPreferences.put(key, value);
+            oma.updateStatement(SQLUserAccount.class)
+               .set(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES), Json.MAPPER.writeValueAsString(newPreferences))
+               .where(SQLUserAccount.ID, id)
+               .executeUpdate();
+            TenantUserManager.flushCacheForUserAccount(this);
+        } catch (SQLException | JsonProcessingException e) {
+            throw Exceptions.handle()
+                            .to(Log.SYSTEM)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to update user preference '%s' to '%s' for %s: %s (%s)",
+                                                    key,
+                                                    value,
+                                                    getIdAsString())
+                            .handle();
+        }
     }
 
     @Override

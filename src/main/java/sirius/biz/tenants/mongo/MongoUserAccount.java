@@ -8,12 +8,14 @@
 
 package sirius.biz.tenants.mongo;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.codelists.LookupValue;
 import sirius.biz.mongo.CustomSortValues;
 import sirius.biz.mongo.SortField;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tycho.academy.OnboardingData;
@@ -23,13 +25,19 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 import sirius.web.controller.Message;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -132,6 +140,47 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
         }
 
         return userIcon.asOptional();
+    }
+
+    @Override
+    public Value readPreference(String key) {
+        return Value.of(getUserAccountData().getUserPreferences().get(key));
+    }
+
+    @Override
+    public void updatePreference(String key, Object value) {
+        try {
+            Map<String, Object> newPreferences = new HashMap<>(getUserAccountData().getUserPreferences());
+            if (Strings.isEmpty(value)) {
+                newPreferences.remove(key);
+                if (newPreferences.isEmpty()) {
+                    mongo.update()
+                         .set(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES), null)
+                         .where(MongoUserAccount.ID, id)
+                         .executeForOne(MongoUserAccount.class);
+                    TenantUserManager.flushCacheForUserAccount(this);
+                }
+
+                return;
+            }
+
+            newPreferences.put(key, value);
+            mongo.update()
+                 .set(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES),
+                      Json.MAPPER.writeValueAsString(newPreferences))
+                 .where(MongoUserAccount.ID, id)
+                 .executeForOne(MongoUserAccount.class);
+            TenantUserManager.flushCacheForUserAccount(this);
+        } catch (JsonProcessingException e) {
+            throw Exceptions.handle()
+                            .to(Log.SYSTEM)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to update user preference '%s' to '%s' for %s: %s (%s)",
+                                                    key,
+                                                    value,
+                                                    getIdAsString())
+                            .handle();
+        }
     }
 
     @Override

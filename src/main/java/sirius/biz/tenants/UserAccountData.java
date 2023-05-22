@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.LoginData;
@@ -28,6 +29,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
@@ -38,6 +40,8 @@ import sirius.web.security.UserContext;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -109,6 +113,19 @@ public class UserAccountData extends Composite implements MessageProvider {
     @NullAllowed
     @Length(2)
     private final LookupValue language = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
+
+    /**
+     * Contains internally stored settings for this user.
+     * <p>
+     * This might e.g. be display settings for specific views or the like.
+     */
+    public static final Mapping USER_PREFERENCES = Mapping.named("userPreferences");
+    @NullAllowed
+    @Lob
+    private String userPreferences;
+
+    @Transient
+    private Map<String, Object> parsedUserPreferences;
 
     @Part
     private static Mails ms;
@@ -335,6 +352,27 @@ public class UserAccountData extends Composite implements MessageProvider {
      */
     public boolean canSendGeneratedPassword() {
         return Strings.isFilled(email) && userObject.isUnique(UserAccount.USER_ACCOUNT_DATA.inner(EMAIL), email);
+    }
+
+    /**
+     * Returns the parsed user preferences.
+     * <p>
+     * Use {@link UserAccount#readPreference(String)} to access the preferences.
+     *
+     * @return the parsed user preferences as map
+     */
+    public Map<String, Object> getUserPreferences() {
+        if (parsedUserPreferences == null) {
+            if (Strings.isFilled(userPreferences)) {
+                parsedUserPreferences = Json.MAPPER.convertValue(Json.parseObject(userPreferences),
+                                                                 new TypeReference<Map<String, Object>>() {
+                                                                 });
+            } else {
+                parsedUserPreferences = Collections.emptyMap();
+            }
+        }
+
+        return Collections.unmodifiableMap(parsedUserPreferences);
     }
 
     public PersonData getPerson() {
