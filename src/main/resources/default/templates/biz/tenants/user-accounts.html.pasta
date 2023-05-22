@@ -85,7 +85,7 @@
                         <i:extensions target="user-accounts" page="accounts" account="account" point="card-top"/>
 
                         <div class="mb-2">
-                            <t:iconInlineInfo icon="fa-solid fa-eye" titleKey="LoginData.lastSeen">
+                            <t:iconInlineInfo icon="fa-solid fa-eye">
                                 <i:if test="account.getUserAccountData().getLogin().getLastSeen() != null">
                                     @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
                                     <i:else>-</i:else>
