@@ -151,23 +151,10 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     public void updatePreference(String key, Object value) {
         try {
             Map<String, Object> newPreferences = new HashMap<>(getUserAccountData().getUserPreferences());
-            if (Strings.isEmpty(value)) {
-                newPreferences.remove(key);
-                if (newPreferences.isEmpty()) {
-                    mongo.update()
-                         .set(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES), null)
-                         .where(MongoUserAccount.ID, id)
-                         .executeForOne(MongoUserAccount.class);
-                    TenantUserManager.flushCacheForUserAccount(this);
-                }
-
-                return;
-            }
-
-            newPreferences.put(key, value);
+            String updatedPreferencesAsString = computeUpdatedPreferences(newPreferences, key, value);
             mongo.update()
                  .set(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES),
-                      Json.MAPPER.writeValueAsString(newPreferences))
+                      updatedPreferencesAsString)
                  .where(MongoUserAccount.ID, id)
                  .executeForOne(MongoUserAccount.class);
             TenantUserManager.flushCacheForUserAccount(this);
@@ -180,6 +167,21 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
                                                     value,
                                                     getIdAsString())
                             .handle();
+        }
+    }
+
+    private String computeUpdatedPreferences(Map<String, Object> preferences, String key, Object value)
+            throws JsonProcessingException {
+        if (Strings.isEmpty(value)) {
+            preferences.remove(key);
+        } else {
+            preferences.put(key, value);
+        }
+
+        if (preferences.isEmpty()) {
+            return null;
+        } else {
+            return Json.MAPPER.writeValueAsString(preferences);
         }
     }
 

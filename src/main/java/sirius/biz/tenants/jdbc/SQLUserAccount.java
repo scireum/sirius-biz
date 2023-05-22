@@ -105,22 +105,10 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     public void updatePreference(String key, Object value) {
         try {
             Map<String, Object> newPreferences = new HashMap<>(getUserAccountData().getUserPreferences());
-            if (Strings.isEmpty(value)) {
-                newPreferences.remove(key);
-                if (newPreferences.isEmpty()) {
-                    oma.updateStatement(SQLUserAccount.class)
-                       .set(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES), null)
-                       .where(SQLUserAccount.ID, id)
-                       .executeUpdate();
-                    TenantUserManager.flushCacheForUserAccount(this);
-                }
-
-                return;
-            }
-
-            newPreferences.put(key, value);
+            String updatedPreferencesAsString = computeUpdatedPreferences(newPreferences, key, value);
             oma.updateStatement(SQLUserAccount.class)
-               .set(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES), Json.MAPPER.writeValueAsString(newPreferences))
+               .set(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES),
+                    updatedPreferencesAsString)
                .where(SQLUserAccount.ID, id)
                .executeUpdate();
             TenantUserManager.flushCacheForUserAccount(this);
@@ -133,6 +121,21 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
                                                     value,
                                                     getIdAsString())
                             .handle();
+        }
+    }
+
+    private String computeUpdatedPreferences(Map<String, Object> preferences, String key, Object value)
+            throws JsonProcessingException {
+        if (Strings.isEmpty(value)) {
+            preferences.remove(key);
+        } else {
+            preferences.put(key, value);
+        }
+
+        if (preferences.isEmpty()) {
+            return null;
+        } else {
+            return Json.MAPPER.writeValueAsString(preferences);
         }
     }
 
