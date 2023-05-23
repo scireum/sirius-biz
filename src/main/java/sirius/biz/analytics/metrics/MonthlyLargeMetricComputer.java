@@ -52,12 +52,12 @@ public abstract class MonthlyLargeMetricComputer<E extends BaseEntity<?>> implem
 
         // if the reference date passed to this method is in the current month, we consider the computation to be of
         // particular interest – unless it is only a best-effort computation that produces preliminary values only
-        boolean periodOutsideOfCurrentInterest = bestEffort || !sameMonth;
+        boolean periodOutsideOfCurrentInterest = !sameMonth;
 
         // usually, given the reference date, we compute the values for the respective previous month; for best-effort
         // scheduling and the current month, however, we leave the date as it is in order to obtain a preliminary value
         // for this month
-        if (!bestEffort || !sameMonth) {
+        if (!bestEffort) {
             date = date.minusMonths(1);
         }
 
