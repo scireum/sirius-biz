@@ -30,7 +30,7 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
     @Parts(TenantAutoSetupExtender.class)
     protected PartCollection<TenantAutoSetupExtender> extenders;
 
-    @ConfigValue("security.system-saml.external-login-interval-days")
+    @ConfigValue("security.system-saml.externalLoginIntervalDays")
     private Integer externalLoginIntervalDays;
     @ConfigValue("security.system-saml.requestIssuerName")
     private String samlRequestIssuerName;

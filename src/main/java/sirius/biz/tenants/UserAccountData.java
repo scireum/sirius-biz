@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.LoginData;
@@ -361,12 +360,10 @@ public class UserAccountData extends Composite implements MessageProvider {
      *
      * @return the parsed user preferences as map
      */
-    public Map<String, Object> getUserPreferences() {
+    public Map<String, Object> fetchUserPreferences() {
         if (parsedUserPreferences == null) {
             if (Strings.isFilled(userPreferences)) {
-                parsedUserPreferences = Json.MAPPER.convertValue(Json.parseObject(userPreferences),
-                                                                 new TypeReference<Map<String, Object>>() {
-                                                                 });
+                parsedUserPreferences = Json.convertToMap(Json.parseObject(userPreferences));
             } else {
                 parsedUserPreferences = Collections.emptyMap();
             }

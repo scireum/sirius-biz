@@ -144,13 +144,13 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
 
     @Override
     public Value readPreference(String key) {
-        return Value.of(getUserAccountData().getUserPreferences().get(key));
+        return Value.of(getUserAccountData().fetchUserPreferences().get(key));
     }
 
     @Override
     public void updatePreference(String key, Object value) {
         try {
-            Map<String, Object> newPreferences = new HashMap<>(getUserAccountData().getUserPreferences());
+            Map<String, Object> newPreferences = new HashMap<>(getUserAccountData().fetchUserPreferences());
             String updatedPreferencesAsString = computeUpdatedPreferences(newPreferences, key, value);
             mongo.update()
                  .set(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.USER_PREFERENCES),
