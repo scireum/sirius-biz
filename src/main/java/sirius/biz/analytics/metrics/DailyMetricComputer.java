@@ -57,7 +57,6 @@ public abstract class DailyMetricComputer<E extends BaseEntity<?>> implements An
             date = date.minusDays(1);
         }
 
-        // params als record übergeben mit besteffort?
         compute(new ComputeParameters<>(date,
                                         date.atStartOfDay(),
                                         date.plusDays(1).atStartOfDay().minusSeconds(1),
