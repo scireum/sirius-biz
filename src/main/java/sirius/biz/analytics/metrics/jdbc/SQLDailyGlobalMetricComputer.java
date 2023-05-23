@@ -8,8 +8,8 @@
 
 package sirius.biz.analytics.metrics.jdbc;
 
-import sirius.biz.analytics.metrics.ComputeParameters;
 import sirius.biz.analytics.metrics.DailyMetricComputer;
+import sirius.biz.analytics.metrics.MetricComputerContext;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.jdbc.SQLEntity;
 
@@ -35,9 +35,9 @@ public abstract class SQLDailyGlobalMetricComputer extends DailyMetricComputer<S
     }
 
     @Override
-    public final void compute(ComputeParameters parameters, SQLEntity entity) throws Exception {
-        compute(parameters);
+    public final void compute(MetricComputerContext context, SQLEntity entity) throws Exception {
+        compute(context);
     }
 
-    protected abstract void compute(ComputeParameters parameters) throws Exception;
+    protected abstract void compute(MetricComputerContext context) throws Exception;
 }

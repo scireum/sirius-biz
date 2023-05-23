@@ -14,9 +14,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Contains the parameters passed to {@link DailyMetricComputer#compute(ComputeParameters, BaseEntity)},
- * {@link MonthlyMetricComputer#compute(ComputeParameters, BaseEntity)} and
- * {@link MonthlyLargeMetricComputer#compute(ComputeParameters, BaseEntity)}.
+ * Contains the parameters passed to {@link DailyMetricComputer#compute(MetricComputerContext, BaseEntity)},
+ * {@link MonthlyMetricComputer#compute(MetricComputerContext, BaseEntity)} and
+ * {@link MonthlyLargeMetricComputer#compute(MetricComputerContext, BaseEntity)}.
  *
  * @param date                           the date for which the computation should be performed
  * @param startOfPeriod                  the start of the period as {@link LocalDateTime}
@@ -27,8 +27,8 @@ import java.time.LocalDateTime;
  * @param bestEffortScheduled            <b>true</b> if the computation is performed on a best-effort basis, usually for
  *                                       a current, still incomplete period, or <b>false</b> otherwise
  */
-public record ComputeParameters(LocalDate date, LocalDateTime startOfPeriod, LocalDateTime endOfPeriod,
-                                boolean periodOutsideOfCurrentInterest, boolean bestEffortScheduled) {
+public record MetricComputerContext(LocalDate date, LocalDateTime startOfPeriod, LocalDateTime endOfPeriod,
+                                    boolean periodOutsideOfCurrentInterest, boolean bestEffortScheduled) {
 
     /**
      * Provides the start of the period as {@link LocalDate}.

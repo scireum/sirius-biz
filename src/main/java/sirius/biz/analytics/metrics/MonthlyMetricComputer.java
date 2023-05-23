@@ -73,22 +73,22 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
             date = date.minusMonths(1);
         }
 
-        compute(new ComputeParameters(date,
-                                      date.withDayOfMonth(1).atStartOfDay(),
-                                      date.withDayOfMonth(date.lengthOfMonth())
-                                          .plusDays(1)
-                                          .atStartOfDay()
-                                          .minusSeconds(1),
-                                      periodOutsideOfCurrentInterest,
-                                      bestEffort), entity);
+        compute(new MetricComputerContext(date,
+                                          date.withDayOfMonth(1).atStartOfDay(),
+                                          date.withDayOfMonth(date.lengthOfMonth())
+                                              .plusDays(1)
+                                              .atStartOfDay()
+                                              .minusSeconds(1),
+                                          periodOutsideOfCurrentInterest,
+                                          bestEffort), entity);
     }
 
     /**
      * Performs the computation for the given parameters.
      *
-     * @param parameters the parameters for the computation
-     * @param entity     the entity to perform the computation for
+     * @param context the parameters for the computation
+     * @param entity  the entity to perform the computation for
      * @throws Exception in case of any problem while performing the computation
      */
-    public abstract void compute(ComputeParameters parameters, E entity) throws Exception;
+    public abstract void compute(MetricComputerContext context, E entity) throws Exception;
 }

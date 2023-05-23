@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.metrics.mongo;
 
-import sirius.biz.analytics.metrics.ComputeParameters;
+import sirius.biz.analytics.metrics.MetricComputerContext;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.mongo.MongoEntity;
@@ -35,9 +35,9 @@ public abstract class MongoMonthlyGlobalMetricComputer extends MonthlyMetricComp
     }
 
     @Override
-    public final void compute(ComputeParameters parameters, MongoEntity entity) throws Exception {
-        compute(parameters);
+    public final void compute(MetricComputerContext context, MongoEntity entity) throws Exception {
+        compute(context);
     }
 
-    protected abstract void compute(ComputeParameters parameters) throws Exception;
+    protected abstract void compute(MetricComputerContext context) throws Exception;
 }

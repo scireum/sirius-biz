@@ -9,7 +9,7 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
-import sirius.biz.analytics.metrics.ComputeParameters;
+import sirius.biz.analytics.metrics.MetricComputerContext;
 import sirius.biz.analytics.metrics.jdbc.SQLMonthlyGlobalMetricComputer;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
@@ -29,30 +29,30 @@ public class SQLTenantGlobalMetricComputer extends SQLMonthlyGlobalMetricCompute
     }
 
     @Override
-    protected void compute(ComputeParameters parameters) throws Exception {
-        if (parameters.periodOutsideOfCurrentInterest()) {
+    protected void compute(MetricComputerContext context) throws Exception {
+        if (context.periodOutsideOfCurrentInterest()) {
             // This is an actual observation and not calculated from recorded data. Therefore, we cannot compute this
             // for past dates...
             return;
         }
 
         metrics.updateGlobalMonthlyMetric(GlobalTenantMetricComputer.METRIC_NUM_TENANTS,
-                                          parameters.date(),
+                                          context.date(),
                                           (int) oma.selectFromSecondary(SQLTenant.class).count());
         metrics.updateGlobalMonthlyMetric(GlobalTenantMetricComputer.METRIC_NUM_ACTIVE_TENANTS,
-                                          parameters.date(),
+                                          context.date(),
                                           (int) oma.selectFromSecondary(SQLTenant.class)
                                                    .where(SQLPerformanceData.filterFlagSet(SQLTenantMetricComputer.ACTIVE_USERS))
                                                    .count());
         metrics.updateGlobalMonthlyMetric(GlobalTenantMetricComputer.METRIC_NUM_USERS,
-                                          parameters.date(),
+                                          context.date(),
                                           (int) oma.selectFromSecondary(SQLUserAccount.class)
                                                    .eq(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                        .inner(LoginData.ACCOUNT_LOCKED),
                                                        false)
                                                    .count());
         metrics.updateGlobalMonthlyMetric(GlobalTenantMetricComputer.METRIC_NUM_ACTIVE_USERS,
-                                          parameters.date(),
+                                          context.date(),
                                           (int) oma.selectFromSecondary(SQLUserAccount.class)
                                                    .eq(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                        .inner(LoginData.ACCOUNT_LOCKED),

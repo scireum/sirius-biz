@@ -10,7 +10,7 @@ package sirius.biz.tenants.metrics.computers;
 
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.flags.PerformanceFlag;
-import sirius.biz.analytics.metrics.ComputeParameters;
+import sirius.biz.analytics.metrics.MetricComputerContext;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
@@ -71,8 +71,8 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
     private EventRecorder eventRecorder;
 
     @Override
-    public void compute(ComputeParameters parameters, U entity) throws Exception {
-        LocalDate lowerLimit = parameters.date().minusDays(observationPeriodDays);
+    public void compute(MetricComputerContext context, U entity) throws Exception {
+        LocalDate lowerLimit = context.date().minusDays(observationPeriodDays);
 
         int numberOfActiveDays = eventRecorder.createQuery(
                                                       //language=SQL
@@ -84,15 +84,15 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                                                                 AND eventDate <= ${upperLimit}""")
                                               .set("userId", entity.getUniqueName())
                                               .set("lowerLimit", lowerLimit)
-                                              .set("upperLimit", parameters.date())
+                                              .set("upperLimit", context.date())
                                               .first()
                                               .flatMap(row -> row.getValue("numberOfDays").asOptionalInt())
                                               .orElse(0);
 
         int activityRateInPercent = numberOfActiveDays * 100 / observationPeriodDays;
-        metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, parameters.date(), activityRateInPercent);
+        metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, context.date(), activityRateInPercent);
 
-        if (!parameters.periodOutsideOfCurrentInterest()) {
+        if (!context.periodOutsideOfCurrentInterest()) {
             entity.getPerformanceData()
                   .modify()
                   .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)
