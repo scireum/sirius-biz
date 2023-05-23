@@ -15,8 +15,6 @@ import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Period;
 
 /**
  * Provides a base class for monthly metric computation for each entity just like {@link MonthlyMetricComputer}.
@@ -61,27 +59,22 @@ public abstract class MonthlyLargeMetricComputer<E extends BaseEntity<?>> implem
             date = date.minusMonths(1);
         }
 
-        compute(date,
-                date.withDayOfMonth(1).atStartOfDay(),
-                date.withDayOfMonth(date.lengthOfMonth()).plusDays(1).atStartOfDay().minusSeconds(1),
-                periodOutsideOfCurrentInterest,
-                entity);
+        compute(new ComputeParameters<>(date,
+                                        date.withDayOfMonth(1).atStartOfDay(),
+                                        date.withDayOfMonth(date.lengthOfMonth())
+                                            .plusDays(1)
+                                            .atStartOfDay()
+                                            .minusSeconds(1),
+                                        periodOutsideOfCurrentInterest,
+                                        bestEffort,
+                                        entity));
     }
 
     /**
-     * Performs the computation for the given date.
+     * Performs the computation for the given parameters.
      *
-     * @param date                           the date for which the computation should be performed
-     * @param startOfPeriod                  the start of the month as <tt>LocalDateTime</tt>
-     * @param endOfPeriod                    the end of the month as <tt>LocalDateTime</tt>
-     * @param periodOutsideOfCurrentInterest <tt>true</tt> if the computation is performed for a past or future month (via the analytics command) or
-     *                                       <tt>false</tt> if the computation is performed for the current month
-     * @param entity                         the entity to perform the computation for
+     * @param parameters the parameters for the computation
      * @throws Exception in case of any problem while performing the computation
      */
-    public abstract void compute(LocalDate date,
-                                 LocalDateTime startOfPeriod,
-                                 LocalDateTime endOfPeriod,
-                                 boolean periodOutsideOfCurrentInterest,
-                                 E entity) throws Exception;
+    public abstract void compute(ComputeParameters<E> parameters) throws Exception;
 }

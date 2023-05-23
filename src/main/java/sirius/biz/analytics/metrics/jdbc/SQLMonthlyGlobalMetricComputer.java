@@ -14,9 +14,6 @@ import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;
 import sirius.kernel.di.std.Part;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 /**
  * Provides a base class for all metric computers which are invoked on a monthly basis to compute a global metric.
  * <p>
@@ -40,28 +37,4 @@ public abstract class SQLMonthlyGlobalMetricComputer extends MonthlyMetricComput
     public int getLevel() {
         return AnalyticalTask.DEFAULT_LEVEL + 1;
     }
-
-    @Override
-    public final void compute(LocalDate date,
-                              LocalDateTime startOfPeriod,
-                              LocalDateTime endOfPeriod,
-                              boolean periodOutsideOfCurrentInterest,
-                              SQLEntity entity) throws Exception {
-        compute(date, startOfPeriod, endOfPeriod, periodOutsideOfCurrentInterest);
-    }
-
-    /**
-     * Performs the computation for the given date.
-     *
-     * @param date                           the date for which the computation should be performed
-     * @param startOfPeriod                  the start of the month as <tt>LocalDateTime</tt>
-     * @param endOfPeriod                    the end of the month as <tt>LocalDateTime</tt>
-     * @param periodOutsideOfCurrentInterest <tt>true</tt> if the computation is performed for a past or future month (via the analytics command) or
-     *                                       <tt>false</tt> if the computation is performed for the current month
-     * @throws Exception in case of any problem while performing the computation
-     */
-    protected abstract void compute(LocalDate date,
-                                    LocalDateTime startOfPeriod,
-                                    LocalDateTime endOfPeriod,
-                                    boolean periodOutsideOfCurrentInterest) throws Exception;
 }

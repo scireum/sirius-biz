@@ -8,13 +8,12 @@
 
 package sirius.biz.process;
 
+import sirius.biz.analytics.metrics.ComputeParameters;
 import sirius.biz.analytics.metrics.jdbc.SQLDailyGlobalMetricComputer;
+import sirius.db.jdbc.SQLEntity;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * Provides some simple global metrics for the {@link Processes} framework.
@@ -39,13 +38,10 @@ public class ProcessesDailyMetrics extends SQLDailyGlobalMetricComputer {
     private Processes processes;
 
     @Override
-    protected void compute(LocalDate date,
-                           LocalDateTime startOfPeriod,
-                           LocalDateTime endOfPeriod,
-                           boolean periodOutsideOfCurrentInterest) throws Exception {
+    public void compute(ComputeParameters<SQLEntity> parameters) throws Exception {
         Tuple<Integer, Integer> processMetrics =
-                processes.computeProcessMetrics(startOfPeriod.toLocalDate(), endOfPeriod.toLocalDate(), null);
-        metrics.updateGlobalDailyMetric(METRIC_NUM_PROCESSES, date, processMetrics.getFirst());
-        metrics.updateGlobalDailyMetric(METRIC_PROCESS_DURATION, date, processMetrics.getSecond());
+                processes.computeProcessMetrics(parameters.startOfPeriodAsDate(), parameters.endOfPeriodAsDate(), null);
+        metrics.updateGlobalDailyMetric(METRIC_NUM_PROCESSES, parameters.date(), processMetrics.getFirst());
+        metrics.updateGlobalDailyMetric(METRIC_PROCESS_DURATION, parameters.date(), processMetrics.getSecond());
     }
 }

@@ -10,6 +10,7 @@ package sirius.biz.tenants.metrics.computers;
 
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.flags.PerformanceFlag;
+import sirius.biz.analytics.metrics.ComputeParameters;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
@@ -18,7 +19,6 @@ import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * Base class to compute the user activity metric and performance flags for user accounts.
@@ -71,12 +71,8 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
     private EventRecorder eventRecorder;
 
     @Override
-    public void compute(LocalDate date,
-                        LocalDateTime startOfPeriod,
-                        LocalDateTime endOfPeriod,
-                        boolean periodOutsideOfCurrentInterest,
-                        U entity) throws Exception {
-        LocalDate lowerLimit = date.minusDays(observationPeriodDays);
+    public void compute(ComputeParameters<U> parameters) throws Exception {
+        LocalDate lowerLimit = parameters.date().minusDays(observationPeriodDays);
 
         int numberOfActiveDays = eventRecorder.createQuery(
                                                       //language=SQL
@@ -86,22 +82,26 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                                                               WHERE userData_userId = ${userId}
                                                                 AND eventDate >= ${lowerLimit}
                                                                 AND eventDate <= ${upperLimit}""")
-                                              .set("userId", entity.getUniqueName())
+                                              .set("userId", parameters.entity().getUniqueName())
                                               .set("lowerLimit", lowerLimit)
-                                              .set("upperLimit", date)
+                                              .set("upperLimit", parameters.date())
                                               .first()
                                               .flatMap(row -> row.getValue("numberOfDays").asOptionalInt())
                                               .orElse(0);
 
         int activityRateInPercent = numberOfActiveDays * 100 / observationPeriodDays;
-        metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, date, activityRateInPercent);
+        metrics.updateMonthlyMetric(parameters.entity(),
+                                    METRIC_USER_ACTIVITY,
+                                    parameters.date(),
+                                    activityRateInPercent);
 
-        if (!periodOutsideOfCurrentInterest) {
-            entity.getPerformanceData()
-                  .modify()
-                  .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)
-                  .set(getFrequentUserFlag(), numberOfActiveDays >= minDaysForFrequentUsers)
-                  .commit();
+        if (!parameters.periodOutsideOfCurrentInterest()) {
+            parameters.entity()
+                      .getPerformanceData()
+                      .modify()
+                      .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)
+                      .set(getFrequentUserFlag(), numberOfActiveDays >= minDaysForFrequentUsers)
+                      .commit();
         }
     }
 

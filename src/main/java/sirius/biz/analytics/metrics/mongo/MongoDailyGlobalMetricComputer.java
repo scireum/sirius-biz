@@ -12,9 +12,6 @@ import sirius.biz.analytics.metrics.DailyMetricComputer;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.mongo.MongoEntity;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 /**
  * Provides a base class for all metric computers which are invoked on a monthly basis to compute a global metric.
  * <p>
@@ -35,18 +32,4 @@ public abstract class MongoDailyGlobalMetricComputer extends DailyMetricComputer
     public int getLevel() {
         return AnalyticalTask.DEFAULT_LEVEL + 1;
     }
-
-    @Override
-    public final void compute(LocalDate date,
-                              LocalDateTime startOfPeriod,
-                              LocalDateTime endOfPeriod,
-                              boolean periodOutsideOfCurrentInterest,
-                              MongoEntity entity) throws Exception {
-        compute(date, startOfPeriod, endOfPeriod, periodOutsideOfCurrentInterest);
-    }
-
-    protected abstract void compute(LocalDate date,
-                                    LocalDateTime startOfPeriod,
-                                    LocalDateTime endOfPeriod,
-                                    boolean periodOutsideOfCurrentInterest) throws Exception;
 }
