@@ -59,7 +59,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     /**
      * Determines the max number of events to keep in the queue.
      */
-    private static final int MAX_BUFFER_SIZE = 16 * 1024;
+    public static final int MAX_BUFFER_SIZE = 16 * 1024;
 
     /**
      * Determines the min number of events before an insertion run is performed.

@@ -2,7 +2,7 @@ package sirius.biz.importer
 
 import sirius.biz.tenants.Tenant
 import sirius.biz.tenants.TenantData
-import sirius.biz.tenants.TenantsHelper
+
 import sirius.biz.tenants.jdbc.SQLTenant
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification

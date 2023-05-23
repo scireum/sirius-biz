@@ -9,7 +9,7 @@
 package sirius.biz.storage.legacy
 
 import sirius.biz.tenants.Tenant
-import sirius.biz.tenants.TenantsHelper
+
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.Sirius

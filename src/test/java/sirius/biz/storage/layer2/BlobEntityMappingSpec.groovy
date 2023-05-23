@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer2
 
 
-import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
