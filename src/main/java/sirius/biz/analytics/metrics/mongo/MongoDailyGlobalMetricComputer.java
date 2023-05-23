@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.metrics.mongo;
 
+import sirius.biz.analytics.metrics.ComputeParameters;
 import sirius.biz.analytics.metrics.DailyMetricComputer;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.mongo.MongoEntity;
@@ -32,4 +33,11 @@ public abstract class MongoDailyGlobalMetricComputer extends DailyMetricComputer
     public int getLevel() {
         return AnalyticalTask.DEFAULT_LEVEL + 1;
     }
+
+    @Override
+    public final void compute(ComputeParameters parameters, MongoEntity entity) throws Exception {
+        compute(parameters);
+    }
+
+    protected abstract void compute(ComputeParameters parameters) throws Exception;
 }

@@ -10,7 +10,6 @@ package sirius.biz.process;
 
 import sirius.biz.analytics.metrics.ComputeParameters;
 import sirius.biz.analytics.metrics.jdbc.SQLDailyGlobalMetricComputer;
-import sirius.db.jdbc.SQLEntity;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -38,7 +37,7 @@ public class ProcessesDailyMetrics extends SQLDailyGlobalMetricComputer {
     private Processes processes;
 
     @Override
-    public void compute(ComputeParameters<SQLEntity> parameters) throws Exception {
+    protected void compute(ComputeParameters parameters) throws Exception {
         Tuple<Integer, Integer> processMetrics =
                 processes.computeProcessMetrics(parameters.startOfPeriodAsDate(), parameters.endOfPeriodAsDate(), null);
         metrics.updateGlobalDailyMetric(METRIC_NUM_PROCESSES, parameters.date(), processMetrics.getFirst());

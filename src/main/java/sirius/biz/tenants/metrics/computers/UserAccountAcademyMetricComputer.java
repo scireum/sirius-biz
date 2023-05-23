@@ -57,15 +57,14 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
     protected int minEducationLevel;
 
     @Override
-    public void compute(ComputeParameters<E> parameters) throws Exception {
-        long totalVideos = queryEligibleOnboardingVideos(parameters.entity()).count();
+    public void compute(ComputeParameters parameters, E userAccount) throws Exception {
+        long totalVideos = queryEligibleOnboardingVideos(userAccount).count();
 
         if (totalVideos == 0) {
             return;
         }
 
-        Query<? extends Query<?, ?, ?>, ?, Constraint> watchedVideosQuery =
-                queryEligibleOnboardingVideos(parameters.entity());
+        Query<? extends Query<?, ?, ?>, ?, Constraint> watchedVideosQuery = queryEligibleOnboardingVideos(userAccount);
         watchedVideosQuery.where(getMapper().filters()
                                             .or(getMapper().filters()
                                                            .eq(OnboardingVideo.ONBOARDING_VIDEO_DATA.inner(
@@ -76,17 +75,13 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
         long watchedVideos = watchedVideosQuery.count();
 
         int educationLevel = (int) (watchedVideos * 100 / totalVideos);
-        metrics.updateMonthlyMetric(parameters.entity(),
-                                    METRIC_USER_EDUCATION_LEVEL,
-                                    parameters.date(),
-                                    educationLevel);
+        metrics.updateMonthlyMetric(userAccount, METRIC_USER_EDUCATION_LEVEL, parameters.date(), educationLevel);
 
         if (!parameters.periodOutsideOfCurrentInterest()) {
-            parameters.entity()
-                      .getPerformanceData()
-                      .modify()
-                      .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
-                      .commit();
+            userAccount.getPerformanceData()
+                       .modify()
+                       .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
+                       .commit();
         }
     }
 

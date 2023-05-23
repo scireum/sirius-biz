@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.metrics.jdbc;
 
+import sirius.biz.analytics.metrics.ComputeParameters;
 import sirius.biz.analytics.metrics.DailyMetricComputer;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.jdbc.SQLEntity;
@@ -32,4 +33,11 @@ public abstract class SQLDailyGlobalMetricComputer extends DailyMetricComputer<S
     public int getLevel() {
         return AnalyticalTask.DEFAULT_LEVEL + 1;
     }
+
+    @Override
+    public final void compute(ComputeParameters parameters, SQLEntity entity) throws Exception {
+        compute(parameters);
+    }
+
+    protected abstract void compute(ComputeParameters parameters) throws Exception;
 }

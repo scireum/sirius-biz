@@ -14,7 +14,6 @@ import sirius.biz.analytics.metrics.jdbc.SQLMonthlyGlobalMetricComputer;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tenants.metrics.computers.GlobalTenantMetricComputer;
-import sirius.db.jdbc.SQLEntity;
 import sirius.kernel.di.std.Register;
 
 /**
@@ -30,7 +29,7 @@ public class SQLTenantGlobalMetricComputer extends SQLMonthlyGlobalMetricCompute
     }
 
     @Override
-    public void compute(ComputeParameters<SQLEntity> parameters) throws Exception {
+    protected void compute(ComputeParameters parameters) throws Exception {
         if (parameters.periodOutsideOfCurrentInterest()) {
             // This is an actual observation and not calculated from recorded data. Therefore, we cannot compute this
             // for past dates...

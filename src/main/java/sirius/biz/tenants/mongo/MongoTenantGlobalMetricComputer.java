@@ -15,7 +15,6 @@ import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tenants.metrics.computers.GlobalTenantMetricComputer;
 import sirius.db.mongo.Mango;
-import sirius.db.mongo.MongoEntity;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
@@ -35,7 +34,7 @@ public class MongoTenantGlobalMetricComputer extends MongoMonthlyGlobalMetricCom
     }
 
     @Override
-    public void compute(ComputeParameters<MongoEntity> parameters) throws Exception {
+    protected void compute(ComputeParameters parameters) throws Exception {
         if (parameters.periodOutsideOfCurrentInterest()) {
             // This is an actual observation and not calculated from recorded data. Therefore, we cannot compute this
             // for past dates...

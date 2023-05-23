@@ -71,7 +71,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
     private EventRecorder eventRecorder;
 
     @Override
-    public void compute(ComputeParameters<U> parameters) throws Exception {
+    public void compute(ComputeParameters parameters, U entity) throws Exception {
         LocalDate lowerLimit = parameters.date().minusDays(observationPeriodDays);
 
         int numberOfActiveDays = eventRecorder.createQuery(
@@ -82,7 +82,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                                                               WHERE userData_userId = ${userId}
                                                                 AND eventDate >= ${lowerLimit}
                                                                 AND eventDate <= ${upperLimit}""")
-                                              .set("userId", parameters.entity().getUniqueName())
+                                              .set("userId", entity.getUniqueName())
                                               .set("lowerLimit", lowerLimit)
                                               .set("upperLimit", parameters.date())
                                               .first()
@@ -90,18 +90,14 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                                               .orElse(0);
 
         int activityRateInPercent = numberOfActiveDays * 100 / observationPeriodDays;
-        metrics.updateMonthlyMetric(parameters.entity(),
-                                    METRIC_USER_ACTIVITY,
-                                    parameters.date(),
-                                    activityRateInPercent);
+        metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, parameters.date(), activityRateInPercent);
 
         if (!parameters.periodOutsideOfCurrentInterest()) {
-            parameters.entity()
-                      .getPerformanceData()
-                      .modify()
-                      .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)
-                      .set(getFrequentUserFlag(), numberOfActiveDays >= minDaysForFrequentUsers)
-                      .commit();
+            entity.getPerformanceData()
+                  .modify()
+                  .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)
+                  .set(getFrequentUserFlag(), numberOfActiveDays >= minDaysForFrequentUsers)
+                  .commit();
         }
     }
 
