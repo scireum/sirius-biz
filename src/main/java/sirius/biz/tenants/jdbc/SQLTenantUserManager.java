@@ -70,6 +70,9 @@ public class SQLTenantUserManager extends TenantUserManager<Long, SQLTenant, SQL
                .setToNow(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_LOGIN))
                .where(SQLUserAccount.ID, account.getId())
                .executeUpdate();
+
+            // We need to invalidate the cache to reflect our changes...
+            userAccountCache.remove(account.getUniqueName());
         } catch (Exception e) {
             Exceptions.handle(BizController.LOG, e);
         }
