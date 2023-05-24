@@ -49,7 +49,7 @@ public abstract class MonthlyLargeMetricComputer<E extends BaseEntity<?>> implem
         boolean sameMonth = LocalDate.now().withDayOfMonth(1).equals(date.withDayOfMonth(1));
 
         // if the reference date passed to this method is in the current month, we consider the computation to be of
-        // particular interest – unless it is only a best-effort computation that produces preliminary values only
+        // particular interest
         boolean periodOutsideOfCurrentInterest = !sameMonth;
 
         // usually, given the reference date, we compute the values for the respective previous month; for best-effort

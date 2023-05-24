@@ -47,7 +47,7 @@ public abstract class DailyMetricComputer<E extends BaseEntity<?>> implements An
         boolean sameDay = LocalDate.now().equals(date);
 
         // if the reference date passed to this method is today, we consider the computation to be of particular
-        // interest – unless it is only a best-effort computation that produces preliminary values only
+        // interest
         boolean periodOutsideOfCurrentInterest = !sameDay;
 
         // usually, given the reference date, we compute the values for the respective previous day; for best-effort
