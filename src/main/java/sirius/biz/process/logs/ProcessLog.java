@@ -405,7 +405,7 @@ public class ProcessLog extends SearchableEntity {
      * @return the log entry itself for fluent method calls
      */
     public ProcessLog withMessage(String message) {
-        this.message = Strings.limit(message, 30000, false); // TODO SIRI-793: Remove this limit
+        this.message = message;
         return this;
     }
 
