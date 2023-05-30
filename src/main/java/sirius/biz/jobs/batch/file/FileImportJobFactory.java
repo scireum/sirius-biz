@@ -118,4 +118,9 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
     protected boolean supportsParentDirectories() {
         return false;
     }
+
+    @Override
+    protected void collectFilesToLock(Map<String, String> context, Consumer<VirtualFile> fileCollector) {
+        FileImportJob.FILE_PARAMETER.get(context).ifPresent(fileCollector);
+    }
 }

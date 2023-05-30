@@ -202,7 +202,9 @@ public class FTPUplink extends ConfigBasedUplink {
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
               .withCanFastMoveHandler(this::canFastMoveHandler)
-              .withFastMoveHandler(this::fastMoveHandler);
+              .withFastMoveHandler(this::fastMoveHandler)
+              .withReadOnlyFlagSupplier(this::isReadOnlySupplier)
+              .withReadOnlyHandler(this::readOnlyHandler);
 
         result.attach(parent.as(RemotePath.class).child(filename));
         result.attach(this);
@@ -394,6 +396,60 @@ public class FTPUplink extends ConfigBasedUplink {
             }
         }
 
+        return false;
+    }
+
+    private boolean isReadOnlySupplier(VirtualFile virtualFile) {
+        for (Attempt attempt : Attempt.values()) {
+            String relativePath = file.as(RemotePath.class).getPath();
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                FTPFile remoteFile = connector.connector().mlistFile(relativePath);
+                return !remoteFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
+            } catch (Exception exception) {
+                connector.forceClose();
+                if (attempt.shouldThrow(exception)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(exception)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Failed to determine if '%s' in uplink '%s' is read-only: %s (%s)",
+                                            relativePath,
+                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
+            }
+        }
+
+        return false;
+    }
+
+    private boolean readOnlyHandler(VirtualFile virtualFile, boolean readOnly) {
+        for (Attempt attempt : Attempt.values()) {
+            String relativePath = file.as(RemotePath.class).getPath();
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                FTPFile remoteFile = connector.connector().mlistFile(relativePath);
+                remoteFile.setPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION, !readOnly);
+                return true;
+            } catch (Exception exception) {
+                connector.forceClose();
+                if (attempt.shouldThrow(exception)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(exception)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Failed to determine if '%s' in uplink '%s' is read-only: %s (%s)",
+                                            relativePath,
+                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
+            }
+        }
         return false;
     }
 

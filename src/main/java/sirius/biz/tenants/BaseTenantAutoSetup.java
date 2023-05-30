@@ -30,6 +30,8 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
     @Parts(TenantAutoSetupExtender.class)
     protected PartCollection<TenantAutoSetupExtender> extenders;
 
+    @ConfigValue("security.system-saml.externalLoginIntervalDays")
+    private Integer externalLoginIntervalDays;
     @ConfigValue("security.system-saml.requestIssuerName")
     private String samlRequestIssuerName;
     @ConfigValue("security.system-saml.issuerUrl")
@@ -46,6 +48,7 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
         userAccount.getUserAccountData().getLogin().setUsername("system");
         userAccount.getUserAccountData().getLogin().setCleartextPassword("system");
         userAccount.getTrace().setSilent(true);
+
         // This should be enough to grant us more roles via the UI
         userAccount.getUserAccountData().getPermissions().getPermissions().add("administrator");
         userAccount.getUserAccountData().getPermissions().getPermissions().add("user-administrator");
@@ -63,6 +66,8 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
     }
 
     protected void updateSamlData(Tenant<?> tenant) {
+        tenant.getTenantData().setExternalLoginIntervalDays(externalLoginIntervalDays);
+
         acceptIfFilled(samlIssuerName, tenant.getTenantData()::setSamlIssuerName);
         acceptIfFilled(samlRequestIssuerName, tenant.getTenantData()::setSamlRequestIssuerName);
         acceptIfFilled(samlIssuerUrl, tenant.getTenantData()::setSamlIssuerUrl);

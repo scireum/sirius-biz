@@ -405,6 +405,14 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    public void updateBlobReadOnlyFlag(MongoBlob blob, boolean readOnly) {
+        mongo.update()
+             .set(MongoBlob.READ_ONLY, readOnly)
+             .where(MongoBlob.ID, blob.getId())
+             .executeForOne(MongoBlob.class);
+    }
+
+    @Override
     protected void updateBlobParent(MongoBlob blob, MongoDirectory newParent) {
         blob.getParentRef().setValue(newParent);
         // Trigger a conventional update to ensure that last modified get updated and a changelog is triggered

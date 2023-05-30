@@ -142,11 +142,9 @@ public class JobConfigData extends Composite {
         if (configMap == null) {
             configMap = new HashMap<>();
             if (configuration != null) {
-                Json.parseObject(configuration).properties().forEach(entry -> {
-                    String key = entry.getKey();
-                    Object value = entry.getValue();
-                    configMap.put(key, value == null ? null : value.toString());
-                });
+                Json.parseObject(configuration)
+                    .properties()
+                    .forEach(entry -> configMap.put(entry.getKey(), entry.getValue().asText(null)));
             }
         }
 

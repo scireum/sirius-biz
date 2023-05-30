@@ -151,7 +151,9 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
         if (!process.isErroneous() && process.require(deleteArchiveParameter).booleanValue()) {
             process.log(ProcessLog.info().withNLSKey("ExtractArchiveJob.deletingArchive"));
-            sourceFile.delete();
+            sourceFile.forceDelete();
+        } else if (sourceFile.readOnly()) {
+            sourceFile.updateReadOnlyFlag(false);
         }
     }
 
@@ -234,6 +236,11 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         parameterCollector.accept(overwriteExistingFilesParameter);
         parameterCollector.accept(deleteArchiveParameter);
         parameterCollector.accept(flattenDirectoriesParameter);
+    }
+
+    @Override
+    protected void collectFilesToLock(Map<String, String> context, Consumer<VirtualFile> fileCollector) {
+        fetchOrCreateSourceParameter().get(context).ifPresent(fileCollector);
     }
 
     @Override
