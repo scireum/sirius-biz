@@ -15,20 +15,19 @@
         </div>
 
         <div class="row">
-            <t:lookupValue class="col-12 col-md-3" name="userAccountData_person_salutation"
+            <t:lookupValue class="col-12 col-md-6 col-xl-3" name="userAccountData_person_salutation"
                            value="@account.getUserAccountData().getPerson().getSalutation()"
                            optional="true"
                            labelKey="PersonData.salutation"/>
-            <t:textfield class="col-12 col-md-3" name="userAccountData_person_title"
+            <t:textfield class="col-12 col-md-6 col-xl-3" name="userAccountData_person_title"
                          value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>
             <t:textfield class="col-12 col-md-6" name="userAccountData_person_firstname"
                          value="@account.getUserAccountData().getPerson().getFirstname()"
                          labelKey="PersonData.firstname"/>
-        </div>
-        <div class="row">
             <t:textfield class="col-12 col-md-6" name="userAccountData_person_lastname"
                          value="@account.getUserAccountData().getPerson().getLastname()"
                          labelKey="PersonData.lastname"/>
+
             <t:singleSelect class="col-12 col-md-6" name="userAccountData_language" labelKey="Model.language">
                 <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
                     <option value="@language.getFirst()"
