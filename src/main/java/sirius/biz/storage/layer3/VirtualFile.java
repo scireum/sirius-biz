@@ -798,7 +798,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * created
      */
     public Optional<OutputStream> tryCreateOutputStream() {
-        if (!canCreateOutputStream()) {
+        if (!canCreateOutputStream() || readOnly()) {
             return Optional.empty();
         }
 
@@ -875,6 +875,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if a stream can be consumed, <tt>false</tt> otherwise
      */
     public boolean canConsumeStream() {
+        if (readOnly()) {
+            return false;
+        }
+
         if (internalCanConsumeStream()) {
             return true;
         }
@@ -967,6 +971,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if a file can be consumed, <tt>false</tt> otherwise
      */
     public boolean canConsumeFile() {
+        if (readOnly()) {
+            return false;
+        }
+
         if (internalCanConsumeFile()) {
             return true;
         }
