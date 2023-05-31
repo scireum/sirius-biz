@@ -114,7 +114,7 @@
             <t:jobs target="@account"/>
             <t:charts target="@account"/>
 
-            <i:extensions target="user-account" point="sidebar" account="account"/>
+            <i:extensions target="user-account" point="sidebar" account="account" page="page"/>
         </i:block>
 
 
