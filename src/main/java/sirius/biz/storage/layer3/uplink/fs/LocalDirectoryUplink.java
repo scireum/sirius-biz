@@ -111,7 +111,9 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
               .withCanFastMoveHandler(this::canFastMoveHandler)
-              .withFastMoveHandler(this::fastMoveHandler);
+              .withFastMoveHandler(this::fastMoveHandler)
+              .withReadOnlyFlagSupplier(this::isReadOnlySupplier)
+              .withReadOnlyHandler(this::setWritableHandler);
 
         result.attach(fileToWrap);
         result.attach(this);
@@ -147,6 +149,34 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
                             .to(StorageUtils.LOG)
                             .error(e)
                             .withSystemErrorMessage("Layer 3/FS: Cannot rename %s to %s: %s (%s)", file, name)
+                            .handle();
+        }
+    }
+
+    private boolean isReadOnlySupplier(VirtualFile file) {
+        try {
+            File unwrappedFile = file.as(File.class);
+            return !unwrappedFile.canWrite();
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/FS: Cannot determine if %s is read-only: %s (%s)", file)
+                            .handle();
+        }
+    }
+
+    private boolean setWritableHandler(VirtualFile file, boolean readOnly) {
+        try {
+            File unwrappedFile = file.as(File.class);
+            return unwrappedFile.setWritable(!readOnly);
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/FS: Cannot set %s writable to %s: %s (%s)",
+                                                    file,
+                                                    !readOnly)
                             .handle();
         }
     }

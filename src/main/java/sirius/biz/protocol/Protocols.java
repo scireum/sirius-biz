@@ -128,8 +128,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
                 si.getMdc().put(t.getFirst(), t.getSecond());
             }
             si.setUser(UserContext.getCurrentUser().getProtocolUsername());
-            si.setMessage(Strings.limit(incident.getException().getMessage(), 30000, false)); // TODO SIRI-793: Remove this limit
-            si.setStack(Strings.limit(NLS.toUserString(incident.getException()), 30000, false)); // TODO SIRI-793: Remove this limit
+            si.setMessage(incident.getException().getMessage());
+            si.setStack(NLS.toUserString(incident.getException()));
             si.setCategory(incident.getCategory());
             si.setLastOccurrence(LocalDateTime.now());
 
@@ -219,8 +219,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setReceiver(receiver);
             msg.setReceiverName(receiverName);
             msg.setSubject(subject);
-            msg.setTextContent(Strings.limit(text, 30000, false)); // TODO SIRI-793: Remove this limit
-            msg.setHtmlContent(Strings.limit(html, 30000, false)); // TODO SIRI-793: Remove this limit
+            msg.setTextContent(text);
+            msg.setHtmlContent(html);
             msg.setSuccess(success);
             msg.setNode(CallContext.getNodeName());
             msg.setType(type);

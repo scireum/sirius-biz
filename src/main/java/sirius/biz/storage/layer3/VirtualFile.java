@@ -93,6 +93,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected ToLongFunction<VirtualFile> sizeSupplier;
     protected Predicate<VirtualFile> directoryFlagSupplier;
     protected Predicate<VirtualFile> existsFlagSupplier;
+    protected Predicate<VirtualFile> readOnlyFlagSupplier;
+    protected BiPredicate<VirtualFile, Boolean> readOnlyHandler;
     protected Predicate<VirtualFile> canCreateChildrenHandler;
     protected Predicate<VirtualFile> canCreateDirectoryHandler;
     protected Predicate<VirtualFile> createDirectoryHandler;
@@ -327,7 +329,21 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if this file can be deleted or <tt>false</tt> otherwise
      */
     public boolean canDelete() {
+        return canDelete(false);
+    }
+
+    /**
+     * Determines if this file can (probably) be deleted.
+     *
+     * @param force if <tt>true</tt>, we signalize the file can potentially be deleted even if it is read-only
+     * @return <tt>true</tt> if this file can be deleted or <tt>false</tt> otherwise
+     */
+    public boolean canDelete(boolean force) {
         try {
+            if (readOnly() && !force) {
+                return false;
+            }
+
             if (deleteHandler == null) {
                 return false;
             }
@@ -345,11 +361,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Tries to delete this file.
      *
+     * @param force if <tt>true</tt> the file will be deleted even if it is read-only
      * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
      */
-    public boolean tryDelete() {
+    public boolean tryDelete(boolean force) {
         try {
-            if (!canDelete()) {
+            if (!canDelete(force)) {
                 return false;
             }
 
@@ -365,7 +382,20 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @throws HandledException if the file cannot be deleted
      */
     public void delete() {
-        if (!tryDelete()) {
+        if (!tryDelete(false)) {
+            throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotDelete").set("file", path()).handle();
+        }
+    }
+
+    /**
+     * Deletes this file, also if it's read-only.
+     * <p>
+     * Depending on the underlying storage, a deletion is not always possible if the file is set as read-only.
+     *
+     * @throws HandledException if the file cannot be deleted
+     */
+    public void forceDelete() {
+        if (!tryDelete(true)) {
             throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotDelete").set("file", path()).handle();
         }
     }
@@ -377,7 +407,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canRename() {
         try {
-            if (renameHandler == null) {
+            if (renameHandler == null || readOnly()) {
                 return false;
             }
 
@@ -406,6 +436,24 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return renameHandler.test(this, newName);
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "renameHandler");
+        }
+    }
+
+    /**
+     * Tries to set the read-only flag of this file.
+     *
+     * @param readOnly the value of the read-only flag
+     * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
+     */
+    public boolean updateReadOnlyFlag(boolean readOnly) {
+        try {
+            if (readOnlyHandler == null) {
+                return false;
+            }
+
+            return readOnlyHandler.test(this, readOnly);
+        } catch (Exception exception) {
+            throw handleErrorInCallback(exception, "readOnlyHandler");
         }
     }
 
@@ -457,6 +505,23 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return false;
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "existsFlagSupplier");
+        }
+    }
+
+    /**
+     * Determines if the file is read-only.
+     *
+     * @return <tt>true</tt> if the file is read-only, <tt>false</tt> otherwise
+     */
+    public boolean readOnly() {
+        try {
+            if (readOnlyFlagSupplier == null) {
+                return false;
+            }
+
+            return readOnlyFlagSupplier.test(this);
+        } catch (Exception exception) {
+            throw handleErrorInCallback(exception, "readOnlyFlagSupplier");
         }
     }
 
@@ -606,11 +671,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            if (canCreateChildrenHandler != null) {
-                return canCreateChildrenHandler.test(this);
+            if (canCreateChildrenHandler == null) {
+                return true;
             }
 
-            return true;
+            return canCreateChildrenHandler.test(this);
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "canCreateChildrenHandler");
         }
@@ -981,7 +1046,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if the file is writeable, <tt>false</tt> otherwise
      */
     public boolean isWriteable() {
-        return !isDirectory() && canCreateOutputStream();
+        return !isDirectory() && !readOnly() && canCreateOutputStream();
     }
 
     /**
@@ -1138,7 +1203,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if the file can (probably) be moved, <tt>false</tt> otherwise
      */
     public boolean canMove() {
-        return canDelete() && (isDirectory() || canCreateInputStream());
+        return !readOnly() && canDelete() && (isDirectory() || canCreateInputStream());
     }
 
     /**

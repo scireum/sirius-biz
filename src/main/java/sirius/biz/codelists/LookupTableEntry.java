@@ -8,8 +8,10 @@
 
 package sirius.biz.codelists;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.web.controller.AutocompleteHelper;
@@ -48,12 +50,12 @@ public class LookupTableEntry {
         return this;
     }
 
-    protected LookupTableEntry withSource(Object source) {
+    protected LookupTableEntry withSource(ObjectNode source) {
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setPrettyFlow(true);
         Yaml yaml = new Yaml(options);
-        this.source = yaml.dump(source);
+        this.source = yaml.dump(Json.convertToMap(source));
 
         return this;
     }

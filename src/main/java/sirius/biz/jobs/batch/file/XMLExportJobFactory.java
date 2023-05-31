@@ -34,7 +34,7 @@ public abstract class XMLExportJobFactory extends FileExportJobFactory {
 
     @Override
     protected void collectAcceptedFileExtensions(Consumer<String> fileExtensionConsumer) {
-        fileExtensionConsumer.accept("xml");
+        fileExtensionConsumer.accept("zip");
     }
 
     @Override

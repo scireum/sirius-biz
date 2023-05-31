@@ -88,12 +88,12 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean isRemovable() {
-        return true;
+        return !file.readOnly();
     }
 
     @Override
     public boolean isWritable() {
-        return true;
+        return !file.readOnly();
     }
 
     @Override
@@ -143,7 +143,7 @@ class BridgeFile implements FtpFile {
     @Override
     public boolean delete() {
         if (doesExist()) {
-            return file.tryDelete();
+            return file.tryDelete(false);
         }
 
         return true;

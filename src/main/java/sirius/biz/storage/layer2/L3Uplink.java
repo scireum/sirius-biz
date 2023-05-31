@@ -148,7 +148,7 @@ public class L3Uplink implements VFSRoot {
             file.attach(new Placeholder(parent, name));
             parent.tryAs(BlobStorageSpace.class)
                   .ifPresent(blobStorageSpace -> file.attach(BlobStorageSpace.class, blobStorageSpace));
-            attachHandlers(file, false);
+            attachHandlers(file, false, false);
 
             return file;
         }
@@ -310,7 +310,7 @@ public class L3Uplink implements VFSRoot {
         file.attach(BlobStorageSpace.class, directory.getStorageSpace());
         file.attach(ChildPageProvider.class, directoryChildPageProvider);
 
-        attachHandlers(file, forceReadonly);
+        attachHandlers(file, forceReadonly, forceReadonly);
 
         return file;
     }
@@ -329,7 +329,7 @@ public class L3Uplink implements VFSRoot {
         MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, blob.getFilename());
         file.attach(Blob.class, blob);
         file.attach(BlobStorageSpace.class, blob.getStorageSpace());
-        attachHandlers(file, forceReadonly);
+        attachHandlers(file, forceReadonly, blob.isReadOnly());
 
         return file;
     }
@@ -404,7 +404,7 @@ public class L3Uplink implements VFSRoot {
         return DEFAULT_PRIORITY;
     }
 
-    private void attachHandlers(MutableVirtualFile file, boolean readonly) {
+    private void attachHandlers(MutableVirtualFile file, boolean forceReadOnly, boolean readOnly) {
         file.withChildren(directoryChildProvider);
         file.withCreateDirectoryHandler(this::createDirectoryHandler);
         file.withDirectoryFlagSupplier(this::directoryFlagSupplier);
@@ -416,8 +416,9 @@ public class L3Uplink implements VFSRoot {
         file.withCanProvideFileHandle(this::isReadable);
         file.withFileHandleSupplier(this::fileHandleSupplier);
         file.withCustomTunnelHandler(this::tunnelHandler);
+        file.withReadOnlyFlagSupplier(ignored -> readOnly);
 
-        if (readonly) {
+        if (forceReadOnly) {
             file.withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE);
             file.withCanCreateDirectoryHandler(MutableVirtualFile.CONSTANT_FALSE);
             file.withCanDeleteHandler(MutableVirtualFile.CONSTANT_FALSE);
@@ -442,6 +443,7 @@ public class L3Uplink implements VFSRoot {
             file.withCanConsumeFile(this::isWriteable);
             file.withConsumeFileHandler(this::consumeFileHandler);
             file.withTouchHandler(this::touchHandler);
+            file.withReadOnlyHandler(this::readOnlyHandler);
         }
     }
 
@@ -487,6 +489,16 @@ public class L3Uplink implements VFSRoot {
         Optional<Blob> blob = file.tryAs(Blob.class);
         if (blob.isPresent()) {
             blob.get().rename(newName);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean readOnlyHandler(VirtualFile file, Boolean readOnly) {
+        Optional<Blob> blob = file.tryAs(Blob.class);
+        if (blob.isPresent()) {
+            blob.get().setReadOnly(readOnly);
             return true;
         }
 

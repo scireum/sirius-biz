@@ -153,7 +153,9 @@ public class CIFSUplink extends ConfigBasedUplink {
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
               .withCanFastMoveHandler(this::canFastMoveHandler)
-              .withFastMoveHandler(this::fastMoveHandler);
+              .withFastMoveHandler(this::fastMoveHandler)
+              .withReadOnlyFlagSupplier(this::isReadOnlySupplier)
+              .withReadOnlyHandler(this::readOnlyHandler);
 
         result.attach(file);
         result.attach(this);
@@ -249,6 +251,35 @@ public class CIFSUplink extends ConfigBasedUplink {
                             .to(StorageUtils.LOG)
                             .error(e)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot delete %s: %s (%s)", file)
+                            .handle();
+        }
+    }
+
+    private boolean readOnlyHandler(VirtualFile file, boolean readOnly) {
+        try {
+            if (readOnly) {
+                file.as(SmbFile.class).setReadOnly();
+            } else {
+                file.as(SmbFile.class).setReadWrite();
+            }
+            return true;
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/CIFS: Cannot delete %s: %s (%s)", file)
+                            .handle();
+        }
+    }
+
+    private boolean isReadOnlySupplier(VirtualFile file) {
+        try {
+            return !file.as(SmbFile.class).canWrite();
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/CIFS: Cannot determine if %s is read-only: %s (%s)", file)
                             .handle();
         }
     }

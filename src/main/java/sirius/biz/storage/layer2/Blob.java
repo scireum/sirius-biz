@@ -154,6 +154,20 @@ public interface Blob {
     boolean isTemporary();
 
     /**
+     * Determines if this blob is marked as read-only.
+     *
+     * @return <tt>true</tt> if the blob is read-only, <tt>false</tt> otherwise
+     */
+    boolean isReadOnly();
+
+    /**
+     * Sets the blob read-only flag.
+     *
+     * @param readOnly the new value for the read-only flag
+     */
+    void setReadOnly(boolean readOnly);
+
+    /**
      * Marks the blob as "read accessed".
      * <p>
      * Note that in nearly all circumstances, this isn't needed to be invoked manually as the framework will

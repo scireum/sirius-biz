@@ -9,6 +9,7 @@
 package sirius.biz.tenants.metrics.computers;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
+import sirius.biz.analytics.metrics.MetricComputerContext;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.process.Processes;
 import sirius.biz.tenants.Tenant;
@@ -18,8 +19,6 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -87,12 +86,8 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
     }
 
     @Override
-    public void compute(LocalDate date,
-                        LocalDateTime startOfPeriod,
-                        LocalDateTime endOfPeriod,
-                        boolean periodOutsideOfCurrentInterest,
-                        T tenant) throws Exception {
-        if (periodOutsideOfCurrentInterest) {
+    public void compute(MetricComputerContext context, T tenant) throws Exception {
+        if (context.periodOutsideOfCurrentInterest()) {
             // This is an actual observation and not calculated from recorded data. Therefore, we cannot compute this
             // for past dates...
             return;
@@ -123,15 +118,18 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
             }
         });
 
-        metrics.updateMonthlyMetric(tenant, METRIC_NUM_USERS, date, totalUsers.get());
+        metrics.updateMonthlyMetric(tenant, METRIC_NUM_USERS, context.date(), totalUsers.get());
         tenant.getPerformanceData().modify().set(getAcademyUsersFlag(), hasAcademyUsers.get()).commit();
 
         if (activeUsers.get() > 0) {
-            metrics.updateMonthlyMetric(tenant, METRIC_NUM_ACTIVE_USERS, date, activeUsers.get());
-            metrics.updateMonthlyMetric(tenant, METRIC_AVG_ACTIVITY, date, sumActivity.get() / activeUsers.get());
+            metrics.updateMonthlyMetric(tenant, METRIC_NUM_ACTIVE_USERS, context.date(), activeUsers.get());
+            metrics.updateMonthlyMetric(tenant,
+                                        METRIC_AVG_ACTIVITY,
+                                        context.date(),
+                                        sumActivity.get() / activeUsers.get());
             metrics.updateMonthlyMetric(tenant,
                                         METRIC_AVG_EDUCATION_LEVEL,
-                                        date,
+                                        context.date(),
                                         sumEducationLevel.get() / activeUsers.get());
 
             tenant.getPerformanceData().modify().set(getActiveUsersFlag(), activeUsers.get() > 0).commit();
@@ -139,9 +137,9 @@ public abstract class TenantMetricComputer<T extends BaseEntity<?> & Tenant<?>> 
 
         if (processes != null) {
             Tuple<Integer, Integer> processMetrics =
-                    processes.computeProcessMetrics(startOfPeriod.toLocalDate(), endOfPeriod.toLocalDate(), tenant);
-            metrics.updateMonthlyMetric(tenant, METRIC_NUM_PROCESSES, date, processMetrics.getFirst());
-            metrics.updateMonthlyMetric(tenant, METRIC_PROCESS_DURATION, date, processMetrics.getSecond());
+                    processes.computeProcessMetrics(context.startOfPeriodAsDate(), context.endOfPeriodAsDate(), tenant);
+            metrics.updateMonthlyMetric(tenant, METRIC_NUM_PROCESSES, context.date(), processMetrics.getFirst());
+            metrics.updateMonthlyMetric(tenant, METRIC_PROCESS_DURATION, context.date(), processMetrics.getSecond());
         }
     }
 

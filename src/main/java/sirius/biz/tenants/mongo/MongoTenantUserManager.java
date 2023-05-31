@@ -76,6 +76,9 @@ public class MongoTenantUserManager extends TenantUserManager<String, MongoTenan
                                                          .inner(LoginData.LAST_EXTERNAL_LOGIN), LocalDateTime.now());
             }
             updater.executeFor(account);
+
+            // We need to invalidate the cache to reflect our changes...
+            userAccountCache.remove(account.getUniqueName());
         } catch (Exception e) {
             Exceptions.handle(BizController.LOG, e);
         }

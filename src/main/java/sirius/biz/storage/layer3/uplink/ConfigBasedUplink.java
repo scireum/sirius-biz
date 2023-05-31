@@ -163,6 +163,7 @@ public abstract class ConfigBasedUplink {
                                  .withCanProvideInputStream(this::canProvideInputStreamHandler)
                                  .withCanProvideOutputStream(this::canProvideOutputStreamHandler)
                                  .withCanRenameHandler(this::canRenameHandler)
+                                 .withReadOnlyFlagSupplier(ignored -> readonly)
                                  .withChildren(innerChildProvider);
     }
 
