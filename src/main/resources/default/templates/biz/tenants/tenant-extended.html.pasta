@@ -57,7 +57,7 @@
 
         <i:extensions target="tenant-extended" point="bottom" tenant="tenant" controller="controller"/>
 
-        <t:formBar/>
+        <t:formBar backButton="false"/>
     </t:editForm>
 
 </i:invoke>

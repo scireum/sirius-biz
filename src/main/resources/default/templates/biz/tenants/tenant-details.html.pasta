@@ -48,7 +48,7 @@
 
         <i:extensions target="tenant-details" point="bottom" tenant="tenant" controller="controller"/>
 
-        <t:formBar>
+        <t:formBar backButton="false">
             <t:tracing trace="tenant.getTrace()" journal="tenant.getJournal()"/>
         </t:formBar>
     </t:editForm>

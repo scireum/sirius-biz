@@ -22,7 +22,7 @@
                          name="tenantData_samlFingerprint" value="@tenant.getTenantData().getSamlFingerprint()"
                          labelKey="TenantData.samlFingerprint" helpKey="TenantData.samlFingerprint.help"/>
         </div>
-        <t:formBar/>
+        <t:formBar backButton="false"/>
     </t:editForm>
 
 </i:invoke>
