@@ -42,7 +42,7 @@
                             <t:dropdownSection>
                                 <t:dropdownItem labelKey="TenantController.select"
                                                 icon="fa fa-building"
-                                                url="apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                             </t:dropdownSection>
                             <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
                                 <t:dropdownSection>
@@ -78,8 +78,7 @@
                                               point="card-actions"/>
                             </t:dropdownSection>
                             <t:dropdownSection>
-                                <t:dropdownDeleteItem
-                                        url="/user-account/controller.getDeleteLink(account.getIdAsString())"/>
+                                <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
                             </t:dropdownSection>
                         </i:block>
                         <i:extensions target="user-accounts" page="accounts" account="account" point="card-top"/>
