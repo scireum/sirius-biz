@@ -54,9 +54,7 @@
             <t:jobs target="tenant"/>
             <t:charts target="tenant"/>
 
-            <i:extensions target="tenant" point="sidebar-additional" tenant="tenant" controller="controller"
-                          page="page"/>
-
+            <i:extensions target="tenant" point="sidebar" tenant="tenant" controller="controller" page="page"/>
         </i:block>
 
         <i:render name="body"/>
