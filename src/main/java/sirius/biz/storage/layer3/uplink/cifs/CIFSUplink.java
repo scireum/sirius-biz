@@ -267,7 +267,9 @@ public class CIFSUplink extends ConfigBasedUplink {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .error(e)
-                            .withSystemErrorMessage("Layer 3/CIFS: Cannot delete %s: %s (%s)", file)
+                            .withSystemErrorMessage("Layer 3/CIFS: Cannot change read-only state on %s to %s: %s (%s)",
+                                                    file,
+                                                    readOnly)
                             .handle();
         }
     }

@@ -447,8 +447,9 @@ public class FTPUplink extends ConfigBasedUplink {
                                     .to(StorageUtils.LOG)
                                     .error(exception)
                                     .withSystemErrorMessage(
-                                            "Layer 3/FTP: Failed to determine if '%s' in uplink '%s' is read-only: %s (%s)",
+                                            "Layer 3/FTP: Cannot change read-only state on '%s' to '%s' in uplink '%s': %s (%s)",
                                             relativePath,
+                                            readOnly,
                                             ftpConfig)
                                     .handle();
                 }
