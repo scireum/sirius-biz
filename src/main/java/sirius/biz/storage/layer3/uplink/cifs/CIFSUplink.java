@@ -274,7 +274,12 @@ public class CIFSUplink extends ConfigBasedUplink {
 
     private boolean isReadOnlySupplier(VirtualFile file) {
         try {
-            return !file.as(SmbFile.class).canWrite();
+            SmbFile smbFile = file.as(SmbFile.class);
+            if (smbFile.exists()) {
+                return !smbFile.canWrite();
+            }
+            SmbFile parentFile = new SmbFile(smbFile.getParent(), smbFile.getContext());
+            return !parentFile.exists() || !parentFile.isDirectory() || !parentFile.canWrite();
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
