@@ -405,7 +405,13 @@ public class FTPUplink extends ConfigBasedUplink {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 FTPFile remoteFile = connector.connector().mlistFile(relativePath);
-                return !remoteFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
+                if (remoteFile != null) {
+                    return !remoteFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
+                }
+                String parentPath = virtualFile.parent().as(RemotePath.class).getPath();
+                FTPFile parentDirectory = connector.connector().mlistFile(parentPath);
+                return parentDirectory == null || !parentDirectory.hasPermission(FTPFile.USER_ACCESS,
+                                                                                 FTPFile.WRITE_PERMISSION);
             } catch (Exception exception) {
                 connector.forceClose();
                 if (attempt.shouldThrow(exception)) {
