@@ -156,7 +156,12 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private boolean isReadOnlySupplier(VirtualFile file) {
         try {
             File unwrappedFile = file.as(File.class);
-            return !unwrappedFile.canWrite();
+            if (unwrappedFile.exists()) {
+                return !Files.isWritable(unwrappedFile.toPath());
+            } else {
+                return unwrappedFile.getParentFile() == null || !Files.isWritable(unwrappedFile.getParentFile()
+                                                                                               .toPath());
+            }
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)

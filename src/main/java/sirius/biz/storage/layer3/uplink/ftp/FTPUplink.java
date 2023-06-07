@@ -401,11 +401,17 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean isReadOnlySupplier(VirtualFile virtualFile) {
         for (Attempt attempt : Attempt.values()) {
-            String relativePath = file.as(RemotePath.class).getPath();
+            String relativePath = virtualFile.as(RemotePath.class).getPath();
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 FTPFile remoteFile = connector.connector().mlistFile(relativePath);
-                return !remoteFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
+                if (remoteFile != null) {
+                    return !remoteFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
+                }
+                String parentPath = virtualFile.parent().as(RemotePath.class).getPath();
+                FTPFile parentDirectory = connector.connector().mlistFile(parentPath);
+                return parentDirectory == null || !parentDirectory.hasPermission(FTPFile.USER_ACCESS,
+                                                                                 FTPFile.WRITE_PERMISSION);
             } catch (Exception exception) {
                 connector.forceClose();
                 if (attempt.shouldThrow(exception)) {
@@ -428,7 +434,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean readOnlyHandler(VirtualFile virtualFile, boolean readOnly) {
         for (Attempt attempt : Attempt.values()) {
-            String relativePath = file.as(RemotePath.class).getPath();
+            String relativePath = virtualFile.as(RemotePath.class).getPath();
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 FTPFile remoteFile = connector.connector().mlistFile(relativePath);
@@ -441,8 +447,9 @@ public class FTPUplink extends ConfigBasedUplink {
                                     .to(StorageUtils.LOG)
                                     .error(exception)
                                     .withSystemErrorMessage(
-                                            "Layer 3/FTP: Failed to determine if '%s' in uplink '%s' is read-only: %s (%s)",
+                                            "Layer 3/FTP: Cannot change read-only state on '%s' to '%s' in uplink '%s': %s (%s)",
                                             relativePath,
+                                            readOnly,
                                             ftpConfig)
                                     .handle();
                 }
