@@ -401,7 +401,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean isReadOnlySupplier(VirtualFile virtualFile) {
         for (Attempt attempt : Attempt.values()) {
-            String relativePath = file.as(RemotePath.class).getPath();
+            String relativePath = virtualFile.as(RemotePath.class).getPath();
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 FTPFile remoteFile = connector.connector().mlistFile(relativePath);
@@ -428,7 +428,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean readOnlyHandler(VirtualFile virtualFile, boolean readOnly) {
         for (Attempt attempt : Attempt.values()) {
-            String relativePath = file.as(RemotePath.class).getPath();
+            String relativePath = virtualFile.as(RemotePath.class).getPath();
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 FTPFile remoteFile = connector.connector().mlistFile(relativePath);
