@@ -164,7 +164,7 @@ public class CIFSUplink extends ConfigBasedUplink {
 
     private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
         try {
-            file.as(SmbFile.class).renameTo(new SmbFile(newParent.as(SmbFile.class), name));
+            file.as(SmbFile.class).renameTo(new SmbFile(newParent.as(SmbFile.class), file.name()));
             return true;
         } catch (Exception e) {
             throw Exceptions.handle()
