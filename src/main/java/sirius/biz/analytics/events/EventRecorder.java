@@ -228,7 +228,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
-     * Sums the number of events for the provided column which have occurred based on the given <tt>queryTuner</tt>.
+     * Sums the values for the provided column of events which have occurred based on the given <tt>queryTuner</tt>.
      * <p>
      * This automatically marks the query as long-running.
      *
@@ -261,7 +261,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
-     * Sums the number of events for the provided column which have occurred based on the given <tt>queryTuner</tt> and time range.
+     * Sums the values for the provided column of events which have occurred based on the given <tt>queryTuner</tt>.
      * <p>
      * This automatically marks the query as long-running.
      *
