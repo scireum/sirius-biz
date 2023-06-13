@@ -80,7 +80,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     private static final int MAX_EVENTS_PER_PROCESS = 16 * 1024;
 
     private static final String AGGREGATION_COUNTER = "counter";
-    private static final String AGGREGATION_SUM = "sum";
+    private static final String AGGREGATION_SUM = "summation";
     private static final String AGGREGATION_DISTINCT_COUNT = "distinctCount";
 
     private LocalDateTime lastProcessed;
