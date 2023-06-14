@@ -3,50 +3,9 @@
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="details">
     <t:editForm url="@apply('/tenant/%s', tenant.getIdAsString())">
-        <div class="row">
-            <t:textfield class="col-12 col-md-6 required"
-                         name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="TenantData.name"/>
-            <t:textfield class="col-12 col-md-6"
-                         name="tenantData_fullName" value="@tenant.getTenantData().getFullName()"
-                         labelKey="TenantData.fullName"/>
-        </div>
-        <div class="row">
-            <t:textfield class="col-12 col-md-6"
-                         name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
-                         labelKey="TenantData.accountNumber"/>
-            <t:singleSelect class="col-12 col-md-6 required"
-                            name="tenantData_language" labelKey="Model.language">
-                <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
-                    <option value="@language.getFirst()"
-                            @selected="language.getFirst() == tenant.getTenantData().getLanguage().getValue()">
-                        @language.getSecond()
-                    </option>
-                </i:for>
-            </t:singleSelect>
-        </div>
-
-        <i:extensions target="tenant-details" point="below-details" tenant="tenant" controller="controller"/>
-
-        <t:heading labelKey="Model.address"/>
-        <div class="row">
-            <t:textfield class="col-12" name="tenantData_address_street"
-                         value="@tenant.getTenantData().getAddress().getStreet()"
-                         labelKey="AddressData.street"/>
-        </div>
-        <div class="row">
-            <t:textfield class="col-12 col-md-3" name="tenantData_address_zip"
-                         value="@tenant.getTenantData().getAddress().getZip()"
-                         labelKey="AddressData.zip"/>
-            <t:textfield class="col-12 col-md-4" name="tenantData_address_city"
-                         value="@tenant.getTenantData().getAddress().getCity()"
-                         labelKey="AddressData.city"/>
-            <t:lookupValue class="col-12 col-md-5" name="tenantData_address_country"
-                           value="@tenant.getTenantData().getAddress().getCountry()"
-                           optional="true"
-                           labelKey="InternationalAddressData.country"/>
-        </div>
-
-        <i:extensions target="tenant-details" point="bottom" tenant="tenant" controller="controller"/>
+        <i:invoke template="/templates/biz/tenants/tenant-details-fields.html.pasta"
+                  tenant="tenant"
+                  controller="controller"/>
 
         <t:formBar backButton="false">
             <t:tracing trace="tenant.getTrace()" journal="tenant.getJournal()"/>
