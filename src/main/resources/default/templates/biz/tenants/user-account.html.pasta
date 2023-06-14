@@ -19,6 +19,10 @@
 
     <i:block name="page-header">
         <t:pageHeader title="@account.getUserAccountData().toString()">
+            <i:block name="actions">
+                <i:extensions target="user-account" account="account" point="actions"/>
+            </i:block>
+
             <i:block name="additionalActions">
                 <t:dropdownSection>
                     <t:dropdownItem labelKey="TenantController.select"
@@ -55,7 +59,7 @@
                 </t:dropdownSection>
 
                 <t:dropdownSection>
-                    <i:extensions target="user-account" account="account" point="actions"/>
+                    <i:extensions target="user-account" account="account" point="additionalActions"/>
                 </t:dropdownSection>
                 <t:dropdownSection>
                     <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
@@ -90,8 +94,8 @@
                 </i:if>
             </div>
             <span class="pull-right">
-            <i:extensions target="user-account" point="header" account="account" page="page"/>
-        </span>
+                <i:extensions target="user-account" point="header" account="account" page="page"/>
+            </span>
         </t:pageHeader>
     </i:block>
 

@@ -20,6 +20,19 @@
         <t:pageHeader title="@tenant.getTenantData().getName()">
             <t:inlineInfo labelKey="TenantData.accountNumber" value="@tenant.getTenantData().getAccountNumber()"/>
             <i:extensions target="tenant" point="head" tenant="tenant" controller="controller" page="page"/>
+
+            <i:block name="actions">
+                <i:extensions target="tenant" point="actions" tenant="tenant" controller="controller" page="page"/>
+            </i:block>
+            <i:block name="additionalActions">
+                <t:dropdownSection>
+                    <i:extensions target="tenant"
+                                  point="additionalActions"
+                                  tenant="tenant"
+                                  controller="controller"
+                                  page="page"/>
+                </t:dropdownSection>
+            </i:block>
         </t:pageHeader>
     </i:block>
 
