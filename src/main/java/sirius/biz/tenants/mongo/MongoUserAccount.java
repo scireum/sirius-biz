@@ -38,6 +38,7 @@ import sirius.web.controller.Message;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -150,6 +151,10 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     @Override
     public void updatePreference(String key, Object value) {
         try {
+            if (Objects.equals(value, getUserAccountData().fetchUserPreferences().get(key))) {
+                return;
+            }
+
             Map<String, Object> newPreferences = new HashMap<>(getUserAccountData().fetchUserPreferences());
             String updatedPreferencesAsString = computeUpdatedPreferences(newPreferences, key, value);
             mongo.update()

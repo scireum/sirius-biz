@@ -164,7 +164,7 @@ public class CIFSUplink extends ConfigBasedUplink {
 
     private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
         try {
-            file.as(SmbFile.class).renameTo(new SmbFile(newParent.as(SmbFile.class), name));
+            file.as(SmbFile.class).renameTo(new SmbFile(newParent.as(SmbFile.class), file.name()));
             return true;
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -267,14 +267,21 @@ public class CIFSUplink extends ConfigBasedUplink {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .error(e)
-                            .withSystemErrorMessage("Layer 3/CIFS: Cannot delete %s: %s (%s)", file)
+                            .withSystemErrorMessage("Layer 3/CIFS: Cannot change read-only state on %s to %s: %s (%s)",
+                                                    file,
+                                                    readOnly)
                             .handle();
         }
     }
 
     private boolean isReadOnlySupplier(VirtualFile file) {
         try {
-            return !file.as(SmbFile.class).canWrite();
+            SmbFile smbFile = file.as(SmbFile.class);
+            if (smbFile.exists()) {
+                return !smbFile.canWrite();
+            }
+            SmbFile parentFile = new SmbFile(smbFile.getParent(), smbFile.getContext());
+            return !parentFile.exists() || !parentFile.isDirectory() || !parentFile.canWrite();
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)

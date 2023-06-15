@@ -80,6 +80,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     private static final int MAX_EVENTS_PER_PROCESS = 16 * 1024;
 
     private static final String AGGREGATION_COUNTER = "counter";
+    private static final String AGGREGATION_SUM = "summation";
     private static final String AGGREGATION_DISTINCT_COUNT = "distinctCount";
 
     private LocalDateTime lastProcessed;
@@ -218,6 +219,69 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
                                                     LocalDateTime endDate,
                                                     @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
         return countEvents(eventType, query -> {
+            query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
+            query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
+            if (queryTuner != null) {
+                queryTuner.accept(query);
+            }
+        });
+    }
+
+    /**
+     * Sums the values for the provided column of events which have occurred based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType    the type of events to query
+     * @param mappingToSum the mapping to sum values for
+     * @param queryTuner   the actual filter to apply. Note that {@link Event#EVENT_DATE} should be filtered, as otherwise
+     *                     the performance will be catastrophic.
+     * @param <E>          the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
+     */
+    public <E extends Event> int sumEvents(Class<E> eventType,
+                                           Mapping mappingToSum,
+                                           @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+        SmartQuery<E> query = oma.select(eventType)
+                                 .aggregationField(Strings.apply("sum(%s) AS %s",
+                                                                 mappingToSum.getName(),
+                                                                 AGGREGATION_SUM));
+        if (queryTuner != null) {
+            queryTuner.accept(query);
+        }
+
+        return query.asSQLQuery()
+                    .markAsLongRunning()
+                    .first()
+                    .flatMap(row -> row.getValue(AGGREGATION_SUM).asOptionalInt())
+                    .orElse(0);
+    }
+
+    /**
+     * Sums the values for the provided column of events which have occurred based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType    the type of events to query
+     * @param mappingToSum the mapping to sum values for
+     * @param startDate    the start date of the range
+     * @param endDate      the end date of the range
+     * @param queryTuner   the actual filter to apply
+     * @param <E>          the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     * @see #countEvents(Class, Consumer)
+     */
+    public <E extends Event> int sumEventsInRange(Class<E> eventType,
+                                                  Mapping mappingToSum,
+                                                  LocalDateTime startDate,
+                                                  LocalDateTime endDate,
+                                                  @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+        return sumEvents(eventType, mappingToSum, query -> {
             query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
             query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
             if (queryTuner != null) {

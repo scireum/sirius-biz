@@ -241,6 +241,7 @@ public abstract class FileImportJob extends ImportJob {
                .filter(VirtualFile::exists)
                .filter(VirtualFile::readOnly)
                .ifPresent(virtualFile -> virtualFile.updateReadOnlyFlag(false));
+        super.close();
     }
 
     /**

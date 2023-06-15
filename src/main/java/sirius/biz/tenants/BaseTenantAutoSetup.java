@@ -16,6 +16,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Priorized;
 
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
@@ -31,6 +32,7 @@ public abstract class BaseTenantAutoSetup implements AutoSetupRule {
     protected PartCollection<TenantAutoSetupExtender> extenders;
 
     @ConfigValue("security.system-saml.externalLoginIntervalDays")
+    @Nullable
     private Integer externalLoginIntervalDays;
     @ConfigValue("security.system-saml.requestIssuerName")
     private String samlRequestIssuerName;

@@ -367,31 +367,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         try {
             U currentUser = originalUser.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
+
             modifiedUser.setId(currentUser.getId());
-            modifiedUser.getUserAccountData()
-                        .getLanguage()
-                        .setValue(currentUser.getUserAccountData().getLanguage().getValue());
-            modifiedUser.getUserAccountData()
-                        .getLogin()
-                        .setUsername(currentUser.getUserAccountData().getLogin().getUsername());
-            modifiedUser.getUserAccountData().setEmail(currentUser.getUserAccountData().getEmail());
-            modifiedUser.getUserAccountData()
-                        .getPermissions()
-                        .setConfigString(currentUser.getUserAccountData().getPermissions().getConfigString());
-            modifiedUser.getUserAccountData()
-                        .getPermissions()
-                        .getPermissions()
-                        .addAll(currentUser.getUserAccountData().getPermissions().getPermissions().modify());
-            modifiedUser.getUserAccountData()
-                        .getPerson()
-                        .getSalutation()
-                        .setValue(currentUser.getUserAccountData().getPerson().getSalutation().getValue());
-            modifiedUser.getUserAccountData()
-                        .getPerson()
-                        .setFirstname(currentUser.getUserAccountData().getPerson().getFirstname());
-            modifiedUser.getUserAccountData()
-                        .getPerson()
-                        .setLastname(currentUser.getUserAccountData().getPerson().getLastname());
+            currentUser.getDescriptor().getProperties().forEach(property -> {
+                property.setValue(modifiedUser, property.getValue(currentUser));
+            });
+
             return modifiedUser;
         } catch (Exception e) {
             throw Exceptions.handle(Log.APPLICATION, e);

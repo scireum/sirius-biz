@@ -33,6 +33,7 @@ import sirius.web.controller.Message;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -104,6 +105,10 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     @Override
     public void updatePreference(String key, Object value) {
         try {
+            if (Objects.equals(value, getUserAccountData().fetchUserPreferences().get(key))) {
+                return;
+            }
+
             Map<String, Object> newPreferences = new HashMap<>(getUserAccountData().fetchUserPreferences());
             String updatedPreferencesAsString = computeUpdatedPreferences(newPreferences, key, value);
             oma.updateStatement(SQLUserAccount.class)
