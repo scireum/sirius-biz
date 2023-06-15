@@ -269,9 +269,11 @@ public class DataExplorerController extends BizController {
     public List<Tuple<String, ChartFactory<?>>> fetchAvailableCharts(String uri, Object targetObject) {
         List<Tuple<String, ChartFactory<?>>> result = new ArrayList<>();
         for (ChartFactory<?> factory : factories) {
-            String identifier = factory.generateIdentifier(uri, targetObject);
-            if (Strings.isFilled(identifier)) {
-                result.add(Tuple.create(identifier, factory));
+            if (factory.isAccessibleToCurrentUser()) {
+                String identifier = factory.generateIdentifier(uri, targetObject);
+                if (Strings.isFilled(identifier)) {
+                    result.add(Tuple.create(identifier, factory));
+                }
             }
         }
 
