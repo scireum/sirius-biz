@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -78,11 +77,8 @@ public class DataExplorerController extends BizController {
     @Routed("/data-explorer")
     @LoginRequired
     public void explorer(WebContext webContext) {
-        List<Action> actions = factories.stream()
-                                        .filter(ChartFactory::isAccessibleToCurrentUser)
-                                        .sorted(Comparator.comparing(ChartFactory::getPriority))
-                                        .map(this::toAction)
-                                        .toList();
+        List<Action> actions =
+                factories.stream().filter(ChartFactory::isAccessibleToCurrentUser).map(this::toAction).toList();
 
         webContext.respondWith().template("/templates/biz/tycho/analytics/data-explorer.html.pasta", actions);
     }
