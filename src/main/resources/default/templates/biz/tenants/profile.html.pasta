@@ -22,59 +22,63 @@
         </li>
     </i:block>
 
-    <t:editForm url="/profile">
-        <div class="row">
-            <div class="col-9">
-                <div class="row">
-                    <t:textfield class="col-12 col-md-6"
-                                 name="userAccountData_login_username"
-                                 value="@userAccount.getUserAccountData().getLogin().getUsername()"
-                                 labelKey="LoginData.username"
-                                 readonly="true"/>
-                    <t:textfield class="col-12 col-md-6"
-                                 name="userAccountData_email"
-                                 value="@userAccount.getUserAccountData().getEmail()"
-                                 labelKey="Model.email"
-                                 readonly="true"/>
-                </div>
-                <div class="row">
-                    <t:lookupValue class="col-12 col-md-6" name="userAccountData_person_salutation"
-                                   value="@userAccount.getUserAccountData().getPerson().getSalutation()"
-                                   optional="true"
-                                   labelKey="PersonData.salutation"/>
-                    <t:textfield class="col-12 col-md-6"
-                                 name="userAccountData_person_title"
-                                 value="@userAccount.getUserAccountData().getPerson().getTitle()"
-                                 labelKey="PersonData.title"/>
-                </div>
-                <div class="row">
-                    <t:textfield class="col-12 col-md-6"
-                                 name="userAccountData_person_firstname"
-                                 value="@userAccount.getUserAccountData().getPerson().getFirstname()"
-                                 labelKey="PersonData.firstname"/>
-                    <t:textfield class="col-12 col-md-6"
-                                 name="userAccountData_person_lastname"
-                                 value="@userAccount.getUserAccountData().getPerson().getLastname()"
-                                 labelKey="PersonData.lastname"/>
-                </div>
-                <div class="row">
-                    <t:singleSelect class="col-12 col-md-6" name="userAccountData_language" labelKey="Model.language">
-                        <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
-                            <option value="@language.getFirst()"
-                                    @selected="language.getFirst() == userAccount.getUserAccountData().getLanguage().getValue()">
-                                @language.getSecond()
-                            </option>
-                        </i:for>
-                    </t:singleSelect>
-                </div>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:sidebarKeyMetrics target="userAccount"/>
+            <t:jobs target="userAccount"/>
+            <t:charts target="userAccount"/>
 
-                <i:extensions target="profile" point="details" account="userAccount"/>
-            </div>
-            <div class="col-3">
-                <i:extensions target="profile" point="sidebar" account="userAccount"/>
-            </div>
-        </div>
+            <i:extensions target="profile" point="sidebar" account="userAccount"/>
+        </i:block>
 
-        <t:formBar/>
-    </t:editForm>
+        <t:editForm url="/profile">
+            <div class="row">
+                <t:textfield class="col-12 col-md-6"
+                             name="userAccountData_login_username"
+                             value="@userAccount.getUserAccountData().getLogin().getUsername()"
+                             labelKey="LoginData.username"
+                             readonly="true"/>
+                <t:textfield class="col-12 col-md-6"
+                             name="userAccountData_email"
+                             value="@userAccount.getUserAccountData().getEmail()"
+                             labelKey="Model.email"
+                             readonly="true"/>
+            </div>
+            <div class="row">
+                <t:lookupValue class="col-12 col-md-6" name="userAccountData_person_salutation"
+                               value="@userAccount.getUserAccountData().getPerson().getSalutation()"
+                               optional="true"
+                               labelKey="PersonData.salutation"/>
+                <t:textfield class="col-12 col-md-6"
+                             name="userAccountData_person_title"
+                             value="@userAccount.getUserAccountData().getPerson().getTitle()"
+                             labelKey="PersonData.title"/>
+            </div>
+            <div class="row">
+                <t:textfield class="col-12 col-md-6"
+                             name="userAccountData_person_firstname"
+                             value="@userAccount.getUserAccountData().getPerson().getFirstname()"
+                             labelKey="PersonData.firstname"/>
+                <t:textfield class="col-12 col-md-6"
+                             name="userAccountData_person_lastname"
+                             value="@userAccount.getUserAccountData().getPerson().getLastname()"
+                             labelKey="PersonData.lastname"/>
+            </div>
+            <div class="row">
+                <t:singleSelect class="col-12 col-md-6" name="userAccountData_language"
+                                labelKey="Model.language">
+                    <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
+                        <option value="@language.getFirst()"
+                                @selected="language.getFirst() == userAccount.getUserAccountData().getLanguage().getValue()">
+                            @language.getSecond()
+                        </option>
+                    </i:for>
+                </t:singleSelect>
+            </div>
+
+            <i:extensions target="profile" point="details" account="userAccount"/>
+
+            <t:formBar/>
+        </t:editForm>
+    </t:sidebar>
 </t:page>
