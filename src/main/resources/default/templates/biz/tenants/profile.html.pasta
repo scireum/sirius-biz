@@ -85,7 +85,7 @@
 
             <i:extensions target="profile" point="details" account="userAccount"/>
 
-            <t:formBar/>
+            <t:formBar backButton="false"/>
         </t:editForm>
     </t:sidebar>
 </t:page>
