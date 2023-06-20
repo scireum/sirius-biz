@@ -47,7 +47,7 @@
 
                 <i:else>
                     <div class="mb-2 d-none d-lg-block">
-                        <t:blobImage skipEmpty="true" urlBuilder="tenant.getTenantData().fetchMediumUrl()"
+                        <t:blobImage skipEmpty="true" urlBuilder="tenant.getTenantData().fetchLargeUrl()"
                                      style="height: 180px"/>
                     </div>
                 </i:else>

@@ -111,7 +111,7 @@
 
                 <i:else>
                     <div class="mb-2 d-none d-lg-block">
-                        <t:blobImage skipEmpty="true" urlBuilder="account.getUserAccountData().fetchMediumUrl()"
+                        <t:blobImage skipEmpty="true" urlBuilder="account.getUserAccountData().fetchLargeUrl()"
                                      style="height: 180px"/>
                     </div>
                 </i:else>
