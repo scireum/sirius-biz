@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -1419,6 +1420,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                                 response.statusCode()));
         }
 
+        assertResponseNotHtml(response);
+
         long length = response.headers().firstValueAsLong(HttpHeaderNames.CONTENT_LENGTH.toString()).orElse(-1);
         if (length >= 0) {
             consumeStream(response.body(), length);
@@ -1429,6 +1432,17 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
 
         return true;
+    }
+
+    private void assertResponseNotHtml(HttpResponse<InputStream> response) throws IOException {
+        List<String> contentTypes = response.headers().allValues(HttpHeaderNames.CONTENT_TYPE.toString());
+
+        if (contentTypes.stream()
+                        .anyMatch(contentType -> contentType.contains(HttpHeaderValues.TEXT_HTML.toString()))) {
+            Streams.exhaust(response.body());
+            throw new IOException(Strings.apply("The server response contains an unexpected content-type (%s)!",
+                                                String.join(", ", contentTypes)));
+        }
     }
 
     /**
