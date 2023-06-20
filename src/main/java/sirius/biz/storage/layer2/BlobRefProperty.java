@@ -59,7 +59,7 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
      */
     public BlobHardRef getRef(Object entity) {
         try {
-            return (BlobHardRef) super.getValueFromField(this.accessPath.apply(entity));
+            return (BlobHardRef) super.getValueFromField(entity);
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(OMA.LOG)
@@ -94,7 +94,8 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
 
     @Override
     public void setValue(Object entity, Object object) {
-        this.setValueToField(object, entity);
+        Object target = accessPath.apply(entity);
+        setValueToField(object, target);
     }
 
     /**

@@ -194,9 +194,9 @@ public class BlobSoftRefProperty extends BlobRefProperty {
 
     @Override
     protected void determineLengths() {
-        BlobSoftRef templateReference = (BlobSoftRef) getRef(descriptor.getReferenceInstance());
-        this.length =
-                templateReference.isSupportsURL() ? URL_COMPATIBLE_LENGTH : BlobHardRefProperty.DEFAULT_KEY_LENGTH;
+        this.length = getReferenceBlobSoftRef().isSupportsURL() ?
+                      URL_COMPATIBLE_LENGTH :
+                      BlobHardRefProperty.DEFAULT_KEY_LENGTH;
     }
 
     @Override
@@ -205,7 +205,7 @@ public class BlobSoftRefProperty extends BlobRefProperty {
             return;
         }
 
-        BlobSoftRef ref = (BlobSoftRef) getRef(entity);
+        BlobSoftRef ref = (BlobSoftRef) getRef(this.accessPath.apply(entity));
         if (ref.isEmpty() || ref.isURL()) {
             return;
         }
