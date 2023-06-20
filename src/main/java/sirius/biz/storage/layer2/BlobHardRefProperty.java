@@ -73,7 +73,7 @@ public class BlobHardRefProperty extends BlobRefProperty {
 
     @Override
     protected void onBeforeSaveChecks(Object entity) {
-        BlobHardRef ref = getRef(entity);
+        BlobHardRef ref = getRef(this.accessPath.apply(entity));
         if (isChanged(entity) && ref.isFilled() && !ref.getBlob().isTemporary()) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -88,7 +88,7 @@ public class BlobHardRefProperty extends BlobRefProperty {
 
     @Override
     protected void onAfterSave(Object entity) {
-        BlobHardRef ref = getRef(entity);
+        BlobHardRef ref = getRef(this.accessPath.apply(entity));
         if (isChanged(entity)) {
             BlobStorageSpace storageSpace = ref.getStorageSpace();
             String uniqueName = ((BaseEntity<?>) entity).getUniqueName();
@@ -102,7 +102,7 @@ public class BlobHardRefProperty extends BlobRefProperty {
 
     @Override
     protected void onAfterDelete(Object entity) {
-        BlobHardRef ref = getRef(entity);
+        BlobHardRef ref = getRef(this.accessPath.apply(entity));
         if (ref.isFilled()) {
             ref.getBlob()
                .getStorageSpace()
