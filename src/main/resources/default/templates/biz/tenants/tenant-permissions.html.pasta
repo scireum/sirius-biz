@@ -5,11 +5,11 @@
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller"
           page="permissions">
 
-    <w:editForm url="@apply('/tenant/%s/permissions', tenant.getIdAsString())">
+    <t:editForm url="@apply('/tenant/%s/permissions', tenant.getIdAsString())">
         <i:invoke template="/templates/biz/packages/additional-and-revoked-permissions.html.pasta"
                   allPermissions="controller.getPermissions()"
                   packageData="@tenant.getTenantData().getPackageData()"/>
-    </w:editForm>
+        <t:formBar singleClick="true" backButton="false"/>
+    </t:editForm>
 
-    <w:formBar singleClick="true"/>
 </i:invoke>

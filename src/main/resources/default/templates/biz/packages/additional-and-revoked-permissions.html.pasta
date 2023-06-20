@@ -4,55 +4,50 @@
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders the additional and revoked permissions"/>
 
-<w:table data="@allPermissions">
-    <thead>
-    <tr>
-        <th>
-            @i18n("Packages.permission.name")<br>
-            <small class="muted">@i18n("Packages.permission.description")</small>
-        </th>
-        <th class="col-md-1">@i18n("Packages.permission.active")</th>
-        <th class="col-md-1">@i18n("Packages.permission.denied")</th>
-        <th class="col-md-1">
-            @i18n("Packages.permission.default")
-            <small class="muted">@i18n("Packages.permission.defaultValue")</small>
-        </th>
-    </tr>
-    </thead>
-    <tbody>
-    <i:for var="permission" items="allPermissions" type="String">
-        <tr>
-            <td>
-                @i18n(apply("Permission.%s", permission))
-                <span class="help-block" style="margin-bottom: 0;">
-                        @i18n(apply("Permission.%s.description", permission))
-                    </span>
-            </td>
-            <i:local name="isEnabled" value="packageData.getAdditionalPermissions().contains(permission)"/>
-            <i:local name="isDenied" value="packageData.getRevokedPermissions().contains(permission)"/>
-            <td>
-                <div class="form-group radio" style="margin-bottom: 0;">
-                    <label>
+<div class="card">
+    <div class="card-body">
+        <table class="table">
+            <thead>
+            <tr>
+                <th style="vertical-align: top">
+                    <div>@i18n("Packages.permission.name")</div>
+                    <div class="text-small text-muted">@i18n("Packages.permission.description")</div>
+                </th>
+                <th class="col-1" style="vertical-align: top">@i18n("Packages.permission.active")</th>
+                <th class="col-1" style="vertical-align: top">@i18n("Packages.permission.denied")</th>
+                <th class="col-2" style="vertical-align: top">
+                    <div>@i18n("Packages.permission.default")</div>
+                    <div class="text-small text-muted">@i18n("Packages.permission.defaultValue")</div>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <i:for var="permission" items="allPermissions" type="String">
+                <tr>
+                    <td>
+                        @i18n(apply("Permission.%s", permission))
+                        <small class="form-text text-muted">@i18n(apply("Permission.%s.description", permission))</small>
+                    </td>
+                    <i:local name="isEnabled" value="packageData.getAdditionalPermissions().contains(permission)"/>
+                    <i:local name="isDenied" value="packageData.getRevokedPermissions().contains(permission)"/>
+                    <td>
                         <input type="radio" name="@permission" value="additional" @checked="isEnabled"/>
-                    </label>
-                </div>
-            </td>
-            <td>
-                <div class="form-group radio" style="margin-bottom: 0;">
-                    <label>
+                    </td>
+                    <td>
                         <input type="radio" name="@permission" value="revoked" @checked="isDenied"/>
-                    </label>
-                </div>
-            </td>
-            <td>
-                <div class="form-group radio" style="margin-bottom: 0;">
-                    <label>
-                        <input type="radio" name="@permission" value="default" @checked="!isEnabled && !isDenied"/>
-                    </label>
-                </div>
-                <span class="muted">@toUserString(packageData.getPackageAndUpgradePermissions().contains(permission))</span>
-            </td>
-        </tr>
-    </i:for>
-    </tbody>
-</w:table>
+                    </td>
+                    <td>
+                        <div>
+                            <input type="radio" name="@permission" value="default"
+                                   @checked="!isEnabled && !isDenied"/>
+                        </div>
+                        <div class="text-small text-muted">
+                            @toUserString(packageData.getPackageAndUpgradePermissions().contains(permission))
+                        </div>
+                    </td>
+                </tr>
+            </i:for>
+            </tbody>
+        </table>
+    </div>
+</div>

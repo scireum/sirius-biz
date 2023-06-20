@@ -13,6 +13,8 @@ import sirius.biz.importer.AutoImport;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.storage.layer2.BlobHardRef;
+import sirius.biz.storage.layer2.URLBuilder;
 import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
@@ -52,6 +54,26 @@ import java.util.function.Consumer;
  */
 public class UserAccountData extends Composite implements MessageProvider {
 
+    /**
+     * Defines the storage space used by user accounts.
+     */
+    public static final String STORAGE_SPACE = "user-accounts";
+
+    /**
+     * Contains the fallback URI used by {@link #fetchSmallUrl()} and {@link #fetchMediumUrl()}.
+     */
+    public static final String IMAGE_FALLBACK_URI = "/assets/images/user_image_fallback.png";
+
+    /**
+     * Contains the name of the variant used to fetch the small image.
+     */
+    public static final String IMAGE_VARIANT_SMALL = "user-small";
+
+    /**
+     * Contains the name of the variant used to fetch the medium image.
+     */
+    public static final String IMAGE_VARIANT_MEDIUM = "user-medium";
+
     @Transient
     private final BaseEntity<?> userObject;
 
@@ -65,6 +87,14 @@ public class UserAccountData extends Composite implements MessageProvider {
     @NullAllowed
     @AutoImport
     private String email;
+
+    /**
+     * Contains the reference to the image file.
+     */
+    public static final Mapping IMAGE = Mapping.named("image");
+    @Autoloaded
+    @NullAllowed
+    private final BlobHardRef image = new BlobHardRef(STORAGE_SPACE);
 
     /**
      * Contains the personal information of the user.
@@ -392,6 +422,10 @@ public class UserAccountData extends Composite implements MessageProvider {
         this.email = email;
     }
 
+    public BlobHardRef getImage() {
+        return image;
+    }
+
     public boolean isExternalLoginRequired() {
         return externalLoginRequired;
     }
@@ -411,5 +445,23 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     public StringList getSubScopes() {
         return subScopes;
+    }
+
+    /**
+     * Builds a URL to the small image.
+     *
+     * @return a URLBuilder which is used to fetch the small image of this user
+     */
+    public URLBuilder fetchSmallUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
+    }
+
+    /**
+     * Builds a URL to the medium image.
+     *
+     * @return a URLBuilder which is used to fetch the medium image of this user
+     */
+    public URLBuilder fetchMediumUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
     }
 }

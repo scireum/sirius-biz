@@ -2,7 +2,7 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 <i:arg type="String" name="page"/>
 
-<w:page title="@toUserString(tenant)">
+<t:page title="@toUserString(tenant)">
     <i:block name="head">
         <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
     </i:block>
@@ -16,63 +16,75 @@
         </li>
     </i:block>
 
-    <w:pageHeader>
-        @i18n("Model.tenant"): @tenant.getTenantData().getName()
-        <small>@tenant.getTenantData().getAccountNumber()</small>
-
-        <span class="pull-right">
+    <i:block name="page-header">
+        <t:pageHeader title="@tenant.getTenantData().getName()">
+            <t:inlineInfo labelKey="TenantData.accountNumber" value="@tenant.getTenantData().getAccountNumber()"/>
             <i:extensions target="tenant" point="head" tenant="tenant" controller="controller" page="page"/>
-        </span>
-    </w:pageHeader>
 
-    <div class="row">
-        <i:if test="!tenant.isNew()">
-            <div class="col-md-3">
-                <w:infobox titleKey="Model.details">
-                    <w:infoboxElement labelKey="Model.name" value="@tenant.getTenantData().getName()"/>
-                    <w:infoboxElement labelKey="TenantData.accountNumber" value="@tenant.getTenantData().getAccountNumber()"/>
-                    <w:infoboxElement labelKey="AddressData.street" value="@tenant.getTenantData().getAddress().getStreet()"/>
-                    <w:infoboxElement labelKey="AddressData.zip" value="@tenant.getTenantData().getAddress().getZip()"/>
-                    <w:infoboxElement labelKey="AddressData.city" value="@tenant.getTenantData().getAddress().getCity()"/>
+            <i:block name="actions">
+                <i:extensions target="tenant" point="actions" tenant="tenant" controller="controller" page="page"/>
+            </i:block>
+            <i:block name="additionalActions">
+                <t:dropdownSection>
+                    <i:extensions target="tenant"
+                                  point="additionalActions"
+                                  tenant="tenant"
+                                  controller="controller"
+                                  page="page"/>
+                </t:dropdownSection>
+            </i:block>
+        </t:pageHeader>
+    </i:block>
 
-                    <i:extensions target="tenant" point="sidebar-infos" tenant="tenant" controller="controller" page="page"/>
-                </w:infobox>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <i:if test="page == 'details'">
+                <t:infobox labelKey="TenantData.image">
+                    <t:blobImageHardRefField name="tenantData_image" objectRef="@tenant.getTenantData().getImage()"
+                                             previewVariant="@sirius.biz.tenants.TenantData.IMAGE_VARIANT_MEDIUM"
+                                             defaultPreview="@sirius.biz.tenants.TenantData.IMAGE_FALLBACK_URI"/>
+                </t:infobox>
 
-                <i:extensions target="tenant" point="sidebar-additional" tenant="tenant" controller="controller" page="page"/>
+                <i:else>
+                    <div class="mb-2 d-none d-lg-block">
+                        <t:blobImage skipEmpty="true" urlBuilder="tenant.getTenantData().fetchMediumUrl()"
+                                     style="height: 180px"/>
+                    </div>
+                </i:else>
+            </i:if>
 
-                <w:navbox labelKey="Model.links">
-                    <w:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getIdAsString())"
-                                  active="page == 'details'"/>
-                    <i:if test="tenant.getTenantData().getPackageData().hasAvailablePackagesOrUpgrades()">
-                        <w:navboxLink labelKey="PackageData.packageString" url="@apply('/tenant/%s/package', tenant.getIdAsString())"
-                                      active="page == 'package'"/>
-                    </i:if>
-                    <i:if test="!controller.getPermissions().isEmpty()">
-                        <w:navboxLink labelKey="Tenant.permissions" url="@apply('/tenant/%s/permissions', tenant.getIdAsString())"
-                                      active="page == 'permissions'"/>
-                    </i:if>
-                    <i:extensions target="tenant" point="sidebar-menu" tenant="tenant" controller="controller" page="page"/>
-                    <w:navboxLink labelKey="Model.extended" url="@apply('/tenant/%s/extended', tenant.getIdAsString())"
-                                  active="page == 'extended'"/>
-                    <w:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getIdAsString())"
-                                  active="page == 'config'"/>
-                    <w:navboxLink labelKey="Model.saml" url="@apply('/tenant/%s/saml', tenant.getIdAsString())"
-                                  active="page == 'saml'"/>
-                    <i:extensions target="tenant" point="sidebar-menu-bottom" tenant="tenant" controller="controller" page="page"/>
-                </w:navbox>
+            <t:sidebarKeyMetrics target="@tenant"/>
 
-                <w:jobs target="tenant" />
+            <t:navbox labelKey="Model.links">
+                <t:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getIdAsString())"
+                              active="page == 'details'"/>
+                <i:if test="tenant.getTenantData().getPackageData().hasAvailablePackagesOrUpgrades()">
+                    <t:navboxLink labelKey="PackageData.packageString"
+                                  url="@apply('/tenant/%s/package', tenant.getIdAsString())"
+                                  active="page == 'package'"/>
+                </i:if>
+                <i:if test="!controller.getPermissions().isEmpty()">
+                    <t:navboxLink labelKey="Tenant.permissions"
+                                  url="@apply('/tenant/%s/permissions', tenant.getIdAsString())"
+                                  active="page == 'permissions'"/>
+                </i:if>
+                <i:extensions target="tenant" point="sidebar-menu" tenant="tenant" controller="controller" page="page"/>
+                <t:navboxLink labelKey="Model.extended" url="@apply('/tenant/%s/extended', tenant.getIdAsString())"
+                              active="page == 'extended'"/>
+                <t:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getIdAsString())"
+                              active="page == 'config'"/>
+                <t:navboxLink labelKey="Model.saml" url="@apply('/tenant/%s/saml', tenant.getIdAsString())"
+                              active="page == 'saml'"/>
+                <i:extensions target="tenant" point="sidebar-menu-bottom" tenant="tenant" controller="controller"
+                              page="page"/>
+            </t:navbox>
 
-                <w:rateLimitBox>
-                    <w:rateLimitsPerType type="tenant" scope="tenant.getIdAsString()" />
-                </w:rateLimitBox>
+            <t:jobs target="tenant"/>
+            <t:charts target="tenant"/>
 
-                <a href="/tenants" class="btn btn-block">@i18n("NLS.back")</a>
-            </div>
-        </i:if>
-        <div class="@if (tenant.isNew()) { col-md-12 } else { col-md-9 }">
-            <i:render name="body"/>
-        </div>
-    </div>
-</w:page>
+            <i:extensions target="tenant" point="sidebar" tenant="tenant" controller="controller" page="page"/>
+        </i:block>
 
+        <i:render name="body"/>
+    </t:sidebar>
+</t:page>

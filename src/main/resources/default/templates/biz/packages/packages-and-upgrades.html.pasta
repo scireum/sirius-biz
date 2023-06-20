@@ -8,18 +8,20 @@
 <i:local name="availablePackages" value="packageData.getAvailablePackages()"/>
 
 <i:if test="!availablePackages.isEmpty()">
-    <w:subHeading labelKey="PackageData.packageString"/>
+    <t:heading labelKey="PackageData.packageString"/>
     <div class="row">
         <i:for var="package" items="availablePackages" type="String">
-            <div class="col-md-12 form-group">
+            <div class="col-12 form-group">
                 <div class="radio">
                     <label>
-                        <input type="radio" name="package" value="@package"
-                               @checked="package == packageData.getPackage()"/>
-                        <span> @packages.getPackageName(packageData.getScope(), package)</span>
-                        <span class="help-block checkbox-help">
+                        <div>
+                            <input type="radio" name="package" value="@package"
+                                   @checked="package == packageData.getPackage()"/>
+                            @packages.getPackageName(packageData.getScope(), package)
+                        </div>
+                        <small class="form-text text-muted">
                             @packages.getPackageDescription(packageData.getScope(), package)
-                        </span>
+                        </small>
                     </label>
                 </div>
             </div>
@@ -29,18 +31,20 @@
 
 <i:local name="upgrades" value="packageData.getAvailableUpgrades()"/>
 <i:if test="!upgrades.isEmpty()">
-    <w:subHeading labelKey="PackageData.upgrades"/>
+    <t:heading labelKey="PackageData.upgrades"/>
     <div class="row">
         <i:for var="upgrade" items="upgrades" type="String">
-            <div class="col-md-12 form-group">
+            <div class="col-12 form-group">
                 <div class="checkbox">
                     <label>
+                        <div>
                         <input type="checkbox" name="upgrades" value="@upgrade"
                                @checked="packageData.getUpgrades().contains(upgrade)"/>
                         <span> @packages.getUpgradeName(packageData.getScope(), upgrade)</span>
-                        <span class="help-block checkbox-help">
+                        </div>
+                        <small class="form-text text-muted">
                             @packages.getUpgradeDescription(packageData.getScope(), upgrade)
-                        </span>
+                        </small>
                     </label>
                 </div>
             </div>
