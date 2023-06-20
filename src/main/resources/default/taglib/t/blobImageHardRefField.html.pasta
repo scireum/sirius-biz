@@ -26,7 +26,7 @@
         </div>
     </i:if>
     <div @if (isFilled(height)) { style="height: @height" }>
-        <t:imageUpload class="h-100" id="@id" uploadUrl="@uploadUrl" acceptedFiles="@acceptedFiles"
+        <t:imageUpload class="blob-ref-field h-100" id="@id" uploadUrl="@uploadUrl" acceptedFiles="@acceptedFiles"
                        currentImage="@currentImage" btnClass="@btnClass">
             <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
                 @i18n("StoredObject.resetBtn")

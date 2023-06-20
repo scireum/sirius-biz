@@ -26,7 +26,7 @@
             <label><span>@label</span></label>
         </div>
     </i:if>
-    <div class="sirius-imageupload soft-blob-ref-field card shadow-sm mb-4 mt-1 @class">
+    <div class="sirius-imageupload blob-ref-field card shadow-sm mb-4 mt-1 @class">
         <div @if (isFilled(height)) { style="height: @height" } id="@id">
             <div class="sirius-upload-content h-100 d-flex flex-column">
                 <div class="img-preview d-flex justify-content-center align-items-center flex-grow-1 mb-1">
