@@ -62,14 +62,14 @@ public class TenantData extends Composite implements Journaled {
     public static final String STORAGE_SPACE = "tenants";
 
     /**
-     * Contains the fallback URI used by {@link #fetchPreviewUrl()} and {@link #fetchMediumUrl()}.
+     * Contains the fallback URI used by {@link #fetchSmallUrl()} and {@link #fetchMediumUrl()}.
      */
     public static final String IMAGE_FALLBACK_URI = "/assets/images/tenant_image_fallback.png";
 
     /**
-     * Contains the name of the variant used to fetch the preview image.
+     * Contains the name of the variant used to fetch the small image.
      */
-    public static final String IMAGE_VARIANT_PREVIEW = "tenant-preview";
+    public static final String IMAGE_VARIANT_SMALL = "tenant-small";
 
     /**
      * Contains the name of the variant used to fetch the medium image.
@@ -609,12 +609,12 @@ public class TenantData extends Composite implements Journaled {
     }
 
     /**
-     * Builds a URL to the preview image.
+     * Builds a URL to the small image.
      *
-     * @return a URLBuilder which is used to fetch the preview image of this user
+     * @return a URLBuilder which is used to fetch the small image of this user
      */
-    public URLBuilder fetchPreviewUrl() {
-        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_PREVIEW);
+    public URLBuilder fetchSmallUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
     }
 
     /**
