@@ -72,8 +72,7 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.UPGRADES)),
                                       name -> packages.getUpgradeName(TenantController.PACKAGE_SCOPE_TENANT, name));
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.ADDITIONAL_PERMISSIONS)),
-                                      Permissions::getTranslatedPermission);
-
+                                      permission -> Permissions.tryGetTranslatedPermission(permission).orElse(null));
 
         return pageHelper;
     }
