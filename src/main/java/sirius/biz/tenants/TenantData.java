@@ -18,6 +18,8 @@ import sirius.biz.mongo.SortValue;
 import sirius.biz.packages.PackageData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
+import sirius.biz.storage.layer2.BlobHardRef;
+import sirius.biz.storage.layer2.URLBuilder;
 import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.biz.web.BizController;
@@ -53,6 +55,26 @@ import java.util.function.Consumer;
  * Represents a tenant using the system.
  */
 public class TenantData extends Composite implements Journaled {
+
+    /**
+     * Defines the storage space used by tenants.
+     */
+    public static final String STORAGE_SPACE = "tenants";
+
+    /**
+     * Contains the fallback URI used by {@link #fetchPreviewUrl()} and {@link #fetchMediumUrl()}.
+     */
+    public static final String IMAGE_FALLBACK_URI = "/assets/images/tenant_image_fallback.png";
+
+    /**
+     * Contains the name of the variant used to fetch the preview image.
+     */
+    public static final String IMAGE_VARIANT_PREVIEW = "tenant-preview";
+
+    /**
+     * Contains the name of the variant used to fetch the medium image.
+     */
+    public static final String IMAGE_VARIANT_MEDIUM = "tenant-medium";
 
     @Transient
     private final BaseEntity<?> tenantObject;
@@ -130,6 +152,14 @@ public class TenantData extends Composite implements Journaled {
     @NullAllowed
     @Length(50)
     private String accountNumber;
+
+    /**
+     * Contains the reference to the image file.
+     */
+    public static final Mapping IMAGE = Mapping.named("image");
+    @Autoloaded
+    @NullAllowed
+    private final BlobHardRef image = new BlobHardRef(STORAGE_SPACE);
 
     /**
      * Contains the name of the system which is used as the SAML provider.
@@ -463,6 +493,10 @@ public class TenantData extends Composite implements Journaled {
         this.accountNumber = accountNumber;
     }
 
+    public BlobHardRef getImage() {
+        return image;
+    }
+
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public InternationalAddressData getAddress() {
         return address;
@@ -572,5 +606,23 @@ public class TenantData extends Composite implements Journaled {
 
     public PackageData getPackageData() {
         return packageData;
+    }
+
+    /**
+     * Builds a URL to the preview image.
+     *
+     * @return a URLBuilder which is used to fetch the preview image of this user
+     */
+    public URLBuilder fetchPreviewUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_PREVIEW);
+    }
+
+    /**
+     * Builds a URL to the medium image.
+     *
+     * @return a URLBuilder which is used to fetch the medium image of this user
+     */
+    public URLBuilder fetchMediumUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
     }
 }

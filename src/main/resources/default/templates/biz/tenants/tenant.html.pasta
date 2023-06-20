@@ -38,6 +38,21 @@
 
     <t:sidebar>
         <i:block name="sidebar">
+            <i:if test="page == 'details'">
+                <t:infobox labelKey="TenantData.image">
+                    <t:blobImageHardRefField name="tenantData_image" objectRef="@tenant.getTenantData().getImage()"
+                                             previewVariant="@sirius.biz.tenants.TenantData.IMAGE_VARIANT_MEDIUM"
+                                             defaultPreview="@sirius.biz.tenants.TenantData.IMAGE_FALLBACK_URI"/>
+                </t:infobox>
+
+                <i:else>
+                    <div class="mb-2 d-none d-lg-block">
+                        <t:blobImage skipEmpty="true" urlBuilder="tenant.getTenantData().fetchMediumUrl()"
+                                     style="height: 180px"/>
+                    </div>
+                </i:else>
+            </i:if>
+
             <t:sidebarKeyMetrics target="@tenant"/>
 
             <t:navbox labelKey="Model.links">
