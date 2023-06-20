@@ -123,9 +123,19 @@ public interface Blob {
     LocalDateTime getLastTouched();
 
     /**
-     * Provides an on-disk copy of the data associated with this blob
+     * Provides an on-disk copy of the data associated with this blob.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * blob.download().ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * </pre>
      *
-     * @return a handle to the data of this blob
+     * @return a {@linkplain java.io.Closeable closeable} file handle to the data of this blob, or an empty optional if no data was present
      */
     Optional<FileHandle> download();
 

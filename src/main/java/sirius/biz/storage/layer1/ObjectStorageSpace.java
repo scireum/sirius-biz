@@ -297,9 +297,19 @@ public abstract class ObjectStorageSpace {
 
     /**
      * Downloads and provides the contents of the requested object.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * space.download(objectId).ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * </pre>
      *
      * @param objectId the physical storage key
-     * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist
+     * @return a {@linkplain java.io.Closeable closeable} file handle to the given object wrapped as optional, or an empty one if the object doesn't exist
      */
     public Optional<FileHandle> download(String objectId) {
         try {

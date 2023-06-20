@@ -1034,10 +1034,19 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     /**
      * Performs a download / fetch of the given blob to make its data locally accessible.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * space.download(blob).ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * </pre>
      *
      * @param blob the blob to fetch the data for
-     * @return a file handle which makes the blob data accessible or an empty optional if no data was present.
-     * Note that the {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * @return a {@linkplain java.io.Closeable closeable} file handle which makes the blob data accessible, or an empty optional if no data was present
      */
     public Optional<FileHandle> download(Blob blob) {
         if (Strings.isEmpty(blob.getPhysicalObjectKey())) {
