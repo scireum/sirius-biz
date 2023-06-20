@@ -92,12 +92,6 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
         return object.get();
     }
 
-    @Override
-    public void setValue(Object entity, Object object) {
-        Object target = accessPath.apply(entity);
-        setValueToField(object, target);
-    }
-
     /**
      * Sets the given value on the target entity as either a blob or a key depending on the value.
      *
