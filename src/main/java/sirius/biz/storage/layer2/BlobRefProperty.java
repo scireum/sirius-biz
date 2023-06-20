@@ -59,13 +59,13 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
      */
     public BlobHardRef getRef(Object entity) {
         try {
-            return (BlobHardRef) super.getValueFromField(this.accessPath.apply(entity));
+            return (BlobHardRef) super.getValueFromField(entity);
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(OMA.LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Unable to obtain a reference object from entity ref field ('%s' in '%s'): %s (%s)",
+                                    "Unable to obtain the BlobHardRef object from blob ref field ('%s' in '%s'): %s (%s)",
                                     getName(),
                                     descriptor.getType().getName())
                             .handle();
@@ -90,11 +90,6 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
     @Override
     public Object transformFromDatasource(Class<? extends BaseMapper<?, ?, ?>> mapperType, Value object) {
         return object.get();
-    }
-
-    @Override
-    public void setValue(Object entity, Object object) {
-        this.setValueToField(object, entity);
     }
 
     /**
