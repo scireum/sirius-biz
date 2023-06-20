@@ -62,7 +62,7 @@ public class TenantData extends Composite implements Journaled {
     public static final String STORAGE_SPACE = "tenants";
 
     /**
-     * Contains the fallback URI used by {@link #fetchSmallUrl()} and {@link #fetchMediumUrl()}.
+     * Contains the fallback URI used by {@link #fetchSmallUrl()}, {@link #fetchMediumUrl()}, and {@link #fetchLargeUrl()}.
      */
     public static final String IMAGE_FALLBACK_URI = "/assets/images/tenant_image_fallback.png";
 

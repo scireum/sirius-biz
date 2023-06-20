@@ -60,7 +60,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     public static final String STORAGE_SPACE = "user-accounts";
 
     /**
-     * Contains the fallback URI used by {@link #fetchSmallUrl()} and {@link #fetchMediumUrl()}.
+     * Contains the fallback URI used by {@link #fetchSmallUrl()}, {@link #fetchMediumUrl()}, and {@link #fetchLargeUrl()}.
      */
     public static final String IMAGE_FALLBACK_URI = "/assets/images/user_image_fallback.png";
 
