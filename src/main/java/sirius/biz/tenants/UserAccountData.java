@@ -74,6 +74,11 @@ public class UserAccountData extends Composite implements MessageProvider {
      */
     public static final String IMAGE_VARIANT_MEDIUM = "user-medium";
 
+    /**
+     * Contains the name of the variant used to fetch the large image.
+     */
+    public static final String IMAGE_VARIANT_LARGE = "user-large";
+
     @Transient
     private final BaseEntity<?> userObject;
 
@@ -463,5 +468,14 @@ public class UserAccountData extends Composite implements MessageProvider {
      */
     public URLBuilder fetchMediumUrl() {
         return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
+    }
+
+    /**
+     * Builds a URL to the large image.
+     *
+     * @return a URLBuilder which is used to fetch the large image of this user
+     */
+    public URLBuilder fetchLargeUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_LARGE);
     }
 }
