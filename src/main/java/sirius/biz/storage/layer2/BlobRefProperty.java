@@ -65,7 +65,7 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
                             .to(OMA.LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Unable to obtain a reference object from entity ref field ('%s' in '%s'): %s (%s)",
+                                    "Unable to obtain the BlobHardRef object from blob ref field ('%s' in '%s'): %s (%s)",
                                     getName(),
                                     descriptor.getType().getName())
                             .handle();

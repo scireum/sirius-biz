@@ -95,7 +95,7 @@ public class BlobSoftRefProperty extends BlobRefProperty {
         }
     }
 
-    private BlobSoftRef getBlobSoftRef() {
+    private BlobSoftRef getReferenceBlobSoftRef() {
         if (blobSoftRef == null) {
             try {
                 blobSoftRef = (BlobSoftRef) field.get(accessPath.apply(descriptor.getReferenceInstance()));
@@ -104,7 +104,7 @@ public class BlobSoftRefProperty extends BlobRefProperty {
                                 .to(Mixing.LOG)
                                 .error(e)
                                 .withSystemErrorMessage(
-                                        "Unable to obtain a BlobSoftRef object from entity ref field ('%s' in '%s'): %s (%s)",
+                                        "Unable to obtain a reference object from blob ref field ('%s' in '%s'): %s (%s)",
                                         getName(),
                                         descriptor.getType().getName())
                                 .handle();
@@ -119,7 +119,7 @@ public class BlobSoftRefProperty extends BlobRefProperty {
         super.link();
 
         try {
-            BaseEntityRef.OnDelete deleteHandler = getBlobSoftRef().getDeleteHandler();
+            BaseEntityRef.OnDelete deleteHandler = getReferenceBlobSoftRef().getDeleteHandler();
 
             if (deleteHandler == BaseEntityRef.OnDelete.CASCADE) {
                 forEachBlobType(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteCascade));
