@@ -354,9 +354,9 @@ public class ObjectStore {
      * Server-side copies an object between two buckets.
      *
      * @param sourceBucket   the source bucket containing the object to copy
-     * @param sourceObjectId the object id co copy from the source bucket
+     * @param sourceObjectId the object ID to copy from the source bucket
      * @param targetBucket   the target bucket containing the object to copy
-     * @param targetObjectId the object id co copy from the target bucket
+     * @param targetObjectId the object ID to copy from the target bucket
      */
     public void copyObject(BucketName sourceBucket,
                            String sourceObjectId,
