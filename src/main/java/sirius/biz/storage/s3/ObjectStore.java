@@ -335,8 +335,9 @@ public class ObjectStore {
      * @param objectId the object to delete
      */
     public void deleteObject(BucketName bucket, String objectId) {
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object %s from %s", objectId, bucket),
-                                                 Duration.ofMinutes(1))) {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object %s from %s",
+                                                                     objectId,
+                                                                     bucket), Duration.ofMinutes(1))) {
             getClient().deleteObject(bucket.getName(), objectId);
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -345,6 +346,37 @@ public class ObjectStore {
                             .withSystemErrorMessage("Failed to delete object %s from bucket %s - %s (%s)",
                                                     objectId,
                                                     bucket)
+                            .handle();
+        }
+    }
+
+    /**
+     * Server-side copies an object between two buckets.
+     *
+     * @param sourceBucket   the source bucket containing the object to copy
+     * @param sourceObjectId the object ID to copy from the source bucket
+     * @param targetBucket   the target bucket containing the object to copy
+     * @param targetObjectId the object ID to copy from the target bucket
+     */
+    public void copyObject(BucketName sourceBucket,
+                           String sourceObjectId,
+                           BucketName targetBucket,
+                           String targetObjectId) {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Copying object from %s/%s to %s/%s",
+                                                                     sourceBucket,
+                                                                     sourceObjectId,
+                                                                     targetBucket,
+                                                                     targetObjectId), Duration.ofMinutes(5))) {
+            getClient().copyObject(sourceBucket.getName(), sourceObjectId, targetBucket.getName(), targetObjectId);
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(ObjectStores.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to copy object from %s/%s to %s/%s - %s (%s)",
+                                                    sourceBucket,
+                                                    sourceObjectId,
+                                                    targetBucket,
+                                                    targetObjectId)
                             .handle();
         }
     }
