@@ -17,7 +17,7 @@
     </i:block>
 
     <i:block name="page-header">
-        <t:pageHeader title="@tenant.getTenantData().getName()">
+        <t:pageHeader title="@tenant.isNew() ? tenant.toString() : tenant.getTenantData().getName()">
             <t:inlineInfo labelKey="TenantData.accountNumber" value="@tenant.getTenantData().getAccountNumber()"/>
             <i:extensions target="tenant" point="head" tenant="tenant" controller="controller" page="page"/>
 

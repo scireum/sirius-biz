@@ -18,7 +18,7 @@
     </i:block>
 
     <i:block name="page-header">
-        <t:pageHeader title="@account.getUserAccountData().toString()">
+        <t:pageHeader title="@account.isNew() ? account.toString() : account.getUserAccountData().toString()">
             <i:block name="actions">
                 <i:extensions target="user-account" account="account" point="actions"/>
             </i:block>
