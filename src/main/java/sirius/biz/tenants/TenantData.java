@@ -62,7 +62,7 @@ public class TenantData extends Composite implements Journaled {
     public static final String STORAGE_SPACE = "tenants";
 
     /**
-     * Contains the fallback URI used by {@link #fetchSmallUrl()} and {@link #fetchMediumUrl()}.
+     * Contains the fallback URI used by {@link #fetchSmallUrl()}, {@link #fetchMediumUrl()}, and {@link #fetchLargeUrl()}.
      */
     public static final String IMAGE_FALLBACK_URI = "/assets/images/tenant_image_fallback.png";
 
@@ -75,6 +75,11 @@ public class TenantData extends Composite implements Journaled {
      * Contains the name of the variant used to fetch the medium image.
      */
     public static final String IMAGE_VARIANT_MEDIUM = "tenant-medium";
+
+    /**
+     * Contains the name of the variant used to fetch the large image.
+     */
+    public static final String IMAGE_VARIANT_LARGE = "tenant-large";
 
     @Transient
     private final BaseEntity<?> tenantObject;
@@ -611,7 +616,7 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Builds a URL to the small image.
      *
-     * @return a URLBuilder which is used to fetch the small image of this user
+     * @return a URLBuilder which is used to fetch the small image of this tenant
      */
     public URLBuilder fetchSmallUrl() {
         return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
@@ -620,9 +625,18 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Builds a URL to the medium image.
      *
-     * @return a URLBuilder which is used to fetch the medium image of this user
+     * @return a URLBuilder which is used to fetch the medium image of this tenant
      */
     public URLBuilder fetchMediumUrl() {
         return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
+    }
+
+    /**
+     * Builds a URL to the large image.
+     *
+     * @return a URLBuilder which is used to fetch the large image of this tenant
+     */
+    public URLBuilder fetchLargeUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_LARGE);
     }
 }

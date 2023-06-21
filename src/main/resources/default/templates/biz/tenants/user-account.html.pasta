@@ -18,53 +18,55 @@
     </i:block>
 
     <i:block name="page-header">
-        <t:pageHeader title="@account.getUserAccountData().toString()">
+        <t:pageHeader title="@account.isNew() ? account.toString() : account.getUserAccountData().toString()">
             <i:block name="actions">
                 <i:extensions target="user-account" account="account" point="actions"/>
             </i:block>
 
-            <i:block name="additionalActions">
-                <t:dropdownSection>
-                    <t:dropdownItem labelKey="TenantController.select"
-                                    icon="fa fa-building"
-                                    url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
-                </t:dropdownSection>
-                <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+            <i:if test="!account.isNew()">
+                <i:block name="additionalActions">
                     <t:dropdownSection>
-                        <t:dropdownItem
-                                labelKey="LoginData.password.generate"
-                                icon="fa-regular fa-envelope"
-                                url="@apply('/user-account/%s/generate-password', account.getIdAsString())"/>
-                        <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
+                        <t:dropdownItem labelKey="TenantController.select"
+                                        icon="fa fa-building"
+                                        url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                    </t:dropdownSection>
+                    <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+                        <t:dropdownSection>
                             <t:dropdownItem
-                                    labelKey="LoginData.password.generateAndSend"
-                                    icon="fa-solid fa-envelope"
-                                    url="@apply('/user-account/%s/generate-and-send-password', account.getIdAsString())"/>
+                                    labelKey="LoginData.password.generate"
+                                    icon="fa-regular fa-envelope"
+                                    url="@apply('/user-account/%s/generate-password', account.getIdAsString())"/>
+                            <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
+                                <t:dropdownItem
+                                        labelKey="LoginData.password.generateAndSend"
+                                        icon="fa-solid fa-envelope"
+                                        url="@apply('/user-account/%s/generate-and-send-password', account.getIdAsString())"/>
+                            </i:if>
+                        </t:dropdownSection>
+                    </i:if>
+                    <t:dropdownSection>
+                        <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                            <t:dropdownItem
+                                    labelKey="LoginData.unlock"
+                                    icon="fa-solid fa-unlock"
+                                    url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
+                            <i:else>
+                                <t:dropdownItem
+                                        labelKey="LoginData.lock"
+                                        icon="fa-solid fa-lock"
+                                        url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
+                            </i:else>
                         </i:if>
                     </t:dropdownSection>
-                </i:if>
-                <t:dropdownSection>
-                    <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
-                        <t:dropdownItem
-                                labelKey="LoginData.unlock"
-                                icon="fa-solid fa-unlock"
-                                url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
-                        <i:else>
-                            <t:dropdownItem
-                                    labelKey="LoginData.lock"
-                                    icon="fa-solid fa-lock"
-                                    url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
-                        </i:else>
-                    </i:if>
-                </t:dropdownSection>
 
-                <t:dropdownSection>
-                    <i:extensions target="user-account" account="account" point="additionalActions"/>
-                </t:dropdownSection>
-                <t:dropdownSection>
-                    <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
-                </t:dropdownSection>
-            </i:block>
+                    <t:dropdownSection>
+                        <i:extensions target="user-account" account="account" point="additionalActions"/>
+                    </t:dropdownSection>
+                    <t:dropdownSection>
+                        <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                    </t:dropdownSection>
+                </i:block>
+            </i:if>
 
             <div class="d-flex flex-row">
                 <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
@@ -105,13 +107,13 @@
                 <t:infobox labelKey="UserAccountData.image">
                     <t:blobImageHardRefField name="userAccountData_image"
                                              objectRef="@account.getUserAccountData().getImage()"
-                                             previewVariant="@sirius.biz.tenants.UserAccountData.IMAGE_VARIANT_MEDIUM"
+                                             previewVariant="@sirius.biz.tenants.UserAccountData.IMAGE_VARIANT_LARGE"
                                              defaultPreview="@sirius.biz.tenants.UserAccountData.IMAGE_FALLBACK_URI"/>
                 </t:infobox>
 
                 <i:else>
                     <div class="mb-2 d-none d-lg-block">
-                        <t:blobImage skipEmpty="true" urlBuilder="account.getUserAccountData().fetchMediumUrl()"
+                        <t:blobImage skipEmpty="true" urlBuilder="account.getUserAccountData().fetchLargeUrl()"
                                      style="height: 180px"/>
                     </div>
                 </i:else>

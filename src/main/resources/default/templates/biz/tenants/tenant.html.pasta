@@ -17,22 +17,24 @@
     </i:block>
 
     <i:block name="page-header">
-        <t:pageHeader title="@tenant.getTenantData().getName()">
+        <t:pageHeader title="@tenant.isNew() ? tenant.toString() : tenant.getTenantData().getName()">
             <t:inlineInfo labelKey="TenantData.accountNumber" value="@tenant.getTenantData().getAccountNumber()"/>
             <i:extensions target="tenant" point="head" tenant="tenant" controller="controller" page="page"/>
 
             <i:block name="actions">
                 <i:extensions target="tenant" point="actions" tenant="tenant" controller="controller" page="page"/>
             </i:block>
-            <i:block name="additionalActions">
-                <t:dropdownSection>
-                    <i:extensions target="tenant"
-                                  point="additionalActions"
-                                  tenant="tenant"
-                                  controller="controller"
-                                  page="page"/>
-                </t:dropdownSection>
-            </i:block>
+            <i:if test="!tenant.isNew()">
+                <i:block name="additionalActions">
+                    <t:dropdownSection>
+                        <i:extensions target="tenant"
+                                      point="additionalActions"
+                                      tenant="tenant"
+                                      controller="controller"
+                                      page="page"/>
+                    </t:dropdownSection>
+                </i:block>
+            </i:if>
         </t:pageHeader>
     </i:block>
 
@@ -41,13 +43,13 @@
             <i:if test="page == 'details'">
                 <t:infobox labelKey="TenantData.image">
                     <t:blobImageHardRefField name="tenantData_image" objectRef="@tenant.getTenantData().getImage()"
-                                             previewVariant="@sirius.biz.tenants.TenantData.IMAGE_VARIANT_MEDIUM"
+                                             previewVariant="@sirius.biz.tenants.TenantData.IMAGE_VARIANT_LARGE"
                                              defaultPreview="@sirius.biz.tenants.TenantData.IMAGE_FALLBACK_URI"/>
                 </t:infobox>
 
                 <i:else>
                     <div class="mb-2 d-none d-lg-block">
-                        <t:blobImage skipEmpty="true" urlBuilder="tenant.getTenantData().fetchMediumUrl()"
+                        <t:blobImage skipEmpty="true" urlBuilder="tenant.getTenantData().fetchLargeUrl()"
                                      style="height: 180px"/>
                     </div>
                 </i:else>

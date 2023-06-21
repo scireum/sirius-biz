@@ -27,7 +27,7 @@
             <t:infobox labelKey="UserAccountData.image">
                 <t:blobImageHardRefField name="userAccountData_image"
                                          objectRef="@userAccount.getUserAccountData().getImage()"
-                                         previewVariant="@sirius.biz.tenants.UserAccountData.IMAGE_VARIANT_MEDIUM"
+                                         previewVariant="@sirius.biz.tenants.UserAccountData.IMAGE_VARIANT_LARGE"
                                          defaultPreview="@sirius.biz.tenants.UserAccountData.IMAGE_FALLBACK_URI"/>
             </t:infobox>
 
