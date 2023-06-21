@@ -23,8 +23,8 @@
                 <i:extensions target="user-account" account="account" point="actions"/>
             </i:block>
 
-            <i:if test="!account.isNew()">
-                <i:block name="additionalActions">
+            <i:block name="additionalActions">
+                <i:if test="!account.isNew()">
                     <t:dropdownSection>
                         <t:dropdownItem labelKey="TenantController.select"
                                         icon="fa fa-building"
@@ -65,8 +65,8 @@
                     <t:dropdownSection>
                         <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
                     </t:dropdownSection>
-                </i:block>
-            </i:if>
+                </i:if>
+            </i:block>
 
             <div class="d-flex flex-row">
                 <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
