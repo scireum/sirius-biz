@@ -24,15 +24,17 @@
             <i:block name="actions">
                 <i:extensions target="tenant" point="actions" tenant="tenant" controller="controller" page="page"/>
             </i:block>
-            <i:block name="additionalActions">
-                <t:dropdownSection>
-                    <i:extensions target="tenant"
-                                  point="additionalActions"
-                                  tenant="tenant"
-                                  controller="controller"
-                                  page="page"/>
-                </t:dropdownSection>
-            </i:block>
+            <i:if test="!tenant.isNew()">
+                <i:block name="additionalActions">
+                    <t:dropdownSection>
+                        <i:extensions target="tenant"
+                                      point="additionalActions"
+                                      tenant="tenant"
+                                      controller="controller"
+                                      page="page"/>
+                    </t:dropdownSection>
+                </i:block>
+            </i:if>
         </t:pageHeader>
     </i:block>
 
