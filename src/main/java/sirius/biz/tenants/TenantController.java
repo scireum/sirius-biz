@@ -326,7 +326,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
      */
     @SuppressWarnings("squid:S1192")
     @Explain("This string has a completely different semantic than the constant defined above")
-    public String getDeleteLink(String tenantId) {
+    public static String getDeleteLink(String tenantId) {
         return new LinkBuilder("/job/delete-tenant").append("tenant", tenantId).toString();
     }
 
