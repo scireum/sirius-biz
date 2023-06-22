@@ -8,7 +8,7 @@
 <i:local name="availablePackages" value="packageData.getAvailablePackages()"/>
 
 <div class="row">
-    <i:local name="availablePackages" value="packageData.getAvailableUpgrades()"/>
+    <i:local name="availablePackages" value="packageData.getAvailablePackages()"/>
     <i:if test="!availablePackages.isEmpty()">
         <t:singleSelect class="col-12 col-md-6 required"
                         name="packageData_packageString"
@@ -25,7 +25,7 @@
     </i:if>
 
     <i:local name="availableUpgrades" value="packageData.getAvailableUpgrades()"/>
-    <i:if test="!upgrades.isEmpty()">
+    <i:if test="!availableUpgrades.isEmpty()">
         <t:multiSelect class="col-12 col-md-6"
                        name="packageData_upgrades"
                        id="singleSelect-packageData_upgrades"
