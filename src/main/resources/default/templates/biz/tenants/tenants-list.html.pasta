@@ -1,5 +1,6 @@
 <i:arg type="Page" name="tenants"/>
-<i:arg type="String" name="baseUrl"/>
+<i:arg type="String" name="paginationBaseUrl"/>
+<i:arg type="String" name="cardBaseUrl"/>
 <i:arg type="boolean" name="enableCardActions"/>
 
 <t:emptyCheck data="tenants">
@@ -8,7 +9,7 @@
             <t:datacard subTitle="@tenant.getTenantData().getAccountNumber()"
                         headerLeft="true"
                         headerLeftAlignmentClass="align-items-stretch text-break break-word"
-                        link="@apply('%s/%s', baseUrl, tenant.getIdAsString())">
+                        link="@apply('%s/%s', cardBaseUrl, tenant.getIdAsString())">
                 <i:block name="header">
                     <div class="pl-2 pr-1 align-self-center">
                         <div class="d-flex flex-column align-items-center justify-content-center"
@@ -74,5 +75,5 @@
         </i:for>
     </t:datacards>
 
-    <t:pagination page="tenants" baseUrl="/tenants"/>
+    <t:pagination page="tenants" baseUrl="@paginationBaseUrl"/>
 </t:emptyCheck>
