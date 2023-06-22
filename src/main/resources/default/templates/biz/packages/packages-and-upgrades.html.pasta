@@ -5,8 +5,6 @@
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders the package and upgrades"/>
 
-<i:local name="availablePackages" value="packageData.getAvailablePackages()"/>
-
 <div class="row">
     <i:local name="availablePackages" value="packageData.getAvailablePackages()"/>
     <i:if test="!availablePackages.isEmpty()">
