@@ -32,7 +32,7 @@
                                         icon="fa fa-building"
                                         url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
                         <t:dropdownDeleteItem
-                                url="@sirius.biz.tenants.TenantController.getDeleteLink(tenant.getIdAsString())"/>
+                                url="@sirius.web.util.LinkBuilder.new('/job/delete-tenant').append('tenant', tenant.getIdAsString()).toString()"/>
                     </i:if>
                 </i:block>
 
