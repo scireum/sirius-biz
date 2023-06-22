@@ -20,8 +20,6 @@
                                  alt=""/>
                         </div>
                     </div>
-
-                    <i:extensions target="tenants" page="tenants" tenant="tenant" point="card-header"/>
                 </i:block>
                 <i:block name="title">
                     <t:country country="@tenant.getTenantData().getAddress().getCountry().getValue()">
@@ -33,20 +31,16 @@
                         <t:dropdownItem labelKey="TenantController.select"
                                         icon="fa fa-building"
                                         url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
-                        <i:extensions target="tenants" page="tenants" tenant="tenant" point="card-actions"/>
                         <t:dropdownDeleteItem
                                 url="@sirius.biz.tenants.TenantController.getDeleteLink(tenant.getIdAsString())"/>
                     </i:if>
                 </i:block>
-                <i:extensions target="tenants" page="tenants" tenant="tenant" point="card-top"/>
 
                 <div class="mb-2">
                     <i:if test="tenant.getTenantData().getFullName() != tenant.getTenantData().getName()">
                         @tenant.getTenantData().getFullName()
                     </i:if>
                 </div>
-
-                <i:extensions target="tenants" page="tenants" tenant="tenant" point="card-bottom"/>
 
                 <i:block name="footer">
                     <div class="mb-2">
@@ -68,8 +62,6 @@
                             </div>
                         </t:iconInlineInfo>
                     </div>
-
-                    <i:extensions target="tenants" page="tenants" tenant="tenant" point="card-footer"/>
                 </i:block>
             </t:datacard>
         </i:for>
