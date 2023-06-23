@@ -26,6 +26,13 @@
             </i:block>
             <i:block name="additionalActions">
                 <i:if test="!tenant.isNew()">
+                    <t:permission permission="flag-system-administrator">
+                        <t:dropdownSection>
+                            <t:dropdownItem labelKey="TenantController.select"
+                                            icon="fa fa-building"
+                                            url="@apply('/tenant/select/%s', tenant.getIdAsString())"/>
+                        </t:dropdownSection>
+                    </t:permission>
                     <t:dropdownSection>
                         <i:extensions target="tenant"
                                       point="additionalActions"
