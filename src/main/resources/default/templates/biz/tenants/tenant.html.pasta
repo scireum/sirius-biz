@@ -30,7 +30,7 @@
                         <t:dropdownSection>
                             <t:dropdownItem labelKey="TenantController.select"
                                             icon="fa fa-building"
-                                            url="@apply('/tenant/select/%s', tenant.getIdAsString())"/>
+                                            url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
                         </t:dropdownSection>
                     </t:permission>
                     <t:dropdownSection>
