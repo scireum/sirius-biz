@@ -1,0 +1,71 @@
+<i:arg type="Page" name="tenants"/>
+<i:arg type="String" name="paginationBaseUrl"/>
+<i:arg type="String" name="cardBaseUrl"/>
+<i:arg type="boolean" name="enableCardActions"/>
+
+<t:emptyCheck data="tenants">
+    <t:datacards>
+        <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
+            <t:datacard subTitle="@tenant.getTenantData().getAccountNumber()"
+                        headerLeft="true"
+                        headerLeftAlignmentClass="align-items-stretch text-break break-word"
+                        link="@apply('%s/%s', cardBaseUrl, tenant.getIdAsString())">
+                <i:block name="header">
+                    <div class="pl-2 pr-1 align-self-center">
+                        <div class="d-flex flex-column align-items-center justify-content-center"
+                             style="width: 80px">
+                            <img style="object-fit: cover; object-position: center;"
+                                 class="mw-100"
+                                 src="@tenant.getTenantData().fetchSmallUrl().buildImageURL()"
+                                 alt=""/>
+                        </div>
+                    </div>
+                </i:block>
+                <i:block name="title">
+                    <t:country country="@tenant.getTenantData().getAddress().getCountry().getValue()">
+                        @tenant.getTenantData().getName()
+                    </t:country>
+                </i:block>
+                <i:block name="actions">
+                    <i:if test="enableCardActions">
+                        <t:dropdownItem labelKey="TenantController.select"
+                                        icon="fa fa-building"
+                                        url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
+                        <t:dropdownDeleteItem
+                                url="@sirius.web.util.LinkBuilder.new('/job/delete-tenant').append('tenant', tenant.getIdAsString()).toString()"/>
+                    </i:if>
+                </i:block>
+
+                <div class="mb-2">
+                    <i:if test="tenant.getTenantData().getFullName() != tenant.getTenantData().getName()">
+                        @tenant.getTenantData().getFullName()
+                    </i:if>
+                </div>
+
+                <i:block name="footer">
+                    <div class="mb-2">
+                        <t:iconInlineInfo icon="fa-solid fa-house">
+                            <div>
+                                <i:if test="isFilled(tenant.getTenantData().getAddress().getStreet())">
+                                    @tenant.getTenantData().getAddress().getStreet()
+                                    <i:else>-</i:else>
+                                </i:if>
+                            </div>
+                            <div>
+                                <i:if test="!isFilled(tenant.getTenantData().getAddress().getZip()) && !isFilled(tenant.getTenantData().getAddress().getCity())">
+                                    -
+                                    <i:else>
+                                        @tenant.getTenantData().getAddress().getZip()
+                                        @tenant.getTenantData().getAddress().getCity()
+                                    </i:else>
+                                </i:if>
+                            </div>
+                        </t:iconInlineInfo>
+                    </div>
+                </i:block>
+            </t:datacard>
+        </i:for>
+    </t:datacards>
+
+    <t:pagination page="tenants" baseUrl="@paginationBaseUrl"/>
+</t:emptyCheck>

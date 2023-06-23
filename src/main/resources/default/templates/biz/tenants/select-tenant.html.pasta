@@ -23,56 +23,10 @@
             </i:if>
         </t:searchHeader>
 
-        <t:emptyCheck data="tenants">
-            <t:datacards>
-                <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
-                    <t:datacard subTitle="@tenant.getTenantData().getAccountNumber()"
-                                headerLeft="true"
-                                headerLeftAlignmentClass="align-items-stretch text-break break-word"
-                                link="@apply('/tenants/select/%s', tenant.getIdAsString())">
-                        <i:block name="header">
-                            <div class="pl-2 pr-1 align-self-center">
-                                <div class="d-flex flex-column align-items-center justify-content-center"
-                                     style="width: 80px">
-                                    <img style="object-fit: cover; object-position: center;"
-                                         class="mw-100"
-                                         src="@tenant.getTenantData().fetchSmallUrl().buildImageURL()"
-                                         alt=""/>
-                                </div>
-                            </div>
-
-                            <i:extensions target="select-tenant" page="tenants" tenant="tenant"
-                                          point="card-header"/>
-                        </i:block>
-                        <i:block name="title">
-                            <t:country country="@tenant.getTenantData().getAddress().getCountry().getValue()">
-                                @tenant.getTenantData().getName()
-                            </t:country>
-                        </i:block>
-
-                        <i:extensions target="select-tenant" page="tenants" tenant="tenant" point="card-top"/>
-
-                        <div class="mb-2">
-                            <i:if test="tenant.getTenantData().getFullName() != tenant.getTenantData().getName()">
-                                <div>@tenant.getTenantData().getFullName()</div>
-                            </i:if>
-                            <div>@tenant.getTenantData().getAddress().getStreet()</div>
-                            <div>@tenant.getTenantData().getAddress().getZip()
-                                @tenant.getTenantData().getAddress().getCity()
-                            </div>
-                        </div>
-                        <i:extensions target="select-tenant" page="tenants" tenant="tenant"
-                                      point="card-bottom"/>
-
-                        <i:block name="footer">
-                            <i:extensions target="select-tenant" page="tenants" tenant="tenant"
-                                          point="card-footer"/>
-                        </i:block>
-                    </t:datacard>
-                </i:for>
-            </t:datacards>
-
-            <t:pagination page="tenants" baseUrl="/tenants"/>
-        </t:emptyCheck>
+        <i:invoke template="/templates/biz/tenants/tenants-list.html.pasta"
+                  tenants="tenants"
+                  paginationBaseUrl="@('/tenants')"
+                  cardBaseUrl="@('/tenants/select')"
+                  enableCardActions="false"/>
     </t:sidebar>
 </t:page>

@@ -24,8 +24,15 @@
             <i:block name="actions">
                 <i:extensions target="tenant" point="actions" tenant="tenant" controller="controller" page="page"/>
             </i:block>
-            <i:if test="!tenant.isNew()">
-                <i:block name="additionalActions">
+            <i:block name="additionalActions">
+                <i:if test="!tenant.isNew()">
+                    <t:permission permission="flag-system-administrator">
+                        <t:dropdownSection>
+                            <t:dropdownItem labelKey="TenantController.select"
+                                            icon="fa fa-building"
+                                            url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
+                        </t:dropdownSection>
+                    </t:permission>
                     <t:dropdownSection>
                         <i:extensions target="tenant"
                                       point="additionalActions"
@@ -33,8 +40,8 @@
                                       controller="controller"
                                       page="page"/>
                     </t:dropdownSection>
-                </i:block>
-            </i:if>
+                </i:if>
+            </i:block>
         </t:pageHeader>
     </i:block>
 

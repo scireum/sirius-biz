@@ -48,13 +48,13 @@
                 </div>
             </i:if>
 
-            <i block="actions">
+            <i:block name="actions">
                 <i:if test="journal != null">
-                    <a href="@journal.getProtocolUri()" role="button" class="btn btn-link">
-                        <i class="fa fa-external-link-alt"></i> @i18n("JournalEntry.plural")
-                    </a>
+                    <t:dropdownItem labelKey="JournalEntry.plural"
+                                    icon="fa fa-external-link-alt"
+                                    url="@journal.getProtocolUri()"/>
                 </i:if>
-            </i>
+            </i:block>
         </t:datacard>
 
     </div>

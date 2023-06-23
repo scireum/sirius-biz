@@ -21,59 +21,10 @@
             </i:if>
         </t:searchHeader>
 
-        <t:emptyCheck data="users">
-            <t:datacards>
-                <i:for type="sirius.biz.tenants.UserAccount" var="account" items="users.getItems()">
-                    <t:datacard
-                            subTitle="@account.getUserAccountData().getLogin().getUsername()"
-                            headerLeft="true"
-                            headerLeftAlignmentClass="align-items-stretch text-break break-word"
-                            link="@apply('/user-accounts/select/%s', account.getIdAsString())">
-                        <i:block name="header">
-                            <div class="pl-2 pr-1 align-self-center">
-                                <div class="d-flex flex-column align-items-center justify-content-center"
-                                     style="width: 80px">
-                                    <img style="object-fit: cover; object-position: center;"
-                                         class="mw-100"
-                                         src="@account.getUserAccountData().fetchSmallUrl().buildImageURL()"
-                                         alt=""/>
-                                </div>
-                            </div>
-
-                            <i:extensions target="select-user-account" page="users" account="account"
-                                          point="card-header"/>
-                        </i:block>
-                        <i:block name="title">
-                            <t:langFlag lang="@account.getUserAccountData().getLanguage().getValue()"/>
-                            <span>@account.getUserAccountData()</span>
-                        </i:block>
-
-                        <i:extensions target="select-user-account" page="users" account="account" point="card-top"/>
-
-                        <div class="mb-2">
-                            <t:iconInlineInfo icon="fa-solid fa-eye">
-                                <i:if test="account.getUserAccountData().getLogin().getLastSeen() != null">
-                                    @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
-                                    <i:else>-</i:else>
-                                </i:if>
-                            </t:iconInlineInfo>
-                            <t:iconInlineInfo icon="fa-regular fa-envelope">
-                                @account.getUserAccountData().getEmail()
-                            </t:iconInlineInfo>
-                        </div>
-                        <i:extensions target="select-user-account" page="users" account="account" point="card-bottom"/>
-
-                        <i:block name="footer">
-                            <i:extensions target="select-user-account" page="users" account="account"
-                                          point="card-footer"/>
-                            <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
-                                <t:dot color="red">@i18n("LoginData.accountLocked")</t:dot>
-                            </i:if>
-                        </i:block>
-                    </t:datacard>
-                </i:for>
-            </t:datacards>
-            <t:pagination page="users" baseUrl="/user-accounts/select"/>
-        </t:emptyCheck>
+        <i:invoke template="/templates/biz/tenants/user-accounts-list.html.pasta"
+                  accounts="users"
+                  paginationBaseUrl="@('/user-accounts/select')"
+                  cardBaseUrl="@('/user-accounts/select')"
+                  enableCardActions="false"/>
     </t:sidebar>
 </t:page>

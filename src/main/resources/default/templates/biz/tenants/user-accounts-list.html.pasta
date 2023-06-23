@@ -1,0 +1,93 @@
+<i:arg type="Page" name="accounts"/>
+<i:arg type="String" name="paginationBaseUrl"/>
+<i:arg type="String" name="cardBaseUrl"/>
+<i:arg type="boolean" name="enableCardActions"/>
+
+<t:emptyCheck data="@accounts">
+    <t:datacards>
+        <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
+            <t:datacard
+                    subTitle="@account.getUserAccountData().getLogin().getUsername()"
+                    headerLeft="true"
+                    headerLeftAlignmentClass="align-items-stretch text-break break-word"
+                    link="@apply('%s/%s', cardBaseUrl , account.getIdAsString())">
+                <i:block name="header">
+                    <div class="pl-2 pr-1 align-self-center">
+                        <div class="d-flex flex-column align-items-center justify-content-center"
+                             style="width: 80px">
+                            <img style="object-fit: cover; object-position: center;"
+                                 class="mw-100"
+                                 src="@account.getUserAccountData().fetchSmallUrl().buildImageURL()"
+                                 alt=""/>
+                        </div>
+                    </div>
+                </i:block>
+                <i:block name="title">
+                    <t:langFlag lang="@account.getUserAccountData().getLanguage().getValue()"/>
+                    <span>@account.getUserAccountData()</span>
+                </i:block>
+                <i:block name="actions">
+                    <i:if test="enableCardActions">
+                        <t:dropdownSection>
+                            <t:dropdownItem labelKey="TenantController.select"
+                                            icon="fa fa-building"
+                                            url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                        </t:dropdownSection>
+                        <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+                            <t:dropdownSection>
+                                <t:dropdownItem
+                                        labelKey="LoginData.password.generate"
+                                        icon="fa-regular fa-envelope"
+                                        url="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-password', account.getIdAsString()))"/>
+                                <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
+                                    <t:dropdownItem
+                                            labelKey="LoginData.password.generateAndSend"
+                                            icon="fa-solid fa-envelope"
+                                            url="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-and-send-password', account.getIdAsString()))"/>
+                                </i:if>
+                            </t:dropdownSection>
+                        </i:if>
+                        <t:dropdownSection>
+                            <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                                <t:dropdownItem
+                                        labelKey="LoginData.unlock"
+                                        icon="fa-solid fa-unlock"
+                                        url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
+                                <i:else>
+                                    <t:dropdownItem
+                                            labelKey="LoginData.lock"
+                                            icon="fa-solid fa-lock"
+                                            url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
+                                </i:else>
+                            </i:if>
+                        </t:dropdownSection>
+                        <t:dropdownSection>
+                            <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                        </t:dropdownSection>
+                    </i:if>
+                </i:block>
+
+                <div class="mb-2">
+                    <t:iconInlineInfo icon="fa-solid fa-eye">
+                        <i:if test="account.getUserAccountData().getLogin().getLastSeen() != null">
+                            @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
+                            <i:else>-</i:else>
+                        </i:if>
+                    </t:iconInlineInfo>
+
+                    <t:iconInlineInfo icon="fa-regular fa-envelope">
+                        @account.getUserAccountData().getEmail()
+                    </t:iconInlineInfo>
+                </div>
+
+                <i:block name="footer">
+                    <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                        <t:dot color="red">@i18n("LoginData.accountLocked")</t:dot>
+                    </i:if>
+                </i:block>
+            </t:datacard>
+        </i:for>
+    </t:datacards>
+
+    <t:pagination page="accounts" baseUrl="@paginationBaseUrl"/>
+</t:emptyCheck>
