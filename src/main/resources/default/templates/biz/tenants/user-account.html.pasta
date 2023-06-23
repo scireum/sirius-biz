@@ -85,16 +85,6 @@
                         @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
                     </t:inlineInfo>
                 </i:if>
-                <i:if test="account.getUserAccountData().getLogin().getLastLogin() != null">
-                    <t:inlineInfo labelKey="LoginData.lastLogin">
-                        @toSpokenDate(account.getUserAccountData().getLogin().getLastLogin())
-                    </t:inlineInfo>
-                </i:if>
-                <i:if test="account.getUserAccountData().getLogin().getApiToken() != null">
-                    <t:inlineInfo labelKey="LoginData.apiToken">
-                        @account.getUserAccountData().getLogin().getApiToken()
-                    </t:inlineInfo>
-                </i:if>
 
                 <i:if test="isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())">
                     <t:inlineInfo labelKey="LoginData.generatedPassword">
