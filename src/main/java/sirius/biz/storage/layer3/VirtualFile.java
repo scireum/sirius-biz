@@ -57,7 +57,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -1447,27 +1446,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     /**
      * Attempts to resolve the file from the given URL or performs a download if the file does not exist.
-     *
-     * @param url                   the url to fetch
-     * @param mode                  determines under which conditions the data from the given URL should be fetched
-     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
-     *                              ".php" or the like as effective file name. When in doubt, use
-     *                              {@link #notServerSidedScripting(String)} to at least exclude common server-sided
-     *                              scripting languages like PHP.
-     * @return the file which has been resolved (and downloaded if necessary) along with a flag which indicates if an
-     * update (download) has been performed
-     * @throws HandledException in case of an any error during the download (or if the effective file path cannot be
-     *                          determined)
-     * @see #resolveOrLoadChildFromURL(URI, FetchFromUrlMode, Predicate, Predicate)
-     */
-    public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URI url,
-                                                                 FetchFromUrlMode mode,
-                                                                 Predicate<String> fileExtensionVerifier) {
-        return resolveOrLoadChildFromURL(url, mode, fileExtensionVerifier, ignored -> false);
-    }
-
-    /**
-     * Attempts to resolve the file from the given URL or performs a download if the file does not exist.
      * <p>
      * Uses the path of the given URL relative to this directory and tries to resolve the child file. If this file
      * does not exist, or has been modified since its last download, a download will be attempted.
@@ -1492,14 +1470,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * This will increment one of the timings (downloaded or download skipped) and also directly report IO
      * errors to the process without spamming the system logs.
      *
-     * @param url                    the url to fetch
-     * @param mode                   determines under which conditions the data from the given URL should be fetched
-     * @param fileExtensionVerifier  specifies which extensions are accepted. This should be used to prevent using
-     *                               ".php" or the like as effective file name. When in doubt, use
-     *                               {@link #notServerSidedScripting(String)} to at least exclude common server-sided
-     *                               scripting languages like PHP.
-     * @param queryParameterSelector determines if a query string parameter's value should be used as effective
-     *                               file name
+     * @param url                   the url to fetch
+     * @param mode                  determines under which conditions the data from the given URL should be fetched
+     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
+     *                              ".php" or the like as effective file name. When in doubt, use
+     *                              {@link #notServerSidedScripting(String)} to at least exclude common server-sided
+     *                              scripting languages like PHP.
      * @return the file which has been resolved (and downloaded if necessary) along with a flag which indicates if an
      * update (download) has been performed
      * @throws HandledException in case of an any error during the download (or if the effective file path cannot be
@@ -1507,11 +1483,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URI url,
                                                                  FetchFromUrlMode mode,
-                                                                 Predicate<String> fileExtensionVerifier,
-                                                                 Predicate<String> queryParameterSelector) {
+                                                                 Predicate<String> fileExtensionVerifier) {
         Watch watch = Watch.start();
-        Tuple<VirtualFile, Boolean> fileAndFlag =
-                performResolveOrLoadChildFromURL(url, mode, fileExtensionVerifier, queryParameterSelector);
+        Tuple<VirtualFile, Boolean> fileAndFlag = performResolveOrLoadChildFromURL(url, mode, fileExtensionVerifier);
         if (Boolean.TRUE.equals(fileAndFlag.getSecond())) {
             TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
         } else {
@@ -1523,10 +1497,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     private Tuple<VirtualFile, Boolean> performResolveOrLoadChildFromURL(URI url,
                                                                          FetchFromUrlMode mode,
-                                                                         Predicate<String> fileExtensionVerifier,
-                                                                         Predicate<String> queryParameterSelector) {
+                                                                         Predicate<String> fileExtensionVerifier) {
         try {
-            String path = parsePathFromUrl(url, fileExtensionVerifier, queryParameterSelector);
+            String path = parsePathFromUrl(url, fileExtensionVerifier);
             if (Strings.isFilled(path)) {
                 VirtualFile file = resolve(path);
                 return Tuple.create(file, file.performLoadFromUrl(url, mode));
@@ -1541,7 +1514,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                 .handle();
             }
 
-            return resolveViaHeadRequest(url, mode, fileExtensionVerifier, queryParameterSelector);
+            return resolveViaHeadRequest(url, mode, fileExtensionVerifier);
         } catch (IOException exception) {
             throw Exceptions.createHandled()
                             .error(exception)
@@ -1560,17 +1533,13 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * parameter of the query string, first by valid file extension, then by parameter name. Note that this will not
      * perform a HEAD request or the like, to fetch the <tt>Content-Disposition</tt> header.
      *
-     * @param url                    the URL to check
-     * @param fileExtensionVerifier  the verifier used to check if the path or any query string parameter contains a
-     *                               valid file name
-     * @param queryParameterSelector the verifier used to check if a query string parameter with a given name contains a
-     *                               valid file name
+     * @param url                   the URL to check
+     * @param fileExtensionVerifier the verifier used to check if the path or any query string parameter contains a
+     *                              valid file name
      * @return the extracted filename (with path) or <tt>null</tt> if none could be extracted
      */
     @Nullable
-    public static String parsePathFromUrl(URI url,
-                                          Predicate<String> fileExtensionVerifier,
-                                          Predicate<String> queryParameterSelector) {
+    public static String parsePathFromUrl(URI url, Predicate<String> fileExtensionVerifier) {
         if (fileExtensionVerifier.test(Files.getFileExtension(url.getPath()))) {
             return url.getPath();
         }
@@ -1584,20 +1553,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                  .flatMap(List::stream)
                                  .filter(path -> fileExtensionVerifier.test(Files.getFileExtension(path)))
                                  .findFirst()
-                                 .or(() -> queryStringDecoder.parameters()
-                                                             .entrySet()
-                                                             .stream()
-                                                             .filter(entry -> queryParameterSelector.test(entry.getKey()))
-                                                             .map(Map.Entry::getValue)
-                                                             .flatMap(List::stream)
-                                                             .findFirst())
                                  .orElse(null);
     }
 
     private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URI url,
                                                               FetchFromUrlMode mode,
-                                                              Predicate<String> fileExtensionVerifier,
-                                                              Predicate<String> queryParameterSelector)
+                                                              Predicate<String> fileExtensionVerifier)
             throws IOException {
         try {
             Outcall headRequest = new Outcall(url);
@@ -1625,7 +1586,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             new URI(new String(lastConnectedURL.toString().getBytes(StandardCharsets.ISO_8859_1),
                                                StandardCharsets.UTF_8));
                 }
-                path = parsePathFromUrl(lastConnectedURL, fileExtensionVerifier, queryParameterSelector);
+                path = parsePathFromUrl(lastConnectedURL, fileExtensionVerifier);
             }
 
             if (Strings.isFilled(path)) {
