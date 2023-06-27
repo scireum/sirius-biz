@@ -28,6 +28,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -49,7 +50,8 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
     public Tuple<VirtualFile, Boolean> resolve(VirtualFile parent,
                                                URI uri,
                                                FetchFromUrlMode mode,
-                                               Predicate<String> fileExtensionVerifier) throws IOException {
+                                               Predicate<String> fileExtensionVerifier,
+                                               Set<Options> options) throws IOException {
         try {
             Outcall headRequest = new Outcall(uri);
             headRequest.markAsHeadRequest();
@@ -80,7 +82,7 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
             }
 
             if (Strings.isFilled(path)) {
-                VirtualFile file = resolveVirtualFile(parent, path);
+                VirtualFile file = resolveVirtualFile(parent, path, uri.getHost(), options);
                 LocalDateTime lastModifiedHeader =
                         headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
                 if (lastModifiedHeader == null
@@ -101,7 +103,7 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
         }
 
         // We either ran into a timeout or the server doesn't support HEAD requests -> re-attempt with a GET
-        return resolveViaGetRequest(parent, uri, mode);
+        return resolveViaGetRequest(parent, uri, mode, options);
     }
 
     private boolean shouldRetryWithGet(HttpResponse<?> response) {
@@ -123,8 +125,10 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
                        .isPresent();
     }
 
-    private Tuple<VirtualFile, Boolean> resolveViaGetRequest(VirtualFile parent, URI uri, FetchFromUrlMode mode)
-            throws IOException {
+    private Tuple<VirtualFile, Boolean> resolveViaGetRequest(VirtualFile parent,
+                                                             URI uri,
+                                                             FetchFromUrlMode mode,
+                                                             Set<Options> options) throws IOException {
         Outcall request = new Outcall(uri);
         request.alwaysFollowRedirects();
         String path = request.parseFileNameFromContentDisposition().orElse(null);
@@ -134,7 +138,7 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
             return null;
         }
 
-        VirtualFile file = resolveVirtualFile(parent, path);
+        VirtualFile file = resolveVirtualFile(parent, path, uri.getHost(), options);
         if (file.exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
             // Drain any content, as the mode dictates not to update the file (which might require another upload,
             // so discarding the data is faster).

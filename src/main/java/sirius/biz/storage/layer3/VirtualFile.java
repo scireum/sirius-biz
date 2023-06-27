@@ -51,9 +51,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -1492,8 +1494,47 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URI url,
                                                                  FetchFromUrlMode mode,
                                                                  Predicate<String> fileExtensionVerifier) {
+        return resolveOrLoadChildFromURL(url,
+                                         mode,
+                                         fileExtensionVerifier,
+                                         EnumSet.noneOf(RemoteFileResolver.Options.class));
+    }
+
+    /**
+     * Attempts to resolve the file from the given URL or performs a download if the file does not exist.
+     * <p>
+     * Uses the path of the given URL relative to this directory and tries to resolve the child file. If this file
+     * does not exist, or has been modified since its last download, a download will be attempted.
+     * <p>
+     * As a result, the resolved file will be returned (which was either already there or has been downloaded).
+     * <p>
+     * In order to determine the effective filename/path of the given URL we use the registered
+     * {@linkplain RemoteFileResolver remote file resolvers}.
+     * <p>
+     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
+     * errors to the process without spamming the system logs.
+     *
+     * @param url                   the url to fetch
+     * @param mode                  determines under which conditions the data from the given URL should be fetched
+     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
+     *                              ".php" or the like as effective file name. When in doubt, use
+     *                              {@link #notServerSidedScripting(String)} to at least exclude common server-sided
+     *                              scripting languages like PHP.
+     * @param options               additional options for resolving the file
+     * @return the file which has been resolved (and downloaded if necessary) along with a flag which indicates if an
+     * update (download) has been performed
+     * @throws HandledException in case of an any error during the download (or if the effective file path cannot be
+     *                          determined)
+     */
+    public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URI url,
+                                                                 FetchFromUrlMode mode,
+                                                                 Predicate<String> fileExtensionVerifier,
+                                                                 Set<RemoteFileResolver.Options> options) {
         Watch watch = Watch.start();
-        Tuple<VirtualFile, Boolean> fileAndFlag = performResolveOrLoadChildFromURL(url, mode, fileExtensionVerifier);
+
+        Tuple<VirtualFile, Boolean> fileAndFlag =
+                performResolveOrLoadChildFromURL(url, mode, fileExtensionVerifier, options);
+
         if (Boolean.TRUE.equals(fileAndFlag.getSecond())) {
             TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
         } else {
@@ -1505,14 +1546,16 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     private Tuple<VirtualFile, Boolean> performResolveOrLoadChildFromURL(URI uri,
                                                                          FetchFromUrlMode mode,
-                                                                         Predicate<String> fileExtensionVerifier) {
+                                                                         Predicate<String> fileExtensionVerifier,
+                                                                         Set<RemoteFileResolver.Options> options) {
         try {
             for (RemoteFileResolver resolver : remoteFileResolvers) {
                 if (resolver.requiresRequestForPathResolve() && mode == FetchFromUrlMode.NEVER_FETCH) {
                     continue;
                 }
 
-                Tuple<VirtualFile, Boolean> fileAndFlag = resolver.resolve(this, uri, mode, fileExtensionVerifier);
+                Tuple<VirtualFile, Boolean> fileAndFlag =
+                        resolver.resolve(this, uri, mode, fileExtensionVerifier, options);
 
                 if (fileAndFlag != null) {
                     return fileAndFlag;

@@ -14,6 +14,7 @@ import sirius.kernel.di.std.Register;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -29,11 +30,12 @@ public class PathAndQueryStringFileResolver extends RemoteFileResolver {
     public Tuple<VirtualFile, Boolean> resolve(VirtualFile parent,
                                                URI uri,
                                                FetchFromUrlMode mode,
-                                               Predicate<String> fileExtensionVerifier) throws IOException {
+                                               Predicate<String> fileExtensionVerifier,
+                                               Set<Options> options) throws IOException {
         String path = parsePathFromUri(uri, fileExtensionVerifier);
 
         if (Strings.isFilled(path)) {
-            VirtualFile file = resolveVirtualFile(parent, path);
+            VirtualFile file = resolveVirtualFile(parent, path, uri.getHost(), options);
             return Tuple.create(file, file.performLoadFromUri(uri, mode));
         }
 
