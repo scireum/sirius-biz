@@ -93,7 +93,7 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
 
     private void outputIndexSizes(Report report) {
         ObjectNode indexStats = elastic.getLowLevelClient().indexStats();
-        ObjectNode indices = Json.getObject(indexStats, "/indices");
+        ObjectNode indices = Json.getObject(indexStats, "indices");
         report.addColumn("name", "Index");
         report.addColumn("docs", "Primary Docs");
         report.addColumn("size", "Primary Size");
