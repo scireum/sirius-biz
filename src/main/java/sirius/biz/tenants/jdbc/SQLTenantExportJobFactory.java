@@ -8,12 +8,10 @@
 
 package sirius.biz.tenants.jdbc;
 
-import sirius.biz.jobs.StandardCategories;
-import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.TenantController;
+import sirius.biz.tenants.TenantExportJobFactory;
 import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.di.std.Register;
-import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -23,7 +21,7 @@ import javax.annotation.Nonnull;
  */
 @Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 @Permission(TenantController.PERMISSION_MANAGE_TENANTS)
-public class SQLTenantExportJobFactory extends EntityExportJobFactory<SQLTenant, SmartQuery<SQLTenant>> {
+public class SQLTenantExportJobFactory extends TenantExportJobFactory<SQLTenant, SmartQuery<SQLTenant>> {
 
     @Nonnull
     @Override
@@ -32,22 +30,7 @@ public class SQLTenantExportJobFactory extends EntityExportJobFactory<SQLTenant,
     }
 
     @Override
-    public int getPriority() {
-        return 9200;
-    }
-
-    @Override
-    public String getCategory() {
-        return StandardCategories.USERS_AND_TENANTS;
-    }
-
-    @Override
     protected Class<SQLTenant> getExportType() {
         return SQLTenant.class;
-    }
-
-    @Override
-    protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
-        return queryString.path().startsWith("/tenant");
     }
 }

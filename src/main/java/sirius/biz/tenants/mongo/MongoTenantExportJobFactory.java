@@ -8,12 +8,10 @@
 
 package sirius.biz.tenants.mongo;
 
-import sirius.biz.jobs.StandardCategories;
-import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.TenantController;
+import sirius.biz.tenants.TenantExportJobFactory;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.di.std.Register;
-import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -23,7 +21,7 @@ import javax.annotation.Nonnull;
  */
 @Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 @Permission(TenantController.PERMISSION_MANAGE_TENANTS)
-public class MongoTenantExportJobFactory extends EntityExportJobFactory<MongoTenant, MongoQuery<MongoTenant>> {
+public class MongoTenantExportJobFactory extends TenantExportJobFactory<MongoTenant, MongoQuery<MongoTenant>> {
 
     @Nonnull
     @Override
@@ -32,23 +30,7 @@ public class MongoTenantExportJobFactory extends EntityExportJobFactory<MongoTen
     }
 
     @Override
-    public int getPriority() {
-        return 9200;
-    }
-
-    @Override
-    public String getCategory() {
-        return StandardCategories.USERS_AND_TENANTS;
-    }
-
-
-    @Override
     protected Class<MongoTenant> getExportType() {
         return MongoTenant.class;
-    }
-
-    @Override
-    protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
-        return queryString.path().startsWith("/tenant");
     }
 }
