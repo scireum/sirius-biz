@@ -35,7 +35,7 @@ public class TenantPermissionsExtender implements EntityImportHandlerExtender {
     public FieldDefinition resolveCustomField(BaseImportHandler<? extends BaseEntity<?>> handler,
                                               EntityDescriptor descriptor,
                                               String field) {
-        if (checkHandler(handler) && PERMISSIONS.getName().equals(field)) {
+        if (checkTenantImportHandler(handler) && PERMISSIONS.getName().equals(field)) {
             return FieldDefinition.stringField(field).withLabel("$Tenant.permissions").addAlias("permissions");
         }
         return null;
@@ -48,7 +48,7 @@ public class TenantPermissionsExtender implements EntityImportHandlerExtender {
                                                                             EntityDescriptor descriptor,
                                                                             ImporterContext context,
                                                                             String fieldToExport) {
-        if (checkHandler(handler) && PERMISSIONS.getName().equals(fieldToExport)) {
+        if (checkTenantImportHandler(handler) && PERMISSIONS.getName().equals(fieldToExport)) {
             return tenant -> String.join(",", tenant.as(Tenant.class).getPermissions());
         }
         return null;
@@ -58,12 +58,12 @@ public class TenantPermissionsExtender implements EntityImportHandlerExtender {
     public void collectDefaultExportableMappings(BaseImportHandler<? extends BaseEntity<?>> handler,
                                                  EntityDescriptor descriptor,
                                                  BiConsumer<Integer, Mapping> collector) {
-        if (checkHandler(handler)) {
+        if (checkTenantImportHandler(handler)) {
             collector.accept(185, PERMISSIONS);
         }
     }
 
-    private boolean checkHandler(BaseImportHandler<? extends BaseEntity<?>> handler) {
+    private boolean checkTenantImportHandler(BaseImportHandler<? extends BaseEntity<?>> handler) {
         return handler instanceof MongoTenantImportHandler || handler instanceof SQLTenantImportHandler;
     }
 }
