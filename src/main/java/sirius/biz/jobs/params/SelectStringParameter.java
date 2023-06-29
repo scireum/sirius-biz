@@ -8,10 +8,10 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -94,30 +94,35 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
             return null;
         }
 
-        if (multipleOptions) {
-            return checkAndTransformMultiValue(input);
+        if (multipleOptions && input.get() instanceof List<?> list) {
+            return checkAndTransformMultiValue(list);
         } else {
             return checkAndTransformSingleValue(input);
         }
     }
 
     private String checkAndTransformSingleValue(Value input) {
-        if (!fetchEntriesMap().containsKey(input.asString())) {
+        String rawInput = input.asString().trim();
+
+        // when supporting multiple options, we use the comma to separate the values, and thus can not allow it within
+        // values
+        if (multipleOptions && rawInput.contains(",")) {
             return null;
         }
-        return input.asString();
-    }
 
-    private String checkAndTransformMultiValue(Value input) {
-        String rawInput = input.asString();
-        if (rawInput.startsWith("[") && rawInput.endsWith("]")) {
-            rawInput = rawInput.substring(1, rawInput.length() - 1);
+        if (!fetchEntriesMap().containsKey(rawInput)) {
+            return null;
         }
 
-        String verifiedInput = Arrays.stream(rawInput.split(","))
-                                     .map(String::trim)
-                                     .filter(value -> fetchEntriesMap().containsKey(value))
-                                     .collect(Collectors.joining(","));
+        return rawInput;
+    }
+
+    private String checkAndTransformMultiValue(List<?> list) {
+        String verifiedInput = list.stream()
+                                   .map(Value::of)
+                                   .map(this::checkAndTransformSingleValue)
+                                   .filter(Objects::nonNull)
+                                   .collect(Collectors.joining(","));
         return Strings.isFilled(verifiedInput) ? verifiedInput : null;
     }
 
