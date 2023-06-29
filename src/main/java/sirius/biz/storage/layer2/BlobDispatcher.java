@@ -10,11 +10,7 @@ package sirius.biz.storage.layer2;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.kernel.commons.Explain;
-import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
-import sirius.kernel.commons.Values;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -23,7 +19,7 @@ import sirius.web.http.Response;
 import sirius.web.http.WebContext;
 import sirius.web.http.WebDispatcher;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 /**
  * Responsible for delivering {@link Blob blobs} managed by the {@link BlobStorage Layer 2} of the storage framework.
@@ -56,12 +52,7 @@ public class BlobDispatcher implements WebDispatcher {
     /**
      * Contains the {@link #URI_PREFIX} with a trailing slash.
      */
-    protected static final String URI_PREFIX_TRAILED = URI_PREFIX + "/";
-
-    /**
-     * Contains the prefix length ("/dasd/") to cut from an incoming URI
-     */
-    private static final int URI_PREFIX_LENGTH = URI_PREFIX_TRAILED.length();
+    public static final String URI_PREFIX_TRAILED = URI_PREFIX + "/";
 
     /**
      * Contains a marker which can be placed in a URI to signal that the underlying file might be very large.
@@ -70,11 +61,6 @@ public class BlobDispatcher implements WebDispatcher {
      * can use this to optimize their cache utilization (e.g. by fully ignoring or piping this request/response).
      */
     public static final String LARGE_FILE_MARKER = "xxl/";
-
-    /**
-     * Contains the prefix length ("xxl" + "/") to cut from an incoming URI
-     */
-    private static final int LARGE_FILE_MARKER_LENGTH = LARGE_FILE_MARKER.length();
 
     /**
      * Marks the request as "physical" access (direct layer 1 access).
@@ -100,57 +86,8 @@ public class BlobDispatcher implements WebDispatcher {
      */
     public static final String FLAG_CACHEABLE = "c";
 
-    /**
-     * Detects the flag combination for a direct physical delivery (no download).
-     * <p>
-     * This will expect a URI like: <tt>/dasd/p/SPACE/ACCESS_TOKEN/BLOB_KEY/PHYSICAL_KEY.FILE_EXTENSION</tt>
-     */
-    private static final String PHYSICAL_DELIVERY = FLAG_PHYSICAL;
-
-    /**
-     * Detects the flag combination for a physical download.
-     * <p>
-     * This will expect a URI like: <tt>/dasd/pd/SPACE/ACCESS_TOKEN/BLOB_KEY/PHYSICAL_KEY/FILENAME.FILE_EXTENSION</tt>
-     */
-    private static final String PHYSICAL_DOWNLOAD = FLAG_PHYSICAL + FLAG_DOWNLOAD;
-
-    /**
-     * Detects the flag combination for a virtual delivery which has no HTTP cache support.
-     * <p>
-     * This will expect a URI like: <tt>/dasd/v/SPACE/ACCESS_TOKEN/VARIANT/BLOB_KEY.FILE_EXTENSION</tt>
-     */
-    private static final String VIRTUAL_DELIVERY = FLAG_VIRTUAL;
-
-    /**
-     * Detects the flag combination for a virtual download which has no HTTP cache support.
-     * <p>
-     * This will expect a URI like: <tt>/dasd/vd/SPACE/ACCESS_TOKEN/VARIANT/BLOB_KEY/FILENAME.FILE_EXTENSION</tt>
-     */
-    private static final String VIRTUAL_DOWNLOAD = FLAG_VIRTUAL + FLAG_DOWNLOAD;
-
-    /**
-     * Detects the flag combination for a cacheable virtual delivery.
-     * <p>
-     * This will expect a URI like: <tt>/dasd/cv/SPACE/ACCESS_TOKEN/VARIANT/BLOB_KEY.FILE_EXTENSION</tt>
-     */
-    private static final String VIRTUAL_CACHEABLE_DELIVERY = FLAG_CACHEABLE + FLAG_VIRTUAL;
-
-    /**
-     * Detects the flag combination for a cacheable virtual download.
-     * <p>
-     * This will expect a URI like: <tt>/dasd/cvd/SPACE/ACCESS_TOKEN/VARIANT/BLOB_KEY/FILENAME.FILE_EXTENSION</tt>
-     */
-    private static final String VIRTUAL_CACHEABLE_DOWNLOAD = FLAG_CACHEABLE + FLAG_VIRTUAL + FLAG_DOWNLOAD;
-
     private static final String PARAM_HOOK = "hook";
     private static final String PARAM_PAYLOAD = "payload";
-
-    private static final int ACTION_TYPE = 0;
-    private static final int STORAGE_SPACE = 1;
-    private static final int ACCESS_TOKEN = 2;
-    private static final int BLOB_KEY = 3;
-    private static final int PHYSICAL_OBJECT_KEY = 4;
-    private static final int FILENAME = 5;
 
     @Part
     private BlobStorage blobStorage;
@@ -173,109 +110,17 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.CONTINUE;
         }
 
-        // Cut off "/dasd/"...
-        uri = uri.substring(URI_PREFIX_LENGTH);
+        Optional<BlobUri> blobUri = BlobUriParser.parseBlobUri(uri);
 
-        // Cut off "xxl/" if present...
-        boolean largeFileExpected = false;
-        if (uri.startsWith(LARGE_FILE_MARKER)) {
-            uri = uri.substring(LARGE_FILE_MARKER_LENGTH);
-            largeFileExpected = true;
-        }
+        if (blobUri.isPresent()) {
+            installCompletionHook(uri, request);
 
-        installCompletionHook(uri, request);
+            if (blobUri.get().isPhysical()) {
+                physicalDelivery(request, blobUri.get());
+            } else {
+                virtualDelivery(request, blobUri.get());
+            }
 
-        Values uriParts = Values.of(uri.split("/"));
-        String type = uriParts.at(ACTION_TYPE).asString();
-        if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 5) {
-            String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
-            physicalDelivery(request,
-                             uriParts.at(STORAGE_SPACE).asString(),
-                             uriParts.at(ACCESS_TOKEN).asString(),
-                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
-                             Files.getFilenameWithoutExtension(physicalKey),
-                             largeFileExpected,
-                             physicalKey);
-
-            return DispatchDecision.DONE;
-        }
-
-        if (Strings.areEqual(type, PHYSICAL_DELIVERY) && uriParts.length() == 6) {
-            String physicalKey = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
-            physicalDelivery(request,
-                             uriParts.at(STORAGE_SPACE).asString(),
-                             uriParts.at(ACCESS_TOKEN).asString(),
-                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
-                             Files.getFilenameWithoutExtension(physicalKey),
-                             largeFileExpected,
-                             stripAdditionalText(uriParts.at(FILENAME).asString()));
-
-            return DispatchDecision.DONE;
-        }
-
-        if (Strings.areEqual(type, PHYSICAL_DOWNLOAD) && uriParts.length() == 6) {
-            physicalDownload(request,
-                             uriParts.at(STORAGE_SPACE).asString(),
-                             uriParts.at(ACCESS_TOKEN).asString(),
-                             uriParts.at(BLOB_KEY).asString(),
-                             uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
-                             largeFileExpected,
-                             stripAdditionalText(uriParts.at(FILENAME).asString()));
-
-            return DispatchDecision.DONE;
-        }
-
-        if (Strings.areEqual(type, VIRTUAL_DELIVERY) && uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
-            virtualDelivery(request,
-                            uriParts.at(STORAGE_SPACE).asString(),
-                            uriParts.at(ACCESS_TOKEN).asString(),
-                            uriParts.at(BLOB_KEY).asString(),
-                            Files.getFilenameWithoutExtension(filename),
-                            filename,
-                            false,
-                            false,
-                            largeFileExpected);
-            return DispatchDecision.DONE;
-        }
-
-        if (Strings.areEqual(type, VIRTUAL_DOWNLOAD) && uriParts.length() == 6) {
-            virtualDelivery(request,
-                            uriParts.at(STORAGE_SPACE).asString(),
-                            uriParts.at(ACCESS_TOKEN).asString(),
-                            uriParts.at(BLOB_KEY).asString(),
-                            uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
-                            stripAdditionalText(uriParts.at(FILENAME).asString()),
-                            true,
-                            false,
-                            largeFileExpected);
-            return DispatchDecision.DONE;
-        }
-
-        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DELIVERY) && uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(PHYSICAL_OBJECT_KEY).asString());
-            virtualDelivery(request,
-                            uriParts.at(STORAGE_SPACE).asString(),
-                            uriParts.at(ACCESS_TOKEN).asString(),
-                            uriParts.at(BLOB_KEY).asString(),
-                            Files.getFilenameWithoutExtension(filename),
-                            filename,
-                            false,
-                            true,
-                            largeFileExpected);
-            return DispatchDecision.DONE;
-        }
-
-        if (Strings.areEqual(type, VIRTUAL_CACHEABLE_DOWNLOAD) && uriParts.length() == 6) {
-            virtualDelivery(request,
-                            uriParts.at(STORAGE_SPACE).asString(),
-                            uriParts.at(ACCESS_TOKEN).asString(),
-                            uriParts.at(BLOB_KEY).asString(),
-                            uriParts.at(PHYSICAL_OBJECT_KEY).asString(),
-                            stripAdditionalText(uriParts.at(FILENAME).asString()),
-                            true,
-                            true,
-                            largeFileExpected);
             return DispatchDecision.DONE;
         }
 
@@ -311,46 +156,29 @@ public class BlobDispatcher implements WebDispatcher {
     }
 
     /**
-     * Strips off a SEO text to retrieve the effective filename.
-     * <p>
-     * Such an "enhanced" filename is generated when {@link URLBuilder#withAddonText(String)} was used.
-     *
-     * @param input the full filename with an optional SEO text as prefix
-     * @return the filename with the additional text stripped of
-     */
-    private String stripAdditionalText(String input) {
-        Tuple<String, String> additionalTextAndKey = Strings.splitAtLast(input, "--");
-        if (additionalTextAndKey.getSecond() == null) {
-            return additionalTextAndKey.getFirst();
-        } else {
-            return additionalTextAndKey.getSecond();
-        }
-    }
-
-    /**
      * Prepares a {@link Response} and delegates the call to the layer 1.
      *
-     * @param request           the request to handle
-     * @param space             the space which is accessed
-     * @param accessToken       the security token to verify
-     * @param blobKey           the blob key to be delivered
-     * @param physicalKey       the physical object key used to determine which object should be delivered
-     * @param largeFileExpected signals that a very large file is expected
-     * @param filename          the filename which is used to set up a proper <tt>Content-Type</tt>
+     * @param request the request to handle
+     * @param blobUri the parsed blob URI
      */
-    private void physicalDelivery(WebContext request,
-                                  String space,
-                                  String accessToken,
-                                  String blobKey,
-                                  String physicalKey,
-                                  boolean largeFileExpected,
-                                  String filename) {
-        if (checkHashInvalid(request, accessToken, physicalKey, space)) {
+    private void physicalDelivery(WebContext request, BlobUri blobUri) {
+        if (checkHashInvalid(request, blobUri.getAccessToken(), blobUri.getPhysicalKey(), blobUri.getStorageSpace())) {
             return;
         }
 
-        Response response = request.respondWith().infinitelyCached().named(filename);
-        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
+        Response response = request.respondWith().infinitelyCached();
+
+        if (blobUri.isDownload()) {
+            response.download(blobUri.getFilename());
+        } else {
+            response.named(blobUri.getFilename());
+        }
+
+        blobStorage.getSpace(blobUri.getStorageSpace())
+                   .deliverPhysical(blobUri.getBlobKey(),
+                                    blobUri.getPhysicalKey(),
+                                    response,
+                                    blobUri.isLargeFileExpected());
     }
 
     /**
@@ -358,12 +186,12 @@ public class BlobDispatcher implements WebDispatcher {
      *
      * @param request     the request to handle
      * @param accessToken the security token to verify
-     * @param physicalKey the physical object key used to determine which object should be delivered
+     * @param key         the key to verify
      * @param space       the space which is accessed
      * @return <tt>true</tt> if the accessToken is invalid, <tt>false</tt> otherwise
      */
-    private boolean checkHashInvalid(WebContext request, String accessToken, String physicalKey, String space) {
-        if (!utils.verifyHash(physicalKey, accessToken, blobStorage.getSpace(space).getUrlValidityDays())) {
+    private boolean checkHashInvalid(WebContext request, String accessToken, String key, String space) {
+        if (!utils.verifyHash(key, accessToken, blobStorage.getSpace(space).getUrlValidityDays())) {
             request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return true;
         }
@@ -371,65 +199,24 @@ public class BlobDispatcher implements WebDispatcher {
     }
 
     /**
-     * Prepares a {@link Response} as download and delegates the call to the layer 1.
-     *
-     * @param request           the request to handle
-     * @param space             the space which is accessed
-     * @param accessToken       the security token to verify
-     * @param blobKey           the blob key of the blob to download
-     * @param physicalKey       the physical object key used to determine which object should be delivered
-     * @param largeFileExpected signals that a very large file is expected
-     * @param filename          the filename which is used to set up a proper <tt>Content-Type</tt>
-     */
-    private void physicalDownload(WebContext request,
-                                  String space,
-                                  String accessToken,
-                                  String blobKey,
-                                  String physicalKey,
-                                  boolean largeFileExpected,
-                                  String filename) {
-        if (checkHashInvalid(request, accessToken, physicalKey, space)) {
-            return;
-        }
-
-        Response response = request.respondWith().infinitelyCached().download(filename);
-        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response, largeFileExpected);
-    }
-
-    /**
      * Prepares a {@link Response} and delegates the call to the layer 2.
      *
-     * @param request     the request to handle
-     * @param space       the space which is accessed
-     * @param accessToken the security token to verify
-     * @param variant     the variant to deliver - {@link URLBuilder#VARIANT_RAW} will be used to deliver the blob
-     *                    itself
-     * @param blobKey     the blob object key used to determine which {@link Blob} should be delivered
-     * @param filename    the filename which is used to set up a proper <tt>Content-Type</tt>
-     * @param download    determines if a download should be generated
-     * @param cacheable   determines if HTTP caching should be supported (<tt>true</tt>) or suppressed (<tt>false</tt>)
+     * @param request the request to handle
+     * @param blobUri the parsed blob URI
      */
-    @SuppressWarnings("squid:S00107")
-    @Explain("As this is a super hot code path we use 8 parameters instead of a parameter object"
-             + " as this makes the URL parsing quite obvious")
-    private void virtualDelivery(WebContext request,
-                                 String space,
-                                 String accessToken,
-                                 @Nullable String variant,
-                                 String blobKey,
-                                 String filename,
-                                 boolean download,
-                                 boolean cacheable,
-                                 boolean largeFileExpected) {
+    private void virtualDelivery(WebContext request, BlobUri blobUri) {
+        String blobKey = blobUri.getBlobKey();
+        String variant = blobUri.getVariant();
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
-        if (checkHashInvalid(request, accessToken, effectiveKey, space)) {
+
+        if (checkHashInvalid(request, blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace())) {
             return;
         }
 
-        BlobStorageSpace storageSpace = blobStorage.getSpace(space);
+        BlobStorageSpace storageSpace = blobStorage.getSpace(blobUri.getStorageSpace());
         Response response = request.respondWith();
 
-        if (cacheable) {
+        if (blobUri.isCacheable()) {
             response.cached();
 
             // If a virtual request is marked as cacheable, we try to redirect to the proper physical blob key
@@ -437,8 +224,8 @@ public class BlobDispatcher implements WebDispatcher {
             // HTTP round-trip for the redirect shouldn't hurt too much, as it is most probably optimized away due to
             // keep-alive. However, using a physical delivery with infinite cache settings will enable any downstream
             // reverse-proxies to maximize their cache utilization...
-            URLBuilder.UrlResult urlResult =
-                    buildPhysicalRedirectUrl(storageSpace, blobKey, variant, filename, download, largeFileExpected);
+            URLBuilder.UrlResult urlResult = buildPhysicalRedirectUrl(storageSpace, blobUri);
+
             if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
                 response.redirectTemporarily(urlResult.url());
                 return;
@@ -447,7 +234,9 @@ public class BlobDispatcher implements WebDispatcher {
             response.notCached();
         }
 
-        if (download) {
+        String filename = blobUri.getFilename();
+
+        if (blobUri.isDownload()) {
             if (Strings.areEqual(filename, blobKey)) {
                 filename = storageSpace.resolveFilename(blobKey).orElse(filename);
             }
@@ -462,20 +251,16 @@ public class BlobDispatcher implements WebDispatcher {
                              request::markAsLongCall);
     }
 
-    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace,
-                                                                 String blobKey,
-                                                                 String variant,
-                                                                 String filename,
-                                                                 boolean download,
-                                                                 boolean largeFileExpected) {
-        URLBuilder urlBuilder = new URLBuilder(storageSpace, blobKey);
-        if (download) {
-            urlBuilder.withFileName(filename).asDownload();
+    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace, BlobUri blobUri) {
+        URLBuilder urlBuilder = new URLBuilder(storageSpace, blobUri.getBlobKey());
+
+        if (blobUri.isDownload()) {
+            urlBuilder.withFileName(blobUri.getFilename()).asDownload();
         }
-        if (Strings.isFilled(variant)) {
-            urlBuilder.withVariant(variant);
+        if (Strings.isFilled(blobUri.getVariant())) {
+            urlBuilder.withVariant(blobUri.getVariant());
         }
-        if (largeFileExpected) {
+        if (blobUri.isLargeFileExpected()) {
             urlBuilder.markAsLargeFile();
         }
 
