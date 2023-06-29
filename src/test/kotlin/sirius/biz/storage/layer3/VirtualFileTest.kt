@@ -45,6 +45,21 @@ class VirtualFileTest {
                             "https://www.example.com/foo/bar.jpg",
                             "/example.com/foo/bar.jpg",
                             EnumSet.of(RemoteFileResolver.Options.INCLUDE_HOST_NAME)
+                    ),
+                    Arguments.of(
+                            "https://www.example.com/dasd/p/SPACE/ACCESS_TOKEN/BLOB_KEY/PHYSICAL_KEY.jpg",
+                            "/SPACE/BLOB_KEY-PHYSICAL_KEY.jpg",
+                            EnumSet.noneOf(RemoteFileResolver.Options::class.java)
+                    ),
+                    Arguments.of(
+                            "https://www.example.com/dasd/cv/SPACE/ACCESS_TOKEN/VARIANT/BLOB_KEY.jpg",
+                            "/SPACE/VARIANT/BLOB_KEY.jpg",
+                            EnumSet.noneOf(RemoteFileResolver.Options::class.java)
+                    ),
+                    Arguments.of(
+                            "https://www.example.com/dasd/cv/SPACE/ACCESS_TOKEN/VARIANT/BLOB_KEY/SEO-TEXT--FILENAME.jpg",
+                            "/SPACE/VARIANT/BLOB_KEY.jpg",
+                            EnumSet.noneOf(RemoteFileResolver.Options::class.java)
                     )
             )
         }
