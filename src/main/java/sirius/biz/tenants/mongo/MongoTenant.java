@@ -29,6 +29,7 @@ import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
@@ -76,6 +77,11 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
 
     @Override
     public boolean hasPermission(String permission) {
+        return getPermissions().contains(permission);
+    }
+
+    @Override
+    public Set<String> getPermissions() {
         if (effectivePermissions == null) {
             Set<String> permissions = new TreeSet<>(getTenantData().getPackageData().computeExpandedPermissions());
             if (Strings.areEqual(getIdAsString(), tenants.getTenantUserManager().getSystemTenantId())) {
@@ -94,7 +100,7 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
             effectivePermissions = TenantUserManager.computeEffectiveTenantPermissions(this, effectivePermissions);
         }
 
-        return effectivePermissions.contains(permission);
+        return Collections.unmodifiableSet(effectivePermissions);
     }
 
     @Override
