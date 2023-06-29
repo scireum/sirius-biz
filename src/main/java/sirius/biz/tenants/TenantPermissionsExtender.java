@@ -23,6 +23,9 @@ import sirius.kernel.di.std.Register;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+/**
+ * Adds the computed <tt>permissions</tt> field to the {@link MongoTenantImportHandler} and {@link SQLTenantImportHandler}.
+ */
 @Register
 public class TenantPermissionsExtender implements EntityImportHandlerExtender {
 
