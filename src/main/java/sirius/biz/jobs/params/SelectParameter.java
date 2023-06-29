@@ -1,6 +1,7 @@
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.nls.NLS;
 
 import java.util.List;
 
@@ -11,6 +12,8 @@ import java.util.List;
  * @param <P> recursive type reference to support fluent method calls
  */
 public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extends ParameterBuilder<V, P> {
+
+    protected boolean multipleOptions = false;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -30,8 +33,22 @@ public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extend
      */
     public abstract List<Tuple<String, String>> getValues();
 
+    /**
+     * Allows to select multiple values.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public P withMultipleOptions() {
+        this.multipleOptions = true;
+        return self();
+    }
+
     @Override
     public String getTemplateName() {
-        return "/templates/biz/jobs/params/selectSingleString.html.pasta";
+        if (multipleOptions) {
+            return "/templates/biz/jobs/params/selectMultiString.html.pasta";
+        } else {
+            return "/templates/biz/jobs/params/selectSingleString.html.pasta";
+        }
     }
 }

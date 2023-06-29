@@ -8,11 +8,13 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Provides a single select parameter from a list of key-value pairs.
@@ -88,10 +90,35 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        if (Strings.isEmpty(input) || !fetchEntriesMap().containsKey(input.asString())) {
+        if (Strings.isEmpty(input)) {
+            return null;
+        }
+
+        if (multipleOptions) {
+            return checkAndTransformMultiValue(input);
+        } else {
+            return checkAndTransformSingleValue(input);
+        }
+    }
+
+    private String checkAndTransformSingleValue(Value input) {
+        if (!fetchEntriesMap().containsKey(input.asString())) {
             return null;
         }
         return input.asString();
+    }
+
+    private String checkAndTransformMultiValue(Value input) {
+        String rawInput = input.asString();
+        if (rawInput.startsWith("[") && rawInput.endsWith("]")) {
+            rawInput = rawInput.substring(1, rawInput.length() - 1);
+        }
+
+        String verifiedInput = Arrays.stream(rawInput.split(","))
+                                     .map(String::trim)
+                                     .filter(value -> fetchEntriesMap().containsKey(value))
+                                     .collect(Collectors.joining(","));
+        return Strings.isFilled(verifiedInput) ? verifiedInput : null;
     }
 
     @Override
