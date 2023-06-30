@@ -1,21 +1,21 @@
-<i:arg type="sirius.biz.storage.layer2.BlobHardRef" name="objectRef"/>
-<i:arg type="String" name="name"/>
+<i:arg name="objectRef" type="sirius.biz.storage.layer2.BlobHardRef"/>
+<i:arg name="name" type="String"/>
 <i:arg name="labelKey" type="String" default=""/>
 <i:arg name="label" type="String" default="@i18n(labelKey)"/>
 <i:arg name="helpKey" type="String" default=""/>
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
-<i:arg type="String" name="value" default="@objectRef.getKey()"/>
-<i:arg type="String" name="id" default="@generateId('image-upload-%s')"/>
+<i:arg name="value" type="String" default="@objectRef.getKey()"/>
+<i:arg name="id" type="String" default="@generateId('image-upload-%s')"/>
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
 <i:arg name="btnClass" type="String" default=""
        description="Lists additional CSS classes to apply to the upload button."/>
-<i:arg type="String" name="defaultPreview" default="/assets/images/placeholder.png"/>
-<i:arg type="String" name="previewVariant" default="raw"/>
-<i:arg type="String" name="acceptedFiles" default="image/*,application/pdf,svg"/>
-<i:arg type="String" name="uploadUrl" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
-<i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
-<i:arg type="String" name="height" default="350px"/>
-<i:arg type="String" name="formId" default="mainEditForm" description="The form this field belongs to."/>
+<i:arg name="defaultPreview" type="String" default="/assets/images/placeholder.png"/>
+<i:arg name="previewVariant" type="String" default="raw"/>
+<i:arg name="acceptedFiles" type="String" default="image/*,application/pdf,svg"/>
+<i:arg name="uploadUrl" type="String" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
+<i:arg name="showResetButton" type="boolean" default="@objectRef.isFilled()"/>
+<i:arg name="height" type="String" default="350px"/>
+<i:arg name="formId" type="String" default="mainEditForm" description="The form this field belongs to."/>
 
 <i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
 
@@ -32,9 +32,14 @@
                 @i18n("StoredObject.resetBtn")
             </button>
 
+            <div id="saveHint" class="alert alert-warning mt-2 d-none">
+                @i18n("StoredObject.saveHint")
+            </div>
+
             <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
         </t:imageUpload>
     </div>
+
     <i:if test="isFilled(help)">
         <div>
             <small class="form-text text-muted">
@@ -54,6 +59,7 @@
     let outerDiv = document.querySelector('#___id');
 
     let _img = outerDiv.querySelector('.img-preview img');
+    const initialImage = _img.src;
     sirius.ready(function () {
         if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
             return;
@@ -144,6 +150,7 @@
                 if (sirius.isFilled(response.fileId)) {
                     outerDiv.querySelector('[name=___name]').value = response.fileId;
                     outerDiv.querySelector('.btn-reset-js').classList.remove('d-none');
+                    outerDiv.querySelector('#saveHint').classList.remove('d-none');
                 }
                 setTimeout(function () {
                     dropzone.removeFile(file);
@@ -155,5 +162,11 @@
         outerDiv.querySelector('[name=___name]').value = '';
         outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
         outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
+
+        if (_img.src === initialImage) {
+            outerDiv.querySelector('#saveHint').classList.add('d-none');
+        } else {
+            outerDiv.querySelector('#saveHint').classList.remove('d-none');
+        }
     }
 </script>
