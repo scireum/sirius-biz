@@ -22,6 +22,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.QueryString;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -39,30 +40,37 @@ public abstract class TenantExportJobFactory<E extends BaseEntity<?> & Tenant<?>
     private static final String PACKAGE_SCOPE = TenantController.PACKAGE_SCOPE_TENANT;
 
     @Part
-    private static Packages packages;
+    private static Packages packagesHelper;
 
     @ConfigValue("security.tenantPermissions")
     private static List<String> permissions;
 
     protected final Parameter<String> packageParameter = new SelectStringParameter("package",
                                                                                    "$PackageData.packageString").withEntriesProvider(
-            () -> packages.getPackages(PACKAGE_SCOPE)
-                          .stream()
-                          .collect(Collectors.toMap(Function.identity(),
-                                                    value -> packages.getPackageName(PACKAGE_SCOPE, value)))).build();
+            () -> packagesHelper.getPackages(PACKAGE_SCOPE)
+                                .stream()
+                                .collect(Collectors.toMap(Function.identity(),
+                                                          value -> packagesHelper.getPackageName(PACKAGE_SCOPE, value),
+                                                          (object, ignored) -> object,
+                                                          LinkedHashMap::new))).build();
 
     protected final Parameter<List<String>> upgradesParameter = new MultiSelectStringParameter("upgrades",
                                                                                                "$PackageData.upgrades").withEntriesProvider(
-            () -> packages.getUpgrades(PACKAGE_SCOPE)
-                          .stream()
-                          .collect(Collectors.toMap(Function.identity(),
-                                                    value -> packages.getUpgradeName(PACKAGE_SCOPE, value)))).build();
+            () -> packagesHelper.getUpgrades(PACKAGE_SCOPE)
+                                .stream()
+                                .collect(Collectors.toMap(Function.identity(),
+                                                          value -> packagesHelper.getUpgradeName(PACKAGE_SCOPE, value),
+                                                          (object, ignored) -> object,
+                                                          LinkedHashMap::new))).build();
 
-    protected final Parameter<List<String>> permissionsParameter = new MultiSelectStringParameter("permissions",
-                                                                                                  "$Tenant.permissions").withEntriesProvider(
-            () -> permissions.stream()
-                             .collect(Collectors.toMap(Function.identity(),
-                                                       permission -> NLS.get("Permission." + permission)))).build();
+    protected final Parameter<List<String>> permissionsParameter =
+            new MultiSelectStringParameter("permissions", "$Tenant.permissions").withEntriesProvider(() -> {
+                return permissions.stream()
+                                  .collect(Collectors.toMap(Function.identity(),
+                                                            permission -> NLS.get("Permission." + permission),
+                                                            (object, ignored) -> object,
+                                                            LinkedHashMap::new));
+            }).build();
 
     @Override
     public int getPriority() {
