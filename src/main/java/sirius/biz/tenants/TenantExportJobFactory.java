@@ -12,10 +12,12 @@ import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
+import sirius.biz.packages.Packages;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.QueryString;
 
@@ -33,8 +35,20 @@ import java.util.stream.Collectors;
 public abstract class TenantExportJobFactory<E extends BaseEntity<?> & Tenant<?>, Q extends Query<Q, E, ?>>
         extends EntityExportJobFactory<E, Q> {
 
+    private static final String PACKAGE_SCOPE = TenantController.PACKAGE_SCOPE_TENANT;
+
+    @Part
+    private static Packages packages;
+
     @ConfigValue("security.tenantPermissions")
     private static List<String> permissions;
+
+    protected final Parameter<String> packageParameter = new SelectStringParameter("package",
+                                                                                   "$PackageData.packageString").withEntriesProvider(
+            () -> packages.getPackages(PACKAGE_SCOPE)
+                          .stream()
+                          .collect(Collectors.toMap(Function.identity(),
+                                                    value -> packages.getPackageName(PACKAGE_SCOPE, value)))).build();
 
     protected final Parameter<String> permissionsParameter = new SelectStringParameter("permissions",
                                                                                        "$Tenant.permissions").withEntriesProvider(
@@ -62,6 +76,7 @@ public abstract class TenantExportJobFactory<E extends BaseEntity<?> & Tenant<?>
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
+        parameterCollector.accept(packageParameter);
         parameterCollector.accept(permissionsParameter);
     }
 

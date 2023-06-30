@@ -8,7 +8,10 @@
 
 package sirius.biz.tenants.mongo;
 
+import sirius.biz.packages.PackageData;
+import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.TenantController;
+import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantExportJobFactory;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.di.std.Register;
@@ -32,5 +35,13 @@ public class MongoTenantExportJobFactory extends TenantExportJobFactory<MongoTen
     @Override
     protected Class<MongoTenant> getExportType() {
         return MongoTenant.class;
+    }
+
+    @Override
+    protected void extendSelectQuery(MongoQuery<MongoTenant> query, ProcessContext processContext) {
+        processContext.getParameter(packageParameter).ifPresent(packageName -> {
+            query.eq(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA).inner(PackageData.PACKAGE_STRING),
+                     packageName);
+        });
     }
 }
