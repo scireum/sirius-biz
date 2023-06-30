@@ -18,6 +18,7 @@ import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Provides an export for {@link MongoTenant tenants}.
@@ -42,6 +43,13 @@ public class MongoTenantExportJobFactory extends TenantExportJobFactory<MongoTen
         processContext.getParameter(packageParameter).ifPresent(packageName -> {
             query.eq(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA).inner(PackageData.PACKAGE_STRING),
                      packageName);
+        });
+
+        processContext.getParameter(upgradesParameter).ifPresent(upgrades -> {
+            query.where(query.filters()
+                             .allInField(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA)
+                                                                .inner(PackageData.UPGRADES),
+                                         List.of(upgrades.split(","))));
         });
     }
 }

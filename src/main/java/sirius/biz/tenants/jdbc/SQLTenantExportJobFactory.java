@@ -18,6 +18,7 @@ import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Provides an export for {@link SQLTenant tenants}.
@@ -42,6 +43,13 @@ public class SQLTenantExportJobFactory extends TenantExportJobFactory<SQLTenant,
         processContext.getParameter(packageParameter).ifPresent(packageName -> {
             query.eq(SQLTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA).inner(PackageData.PACKAGE_STRING),
                      packageName);
+        });
+
+        processContext.getParameter(upgradesParameter).ifPresent(upgrades -> {
+            query.where(query.filters()
+                             .allInField(SQLTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA)
+                                                              .inner(PackageData.UPGRADES),
+                                         List.of(upgrades.split(","))));
         });
     }
 }

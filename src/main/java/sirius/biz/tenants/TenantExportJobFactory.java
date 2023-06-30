@@ -50,6 +50,15 @@ public abstract class TenantExportJobFactory<E extends BaseEntity<?> & Tenant<?>
                           .collect(Collectors.toMap(Function.identity(),
                                                     value -> packages.getPackageName(PACKAGE_SCOPE, value)))).build();
 
+    protected final Parameter<String> upgradesParameter = new SelectStringParameter("upgrades",
+                                                                                    "$PackageData.upgrades").withEntriesProvider(
+                                                                                                                    () -> packages.getUpgrades(PACKAGE_SCOPE)
+                                                                                                                                  .stream()
+                                                                                                                                  .collect(Collectors.toMap(Function.identity(),
+                                                                                                                                                            value -> packages.getUpgradeName(PACKAGE_SCOPE, value))))
+                                                                                                            .withMultipleOptions()
+                                                                                                            .build();
+
     protected final Parameter<String> permissionsParameter = new SelectStringParameter("permissions",
                                                                                        "$Tenant.permissions").withEntriesProvider(
                                                                                                                      () -> permissions.stream()
@@ -77,6 +86,7 @@ public abstract class TenantExportJobFactory<E extends BaseEntity<?> & Tenant<?>
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
         parameterCollector.accept(packageParameter);
+        parameterCollector.accept(upgradesParameter);
         parameterCollector.accept(permissionsParameter);
     }
 
