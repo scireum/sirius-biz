@@ -1,6 +1,7 @@
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.CachingSupplier;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -66,6 +67,14 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
 
         this.entriesProvider = entriesProvider;
         return self();
+    }
+
+    @Override
+    @SuppressWarnings("java:S1185")
+    @Explain(
+            "The super method is protected as not all inheriting classes support multiple options. This parameter does, and we enable public visibility while simply inheriting the documentation.")
+    public SelectStringParameter withMultipleOptions() {
+        return super.withMultipleOptions();
     }
 
     private Map<String, String> fetchEntriesMap() {

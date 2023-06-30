@@ -1,7 +1,6 @@
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.nls.NLS;
 
 import java.util.List;
 
@@ -38,7 +37,7 @@ public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extend
      *
      * @return the parameter itself for fluent method calls
      */
-    public P withMultipleOptions() {
+    protected P withMultipleOptions() {
         this.multipleOptions = true;
         return self();
     }

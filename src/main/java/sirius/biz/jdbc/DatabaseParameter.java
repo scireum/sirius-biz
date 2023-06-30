@@ -58,10 +58,6 @@ public class DatabaseParameter extends SelectParameter<Database, DatabaseParamet
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        if (multipleOptions) {
-            throw new IllegalStateException("DatabaseParameter does not support multiple options.");
-        }
-
         if (Strings.isEmpty(input) || !databases.hasDatabase(input.asString())) {
             return null;
         }
@@ -70,10 +66,6 @@ public class DatabaseParameter extends SelectParameter<Database, DatabaseParamet
 
     @Override
     protected Optional<Database> resolveFromString(@Nonnull Value input) {
-        if (multipleOptions) {
-            throw new IllegalStateException("DatabaseParameter does not support multiple options.");
-        }
-
         if (!databases.hasDatabase(input.asString())) {
             return Optional.empty();
         }
