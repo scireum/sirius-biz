@@ -647,12 +647,6 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         LoginData loginData = account.getUserAccountData().getLogin();
-        if (acceptApiTokens && checkApiToken(loginData, password)) {
-            completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
-            recordLogin(result, false);
-            return result;
-        }
-
         LoginData.PasswordVerificationResult pwResult = loginData.checkPassword(user, password);
         if (pwResult != LoginData.PasswordVerificationResult.INVALID) {
             completeAuditLogForUser(auditLog.neutral("AuditLog.passwordLogin"), account);
@@ -664,6 +658,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                 return rehashingResult.get();
             }
 
+            recordLogin(result, false);
+            return result;
+        }
+
+        if (acceptApiTokens && checkApiToken(loginData, password)) {
+            completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
             recordLogin(result, false);
             return result;
         }
