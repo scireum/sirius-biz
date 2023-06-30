@@ -8,17 +8,21 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.packages.PackageData;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantExportJobFactory;
 import sirius.db.jdbc.SmartQuery;
+import sirius.kernel.di.PartCollection;
+import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Provides an export for {@linkplain SQLTenant tenants}.
@@ -26,6 +30,9 @@ import java.util.List;
 @Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 @Permission(TenantController.PERMISSION_MANAGE_TENANTS)
 public class SQLTenantExportJobFactory extends TenantExportJobFactory<SQLTenant, SmartQuery<SQLTenant>> {
+
+    @Parts(SQLTenantExportJobExtender.class)
+    private PartCollection<SQLTenantExportJobExtender> extenders;
 
     @Nonnull
     @Override
@@ -36,6 +43,12 @@ public class SQLTenantExportJobFactory extends TenantExportJobFactory<SQLTenant,
     @Override
     protected Class<SQLTenant> getExportType() {
         return SQLTenant.class;
+    }
+
+    @Override
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
+        super.collectParameters(parameterCollector);
+        extenders.forEach(extender -> extender.collectParameters(parameterCollector));
     }
 
     @Override
@@ -51,5 +64,7 @@ public class SQLTenantExportJobFactory extends TenantExportJobFactory<SQLTenant,
                                                               .inner(PackageData.UPGRADES),
                                          List.of(upgrades.split(","))));
         });
+
+        extenders.forEach(extender -> extender.extendSelectQuery(query, processContext));
     }
 }
