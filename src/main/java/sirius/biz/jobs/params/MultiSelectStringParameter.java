@@ -119,16 +119,6 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
     }
 
     @Override
-    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
-        return updater.apply(parameterContext).map(value -> {
-            String stringifiedValue = String.join(",", value);
-            return Json.createObject()
-                       .put("value", stringifiedValue)
-                       .put("text", NLS.smartGet(fetchEntriesMap().get(stringifiedValue)));
-        });
-    }
-
-    @Override
     protected Optional<List<String>> resolveFromString(@Nonnull Value input) {
         return input.asOptionalString()
                     .map(string -> Stream.of(string.split(","))
