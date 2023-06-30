@@ -32,9 +32,14 @@
                 @i18n("StoredObject.resetBtn")
             </button>
 
+            <div id="saveHint" class="alert alert-warning mt-2 d-none">
+                @i18n("StoredObject.saveHint")
+            </div>
+
             <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
         </t:imageUpload>
     </div>
+
     <i:if test="isFilled(help)">
         <div>
             <small class="form-text text-muted">
@@ -54,6 +59,7 @@
     let outerDiv = document.querySelector('#___id');
 
     let _img = outerDiv.querySelector('.img-preview img');
+    const initialImage = _img.src;
     sirius.ready(function () {
         if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
             return;
@@ -144,6 +150,7 @@
                 if (sirius.isFilled(response.fileId)) {
                     outerDiv.querySelector('[name=___name]').value = response.fileId;
                     outerDiv.querySelector('.btn-reset-js').classList.remove('d-none');
+                    outerDiv.querySelector('#saveHint').classList.remove('d-none');
                 }
                 setTimeout(function () {
                     dropzone.removeFile(file);
@@ -155,5 +162,11 @@
         outerDiv.querySelector('[name=___name]').value = '';
         outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
         outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
+
+        if (_img.src === initialImage) {
+            outerDiv.querySelector('#saveHint').classList.add('d-none');
+        } else {
+            outerDiv.querySelector('#saveHint').classList.remove('d-none');
+        }
     }
 </script>
