@@ -15,7 +15,7 @@
     <t:sidebar>
         <i:block name="sidebar">
             <t:sidebarKeyMetrics target="sirius.biz.tenants.UserAccount.class"/>
-            <t:filterbox page="accounts" baseUrl="/accounts"/>
+            <t:filterbox page="accounts" baseUrl="/user-accounts"/>
             <t:jobs target="sirius.biz.tenants.UserAccount.class"/>
             <t:charts target="sirius.biz.tenants.UserAccount.class"/>
             <i:extensions target="user-accounts" point="sidebar" page="accounts"/>
