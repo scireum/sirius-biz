@@ -21,7 +21,6 @@ import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -61,8 +60,7 @@ public class MongoTenantExportJobFactory extends TenantExportJobFactory<MongoTen
         processContext.getParameter(upgradesParameter).ifPresent(upgrades -> {
             query.where(query.filters()
                              .allInField(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA)
-                                                                .inner(PackageData.UPGRADES),
-                                         List.of(upgrades.split(","))));
+                                                                .inner(PackageData.UPGRADES), upgrades));
         });
 
         extenders.forEach(extender -> extender.extendSelectQuery(query, processContext));

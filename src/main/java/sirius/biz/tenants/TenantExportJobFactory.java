@@ -10,6 +10,7 @@ package sirius.biz.tenants;
 
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
+import sirius.biz.jobs.params.MultiSelectStringParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.packages.Packages;
@@ -50,22 +51,18 @@ public abstract class TenantExportJobFactory<E extends BaseEntity<?> & Tenant<?>
                           .collect(Collectors.toMap(Function.identity(),
                                                     value -> packages.getPackageName(PACKAGE_SCOPE, value)))).build();
 
-    protected final Parameter<String> upgradesParameter = new SelectStringParameter("upgrades",
-                                                                                    "$PackageData.upgrades").withEntriesProvider(
-                                                                                                                    () -> packages.getUpgrades(PACKAGE_SCOPE)
-                                                                                                                                  .stream()
-                                                                                                                                  .collect(Collectors.toMap(Function.identity(),
-                                                                                                                                                            value -> packages.getUpgradeName(PACKAGE_SCOPE, value))))
-                                                                                                            .withMultipleOptions()
-                                                                                                            .build();
+    protected final Parameter<List<String>> upgradesParameter = new MultiSelectStringParameter("upgrades",
+                                                                                               "$PackageData.upgrades").withEntriesProvider(
+            () -> packages.getUpgrades(PACKAGE_SCOPE)
+                          .stream()
+                          .collect(Collectors.toMap(Function.identity(),
+                                                    value -> packages.getUpgradeName(PACKAGE_SCOPE, value)))).build();
 
-    protected final Parameter<String> permissionsParameter = new SelectStringParameter("permissions",
-                                                                                       "$Tenant.permissions").withEntriesProvider(
-                                                                                                                     () -> permissions.stream()
-                                                                                                                                      .collect(Collectors.toMap(Function.identity(),
-                                                                                                                                                                permission -> NLS.get("Permission." + permission))))
-                                                                                                             .withMultipleOptions()
-                                                                                                             .build();
+    protected final Parameter<List<String>> permissionsParameter = new MultiSelectStringParameter("permissions",
+                                                                                                  "$Tenant.permissions").withEntriesProvider(
+            () -> permissions.stream()
+                             .collect(Collectors.toMap(Function.identity(),
+                                                       permission -> NLS.get("Permission." + permission)))).build();
 
     @Override
     public int getPriority() {
@@ -93,8 +90,7 @@ public abstract class TenantExportJobFactory<E extends BaseEntity<?> & Tenant<?>
     @Override
     protected boolean includeEntityDuringExport(E entity, ProcessContext processContext) {
         return processContext.getParameter(permissionsParameter)
-                             .map(necessaryPermissions -> entity.getPermissions()
-                                                                .containsAll(List.of(necessaryPermissions.split(","))))
+                             .map(necessaryPermissions -> entity.getPermissions().containsAll(necessaryPermissions))
                              .orElse(true);
     }
 }
