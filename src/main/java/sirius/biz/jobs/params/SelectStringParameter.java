@@ -88,17 +88,11 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        String rawInput = input.asString().trim();
-
-        if (Strings.isEmpty(rawInput)) {
+        String inputString = input.asString();
+        if (Strings.isEmpty(inputString) || !fetchEntriesMap().containsKey(inputString)) {
             return null;
         }
-
-        if (!fetchEntriesMap().containsKey(rawInput)) {
-            return null;
-        }
-
-        return rawInput;
+        return inputString;
     }
 
     @Override
