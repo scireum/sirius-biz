@@ -27,7 +27,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Provides a base class for factories which export {@link Tenant tenants}.
+ * Provides a base class for job factories which export {@linkplain Tenant tenants}.
  *
  * @param <E> the type of tenants being exported
  * @param <Q> the query type used to select tenants

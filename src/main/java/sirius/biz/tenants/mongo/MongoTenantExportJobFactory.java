@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
- * Provides an export for {@link MongoTenant tenants}.
+ * Provides an export for {@linkplain MongoTenant tenants}.
  */
 @Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 @Permission(TenantController.PERMISSION_MANAGE_TENANTS)

@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
- * Provides an export for {@link SQLTenant tenants}.
+ * Provides an export for {@linkplain SQLTenant tenants}.
  */
 @Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 @Permission(TenantController.PERMISSION_MANAGE_TENANTS)
