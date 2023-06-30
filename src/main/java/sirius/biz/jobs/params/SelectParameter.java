@@ -12,8 +12,6 @@ import java.util.List;
  */
 public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extends ParameterBuilder<V, P> {
 
-    protected boolean multipleOptions = false;
-
     /**
      * Creates a new parameter with the given name and label.
      *
@@ -32,22 +30,8 @@ public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extend
      */
     public abstract List<Tuple<String, String>> getValues();
 
-    /**
-     * Allows to select multiple values.
-     *
-     * @return the parameter itself for fluent method calls
-     */
-    protected P withMultipleOptions() {
-        this.multipleOptions = true;
-        return self();
-    }
-
     @Override
     public String getTemplateName() {
-        if (multipleOptions) {
-            return "/templates/biz/jobs/params/selectMultiString.html.pasta";
-        } else {
-            return "/templates/biz/jobs/params/selectSingleString.html.pasta";
-        }
+        return "/templates/biz/jobs/params/selectSingleString.html.pasta";
     }
 }
