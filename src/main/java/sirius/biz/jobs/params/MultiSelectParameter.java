@@ -5,7 +5,7 @@ import sirius.kernel.commons.Tuple;
 import java.util.List;
 
 /**
- * Provides a single select parameter from a list of key-value pairs.
+ * Provides a multi select parameter from a list of key-value pairs.
  *
  * @param <V> the type of values produced by this parameter
  * @param <P> recursive type reference to support fluent method calls

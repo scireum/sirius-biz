@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Provides a single select parameter from a list of key-value pairs.
+ * Provides a multi select parameter from a list of key-value pairs.
  */
 public class MultiSelectStringParameter extends MultiSelectParameter<String, MultiSelectStringParameter> {
 
