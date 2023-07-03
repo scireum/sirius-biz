@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 public interface TenantExportJobExtender<E extends BaseEntity<?> & Tenant<?>, Q extends Query<Q, E, ?>> {
 
     /**
-     * Collects all parameters expected by the tenant export job.
+     * Collects all parameters expected by the tenant export job extension.
      *
      * @param parameterCollector the collector to be supplied with the expected parameters
      */
@@ -33,7 +33,7 @@ public interface TenantExportJobExtender<E extends BaseEntity<?> & Tenant<?>, Q 
     }
 
     /**
-     * Permits to add additional constraints on the query used to select all exportable tenants.
+     * Permits to add additional constraints on the query used to select exportable tenants.
      *
      * @param query          the query to extend
      * @param processContext the current process which can be used to extract parameters
