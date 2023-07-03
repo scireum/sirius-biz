@@ -22,6 +22,12 @@ public class IPBlockedEvent extends Event<IPBlockedEvent> {
     public static final Mapping IP = Mapping.named("ip");
     private String ip;
 
+    /**
+     * Sets the IP address which has been blocked.
+     *
+     * @param ip the IP address
+     * @return the event itself for fluent method calls
+     */
     public IPBlockedEvent withIp(String ip) {
         this.ip = ip;
         return this;

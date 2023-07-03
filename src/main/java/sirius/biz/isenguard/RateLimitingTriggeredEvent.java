@@ -65,36 +65,78 @@ public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent
     public static final Mapping LOCATION = Mapping.named("location");
     private String location;
 
+    /**
+     * Sets the realm which defined the limit.
+     *
+     * @param realm the realm
+     * @return the event itself for fluent method calls
+     */
     public RateLimitingTriggeredEvent withRealm(String realm) {
         this.realm = realm;
         return this;
     }
 
+    /**
+     * Sets the scope which triggered the limit
+     *
+     * @param scope the scope
+     * @return the event itself for fluent method calls
+     */
     public RateLimitingTriggeredEvent withScope(String scope) {
         this.scope = scope;
         return this;
     }
 
+    /**
+     * Sets the effective limit which was reached.
+     *
+     * @param limit the effective limit
+     * @return the event itself for fluent method calls
+     */
     public RateLimitingTriggeredEvent withLimit(Integer limit) {
         this.limit = limit;
         return this;
     }
 
+    /**
+     * Sets the interval (in seconds) in which the limit was reached.
+     *
+     * @param interval the interval
+     * @return the event itself for fluent method calls
+     */
     public RateLimitingTriggeredEvent withInterval(Integer interval) {
         this.interval = interval;
         return this;
     }
 
+    /**
+     * Sets the IP address which caused the event.
+     *
+     * @param ip the IP address
+     * @return the event itself for fluent method calls
+     */
     public RateLimitingTriggeredEvent withIp(String ip) {
         this.ip = ip;
         return this;
     }
 
+    /**
+     * Sets the tenant which caused the event.
+     *
+     * @param tenant the tenant identifier
+     * @return the event itself for fluent method calls
+     */
     public RateLimitingTriggeredEvent withTenant(String tenant) {
         this.tenant = tenant;
         return this;
     }
 
+    /**
+     * Sets the location which caused the event.
+     *
+     * @param location the location
+     * @return the event itself for fluent method calls
+     */
     public RateLimitingTriggeredEvent withLocation(String location) {
         this.location = location;
         return this;
