@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,6 +22,11 @@ import java.util.stream.Stream;
  * Provides a multi select parameter from a list of key-value pairs.
  */
 public class MultiSelectStringParameter extends MultiSelectParameter<String, MultiSelectStringParameter> {
+
+    /**
+     * Defines the character used to delimit multiple values while encoded in a single string.
+     */
+    private static final String DELIMITER = "|";
 
     private final Map<String, String> entries = new LinkedHashMap<>();
 
@@ -99,15 +105,15 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
                                    .map(Value::of)
                                    .map(this::checkAndTransformSingleValue)
                                    .filter(Objects::nonNull)
-                                   .collect(Collectors.joining(","));
+                                   .collect(Collectors.joining(DELIMITER));
         return Strings.isFilled(verifiedInput) ? verifiedInput : null;
     }
 
     private String checkAndTransformSingleValue(Value input) {
         String rawInput = input.asString().trim();
 
-        // we use the comma to separate the values, and thus can not allow it within values
-        if (rawInput.contains(",")) {
+        // we can not allow the delimiter within values, as we obviously use it to separate values from each other
+        if (rawInput.contains(DELIMITER)) {
             return null;
         }
 
@@ -121,7 +127,7 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
     @Override
     protected Optional<List<String>> resolveFromString(@Nonnull Value input) {
         return input.asOptionalString()
-                    .map(string -> Stream.of(string.split(","))
+                    .map(string -> Stream.of(string.split(Pattern.quote(DELIMITER)))
                                          .map(Value::of)
                                          .map(this::checkAndTransformSingleValue)
                                          .filter(Objects::nonNull)
