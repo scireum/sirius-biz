@@ -1,7 +1,6 @@
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.CachingSupplier;
-import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
