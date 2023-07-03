@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 /**
  * Provides a base class for all events recorded by the {@link EventRecorder}.
  * <p>
- * Sub-classes will be persisted in the <tt>analytics</tt> database realm which is expected to
+ * Subclasses will be persisted in the <tt>analytics</tt> database realm which is expected to
  * point to a <b>Clickhouse</b> database.
  */
 @Realm("analytics")
