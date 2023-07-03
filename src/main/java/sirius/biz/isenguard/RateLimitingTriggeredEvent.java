@@ -69,55 +69,62 @@ public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent
         return realm;
     }
 
-    public void setRealm(String realm) {
+    public RateLimitingTriggeredEvent withRealm(String realm) {
         this.realm = realm;
+        return this;
     }
 
     public String getScope() {
         return scope;
     }
 
-    public void setScope(String scope) {
+    public RateLimitingTriggeredEvent withScope(String scope) {
         this.scope = scope;
+        return this;
     }
 
     public Integer getLimit() {
         return limit;
     }
 
-    public void setLimit(Integer limit) {
+    public RateLimitingTriggeredEvent withLimit(Integer limit) {
         this.limit = limit;
+        return this;
     }
 
     public Integer getInterval() {
         return interval;
     }
 
-    public void setInterval(Integer interval) {
+    public RateLimitingTriggeredEvent withInterval(Integer interval) {
         this.interval = interval;
+        return this;
     }
 
     public String getIp() {
         return ip;
     }
 
-    public void setIp(String ip) {
+    public RateLimitingTriggeredEvent withIp(String ip) {
         this.ip = ip;
+        return this;
     }
 
     public String getTenant() {
         return tenant;
     }
 
-    public void setTenant(String tenant) {
+    public RateLimitingTriggeredEvent withTenant(String tenant) {
         this.tenant = tenant;
+        return this;
     }
 
     public String getLocation() {
         return location;
     }
 
-    public void setLocation(String location) {
+    public RateLimitingTriggeredEvent withLocation(String location) {
         this.location = location;
+        return this;
     }
 }

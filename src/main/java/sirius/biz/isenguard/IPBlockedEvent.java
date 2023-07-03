@@ -26,7 +26,8 @@ public class IPBlockedEvent extends Event<IPBlockedEvent> {
         return ip;
     }
 
-    public void setIp(String ip) {
+    public IPBlockedEvent withIp(String ip) {
         this.ip = ip;
+        return this;
     }
 }
