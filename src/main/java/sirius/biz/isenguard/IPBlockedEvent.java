@@ -22,12 +22,12 @@ public class IPBlockedEvent extends Event<IPBlockedEvent> {
     public static final Mapping IP = Mapping.named("ip");
     private String ip;
 
-    public String getIp() {
-        return ip;
-    }
-
     public IPBlockedEvent withIp(String ip) {
         this.ip = ip;
         return this;
+    }
+
+    public String getIp() {
+        return ip;
     }
 }

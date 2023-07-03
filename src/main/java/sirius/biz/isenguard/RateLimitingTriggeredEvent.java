@@ -65,17 +65,9 @@ public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent
     public static final Mapping LOCATION = Mapping.named("location");
     private String location;
 
-    public String getRealm() {
-        return realm;
-    }
-
     public RateLimitingTriggeredEvent withRealm(String realm) {
         this.realm = realm;
         return this;
-    }
-
-    public String getScope() {
-        return scope;
     }
 
     public RateLimitingTriggeredEvent withScope(String scope) {
@@ -83,17 +75,9 @@ public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent
         return this;
     }
 
-    public Integer getLimit() {
-        return limit;
-    }
-
     public RateLimitingTriggeredEvent withLimit(Integer limit) {
         this.limit = limit;
         return this;
-    }
-
-    public Integer getInterval() {
-        return interval;
     }
 
     public RateLimitingTriggeredEvent withInterval(Integer interval) {
@@ -101,17 +85,9 @@ public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent
         return this;
     }
 
-    public String getIp() {
-        return ip;
-    }
-
     public RateLimitingTriggeredEvent withIp(String ip) {
         this.ip = ip;
         return this;
-    }
-
-    public String getTenant() {
-        return tenant;
     }
 
     public RateLimitingTriggeredEvent withTenant(String tenant) {
@@ -119,12 +95,36 @@ public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent
         return this;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
     public RateLimitingTriggeredEvent withLocation(String location) {
         this.location = location;
         return this;
+    }
+
+    public String getRealm() {
+        return realm;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public Integer getLimit() {
+        return limit;
+    }
+
+    public Integer getInterval() {
+        return interval;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public String getTenant() {
+        return tenant;
+    }
+
+    public String getLocation() {
+        return location;
     }
 }
