@@ -131,6 +131,6 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
                                          .map(Value::of)
                                          .map(this::checkAndTransformSingleValue)
                                          .filter(Objects::nonNull)
-                                         .collect(Collectors.toList()));
+                                         .toList());
     }
 }
