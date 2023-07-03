@@ -1,7 +1,6 @@
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.CachingSupplier;
-import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -11,13 +10,22 @@ import javax.annotation.Nonnull;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * Provides a single select parameter from a list of key-value pairs.
+ * Provides a multi select parameter from a list of key-value pairs.
  */
-public class SelectStringParameter extends SelectParameter<String, SelectStringParameter> {
+public class MultiSelectStringParameter extends MultiSelectParameter<String, MultiSelectStringParameter> {
+
+    /**
+     * Defines the character used to delimit multiple values while encoded in a single string.
+     */
+    private static final String DELIMITER = "|";
 
     private final Map<String, String> entries = new LinkedHashMap<>();
 
@@ -29,7 +37,7 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      * @param name  the name of the parameter
      * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
      */
-    public SelectStringParameter(String name, String label) {
+    public MultiSelectStringParameter(String name, String label) {
         super(name, label);
     }
 
@@ -40,7 +48,7 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      * @param value the display value, which will be {@link NLS#smartGet(String) auto translated before display}
      * @return the parameter itself for fluent method calls
      */
-    public SelectStringParameter withEntry(String key, String value) {
+    public MultiSelectStringParameter withEntry(String key, String value) {
         if (this.entriesProvider != null) {
             throw new IllegalStateException("Entries can not be added when an entries provider is set.");
         }
@@ -57,7 +65,7 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      * @param entriesProvider the provider that returns list of entries
      * @return the parameter itself for fluent method calls
      */
-    public SelectStringParameter withEntriesProvider(Supplier<Map<String, String>> entriesProvider) {
+    public MultiSelectStringParameter withEntriesProvider(Supplier<Map<String, String>> entriesProvider) {
         if (!entries.isEmpty()) {
             throw new IllegalStateException("An entry provider can not be set after entries have already been added.");
         }
@@ -88,23 +96,40 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        String inputString = input.asString();
-        if (Strings.isEmpty(inputString) || !fetchEntriesMap().containsKey(inputString)) {
+        if (!(input.get() instanceof List<?> list)) {
+            return checkAndTransformSingleValue(input);
+        }
+
+        String verifiedInput = list.stream()
+                                   .map(Value::of)
+                                   .map(this::checkAndTransformSingleValue)
+                                   .filter(Objects::nonNull)
+                                   .collect(Collectors.joining(DELIMITER));
+        return Strings.isFilled(verifiedInput) ? verifiedInput : null;
+    }
+
+    private String checkAndTransformSingleValue(Value input) {
+        String rawInput = input.asString().trim();
+
+        // we can not allow the delimiter within values, as we obviously use it to separate values from each other
+        if (rawInput.contains(DELIMITER)) {
             return null;
         }
-        return inputString;
+
+        if (!fetchEntriesMap().containsKey(rawInput)) {
+            return null;
+        }
+
+        return rawInput;
     }
 
     @Override
-    public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
-        return updater.apply(parameterContext)
-                      .map(value -> Json.createObject()
-                                        .put("value", value)
-                                        .put("text", NLS.smartGet(fetchEntriesMap().get(value))));
-    }
-
-    @Override
-    protected Optional<String> resolveFromString(@Nonnull Value input) {
-        return input.asOptionalString();
+    protected Optional<List<String>> resolveFromString(@Nonnull Value input) {
+        return input.asOptionalString()
+                    .map(string -> Stream.of(string.split(Pattern.quote(DELIMITER)))
+                                         .map(Value::of)
+                                         .map(this::checkAndTransformSingleValue)
+                                         .filter(Objects::nonNull)
+                                         .toList());
     }
 }
