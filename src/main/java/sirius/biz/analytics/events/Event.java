@@ -88,19 +88,6 @@ public abstract class Event extends SQLEntity {
     }
 
     /**
-     * Sets a custom event timestamp.
-     * <p>
-     * In most cases this method shouldn't be called manually as the event will initialize this field with <tt>now</tt>.
-     *
-     * @param eventTimestamp the {@link LocalDateTime} the event occurred.
-     * @deprecated Use {@link #withCustomEventTimestamp(LocalDateTime)} instead.
-     */
-    @Deprecated(since = "2022/10/05")
-    public void setCustomEventTimestamp(LocalDateTime eventTimestamp) {
-        this.eventTimestamp = eventTimestamp;
-    }
-
-    /**
      * Sets a custom node on which this event was recorded.
      * <p>
      * In most cases this method shouldn't be called manually as the event will initialize this field with
@@ -112,20 +99,6 @@ public abstract class Event extends SQLEntity {
     public Event withCustomNode(String node) {
         this.node = node;
         return this;
-    }
-
-    /**
-     * Sets a custom node on which this event was recorded.
-     * <p>
-     * In most cases this method shouldn't be called manually as the event will initialize this field with
-     * the name of the current node.
-     *
-     * @param node the node name to use
-     * @deprecated Use {@link #withCustomNode(String)} instead.
-     */
-    @Deprecated(since = "2022/10/05")
-    public void setCustomNode(String node) {
-        this.node = node;
     }
 
     public LocalDate getEventDate() {
