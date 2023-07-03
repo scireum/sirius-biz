@@ -16,7 +16,7 @@ import sirius.db.mixing.annotations.NullAllowed;
 /**
  * Recorded once a rate limit was first hit for a realm, scope and interval.
  */
-public class RateLimitingTriggeredEvent extends Event {
+public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent> {
 
     /**
      * Contains the realm which defined the limit.

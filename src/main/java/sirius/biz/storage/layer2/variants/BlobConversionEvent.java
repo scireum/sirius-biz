@@ -19,7 +19,7 @@ import sirius.kernel.di.std.Framework;
  * Records the successful/failed conversion of a {@link BlobVariant} by a {@link Converter}.
  */
 @Framework(StorageUtils.FRAMEWORK_STORAGE)
-public class BlobConversionEvent extends Event {
+public class BlobConversionEvent extends Event<BlobConversionEvent> {
 
     /**
      * Contains the ID of the tenant owning the source and target files being converted.

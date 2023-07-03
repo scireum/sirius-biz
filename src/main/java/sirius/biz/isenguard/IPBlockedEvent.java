@@ -14,7 +14,7 @@ import sirius.db.mixing.Mapping;
 /**
  * Recorded for each IP address blocked by {@link Isenguard#blockIP(String)}.
  */
-public class IPBlockedEvent extends Event {
+public class IPBlockedEvent extends Event<IPBlockedEvent> {
 
     /**
      * Contains the IP address which has been blocked.

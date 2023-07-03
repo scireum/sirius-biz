@@ -36,7 +36,7 @@ import sirius.web.http.WebContext;
  * @see EventRecorder
  * @see #withAggregationUrl(String)
  */
-public class PageImpressionEvent extends Event {
+public class PageImpressionEvent extends Event<PageImpressionEvent> {
 
     /**
      * Contains a generic or shortened URI which can be used to aggregate on.
