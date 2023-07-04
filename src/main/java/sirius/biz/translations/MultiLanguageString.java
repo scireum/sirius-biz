@@ -325,6 +325,14 @@ public class MultiLanguageString extends SafeMap<String, String> {
             throw new IllegalStateException(
                     "Can not call fetchTextOrFallback on a MultiLanguageString without fallback enabled.");
         }
+
+        if (!isEnabled()) {
+            // If the multi-language features are disabled for the field, returns the fallback value by default,
+            // falling back to the requested language as last resort. The fallback key is what gets written to the
+            // database on save for fields in this state.
+            return data().getOrDefault(FALLBACK_KEY, data().get(language));
+        }
+
         return data().getOrDefault(language, data().get(FALLBACK_KEY));
     }
 
