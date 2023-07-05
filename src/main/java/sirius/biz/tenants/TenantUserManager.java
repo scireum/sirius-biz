@@ -912,8 +912,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
               .map(flag -> ROLE_PREFIX_PERFORMANCE_FLAG + flag)
               .forEach(roles::add);
 
-        Set<String> transformedRoles = transformRoles(roles);
-        tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(transformedRoles::remove);
+        Set<String> excludedPermissions = new HashSet<>(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        Set<String> transformedRoles = transformRoles(roles, excludedPermissions);
+        excludedPermissions.forEach(transformedRoles::remove);
 
         return transformedRoles;
     }
@@ -938,8 +939,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         // also apply profiles and revokes to additional roles
-        Permissions.applyProfiles(result);
-        tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(result::remove);
+        Set<String> excludedPermissions = new HashSet<>(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        Permissions.applyProfiles(result, excludedPermissions);
+        excludedPermissions.forEach(result::remove);
 
         return result;
     }
