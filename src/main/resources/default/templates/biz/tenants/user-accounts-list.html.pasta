@@ -15,7 +15,7 @@
                     <div class="pl-2 pr-1 align-self-center">
                         <div class="d-flex flex-column align-items-center justify-content-center"
                              style="width: 80px">
-                            <img style="object-fit: cover; object-position: center;"
+                            <img style="border-radius: 50%; object-fit: cover; object-position: center;"
                                  class="mw-100"
                                  src="@account.getUserAccountData().fetchSmallUrl().buildImageURL()"
                                  alt=""/>
@@ -30,7 +30,7 @@
                     <i:if test="enableCardActions">
                         <t:dropdownSection>
                             <t:dropdownItem labelKey="TenantController.select"
-                                            icon="fa fa-building"
+                                            icon="fa-solid fa-user-secret"
                                             url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                         </t:dropdownSection>
                         <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
@@ -64,15 +64,20 @@
                         <t:dropdownSection>
                             <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
                         </t:dropdownSection>
+                        <i:else>
+                            <t:dropdownSection>
+                                <t:dropdownItem labelKey="TenantController.edit"
+                                                icon="fa-solid fa-pencil"
+                                                permission="permission-manage-user-accounts"
+                                                url="@apply('/user-account/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:else>
                     </i:if>
                 </i:block>
 
                 <div class="mb-2">
                     <t:iconInlineInfo icon="fa-solid fa-eye">
-                        <i:if test="account.getUserAccountData().getLogin().getLastSeen() != null">
-                            @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
-                            <i:else>-</i:else>
-                        </i:if>
+                        @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
                     </t:iconInlineInfo>
 
                     <t:iconInlineInfo icon="fa-regular fa-envelope">
