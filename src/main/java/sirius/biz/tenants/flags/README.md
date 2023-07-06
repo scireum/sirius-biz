@@ -9,6 +9,6 @@ or also, where some users still may use an old implementation where all others r
 To achieve this, these flags can be toggled in many locations (the first being present, will be used):
 * By either having the string **flag-FLAGNAME-disabled** or **flag-FLAGNAME** in the user agent
 * By setting it in the custom config in the current user or its tenant (in the block **flags**)
-* By setting it in the scope config
-* By setting it in the tenant config which owns the current scope
-* By setting it in the config of the system tenant
+* By setting it in the scope config (in the block **flags**)
+* By setting it in the tenant config which owns the current scope (in the block **flags**)
+* By setting it in the config of the system tenant (in the block **flags.global**)

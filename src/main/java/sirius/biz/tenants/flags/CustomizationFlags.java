@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.flags;
 
+import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
 import sirius.kernel.async.CallContext;
@@ -18,7 +19,6 @@ import sirius.kernel.settings.Settings;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,9 +31,9 @@ import java.util.Optional;
  * <ol>
  *     <li>By either having the string <tt>flag-FLAGNAME-disabled</tt> or <tt>flag-FLAGNAME</tt> in the user agent</li>
  *     <li>By setting it in the custom config in the current user or its tenant (in the block <tt>flags</tt>)</li>
- *     <li>By setting it in the scope config</li>
- *     <li>By setting it in the tenant config which owns the current scope</li>
- *     <li>By setting it in the config of the system tenant</li>
+ *     <li>By setting it in the scope config (in the block <tt>flags</tt>)</li>
+ *     <li>By setting it in the tenant config which owns the current scope (in the block <tt>flags</tt>)</li>
+ *     <li>By setting it in the config of the system tenant (in the block <tt>flags.global</tt>)</li>
  * </ol>
  * <p>
  * These places are checked in order and the first given value is used. Therefore, especially via the system tenant,
@@ -95,16 +95,6 @@ public class CustomizationFlags {
         return Optional.empty();
     }
 
-    @Nonnull
-    private Optional<Tuple<Boolean, String>> readFromSystemTenantSettings(String flagName) {
-        if (tenants == null) {
-            return Optional.empty();
-        }
-        return tenants.fetchCachedTenant(tenants.getSystemTenantId())
-                      .flatMap(tenant -> readFromSettings(tenant.getSettings(), flagName, "system-tenant-settings"));
-    }
-
-    @Nonnull
     private Optional<Tuple<Boolean, String>> readFromScopeTenantSettings(String flagName) {
         if (tenants == null) {
             return Optional.empty();
@@ -114,6 +104,23 @@ public class CustomizationFlags {
         if (scopeObject instanceof TenantAware tenantAwareScope) {
             return tenants.fetchCachedTenant(tenantAwareScope.getTenant().getIdAsString())
                           .flatMap(tenant -> readFromSettings(tenant.getSettings(), flagName, "scope-tenant-settings"));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Tuple<Boolean, String>> readFromSystemTenantSettings(String flagName) {
+        if (tenants == null) {
+            return Optional.empty();
+        }
+        Tenant<?> systemTenant = tenants.fetchCachedTenant(tenants.getSystemTenantId()).orElse(null);
+        if (systemTenant == null) {
+            return Optional.empty();
+        }
+        Settings settings = systemTenant.getSettings();
+        if (settings.has("flags.global." + flagName)) {
+            return Optional.of(Tuple.create(settings.get("flags.global." + flagName).asBoolean(),
+                                            "system-tenant-settings"));
         } else {
             return Optional.empty();
         }
