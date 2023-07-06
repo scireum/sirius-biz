@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.mongo;
 
+import com.typesafe.config.ConfigFactory;
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.mongo.MongoBizEntity;
 import sirius.biz.mongo.SortField;
@@ -27,6 +28,7 @@ import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.settings.Settings;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -63,6 +65,9 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
      */
     @Transient
     private Set<String> effectivePermissions;
+
+    @Transient
+    private Settings settings;
 
     @Part
     @Nullable
@@ -101,6 +106,19 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
         }
 
         return Collections.unmodifiableSet(effectivePermissions);
+    }
+
+    @Override
+    public Settings getSettings() {
+        if (settings == null) {
+            if (null == getTenantData().getConfig()) {
+                settings = new Settings(ConfigFactory.empty(), false);
+            } else {
+                settings = new Settings(getTenantData().getConfig(), false);
+            }
+        }
+
+        return settings;
     }
 
     @Override
