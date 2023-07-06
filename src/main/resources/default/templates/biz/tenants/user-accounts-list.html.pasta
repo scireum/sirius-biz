@@ -67,7 +67,7 @@
                         <i:else>
                             <t:dropdownSection>
                                 <t:dropdownItem labelKey="TenantController.edit"
-                                                icon="fa fa-pencil"
+                                                icon="fa-solid fa-pencil"
                                                 permission="permission-manage-user-accounts"
                                                 url="@apply('/user-account/%s', account.getIdAsString())"/>
                             </t:dropdownSection>

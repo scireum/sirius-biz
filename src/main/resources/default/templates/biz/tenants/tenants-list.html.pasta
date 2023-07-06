@@ -36,7 +36,7 @@
                         <i:else>
                             <t:dropdownItem labelKey="TenantController.edit"
                                             permission="permission-manage-tenants"
-                                            icon="fa fa-pencil"
+                                            icon="fa-solid fa-pencil"
                                             url="@apply('/tenant/%s', tenant.getIdAsString())"/>
                         </i:else>
                     </i:if>
