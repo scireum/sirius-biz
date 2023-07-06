@@ -29,7 +29,7 @@
                 <i:block name="actions">
                     <i:if test="enableCardActions">
                         <t:dropdownItem labelKey="TenantController.select"
-                                        icon="fa fa-building"
+                                        icon="fa-solid fa-building"
                                         url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
                         <t:dropdownDeleteItem
                                 url="@sirius.web.util.LinkBuilder.new('/job/delete-tenant').append('tenant', tenant.getIdAsString()).toString()"/>

@@ -30,7 +30,7 @@
                     <i:if test="enableCardActions">
                         <t:dropdownSection>
                             <t:dropdownItem labelKey="TenantController.select"
-                                            icon="fa fa-building"
+                                            icon="fa-solid fa-user-secret"
                                             url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                         </t:dropdownSection>
                         <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
