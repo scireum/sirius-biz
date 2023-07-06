@@ -44,13 +44,13 @@ import java.util.Optional;
 @Register(classes = CustomizationFlags.class)
 public class CustomizationFlags {
 
-    private static final List<String> knownFlags = new ArrayList<>();
+    private static final List<CustomizationFlag> knownFlags = new ArrayList<>();
 
     @Part
     private Tenants<?, ?, ?> tenants;
 
-    protected static synchronized void addKnownFlag(String name) {
-        knownFlags.add(name);
+    protected static synchronized void addKnownFlag(CustomizationFlag flag) {
+        knownFlags.add(flag);
     }
 
     /**
@@ -58,23 +58,11 @@ public class CustomizationFlags {
      *
      * @return a list fo all flags which are created via {@link CustomizationFlag}.
      */
-    public synchronized List<String> getKnownFlags() {
+    public synchronized List<CustomizationFlag> getKnownFlags() {
         return new ArrayList<>(knownFlags);
     }
 
-    /**
-     * Checks if the given flag is enabled or disabled and also reports the source of the value.
-     * <p>
-     * Note that this is rather a debugging / reporting API and the main access should be performed via
-     * {@link CustomizationFlag#isEnabled()} or {@link CustomizationFlag#isEnabled(boolean)}. This way, all
-     * flags which are in use, get properly reported via {@link #getKnownFlags()}.
-     *
-     * @param flagName     the name of the flag to query
-     * @param defaultValue the default to use in case no config is present anywhere
-     * @return the value of the flag and the source where it was found
-     */
-    public Tuple<Boolean, String> isFlagEnabled(String flagName, boolean defaultValue) {
-
+    protected Tuple<Boolean, String> isFlagEnabled(String flagName, boolean defaultValue) {
         return readFromUserAgent(flagName).or(() -> readFromUserSettings(flagName))
                                           .or(() -> readFromScopeSettings(flagName))
                                           .or(() -> readFromScopeTenantSettings(flagName))

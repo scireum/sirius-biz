@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.flags;
 
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
 /**
@@ -23,33 +24,45 @@ public class CustomizationFlag {
     private static CustomizationFlags flags;
 
     private final String name;
+    private final boolean defaultValue;
 
     /**
      * Creates a new flag with the given name
      *
-     * @param name the name of the flag to use
+     * @param name         the name of the flag to use
+     * @param defaultValue the default value to use if no config is present
      */
-    public CustomizationFlag(String name) {
+    public static CustomizationFlag create(String name, boolean defaultValue) {
+        CustomizationFlag flag = new CustomizationFlag(name, defaultValue);
+        CustomizationFlags.addKnownFlag(flag);
+
+        return flag;
+    }
+
+    private CustomizationFlag(String name, boolean defaultValue) {
         this.name = name;
-        CustomizationFlags.addKnownFlag(name);
+        this.defaultValue = defaultValue;
     }
 
     /**
-     * Checks if the given flag is enabled.
-     *
-     * @param defaultValue determines the default value in case no flag is set
-     * @return <tt>true</tt> if the flag is enabled or <tt>false</tt> otherwise
-     */
-    public boolean isEnabled(boolean defaultValue) {
-        return flags != null && flags.isFlagEnabled(name, defaultValue).getFirst();
-    }
-
-    /**
-     * Checks if the given flag is enabled, uses <tt>false</tt> as fallback if no configuration is present.
+     * Checks if the given flag is enabled or uses the specified default value if no config is present.
      *
      * @return <tt>true</tt> if the flag is enabled or <tt>false</tt> otherwise
      */
     public boolean isEnabled() {
-        return isEnabled(false);
+        return flags != null && flags.isFlagEnabled(name, defaultValue).getFirst();
+    }
+
+    /**
+     * Determines if the flag is enabled and also reports the reason why it is enabled or disabled.
+     *
+     * @return a tuple containing the flag state and also the source which was used to determine the state.
+     */
+    public Tuple<Boolean, String> check() {
+        return flags.isFlagEnabled(name, defaultValue);
+    }
+
+    public String getName() {
+        return name;
     }
 }
