@@ -1,6 +1,6 @@
 <k:article code="JDKOE"
            lang="en"
-           parent="SKAME"
+           parent="DJELK"
            title="Customization Flags"
            permissions="flag-system-tenant"
 >
@@ -39,10 +39,10 @@
 
         <i:local name="flags" value="part(sirius.biz.tenants.flags.CustomizationFlags.class)"/>
         <table class="table mt-4">
-            <i:for type="String" var="flag" items="flags.getKnownFlags()">
-                <i:local name="enabledAndSource" value="flags.isFlagEnabled(flag, false)"/>
+            <i:for type="sirius.biz.tenants.flags.CustomizationFlag" var="flag" items="flags.getKnownFlags()">
+                <i:local name="enabledAndSource" value="flag.check()"/>
                 <tr>
-                    <td class="font-weight-bold">@flag</td>
+                    <td class="font-weight-bold">@flag.getName()</td>
                     <td class="text-right">
                         <b class="@if (enabledAndSource.getFirst()) { sci-text-green-dark } else { sci-text-gray-darker} ">
                             @toUserString(enabledAndSource.getFirst())
