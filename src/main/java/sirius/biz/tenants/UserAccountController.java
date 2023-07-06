@@ -610,19 +610,11 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                                                                              NLS.get("LoginData.accountLocked"))
                                                             .withTotalCount()
                                                             .asPage();
-        fillTenantsFromCache(selectableUsers);
 
         webContext.respondWith()
                   .template("/templates/biz/tenants/select-user-account.html.pasta",
                             selectableUsers,
                             isCurrentlySpying(webContext));
-    }
-
-    private void fillTenantsFromCache(Page<U> selectableUsers) {
-        selectableUsers.getItems()
-                       .forEach(user -> user.getTenant()
-                                            .setValue(matchingTenants.fetchCachedTenant(user.getTenant())
-                                                                     .orElse(null)));
     }
 
     private boolean isCurrentlySpying(WebContext webContext) {
