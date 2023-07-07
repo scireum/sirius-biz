@@ -63,9 +63,24 @@ public class LookupTables {
         Extension extension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, name);
         String baseTable = extension.get(CONFIG_KEY_TABLE).asString();
 
-        // If no IDB config is present, or Jupiter is disabled, we resort to code list based tables
-        if (Strings.isEmpty(baseTable) || jupiter == null) {
-            return new CodeListLookupTable(extension, extension.get(CONFIG_KEY_CODE_LIST).asString(name));
+        // If no IDB config is present, ...
+        if (Strings.isEmpty(baseTable)) {
+            String codeList = extension.get(CONFIG_KEY_CODE_LIST).asString();
+            if (Sirius.isTest()) {
+                String json = extension.get(TestJsonLookupTable.CONFIG_KEY_TEST_DATA_JSON).asString();
+                if (Strings.isEmpty(codeList) && Strings.isEmpty(json)) {
+                    // ...and we are running in test mode and no codeList is given
+                    return new TestExtensionLookupTable(extension);
+                }
+                if (Strings.isFilled(json)) {
+                    // ...but a json table is given
+                    return new TestJsonLookupTable(extension);
+                }
+            }
+            // ...and Jupiter is disabled, we resort to code list based tables
+            if (jupiter == null) {
+                return new CodeListLookupTable(extension, Strings.firstFilled(codeList, name));
+            }
         }
 
         // Note: to ensure the configured tables are loaded in the correct order, the base table needs to be resolved
