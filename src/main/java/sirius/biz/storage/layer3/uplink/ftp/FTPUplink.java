@@ -164,11 +164,32 @@ public class FTPUplink extends ConfigBasedUplink {
             }
         } else {
             if (ftpFileFilter != null) {
-                return client.listFiles(relativeParent.getPath(), ftpFileFilter);
+                return fixNonMlsdPermissions(client.listFiles(relativeParent.getPath(), ftpFileFilter));
             } else {
-                return client.listFiles(relativeParent.getPath());
+                return fixNonMlsdPermissions(client.listFiles(relativeParent.getPath()));
             }
         }
+    }
+
+    /**
+     * Without MLSD support, we have to fix the permissions manually as depending on the used FTP server, the
+     * permission information might not be provided which gets interpreted as "no permissions".
+     *
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc3659">MLSD spec</a> for details
+     * @param files the input files
+     * @return the files with fixed permissions
+     */
+    private FTPFile[] fixNonMlsdPermissions(FTPFile[] files) {
+        for (FTPFile file : files) {
+            if (!file.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
+                && !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
+                && !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)) {
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION, true);
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION, true);
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION, true);
+            }
+        }
+        return files;
     }
 
     private boolean isUsable(FTPFile entry) {
