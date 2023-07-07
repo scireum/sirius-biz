@@ -65,4 +65,9 @@ public class MongoTenantExportJobFactory extends TenantExportJobFactory<MongoTen
 
         extenders.forEach(extender -> extender.extendSelectQuery(query, processContext));
     }
+
+    @Override
+    protected boolean isSystemProcess() {
+        return true;
+    }
 }
