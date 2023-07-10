@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import com.typesafe.config.ConfigFactory;
 import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.jdbc.BizEntity;
@@ -25,6 +26,7 @@ import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.settings.Settings;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -57,6 +59,9 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
     @Transient
     private Set<String> effectivePermissions;
 
+    @Transient
+    private Settings settings;
+
     @Part
     @Nullable
     private static Tenants<?, ?, ?> tenants;
@@ -87,6 +92,19 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
         }
 
         return Collections.unmodifiableSet(effectivePermissions);
+    }
+
+    @Override
+    public Settings getSettings() {
+        if (settings == null) {
+            if (null == getTenantData().getConfig()) {
+                settings = new Settings(ConfigFactory.empty(), false);
+            } else {
+                settings = new Settings(getTenantData().getConfig(), false);
+            }
+        }
+
+        return settings;
     }
 
     @Override

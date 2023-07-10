@@ -75,11 +75,6 @@
 
                 <t:inlineLang lang="@account.getUserAccountData().getLanguage().getValue()"/>
 
-                <i:if test="account.getUserAccountData().getEmail() != account.getUserAccountData().toString()">
-                    <t:inlineInfo labelKey="ContactData.email">
-                        @account.getUserAccountData().getEmail()
-                    </t:inlineInfo>
-                </i:if>
                 <i:if test="account.getUserAccountData().getLogin().getLastSeen() != null">
                     <t:inlineInfo labelKey="LoginData.lastSeen">
                         @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())

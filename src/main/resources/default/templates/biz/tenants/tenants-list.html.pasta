@@ -29,10 +29,16 @@
                 <i:block name="actions">
                     <i:if test="enableCardActions">
                         <t:dropdownItem labelKey="TenantController.select"
-                                        icon="fa fa-building"
+                                        icon="fa-solid fa-building"
                                         url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
                         <t:dropdownDeleteItem
                                 url="@sirius.web.util.LinkBuilder.new('/job/delete-tenant').append('tenant', tenant.getIdAsString()).toString()"/>
+                        <i:else>
+                            <t:dropdownItem labelKey="TenantController.edit"
+                                            permission="permission-manage-tenants"
+                                            icon="fa-solid fa-pencil"
+                                            url="@apply('/tenant/%s', tenant.getIdAsString())"/>
+                        </i:else>
                     </i:if>
                 </i:block>
 
@@ -43,24 +49,12 @@
                 </div>
 
                 <i:block name="footer">
-                    <div class="mb-2">
-                        <t:iconInlineInfo icon="fa-solid fa-house">
-                            <div>
-                                <i:if test="isFilled(tenant.getTenantData().getAddress().getStreet())">
-                                    @tenant.getTenantData().getAddress().getStreet()
-                                    <i:else>-</i:else>
-                                </i:if>
-                            </div>
-                            <div>
-                                <i:if test="!isFilled(tenant.getTenantData().getAddress().getZip()) && !isFilled(tenant.getTenantData().getAddress().getCity())">
-                                    -
-                                    <i:else>
-                                        @tenant.getTenantData().getAddress().getZip()
-                                        @tenant.getTenantData().getAddress().getCity()
-                                    </i:else>
-                                </i:if>
-                            </div>
-                        </t:iconInlineInfo>
+                    <!--@ We enforce a height of 2 lines here, so that all cards appear to have the same height. -->
+                    <div class="mb-2" style="min-height: 3rem">
+                        <div> @tenant.getTenantData().getAddress().getStreet()</div>
+                        <div>
+                            @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
+                        </div>
                     </div>
                 </i:block>
             </t:datacard>
