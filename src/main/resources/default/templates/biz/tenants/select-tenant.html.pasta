@@ -25,7 +25,7 @@
 
         <i:invoke template="/templates/biz/tenants/tenants-list.html.pasta"
                   tenants="tenants"
-                  paginationBaseUrl="@('/tenants')"
+                  paginationBaseUrl="@('/tenants/select')"
                   cardBaseUrl="@('/tenants/select')"
                   enableCardActions="false"/>
     </t:sidebar>
