@@ -11,6 +11,7 @@ package sirius.biz.codelists;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Streams;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Value;
@@ -34,6 +35,9 @@ class TestJsonLookupTable extends LookupTable {
 
     TestJsonLookupTable(Extension extension) {
         super(extension);
+        if (!Sirius.isTest()) {
+            throw new IllegalStateException(getClass().getSimpleName() + " only supported while in test mode.");
+        }
         this.json = Json.parseObject(extension.get(CONFIG_KEY_TEST_DATA_JSON).asString());
     }
 

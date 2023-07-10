@@ -27,7 +27,7 @@ class TestExtensionLookupTable extends LookupTable {
     TestExtensionLookupTable(Extension extension) {
         super(extension);
         if (!Sirius.isTest()) {
-            throw new IllegalStateException(getClass().getSimpleName() + "only supported while in test mode.");
+            throw new IllegalStateException(getClass().getSimpleName() + " only supported while in test mode.");
         }
     }
 
