@@ -9,13 +9,16 @@
 package sirius.biz.codelists;
 
 import sirius.kernel.Sirius;
-import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -23,6 +26,8 @@ import java.util.stream.Stream;
  * Provides an implementation for {@link LookupTable} based on {@link Extension} for testing purposes.
  */
 class TestExtensionLookupTable extends LookupTable {
+
+    private static final String CONFIG_KEY_DATA = "data";
 
     TestExtensionLookupTable(Extension extension) {
         super(extension);
@@ -33,17 +38,20 @@ class TestExtensionLookupTable extends LookupTable {
 
     @Override
     protected boolean performContains(@Nonnull String code) {
-        return extension.has(code);
+        return extension.has(CONFIG_KEY_DATA + "." + code);
     }
 
     @Override
     protected Optional<String> performResolveName(String code, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(code + ".name", language));
+        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.name", CONFIG_KEY_DATA, code),
+                                                                 language));
     }
 
     @Override
     protected Optional<String> performResolveDescription(@Nonnull String code, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(code + ".description", language));
+        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.description",
+                                                                               CONFIG_KEY_DATA,
+                                                                               code), language));
     }
 
     @Override
@@ -54,7 +62,10 @@ class TestExtensionLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performFetchTranslatedField(String code, String targetField, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(code + "." + targetField, language));
+        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.%s",
+                                                                               CONFIG_KEY_DATA,
+                                                                               code,
+                                                                               targetField), language));
     }
 
     @Override
@@ -96,16 +107,18 @@ class TestExtensionLookupTable extends LookupTable {
         return performSuggest(limit, searchTerm, language);
     }
 
+    @SuppressWarnings("unchecked")
+    @Explain("The data is provided in the configuration as String keys with assigned value objects.")
     @Override
     public Stream<LookupTableEntry> scan(String language, Limit limit) {
-        Context tableContext = extension.getContext();
-        return tableContext.keySet()
-                           .stream()
-                           .skip(limit.getItemsToSkip())
-                           .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
-                           .map(key -> new LookupTableEntry(key,
-                                                            resolveName(key, language).orElse(key),
-                                                            resolveDescription(key, language).orElse("")));
+        Map<String, Object> data = extension.get(CONFIG_KEY_DATA).get(Map.class, Collections.emptyMap());
+        return data.keySet()
+                   .stream()
+                   .skip(limit.getItemsToSkip())
+                   .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
+                   .map(key -> new LookupTableEntry(key,
+                                                    resolveName(key, language).orElse(key),
+                                                    resolveDescription(key, language).orElse("")));
     }
 
     @Override
@@ -116,6 +129,6 @@ class TestExtensionLookupTable extends LookupTable {
 
     @Override
     public int count() {
-        return extension.getConfigList(extension.getId()).size();
+        return extension.get(CONFIG_KEY_DATA).get(Map.class, Collections.emptyMap()).size();
     }
 }

@@ -24,6 +24,7 @@ class LookupTablesTest {
     @Test
     fun `TestExtensionLookupTable creation works`() {
         val table = lookupTables.fetchTable("test-extension-table")
+        assertEquals(1, table.count())
         assertTrue(table.normalize("test").isPresent)
 
         // reading translations from NLS keys works
@@ -38,6 +39,7 @@ class LookupTablesTest {
     @Test
     fun `TestJsonLookupTable creation works`() {
         val table = lookupTables.fetchTable("test-json-table")
+        assertEquals(1, table.count())
         assertTrue(table.normalize("test").isPresent)
         assertEquals("Der beste Name", table.resolveName("test").get())
         assertEquals("Die beste Beschreibung", table.resolveDescription("test").get())
