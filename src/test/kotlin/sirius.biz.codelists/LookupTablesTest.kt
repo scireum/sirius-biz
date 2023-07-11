@@ -29,11 +29,11 @@ class LookupTablesTest {
 
         // reading translations from NLS keys works
         assertEquals("Name", table.resolveName("test").get())
-        assertEquals("Uzvārds", table.resolveName("test","lv").get())
+        assertEquals("Uzvārds", table.resolveName("test", "lv").get())
 
         // reading translations directly from the config works
         assertEquals("Die beste Beschreibung", table.resolveDescription("test").get())
-        assertEquals("Den bästa beskrivningen", table.resolveDescription("test","sv").get())
+        assertEquals("Den bästa beskrivningen", table.resolveDescription("test", "sv").get())
     }
 
     @Test
@@ -43,7 +43,7 @@ class LookupTablesTest {
         assertTrue(table.normalize("test").isPresent)
         assertEquals("Der beste Name", table.resolveName("test").get())
         assertEquals("Die beste Beschreibung", table.resolveDescription("test").get())
-        assertEquals("Det bästa namnet", table.resolveName("test","sv").get())
-        assertEquals("Den bästa beskrivningen", table.resolveDescription("test","sv").get())
+        assertEquals("Det bästa namnet", table.resolveName("test", "sv").get())
+        assertEquals("Den bästa beskrivningen", table.resolveDescription("test", "sv").get())
     }
 }
