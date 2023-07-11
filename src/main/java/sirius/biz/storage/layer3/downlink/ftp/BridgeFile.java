@@ -88,12 +88,19 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean isRemovable() {
-        return !file.readOnly();
+        return isWritable();
     }
 
+    // Hier
     @Override
     public boolean isWritable() {
-        return !file.readOnly();
+        if (file != null) {
+            return !file.readOnly();
+        }
+        if (parent != null) {
+            return !parent.readOnly();
+        }
+        throw new IllegalArgumentException("BridgeFile not initialized properly");
     }
 
     @Override
