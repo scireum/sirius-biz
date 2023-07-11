@@ -175,9 +175,9 @@ public class FTPUplink extends ConfigBasedUplink {
      * Without MLSD support, we have to fix the permissions manually as depending on the used FTP server, the
      * permission information might not be provided which gets interpreted as "no permissions".
      *
-     * @see <a href="https://datatracker.ietf.org/doc/html/rfc3659">MLSD spec</a> for details
      * @param files the input files
      * @return the files with fixed permissions
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc3659">MLSD spec</a> for details
      */
     private FTPFile[] fixNonMlsdPermissions(FTPFile[] files) {
         for (FTPFile file : files) {
