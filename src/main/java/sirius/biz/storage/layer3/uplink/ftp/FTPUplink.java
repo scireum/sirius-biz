@@ -246,8 +246,14 @@ public class FTPUplink extends ConfigBasedUplink {
         for (Attempt attempt : Attempt.values()) {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
+                Optional<RemotePath> remotePath = file.parent().tryAs(RemotePath.class);
+                // If we cannot resolve the remote path, we cannot resolve the file either. This is most likely the
+                // case for the root directory of the uplink that has not parent.
+                if (!remotePath.isPresent()) {
+                    return Optional.empty();
+                }
                 FTPFile[] ftpFiles = list(connector.connector(),
-                                          file.parent().as(RemotePath.class),
+                                          remotePath.get(),
                                           ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
                 if (ftpFiles.length > 0) {
                     file.attach(ftpFiles[0]);
