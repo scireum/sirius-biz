@@ -35,6 +35,14 @@ public class BlobUriParser {
     private static final int STORAGE_SPACE = 1;
     private static final int ACCESS_TOKEN = 2;
 
+    private static final int PHYSICAL_URI_BLOB_KEY = 3;
+    private static final int VIRTUAL_URI_VARIANT = 3;
+    private static final int SHORT_URL_FILENAME = 4;
+
+    private static final int PHYSICAL_LONG_URI_PHYSICAL_KEY = 4;
+    private static final int VIRTUAL_LONG_URI_BLOB_KEY = 4;
+    private static final int LONG_URL_FILENAME = 5;
+
     private BlobUriParser() {
     }
 
@@ -88,22 +96,22 @@ public class BlobUriParser {
     private static Optional<BlobUri> parsePhysicalUri(BlobUri result, Values uriParts) {
         // Handles /dasd/p/SPACE/ACCESS_TOKEN/BLOB_KEY/seo--PHYSICAL_KEY.FILE_EXTENSION
         if (uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(4).asString());
+            String filename = stripAdditionalText(uriParts.at(SHORT_URL_FILENAME).asString());
             String physicalKey = Files.getFilenameWithoutExtension(filename);
 
             return Optional.of(result.withPhysical(true)
-                                     .withBlobKey(uriParts.at(3).asString())
+                                     .withBlobKey(uriParts.at(PHYSICAL_URI_BLOB_KEY).asString())
                                      .withPhysicalKey(physicalKey)
                                      .withFilename(filename));
         }
 
         // Handles /dasd/p[d]/SPACE/ACCESS_TOKEN/BLOB_KEY/PHYSICAL_KEY/seo--FILENAME.FILE_EXTENSION
         if (uriParts.length() == 6) {
-            String filename = stripAdditionalText(uriParts.at(5).asString());
+            String filename = stripAdditionalText(uriParts.at(LONG_URL_FILENAME).asString());
 
             return Optional.of(result.withPhysical(true)
-                                     .withBlobKey(uriParts.at(3).asString())
-                                     .withPhysicalKey(uriParts.at(4).asString())
+                                     .withBlobKey(uriParts.at(PHYSICAL_URI_BLOB_KEY).asString())
+                                     .withPhysicalKey(uriParts.at(PHYSICAL_LONG_URI_PHYSICAL_KEY).asString())
                                      .withFilename(filename));
         }
 
@@ -114,20 +122,20 @@ public class BlobUriParser {
     private static Optional<BlobUri> parseVirtualUri(BlobUri result, Values uriParts) {
         // Handles /dasd/[c]v/SPACE/ACCESS_TOKEN/VARIANT/seo--BLOB_KEY.FILE_EXTENSION
         if (uriParts.length() == 5) {
-            String filename = stripAdditionalText(uriParts.at(4).asString());
+            String filename = stripAdditionalText(uriParts.at(SHORT_URL_FILENAME).asString());
             String blobKey = Files.getFilenameWithoutExtension(filename);
 
             return Optional.of(result.withBlobKey(blobKey)
-                                     .withVariant(uriParts.at(3).asString())
+                                     .withVariant(uriParts.at(VIRTUAL_URI_VARIANT).asString())
                                      .withFilename(filename));
         }
 
         // Handles /dasd/[c]v[d]/SPACE/ACCESS_TOKEN/VARIANT/BLOB_KEY/seo--FILENAME.FILE_EXTENSION
         if (uriParts.length() == 6) {
-            String filename = stripAdditionalText(uriParts.at(5).asString());
+            String filename = stripAdditionalText(uriParts.at(LONG_URL_FILENAME).asString());
 
-            return Optional.of(result.withBlobKey(uriParts.at(4).asString())
-                                     .withVariant(uriParts.at(3).asString())
+            return Optional.of(result.withBlobKey(uriParts.at(VIRTUAL_LONG_URI_BLOB_KEY).asString())
+                                     .withVariant(uriParts.at(VIRTUAL_URI_VARIANT).asString())
                                      .withFilename(filename));
         }
 
