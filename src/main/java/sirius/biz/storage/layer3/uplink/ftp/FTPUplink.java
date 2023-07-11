@@ -248,7 +248,7 @@ public class FTPUplink extends ConfigBasedUplink {
             try {
                 Optional<RemotePath> remotePath = file.parent().tryAs(RemotePath.class);
                 // If we cannot resolve the remote path, we cannot resolve the file either. This is most likely the
-                // case for the root directory of the uplink that has not parent.
+                // case for the root directory of the uplink that has no parent.
                 if (!remotePath.isPresent()) {
                     return Optional.empty();
                 }
