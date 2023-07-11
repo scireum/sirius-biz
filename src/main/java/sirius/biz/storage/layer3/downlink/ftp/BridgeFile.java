@@ -91,7 +91,6 @@ class BridgeFile implements FtpFile {
         return isWritable();
     }
 
-    // Hier
     @Override
     public boolean isWritable() {
         if (file != null) {
