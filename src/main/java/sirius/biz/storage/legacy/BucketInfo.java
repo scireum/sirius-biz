@@ -26,17 +26,17 @@ import sirius.web.security.UserContext;
 @Deprecated
 public class BucketInfo {
 
-    private String name;
-    private String description;
-    private String permission;
-    private boolean canCreate;
-    private boolean canEdit;
-    private boolean canDelete;
-    private boolean alwaysUseLikeSearch;
-    private boolean showPublicURLs;
-    private int deleteFilesAfterDays;
-    private PhysicalStorageEngine engine;
-    private boolean logAsDeprecated;
+    private final String name;
+    private final String description;
+    private final String permission;
+    private final boolean canCreate;
+    private final boolean canEdit;
+    private final boolean canDelete;
+    private final boolean alwaysUseLikeSearch;
+    private final boolean showPublicURLs;
+    private final int deleteFilesAfterDays;
+    private final PhysicalStorageEngine engine;
+    private final boolean logAsDeprecated;
 
     @Part
     private static OMA oma;

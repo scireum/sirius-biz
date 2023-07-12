@@ -77,7 +77,7 @@ public class VersionManager {
 
     private Boolean commandPresent;
 
-    private Cache<String, Tuple<VirtualObject, Map<String, String>>> logicalToPhysicalCache =
+    private final Cache<String, Tuple<VirtualObject, Map<String, String>>> logicalToPhysicalCache =
             CacheManager.createCoherentCache("storage-object-metadata");
 
     private static final String PNG_IMAGE = "png";

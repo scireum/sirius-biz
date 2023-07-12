@@ -91,7 +91,7 @@ public class Storage {
 
     private static final Pattern NON_URL_CHARACTERS = Pattern.compile("[^a-zA-Z0-9_.]");
 
-    private static Cache<String, VirtualObject> virtualObjectCache =
+    private static final Cache<String, VirtualObject> virtualObjectCache =
             CacheManager.createCoherentCache("virtual-objects");
 
     @Part
