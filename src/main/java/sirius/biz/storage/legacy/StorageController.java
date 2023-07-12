@@ -248,15 +248,13 @@ public class StorageController extends BizController {
                                                            .handle());
             }
 
-            try {
+            try (upload) {
                 ctx.markAsLongCall();
                 storage.updateFile(file,
                                    upload,
                                    null,
                                    null,
                                    Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
-            } finally {
-                upload.close();
             }
 
             out.property(RESPONSE_FILE_ID, file.getObjectKey());
@@ -292,15 +290,13 @@ public class StorageController extends BizController {
             StoredObject file = storage.findByKey((SQLTenant) tenants.getRequiredTenant(), bucketName, objectId)
                                        .orElseThrow(() -> cannotAccessBucketException(bucketName));
 
-            try {
+            try (upload) {
                 ctx.markAsLongCall();
                 storage.updateFile(file,
                                    upload,
                                    null,
                                    null,
                                    Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
-            } finally {
-                upload.close();
             }
 
             out.property(RESPONSE_FILE_ID, file.getObjectKey());
@@ -340,15 +336,13 @@ public class StorageController extends BizController {
                                                  bucketName,
                                                  NO_REFERENCE.equals(reference) ? null : reference,
                                                  name);
-            try {
+            try (upload) {
                 ctx.markAsLongCall();
                 storage.updateFile(file,
                                    upload,
                                    null,
                                    null,
                                    Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
-            } finally {
-                upload.close();
             }
 
             out.property(RESPONSE_FILE_ID, file.getObjectKey());
