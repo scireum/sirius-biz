@@ -200,11 +200,6 @@ public class VirtualFileSystem {
      */
     public boolean isAutoCleanupBlob(VirtualFile virtualFile) {
         Optional<BlobStorageSpace> blobStorageSpace = virtualFile.tryAs(BlobStorageSpace.class);
-
-        if (blobStorageSpace.isEmpty()) {
-            return false;
-        }
-
-        return blobStorageSpace.get().getRetentionDays() > 0;
+        return blobStorageSpace.filter(storageSpace -> storageSpace.getRetentionDays() > 0).isPresent();
     }
 }
