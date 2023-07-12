@@ -47,6 +47,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -482,11 +483,7 @@ public class Storage {
         VirtualObject object = (VirtualObject) file;
 
         InputStream result = getStorageEngine(object.getBucket()).getData(object.getBucket(), object.getPhysicalKey());
-        if (result == null) {
-            return new ByteArrayInputStream(EMPTY_BUFFER);
-        } else {
-            return result;
-        }
+        return Objects.requireNonNullElseGet(result, () -> new ByteArrayInputStream(EMPTY_BUFFER));
     }
 
     /**
