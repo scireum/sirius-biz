@@ -492,8 +492,8 @@ public class Storage {
      * @param object the object to delete
      */
     public void delete(StoredObject object) {
-        if (object instanceof VirtualObject) {
-            oma.delete((VirtualObject) object);
+        if (object instanceof VirtualObject virtualObject) {
+            oma.delete(virtualObject);
         }
     }
 
