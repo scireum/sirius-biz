@@ -15,7 +15,6 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
 import sirius.kernel.async.Future;
 import sirius.kernel.async.Promise;
-import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Tuple;
