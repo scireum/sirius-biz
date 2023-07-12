@@ -22,7 +22,7 @@ import java.util.function.BiConsumer;
  * @param <E> the type of events being queried
  * @see sirius.biz.tycho.DashboardPlatformDistributionChart
  */
-public class PlatformDistributionTimeSeriesComputer<O, E extends Event> extends EventTimeSeriesComputer<O, E> {
+public class PlatformDistributionTimeSeriesComputer<O, E extends Event<E>> extends EventTimeSeriesComputer<O, E> {
     /**
      * Retrieves the number of occurrences of the iOS platform within the user agent data.
      */

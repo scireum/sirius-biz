@@ -197,7 +197,7 @@ public class VersionedFiles {
      * @param tenant           the owning tenant
      * @param uniqueIdentifier the unique identifier of a versioned file
      */
-    public void deleteOldVersions(Tenant tenant, String uniqueIdentifier) {
+    public void deleteOldVersions(Tenant<?> tenant, String uniqueIdentifier) {
         if (maxNumberOfVersions == 0) {
             return;
         }

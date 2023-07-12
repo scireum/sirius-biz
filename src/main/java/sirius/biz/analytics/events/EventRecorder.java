@@ -85,7 +85,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
 
     private LocalDateTime lastProcessed;
     private final AtomicInteger bufferedEvents = new AtomicInteger();
-    private final Queue<Event> buffer = new ConcurrentLinkedQueue<>();
+    private final Queue<Event<?>> buffer = new ConcurrentLinkedQueue<>();
 
     @Part
     private Schema schema;
@@ -185,7 +185,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @throws SQLException in case of a database error
      * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
      */
-    public <E extends Event> int countEvents(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner)
+    public <E extends Event<E>> int countEvents(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
         SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS " + AGGREGATION_COUNTER);
         if (queryTuner != null) {
@@ -214,10 +214,11 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @throws SQLException in case of a database error
      * @see #countEvents(Class, Consumer)
      */
-    public <E extends Event> int countEventsInRange(Class<E> eventType,
-                                                    LocalDateTime startDate,
-                                                    LocalDateTime endDate,
-                                                    @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+    public <E extends Event<E>> int countEventsInRange(Class<E> eventType,
+                                                       LocalDateTime startDate,
+                                                       LocalDateTime endDate,
+                                                       @Nullable Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
         return countEvents(eventType, query -> {
             query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
             query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
@@ -242,9 +243,9 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @throws SQLException in case of a database error
      * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
      */
-    public <E extends Event> int sumEvents(Class<E> eventType,
-                                           Mapping mappingToSum,
-                                           @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+    public <E extends Event<E>> int sumEvents(Class<E> eventType,
+                                              Mapping mappingToSum,
+                                              @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
         SmartQuery<E> query = oma.select(eventType)
                                  .aggregationField(Strings.apply("sum(%s) AS %s",
                                                                  mappingToSum.getName(),
@@ -276,11 +277,11 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @throws SQLException in case of a database error
      * @see #countEvents(Class, Consumer)
      */
-    public <E extends Event> int sumEventsInRange(Class<E> eventType,
-                                                  Mapping mappingToSum,
-                                                  LocalDateTime startDate,
-                                                  LocalDateTime endDate,
-                                                  @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+    public <E extends Event<E>> int sumEventsInRange(Class<E> eventType,
+                                                     Mapping mappingToSum,
+                                                     LocalDateTime startDate,
+                                                     LocalDateTime endDate,
+                                                     @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
         return sumEvents(eventType, mappingToSum, query -> {
             query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
             query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
@@ -304,9 +305,9 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * the API of {@link sirius.kernel.health.metrics.Metrics}.
      * @throws SQLException in case of a database error
      */
-    public <E extends Event> int countDistinctValuesInEvents(Class<E> eventType,
-                                                             Mapping mapping,
-                                                             @Nullable Consumer<SmartQuery<E>> queryTuner)
+    public <E extends Event<E>> int countDistinctValuesInEvents(Class<E> eventType,
+                                                                Mapping mapping,
+                                                                @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
         SmartQuery<E> query = oma.select(eventType)
                                  .aggregationField(Strings.apply("COUNT(DISTINCT %s) as %s",
@@ -333,7 +334,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      *
      * @param event the event to record
      */
-    public void record(@Nonnull Event event) {
+    public void record(@Nonnull Event<?> event) {
         if (!configured) {
             return;
         }
@@ -388,8 +389,8 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         lastProcessed = LocalDateTime.now();
         int processedEvents = 0;
         try (BatchContext ctx = new BatchContext(() -> "Process recorded events.", Duration.ofMinutes(1))) {
-            Map<Class<? extends Event>, InsertQuery<Event>> queries = new HashMap<>();
-            Event nextEvent = fetchBufferedEvent();
+            Map<Class<? extends Event<?>>, InsertQuery<Event<?>>> queries = new HashMap<>();
+            Event<?> nextEvent = fetchBufferedEvent();
             while (nextEvent != null) {
                 processEvent(ctx, queries, nextEvent);
                 if (++processedEvents >= MAX_EVENTS_PER_PROCESS) {
@@ -416,10 +417,13 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @param event   the event to insert
      */
     @SuppressWarnings("unchecked")
-    private void processEvent(BatchContext ctx, Map<Class<? extends Event>, InsertQuery<Event>> queries, Event event) {
+    private void processEvent(BatchContext ctx,
+                              Map<Class<? extends Event<?>>, InsertQuery<Event<?>>> queries,
+                              Event<?> event) {
         try {
-            InsertQuery<Event> qry = queries.computeIfAbsent(event.getClass(),
-                                                             type -> (InsertQuery<Event>) ctx.insertQuery(type, false));
+            InsertQuery<Event<?>> qry = queries.computeIfAbsent((Class<Event<?>>) event.getClass(),
+                                                                type -> (InsertQuery<Event<?>>) ctx.insertQuery(type,
+                                                                                                                false));
             qry.insert(event, false, true);
         } catch (Exception e) {
             if (!event.retried) {
@@ -436,8 +440,8 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @return the next event to process or <tt>null</tt> to indicate that the buffer queue is empty.
      */
     @Nullable
-    protected Event fetchBufferedEvent() {
-        Event result = buffer.poll();
+    protected Event<?> fetchBufferedEvent() {
+        Event<?> result = buffer.poll();
         if (result != null) {
             bufferedEvents.decrementAndGet();
         }
