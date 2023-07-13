@@ -29,6 +29,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
+import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -123,6 +124,18 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
         } else {
             process.log(ProcessLog.info().withNLSKey("DeleteTenantJobFactory.simulateInfo"));
         }
+    }
+
+    @Override
+    protected boolean hasPresetFor(@Nonnull QueryString queryString, Object targetObject) {
+        return targetObject instanceof Tenant;
+    }
+
+    @Override
+    protected void computePresetFor(@Nonnull QueryString queryString,
+                                    Object targetObject,
+                                    @Nonnull Map<String, Object> preset) {
+        preset.put(TENANT_PARAMETER.getName(), ((Tenant<?>) targetObject).getIdAsString());
     }
 
     @Override
