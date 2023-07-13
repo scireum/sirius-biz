@@ -148,7 +148,6 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
         return 9210;
     }
 
-
     @Override
     public String getCategory() {
         return StandardCategories.USERS_AND_TENANTS;
