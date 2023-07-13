@@ -12,6 +12,7 @@ import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.jobs.params.TenantParameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
@@ -53,6 +54,10 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
 
     protected static final Parameter<Tenant<?>> TENANT_PARAMETER =
             new TenantParameter("tenant", "$Model.tenant").markRequired().build();
+
+    protected static final Parameter<String> TENANT_NAME =
+            new StringParameter("tenantName", "$DeleteTenantJobFactory.tenantName").withDescription(
+                    "$DeleteTenantJobFactory.tenantName.help").build();
 
     protected static final Parameter<Boolean> TAKE_ACTION_PARAMETER =
             new BooleanParameter("takeAction", "$DeleteTenantJobFactory.takeAction").withDescription(
@@ -118,6 +123,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(TENANT_PARAMETER);
+        parameterCollector.accept(TENANT_NAME);
         parameterCollector.accept(TAKE_ACTION_PARAMETER);
     }
 
