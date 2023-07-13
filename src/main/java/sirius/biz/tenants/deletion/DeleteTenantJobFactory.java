@@ -61,7 +61,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
 
     protected static final Parameter<Boolean> TAKE_ACTION_PARAMETER =
             new BooleanParameter("takeAction", "$DeleteTenantJobFactory.takeAction").withDescription(
-                    "$DeleteTenantJobFactory.takeAction.help").build();
+                    "$DeleteTenantJobFactory.takeAction.help").withDefaultTrue().build();
 
     @Part
     private Tenants<?, ?, ?> tenants;
@@ -85,7 +85,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected void execute(ProcessContext process) throws Exception {
         Tenant<?> tenant = process.require(TENANT_PARAMETER);
-        boolean takeAction = process.require(DeleteTenantJobFactory.TAKE_ACTION_PARAMETER);
+        boolean takeAction = !process.require(DeleteTenantJobFactory.TAKE_ACTION_PARAMETER);
 
         if (!takeAction) {
             process.log(ProcessLog.info().withNLSKey("DeleteTenantJobFactory.simulateInfo"));
