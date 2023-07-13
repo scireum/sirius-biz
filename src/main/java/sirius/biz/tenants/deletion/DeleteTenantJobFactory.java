@@ -57,7 +57,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
 
     protected static final Parameter<String> TENANT_NAME =
             new StringParameter("tenantName", "$DeleteTenantJobFactory.tenantName").withDescription(
-                    "$DeleteTenantJobFactory.tenantName.help").build();
+                    "$DeleteTenantJobFactory.tenantName.help").markRequired().build();
 
     protected static final Parameter<Boolean> TAKE_ACTION_PARAMETER =
             new BooleanParameter("takeAction", "$DeleteTenantJobFactory.takeAction").withDescription(
@@ -86,6 +86,11 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     protected void execute(ProcessContext process) throws Exception {
         Tenant<?> tenant = process.require(TENANT_PARAMETER);
         boolean takeAction = !process.require(DeleteTenantJobFactory.TAKE_ACTION_PARAMETER);
+        String providedTenantName = process.require(TENANT_NAME);
+
+        if (!providedTenantName.equals(tenant.getTenantData().getName())) {
+            throw Exceptions.createHandled().withNLSKey("DeleteTenantJobFactory.tenantNameMismatch").handle();
+        }
 
         if (!takeAction) {
             process.log(ProcessLog.info().withNLSKey("DeleteTenantJobFactory.simulateInfo"));
