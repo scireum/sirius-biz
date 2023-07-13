@@ -95,10 +95,34 @@ class TestExtensionLookupTable extends LookupTable {
         return Optional.empty();
     }
 
+    @SuppressWarnings("unchecked")
+    @Explain("The data is provided in the configuration as String keys with assigned value objects.")
     @Override
     protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
-        // Not supported yet
-        return Stream.empty();
+        Map<String, Object> data = extension.get(CONFIG_KEY_DATA).get(Map.class, Collections.emptyMap());
+        return data.keySet()
+                   .stream()
+                   .filter(key -> filter(key, searchTerm, language))
+                   .map(key -> extractEntryData(key, language))
+                   .skip(limit.getItemsToSkip())
+                   .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
+    }
+
+    private LookupTableEntry extractEntryData(String code, String language) {
+        return new LookupTableEntry(code,
+                                    resolveName(code, language).orElse(code),
+                                    resolveDescription(code, language).orElse(""));
+    }
+
+    private boolean filter(String code, String searchTerm, String language) {
+        if (Strings.isEmpty(searchTerm)) {
+            return true;
+        }
+
+        String effectiveSearchTerm = searchTerm.toLowerCase();
+        return Value.of(code).toLowerCase().contains(effectiveSearchTerm) || Value.of(resolveName(code, language))
+                                                                                  .toLowerCase()
+                                                                                  .contains(effectiveSearchTerm);
     }
 
     @Override
@@ -116,9 +140,7 @@ class TestExtensionLookupTable extends LookupTable {
                    .stream()
                    .skip(limit.getItemsToSkip())
                    .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
-                   .map(key -> new LookupTableEntry(key,
-                                                    resolveName(key, language).orElse(key),
-                                                    resolveDescription(key, language).orElse("")));
+                   .map(key -> extractEntryData(key, language));
     }
 
     @Override

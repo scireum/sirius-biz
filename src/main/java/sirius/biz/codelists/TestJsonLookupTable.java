@@ -14,11 +14,13 @@ import com.google.common.collect.Streams;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -48,12 +50,12 @@ class TestJsonLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performResolveName(String code, String language) {
-        return Optional.ofNullable(json.get(code).get("name").get(language).asText());
+        return Optional.ofNullable(json.path(code).path("name").path(language).asText());
     }
 
     @Override
     protected Optional<String> performResolveDescription(@Nonnull String code, String language) {
-        return Optional.ofNullable(json.get(code).get("description").get(language).asText());
+        return Optional.ofNullable(json.path(code).path("description").path(language).asText());
     }
 
     @Override
@@ -64,7 +66,7 @@ class TestJsonLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performFetchTranslatedField(String code, String targetField, String language) {
-        return Optional.ofNullable(json.get(code).get(targetField).get(language).asText());
+        return Optional.ofNullable(json.path(code).path(targetField).path(language).asText());
     }
 
     @Override
@@ -96,8 +98,29 @@ class TestJsonLookupTable extends LookupTable {
 
     @Override
     protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
-        // Not supported yet
-        return Stream.empty();
+        return Streams.stream(json.fields())
+                      .filter(entry -> filter(entry, searchTerm, language))
+                      .map(entry -> extractEntryData(entry.getKey(), entry.getValue(), language))
+                      .skip(limit.getItemsToSkip())
+                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
+    }
+
+    private boolean filter(Map.Entry<String, JsonNode> entry, String searchTerm, String language) {
+        if (Strings.isEmpty(searchTerm)) {
+            return true;
+        }
+
+        String effectiveSearchTerm = searchTerm.toLowerCase();
+        return Value.of(entry.getKey()).toLowerCase().contains(effectiveSearchTerm)
+               || Value.of(entry.getValue()
+                                .path("name."
+                                      + language)
+                                .asText())
+                       .toLowerCase()
+                       .contains(effectiveSearchTerm)
+               || Value.of(entry.getValue().path("description." + language).asText())
+                       .toLowerCase()
+                       .contains(effectiveSearchTerm);
     }
 
     @Override
@@ -106,8 +129,10 @@ class TestJsonLookupTable extends LookupTable {
         return performSuggest(limit, searchTerm, language);
     }
 
-    private LookupTableEntry extractEntryData(String code, JsonNode entry) {
-        return new LookupTableEntry(code, entry.get("name").asText(), entry.get("description").asText());
+    private LookupTableEntry extractEntryData(String code, JsonNode entry, String language) {
+        return new LookupTableEntry(code,
+                                    entry.path("name").path(language).asText(),
+                                    entry.path("description").path(language).asText());
     }
 
     @Override
@@ -116,7 +141,7 @@ class TestJsonLookupTable extends LookupTable {
                       .filter(entry -> entry.getKey().equals(language))
                       .skip(limit.getItemsToSkip())
                       .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
-                      .map(entry -> extractEntryData(entry.getKey(), entry.getValue()));
+                      .map(entry -> extractEntryData(entry.getKey(), entry.getValue(), language));
     }
 
     @Override
