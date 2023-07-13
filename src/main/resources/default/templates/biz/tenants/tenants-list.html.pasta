@@ -31,8 +31,9 @@
                         <t:dropdownItem labelKey="TenantController.select"
                                         icon="fa-solid fa-building"
                                         url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
-                        <t:dropdownDeleteItem
-                                url="@sirius.web.util.LinkBuilder.new('/job/delete-tenant').append('tenant', tenant.getIdAsString()).toString()"/>
+                        <t:dropdownDeleteItem withConfirm="false"
+                                              labelKey="TenantController.delete"
+                                              url="@sirius.web.util.LinkBuilder.new('/job/delete-tenant').append('tenant', tenant.getIdAsString()).toString()"/>
                         <i:else>
                             <t:dropdownItem labelKey="TenantController.edit"
                                             permission="permission-manage-tenants"
