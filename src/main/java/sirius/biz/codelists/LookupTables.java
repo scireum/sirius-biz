@@ -62,23 +62,23 @@ public class LookupTables {
     private LookupTable makeTable(String name) {
         Extension extension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, name);
         String baseTable = extension.get(CONFIG_KEY_TABLE).asString();
-        String codeList = extension.get(CONFIG_KEY_CODE_LIST).asString();
 
-        // If no IDB config is present, ...
-        if (Strings.isEmpty(baseTable) && Sirius.isTest()) {
-            String json = extension.get(TestJsonLookupTable.CONFIG_KEY_TEST_DATA_JSON).asString();
-            if (Strings.isEmpty(codeList) && Strings.isEmpty(json)) {
-                // ...and we are running in test mode and no codeList is given
-                return new TestExtensionLookupTable(extension);
+        // If no IDB config is present or Jupiter is disabled, ...
+        if (Strings.isEmpty(baseTable) || jupiter == null) {
+            String codeList = extension.get(CONFIG_KEY_CODE_LIST).asString();
+            if (Sirius.isTest()) {
+                String json = extension.get(TestJsonLookupTable.CONFIG_KEY_TEST_DATA_JSON).asString();
+                if (Strings.isEmpty(codeList) && Strings.isEmpty(json)) {
+                    // ...and we are running in test mode and no codeList is given
+                    return new TestExtensionLookupTable(extension);
+                }
+                if (Strings.isFilled(json)) {
+                    // ...but a json table is given
+                    return new TestJsonLookupTable(extension);
+                }
             }
-            if (Strings.isFilled(json)) {
-                // ...but a json table is given
-                return new TestJsonLookupTable(extension);
-            }
-        }
 
-        // ...or Jupiter is disabled, we resort to code list based tables
-        if (jupiter == null) {
+            // ...we resort to code list based tables
             return new CodeListLookupTable(extension, Strings.firstFilled(codeList, name));
         }
 
