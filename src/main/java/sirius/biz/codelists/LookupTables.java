@@ -65,17 +65,15 @@ public class LookupTables {
         String codeList = extension.get(CONFIG_KEY_CODE_LIST).asString();
 
         // If no IDB config is present, ...
-        if (Strings.isEmpty(baseTable)) {
-            if (Sirius.isTest()) {
-                String json = extension.get(TestJsonLookupTable.CONFIG_KEY_TEST_DATA_JSON).asString();
-                if (Strings.isEmpty(codeList) && Strings.isEmpty(json)) {
-                    // ...and we are running in test mode and no codeList is given
-                    return new TestExtensionLookupTable(extension);
-                }
-                if (Strings.isFilled(json)) {
-                    // ...but a json table is given
-                    return new TestJsonLookupTable(extension);
-                }
+        if (Strings.isEmpty(baseTable) && Sirius.isTest()) {
+            String json = extension.get(TestJsonLookupTable.CONFIG_KEY_TEST_DATA_JSON).asString();
+            if (Strings.isEmpty(codeList) && Strings.isEmpty(json)) {
+                // ...and we are running in test mode and no codeList is given
+                return new TestExtensionLookupTable(extension);
+            }
+            if (Strings.isFilled(json)) {
+                // ...but a json table is given
+                return new TestJsonLookupTable(extension);
             }
         }
 
