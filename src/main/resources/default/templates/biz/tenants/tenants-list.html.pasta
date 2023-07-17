@@ -28,12 +28,16 @@
                 </i:block>
                 <i:block name="actions">
                     <i:if test="enableCardActions">
-                        <t:dropdownItem labelKey="TenantController.select"
-                                        icon="fa-solid fa-building"
-                                        url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
-                        <t:dropdownDeleteItem withConfirm="false"
-                                              labelKey="TenantController.delete"
-                                              url="@sirius.web.util.LinkBuilder.new('/job/delete-tenant').append('tenant', tenant.getIdAsString()).toString()"/>
+                        <t:dropdownSection>
+                            <t:dropdownItem labelKey="TenantController.select"
+                                            icon="fa-solid fa-building"
+                                            url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
+                        </t:dropdownSection>
+                        <t:dropdownSection>
+                            <t:dropdownDeleteItem withConfirm="false"
+                                                  labelKey="TenantController.delete"
+                                                  url="@sirius.web.util.LinkBuilder.new('/job/delete-tenant').append('tenant', tenant.getIdAsString()).toString()"/>
+                        </t:dropdownSection>
                         <i:else>
                             <t:dropdownItem labelKey="TenantController.edit"
                                             permission="permission-manage-tenants"
