@@ -12,6 +12,7 @@ import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.jobs.params.TenantParameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
@@ -28,6 +29,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
+import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -54,9 +56,13 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     protected static final Parameter<Tenant<?>> TENANT_PARAMETER =
             new TenantParameter("tenant", "$Model.tenant").markRequired().build();
 
-    protected static final Parameter<Boolean> TAKE_ACTION_PARAMETER =
-            new BooleanParameter("takeAction", "$DeleteTenantJobFactory.takeAction").withDescription(
-                    "$DeleteTenantJobFactory.takeAction.help").build();
+    protected static final Parameter<String> TENANT_NAME =
+            new StringParameter("tenantName", "$DeleteTenantJobFactory.tenantName").withDescription(
+                    "$DeleteTenantJobFactory.tenantName.help").markRequired().build();
+
+    protected static final Parameter<Boolean> SIMULATE_PARAMETER =
+            new BooleanParameter("simulate", "$DeleteTenantJobFactory.simulate").withDescription(
+                    "$DeleteTenantJobFactory.simulate.help").withDefaultTrue().build();
 
     @Part
     private Tenants<?, ?, ?> tenants;
@@ -70,7 +76,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected String createProcessTitle(Map<String, String> context) {
         String name = TENANT_PARAMETER.require(context).getTenantData().getName();
-        if (Boolean.TRUE.equals(TAKE_ACTION_PARAMETER.require(context))) {
+        if (Boolean.FALSE.equals(SIMULATE_PARAMETER.require(context))) {
             return NLS.fmtr("DeleteTenantJobFactory.title").set("name", name).format();
         } else {
             return NLS.fmtr("DeleteTenantJobFactory.title.simulate").set("name", name).format();
@@ -80,16 +86,21 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected void execute(ProcessContext process) throws Exception {
         Tenant<?> tenant = process.require(TENANT_PARAMETER);
-        boolean takeAction = process.require(DeleteTenantJobFactory.TAKE_ACTION_PARAMETER);
+        boolean shouldExecute = !process.require(DeleteTenantJobFactory.SIMULATE_PARAMETER);
+        String providedTenantName = process.require(TENANT_NAME);
 
-        if (!takeAction) {
+        if (!providedTenantName.equals(tenant.getTenantData().getName())) {
+            throw Exceptions.createHandled().withNLSKey("DeleteTenantJobFactory.tenantNameMismatch").handle();
+        }
+
+        if (!shouldExecute) {
             process.log(ProcessLog.info().withNLSKey("DeleteTenantJobFactory.simulateInfo"));
         }
 
         for (DeleteTenantTask task : deletionTasks) {
             try {
-                task.beforeExecution(process, tenant, takeAction);
-                if (takeAction) {
+                task.beforeExecution(process, tenant, shouldExecute);
+                if (shouldExecute) {
                     task.execute(process, tenant);
                 }
             } catch (Exception e) {
@@ -100,14 +111,14 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
                                                  "An error occurred while executing the deletion task %s: %s (%s)",
                                                  task.getClass().getName())
                                          .handle());
-                if (takeAction) {
+                if (shouldExecute) {
                     process.log(ProcessLog.warn().withNLSKey("DeleteTenantJobFactory.aborting"));
                     return;
                 }
             }
         }
 
-        if (takeAction) {
+        if (shouldExecute) {
             process.log(ProcessLog.info().withNLSKey("DeleteTenantJobFactory.deletingMainEntity"));
             mixing.getDescriptor(tenant.getClass()).getMapper().delete((BaseEntity<?>) tenant);
         } else {
@@ -116,9 +127,22 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    protected boolean hasPresetFor(@Nonnull QueryString queryString, Object targetObject) {
+        return targetObject instanceof Tenant;
+    }
+
+    @Override
+    protected void computePresetFor(@Nonnull QueryString queryString,
+                                    Object targetObject,
+                                    @Nonnull Map<String, Object> preset) {
+        preset.put(TENANT_PARAMETER.getName(), ((Tenant<?>) targetObject).getIdAsString());
+    }
+
+    @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(TENANT_PARAMETER);
-        parameterCollector.accept(TAKE_ACTION_PARAMETER);
+        parameterCollector.accept(TENANT_NAME);
+        parameterCollector.accept(SIMULATE_PARAMETER);
     }
 
     @Override
@@ -141,7 +165,6 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     public int getPriority() {
         return 9210;
     }
-
 
     @Override
     public String getCategory() {
