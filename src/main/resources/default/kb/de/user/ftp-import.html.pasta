@@ -1,0 +1,85 @@
+<k:article code="EAI5V" lang="de" parent="SLEOK"
+           title="Verbindung zum FTP(S)-Server und automatischer Start von Jobs" permissions="flag-logged-in">
+    <i:block name="description">Erklärt wie Jobs via FTP(S) Verbindung gestartet werden können.</i:block>
+
+    <k:section heading="Einrichtung des Zugriffs zum FTP-Server">
+        <p>
+            Sie können Dateien per FTP(S)-Upload übergeben um diese etwa im Medienpool abzulegen oder automatisch
+            einen Verarbeitungsjob starten zu lassen.
+        </p>
+        <p>
+            Im Folgenden finden Sie die dafür notwendigen Informationen.
+        </p>
+    </k:section>
+    <k:section heading="Protokoll und Serveradresse">
+        <p>
+            Es wird der Einsatz von SFTP empfohlen (Secure File Transfer Protocol, SSH File Transfer Protocol) - Port
+            22:
+        </p>
+        <k:code>
+            @apply('sftp://sftp.%s', config('oxomi.cdn.defaultHost'))
+        </k:code>
+        <p>
+            Alternativ steht auch FTPs zur Verfügung: FTPs (FTP-SSL bzw. FTP over TLS/SSL) - Port 21:
+        </p>
+        <k:code>
+            @apply('ftps://ftp.%s', config('oxomi.cdn.defaultHost'))
+        </k:code>
+        <p>
+            <b>Hinweis:</b> Es sind bei FTP-SSL mit der Client-Software FileZilla Einschränkungen bekannt (TLS-Warnung
+            vom Server). Z.B. mit dem Client-Software CyberDuck sind keine Einschränkungen bekannt. FTP ohne SSL (nicht
+            empfohlen) funktioniert auch mit FileZilla.
+        </p>
+    </k:section>
+    <k:section heading="Benutzername und Berechtigungen">
+        <p>
+            Benutzername und Kennwort des entsprechend berechtigten Backend-Benutzers.
+        </p>
+        <p>
+            Es müssen alle nötigen Berechtigungen am Unternehmen und am Benutzer vorhanden sein um Uploads zu
+            tätigen und ggfs. um Verarbeitungsjobs zu starten.
+        </p>
+        <p>
+            <b>Hinweis:</b> Für vollautomatisierte Übertragungen durch "Systembenutzer" wird empfohlen, den FTP-Benutzer
+            im Backend am Backend-Benutzer unter <b>Sicherheit</b> &rarr; <b>Zugangsbereiche</b> auf "Dateisystem
+            (FTP, ...)" einzuschränken.
+        </p>
+    </k:section>
+    <k:section heading="Ordnerstruktur auf dem FTP-Server">
+        <p>
+            Je nach Berechtigungen und finden Sie auf dem FTP-Server vor.
+        </p>
+    </k:section>
+    <k:section heading="Verarbeitungsjob per FTP starten">
+        <p>
+            Alle Verarbeitungsjobs, die Dateien annehmen, können automatisch, d.h. ohne Durchführung von weiteren
+            Schritten in der Verwaltungsoberfläche gestartet werden. Dafür muss eine Datei per FTP-Upload bereitgestellt
+            werden. Die notwendigen Parameter werden dabei über eine sogenannte Vorlage vordefiniert.
+        </p>
+        <p>
+            <b>Ablauf:</b>
+        </p>
+        <ol>
+            <li>
+                Vorbereitung der Vorlage (dieser Schritt ist nur einmalig erforderlich):
+                Rufen Sie zunächst den gewünschten Import in der Verwaltungsoberfläche auf.
+                Konfigurieren Sie nun die gewünschten Job-Parameter.
+                Erstellen Sie dann über die Schaltfläche "+ Vorlage anlegen" rechts unter Vorlagen eine neue Vorlage und
+                geben Sie Ihrer Vorlage einen Namen.
+            </li>
+            <li>
+                Verbinden Sie sich nun wie oben beschrieben mit dem FTP-Server.
+            </li>
+            <li>
+                Legen Sie die zu verarbeitende Datei in der Ordnerstruktur unter
+                <k:inlineCode>jobs/&lt;Name des Verarbeitungsjobs&gt;/&lt;Ihr Vorlagenname&gt;</k:inlineCode>
+                ab
+            </li>
+            <li>
+                Sobald die Datei erfolgreich in den Ordner hochgeladen ist, wird der gewählte Verarbeitungsjob
+                automatisch gestartet. Den Fortschritt der Verarbeitung können Sie wie gewohnt in der
+                Verwaltungsoberfläche unter <b>Verwalten</b> &rarr; <b>Prozesse</b> überprüfen.
+            </li>
+        </ol>
+    </k:section>
+</k:article>
