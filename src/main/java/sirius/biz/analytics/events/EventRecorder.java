@@ -268,6 +268,24 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
+     * Counts the number of events which have occurred in the last 12 months based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType the type of events to query
+     * @param queryTuner the actual filter to apply
+     * @return the number of events matching the given filter in the last 12 months. Note that we return an <tt>int</tt>
+     * here to better match the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @param <E> the generic types of the entities to query
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event> int countEventsInLast12Months(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+        LocalDateTime startDate = LocalDateTime.now().minusYears(1).plusMonths(1);
+        LocalDateTime endDate = LocalDateTime.now();
+        return countEventsInRange(eventType, startDate, endDate, queryTuner);
+    }
+
+    /**
      * Sums the values for the provided column of events which have occurred based on the given <tt>queryTuner</tt>.
      * <p>
      * This automatically marks the query as long-running.
