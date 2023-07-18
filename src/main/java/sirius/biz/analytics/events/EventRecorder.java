@@ -35,6 +35,8 @@ import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -225,6 +227,44 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
                 queryTuner.accept(query);
             }
         });
+    }
+
+    /**
+     * Counts the number of events which have occurred in the last month based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType the type of events to query
+     * @param queryTuner the actual filter to apply
+     * @return the number of events matching the given filter in the last month. Note that we return an <tt>int</tt>
+     * here to better match the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @param <E> the generic types of the entities to query
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event> int countEventsInLastMonth(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+        YearMonth lastYearMonth = YearMonth.now().minusMonths(1);
+        LocalDateTime startDate = lastYearMonth.atDay(1).atStartOfDay();
+        LocalDateTime endDate = lastYearMonth.atEndOfMonth().atTime(LocalTime.MAX);
+        return countEventsInRange(eventType, startDate, endDate, queryTuner);
+    }
+
+    /**
+     * Counts the number of events which have occurred in the last year based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType the type of events to query
+     * @param queryTuner the actual filter to apply
+     * @return the number of events matching the given filter in the last year. Note that we return an <tt>int</tt>
+     * here to better match the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @param <E> the generic types of the entities to query
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event> int countEventsInLastYear(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+        YearMonth lastYearMonth = YearMonth.now().minusYears(1);
+        LocalDateTime startDate = lastYearMonth.withMonth(1).atDay(1).atStartOfDay();
+        LocalDateTime endDate = lastYearMonth.withMonth(12).atEndOfMonth().atTime(LocalTime.MAX);
+        return countEventsInRange(eventType, startDate, endDate, queryTuner);
     }
 
     /**
