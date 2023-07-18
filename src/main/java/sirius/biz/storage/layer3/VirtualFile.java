@@ -21,6 +21,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Wait;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -81,6 +82,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
     private static final String MESSAGE_KEY_LOAD_FROM_URL_FAILED = "$VirtualFile.loadFromUrlFailed";
     private static final String MESSAGE_KEY_LOAD_FROM_URL_DISABLED = "$VirtualFile.loadFromUrlDisabled";
+    private static final int NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE = 3;
 
     protected String name;
     protected String description;
@@ -1388,7 +1390,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            HttpResponse<InputStream> response = requestFileFromUri(uri, mode);
+            HttpResponse<InputStream> response =
+                    requestFileFromUri(uri, mode, NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE);
 
             if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
                 tryTouch();
@@ -1409,7 +1412,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
     }
 
-    private HttpResponse<InputStream> requestFileFromUri(URI uri, FetchFromUrlMode mode) throws IOException {
+    private HttpResponse<InputStream> requestFileFromUri(URI uri, FetchFromUrlMode mode, int retries)
+            throws IOException {
         Outcall outcall = new Outcall(uri);
         outcall.alwaysFollowRedirects();
 
@@ -1421,6 +1425,21 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
 
         HttpResponse<InputStream> response = outcall.getResponse();
+
+        if (response.statusCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code()) {
+            Streams.exhaust(response.body());
+
+            if (retries > 0) {
+                // Wait 200ms, 700ms, 1200ms...
+                Wait.millis(200 + (NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE - retries) * 500);
+                return requestFileFromUri(uri, mode, retries - 1);
+            }
+
+            throw new IOException(Strings.apply("The server responded with status %s (%s) after %s retries!",
+                                                HttpResponseStatus.valueOf(response.statusCode()).toString(),
+                                                response.statusCode(),
+                                                NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE));
+        }
 
         if (response.statusCode() >= 400) {
             Streams.exhaust(response.body());
