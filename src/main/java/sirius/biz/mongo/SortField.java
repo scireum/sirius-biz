@@ -106,4 +106,8 @@ public class SortField extends Composite {
 
         this.sortField = normalizeText(sortFieldContents.toString());
     }
+
+    public String getSortField() {
+        return sortField;
+    }
 }

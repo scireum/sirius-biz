@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -90,6 +91,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected Consumer<Q> queryExtender;
     protected Consumer<Context> contextExtender;
     protected String targetFileName;
+    protected BiPredicate<E, ProcessContext> entityFilter;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -147,6 +149,17 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      */
     public EntityExportJob<E, Q> withFileName(String fileName) {
         this.targetFileName = fileName;
+        return this;
+    }
+
+    /**
+     * Specifies a custom filter which is applied on the database result before export.
+     *
+     * @param entityFilter the filter method to use
+     * @return the export job itself for fluent method calls
+     */
+    public EntityExportJob<E, Q> withEntityFilter(BiPredicate<E, ProcessContext> entityFilter) {
+        this.entityFilter = entityFilter;
         return this;
     }
 
@@ -335,11 +348,16 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      * Actually exports all entities using the mapping which has already been determined.
      * <p>
      * The mapping was either determined by {@link #templateBasedExport()} or by using the default mapping in
-     * {@link #fullExportWithoutTemplate()}.
+     * {@link #fullExportWithoutTemplate()}. The result provided by the database is
+     * {@linkplain #withEntityFilter(BiPredicate) filtered} when set up accordingly.
      */
     private void fullExportWithGivenMapping() {
         process.log(ProcessLog.info().withNLSKey("EntityExport.fullExport"));
-        createFullExportQuery().streamBlockwise().forEach(this::exportEntity);
+        BiPredicate<E, ProcessContext> filter =
+                Optional.ofNullable(this.entityFilter).orElse((entity, ignored) -> true);
+        createFullExportQuery().streamBlockwise()
+                               .filter(entity -> filter.test(entity, process))
+                               .forEach(this::exportEntity);
     }
 
     protected void exportEntity(E entity) {

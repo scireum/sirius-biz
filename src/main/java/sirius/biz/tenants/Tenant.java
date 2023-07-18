@@ -17,9 +17,12 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.di.transformers.Transformable;
+import sirius.kernel.settings.Settings;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
+import sirius.web.security.UserContext;
 
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * Provides the database independent interface for describing a tenant which uses the system.
@@ -81,4 +84,21 @@ public interface Tenant<I extends Serializable>
      * @return <tt>true</tt> if the tenant has the permission, <tt>false</tt> otherwise
      */
     boolean hasPermission(String permission);
+
+    /**
+     * Returns the set of all permissions which are effectively enabled for this tenant.
+     *
+     * @return the set of all permissions effectively enabled for this tenant
+     */
+    Set<String> getPermissions();
+
+    /**
+     * Returns the compiled and parsed settings of this tenant.
+     * <p>
+     * Normally, we obtain the settings via {@link UserContext#getSettings()} but sometimes we only or directly need
+     * the settings of a tenant instead of those of a user + tenant.
+     *
+     * @return the settings of this tenant
+     */
+    Settings getSettings();
 }

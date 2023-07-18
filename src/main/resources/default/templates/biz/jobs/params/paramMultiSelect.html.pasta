@@ -1,0 +1,40 @@
+<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
+<i:arg type="Map" name="context"/>
+<i:arg type="boolean" name="optional" default="true"/>
+<i:arg type="String" name="suggestionUri" default=""/>
+
+<!--@ setting optional=true because we don't want the multi select to prefill automatically-->
+<!--@ this keeps the behavior of the (old) wondergem template-->
+<i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
+<t:multiSelect class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
+               name="@param.getName()"
+               label="@param.getLabel()"
+               help="@param.getDescription()"
+               optional="@optional"
+               suggestionUri="@suggestionUri">
+
+    <i:render name="body"/>
+
+    <i:block name="script">
+        const _elem = sirius.querySelector(".param-___param.getName()");
+        _elem.addEventListener("clear", function () {
+            autocomplete.select.clear(true, false);
+        });
+        _elem.addEventListener("updated-value", function (event) {
+            autocomplete.val(event.detail, true);
+        });
+    </i:block>
+
+    <i:block name="autocompleteOptions">
+        <i:if test="isFilled(suggestionUri)">
+            {
+                suggestionsUriBuilder: function (query) {
+                    const context = getFormData(sirius.querySelector(".edit-form"));
+                    const urlParameter = new URLSearchParams(context);
+                    urlParameter.append("query", query);
+                    return "@suggestionUri" + "?" + urlParameter.toString();
+                }
+            }
+        </i:if>
+    </i:block>
+</t:multiSelect>
