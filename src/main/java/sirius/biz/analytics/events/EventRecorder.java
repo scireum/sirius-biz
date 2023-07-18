@@ -232,6 +232,9 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     /**
      * Counts the number of events which have occurred in the last month based on the given <tt>queryTuner</tt>.
      * <p>
+     * This method counts the number of events which have occurred in the last calendar month. Therefore, the
+     * start date is the first day of the last month and the end date is the last day of the last month.
+     * <p>
      * This automatically marks the query as long-running.
      *
      * @param eventType the type of events to query
@@ -250,6 +253,10 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
 
     /**
      * Counts the number of events which have occurred in the last year based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This method counts the number of events which have occurred in the last calendar year. Therefore, the
+     * start date is the first day of the last year and the end date is the last day of the last year. In order to get
+     * the past twelve months, use {@link #countEventsInLast12Months(Class, Consumer)}.
      * <p>
      * This automatically marks the query as long-running.
      *
