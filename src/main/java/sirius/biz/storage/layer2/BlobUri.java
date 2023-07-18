@@ -24,10 +24,6 @@ public class BlobUri {
     private String variant;
     private String filename;
 
-    public boolean isLargeFileExpected() {
-        return largeFileExpected;
-    }
-
     /**
      * Signals that a very large file is expected
      *
@@ -37,10 +33,6 @@ public class BlobUri {
     public BlobUri withLargeFileExpected(boolean largeFileExpected) {
         this.largeFileExpected = largeFileExpected;
         return this;
-    }
-
-    public boolean isPhysical() {
-        return physical;
     }
 
     /**
@@ -54,10 +46,6 @@ public class BlobUri {
         return this;
     }
 
-    public boolean isDownload() {
-        return download;
-    }
-
     /**
      * Signals that the file should be delivered as download.
      *
@@ -67,10 +55,6 @@ public class BlobUri {
     public BlobUri withDownload(boolean download) {
         this.download = download;
         return this;
-    }
-
-    public boolean isCacheable() {
-        return cacheable;
     }
 
     /**
@@ -84,10 +68,6 @@ public class BlobUri {
         return this;
     }
 
-    public String getStorageSpace() {
-        return storageSpace;
-    }
-
     /**
      * Sets the space which is accessed
      *
@@ -97,10 +77,6 @@ public class BlobUri {
     public BlobUri withStorageSpace(String storageSpace) {
         this.storageSpace = storageSpace;
         return this;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
     }
 
     /**
@@ -114,10 +90,6 @@ public class BlobUri {
         return this;
     }
 
-    public String getBlobKey() {
-        return blobKey;
-    }
-
     /**
      * Sets the blob object key used to determine which {@link Blob} should be delivered.
      *
@@ -127,10 +99,6 @@ public class BlobUri {
     public BlobUri withBlobKey(String blobKey) {
         this.blobKey = blobKey;
         return this;
-    }
-
-    public String getPhysicalKey() {
-        return physicalKey;
     }
 
     /**
@@ -144,10 +112,6 @@ public class BlobUri {
         return this;
     }
 
-    public String getVariant() {
-        return variant;
-    }
-
     /**
      * Sets the variant to deliver.
      *
@@ -159,10 +123,6 @@ public class BlobUri {
         return this;
     }
 
-    public String getFilename() {
-        return filename;
-    }
-
     /**
      * Sets the filename to deliver.
      *
@@ -172,5 +132,45 @@ public class BlobUri {
     public BlobUri withFilename(String filename) {
         this.filename = filename;
         return this;
+    }
+
+    public boolean isLargeFileExpected() {
+        return largeFileExpected;
+    }
+
+    public boolean isPhysical() {
+        return physical;
+    }
+
+    public boolean isDownload() {
+        return download;
+    }
+
+    public boolean isCacheable() {
+        return cacheable;
+    }
+
+    public String getStorageSpace() {
+        return storageSpace;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public String getBlobKey() {
+        return blobKey;
+    }
+
+    public String getPhysicalKey() {
+        return physicalKey;
+    }
+
+    public String getVariant() {
+        return variant;
+    }
+
+    public String getFilename() {
+        return filename;
     }
 }
