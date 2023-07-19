@@ -2,20 +2,14 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="config">
-    <div id="editor" class="flex-grow-1" style="min-height: 450px">@tenant.getTenantData().getConfigString()</div>
-
-    <div class="bt-gray mt-4 pt-3">
-        <a id="saveBtn" class="btn btn-primary">
-            <i class="fa fa-check"></i> @i18n("NLS.save")
-        </a>
-    </div>
+    <t:codeEditor id="editor" mode="json">@tenant.getTenantData().getConfigString()</t:codeEditor>
+    <t:formBar backButton="false"/>
 
     <script type="text/javascript">
         sirius.ready(function () {
-            const editor = ace.edit("editor");
-            editor.setTheme("ace/theme/idle_fingers");
+            let editor = ace.edit("editor");
 
-            document.getElementById('saveBtn').addEventListener('click', function () {
+            document.querySelector('.submit-link-js').addEventListener('click', function () {
                 sirius.postJSON('/tenant/@tenant.getIdAsString()/config/update',
                     {
                         csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()',
@@ -26,9 +20,10 @@
                         if (response.error) {
                             addErrorMessage(response.message);
                         } else {
-                            addSuccessMessage('@i18n("BasicController.changesSaved")');
+                            addInfoMessage('@i18n("BasicController.changesSaved")');
                         }
                     });
+                editor.resize();
             });
         });
     </script>
