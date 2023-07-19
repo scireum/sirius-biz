@@ -1,8 +1,7 @@
 <i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
 
 <i:invoke template="/templates/biz/tenants/user-account.html.pasta" account="account" page="config">
-    <t:codeEditor id="editor" mode="json">@account.getUserAccountData().getPermissions().getConfigString()
-    </t:codeEditor>
+    <t:codeEditor id="editor" mode="json">@account.getUserAccountData().getPermissions().getConfigString()</t:codeEditor>
     <t:formBar backButton="false"/>
 
     <script type="text/javascript">
