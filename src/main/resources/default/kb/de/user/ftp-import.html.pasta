@@ -13,27 +13,28 @@
     </k:section>
     <k:section heading="Protokoll und Serveradresse">
         <p>
-            Es wird der Einsatz von SFTP empfohlen (Secure File Transfer Protocol, SSH File Transfer Protocol) - Port
-            22:
+            Es wird der Einsatz von SFTP empfohlen (Secure File Transfer Protocol, SSH File Transfer Protocol). SFTP
+            verwendet standardmäßig Port 22.
         </p>
         <k:code>
-            @apply('sftp://sftp.%s', config('oxomi.cdn.defaultHost'))
+            @apply('sftp://sftp.%s', config('product.baseUrl'))
         </k:code>
         <p>
-            Alternativ steht auch FTPs zur Verfügung: FTPs (FTP-SSL bzw. FTP over TLS/SSL) - Port 21:
+            Alternativ steht auch FTPs zur Verfügung (FTP-SSL bzw. FTP over TLS/SSL). Hier wird standardmäßig Port 21
+            verwendet.
         </p>
         <k:code>
-            @apply('ftps://ftp.%s', config('oxomi.cdn.defaultHost'))
+            @apply('ftps://ftp.%s', config('product.baseUrl'))
         </k:code>
         <p>
-            <b>Hinweis:</b> Es sind bei FTP-SSL mit der Client-Software FileZilla Einschränkungen bekannt (TLS-Warnung
-            vom Server). Z.B. mit dem Client-Software CyberDuck sind keine Einschränkungen bekannt. FTP ohne SSL (nicht
-            empfohlen) funktioniert auch mit FileZilla.
+            <b>Hinweis:</b> Es sind Einschränkungen bekannt bei der Verwendung von FTP-SSL mit der Client-Software
+            FileZilla (TLS-Warnung vom Server). Für andere Client-Software wie z.B. CyberDuck sind diese Einschränkungen
+            nicht bekannt. FTP ohne SSL (nicht empfohlen) funktioniert auch mit FileZilla.
         </p>
     </k:section>
     <k:section heading="Benutzername und Berechtigungen">
         <p>
-            Benutzername und Kennwort des entsprechend berechtigten Backend-Benutzers.
+            Benutzername und Kennwort des entsprechend berechtigten Backend-Benutzers werden benötigt.
         </p>
         <p>
             Es müssen alle nötigen Berechtigungen am Unternehmen und am Benutzer vorhanden sein um Uploads zu
@@ -47,7 +48,7 @@
     </k:section>
     <k:section heading="Ordnerstruktur auf dem FTP-Server">
         <p>
-            Je nach Berechtigungen und finden Sie auf dem FTP-Server vor.
+            Je nach Berechtigungen finden Sie auf dem FTP-Server unterschiedlich viele Hauptordner vor.
         </p>
     </k:section>
     <k:section heading="Verarbeitungsjob per FTP starten">
