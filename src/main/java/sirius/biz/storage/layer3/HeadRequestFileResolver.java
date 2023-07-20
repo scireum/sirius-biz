@@ -153,7 +153,7 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
             || mode == FetchFromUrlMode.ALWAYS_FETCH
             || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
             // Directly load the file from the response, we don't need another request.
-            file.loadFromOutcall(request);
+            file.loadFromResponse(request.getResponse());
             return Tuple.create(file, true);
         } else {
             // Drain any content, as the mode dictates not to update the file (which might require another upload,

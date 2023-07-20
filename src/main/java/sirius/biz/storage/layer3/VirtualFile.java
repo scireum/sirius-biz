@@ -21,6 +21,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Wait;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -81,6 +82,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
     private static final String MESSAGE_KEY_LOAD_FROM_URL_FAILED = "$VirtualFile.loadFromUrlFailed";
     private static final String MESSAGE_KEY_LOAD_FROM_URL_DISABLED = "$VirtualFile.loadFromUrlDisabled";
+    private static final int NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE = 3;
 
     protected String name;
     protected String description;
@@ -1376,8 +1378,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      *
      * @param uri  the URI to fetch
      * @param mode determines under which conditions the data from the given URI should be fetched
-     * @return <tt>true</tt> if the file was successfully fetched or <tt>false</tt> if the contents weren't updated
-     * as no change was detected
+     * @return <tt>true</tt> if the file was successfully read, or <tt>false</tt> if the server answered with code
+     * {@linkplain HttpResponseStatus#NOT_MODIFIED 304 Not Modified}
      */
     public boolean performLoadFromUri(URI uri, FetchFromUrlMode mode) {
         try {
@@ -1388,17 +1390,17 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            Outcall outcall = new Outcall(uri);
-            outcall.alwaysFollowRedirects();
+            HttpResponse<InputStream> response =
+                    requestFileFromUri(uri, mode, NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE);
 
-            CookieManager cookieManager = new CookieManager();
-            outcall.modifyClient().cookieHandler(cookieManager);
-
-            if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
-                outcall.setIfModifiedSince(lastModifiedDate());
+            if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
+                tryTouch();
+                return false;
             }
 
-            return loadFromOutcall(outcall);
+            loadFromResponse(response);
+
+            return true;
         } catch (IOException exception) {
             throw Exceptions.createHandled()
                             .error(exception)
@@ -1410,28 +1412,33 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
     }
 
-    private boolean shouldSkipDownloadForExistingFile(FetchFromUrlMode mode) {
-        // If the mode is set to non-existent files only, we perform no download if the file exists.
-        // We also perform no download, if the file has already been modified (downloaded) at the same day
-        // (unless the mode is set to ALWAYS_FETCH...)
-        return mode == FetchFromUrlMode.NON_EXISTENT || (mode == FetchFromUrlMode.NON_EXISTENT_OR_MODIFIED
-                                                         && lastModifiedDate().isAfter(LocalDate.now().atStartOfDay()));
-    }
+    private HttpResponse<InputStream> requestFileFromUri(URI uri, FetchFromUrlMode mode, int retries)
+            throws IOException {
+        Outcall outcall = new Outcall(uri);
+        outcall.alwaysFollowRedirects();
 
-    /**
-     * Loads the contents of the given outcall into this file.
-     *
-     * @param outcall the outcall to read the contents from
-     * @return <tt>true</tt> if the file was successfully read, or <tt>false</tt> if the server answered with code
-     * {@linkplain HttpResponseStatus#NOT_MODIFIED 304 Not Modified}
-     * @throws IOException in case of an IO error
-     */
-    public boolean loadFromOutcall(Outcall outcall) throws IOException {
+        CookieManager cookieManager = new CookieManager();
+        outcall.modifyClient().cookieHandler(cookieManager);
+
+        if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
+            outcall.setIfModifiedSince(lastModifiedDate());
+        }
+
         HttpResponse<InputStream> response = outcall.getResponse();
 
-        if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
-            tryTouch();
-            return false;
+        if (response.statusCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code()) {
+            Streams.exhaust(response.body());
+
+            if (retries > 0) {
+                // Wait 200ms, 700ms, 1200ms...
+                Wait.millis(200 + (NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE - retries) * 500);
+                return requestFileFromUri(uri, mode, retries - 1);
+            }
+
+            throw new IOException(Strings.apply("The server responded with status %s (%s) after %s retries!",
+                                                HttpResponseStatus.valueOf(response.statusCode()).toString(),
+                                                response.statusCode(),
+                                                NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE));
         }
 
         if (response.statusCode() >= 400) {
@@ -1441,6 +1448,24 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                                 response.statusCode()));
         }
 
+        return response;
+    }
+
+    private boolean shouldSkipDownloadForExistingFile(FetchFromUrlMode mode) {
+        // If the mode is set to non-existent files only, we perform no download if the file exists.
+        // We also perform no download, if the file has already been modified (downloaded) at the same day
+        // (unless the mode is set to ALWAYS_FETCH...)
+        return mode == FetchFromUrlMode.NON_EXISTENT || (mode == FetchFromUrlMode.NON_EXISTENT_OR_MODIFIED
+                                                         && lastModifiedDate().isAfter(LocalDate.now().atStartOfDay()));
+    }
+
+    /**
+     * Loads the contents of the given response into this file.
+     *
+     * @param response the response to read the contents from
+     * @throws IOException in case of an IO error
+     */
+    public void loadFromResponse(HttpResponse<InputStream> response) throws IOException {
         assertResponseNotHtml(response);
 
         long length = response.headers().firstValueAsLong(HttpHeaderNames.CONTENT_LENGTH.toString()).orElse(-1);
@@ -1451,8 +1476,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 Streams.transfer(response.body(), outputStream);
             }
         }
-
-        return true;
     }
 
     private void assertResponseNotHtml(HttpResponse<InputStream> response) throws IOException {
