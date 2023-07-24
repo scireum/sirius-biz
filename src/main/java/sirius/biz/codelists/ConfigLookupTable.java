@@ -8,7 +8,6 @@
 
 package sirius.biz.codelists;
 
-import sirius.kernel.Sirius;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
@@ -23,7 +22,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Provides an implementation for {@link LookupTable} based on {@link Extension} for testing purposes.
+ * Provides an implementation for {@link LookupTable} based on {@link Extension config data}.
  */
 class ConfigLookupTable extends LookupTable {
 
@@ -31,9 +30,6 @@ class ConfigLookupTable extends LookupTable {
 
     ConfigLookupTable(Extension extension) {
         super(extension);
-        if (!Sirius.isTest()) {
-            throw new IllegalStateException(getClass().getSimpleName() + " only supported while in test mode.");
-        }
     }
 
     @Override
