@@ -9,13 +9,25 @@
 package sirius.biz.importer.format;
 
 import sirius.biz.jobs.infos.JobInfoCollector;
-import sirius.kernel.commons.*;
+import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Monoflop;
+import sirius.kernel.commons.StringCleanup;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
+import sirius.kernel.commons.Values;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -197,8 +209,9 @@ public class ImportDictionary {
         this.mappingFunction = new ArrayList<>();
         for (int index = 0; index < header.length(); index++) {
             String headerName = extractLabel(header.at(index).asString());
-            String headerField = resolve(headerName).orElseGet(() -> resolveComputedField(headerName).map(
-                    FieldDefinition::getName).orElse(null));
+            String headerField =
+                    resolve(headerName).orElseGet(() -> resolveComputedField(headerName).map(FieldDefinition::getName)
+                                                                                        .orElse(null));
             if (failForUnknownColumns && headerField == null) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("ImportDictionary.unknownColumn")
@@ -312,8 +325,9 @@ public class ImportDictionary {
         }
 
         if (failForAdditionalColumns) {
-            for (int superfluousIndex = headerIndex.get(); superfluousIndex <
-                    headerFields.length(); superfluousIndex++) {
+            for (int superfluousIndex = headerIndex.get();
+                 superfluousIndex < headerFields.length();
+                 superfluousIndex++) {
                 problemDetected.set(true);
                 problemConsumer.accept(NLS.fmtr("ImportDictionary.superfluousColumn")
                                           .set(PARAM_INDEX, superfluousIndex + 1)
