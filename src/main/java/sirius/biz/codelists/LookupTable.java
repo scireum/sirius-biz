@@ -100,6 +100,31 @@ public abstract class LookupTable {
     }
 
     /**
+     * Attempts to resolve the name for the given code or returns the input itself.
+     *
+     * @param code the code to resolve the name for
+     * @return the name for the given code in the currently active language if present or the code itself. Note that
+     * this will only resolve the main code. When in doubt, the code must be normalized via {@link #normalize(String)}
+     * before invoking this method.
+     */
+    public String forceResolveName(String code) {
+        return resolveName(code).orElse(code);
+    }
+
+    /**
+     * Attempts to resolve the name for the given code or returns the input itself.
+     *
+     * @param code     the code to resolve the name for
+     * @param language the language of the name to resolve
+     * @return the name for the given code in the given language if present or the code itself. Note that this will only
+     * resolve the main code. When in doubt, the code must be normalized via {@link #normalize(String)} before invoking
+     * this method.
+     */
+    public String forceResolveName(String code, String language) {
+        return resolveName(code, language).orElse(code);
+    }
+
+    /**
      * Resolves the name for the given code.
      *
      * @param code the code to resolve the name for
