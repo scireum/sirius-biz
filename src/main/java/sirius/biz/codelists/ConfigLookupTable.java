@@ -25,11 +25,11 @@ import java.util.stream.Stream;
 /**
  * Provides an implementation for {@link LookupTable} based on {@link Extension} for testing purposes.
  */
-class TestExtensionLookupTable extends LookupTable {
+class ConfigLookupTable extends LookupTable {
 
     private static final String CONFIG_KEY_DATA = "data";
 
-    TestExtensionLookupTable(Extension extension) {
+    ConfigLookupTable(Extension extension) {
         super(extension);
         if (!Sirius.isTest()) {
             throw new IllegalStateException(getClass().getSimpleName() + " only supported while in test mode.");

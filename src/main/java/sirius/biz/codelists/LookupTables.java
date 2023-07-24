@@ -70,7 +70,7 @@ public class LookupTables {
                 String json = extension.get(TestJsonLookupTable.CONFIG_KEY_TEST_DATA_JSON).asString();
                 if (Strings.isEmpty(codeList) && Strings.isEmpty(json)) {
                     // ...and we are running in test mode and no codeList is given
-                    return new TestExtensionLookupTable(extension);
+                    return new ConfigLookupTable(extension);
                 }
                 if (Strings.isFilled(json)) {
                     // ...but a json table is given
