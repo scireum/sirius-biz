@@ -22,7 +22,7 @@ class LookupTablesTest {
     }
 
     @Test
-    fun `TestExtensionLookupTable creation works`() {
+    fun `ConfigLookupTable creation works`() {
         val table = lookupTables.fetchTable("test-extension-table")
         assertEquals(1, table.count())
         assertTrue(table.normalize("test").isPresent)
