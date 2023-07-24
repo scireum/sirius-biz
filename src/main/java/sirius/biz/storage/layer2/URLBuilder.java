@@ -611,7 +611,7 @@ public class URLBuilder {
     private void appendAddonText(StringBuilder result) {
         if (Strings.isFilled(addonText)) {
             result.append(Strings.cleanup(addonText,
-                                          text -> (NON_URL_CHARACTERS.matcher(addonText).replaceAll("-")),
+                                          text -> NON_URL_CHARACTERS.matcher(addonText).replaceAll("-"),
                                           StringCleanup::reduceCharacters));
             result.append("--");
         }
