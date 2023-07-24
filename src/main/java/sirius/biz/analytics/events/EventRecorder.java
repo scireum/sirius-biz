@@ -245,7 +245,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @param <E> the generic types of the entities to query
      * @throws SQLException in case of a database error
      */
-    public <E extends Event> int countEventsInLastMonth(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+    public <E extends Event<E>> int countEventsInLastMonth(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
         YearMonth lastYearMonth = YearMonth.now().minusMonths(1);
         LocalDateTime startDate = lastYearMonth.atDay(1).atStartOfDay();
         LocalDateTime endDate = lastYearMonth.atEndOfMonth().atTime(LocalTime.MAX);
@@ -268,7 +268,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @param <E> the generic types of the entities to query
      * @throws SQLException in case of a database error
      */
-    public <E extends Event> int countEventsInLastYear(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+    public <E extends Event<E>> int countEventsInLastYear(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
         YearMonth lastYearMonth = YearMonth.now().minusYears(1);
         LocalDateTime startDate = lastYearMonth.withMonth(1).atDay(1).atStartOfDay();
         LocalDateTime endDate = lastYearMonth.withMonth(12).atEndOfMonth().atTime(LocalTime.MAX);
@@ -287,7 +287,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @param <E> the generic types of the entities to query
      * @throws SQLException in case of a database error
      */
-    public <E extends Event> int countEventsInLast12Months(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+    public <E extends Event<E>> int countEventsInLast12Months(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
         LocalDateTime startDate = LocalDateTime.now().minusYears(1).plusMonths(1);
         LocalDateTime endDate = LocalDateTime.now();
         return countEventsInRange(eventType, startDate, endDate, queryTuner);
