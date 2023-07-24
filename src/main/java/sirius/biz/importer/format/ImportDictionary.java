@@ -608,7 +608,8 @@ public class ImportDictionary {
      * @return the normalized version of the field
      */
     protected static String normalize(String field) {
-        return StringCleanup.reduceCharacters(field.toLowerCase()).replaceAll("[^\\p{L}\\d_]", "");
+        return Strings.cleanup(field, StringCleanup::reduceCharacters, StringCleanup::lowercase)
+                      .replaceAll("[^\\p{L}\\d_]", "");
     }
 
     /**
