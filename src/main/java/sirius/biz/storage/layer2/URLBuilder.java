@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2;
 import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
@@ -510,7 +511,7 @@ public class URLBuilder {
         result.append("/");
         appendAddonText(result);
         result.append(Strings.urlEncode(Files.toSaneFileName(filename)
-                                         .orElse(physicalKey + fetchUrlEncodedFileExtension())));
+                                             .orElse(physicalKey + fetchUrlEncodedFileExtension())));
     }
 
     private String createVirtualDeliveryUrl() {
@@ -609,7 +610,7 @@ public class URLBuilder {
 
     private void appendAddonText(StringBuilder result) {
         if (Strings.isFilled(addonText)) {
-            result.append(Strings.reduceCharacters(NON_URL_CHARACTERS.matcher(addonText).replaceAll("-")));
+            result.append(StringCleanup.reduceCharacters(NON_URL_CHARACTERS.matcher(addonText).replaceAll("-")));
             result.append("--");
         }
     }
