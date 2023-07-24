@@ -22,6 +22,7 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Hasher;
+import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
@@ -630,9 +631,11 @@ public class Storage {
             result.append(computeHash(downloadBuilder.getPhysicalKey(), 0));
         }
         result.append("/");
-        if (Strings.isFilled(downloadBuilder.getAddonText())) {
-            result.append(Strings.reduceCharacters(NON_URL_CHARACTERS.matcher(downloadBuilder.getAddonText())
-                                                                     .replaceAll("-")));
+        String addonText = downloadBuilder.getAddonText();
+        if (Strings.isFilled(addonText)) {
+            result.append(Strings.cleanup(addonText,
+                                          text -> NON_URL_CHARACTERS.matcher(text).replaceAll("-"),
+                                          StringCleanup::reduceCharacters));
             result.append("--");
         }
         result.append(downloadBuilder.getPhysicalKey());
