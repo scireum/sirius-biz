@@ -21,8 +21,8 @@
                         } else {
                             addInfoMessage('@i18n("BasicController.changesSaved")');
                         }
+                        editor.resize();
                     });
-                editor.resize();
             });
         });
     </script>
