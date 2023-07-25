@@ -8,9 +8,9 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.layer3.uplink.UplinkFactory;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
-import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -25,7 +25,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.Optional;
 
 /**
  * Provides the main entrypoint into the <b>Virtual File System</b>.
@@ -199,7 +198,8 @@ public class VirtualFileSystem {
      * @return <tt>true</tt> when the owner space specifies retention days greater than zero, <tt>false</tt> otherwise
      */
     public boolean isAutoCleanupBlob(VirtualFile virtualFile) {
-        Optional<BlobStorageSpace> blobStorageSpace = virtualFile.tryAs(BlobStorageSpace.class);
-        return blobStorageSpace.filter(storageSpace -> storageSpace.getRetentionDays() > 0).isPresent();
+        return virtualFile.tryAs(BlobStorageSpace.class)
+                          .filter(storageSpace -> storageSpace.getRetentionDays() > 0)
+                          .isPresent();
     }
 }
