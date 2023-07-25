@@ -36,7 +36,7 @@ import java.util.function.BiConsumer;
  * @param <O> the types of objects on which this computer operates
  * @param <E> the events being processed
  */
-public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesComputer<O> {
+public class EventTimeSeriesComputer<O, E extends Event<E>> implements TimeSeriesComputer<O> {
 
     /**
      * Provides a common aggregation which counts all events (<tt>count(*)</tt>).

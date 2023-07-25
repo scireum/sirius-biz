@@ -48,6 +48,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -91,7 +92,7 @@ public class Storage {
 
     private static final Pattern NON_URL_CHARACTERS = Pattern.compile("[^a-zA-Z0-9_.]");
 
-    private static Cache<String, VirtualObject> virtualObjectCache =
+    private static final Cache<String, VirtualObject> virtualObjectCache =
             CacheManager.createCoherentCache("virtual-objects");
 
     @Part
@@ -483,11 +484,7 @@ public class Storage {
         VirtualObject object = (VirtualObject) file;
 
         InputStream result = getStorageEngine(object.getBucket()).getData(object.getBucket(), object.getPhysicalKey());
-        if (result == null) {
-            return new ByteArrayInputStream(EMPTY_BUFFER);
-        } else {
-            return result;
-        }
+        return Objects.requireNonNullElseGet(result, () -> new ByteArrayInputStream(EMPTY_BUFFER));
     }
 
     /**
@@ -496,8 +493,8 @@ public class Storage {
      * @param object the object to delete
      */
     public void delete(StoredObject object) {
-        if (object instanceof VirtualObject) {
-            oma.delete((VirtualObject) object);
+        if (object instanceof VirtualObject virtualObject) {
+            oma.delete(virtualObject);
         }
     }
 

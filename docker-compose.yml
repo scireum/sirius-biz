@@ -43,7 +43,7 @@ services:
       - ingest.geoip.downloader.enabled=false
     hostname: es
   s3-system:
-    image: scireum/s3-ninja:8.0.0
+    image: scireum/s3-ninja:8.3.2
     ports:
-      - 9000
+      - "9000"
     hostname: s3ninja

@@ -602,10 +602,9 @@ public abstract class LookupTable {
     public static Map<String, String> parseTranslationTable(ObjectNode root, JsonPointer path) {
         return Json.tryGetAt(root, path).map(translations -> {
             if (translations.isObject()) {
-                return ((ObjectNode) translations).properties()
-                                                  .stream()
-                                                  .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                            entry -> entry.getValue().asText()));
+                return translations.properties()
+                                   .stream()
+                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
             } else {
                 return Collections.singletonMap("xx", translations.asText());
             }
@@ -677,11 +676,10 @@ public abstract class LookupTable {
         }
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isObject()) {
-            return ((ObjectNode) jsonNode).properties()
-                                          .stream()
-                                          .filter(entry -> Strings.isFilled(entry.getValue().asText()))
-                                          .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                    entry -> entry.getValue().asText()));
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> Strings.isFilled(entry.getValue().asText()))
+                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
         } else {
             return Collections.emptyMap();
         }
@@ -703,11 +701,11 @@ public abstract class LookupTable {
         }
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isObject()) {
-            return ((ObjectNode) jsonNode).properties()
-                                          .stream()
-                                          .filter(entry -> entry.getValue().isArray())
-                                          .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                    entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> entry.getValue().isArray())
+                           .collect(Collectors.toMap(Map.Entry::getKey,
+                                                     entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
         } else {
             return Collections.emptyMap();
         }
@@ -729,11 +727,10 @@ public abstract class LookupTable {
         }
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isObject()) {
-            return ((ObjectNode) jsonNode).properties()
-                                          .stream()
-                                          .filter(entry -> entry.getValue().isObject())
-                                          .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                    entry -> (ObjectNode) entry.getValue()));
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> entry.getValue().isObject())
+                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> (ObjectNode) entry.getValue()));
         } else {
             return Collections.emptyMap();
         }

@@ -19,7 +19,6 @@ import sirius.biz.tenants.UserAccountController;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
