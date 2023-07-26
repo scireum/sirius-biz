@@ -9,8 +9,9 @@
 package sirius.biz.analytics.reports;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import sirius.kernel.commons.StringCleanup;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
-import sirius.web.templates.ContentHelper;
 
 import javax.annotation.Nonnull;
 
@@ -27,9 +28,9 @@ public class CSSCellFormat implements CellFormat {
     @Override
     public String format(ObjectNode data) {
         return "<div class=\""
-               + ContentHelper.escapeXML(data.path(KEY_CLASSES).asText())
+               + Strings.cleanup(data.path(KEY_CLASSES).asText(), StringCleanup::escapeXml)
                + "\">"
-               + ContentHelper.escapeXML(data.path(KEY_VALUE).asText())
+               + Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml)
                + "</div>";
     }
 

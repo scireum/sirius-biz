@@ -8,6 +8,8 @@
 
 package sirius.biz.tycho.search;
 
+import sirius.kernel.commons.StringCleanup;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -17,7 +19,6 @@ import sirius.pasta.tagliatelle.Template;
 import sirius.pasta.tagliatelle.compiler.TemplateCompilationContext;
 import sirius.pasta.tagliatelle.compiler.TemplateCompiler;
 import sirius.pasta.tagliatelle.rendering.RenderException;
-import sirius.web.templates.ContentHelper;
 
 import java.io.FileNotFoundException;
 import java.util.Optional;
@@ -65,7 +66,7 @@ public class OpenSearchResult {
      * @return the result itself for fluent method calls.
      */
     public OpenSearchResult withDescription(String description) {
-        this.htmlDescription = ContentHelper.escapeXML(description);
+        this.htmlDescription = Strings.cleanup(description, StringCleanup::escapeXml);
         return this;
     }
 
