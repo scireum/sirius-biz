@@ -17,7 +17,7 @@ import sirius.kernel.di.std.Part
 import sirius.web.controller.Message
 import sirius.web.controller.MessageLevel
 import sirius.web.http.DistributedUserMessageCache
-import java.util.*
+import java.util.Collections
 
 @ExtendWith(SiriusExtension::class)
 class RedisUserMessageCacheTest {
