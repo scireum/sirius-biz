@@ -58,17 +58,21 @@
                             <i:for type="sirius.biz.jobs.presets.JobPreset" var="preset"
                                    items="presets.fetchPresets(job)">
                                 <li class="list-group-item d-flex flex-row justify-content-between align-items-baseline">
-                                    <div><b>@preset.getJobConfigData().getLabel()</b></div>
+                                    <div class="text-truncate"><b>@preset.getJobConfigData().getLabel()</b></div>
                                     <div class="btn-group" role="group">
-                                        <a class="btn btn-outline-link"
+                                        <a class="btn btn-outline-link text-nowrap"
                                            href="javascript:loadPreset('@preset.getIdAsString()')">
                                             <i class="fa fa-check"></i>
-                                            @i18n("JobsController.usePreset")
+                                            <span class="d-sm-inline-block d-md-none d-xl-inline-block">
+                                                @i18n("JobsController.usePreset")
+                                            </span>
                                         </a>
-                                        <a class="btn btn-outline-danger pull-right"
+                                        <a class="btn btn-outline-danger pull-right text-nowrap"
                                            href="javascript:deletePreset('@preset.getIdAsString()')">
                                             <i class="fa fa-trash"></i>
-                                            @i18n("NLS.delete")
+                                            <span class="d-sm-inline-block d-md-none d-xl-inline-block">
+                                                @i18n("NLS.delete")
+                                            </span>
                                         </a>
                                     </div>
                                 </li>

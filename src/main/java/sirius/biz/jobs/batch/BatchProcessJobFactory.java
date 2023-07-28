@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.batch;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.jobs.BasicJobFactory;
@@ -21,6 +21,7 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.SpyUser;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.HandledException;
@@ -124,6 +125,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
                                                    getCurrentOrRootUser(),
                                                    determinePersistencePeriod(context),
                                                    context);
+        lockFiles(context);
         logScheduledMessage(processId);
         addLinkToJob(processId);
         createAndScheduleDistributedTask(processId);
@@ -172,8 +174,8 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     private void createAndScheduleDistributedTask(String processId) {
-        JSONObject executorContext =
-                new JSONObject().fluentPut(CONTEXT_PROCESS, processId).fluentPut(CONTEXT_JOB_FACTORY, getName());
+        ObjectNode executorContext =
+                Json.createObject().put(CONTEXT_PROCESS, processId).put(CONTEXT_JOB_FACTORY, getName());
         if (tasks.getQueueInfo(tasks.getQueueName(getExecutor())).isPrioritized()) {
             tasks.submitPrioritizedTask(getExecutor(), getPenaltyToken(), executorContext);
         } else {

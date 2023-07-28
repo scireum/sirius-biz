@@ -106,7 +106,7 @@ public class ObjectStore {
     private static Tasks tasks;
 
     /**
-     * Provides some book keeping and monitoring for S3 up- and downloads.
+     * Provides some bookkeeping and monitoring for S3 up- and downloads.
      */
     private class MonitoringProgressListener implements S3ProgressListener {
 
@@ -335,8 +335,9 @@ public class ObjectStore {
      * @param objectId the object to delete
      */
     public void deleteObject(BucketName bucket, String objectId) {
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object % from %s", objectId, bucket),
-                                                 Duration.ofMinutes(1))) {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object %s from %s",
+                                                                     objectId,
+                                                                     bucket), Duration.ofMinutes(1))) {
             getClient().deleteObject(bucket.getName(), objectId);
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -345,6 +346,37 @@ public class ObjectStore {
                             .withSystemErrorMessage("Failed to delete object %s from bucket %s - %s (%s)",
                                                     objectId,
                                                     bucket)
+                            .handle();
+        }
+    }
+
+    /**
+     * Server-side copies an object between two buckets.
+     *
+     * @param sourceBucket   the source bucket containing the object to copy
+     * @param sourceObjectId the object ID to copy from the source bucket
+     * @param targetBucket   the target bucket containing the object to copy
+     * @param targetObjectId the object ID to copy from the target bucket
+     */
+    public void copyObject(BucketName sourceBucket,
+                           String sourceObjectId,
+                           BucketName targetBucket,
+                           String targetObjectId) {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Copying object from %s/%s to %s/%s",
+                                                                     sourceBucket,
+                                                                     sourceObjectId,
+                                                                     targetBucket,
+                                                                     targetObjectId), Duration.ofMinutes(5))) {
+            getClient().copyObject(sourceBucket.getName(), sourceObjectId, targetBucket.getName(), targetObjectId);
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(ObjectStores.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to copy object from %s/%s to %s/%s - %s (%s)",
+                                                    sourceBucket,
+                                                    sourceObjectId,
+                                                    targetBucket,
+                                                    targetObjectId)
                             .handle();
         }
     }
@@ -398,13 +430,13 @@ public class ObjectStore {
     }
 
     /**
-     * Generates a presigned download URL for the given object.
+     * Generates a pre-signed download URL for the given object.
      * <p>
      * This can be used to {@link sirius.web.http.Response#tunnel(String)} the data to a client.
      *
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to generate the url for
-     * @return a presigned download URL for the object
+     * @return a pre-signed download URL for the object
      */
     public String objectUrl(BucketName bucket, String objectId) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket.getName(), objectId);
@@ -423,7 +455,7 @@ public class ObjectStore {
      */
     public File download(BucketName bucket, String objectId) throws FileNotFoundException {
         File dest = null;
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object %s from %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
             dest = File.createTempFile("AMZS3", null);
@@ -478,7 +510,7 @@ public class ObjectStore {
      * @throws FileNotFoundException in case of an unknown object
      */
     public byte[] downloadInMemory(BucketName bucket, String objectId) throws FileNotFoundException {
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object %s from %s",
                                                                      objectId,
                                                                      bucket), Duration.ofSeconds(90))) {
             ensureBucketExists(bucket);
@@ -714,7 +746,7 @@ public class ObjectStore {
         ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
-        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object %s to %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
             List<PartETag> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());

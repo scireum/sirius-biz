@@ -1,0 +1,6 @@
+<i:arg type="sirius.biz.jobs.infos.TextInfo" name="info"/>
+<div class="card mb-4">
+    <div class="card-body">
+        @info.getText()
+    </div>
+</div>

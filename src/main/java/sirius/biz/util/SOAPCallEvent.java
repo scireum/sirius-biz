@@ -17,7 +17,7 @@ import sirius.db.mixing.annotations.Trim;
 /**
  * Record a SOAP call performed by {@link sirius.biz.util.MonitoredSOAPClient}.
  */
-public class SOAPCallEvent extends Event {
+public class SOAPCallEvent extends Event<SOAPCallEvent> {
     /**
      * Contains the shop, customer and user which triggered the event.
      */

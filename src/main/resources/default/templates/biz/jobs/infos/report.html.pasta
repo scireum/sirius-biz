@@ -1,2 +1,2 @@
 <i:arg type="sirius.biz.jobs.infos.ReportInfo" name="info"/>
-<w:report report="info.getReport()" />
+<t:report report="info.getReport()"/>

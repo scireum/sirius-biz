@@ -26,7 +26,7 @@
                         </a>
                     </i:else>
                 </i:if>
-                <t:kbBtn code="V7FGJ" />
+                <t:kbBtn code="V7FGJ"/>
             </i:block>
         </t:pageHeader>
     </i:block>
@@ -37,6 +37,9 @@
             <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
                 <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())">
                     <i:block name="actions">
+                        <t:dropdownSection>
+                            <t:dropdownItem label="Go To Node" url="@node.buildNodeUrl()"/>
+                        </t:dropdownSection>
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
                                 <t:dropdownItem label="Stop Bleeding"
@@ -86,7 +89,7 @@
                                             </i:block>
                                         </i:switch>
                                     </div>
-                                    <div class="muted small">@jobInfo.getExecutionInfo()</div>
+                                    <div class="text-muted small">@jobInfo.getExecutionInfo()</div>
                                 </div>
                                 <div>
                                     <i:if test="jobInfo.isLocalOverwrite()">
@@ -129,8 +132,12 @@
         <t:heading>Nodes</t:heading>
         <t:datacards>
             <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
-                <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())">
+                <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())"
+                            link="@node.buildNodeUrl()">
                     <i:block name="actions">
+                        <t:dropdownSection>
+                            <t:dropdownItem label="Go To Node" url="@node.buildNodeUrl()"/>
+                        </t:dropdownSection>
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
                                 <t:dropdownItem label="Stop Bleeding"
@@ -214,7 +221,7 @@
                                                 </i:block>
                                             </i:switch>
                                         </div>
-                                        <div class="muted small">@jobInfo.getExecutionInfo()</div>
+                                        <div class="text-muted small">@jobInfo.getExecutionInfo()</div>
                                     </div>
                                     <div>
                                         <i:if test="jobInfo.isLocalOverwrite()">

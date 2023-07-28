@@ -13,6 +13,7 @@ import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer3.VirtualFile;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -89,6 +91,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected Consumer<Q> queryExtender;
     protected Consumer<Context> contextExtender;
     protected String targetFileName;
+    protected BiPredicate<E, ProcessContext> entityFilter;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -150,6 +153,17 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     }
 
     /**
+     * Specifies a custom filter which is applied on the database result before export.
+     *
+     * @param entityFilter the filter method to use
+     * @return the export job itself for fluent method calls
+     */
+    public EntityExportJob<E, Q> withEntityFilter(BiPredicate<E, ProcessContext> entityFilter) {
+        this.entityFilter = entityFilter;
+        return this;
+    }
+
+    /**
      * Resolves custom fields which are not known by the entity or its {@link sirius.biz.importer.ImportHandler}.
      *
      * @param field the field to resolve
@@ -203,7 +217,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
                 return;
             }
 
-            errorContext.withContext(ERROR_CONTEXT_ROW, rowNumber);
+            ErrorContext.get().withContext(ERROR_CONTEXT_ROW, rowNumber);
 
             if (!dictionary.hasMappings()) {
                 determineMappingsFromRow(rowNumber, row);
@@ -214,10 +228,10 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
                 handleTemplateRow(row);
             }
 
-            errorContext.removeContext(ERROR_CONTEXT_ROW);
+            ErrorContext.get().removeContext(ERROR_CONTEXT_ROW);
         }, error -> {
             process.handle(error);
-            errorContext.removeContext(ERROR_CONTEXT_ROW);
+            ErrorContext.get().removeContext(ERROR_CONTEXT_ROW);
 
             return true;
         });
@@ -238,7 +252,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         dictionary.determineMappingFromHeadings(row, false);
         process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
         setupExtractors();
-        errorContext.handle(() -> export.addListRow(row.asList()));
+        ErrorContext.get().handle(() -> export.addListRow(row.asList()));
     }
 
     /**
@@ -277,7 +291,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     private void handleTemplateRow(Values row) {
         Watch w = Watch.start();
 
-        errorContext.handle(() -> {
+        ErrorContext.get().handle(() -> {
             Context data = dictionary.load(row, false);
 
             if (contextExtender != null) {
@@ -334,11 +348,16 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      * Actually exports all entities using the mapping which has already been determined.
      * <p>
      * The mapping was either determined by {@link #templateBasedExport()} or by using the default mapping in
-     * {@link #fullExportWithoutTemplate()}.
+     * {@link #fullExportWithoutTemplate()}. The result provided by the database is
+     * {@linkplain #withEntityFilter(BiPredicate) filtered} when set up accordingly.
      */
     private void fullExportWithGivenMapping() {
         process.log(ProcessLog.info().withNLSKey("EntityExport.fullExport"));
-        createFullExportQuery().streamBlockwise().forEach(this::exportEntity);
+        BiPredicate<E, ProcessContext> filter =
+                Optional.ofNullable(this.entityFilter).orElse((entity, ignored) -> true);
+        createFullExportQuery().streamBlockwise()
+                               .filter(entity -> filter.test(entity, process))
+                               .forEach(this::exportEntity);
     }
 
     protected void exportEntity(E entity) {

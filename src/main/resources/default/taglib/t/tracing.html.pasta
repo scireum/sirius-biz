@@ -10,7 +10,7 @@
     </btn>
 
     <div class="row tracing collapse">
-        <t:datacard class="mt-4" title="@i18n('TraceData.infos')">
+        <t:datacard class="mt-2" title="@i18n('TraceData.infos')">
             <i:render name="body"/>
             <div class="row">
                 <div class="col-lg">
@@ -48,16 +48,14 @@
                 </div>
             </i:if>
 
-            <i block="actions">
+            <i:block name="actions">
                 <i:if test="journal != null">
-                    <a href="@journal.getProtocolUri()" role="button" class="btn btn-link">
-                        <i class="fa fa-external-link-alt"></i> @i18n("JournalEntry.plural")
-                    </a>
+                    <t:dropdownItem labelKey="JournalEntry.plural"
+                                    icon="fa fa-external-link-alt"
+                                    url="@journal.getProtocolUri()"/>
                 </i:if>
-            </i>
+            </i:block>
         </t:datacard>
 
     </div>
 </i:if>
-
-

@@ -24,7 +24,7 @@ import sirius.web.security.UserManager;
  *
  * @see sirius.biz.tenants.TenantUserManager#recordUserActivityEvent(UserInfo)
  */
-public class UserActivityEvent extends Event {
+public class UserActivityEvent extends Event<UserActivityEvent> {
 
     /**
      * Contains the current user, tenant and scope if available.

@@ -8,7 +8,6 @@
 
 package sirius.biz.analytics.metrics.jdbc;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.analytics.metrics.DailyMetricComputer;
 import sirius.biz.analytics.metrics.MetricsGuaranteedBatchExecutor;
 import sirius.biz.analytics.metrics.MetricsGuaranteedSchedulerExecutor;
@@ -19,7 +18,6 @@ import sirius.biz.analytics.scheduler.ScheduleInterval;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
-import java.time.LocalDate;
 
 /**
  * Provides the executor which is responsible for scheduling {@link DailyMetricComputer} instances which refer
@@ -57,10 +55,5 @@ public class SQLGuaranteedDailyMetricScheduler extends SQLAnalyticalTaskSchedule
     @Override
     public String getName() {
         return "sql-metrics-daily";
-    }
-
-    @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
-        super.executeBatch(batchDescription, date.minusDays(1), level);
     }
 }

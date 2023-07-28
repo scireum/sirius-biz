@@ -15,8 +15,6 @@ import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Period;
 
 /**
  * Provides a base class for all metric computers which are invoked on a monthly basis to compute a metric for each of
@@ -57,35 +55,40 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
     }
 
     @Override
-    public final void compute(LocalDate date, E entity) throws Exception {
-        compute(date,
-                date.withDayOfMonth(1).atStartOfDay(),
-                date.withDayOfMonth(date.lengthOfMonth()).plusDays(1).atStartOfDay().minusSeconds(1), isPastDate(date),
-                entity);
-    }
-
-    private boolean isPastDate(LocalDate date) {
-        if (suppressBestEffortScheduling()) {
-            return Period.between(LocalDate.now(), date).getMonths() >= 2;
-        } else {
-            return Period.between(LocalDate.now(), date).getDays() >= 2;
+    public final void compute(LocalDate date, E entity, boolean bestEffort) throws Exception {
+        if (bestEffort && suppressBestEffortScheduling()) {
+            return;
         }
+
+        boolean sameMonth = LocalDate.now().withDayOfMonth(1).equals(date.withDayOfMonth(1));
+
+        // if the reference date passed to this method is in the current month, we consider the computation to be of
+        // particular interest
+        boolean periodOutsideOfCurrentInterest = !sameMonth;
+
+        // usually, given the reference date, we compute the values for the respective previous month; for best-effort
+        // scheduling and the current month, however, we leave the date as it is in order to obtain a preliminary value
+        // for this month
+        if (!bestEffort) {
+            date = date.minusMonths(1);
+        }
+
+        compute(new MetricComputerContext(date,
+                                          date.withDayOfMonth(1).atStartOfDay(),
+                                          date.withDayOfMonth(date.lengthOfMonth())
+                                              .plusDays(1)
+                                              .atStartOfDay()
+                                              .minusSeconds(1),
+                                          periodOutsideOfCurrentInterest,
+                                          bestEffort), entity);
     }
 
     /**
-     * Performs the computation for the given date.
+     * Performs the computation for the given parameters.
      *
-     * @param date          the date for which the computation should be performed
-     * @param startOfPeriod the start of the month as <tt>LocalDateTime</tt>
-     * @param endOfPeriod   the end of the month as <tt>LocalDateTime</tt>
-     * @param pastDate      <tt>true</tt> if the computation is performed for a past date (via the analytics command) or
-     *                      <tt>false</tt> if the computation is performed for the current month.
-     * @param entity        the entity to perform the computation for
+     * @param context the parameters for the computation
+     * @param entity  the entity to perform the computation for
      * @throws Exception in case of any problem while performing the computation
      */
-    public abstract void compute(LocalDate date,
-                                 LocalDateTime startOfPeriod,
-                                 LocalDateTime endOfPeriod,
-                                 boolean pastDate,
-                                 E entity) throws Exception;
+    public abstract void compute(MetricComputerContext context, E entity) throws Exception;
 }

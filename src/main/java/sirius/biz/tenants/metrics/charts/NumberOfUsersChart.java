@@ -1,0 +1,77 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
+package sirius.biz.tenants.metrics.charts;
+
+import sirius.biz.analytics.explorer.ChartFactory;
+import sirius.biz.analytics.explorer.ChartObjectResolver;
+import sirius.biz.analytics.explorer.MetricTimeSeriesComputer;
+import sirius.biz.analytics.explorer.TimeSeriesChartFactory;
+import sirius.biz.analytics.explorer.TimeSeriesComputer;
+import sirius.biz.jobs.StandardCategories;
+import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.tenants.Tenants;
+import sirius.biz.tenants.metrics.computers.GlobalTenantMetricComputer;
+import sirius.kernel.commons.Callback;
+import sirius.kernel.di.std.Register;
+import sirius.web.security.Permission;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.function.Consumer;
+
+/**
+ * Provides a chart showing the number of {@link GlobalTenantMetricComputer#METRIC_NUM_USERS}.
+ */
+@Register(framework = Tenants.FRAMEWORK_TENANTS)
+@Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
+public class NumberOfUsersChart extends TimeSeriesChartFactory<Object> {
+
+    @Override
+    protected boolean isMatchingChart(String uri, Object targetObject) {
+        return targetObject instanceof Class<?> type && Tenant.class.isAssignableFrom(type);
+    }
+
+    @Override
+    protected void collectReferencedCharts(Consumer<Class<? extends ChartFactory<Object>>> referenceChartConsumer) {
+        referenceChartConsumer.accept(NumberOfActiveUsersChart.class);
+        referenceChartConsumer.accept(NumberOfUserInteractionsChart.class);
+        referenceChartConsumer.accept(NumberOfTenantsChart.class);
+    }
+
+    @Override
+    protected void computers(Object ignoredObject,
+                             boolean hasComparisonPeriod,
+                             boolean isComparisonPeriod,
+                             Callback<TimeSeriesComputer<Object>> executor) throws Exception {
+        executor.invoke(new MetricTimeSeriesComputer<>(GlobalTenantMetricComputer.METRIC_NUM_USERS));
+    }
+
+    @Nonnull
+    @Override
+    public String getName() {
+        return "GlobalNumberOfUsers";
+    }
+
+    @Override
+    public int getPriority() {
+        return 9020;
+    }
+
+    @Nullable
+    @Override
+    protected Class<? extends ChartObjectResolver<Object>> getResolver() {
+        return null;
+    }
+
+    @Override
+    public String getCategory() {
+        return StandardCategories.USERS_AND_TENANTS;
+    }
+}

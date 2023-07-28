@@ -25,6 +25,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.http.WebContext;
+import sirius.web.security.Permissions;
 
 import java.util.Optional;
 
@@ -64,12 +65,14 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
 
         MongoPerformanceData.addFilterFacet(pageHelper);
 
+        pageHelper.applyExtenders("/tenants/*");
+
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.PACKAGE_STRING)),
                                       name -> packages.getPackageName(TenantController.PACKAGE_SCOPE_TENANT, name));
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.UPGRADES)),
                                       name -> packages.getUpgradeName(TenantController.PACKAGE_SCOPE_TENANT, name));
-
-        pageHelper.applyExtenders("/tenants/*");
+        pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.ADDITIONAL_PERMISSIONS)),
+                                      permission -> Permissions.tryGetTranslatedPermission(permission).orElse(null));
 
         return pageHelper;
     }

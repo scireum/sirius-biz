@@ -32,6 +32,6 @@ public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extend
 
     @Override
     public String getTemplateName() {
-        return "/templates/biz/jobs/params/selectString.html.pasta";
+        return "/templates/biz/jobs/params/selectSingleString.html.pasta";
     }
 }

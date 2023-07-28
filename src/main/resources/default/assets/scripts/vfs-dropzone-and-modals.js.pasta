@@ -1,0 +1,345 @@
+let vfsModalDropzone;
+
+function selectVFSFile(config) {
+
+    function filter(child) {
+        return config.pathRestriction === undefined || child.path.startsWith(config.pathRestriction);
+    }
+
+    function createRow(child, modal, resolve, changeDirectory) {
+        const _self = this;
+        child.icon = child.directory ? "fa-folder-open" : "fa-file";
+
+        const _fileTableRow = document.createElement("tr");
+        _fileTableRow.innerHTML = Mustache.render(
+            '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa {{icon}}"></i>&nbsp;{{name}}</a></td>' +
+            '<td class="text-right">{{sizeString}}</td>' +
+            '<td class="text-right" title="{{lastModifiedString}}">{{lastModifiedSpokenString}}</td>', child);
+
+        _fileTableRow.querySelector(".file-link").addEventListener("click", function () {
+            if (this.dataset.dir === "true") {
+                changeDirectory(this.dataset.path);
+            } else {
+                modal.hide();
+                resolve(this.dataset.path);
+            }
+        });
+        return _fileTableRow;
+    }
+
+    function replaceEventHandlers(_elem, eventName, handler) {
+        const _clonedElem = _elem.cloneNode(false);
+        while (_elem.hasChildNodes()) {
+            _clonedElem.appendChild(_elem.firstChild);
+        }
+        _elem.parentNode.replaceChild(_clonedElem, _elem);
+        _clonedElem.addEventListener(eventName, handler);
+        return _clonedElem;
+    }
+
+    return new Promise(function (resolve, reject) {
+        const _modalElement = document.getElementById("select-file-modal");
+        const _table = _modalElement.querySelector('.select-file-table-js');
+        const _searchForm = _modalElement.querySelector('.search-form-js input');
+        const modal = new bootstrap.Modal(_modalElement);
+        const pageSize = 25;
+
+        document.querySelector("#select-file-modal .modal-title").textContent = config.modalTitle;
+
+        _searchForm.value = "";
+
+        const pagination = new Pagination(_modalElement.querySelector(".pagination-controls-js"), pageSize, function (page, pagination) {
+            if (page <= 0) {
+                pagination._previousBtn.classList.add("disabled");
+            } else {
+                pagination._previousBtn.classList.remove("disabled");
+            }
+            const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skipReadOnlyFiles=true&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}&extensions={{extensions}}", {
+                path: encodeURIComponent(config.path),
+                onlyDirectories: config.allowDirectories && !config.allowFiles,
+                skip: page * pageSize,
+                maxItems: pageSize + 1,
+                filter: encodeURIComponent(_searchForm.value),
+                extensions: encodeURIComponent(config.allowedExtensions)
+            });
+            fetch(url).then(function (response) {
+                if (!response.ok) {
+                    throw "Http response status was " + response.status;
+                }
+                return response.json();
+            }).then(function (json) {
+                _table.textContent = "";
+                let numItems = Math.min(json.children.length, pageSize);
+                for (let i = 0; i < numItems; i++) {
+                    let child = json.children[i];
+                    if (filter(child)) {
+                        _table.appendChild(createRow(child, modal, resolve, function (newPath) {
+                            config.path = newPath;
+                            _searchForm.value = "";
+                            pagination.reset();
+                        }));
+                    }
+                }
+                pagination.setPageLabel((page * pageSize + 1) + " - " + (page * pageSize + numItems));
+
+                _modalElement.querySelector(".search-result-js").style.display = _searchForm.value ? "block" : "none";
+
+                if (json.children.length <= pageSize) {
+                    pagination._nextBtn.classList.add("disabled");
+                } else {
+                    pagination._nextBtn.classList.remove("disabled");
+                }
+
+                const _breadcrumbs = _modalElement.querySelector('.breadcrumb-js');
+                _breadcrumbs.textContent = '';
+                for (let i = 0; i < json.path.length; i++) {
+                    const element = json.path[i];
+                    if (!filter(element)) {
+                        continue;
+                    }
+                    const _folderBreadcrumb = document.createElement("li");
+                    _folderBreadcrumb.innerHTML = Mustache.render('<a class="file-link" href="#" data-path={{path}}>{{{name}}}</a>', {
+                        path: element.path,
+                        name: element.name === "/" ? "<i class='fa fa-folder-open'></i>" : element.name
+                    });
+                    _folderBreadcrumb.querySelector('.file-link').addEventListener("click", function () {
+                        config.path = this.dataset.path;
+                        pagination.reset();
+                    });
+                    _breadcrumbs.appendChild(_folderBreadcrumb);
+                }
+                const _uploadBox = _modalElement.querySelector('.upload-box-js');
+                if (config.allowFiles && json.canCreateChildren) {
+                    _uploadBox.classList.remove('d-none');
+                    _uploadBox.classList.add('dropzone');
+                    if (vfsModalDropzone) {
+                        vfsModalDropzone.destroy();
+                    }
+                    config.clickable = '#select-file-modal .upload-box-js .dropzone-select';
+                    config.previewsContainer = '#select-file-modal .upload-box-js .dropzone-items';
+                    vfsModalDropzone = createDropzone("#select-file-modal .dropzone-drop-area-js", config, modal, resolve);
+                } else {
+                    _uploadBox.classList.add('d-none');
+                    _uploadBox.classList.remove('dropzone');
+                }
+            });
+
+        });
+
+        replaceEventHandlers(_modalElement.querySelector('.search-form-js .search-btn-js'), 'click', function () {
+            pagination.reset();
+        });
+        replaceEventHandlers(_modalElement.querySelector('.search-form-js'), 'submit', function (event) {
+            event.preventDefault();
+            pagination.reset();
+        });
+        replaceEventHandlers(_modalElement.querySelector('.ok-btn-js'), 'click', function () {
+            modal.hide();
+            resolve(config.path);
+        });
+
+        _modalElement.querySelector('.ok-btn-js').parentElement.style.display = config.allowDirectories ? 'inline-block' : 'none';
+
+        modal.show();
+    });
+}
+
+function fetchPathFromInput(basePath, _input) {
+    let path = _input.value;
+
+    if (path == null || path === '') {
+        path = basePath;
+    } else {
+        path = path.substr(0, path.lastIndexOf("/"));
+    }
+
+    return path;
+}
+
+function createDropzone(dropzoneId, config, modal, resolve) {
+    const path = config.path ? config.path : fetchPathFromInput(config.basePath, config._input);
+
+    return new Dropzone(dropzoneId, {
+        acceptedFiles: config.allowedExtensions,
+        clickable: config.clickable,
+        dictInvalidFileType: "___i18n('BaseFileParameter.invalidFileExtension')",
+        dictMaxFilesExceeded: config.dictMaxFilesExceeded,
+        // even though we only want 1 file, we allow multiple
+        // this avoids user errors when an existing upload should be replaced
+        maxFiles: null,
+        maxFilesize: null,
+        parallelUploads: 1,
+        previewsContainer: config.previewsContainer,
+        sendFileAsBody: true,
+        previewTemplate: '' +
+            '<div class="dropzone-item">\n' +
+            '   <div class="dropzone-file">\n' +
+            '       <div class="dropzone-filename">\n' +
+            '           <span data-dz-name></span>\n' +
+            '           <strong>(<span data-dz-size></span>)</strong>\n' +
+            '           <span class="dz-success-mark">✔</span>\n' +
+            '           <span class="dz-error-mark">✘</span>\n' +
+            '       </div>\n' +
+            '       <div class="dropzone-error" data-dz-errormessage></div>\n' +
+            '   </div>\n' +
+            '\n' +
+            '   <div class="dropzone-progress d-flex">\n' +
+            '       <div class="progress flex-grow-1">\n' +
+            '           <div class="progress-bar bg-primary" role="progressbar" aria-valuemin="0" aria-valuemax="100" ' +
+            '                         aria-valuenow="0" data-dz-uploadprogress>' +
+            '           </div>\n' +
+            '       </div>\n' +
+            '       <span class="dropzone-delete ml-4" data-dz-remove><i class="fa fa-times"></i></span>\n' +
+            '   </div>\n' +
+            '</div>',
+        url: function (files) {
+            return '/fs/upload?filename=' + encodeURIComponent(files[0].name) + '&path=' + path;
+        },
+        error: function (file, message) {
+            errorHandler(file, message, config.allowedExtensions, config._input, modal);
+        },
+        init: function () {
+            const dropzone = this;
+            let previewsContainer = !modal ? dropzoneId : "#select-file-modal .upload-box-js #sirius-upload-progress";
+            let _outerContainer = document.querySelector(previewsContainer);
+
+            if (previewsContainer) {
+                let dropzoneIndicatorSelector = previewsContainer + ' .sirius-upload-hover';
+                let _dropzoneIndicator = document.querySelector(dropzoneIndicatorSelector);
+
+                function hideIndicators() {
+                    document.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                        _indicator.classList.remove('d-flex');
+                        _indicator.classList.add('d-none');
+                        _indicator.classList.remove('sirius-upload-hover-active');
+                    });
+                }
+
+                document.addEventListener('dragenter', function (event) {
+                    let _fileModal = document.querySelector('#select-file-modal');
+                    if (window.getComputedStyle(_fileModal).display === 'none') {
+                        _outerContainer.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                            _outerContainer.classList.remove('d-none');
+                            _indicator.classList.add('d-flex');
+                            _indicator.classList.remove('d-none');
+                        });
+                    } else if (modal) {
+                        modal._element.querySelectorAll('.sirius-upload-hover').forEach(function (_indicator) {
+                            _indicator.classList.add('d-flex');
+                            _indicator.classList.remove('d-none');
+                        });
+                    }
+                }, false);
+                document.addEventListener('dragover', function (event) {
+                    event.preventDefault();
+                });
+                document.addEventListener('dragend', function (event) {
+                    hideIndicators();
+                }, false);
+                document.addEventListener('drop', function (event) {
+                    hideIndicators();
+                }, false);
+                document.addEventListener('dragleave', function (event) {
+                    if (sirius.isDragleaveEventLeavingWindow(event)) {
+                        hideIndicators();
+                    }
+                }, false);
+                _dropzoneIndicator.addEventListener('dragenter', function (event) {
+                    _dropzoneIndicator.classList.add('sirius-upload-hover-active');
+                });
+                _dropzoneIndicator.addEventListener('dragleave', function (event) {
+                    _dropzoneIndicator.classList.remove('sirius-upload-hover-active');
+                });
+                _dropzoneIndicator.addEventListener('dragover', function (event) {
+                    event.preventDefault();
+                });
+                _dropzoneIndicator.addEventListener('drop', function (event) {
+                    event.preventDefault();
+                });
+                dropzone.on('drop', function () {
+                    hideIndicators();
+                });
+            }
+            sirius.warnOnUnload(function () {
+                return dropzone.getUploadingFiles().length + dropzone.getQueuedFiles().length;
+            });
+            this.on('sending', function (file, xhr, formData) {
+                formData.append('filename', file.name);
+                formData.append('path', path);
+            });
+            this.on('success', function (file, response) {
+                if (file.previewElement) {
+                    setTimeout(function () {
+                        if (modal) {
+                            modal.hide();
+                        }
+                        file.previewElement.remove();
+                    }, 1000);
+                }
+                if (response.error) {
+                    file.previewElement.classList.add('dz-error');
+                    file.previewElement.classList.remove('dz-success');
+                } else {
+                    if (resolve) {
+                        resolve(response.file);
+                    } else {
+                        config._input.value = response.file;
+                        sirius.dispatchEvent("change", config._input);
+                    }
+                }
+            });
+            this.on('maxfilesexceeded', function (file) {
+                // remove all files to reset limit, so a second separate upload is possible
+                this.removeAllFiles();
+                this.addFile(file);
+            });
+        }
+    });
+}
+
+function createInplaceDropzone(basePath, localId, _input, allowedExtensions, dictMaxFilesExceeded) {
+    const dropzoneId = "#sirius-upload-progress-" + localId;
+    let config = {
+        _input: _input,
+        basePath: basePath,
+        allowedExtensions: allowedExtensions,
+        dictMaxFilesExceeded: dictMaxFilesExceeded,
+        clickable: dropzoneId,
+        previewsContainer: dropzoneId
+    };
+
+    createDropzone(dropzoneId, config, null, null);
+}
+
+function errorHandler(file, message, allowedExtensions, _input, modal) {
+    const nameSubstitution = "${name}";
+    const extensionsSubstitution = "${extensions}";
+
+    if (file.status === Dropzone.CANCELED) {
+        // no need to show error to the user
+        return;
+    }
+
+    // clear the value of the input field if an error occurred
+    _input.value = "";
+
+    if (file.previewElement) {
+        file.previewElement.classList.add('dz-error');
+
+        if (typeof message !== 'string' && message.message) {
+            message = message.message;
+        }
+
+        if (message.includes(nameSubstitution) && message.includes(extensionsSubstitution)) {
+            message = message.replace(nameSubstitution, file.name).replace(extensionsSubstitution, allowedExtensions);
+        }
+
+        file.previewElement.querySelector('[data-dz-errormessage]').innerHTML = message;
+
+        setTimeout(function () {
+            if (!modal) {
+                file.previewElement.remove();
+            }
+        }, 5000);
+    }
+}

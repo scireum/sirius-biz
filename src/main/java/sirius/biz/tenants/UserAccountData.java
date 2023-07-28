@@ -13,6 +13,8 @@ import sirius.biz.importer.AutoImport;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.storage.layer2.BlobHardRef;
+import sirius.biz.storage.layer2.URLBuilder;
 import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
@@ -28,6 +30,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
@@ -38,6 +41,8 @@ import sirius.web.security.UserContext;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -48,6 +53,31 @@ import java.util.function.Consumer;
  * Several users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 public class UserAccountData extends Composite implements MessageProvider {
+
+    /**
+     * Defines the storage space used by user accounts.
+     */
+    public static final String STORAGE_SPACE = "user-accounts";
+
+    /**
+     * Contains the fallback URI used by {@link #fetchSmallUrl()}, {@link #fetchMediumUrl()}, and {@link #fetchLargeUrl()}.
+     */
+    public static final String IMAGE_FALLBACK_URI = "/assets/images/user_image_fallback.png";
+
+    /**
+     * Contains the name of the variant used to fetch the small image.
+     */
+    public static final String IMAGE_VARIANT_SMALL = "user-small";
+
+    /**
+     * Contains the name of the variant used to fetch the medium image.
+     */
+    public static final String IMAGE_VARIANT_MEDIUM = "user-medium";
+
+    /**
+     * Contains the name of the variant used to fetch the large image.
+     */
+    public static final String IMAGE_VARIANT_LARGE = "user-large";
 
     @Transient
     private final BaseEntity<?> userObject;
@@ -62,6 +92,14 @@ public class UserAccountData extends Composite implements MessageProvider {
     @NullAllowed
     @AutoImport
     private String email;
+
+    /**
+     * Contains the reference to the image file.
+     */
+    public static final Mapping IMAGE = Mapping.named("image");
+    @Autoloaded
+    @NullAllowed
+    private final BlobHardRef image = new BlobHardRef(STORAGE_SPACE);
 
     /**
      * Contains the personal information of the user.
@@ -109,6 +147,19 @@ public class UserAccountData extends Composite implements MessageProvider {
     @NullAllowed
     @Length(2)
     private final LookupValue language = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
+
+    /**
+     * Contains internally stored settings for this user.
+     * <p>
+     * This might e.g. be display settings for specific views or the like.
+     */
+    public static final Mapping USER_PREFERENCES = Mapping.named("userPreferences");
+    @NullAllowed
+    @Lob
+    private String userPreferences;
+
+    @Transient
+    private Map<String, Object> parsedUserPreferences;
 
     @Part
     private static Mails ms;
@@ -337,6 +388,25 @@ public class UserAccountData extends Composite implements MessageProvider {
         return Strings.isFilled(email) && userObject.isUnique(UserAccount.USER_ACCOUNT_DATA.inner(EMAIL), email);
     }
 
+    /**
+     * Returns the parsed user preferences.
+     * <p>
+     * Use {@link UserAccount#readPreference(String)} to access the preferences.
+     *
+     * @return the parsed user preferences as map
+     */
+    public Map<String, Object> fetchUserPreferences() {
+        if (parsedUserPreferences == null) {
+            if (Strings.isFilled(userPreferences)) {
+                parsedUserPreferences = Json.convertToMap(Json.parseObject(userPreferences));
+            } else {
+                parsedUserPreferences = Collections.emptyMap();
+            }
+        }
+
+        return Collections.unmodifiableMap(parsedUserPreferences);
+    }
+
     public PersonData getPerson() {
         return person;
     }
@@ -355,6 +425,10 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public BlobHardRef getImage() {
+        return image;
     }
 
     public boolean isExternalLoginRequired() {
@@ -376,5 +450,32 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     public StringList getSubScopes() {
         return subScopes;
+    }
+
+    /**
+     * Builds a URL to the small image.
+     *
+     * @return a URLBuilder which is used to fetch the small image of this user
+     */
+    public URLBuilder fetchSmallUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
+    }
+
+    /**
+     * Builds a URL to the medium image.
+     *
+     * @return a URLBuilder which is used to fetch the medium image of this user
+     */
+    public URLBuilder fetchMediumUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
+    }
+
+    /**
+     * Builds a URL to the large image.
+     *
+     * @return a URLBuilder which is used to fetch the large image of this user
+     */
+    public URLBuilder fetchLargeUrl() {
+        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_LARGE);
     }
 }

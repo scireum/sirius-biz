@@ -15,7 +15,6 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
 import sirius.kernel.async.Future;
 import sirius.kernel.async.Promise;
-import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Tuple;
@@ -95,7 +94,9 @@ public interface ProcessContext extends TaskContextAdapter {
      * @param adminOnly whether to show the timing only to administrators instead of all users
      * @see Process#DEBUGGING
      * @see Processes#changeDebugging(String, boolean)
+     * @deprecated This seems like an overly complex API with is only used in very narrow edge cases.
      */
+    @Deprecated
     void addDebugTiming(String counter, long millis, boolean adminOnly);
 
     /**
@@ -334,6 +335,11 @@ public interface ProcessContext extends TaskContextAdapter {
      * additional sideTasks (other than using a {@link sirius.kernel.async.CombinedFuture} in the main thread).
      */
     Future performInSideTask(UnitOfWork parallelTask);
+
+    /**
+     * Blocks until all currently active side-tasks are completed.
+     */
+    void awaitSideTaskCompletion();
 
     /**
      * Blocks the current thread until all logs have been flushed into Elasticsearch.

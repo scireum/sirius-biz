@@ -47,7 +47,7 @@ public class MongoAcademyReport extends AcademyReport {
                  MongoBooleanFacet skippedFacet =
                          new MongoBooleanFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.SKIPPED));
                  MongoBooleanFacet recommendedFacet =
-                         new MongoBooleanFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.SKIPPED));
+                         new MongoBooleanFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.RECOMMENDED));
                  MongoAverageFacet percentWatchedFacet =
                          new MongoAverageFacet(MongoOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PERCENT_WATCHED));
                  mango.select(MongoOnboardingVideo.class)
@@ -70,7 +70,9 @@ public class MongoAcademyReport extends AcademyReport {
                                        Tuple.create(COLUMN_SKIPPED, cells.of(skippedFacet.getNumTrue())),
                                        Tuple.create(COLUMN_RECOMMENDED, cells.of(recommendedFacet.getNumTrue())),
                                        Tuple.create(COLUMN_PERCENT_WATCHED,
-                                                    cells.of(percentWatchedFacet.getValue().fill(Amount.ZERO)))));
+                                                    cells.of(percentWatchedFacet.getValue()
+                                                                                .fill(Amount.ZERO)
+                                                                                .times(Amount.ONE_HUNDRED)))));
              });
     }
 

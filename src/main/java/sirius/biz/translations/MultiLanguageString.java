@@ -8,9 +8,9 @@
 
 package sirius.biz.translations;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.db.mixing.types.SafeMap;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.ScopeInfo;
@@ -325,6 +325,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
             throw new IllegalStateException(
                     "Can not call fetchTextOrFallback on a MultiLanguageString without fallback enabled.");
         }
+
         return data().getOrDefault(language, data().get(FALLBACK_KEY));
     }
 
@@ -428,11 +429,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @return Multilanguage map as a JSON object
      */
     public String getAsJSON() {
-        JSONObject jsonObject = new JSONObject();
-        if (data != null) {
-            jsonObject.putAll(data);
-        }
-        return jsonObject.toJSONString();
+        return Json.write(Json.convertFromMap(data));
     }
 
     @Override

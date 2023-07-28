@@ -14,6 +14,7 @@ import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
@@ -34,6 +35,7 @@ import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +54,9 @@ public abstract class FileImportJob extends ImportJob {
      * <p>
      * Note that even if another instance is used in {@link FileImportJobFactory#collectParameters(Consumer)}, this
      * will still work out as long as the parameter names are the same. Therefore, both parameters should be
-     * created using {@link #createFileParameter(List)}.
+     * created using {@link #createFileParameter(List, String)}.
      */
-    public static final Parameter<VirtualFile> FILE_PARAMETER = createFileParameter(null);
+    public static final Parameter<VirtualFile> FILE_PARAMETER = createFileParameter(null, null);
 
     /**
      * Determines the mode in which auxiliary files are handled (if this job supports it).
@@ -65,6 +67,7 @@ public abstract class FileImportJob extends ImportJob {
         EnumParameter<AuxiliaryFileMode> parameter =
                 new EnumParameter<>("auxFileMode", "$FileImportJobFactory.auxFileMode", AuxiliaryFileMode.class);
         AUX_FILE_MODE_PARAMETER = parameter.withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE)
+                                           .withDescription("$FileImportJobFactory.auxFileMode.help")
                                            .hideWhen(FileImportJob::hasNoArchiveFile)
                                            .markRequired()
                                            .build();
@@ -95,8 +98,6 @@ public abstract class FileImportJob extends ImportJob {
         parameter.hideWhen(FileImportJob::hasAuxFilesDisabled);
         AUX_FILE_PARENT_DIRECTORY_PARAMETER = parameter.build();
     }
-
-    private static final String FILE_EXTENSION_ZIP = "zip";
 
     @Part
     private static VirtualFileSystem virtualFileSystem;
@@ -183,10 +184,15 @@ public abstract class FileImportJob extends ImportJob {
      * Helps to create a custom file parameter with an appropriate file extension filter.
      *
      * @param acceptedFileExtensions the file extensions to accept
+     * @param description            the description to use in the parameter
      * @return the parameter used to select the import file
      */
-    public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions) {
+    public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions,
+                                                             @Nullable String description) {
         FileParameter result = new FileParameter("file", FILE_LABEL).filesOnly().withBasePath("/work");
+        if (Strings.isFilled(description)) {
+            result.withDescription(description);
+        }
         if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
             result.withAcceptedExtensionsList(acceptedFileExtensions);
         }
@@ -209,7 +215,8 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                errorContext.inContext(suppressFileNameInContext ? "" : FILE_LABEL,
+                ErrorContext.get()
+                            .inContext(suppressFileNameInContext ? "" : FILE_LABEL,
                                        file.name(),
                                        () -> executeForStream(file.name(), fileHandle::getInputStream));
             }
@@ -226,6 +233,15 @@ public abstract class FileImportJob extends ImportJob {
         } else {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        process.getParameter(FILE_PARAMETER)
+               .filter(VirtualFile::exists)
+               .filter(VirtualFile::readOnly)
+               .ifPresent(virtualFile -> virtualFile.updateReadOnlyFlag(false));
+        super.close();
     }
 
     /**
@@ -275,7 +291,8 @@ public abstract class FileImportJob extends ImportJob {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
                                   .withContext("filename", extractedFile.getFilePath()));
-            errorContext.inContext(suppressFileNameInContext ? "" : FILE_LABEL,
+            ErrorContext.get()
+                        .inContext(suppressFileNameInContext ? "" : FILE_LABEL,
                                    extractedFile.getFilePath(),
                                    () -> executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream));
             return true;

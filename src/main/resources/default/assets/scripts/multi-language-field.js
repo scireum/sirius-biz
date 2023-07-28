@@ -266,7 +266,9 @@ MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
 
 MultiLanguageField.prototype.renderLanguageLink = function (langCode, active) {
     const _anchor = document.createElement('a');
-    _anchor.classList.add('nav-link');
+    if (this.multiline) {
+        _anchor.classList.add('nav-link');
+    }
     _anchor.classList.add('mls-language-label');
     if (active) {
         _anchor.classList.add('active');

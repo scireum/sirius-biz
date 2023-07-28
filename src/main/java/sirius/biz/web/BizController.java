@@ -68,6 +68,11 @@ public class BizController extends BasicController {
      */
     private static final String CHECKBOX_PRESENCE_MARKER = "_marker";
 
+    /**
+     * Defines the executor used to delete complex entities.
+     */
+    private static final String COMPLEX_DELETION_EXECUTOR = "complex-deletes";
+
     @Part
     protected Mixing mixing;
 
@@ -435,6 +440,7 @@ public class BizController extends BasicController {
                     assertTenant(tenantAware);
                 }
                 if (entity.getDescriptor().isComplexDelete() && processes != null) {
+                    entity.getDescriptor().getMapper().assertDeletable(entity);
                     deleteComplexEntity(entity);
                 } else {
                     entity.getDescriptor().getMapper().delete(entity);
@@ -452,7 +458,7 @@ public class BizController extends BasicController {
                                                                  "fa-trash",
                                                                  PersistencePeriod.THREE_MONTHS,
                                                                  Collections.emptyMap());
-        tasks.defaultExecutor().fork(() -> processes.execute(processId, process -> {
+        tasks.executor(COMPLEX_DELETION_EXECUTOR).fork(() -> processes.execute(processId, process -> {
             process.log(ProcessLog.info()
                                   .withNLSKey("BizController.startDelete")
                                   .withContext("entity", String.valueOf(entity)));

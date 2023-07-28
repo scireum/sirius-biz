@@ -30,14 +30,18 @@
                         <tr>
                             <th>
                                 <div class="row">
-                                    <div class="col-md-4">@i18n("StoredIncident.lastOccurrence")</div>
-                                    <div class="col-md-4">@i18n("StoredIncident.numberOfOccurrences")</div>
-                                    <div class="col-md-4">@i18n("StoredIncident.user")</div>
-                                </div>
-                                <div class="row">
-                                    <div class="muted col-md-4">@i18n("StoredIncident.firstOccurrence")</div>
-                                    <div class="muted col-md-4">@i18n("StoredIncident.category")</div>
-                                    <div class="muted col-md-4">@i18n("StoredIncident.node")</div>
+                                    <div class="col-md-4">
+                                        <div>@i18n("StoredIncident.lastOccurrence")</div>
+                                        <small class="text-muted">@i18n("StoredIncident.firstOccurrence")</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div>@i18n("StoredIncident.numberOfOccurrences")</div>
+                                        <small class="text-muted">@i18n("StoredIncident.category")</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div>@i18n("StoredIncident.user")</div>
+                                        <small class="text-muted">@i18n("StoredIncident.node")</small>
+                                    </div>
                                 </div>
                             </th>
                         </tr>
@@ -48,21 +52,24 @@
                                 <td>
                                     <div class="row">
                                         <div class="col-md-4 text-small">
-                                            <a href="/system/error/@i.getId()">@toUserString(i.getLastOccurrence())</a>
+                                            <div>
+                                                <a href="/system/error/@i.getId()">@toUserString(i.getLastOccurrence())</a>
+                                            </div>
+                                            <div class="text-muted">@toUserString(i.getFirstOccurrence())</div>
                                         </div>
-                                        <div class="col-md-4 text-muted text-small">@i.getNumberOfOccurrences()</div>
-                                        <div class="col-md-4 text-muted text-small">@i.getUser()</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="muted col-md-4 text-muted text-small">
-                                            @toUserString(i.getFirstOccurrence())
+                                        <div class="col-md-4 text-small text-muted">
+                                            <div>@i.getNumberOfOccurrences()</div>
+                                            <div>@i.getCategory()</div>
                                         </div>
-                                        <div class="muted col-md-4 text-muted text-small">@i.getCategory()</div>
-                                        <div class="muted col-md-4 text-muted text-small">@i.getNode()</div>
+                                        <div class="col-md-4 text-small text-muted">
+                                            <div>@i.getUser()</div>
+                                            <div>@i.getNode()</div>
+                                        </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 error-code">
-                                            <pre class="mb-0 pt-2" style="white-space: break-spaces; overflow-wrap: anywhere;">@i.getMessage()</pre>
+                                            <pre class="mb-0 pt-2"
+                                                 style="white-space: break-spaces; overflow-wrap: anywhere;">@i.getMessage()</pre>
                                         </div>
                                     </div>
                                 </td>

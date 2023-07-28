@@ -34,7 +34,6 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
-import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -77,8 +76,8 @@ import java.util.Optional;
 @Index(name = "blob_content_updated_loop", columns = "contentUpdated", columnSettings = Mango.INDEX_ASCENDING)
 @Index(name = "blob_deleted_loop", columns = "deleted", columnSettings = Mango.INDEX_ASCENDING)
 @Index(name = "blob_parent_changed_loop", columns = "parentChanged", columnSettings = Mango.INDEX_ASCENDING)
-@Index(name = "blob_delete_old_temporary_loop",
-        columns = {"spaceName", "deleted", "lastModified", "temporary"},
+@Index(name = "blob_delete_temporary_loop",
+        columns = {"spaceName", "temporary", "deleted", "lastModified"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 @TranslationSource(Blob.class)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
@@ -179,6 +178,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private boolean temporary;
 
     /**
+     * Stores if the blob is marked as read-only.
+     */
+    public static final Mapping READ_ONLY = Mapping.named("readOnly");
+    private boolean readOnly;
+
+    /**
      * Contains the size (in bytes) of the blob data.
      */
     public static final Mapping SIZE = Mapping.named("size");
@@ -230,12 +235,6 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     public static final Mapping CONTENT_UPDATED = Mapping.named("contentUpdated");
     private boolean contentUpdated;
 
-    /**
-     * Stores if the blob was marked as hidden.
-     */
-    public static final Mapping HIDDEN = Mapping.named("hidden");
-    private boolean hidden;
-
     @Part
     @Nullable
     private static BlobStorage layer2;
@@ -252,7 +251,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         updateFilenameFields();
 
         if (deleted) {
-            // The blob has been deleted. Reset all other flags since its now pointless to trigger any BlobChangedHandler.
+            // The blob has been deleted. Reset all other flags since it's now pointless to trigger any BlobChangedHandler.
             created = false;
             renamed = false;
             contentUpdated = false;
@@ -327,11 +326,8 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     }
 
     @Override
-    public void deliver(Response response) {
-        getStorageSpace().deliverPhysical(getBlobKey(),
-                                          getPhysicalObjectKey(),
-                                          response,
-                                          URLBuilder.isConsideredLarge(this));
+    public Future tryCreateVariant(FileHandle inputFile, String variantName) {
+        return getStorageSpace().tryCreateVariant(this, inputFile, variantName);
     }
 
     @Override
@@ -481,6 +477,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         return filename;
     }
 
+    @Nullable
+    @Override
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
     @Override
     public long getSize() {
         return size;
@@ -520,14 +522,6 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         return parentChanged;
     }
 
-    public boolean isHidden() {
-        return hidden;
-    }
-
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
-    }
-
     @Override
     public LocalDateTime getLastTouched() {
         return lastTouched;
@@ -535,5 +529,15 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     public void setLastTouched(LocalDateTime lastTouched) {
         this.lastTouched = lastTouched;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    @Override
+    public void setReadOnly(boolean readOnly) {
+        getStorageSpace().updateBlobReadOnlyFlag(this, readOnly);
     }
 }

@@ -125,7 +125,9 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                 getUsersAsPage(webContext).addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                         .inner(LoginData.ACCOUNT_LOCKED)
                                                                                         .toString(),
-                                                           NLS.get("LoginData.accountLocked")).asPage();
+                                                           NLS.get("LoginData.accountLocked"))
+                                          .withTotalCount()
+                                          .asPage();
 
         webContext.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", accounts, getUserClass());
     }
@@ -201,7 +203,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
                                                             List<String> accessiblePermissions = getRoles();
                                                             packages.loadAccessiblePermissions(webContext.getParameters(
-                                                                    "roles"),
+                                                                                                       "roles"),
                                                                                                accessiblePermissions::contains,
                                                                                                userAccount.getUserAccountData()
                                                                                                           .getPermissions()
@@ -600,20 +602,19 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
     public void selectUserAccounts(WebContext webContext) {
-        Page<U> selectableUsers = getSelectableUsersAsPage().withContext(webContext).asPage();
-        fillTenantsFromCache(selectableUsers);
+        Page<U> selectableUsers = getSelectableUsersAsPage().withContext(webContext)
+                                                            .addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(
+                                                                                                UserAccountData.LOGIN)
+                                                                                                          .inner(LoginData.ACCOUNT_LOCKED)
+                                                                                                          .toString(),
+                                                                             NLS.get("LoginData.accountLocked"))
+                                                            .withTotalCount()
+                                                            .asPage();
 
         webContext.respondWith()
                   .template("/templates/biz/tenants/select-user-account.html.pasta",
                             selectableUsers,
                             isCurrentlySpying(webContext));
-    }
-
-    private void fillTenantsFromCache(Page<U> selectableUsers) {
-        selectableUsers.getItems()
-                       .forEach(user -> user.getTenant()
-                                            .setValue(matchingTenants.fetchCachedTenant(user.getTenant())
-                                                                     .orElse(null)));
     }
 
     private boolean isCurrentlySpying(WebContext webContext) {

@@ -19,7 +19,6 @@ import sirius.biz.tenants.UserAccountController;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
@@ -61,19 +60,6 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
     @Override
     protected BasePageHelper<SQLUserAccount, ?, ?, ?> getSelectableUsersAsPage() {
         SmartQuery<SQLUserAccount> baseQuery = oma.select(SQLUserAccount.class)
-                                                  .fields(SQLEntity.ID,
-                                                          UserAccount.TENANT.join(Tenant.TENANT_DATA.inner(TenantData.NAME)),
-                                                          UserAccount.TENANT.join(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
-                                                          UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                                       .inner(PersonData.TITLE),
-                                                          UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                                       .inner(PersonData.SALUTATION),
-                                                          UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                                       .inner(PersonData.LASTNAME),
-                                                          UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                                       .inner(PersonData.FIRSTNAME),
-                                                          UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                                       .inner(LoginData.USERNAME))
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.LASTNAME))
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)

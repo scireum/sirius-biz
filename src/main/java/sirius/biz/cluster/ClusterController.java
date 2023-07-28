@@ -37,6 +37,7 @@ import sirius.web.services.JSONStructuredOutput;
 import sirius.web.services.PublicService;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
  * <p>
  * Cluster members collect certain metrics and background infos via JSON using this controller.
  * <p>
- * Also this is resonsible for rendering the <tt>/system/cluster</tt> view.
+ * Also, this is responsible for rendering the <tt>/system/cluster</tt> view.
  */
 @Register
 public class ClusterController extends BasicController {
@@ -112,69 +113,71 @@ public class ClusterController extends BasicController {
      * Reports all metrics of this node as JSON.
      *
      * @param webContext the request to handle
-     * @param out        the output to write the JSON to
+     * @param output     the output to write the JSON to
      * @param token      the cluster authentication token
      */
     @Routed("/system/cluster/state/:1")
     @InternalService
-    public void nodeInfo(WebContext webContext, JSONStructuredOutput out, String token) {
+    public void nodeInfo(WebContext webContext, JSONStructuredOutput output, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
-        out.property(RESPONSE_NAME, CallContext.getNodeName());
-        out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
-        out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
+        output.property(RESPONSE_NAME, CallContext.getNodeName());
+        output.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
+        output.property(RESPONSE_UPTIME,
+                        NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false));
 
-        out.beginArray(RESPONSE_METRICS);
-        for (Metric m : metrics.getMetrics()) {
-            out.beginObject(RESPONSE_METRIC);
-            out.property(RESPONSE_CODE, m.getCode());
-            out.property(RESPONSE_LABEL, m.getLabel());
-            out.property(RESPONSE_VALUE, m.getValue());
-            out.property(RESPONSE_UNIT, m.getUnit());
-            out.property(RESPONSE_STATE, m.getState().name());
-            out.endObject();
+        output.beginArray(RESPONSE_METRICS);
+        for (Metric metric : metrics.getMetrics()) {
+            output.beginObject(RESPONSE_METRIC);
+            output.property(RESPONSE_CODE, metric.getCode());
+            output.property(RESPONSE_LABEL, metric.getLabel());
+            output.property(RESPONSE_VALUE, metric.getValue());
+            output.property(RESPONSE_UNIT, metric.getUnit());
+            output.property(RESPONSE_STATE, metric.getState().name());
+            output.endObject();
         }
-        out.endArray();
+        output.endArray();
     }
 
     /**
      * Reports all background activities of this node as JSON.
      *
      * @param webContext the request to handle
-     * @param out        the output to write the JSON to
+     * @param output     the output to write the JSON to
      * @param token      the cluster authentication token
      */
     @Routed("/system/cluster/background/:1")
     @InternalService
-    public void backgroundInfo(WebContext webContext, JSONStructuredOutput out, String token) {
+    public void backgroundInfo(WebContext webContext, JSONStructuredOutput output, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
-        out.property(RESPONSE_NAME, CallContext.getNodeName());
-        out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
-        out.property(RESPONSE_VERSION, Product.getProduct().getVersion());
-        out.property(RESPONSE_DETAILED_VERSION, Product.getProduct().getDetails());
-        out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
-        out.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
-        out.property(RESPONSE_ACTIVE_BACKGROUND_TASKS, neighborhoodWatch.getActiveBackgroundTasks());
+        output.property(RESPONSE_NAME, CallContext.getNodeName());
+        output.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
+        output.property(RESPONSE_VERSION, Product.getProduct().getVersion());
+        output.property(RESPONSE_DETAILED_VERSION, Product.getProduct().getDetails());
+        output.property(RESPONSE_UPTIME,
+                        NLS.convertDuration(Duration.ofMillis(Sirius.getUptimeInMilliseconds()), true, false));
+        output.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
+        output.property(RESPONSE_ACTIVE_BACKGROUND_TASKS, neighborhoodWatch.getActiveBackgroundTasks());
 
-        out.beginArray(RESPONSE_JOBS);
+        output.beginArray(RESPONSE_JOBS);
         for (BackgroundJobInfo job : neighborhoodWatch.getLocalBackgroundInfo().getJobs().values()) {
-            out.beginObject(RESPONSE_JOB);
-            out.property(RESPONSE_NAME, job.getName());
-            out.property(RESPONSE_DESCRIPTION, job.getDescription());
-            out.property(RESPONSE_LOCAL, job.getSynchronizeType().name());
-            out.property(RESPONSE_LOCAL_OVERWRITE, job.isLocalOverwrite());
-            out.property(RESPONSE_GLOBALLY_ENABLED, job.isGloballyEnabled());
-            out.property(RESPONSE_EXECUTION_INFO, job.getExecutionInfo());
-            out.endObject();
+            output.beginObject(RESPONSE_JOB);
+            output.property(RESPONSE_NAME, job.getName());
+            output.property(RESPONSE_DESCRIPTION, job.getDescription());
+            output.property(RESPONSE_LOCAL, job.getSynchronizeType().name());
+            output.property(RESPONSE_LOCAL_OVERWRITE, job.isLocalOverwrite());
+            output.property(RESPONSE_GLOBALLY_ENABLED, job.isGloballyEnabled());
+            output.property(RESPONSE_EXECUTION_INFO, job.getExecutionInfo());
+            output.endObject();
         }
-        out.endArray();
+        output.endArray();
     }
 
     /**
@@ -186,11 +189,14 @@ public class ClusterController extends BasicController {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void cluster(WebContext webContext) {
         List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
+        clusterInfo.sort(Comparator.comparing(BackgroundInfo::getNodeName));
+
         List<String> jobKeys = clusterInfo.stream()
                                           .flatMap(node -> node.getJobs().keySet().stream())
                                           .distinct()
                                           .sorted(Comparator.naturalOrder())
                                           .toList();
+
         Map<String, String> descriptions = clusterInfo.stream()
                                                       .flatMap(node -> node.getJobs().entrySet().stream())
                                                       .collect(Collectors.toMap(Map.Entry::getKey,
@@ -270,7 +276,7 @@ public class ClusterController extends BasicController {
         }
 
         neighborhoodWatch.changeBleeding(node, FLAG_ENABLE.equals(setting));
-        webContext.respondWith().direct(HttpResponseStatus.OK, "OK");
+        webContext.respondWith().direct(HttpResponseStatus.OK, HttpResponseStatus.OK.reasonPhrase());
     }
 
     /**
@@ -299,7 +305,7 @@ public class ClusterController extends BasicController {
                     examples = @ExampleObject("Service not fully started or bleeding out...")))
     public void ready(WebContext webContext) {
         if (Sirius.isRunning() && !neighborhoodWatch.isBleeding()) {
-            webContext.respondWith().direct(HttpResponseStatus.OK, "OK");
+            webContext.respondWith().direct(HttpResponseStatus.OK, HttpResponseStatus.OK.reasonPhrase());
         } else {
             webContext.respondWith()
                       .error(HttpResponseStatus.SERVICE_UNAVAILABLE, "Service not fully started or bleeding out...");
@@ -330,7 +336,7 @@ public class ClusterController extends BasicController {
             content = @Content(mediaType = "text/plain", examples = @ExampleObject("Tasks running: 5")))
     public void halted(WebContext webContext) {
         if (!Sirius.isRunning() || (neighborhoodWatch.isBleeding() && distributedTasks.getNumberOfActiveTasks() == 0)) {
-            webContext.respondWith().direct(HttpResponseStatus.OK, "OK");
+            webContext.respondWith().direct(HttpResponseStatus.OK, HttpResponseStatus.OK.reasonPhrase());
         } else {
             webContext.respondWith()
                       .direct(HttpResponseStatus.EXPECTATION_FAILED,

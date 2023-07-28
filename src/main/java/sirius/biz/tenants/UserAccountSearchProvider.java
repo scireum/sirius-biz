@@ -73,7 +73,7 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
             // If we're NOT part of the system tenant, we only may search within our own tenant...
             userAccountQuery.eq(SQLUserAccount.TENANT, currentTenant);
         } else if (!currentUser.hasPermission(UserAccountController.getUserManagementPermission())) {
-            // If we're the system tenant but have no user mangement permission there, we may not see
+            // If we're the system tenant but have no user management permission there, we may not see
             // and edit or select our own users...
             userAccountQuery.ne(SQLUserAccount.TENANT, currentTenant);
         }

@@ -153,6 +153,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_RETENTION_DAYS = "retentionDays";
 
     /**
+     * Contains the name of the config keys used to determine the url validity in days.
+     */
+    private static final String CONFIG_KEY_URL_VALIDITY_DAYS = "urlValidityDays";
+
+    /**
      * Determines if touch tracking is active for this space.
      */
     private static final String CONFIG_KEY_TOUCH_TRACKING = "touchTracking";
@@ -263,10 +268,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected static Cache<String, String> blobKeyToPhysicalCache =
             CacheManager.createCoherentCache("storage-physical-keys");
 
+    protected static final String REMOVE_BY_FILENAME = "filename_remover";
+
     /**
      * Caches the {@link Blob blobs} that belong to certain paths
      */
-    protected static Cache<String, Blob> blobByPathCache = CacheManager.createCoherentCache("storage-paths");
+    protected static Cache<String, Blob> blobByPathCache = CacheManager.<Blob>createCoherentCache("storage-paths")
+                                                                       .addValueBasedRemover(REMOVE_BY_FILENAME)
+                                                                       .removeIf((input, blob) -> blob == null
+                                                                                                  || Strings.areEqual(
+                                                                               blob.getFilename(),
+                                                                               input));
 
     protected final Extension config;
     protected final String description;
@@ -276,6 +288,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected String baseUrl;
     protected boolean useNormalizedNames;
     protected int retentionDays;
+    protected int urlValidityDays;
     protected boolean touchTracking;
     protected boolean sortByLastModified;
     protected ObjectStorageSpace objectStorageSpace;
@@ -295,6 +308,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
         this.description = config.getRaw(CONFIG_KEY_DESCRIPTION).asString();
         this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
+        this.urlValidityDays = config.get(CONFIG_KEY_URL_VALIDITY_DAYS).asInt(StorageUtils.DEFAULT_URL_VALIDITY_DAYS);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
         this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
     }
@@ -308,6 +322,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Override
     public String getDescription() {
         return NLS.smartGet(description);
+    }
+
+    @Nullable
+    @Override
+    public String getAcademyVideoTrackId() {
+        return config.getString("academyVideoTrackId");
+    }
+
+    @Nullable
+    @Override
+    public String getAcademyVideoCode() {
+        return config.getString("academyVideoCode");
+    }
+
+    @Nullable
+    @Override
+    public String getKnowledgeBaseArticleCode() {
+        return config.getString("kba");
     }
 
     @Override
@@ -336,6 +368,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Override
     public int getRetentionDays() {
         return retentionDays;
+    }
+
+    @Override
+    public int getUrlValidityDays() {
+        return urlValidityDays;
     }
 
     /**
@@ -930,7 +967,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         updateBlobParent(blob, newParent);
 
-        blobByPathCache.clear();
+        blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
     }
 
     /**
@@ -951,7 +988,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void delete(B blob) {
         markBlobAsDeleted(blob);
 
-        blobByPathCache.clear();
+        blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
     }
 
     /**
@@ -972,10 +1009,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotRenameDuplicateName").handle();
         }
 
+        blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
         updateBlobName(blob, newName);
 
         blobKeyToFilenameCache.remove(blob.getBlobKey());
-        blobByPathCache.clear();
+        blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
     }
 
     /**
@@ -987,11 +1025,28 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract void updateBlobName(B blob, String newName);
 
     /**
+     * Effectively updates the blob read-only flag after all checks have been passed.
+     *
+     * @param blob     the blob to rename
+     * @param readOnly the new value to use
+     */
+    public abstract void updateBlobReadOnlyFlag(B blob, boolean readOnly);
+
+    /**
      * Performs a download / fetch of the given blob to make its data locally accessible.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * space.download(blob).ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * </pre>
      *
      * @param blob the blob to fetch the data for
-     * @return a file handle which makes the blob data accessible or an empty optional if no data was present.
-     * Note that the {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * @return a {@linkplain java.io.Closeable closeable} file handle which makes the blob data accessible, or an empty optional if no data was present
      */
     public Optional<FileHandle> download(Blob blob) {
         if (Strings.isEmpty(blob.getPhysicalObjectKey())) {
@@ -1120,6 +1175,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void updateContent(B blob, @Nullable String filename, File file) {
         String nextPhysicalId = keyGenerator.generateId();
         try {
+            if (Strings.isFilled(filename)) {
+                blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
+            }
             getPhysicalSpace().upload(nextPhysicalId, file);
             blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
@@ -1128,9 +1186,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
-            if (Strings.isFilled(filename)) {
-                blobByPathCache.clear();
-            }
+            blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
@@ -1175,6 +1231,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void updateContent(B blob, String filename, InputStream data, long contentLength) {
         String nextPhysicalId = keyGenerator.generateId();
         try {
+            if (Strings.isFilled(filename)) {
+                blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
+            }
             getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
             blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
@@ -1183,9 +1242,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
-            if (Strings.isFilled(filename)) {
-                blobByPathCache.clear();
-            }
+            blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
@@ -1476,7 +1533,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Actually attempts to either lookup or create the requested variant.
+     * Actually attempts to either look up or create the requested variant.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1535,10 +1592,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (conversionEnabled && !retryLimitReached(variant)) {
-            // A variant exists and we should re-try to create it...
+            // A variant exists, and we should re-try to create it...
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
-                invokeConversionPipelineAsync(blob, variant);
+                invokeConversionPipelineAsync(blob, null, variant);
                 return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
             } else {
                 // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
@@ -1631,12 +1688,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Spawns a thread which will actually invoke the appropriate conversion pipeline.
      *
-     * @param blob    the blob for which the variant is to be created
-     * @param variant the variant to generate
+     * @param blob      the blob for which the variant is to be created
+     * @param inputFile the file handle holding the file to use as input for the conversion
+     * @param variant   the variant to generate
      * @return a future holding the conversion process
      */
-    private Future invokeConversionPipelineAsync(B blob, V variant) {
+    private Future invokeConversionPipelineAsync(B blob, FileHandle inputFile, V variant) {
         ConversionProcess conversionProcess = new ConversionProcess(blob, variant.getVariantName());
+        if (inputFile != null) {
+            conversionProcess.withInputFile(inputFile.getFile());
+        }
+
         Future future = conversionEngine.performConversion(conversionProcess);
         future.onSuccess(ignored -> {
             try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
@@ -1651,16 +1713,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             markConversionFailure(variant, conversionProcess);
             eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                           .withConversionError(conversionException));
-
-            throw Exceptions.handle()
-                            .error(conversionException)
-                            .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
-                                                    variant.getVariantName(),
-                                                    variant.getIdAsString(),
-                                                    blob.getBlobKey(),
-                                                    blob.getFilename())
-                            .handle();
         });
         return future;
     }
@@ -1718,7 +1770,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
             return false;
         } else {
-            invokeConversionPipelineAsync(blob, variant);
+            invokeConversionPipelineAsync(blob, null, variant);
             return true;
         }
     }
@@ -1727,11 +1779,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Tries to create the requested variant if the variant does not exist already.
      *
      * @param blob        the blob for which the variant is to be created
+     * @param inputFile   the file handle holding the file to use as input for the conversion
      * @param variantName the variant to generate
      * @param retries     the number of retries left
      * @return a future holding the conversion process
      */
-    private Future tryCreateVariant(B blob, String variantName, int retries) {
+    private Future tryCreateVariant(B blob, FileHandle inputFile, String variantName, int retries) {
         if (retries == 0) {
             Future future = new Future();
             future.fail(new IllegalStateException(Strings.apply(
@@ -1756,9 +1809,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 // wait a short and random amount of time and retry...
                 Wait.randomMillis(0, 150);
                 // A collision was detected and the given variant was removed, therefore we need to create the variant again.
-                return tryCreateVariant(blob, variantName, retries - 1);
+                return tryCreateVariant(blob, inputFile, variantName, retries - 1);
             } else {
-                return invokeConversionPipelineAsync(blob, variant);
+                return invokeConversionPipelineAsync(blob, inputFile, variant);
             }
         } else {
             // No variant is present and no conversion is possible -> give up
@@ -1782,7 +1835,19 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return a future holding the conversion process
      */
     public Future tryCreateVariant(B blob, String variantName) {
-        return tryCreateVariant(blob, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
+        return tryCreateVariant(blob, null, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
+    }
+
+    /**
+     * Tries to create the requested variant if the variant does not exist already.
+     *
+     * @param blob        the blob for which the variant is to be created
+     * @param inputFile   the file handle holding the file to use as input for the conversion
+     * @param variantName the variant to generate
+     * @return a future holding the conversion process
+     */
+    public Future tryCreateVariant(B blob, FileHandle inputFile, String variantName) {
+        return tryCreateVariant(blob, inputFile, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
     }
 
     /**

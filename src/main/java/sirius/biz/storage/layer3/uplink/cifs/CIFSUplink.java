@@ -153,7 +153,9 @@ public class CIFSUplink extends ConfigBasedUplink {
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
               .withCanFastMoveHandler(this::canFastMoveHandler)
-              .withFastMoveHandler(this::fastMoveHandler);
+              .withFastMoveHandler(this::fastMoveHandler)
+              .withReadOnlyFlagSupplier(this::isReadOnlySupplier)
+              .withReadOnlyHandler(this::readOnlyHandler);
 
         result.attach(file);
         result.attach(this);
@@ -162,7 +164,7 @@ public class CIFSUplink extends ConfigBasedUplink {
 
     private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
         try {
-            file.as(SmbFile.class).renameTo(new SmbFile(newParent.as(SmbFile.class), name));
+            file.as(SmbFile.class).renameTo(new SmbFile(newParent.as(SmbFile.class), file.name()));
             return true;
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -249,6 +251,42 @@ public class CIFSUplink extends ConfigBasedUplink {
                             .to(StorageUtils.LOG)
                             .error(e)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot delete %s: %s (%s)", file)
+                            .handle();
+        }
+    }
+
+    private boolean readOnlyHandler(VirtualFile file, boolean readOnly) {
+        try {
+            if (readOnly) {
+                file.as(SmbFile.class).setReadOnly();
+            } else {
+                file.as(SmbFile.class).setReadWrite();
+            }
+            return true;
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/CIFS: Cannot change read-only state on %s to %s: %s (%s)",
+                                                    file,
+                                                    readOnly)
+                            .handle();
+        }
+    }
+
+    private boolean isReadOnlySupplier(VirtualFile file) {
+        try {
+            SmbFile smbFile = file.as(SmbFile.class);
+            if (smbFile.exists()) {
+                return !smbFile.canWrite();
+            }
+            SmbFile parentFile = new SmbFile(smbFile.getParent(), smbFile.getContext());
+            return !parentFile.exists() || !parentFile.isDirectory() || !parentFile.canWrite();
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/CIFS: Cannot determine if %s is read-only: %s (%s)", file)
                             .handle();
         }
     }

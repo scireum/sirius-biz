@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import com.typesafe.config.ConfigFactory;
 import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.jdbc.BizEntity;
@@ -25,8 +26,10 @@ import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.settings.Settings;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -56,12 +59,20 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
     @Transient
     private Set<String> effectivePermissions;
 
+    @Transient
+    private Settings settings;
+
     @Part
     @Nullable
     private static Tenants<?, ?, ?> tenants;
 
     @Override
     public boolean hasPermission(String permission) {
+        return getPermissions().contains(permission);
+    }
+
+    @Override
+    public Set<String> getPermissions() {
         if (effectivePermissions == null) {
             Set<String> permissions = new TreeSet<>(getTenantData().getPackageData().computeExpandedPermissions());
             if (Strings.areEqual(getIdAsString(), tenants.getTenantUserManager().getSystemTenantId())) {
@@ -80,7 +91,20 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
             effectivePermissions = TenantUserManager.computeEffectiveTenantPermissions(this, effectivePermissions);
         }
 
-        return effectivePermissions.contains(permission);
+        return Collections.unmodifiableSet(effectivePermissions);
+    }
+
+    @Override
+    public Settings getSettings() {
+        if (settings == null) {
+            if (null == getTenantData().getConfig()) {
+                settings = new Settings(ConfigFactory.empty(), false);
+            } else {
+                settings = new Settings(getTenantData().getConfig(), false);
+            }
+        }
+
+        return settings;
     }
 
     @Override

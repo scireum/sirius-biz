@@ -17,7 +17,7 @@
     </i:block>
 
     <t:searchHeader page="entries" baseUrl="/jobs/scheduler">
-        <a class="btn btn-primary" href="/jobs/scheduler/entry/new">@i18n("Model.create")</a>
+        <t:createButton url="/jobs/scheduler/entry/new"/>
     </t:searchHeader>
 
     <t:emptyCheck data="entries">

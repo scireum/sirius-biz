@@ -16,14 +16,31 @@ li.right-menu-icon {
 
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   // Make fa icons the same size as our provided pngs in the collapsed (hamburger) menu...
-  .right-menu-icon svg{
-    width: 1.5rem !important;
+  li.right-menu-icon {
+    padding-left: 0;
+    border-right: none !important;
+
+    svg {
+      width: 1.5rem !important;
+    }
+  }
+  // Do not oversize the user icon in the collapsed (hamburger) menu...
+  li.right-large-menu-icon {
+    img {
+      height: 1.5rem;
+    }
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
+  // Make fa icons the same size as our provided pngs in the expanded (normal) menu...
+  li.right-menu-icon {
+    >a {
+      line-height: 2;
+    }
+  }
   // Make the user icon a bit more prominent in the expanded (normal) menu...
   li.right-large-menu-icon {
     a {
@@ -49,7 +66,7 @@ li.right-menu-icon {
   }
 
   input::placeholder {
-    color: rgba(0,0,0, 0.5);
+    color: rgba(0, 0, 0, 0.5);
     font-weight: lighter;
   }
 }

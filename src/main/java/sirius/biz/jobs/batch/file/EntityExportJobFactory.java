@@ -39,7 +39,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
         parameterCollector.accept(EntityExportJob.TEMPLATE_FILE_PARAMETER);
     }
 
-    @SuppressWarnings("squid:S2095")
+    @SuppressWarnings({"squid:S2095", "resource"})
     @Explain("The job must not be closed here as it is returned and managed by the caller.")
     @Override
     protected EntityExportJob<E, Q> createJob(ProcessContext process) {
@@ -52,6 +52,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
                                          getDefaultMapping(),
                                          process,
                                          getName()).withQueryExtender(query -> extendSelectQuery(query, process))
+                                                   .withEntityFilter(this::includeEntityDuringExport)
                                                    .withContextExtender(context -> context.putAll(parameterContext))
                                                    .withFileName(getCustomFileName());
     }
@@ -73,7 +74,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     /**
      * Permits to return a custom file name when exporting the entity.
      * <p>
-     * Otherwise the "end user friendly" plural of the entity is used as target file name
+     * Otherwise, the "end-user friendly" plural of the entity is used as target file name
      */
     protected String getCustomFileName() {
         return null;
@@ -87,6 +88,20 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
      */
     protected void extendSelectQuery(Q query, ProcessContext processContext) {
         // Nothing to add by default
+    }
+
+    /**
+     * Checks whether the given entity should be exported. This can be overridden to filter entities using more complex
+     * logic than can be expressed by the query.
+     * <p>
+     * This method should be used with care.
+     *
+     * @param entity         the entity to check
+     * @param processContext the current process which can be used to extract parameters
+     * @return <tt>true</tt> if the entity should be exported, <tt>false</tt> otherwise
+     */
+    protected boolean includeEntityDuringExport(E entity, ProcessContext processContext) {
+        return true;
     }
 
     /**
@@ -137,7 +152,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     @Override
     protected void collectJobInfos(JobInfoCollector collector) {
         super.collectJobInfos(collector);
-        collector.addTranslatedWell("EntityExportJobFactory.templateModes");
+        collector.addTranslatedCard("EntityExportJobFactory.templateModes");
         getDictionary().emitJobInfos(collector);
     }
 }

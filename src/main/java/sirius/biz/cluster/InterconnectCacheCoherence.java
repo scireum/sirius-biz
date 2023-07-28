@@ -8,11 +8,12 @@
 
 package sirius.biz.cluster;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheCoherence;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -42,51 +43,54 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
     @Override
     public void clear(Cache<String, ?> cache) {
         interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_CLEAR)
-                                              .fluentPut(MESSAGE_CACHE, cache.getName())
-                                              .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
+                              Json.createObject()
+                                  .put(MESSAGE_TYPE, TYPE_CLEAR)
+                                  .put(MESSAGE_CACHE, cache.getName())
+                                  .put(MESSAGE_NODE, CallContext.getNodeName()));
         CacheManager.clearCoherentCacheLocally(cache.getName());
     }
 
     @Override
     public void removeKey(Cache<String, ?> cache, String key) {
         interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_REMOVE)
-                                              .fluentPut(MESSAGE_CACHE, cache.getName())
-                                              .fluentPut(MESSAGE_KEY, key)
-                                              .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
+                              Json.createObject()
+                                  .put(MESSAGE_TYPE, TYPE_REMOVE)
+                                  .put(MESSAGE_CACHE, cache.getName())
+                                  .put(MESSAGE_KEY, key)
+                                  .put(MESSAGE_NODE, CallContext.getNodeName()));
         CacheManager.removeCoherentCacheKeyLocally(cache.getName(), key);
     }
 
     @Override
     public void removeAll(Cache<String, ?> cache, String discriminator, String testInput) {
         interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_REMOVE_ALL)
-                                              .fluentPut(MESSAGE_CACHE, cache.getName())
-                                              .fluentPut(MESSAGE_DISCRIMINATOR, discriminator)
-                                              .fluentPut(MESSAGE_TEST_VALUE, testInput)
-                                              .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
+                              Json.createObject()
+                                  .put(MESSAGE_TYPE, TYPE_REMOVE_ALL)
+                                  .put(MESSAGE_CACHE, cache.getName())
+                                  .put(MESSAGE_DISCRIMINATOR, discriminator)
+                                  .put(MESSAGE_TEST_VALUE, testInput)
+                                  .put(MESSAGE_NODE, CallContext.getNodeName()));
         CacheManager.coherentCacheRemoveAllLocally(cache.getName(), discriminator, testInput);
     }
 
     @Override
-    public void handleEvent(JSONObject event) {
-        String type = event.getString(MESSAGE_TYPE);
-        String cache = event.getString(MESSAGE_CACHE);
+    public void handleEvent(ObjectNode event) {
+        String type = Json.tryValueString(event, MESSAGE_TYPE).orElse(null);
+        String cache = Json.tryValueString(event, MESSAGE_CACHE).orElse(null);
 
         // Ignore our own messages, as we already have executed them...
-        if (Strings.areEqual(CallContext.getNodeName(), event.getString(MESSAGE_NODE))) {
+        if (Strings.areEqual(CallContext.getNodeName(), Json.tryValueString(event, MESSAGE_NODE).orElse(null))) {
             return;
         }
 
         if (Strings.areEqual(type, TYPE_CLEAR)) {
             CacheManager.clearCoherentCacheLocally(cache);
         } else if (Strings.areEqual(type, TYPE_REMOVE)) {
-            String key = event.getString(MESSAGE_KEY);
+            String key = Json.tryValueString(event, MESSAGE_KEY).orElse(null);
             CacheManager.removeCoherentCacheKeyLocally(cache, key);
         } else if (Strings.areEqual(type, TYPE_REMOVE_ALL)) {
-            String discriminator = event.getString(MESSAGE_DISCRIMINATOR);
-            String testValue = event.getString(MESSAGE_TEST_VALUE);
+            String discriminator = Json.tryValueString(event, MESSAGE_DISCRIMINATOR).orElse(null);
+            String testValue = Json.tryValueString(event, MESSAGE_TEST_VALUE).orElse(null);
             CacheManager.coherentCacheRemoveAllLocally(cache, discriminator, testValue);
         }
     }

@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.web.BizController;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.ContentHelper;
@@ -26,17 +26,17 @@ public class LinkCellFormat implements CellFormat {
     protected static final String KEY_VALUE = "value";
 
     @Override
-    public String format(JSONObject data) {
+    public String format(ObjectNode data) {
         return "<a href=\""
-               + ContentHelper.escapeXML(data.getString(KEY_URL))
+               + ContentHelper.escapeXML(data.path(KEY_URL).asText())
                + "\" classes=\"link\" target=\"_blank\">"
-               + ContentHelper.escapeXML(data.getString(KEY_VALUE))
+               + ContentHelper.escapeXML(data.path(KEY_VALUE).asText())
                + "</a>";
     }
 
     @Override
-    public String rawValue(JSONObject data) {
-        StringBuilder linkUrl = new StringBuilder(data.getString(KEY_URL));
+    public String rawValue(ObjectNode data) {
+        StringBuilder linkUrl = new StringBuilder(data.path(KEY_URL).asText());
         if (!linkUrl.toString().startsWith("http") && linkUrl.toString().startsWith("/")) {
             linkUrl.insert(0, BizController.getBaseUrl());
         }

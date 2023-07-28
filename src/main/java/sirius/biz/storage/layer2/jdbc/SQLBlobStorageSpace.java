@@ -125,7 +125,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected void rollbackDirectory(SQLDirectory directory) {
         try {
             oma.deleteStatement(SQLDirectory.class).where(SQLDirectory.ID, directory.getId()).executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer2/SQL: Failed to rollback directory %s (%s) in %s: %s (%s)",
@@ -220,10 +220,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .where(SQLBlob.REFERENCE, referencingEntity)
                .where(SQLBlob.REFERENCE_DESIGNATOR, null)
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the objects referenced to '%s' as deleted: %s (%s)",
                               referencingEntity)
@@ -254,10 +254,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
             }
 
             updateStatement.executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the objects referenced to '%s' via '%s' as deleted: %s (%s)",
                               referencingEntity,
@@ -315,10 +315,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                         referenceDesignator)
                                 .handle();
             }
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 2/SQL: An error occurred, when referencing '%s' from '%s' ('%s'): %s (%s)",
                                     objectKey,
@@ -359,10 +359,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                         referencingEntity)
                                 .handle();
             }
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 2/SQL: An error occurred, when referencing '%s' from '%s: %s (%s)",
                                     objectKey,
@@ -416,10 +416,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .where(SQLBlob.BLOB_KEY, objectKey)
                .where(SQLBlob.TEMPORARY, true)
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the object '%s' as used: %s (%s)",
                               objectKey)
@@ -440,10 +440,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .where(SQLBlob.ID, ((SQLBlob) blob).getId())
                .where(SQLBlob.TEMPORARY, true)
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the object '%s' as used: %s (%s)",
                               blob.getBlobKey())
@@ -458,10 +458,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .set(SQLBlob.DELETED, true)
                .where(SQLBlob.ID, blob.getId())
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the blob '%s' as deleted: %s (%s)",
                               blob.getBlobKey())
@@ -473,6 +473,25 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected void updateBlobName(SQLBlob blob, String newName) {
         blob.setFilename(newName);
         oma.update(blob);
+    }
+
+    @Override
+    public void updateBlobReadOnlyFlag(SQLBlob blob, boolean readOnly) {
+        try {
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.READ_ONLY, readOnly)
+               .where(SQLBlob.ID, blob.getId())
+               .executeUpdate();
+        } catch (SQLException exception) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(exception)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occurred, when updating the read-only flag of blob '%s' to %s: %s (%s)",
+                              blob.getBlobKey(),
+                              readOnly)
+                      .handle();
+        }
     }
 
     @Override
@@ -488,10 +507,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .set(SQLDirectory.DELETED, true)
                .where(SQLDirectory.ID, directory.getId())
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the directory '%s' as deleted: %s (%s)",
                               directory.getId())
@@ -902,10 +921,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
                .where(SQLVariant.ID, variant.getId())
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as failed: %s (%s)",
                               variant.getIdAsString(),
@@ -926,10 +945,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
                .where(SQLVariant.ID, variant.getId())
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occurred, when marking the variant '%s' of blob '%s' as converted: %s (%s)",
                               variant.getIdAsString(),
@@ -957,10 +976,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED, LocalDateTime.now().minusDays(retentionDays)))
                .limit(256)
                .iterateAll(this::markBlobAsDeleted);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 2/SQL: Failed to delete old blobs in %s: %s (%s)", spaceName)
                       .handle();
         }
@@ -975,10 +994,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
                .limit(256)
                .iterateAll(this::markBlobAsDeleted);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 2/SQL: Failed to delete temporary blobs in %s: %s (%s)", spaceName)
                       .handle();
         }
@@ -995,10 +1014,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 template.setBlobKey(blobKey);
                 markTouchedQuery.update(template, false, false);
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 2/SQL: Failed to mark blobs in %s as touched: %s (%s)", spaceName)
                       .handle();
         }

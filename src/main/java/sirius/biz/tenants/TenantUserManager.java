@@ -11,6 +11,7 @@ package sirius.biz.tenants;
 import com.typesafe.config.Config;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.UserActivityEvent;
+import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.SpyUser;
@@ -152,6 +153,21 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      */
     private static final String SUFFIX_FINGERPRINT = "-fingerprint";
 
+    /**
+     * Contains the prefix added to the account number which is added as artificial role.
+     * <p>
+     * Therefore, each user of a tenant has the following additional role (if filled):
+     * {@code ROLE_PREFIX_ACCOUNT_NUMBER + tenant.getTenantData().getAccountNumber()}
+     */
+    public static final String ROLE_PREFIX_ACCOUNT_NUMBER = "tenant-";
+
+    /**
+     * Contains the prefix added to all performance flags when they're made visible as roles.
+     * <p>
+     * This simplifies checking if a user or its tenant has a certain flag active.
+     */
+    public static final String ROLE_PREFIX_PERFORMANCE_FLAG = "performance-flag-";
+
     protected final String systemTenant;
     protected final boolean acceptApiTokens;
     protected final List<String> availableLanguages;
@@ -193,7 +209,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
-        this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
+        this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(false);
         this.availableLanguages = scope.getDisplayLanguages().stream().toList();
     }
 
@@ -351,27 +367,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         try {
             U currentUser = originalUser.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
+
             modifiedUser.setId(currentUser.getId());
-            modifiedUser.getUserAccountData()
-                        .getLanguage()
-                        .setValue(currentUser.getUserAccountData().getLanguage().getValue());
-            modifiedUser.getUserAccountData()
-                        .getLogin()
-                        .setUsername(currentUser.getUserAccountData().getLogin().getUsername());
-            modifiedUser.getUserAccountData().setEmail(currentUser.getUserAccountData().getEmail());
-            modifiedUser.getUserAccountData()
-                        .getPermissions()
-                        .setConfigString(currentUser.getUserAccountData().getPermissions().getConfigString());
-            modifiedUser.getUserAccountData()
-                        .getPermissions()
-                        .getPermissions()
-                        .addAll(currentUser.getUserAccountData().getPermissions().getPermissions().modify());
-            modifiedUser.getUserAccountData()
-                        .getPerson()
-                        .setFirstname(currentUser.getUserAccountData().getPerson().getFirstname());
-            modifiedUser.getUserAccountData()
-                        .getPerson()
-                        .setLastname(currentUser.getUserAccountData().getPerson().getLastname());
+            currentUser.getDescriptor().getProperties().forEach(property -> {
+                property.setValue(modifiedUser, property.getValue(currentUser));
+            });
+
             return modifiedUser;
         } catch (Exception e) {
             throw Exceptions.handle(Log.APPLICATION, e);
@@ -646,12 +647,6 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         LoginData loginData = account.getUserAccountData().getLogin();
-        if (acceptApiTokens && checkApiToken(loginData, password)) {
-            completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
-            recordLogin(result, false);
-            return result;
-        }
-
         LoginData.PasswordVerificationResult pwResult = loginData.checkPassword(user, password);
         if (pwResult != LoginData.PasswordVerificationResult.INVALID) {
             completeAuditLogForUser(auditLog.neutral("AuditLog.passwordLogin"), account);
@@ -663,6 +658,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                 return rehashingResult.get();
             }
 
+            recordLogin(result, false);
+            return result;
+        }
+
+        if (acceptApiTokens && checkApiToken(loginData, password)) {
+            completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
             recordLogin(result, false);
             return result;
         }
@@ -894,7 +895,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             roles.add(Tenant.PERMISSION_SYSTEM_TENANT);
         }
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
-            roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
+            roles.add(ROLE_PREFIX_ACCOUNT_NUMBER + tenant.getTenantData().getAccountNumber());
         }
 
         for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
@@ -905,8 +906,15 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             roles.add(PERMISSION_HAS_CHILDREN);
         }
 
-        Set<String> transformedRoles = transformRoles(roles);
-        tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(transformedRoles::remove);
+        tenant.getPerformanceData()
+              .activeFlags()
+              .map(PerformanceFlag::getName)
+              .map(flag -> ROLE_PREFIX_PERFORMANCE_FLAG + flag)
+              .forEach(roles::add);
+
+        Set<String> excludedPermissions = new HashSet<>(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        Set<String> transformedRoles = transformRoles(roles, excludedPermissions);
+        excludedPermissions.forEach(transformedRoles::remove);
 
         return transformedRoles;
     }
@@ -931,8 +939,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         // also apply profiles and revokes to additional roles
-        Permissions.applyProfiles(result);
-        tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(result::remove);
+        Set<String> excludedPermissions = new HashSet<>(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        Permissions.applyProfiles(result, excludedPermissions);
+        excludedPermissions.forEach(result::remove);
 
         return result;
     }

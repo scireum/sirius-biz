@@ -8,14 +8,16 @@
 
 package sirius.biz.codelists;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonPointer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
-import sirius.web.util.JSONPath;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -95,6 +97,31 @@ public abstract class LookupTable {
             case UPPER -> code.toUpperCase();
             default -> code;
         };
+    }
+
+    /**
+     * Attempts to resolve the name for the given code or returns the input itself.
+     *
+     * @param code the code to resolve the name for
+     * @return the name for the given code in the currently active language if present or the code itself. Note that
+     * this will only resolve the main code. When in doubt, the code must be normalized via {@link #normalize(String)}
+     * before invoking this method.
+     */
+    public String forceResolveName(String code) {
+        return resolveName(code).orElse(code);
+    }
+
+    /**
+     * Attempts to resolve the name for the given code or returns the input itself.
+     *
+     * @param code     the code to resolve the name for
+     * @param language the language of the name to resolve
+     * @return the name for the given code in the given language if present or the code itself. Note that this will only
+     * resolve the main code. When in doubt, the code must be normalized via {@link #normalize(String)} before invoking
+     * this method.
+     */
+    public String forceResolveName(String code, String language) {
+        return resolveName(code, language).orElse(code);
     }
 
     /**
@@ -528,7 +555,7 @@ public abstract class LookupTable {
      * <p>
      * The system will try to use a cache if possible.
      *
-     * @param type the type of value to instantiate (Must accept a JSONObject in its constructor)
+     * @param type the type of value to instantiate (Must accept a jackson ObjectNode in its constructor)
      * @param code the leading code used to determine which value to load
      * @param <T>  the generic type of the object to fetch
      * @return the object for the given code, or an empty optional if the code is unknown
@@ -545,7 +572,7 @@ public abstract class LookupTable {
     /**
      * Fetches the given object based on the data in the lookup table - without using any cache.
      *
-     * @param type the type of value to instantiate (Must accept a JSONObject in its constructor)
+     * @param type the type of value to instantiate (Must accept a jackson ObjectNode in its constructor)
      * @param code the leading code used to determine which value to load
      * @param <T>  the generic type of the object to fetch
      * @return the object for the given code, or an empty optional if the code is unknown
@@ -572,22 +599,24 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the parsed translation map. Note that this also gracefully handles simple string values
      */
-    public static Map<String, String> parseTranslationTable(JSONObject root, String path) {
-        Value translations = JSONPath.queryValue(root, path);
-        if (translations.is(JSONObject.class)) {
-            return ((JSONObject) translations.get()).entrySet()
-                                                    .stream()
-                                                    .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                              entry -> String.valueOf(entry.getValue())));
-        } else {
-            return Collections.singletonMap("xx", translations.asString());
-        }
+    public static Map<String, String> parseTranslationTable(ObjectNode root, JsonPointer path) {
+        return Json.tryGetAt(root, path).map(translations -> {
+            if (translations.isObject()) {
+                return translations.properties()
+                                   .stream()
+                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
+            } else {
+                return Collections.singletonMap("xx", translations.asText());
+            }
+        }).orElseGet(() -> {
+            return Collections.singletonMap("xx", "");
+        });
     }
 
     /**
      * Resolves the translation for a given language using a translation table.
      * <p>
-     * This table can be built / parsed using {@link #parseTranslationTable(JSONObject, String)}.
+     * This table can be built / parsed using {@link #parseTranslationTable(ObjectNode, JsonPointer)}.
      *
      * @param table    the table used to look up the value
      * @param language the language to translate to or <tt>null</tt> to use the current language
@@ -612,19 +641,23 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the string list found in the JSON, or an empty list if there is none
      */
-    public static List<String> parseStringList(JSONObject root, String path) {
-        Value value = JSONPath.queryValue(root, path);
-        if (value.is(JSONArray.class)) {
-            return transformArrayToStringList(value.get(JSONArray.class, null));
-        } else if (value.is(String.class) && !value.isEmptyString()) {
-            return Collections.singletonList(value.asString());
+    public static List<String> parseStringList(ObjectNode root, JsonPointer path) {
+        Optional<JsonNode> optionalJsonNode = Json.tryGetAt(root, path);
+        if (optionalJsonNode.isEmpty()) {
+            return Collections.emptyList();
+        }
+        JsonNode jsonNode = optionalJsonNode.get();
+        if (jsonNode.isArray()) {
+            return transformArrayToStringList((ArrayNode) jsonNode);
+        } else if (jsonNode.isTextual() && Strings.isFilled(jsonNode.asText())) {
+            return Collections.singletonList(jsonNode.asText(null));
         } else {
             return Collections.emptyList();
         }
     }
 
-    private static List<String> transformArrayToStringList(JSONArray array) {
-        return array.stream().filter(Strings::isFilled).map(String::valueOf).toList();
+    private static List<String> transformArrayToStringList(ArrayNode array) {
+        return Json.streamEntries(array).map(JsonNode::asText).filter(Strings::isFilled).toList();
     }
 
     /**
@@ -636,14 +669,17 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the string map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, String> parseStringMap(JSONObject root, String path) {
-        Value value = JSONPath.queryValue(root, path);
-        if (value.is(JSONObject.class)) {
-            return ((JSONObject) value.get()).entrySet()
-                                             .stream()
-                                             .filter(entry -> Strings.isFilled(entry.getValue()))
-                                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> String.valueOf(entry.getValue())));
+    public static Map<String, String> parseStringMap(ObjectNode root, JsonPointer path) {
+        Optional<JsonNode> optionalJsonNode = Json.tryGetAt(root, path);
+        if (optionalJsonNode.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        JsonNode jsonNode = optionalJsonNode.get();
+        if (jsonNode.isObject()) {
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> Strings.isFilled(entry.getValue().asText()))
+                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
         } else {
             return Collections.emptyMap();
         }
@@ -658,21 +694,25 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, List<String>> parseStringListMap(JSONObject root, String path) {
-        Value value = JSONPath.queryValue(root, path);
-        if (value.is(JSONObject.class)) {
-            return ((JSONObject) value.get()).entrySet()
-                                             .stream()
-                                             .filter(entry -> entry.getValue() instanceof JSONArray)
-                                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((JSONArray) entry.getValue())));
+    public static Map<String, List<String>> parseStringListMap(ObjectNode root, JsonPointer path) {
+        Optional<JsonNode> optionalJsonNode = Json.tryGetAt(root, path);
+        if (optionalJsonNode.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        JsonNode jsonNode = optionalJsonNode.get();
+        if (jsonNode.isObject()) {
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> entry.getValue().isArray())
+                           .collect(Collectors.toMap(Map.Entry::getKey,
+                                                     entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
         } else {
             return Collections.emptyMap();
         }
     }
 
     /**
-     * Parses and extracts an inner map (of strings to JSONObjects) from a JSON object.
+     * Parses and extracts an inner map (of strings to jackson ObjectNodes) from a JSON object.
      * <p>
      * This can be used when processing JSON in order to build an object for {@link #fetchObject(Class, String)}.
      *
@@ -680,14 +720,17 @@ public abstract class LookupTable {
      * @param path the path to the field to query
      * @return the map found in the JSON, or an empty map if there is none
      */
-    public static Map<String, JSONObject> parseMap(JSONObject root, String path) {
-        Value value = JSONPath.queryValue(root, path);
-        if (value.is(JSONObject.class)) {
-            return ((JSONObject) value.get()).entrySet()
-                                             .stream()
-                                             .filter(entry -> entry.getValue() instanceof JSONObject)
-                                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> (JSONObject) entry.getValue()));
+    public static Map<String, ObjectNode> parseMap(ObjectNode root, JsonPointer path) {
+        Optional<JsonNode> optionalJsonNode = Json.tryGetAt(root, path);
+        if (optionalJsonNode.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        JsonNode jsonNode = optionalJsonNode.get();
+        if (jsonNode.isObject()) {
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> entry.getValue().isObject())
+                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> (ObjectNode) entry.getValue()));
         } else {
             return Collections.emptyMap();
         }

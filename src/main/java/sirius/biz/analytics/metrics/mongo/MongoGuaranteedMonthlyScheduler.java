@@ -8,7 +8,6 @@
 
 package sirius.biz.analytics.metrics.mongo;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.analytics.metrics.MetricsGuaranteedBatchExecutor;
 import sirius.biz.analytics.metrics.MetricsGuaranteedSchedulerExecutor;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
@@ -19,7 +18,6 @@ import sirius.biz.analytics.scheduler.ScheduleInterval;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
-import java.time.LocalDate;
 
 /**
  * Provides the executor which is responsible for scheduling {@link MonthlyMetricComputer} instances which refer
@@ -57,10 +55,5 @@ public class MongoGuaranteedMonthlyScheduler extends MongoAnalyticalTaskSchedule
     @Override
     public String getName() {
         return "mongo-metrics-monthly";
-    }
-
-    @Override
-    public void executeBatch(JSONObject batchDescription, LocalDate date, int level) {
-        super.executeBatch(batchDescription, date.minusMonths(1), level);
     }
 }

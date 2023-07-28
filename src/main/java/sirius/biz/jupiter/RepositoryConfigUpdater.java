@@ -25,9 +25,9 @@ import java.util.Map;
 public class RepositoryConfigUpdater implements JupiterConfigUpdater {
 
     @Override
-    public void emitConfig(String instance, Extension systemConfig, Map<String, Object> config) {
+    public void emitConfig(JupiterConnector connector, Extension systemConfig, Map<String, Object> config) {
         Map<String, Object> repoConfig = new HashMap<>();
-        repoConfig.put("namespaces", systemConfig.getStringList("repository.namespaces"));
+        repoConfig.put("namespaces", connector.fetchEnabledNamespaces());
         config.put("repository", repoConfig);
     }
 }

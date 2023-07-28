@@ -1,135 +1,34 @@
 <i:arg type="Page" name="accounts"/>
 <i:arg type="java.lang.Class" name="accountType"/>
 
-<w:page titleKey="UserAccount.plural">
+<t:page titleKey="UserAccount.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/user-accounts">@i18n("UserAccount.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="UserAccount.plural"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="UserAccount.plural"/>
+    </i:block>
 
-    <div class="row">
-        <div class="col-md-3">
-            <w:filterbox page="accounts" baseUrl="/user-accounts"/>
-            <w:jobs target="accountType"/>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:sidebarKeyMetrics target="sirius.biz.tenants.UserAccount.class"/>
+            <t:filterbox page="accounts" baseUrl="/user-accounts"/>
+            <t:jobs target="sirius.biz.tenants.UserAccount.class"/>
+            <t:charts target="sirius.biz.tenants.UserAccount.class"/>
             <i:extensions target="user-accounts" point="sidebar" page="accounts"/>
-        </div>
-        <div class="col-md-9">
-            <w:tableSearchHeader page="accounts" baseUrl="/user-accounts">
-                <a class="btn btn-primary" href="/user-account/new">@i18n("Model.create")</a>
-            </w:tableSearchHeader>
+        </i:block>
 
-            <w:table data="accounts">
-                <thead>
-                <tr>
-                    <i:extensions target="user-accounts" point="first-column-head" page="accounts"/>
-                    <th>
-                        @i18n("LoginData.username")<br>
-                        <small class="muted">@i18n("LoginData.lastSeen")</small>
-                    </th>
-                    <th>
-                        @i18n("Model.name")<br>
-                        <span class="muted">@i18n("Model.email")</span>
-                    </th>
-                    <th>
-                        @i18n("LoginData.password")<br>
-                        <span class="muted">@i18n("LoginData.generatedPassword")</span>
-                    </th>
+        <t:searchHeader page="accounts" baseUrl="/user-accounts">
+            <t:createButton url="/user-account/new"/>
+        </t:searchHeader>
 
-                    <i:extensions target="user-accounts" point="last-column-head" page="accounts"/>
-                    <th/>
-                </tr>
-                </thead>
-                <tbody>
-                <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
-                    <tr @if (account.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
-                        <i:extensions target="user-accounts" point="first-column" page="accounts" account="account"/>
-                        <td class="title">
-                            <a class="link"
-                               href="/user-account/@account.getIdAsString()">@account.getUserAccountData().getLogin().getUsername()</a>
-                            <br>
-                            <small class="muted">
-                                <i:if test="account.getUserAccountData().getLogin().getLastSeen() != null">
-                                    @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
-                                    <i:else>-</i:else>
-                                </i:if>
-                            </small>
-                        </td>
-                        <td>
-                            @account.getUserAccountData().getPerson()<br>
-                            <span class="muted">@account.getUserAccountData().getEmail()</span>
-                        </td>
-                        <td>
-                            <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
-                                <a href="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-password', account.getIdAsString()))"
-                                   class="link">
-                                    <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
-                                </a>
-                                <br>
-                                <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
-                                    <a href="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-and-send-password', account.getIdAsString()))"
-                                       class="link">
-                                        <i class="fa fa-angle-double-right"></i>
-                                        @i18n("LoginData.password.generateAndSend")
-                                    </a>
-                                    <br>
-                                </i:if>
-                            </i:if>
-
-                            <i:if test="@account.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
-                                <span class="muted">@account.getUserAccountData().getLogin().getGeneratedPassword()</span>
-
-                                <i:else>
-                                    <i:if test="isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())">
-                                        <span class="muted">@i18n("LoginData.password.hiddenGenerated")</span>
-                                    </i:if>
-                                </i:else>
-                            </i:if>
-                        </td>
-                        <i:extensions target="user-accounts" point="last-column" page="accounts" account="account"/>
-                        <td class="align-center">
-                            <w:permission permission="permission-select-user-account">
-                                <div>
-                                    <a class="link" href="/user-accounts/select/@account.getIdAsString()">
-                                        <i class="fa fa-user"></i>
-                                        @i18n("UserAccountConroller.select")
-                                    </a>
-                                </div>
-                            </w:permission>
-                            <w:permission permission="permission-delete-user-accounts">
-                                <div>
-                                    <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
-                                                  page="accounts"/>
-                                </div>
-                            </w:permission>
-
-                            <div>
-                                <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
-                                    <a class="link link-danger" href="/user-account/@account.getIdAsString()/unlock">
-                                        <i class="fa fa-unlock"></i>
-                                        @i18n("LoginData.unlock")
-                                    </a>
-
-                                    <i:else>
-                                        <a class="link link-danger"
-                                           href="/user-account/@account.getIdAsString()/lock">
-                                            <i class="fa fa-lock"></i>
-                                            @i18n("LoginData.lock")
-                                        </a>
-                                    </i:else>
-                                </i:if>
-                            </div>
-                            <i:extensions target="user-accounts" point="actions" page="accounts" account="account"/>
-                        </td>
-                    </tr>
-                </i:for>
-                </tbody>
-            </w:table>
-
-            <w:pagination page="accounts" baseUrl="/user-accounts"/>
-        </div>
-    </div>
-
-</w:page>
+        <i:invoke template="/templates/biz/tenants/user-accounts-list.html.pasta"
+                  accounts="accounts"
+                  paginationBaseUrl="@('/user-accounts')"
+                  cardBaseUrl="@('/user-account')"
+                  enableCardActions="true"/>
+    </t:sidebar>
+</t:page>

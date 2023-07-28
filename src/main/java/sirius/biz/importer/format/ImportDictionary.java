@@ -11,6 +11,7 @@ package sirius.biz.importer.format;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Monoflop;
+import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
@@ -607,12 +608,10 @@ public class ImportDictionary {
      * @return the normalized version of the field
      */
     protected static String normalize(String field) {
-        return field.toLowerCase()
-                    .replace("ä", "ae")
-                    .replace("ö", "oe")
-                    .replace("ü", "ue")
-                    .replace("ß", "ss")
-                    .replaceAll("[^\\p{L}0-9_]", "");
+        return Strings.cleanup(field,
+                               StringCleanup::lowercase,
+                               StringCleanup::reduceCharacters,
+                               text -> text.replaceAll("[^\\p{L}\\d_]", ""));
     }
 
     /**

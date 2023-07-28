@@ -223,8 +223,10 @@ public class PackageData extends Composite {
         }
         permissions.addAll(getUpgrades().data());
         permissions.addAll(getAdditionalPermissions().data());
-        Permissions.applyProfiles(permissions);
-        getRevokedPermissions().data().forEach(permissions::remove);
+
+        Set<String> excludedPermissions = new HashSet<>(getRevokedPermissions().data());
+        Permissions.applyProfiles(permissions, excludedPermissions);
+        excludedPermissions.forEach(permissions::remove);
 
         return permissions;
     }

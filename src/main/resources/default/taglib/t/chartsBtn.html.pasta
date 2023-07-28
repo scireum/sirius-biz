@@ -1,14 +1,18 @@
 <i:arg type="String" name="uri" default="@CallContext.getCurrent().get(WebContext.class).getRequest().uri()"/>
 <i:arg type="Object" name="target"/>
+<i:arg type="String" name="btnClass" default="btn btn-link"/>
 
-<i:local name="explorer" value="part(sirius.biz.analytics.charts.explorer.DataExplorerController.class)"/>
+<i:local name="explorer" value="part(sirius.biz.analytics.explorer.DataExplorerController.class)"/>
 <i:local name="chartList" value="explorer.fetchAvailableCharts(uri, target)"/>
 
 <i:if test="!chartList.isEmpty()">
-    <t:dropdown icon="fas fa-cogs" labelKey="DataExplorerController.matchingCharts" labelClass="d-none d-md-inline-block">
+    <t:dropdown icon="fa-solid fa-chart-simple"
+                labelKey="DataExplorerController.matchingCharts"
+                btnClass="@btnClass"
+                labelClass="d-none d-md-inline-block">
         <i:for type="Tuple" var="idAndFactory" items="chartList">
             <i:local name="id" value="idAndFactory.getFirst().as(String.class)"/>
-            <i:local name="factory" value="idAndFactory.getSecond().as(sirius.biz.analytics.charts.explorer.ChartFactory.class)"/>
+            <i:local name="factory" value="idAndFactory.getSecond().as(sirius.biz.analytics.explorer.ChartFactory.class)"/>
 
             <t:dropdownItem
                     icon="@apply('%s %s', factory.getIcon(), sirius.biz.web.Action.fetchColorForLabel(factory.getLabel()))"

@@ -10,11 +10,15 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.tycho.QuickAction;
+import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -52,6 +56,9 @@ public class VirtualFileSystemController extends BizController {
     @Part
     private VirtualFileSystem vfs;
 
+    @PriorityParts(FileQuickActionProvider.class)
+    private List<FileQuickActionProvider> quickActionProviders;
+
     /**
      * Lists all children of a given directory.
      *
@@ -65,20 +72,38 @@ public class VirtualFileSystemController extends BizController {
         VirtualFile file = resolveToExistingFile(path);
 
         if (!file.isDirectory()) {
-            // Note that we violate our architectural layers here a bit, as we directly check for the presence of a
-            // Layer2 Blob. In this case, we can redirect to an optimized download URL. We *could* bury this in yet
-            // another interface, but for now, we directly resolve the Blob and create a URL this way...
-            file.tryAs(Blob.class)
-                .flatMap(blob -> file.as(Blob.class).url().enableLargeFileDetection().asDownload(file.name()).buildURL())
-                .ifPresentOrElse(blobDeliveryUrl -> webContext.respondWith().redirectTemporarily(blobDeliveryUrl),
-                                 () -> file.deliverDownloadTo(webContext));
+            file.deliverDownloadTo(webContext);
         } else {
+            // We sort of break layers here as using yet another interface doesn't provide much
+            // value.
+            file.tryAs(Blob.class).ifPresent(blob -> {
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_ACADEMY_TRACK,
+                                        blob.getStorageSpace().getAcademyVideoTrackId());
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_ACADEMY_VIDEO,
+                                        blob.getStorageSpace().getAcademyVideoCode());
+                webContext.setAttribute(UserAssistant.WEB_CONTEXT_SETTING_KBA,
+                                        blob.getStorageSpace().getKnowledgeBaseArticleCode());
+            });
+
             webContext.respondWith()
                       .template("/templates/biz/storage/list.html.pasta",
+                                this,
                                 file,
                                 file.pathList(),
                                 computeChildrenAsPage(webContext, file));
         }
+    }
+
+    /**
+     * Resolves quick actions which are applicable for the provided file.
+     *
+     * @param virtualFile the file for which the quick actions have to be resolved for
+     * @return a list of quick actions applicable for the file
+     */
+    public List<QuickAction> resolveQuickActionsForFile(VirtualFile virtualFile) {
+        List<QuickAction> quickActionList = new ArrayList<>();
+        quickActionProviders.forEach(provider -> provider.computeQuickAction(virtualFile, quickActionList::add));
+        return quickActionList;
     }
 
     private VirtualFile resolveToExistingFile(String path) {
@@ -240,6 +265,9 @@ public class VirtualFileSystemController extends BizController {
         if (webContext.isSafePOST()) {
             try {
                 String name = webContext.get("name").asString();
+                if (Strings.isEmpty(name)) {
+                    name = NLS.get("VFSController.createDirectory");
+                }
                 VirtualFile newDirectory = parent.resolve(name);
                 newDirectory.createAsDirectory();
                 UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
@@ -290,6 +318,30 @@ public class VirtualFileSystemController extends BizController {
     }
 
     /**
+     * Sets the read-only flag of the given file to false.
+     *
+     * @param webContext the request to handle
+     */
+    @LoginRequired
+    @Routed("/fs/unlock")
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    public void unlock(WebContext webContext) {
+        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        if (!file.exists()) {
+            webContext.respondWith().redirectToGet("/fs");
+            return;
+        }
+
+        try {
+            file.updateReadOnlyFlag(false);
+        } catch (Exception e) {
+            UserContext.handle(e);
+        }
+
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+    }
+
+    /**
      * Provides a JSON API which lists the contents of a given directory.
      * <p>
      * This is used by the selectVFSFile or selectVFSDirectory JavaScript calls/modals.
@@ -320,6 +372,9 @@ public class VirtualFileSystemController extends BizController {
         FileSearch search = FileSearch.iterateAll(child -> outputFile(out, child.name(), child));
         if (webContext.get("onlyDirectories").asBoolean()) {
             search.withOnlyDirectories();
+        }
+        if (webContext.get("skipReadOnlyFiles").asBoolean()) {
+            search.skipReadOnlyFiles();
         }
         search.withPrefixFilter(webContext.get("filter").asString());
         webContext.get("extensions").ifFilled(extensionString -> {
@@ -371,7 +426,8 @@ public class VirtualFileSystemController extends BizController {
             out.property("sizeString", child.isDirectory() ? "" : NLS.formatSize(child.size()));
             out.property("lastModified", child.isDirectory() ? null : NLS.toMachineString(child.lastModifiedDate()));
             out.property("lastModifiedString", child.isDirectory() ? "" : NLS.toUserString(child.lastModifiedDate()));
-            out.property("lastModifiedSpokenString", child.isDirectory() ? "" : NLS.toSpokenDate(child.lastModifiedDate()));
+            out.property("lastModifiedSpokenString",
+                         child.isDirectory() ? "" : NLS.toSpokenDate(child.lastModifiedDate()));
         } finally {
             out.endObject();
         }

@@ -1,0 +1,97 @@
+input.form-control.mls-input {
+  background-color: #ffffff;
+}
+
+.mls-modal {
+  .modal-body {
+    min-height: 250px;
+  }
+
+  .mls-add-language-button .dropdown-menu {
+    max-height: 140px;
+    overflow: auto;
+
+    .dropdown-item a {
+      color: #495057;
+    }
+
+    .dropdown-item:active a {
+      color: #fff;
+    }
+  }
+
+  .mls-modal-inputs .mls-language-label {
+    display: flex;
+    height: 34px;
+    align-items: center;
+  }
+
+  .mls-language-flag {
+    margin-right: 8px;
+  }
+
+  .mls-language-globe {
+    height: 12px;
+    width: 12px;
+    object-fit: cover;
+  }
+}
+
+.mls-tab-list {
+
+  border-bottom: 0;
+
+  .mls-toggle-language-button::after,
+  > li > a.active:not(.dropdown-toggle)::after {
+    // overlap textarea border so active tab flows into textarea
+    content: '';
+    width: 100%;
+    border-bottom: 4px solid #fff;
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+  }
+
+  > li > a {
+    color: #212529;
+    position: relative;
+  }
+
+  .mls-toggle-language-button {
+    .nav-link {
+      color: #495057;
+      background-color: #fff;
+      border-color: #dee2e6 #dee2e6 #fff;
+    }
+  }
+
+  .dropdown-menu {
+    max-height: 140px;
+    overflow: auto;
+  }
+
+  .dropdown-item a {
+    color: #495057;
+  }
+
+  .dropdown-item:active a {
+    color: #fff;
+  }
+
+  .mls-language-label,
+  .mls-add-language-link {
+    display: flex;
+    height: 32px;
+    align-items: center;
+  }
+
+  .mls-language-flag {
+    margin-right: 8px;
+  }
+
+  .mls-language-globe {
+    height: 12px;
+    width: 12px;
+    object-fit: cover;
+  }
+}

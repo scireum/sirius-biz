@@ -8,16 +8,20 @@
 
 package sirius.biz.jupiter;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import sirius.db.redis.RedisDB;
+import sirius.kernel.Sirius;
 import sirius.kernel.async.Operation;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Microtiming;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -36,10 +40,11 @@ import java.util.function.Supplier;
 public class JupiterConnector {
 
     private static final JupiterCommand CMD_SET_CONFIG = new JupiterCommand("SYS.SET_CONFIG");
+    private static final JupiterCommand CMD_PYRUN = new JupiterCommand("PY.RUN");
 
     /**
      * If a failover is performed, we keep using the fallback instance for a certain amount of time to prevent
-     * constant switching back and forth in case of network problems (etc). This constant determines the interval
+     * constant switching back and forth in case of network problems (etc.). This constant determines the interval
      * before a failover back to the main instance is attempted.
      */
     private static final int FAILOVER_TRIGGER_REARM_INTERVAL = 60_000;
@@ -48,7 +53,7 @@ public class JupiterConnector {
      * Provides an upper bound of the expected runtime of a Jupiter command for monitoring purposes.
      */
     private static final Duration EXPECTED_JUPITER_COMMAND_RUNTIME = Duration.ofSeconds(10);
-
+    private static final String ERR_RESPONSE_UNKNOWN_KERNEL = "UNKNOWN_KERNEL";
     private final String instanceName;
     private final RedisDB redis;
     private final RedisDB fallbackRedis;
@@ -78,6 +83,15 @@ public class JupiterConnector {
      */
     public boolean isConfigured() {
         return redis.isConfigured();
+    }
+
+    /**
+     * Returns the list of namespaces which are enabled for this connector.
+     *
+     * @return the list of enabled namespaces
+     */
+    public List<String> fetchEnabledNamespaces() {
+        return Sirius.getSettings().getExtension("jupiter.settings", getName()).getStringList("repository.namespaces");
     }
 
     /**
@@ -170,8 +184,15 @@ public class JupiterConnector {
         try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
-        } catch (Exception e) {
-            throw Exceptions.handle(Jupiter.LOG, e);
+        } catch (Exception error) {
+            throw Exceptions.handle()
+                            .to(Jupiter.LOG)
+                            .error(error)
+                            .withSystemErrorMessage(
+                                    "The Jupiter instance %s failed to for command: '%s' - Error: %s (%s)",
+                                    instanceName,
+                                    description.get())
+                            .handle();
         }
     }
 
@@ -217,6 +238,35 @@ public class JupiterConnector {
             db.sendCommand(CMD_SET_CONFIG, configString);
             db.getStatusCodeReply();
         });
+    }
+
+    /**
+     * Invokes a running Python kernel using <tt>PY.RUN</tt>.
+     *
+     * @param kernel the name of the kernel to run
+     * @param input  the JSON object to send to the kernel
+     * @return the received JSON response
+     * @throws IllegalArgumentException if the given kernel is unknown
+     */
+    public ObjectNode pyRun(String kernel, ObjectNode input) {
+        String result = query(() -> "PY.RUN: " + kernel, db -> {
+            db.sendCommand(CMD_PYRUN, kernel, Json.write(input));
+            return db.getBulkReply();
+        });
+
+        if (ERR_RESPONSE_UNKNOWN_KERNEL.equals(result)) {
+            throw new IllegalArgumentException("Unknown kernel: " + kernel);
+        }
+
+        ObjectNode json = Json.parseObject(result);
+        if (json.has("error")) {
+            throw Exceptions.handle()
+                            .to(Jupiter.LOG)
+                            .withSystemErrorMessage("Error while running kernel %s: %s", kernel, Json.write(json))
+                            .handle();
+        }
+
+        return json;
     }
 
     /**

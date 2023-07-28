@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.interactive;
 
-import sirius.biz.analytics.charts.Dataset;
+import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.analytics.reports.Cell;
 import sirius.kernel.commons.Tuple;
 import sirius.web.http.WebContext;

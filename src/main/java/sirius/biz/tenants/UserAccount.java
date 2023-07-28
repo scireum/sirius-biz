@@ -19,9 +19,11 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.transformers.Transformable;
 import sirius.web.security.MessageProvider;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
@@ -62,4 +64,26 @@ public interface UserAccount<I extends Serializable, T extends BaseEntity<I> & T
 
     @Override
     BaseEntityRef<I, T> getTenant();
+
+    /**
+     * Reads the preference with the given name/key.
+     *
+     * @param key the name of the preference to read
+     * @return the value stores for the given preference
+     */
+    Value readPreference(String key);
+
+    /**
+     * Updates/stores the preference with the given name/key.
+     * <p>
+     * This will directly update the underlying database and store the preferences. Note, that in order to keep
+     * this list concise, prefer a <tt>null</tt> + default value for the "average case" which will not be stored
+     * at all. So a key like "layout" should store <tt>"TABLE"</tt> / <tt>null</tt> in favor of "useCardLayout" with
+     * <tt>true</tt> and <tt>false</tt> or <tt>"TABLE"</tt> and <tt>"CARDS"</tt> as enum values.
+     *
+     * @param key   the name of the preference to store
+     * @param value the value to store. This should be either a <tt>String</tt>, <tt>boolean</tt> or <tt>int</tt>.
+     *              Use <tt>null</tt> to remove the reference.
+     */
+    void updatePreference(String key, @Nullable Object value);
 }

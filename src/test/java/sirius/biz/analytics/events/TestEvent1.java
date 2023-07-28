@@ -10,7 +10,7 @@ package sirius.biz.analytics.events;
 
 import sirius.db.mixing.annotations.Length;
 
-public class TestEvent1 extends Event {
+public class TestEvent1 extends Event<TestEvent1> {
 
     @Length(4)
     private int aNumber;

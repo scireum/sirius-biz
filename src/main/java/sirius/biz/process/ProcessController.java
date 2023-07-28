@@ -8,7 +8,7 @@
 
 package sirius.biz.process;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,6 +30,7 @@ import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.GlobalContext;
@@ -378,7 +379,7 @@ public class ProcessController extends BizController {
                                  NLS.get("ProcessController.exportLogsReason") :
                                  NLS.fmtr("ProcessController.exportOutputReason").set("output", name).format());
 
-        JSONObject exportSpec = new JSONObject();
+        ObjectNode exportSpec = Json.createObject();
         exportSpec.put(ExportLogsAsFileTaskExecutor.CONTEXT_PROCESS, process.getId());
         exportSpec.put(ExportLogsAsFileTaskExecutor.CONTEXT_OUTPUT, name);
         exportSpec.put(ExportLogsAsFileTaskExecutor.CONTEXT_FORMAT, type);

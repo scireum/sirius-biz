@@ -8,13 +8,14 @@
 
 package sirius.biz.tycho.search;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.web.BizController;
 import sirius.kernel.async.CombinedFuture;
 import sirius.kernel.async.Future;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Timeout;
 import sirius.kernel.di.PartCollection;
@@ -200,8 +201,7 @@ public class OpenSearchController extends BizController {
 
             synchronized (outputStream) {
                 for (OpenSearchResult result : results) {
-                    outputStream.write(transformToJson(provider, result).toJSONString()
-                                                                        .getBytes(StandardCharsets.UTF_8));
+                    outputStream.write(Json.write(transformToJson(provider, result)).getBytes(StandardCharsets.UTF_8));
                     outputStream.write(NEWLINE);
                 }
                 outputStream.flush();
@@ -218,8 +218,8 @@ public class OpenSearchController extends BizController {
         }
     }
 
-    private JSONObject transformToJson(OpenSearchProvider provider, OpenSearchResult result) {
-        JSONObject object = new JSONObject();
+    private ObjectNode transformToJson(OpenSearchProvider provider, OpenSearchResult result) {
+        ObjectNode object = Json.createObject();
         object.put(RESPONSE_CATEGORY, provider.getLabel());
         object.put(RESPONSE_CATEGORY_URL, provider.getUrl());
         object.put(RESPONSE_PRIORITY, provider.getPriority());

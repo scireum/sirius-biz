@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>10.1.1</version>
+        <version>10.2.0</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>ga-7.0.0</sirius.kernel>
-        <sirius.web>ga-8.0.1</sirius.web>
-        <sirius.db>ga-8.0.0</sirius.db>
+        <sirius.kernel>ga-8.0.0</sirius.kernel>
+        <sirius.web>ga-9.0.0</sirius.web>
+        <sirius.db>ga-9.0.0</sirius.db>
     </properties>
 
     <repositories>
@@ -67,12 +67,10 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.14.0-rc1</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.14.0-rc1</version>
         </dependency>
 
         <dependency>
@@ -165,11 +163,6 @@
             <groupId>net.sf.sevenzipjbinding</groupId>
             <artifactId>sevenzipjbinding-all-platforms</artifactId>
             <version>16.02-2.01</version>
-        </dependency>
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>1.33</version>
         </dependency>
     </dependencies>
 </project>

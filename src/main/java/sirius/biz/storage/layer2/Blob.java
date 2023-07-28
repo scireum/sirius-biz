@@ -13,7 +13,6 @@ import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.kernel.async.Future;
 import sirius.kernel.health.HandledException;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
-import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -41,7 +40,7 @@ public interface Blob {
     /**
      * Returns the name of the {@link #getStorageSpace() storage space}.
      *
-     * @return the name of the stroage space in which this directory resides.
+     * @return the name of the storage space in which this directory resides.
      */
     String getSpaceName();
 
@@ -85,6 +84,14 @@ public interface Blob {
     String getFilename();
 
     /**
+     * Returns the file extension of the blob.
+     *
+     * @return the file extension of the blob or <tt>null</tt> if no file extension was assigned
+     */
+    @Nullable
+    String getFileExtension();
+
+    /**
      * Returns the full path to this blob (including its filename).
      *
      * @return the path to this blob or <tt>null</tt> if either there is no filename or no parent set
@@ -116,9 +123,19 @@ public interface Blob {
     LocalDateTime getLastTouched();
 
     /**
-     * Provides a on-disk copy of the data associated with this blob
+     * Provides an on-disk copy of the data associated with this blob.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * blob.download().ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * </pre>
      *
-     * @return a handle to the data of this blob
+     * @return a {@linkplain java.io.Closeable closeable} file handle to the data of this blob, or an empty optional if no data was present
      */
     Optional<FileHandle> download();
 
@@ -131,11 +148,13 @@ public interface Blob {
     Future tryCreateVariant(String variantName);
 
     /**
-     * Delivers the data of this blob into the given HTTP response.
+     * Tries to create the desired variant using the given input file, which bypasses the download from the blob.
      *
-     * @param response the HTTP response to populate
+     * @param variantName the name of the desired variant
+     * @param inputFile   the file handle holding the file to use as input for the conversion
+     * @return a future holding the conversion process
      */
-    void deliver(Response response);
+    Future tryCreateVariant(FileHandle inputFile, String variantName);
 
     /**
      * Determines if this blob is still marked as temporary.
@@ -143,6 +162,20 @@ public interface Blob {
      * @return <tt>true</tt> if the blob is temporary, <tt>false</tt> otherwise
      */
     boolean isTemporary();
+
+    /**
+     * Determines if this blob is marked as read-only.
+     *
+     * @return <tt>true</tt> if the blob is read-only, <tt>false</tt> otherwise
+     */
+    boolean isReadOnly();
+
+    /**
+     * Sets the blob read-only flag.
+     *
+     * @param readOnly the new value for the read-only flag
+     */
+    void setReadOnly(boolean readOnly);
 
     /**
      * Marks the blob as "read accessed".
@@ -187,7 +220,7 @@ public interface Blob {
      * Provides new content for this blob.
      * <p>
      * Also note that if a file is used to provide the new contents of this blob, use
-     * {@link #updateContent(String, File)} as this is likely way more efficient.
+     * {@link #updateContent(String, File)} as this way is likely more efficient.
      * <p>
      * Note that this blob object itself will also be updated with the appropriate metadata
      * (filename, size, lastModified).
@@ -200,7 +233,7 @@ public interface Blob {
     void updateContent(@Nullable String filename, InputStream data, long contentLength);
 
     /**
-     * Creates a output stream which can be used to update the contents of this blob.
+     * Creates an output stream which can be used to update the contents of this blob.
      * <p>
      * The data written into the output stream will be buffered locally and used to update the contents once the
      * stream is closed. Use {@link #updateContent(String, File)} if a file is used to update the contents or
@@ -215,7 +248,7 @@ public interface Blob {
     OutputStream createOutputStream(@Nullable String filename);
 
     /**
-     * Creates a output stream which can be used to update the contents of this blob.
+     * Creates an output stream which can be used to update the contents of this blob.
      * <p>
      * Stores the contents once the stream is closed just like {@link #createOutputStream(String)} but permits to add a callback
      * which is invoked once the blob has been updated.
@@ -232,13 +265,11 @@ public interface Blob {
     /**
      * Creates an input stream which can be used to read the contents of this blob.
      * <p>
-     * Note that this might require downloading the blob from an external storage device into a local buffer. When
-     * responding to a HTTP request use {@link #deliver(Response)} which might be more efficient in this case. Use
-     * {@link #download()} to have full control over the downloaded file handle.
+     * Note that this might require downloading the blob from an external storage device into a local buffer.
+     * Use {@link #download()} to have full control over the downloaded file handle.
      *
      * @return an input stream providing the contents of this blob
      * @see #download()
-     * @see #deliver(Response)
      */
     InputStream createInputStream();
 

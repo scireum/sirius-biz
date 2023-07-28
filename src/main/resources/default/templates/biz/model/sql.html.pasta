@@ -89,17 +89,18 @@
                         addErrorMessage(data.message);
                         return;
                     }
-                    if (data.rows.length > 0) {
-                        document.getElementById('exportQuery').value = document.getElementById('query').value;
-                        document.getElementById('exportDatabase').value = document.getElementById("db").tokenAutocomplete.val()[0];
-                        _exportBtn.classList.remove("d-none");
-                        _exportBtn.classList.add("d-inline");
-                    }
-
-                    if (data.rows !== null && data.rows.length === 1 && data.columns !== null) {
-                        outputDetails(_rows, data);
-                    } else {
-                        outputTable(_columns, _rows, data);
+                    if (data.rows !== undefined && data.columns !== undefined) {
+                        if (data.rows.length > 0) {
+                            document.getElementById('exportQuery').value = document.getElementById('query').value;
+                            document.getElementById('exportDatabase').value = document.getElementById("db").tokenAutocomplete.val()[0];
+                            _exportBtn.classList.remove("d-none");
+                            _exportBtn.classList.add("d-inline");
+                        }
+                        if (data.rows.length === 1) {
+                            outputDetails(_rows, data);
+                        } else {
+                            outputTable(_columns, _rows, data);
+                        }
                     }
                 });
         }

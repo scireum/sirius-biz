@@ -8,7 +8,6 @@
 
 package sirius.biz.jobs.params;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
 import sirius.db.es.Elastic;
@@ -18,11 +17,11 @@ import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mango;
-import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
-import sirius.kernel.di.Injector;
+import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -56,6 +55,9 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     @Nullable
     protected static Tenants<?, ?, ?> tenants;
 
+    @Part
+    private static GlobalContext globalContext;
+
     private EntityDescriptor descriptor;
 
     /**
@@ -87,41 +89,53 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     }
 
     /**
-     * Returns the autocompletion URL used to determine suggestions for inputs provided by the user.
-     *
-     * @return the autocomplete URL used to provide suggestions for user input
-     * @deprecated override {@link #getAutocompleterName()} instead, or, if it is not feasible to implement an
-     * {@link Autocompleter}, override {@link #getAutocompleteUrl()}
-     */
-    @Deprecated
-    public String getAutocompleteUri() {
-        return null;
-    }
-
-    /**
-     * The {@link sirius.kernel.di.std.Register registered} name of an {@link Autocompleter} implementation.
-     *
-     * @return the name of the Autocompleter
-     */
-    public String getAutocompleterName() {
-        return null;
-    }
-
-    /**
-     * Returns the autocompletion URL used to determine suggestions for inputs provided by the user.
+     * The type of {@link Autocompleter} to use for this parameter.
      * <p>
-     * Consider to register an {@link Autocompleter} instead.
+     * Note that this autocompleter needs to be @{@link sirius.kernel.di.std.Register registered} to be available
+     * to the framework.
      *
-     * @return the autocomplete URL used to provide suggestions for user input
+     * @return the type of autocompleter to use or <tt>null</tt> if there is none or a custom url via
+     * {@link #getCustomAutocompleteUri()} is being used.
      */
-    public String getAutocompleteUrl() {
-        return Optional.ofNullable(getAutocompleterName())
-                       .map(name -> "/jobs/parameter-autocomplete/" + name)
-                       .orElseGet(this::getAutocompleteUri);
+    @Nullable
+    protected Class<? extends Autocompleter<V>> getAutocompleter() {
+        return null;
     }
 
     /**
-     * Returns the type of entities represented by this paramter.
+     * Returns the custom autocompletion URL used to determine suggestions for inputs provided by the user.
+     *
+     * @return the autocomplete URL used to provide suggestions for user input. Note that this is only needed, if no
+     * {@link #getAutocompleter() autocompleter} is provided (which is the preferred way).
+     */
+    @Nullable
+    protected String getCustomAutocompleteUri() {
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Optional<? extends Autocompleter<V>> findAutocompleter() {
+        return Optional.ofNullable(getAutocompleter())
+                       .flatMap(type -> globalContext.getParts(Autocompleter.class)
+                                                     .stream()
+                                                     .filter(type::isInstance)
+                                                     .map(autocompleter -> (Autocompleter<V>) autocompleter)
+                                                     .findFirst());
+    }
+
+    /**
+     * Returns the autocompletion URL used to determine suggestions for inputs provided by the user.
+     *
+     * @return the autocomplete URL used to provide suggestions for user input
+     */
+    public final String getAutocompleteUrl() {
+        return findAutocompleter().map(Autocompleter::getName)
+                                  .map(name -> "/jobs/parameter-autocomplete/" + name)
+                                  .orElseGet(this::getCustomAutocompleteUri);
+    }
+
+    /**
+     * Returns the type of entities represented by this parameter.
      *
      * @return the type of entities represented by this
      */
@@ -157,22 +171,16 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @param entity the entity to derive  the label from
      * @return the label or textual representation to use for the given entity
      */
-    @SuppressWarnings("unchecked")
-    @Explain("There is no way to rewrite this. "
-             + "Also, it _should_ be fine if the Autocompleter is implemented according to the specification")
     protected String createLabel(V entity) {
-        if (Strings.isFilled(getAutocompleterName())) {
-            Autocompleter<V> autocompleter = Injector.context().getPart(getAutocompleterName(), Autocompleter.class);
-            return autocompleter.toLabel(entity);
-        }
-        return entity.toString();
+        return findAutocompleter().map(autocompleter -> autocompleter.toLabel(entity)).orElseGet(entity::toString);
     }
 
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)
-                      .map(value -> new JSONObject().fluentPut("value", value.getIdAsString())
-                                                    .fluentPut("text", createLabel(value)));
+                      .map(value -> Json.createObject()
+                                        .put("value", value.getIdAsString())
+                                        .put("text", createLabel(value)));
     }
 
     @Override

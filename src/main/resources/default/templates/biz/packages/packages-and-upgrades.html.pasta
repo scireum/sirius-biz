@@ -5,45 +5,37 @@
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders the package and upgrades"/>
 
-<i:local name="availablePackages" value="packageData.getAvailablePackages()"/>
+<div class="row">
+    <i:local name="availablePackages" value="packageData.getAvailablePackages()"/>
+    <i:if test="!availablePackages.isEmpty()">
+        <t:singleSelect class="col-12 col-md-6 required"
+                        name="package"
+                        id="singleSelect-package"
+                        labelKey="PackageData.packageString">
+            <i:for var="package" type="String" items="@availablePackages">
+                <option value="@package"
+                        data-description="@packages.getPackageDescription(packageData.getScope(), package)"
+                        @selected="package == packageData.getPackage()">
+                    @packages.getPackageName(packageData.getScope(), package)
+                </option>
+            </i:for>
+        </t:singleSelect>
+    </i:if>
 
-<i:if test="!availablePackages.isEmpty()">
-    <w:subHeading labelKey="PackageData.packageString"/>
-    <div class="row">
-        <i:for var="package" items="availablePackages" type="String">
-            <div class="col-md-12 form-group">
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="package" value="@package"
-                               @checked="package == packageData.getPackage()"/>
-                        <span> @packages.getPackageName(packageData.getScope(), package)</span>
-                        <span class="help-block checkbox-help">
-                            @packages.getPackageDescription(packageData.getScope(), package)
-                        </span>
-                    </label>
-                </div>
-            </div>
-        </i:for>
-    </div>
-</i:if>
-
-<i:local name="upgrades" value="packageData.getAvailableUpgrades()"/>
-<i:if test="!upgrades.isEmpty()">
-    <w:subHeading labelKey="PackageData.upgrades"/>
-    <div class="row">
-        <i:for var="upgrade" items="upgrades" type="String">
-            <div class="col-md-12 form-group">
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" name="upgrades" value="@upgrade"
-                               @checked="packageData.getUpgrades().contains(upgrade)"/>
-                        <span> @packages.getUpgradeName(packageData.getScope(), upgrade)</span>
-                        <span class="help-block checkbox-help">
-                            @packages.getUpgradeDescription(packageData.getScope(), upgrade)
-                        </span>
-                    </label>
-                </div>
-            </div>
-        </i:for>
-    </div>
-</i:if>
+    <i:local name="availableUpgrades" value="packageData.getAvailableUpgrades()"/>
+    <i:if test="!availableUpgrades.isEmpty()">
+        <t:multiSelect class="col-12 col-md-6"
+                       name="upgrades"
+                       id="singleSelect-upgrades"
+                       labelKey="PackageData.upgrades"
+                       optional="true">
+            <i:for var="upgrade" type="String" items="@availableUpgrades">
+                <option value="@upgrade"
+                        data-description="@packages.getUpgradeDescription(packageData.getScope(), upgrade)"
+                        @selected="packageData.getUpgrades().contains(upgrade)">
+                    @packages.getUpgradeName(packageData.getScope(), upgrade)
+                </option>
+            </i:for>
+        </t:multiSelect>
+    </i:if>
+</div>

@@ -14,8 +14,12 @@
     </i:block>
 
     <i:block name="page-header">
-        <t:pageHeader>
-            <i:block name="title">@entry.toString()</i:block>
+        <t:pageHeader title="@entry.toString()">
+            <i:block name="additionalActions">
+                <i:if test="!entry.isNew()">
+                    <t:dropdownDeleteItem url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())"/>
+                </i:if>
+            </i:block>
         </t:pageHeader>
     </i:block>
 
@@ -80,8 +84,8 @@
                          labelKey="SchedulerData.year"
                          helpKey="SchedulerData.year.help"
                          value="@entry.getSchedulerData().getYear()"/>
-            <t:textfield  class="col-md"
-                          name="schedulerData_month"
+            <t:textfield class="col-md"
+                         name="schedulerData_month"
                          labelKey="SchedulerData.month"
                          helpKey="SchedulerData.month.help"
                          value="@entry.getSchedulerData().getMonth()"/>
@@ -110,7 +114,7 @@
         </div>
         <t:heading labelKey="SchedulerController.parameters"/>
         <div class="row">
-            <i:for type="sirius.biz.jobs.params.Parameter" 
+            <i:for type="sirius.biz.jobs.params.Parameter"
                    var="param"
                    items="entry.getJobConfigData().getJobFactory().getParameters()">
                 <i:dynamicInvoke template="@param.getTemplateName()"

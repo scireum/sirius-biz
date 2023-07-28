@@ -22,6 +22,7 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Hasher;
+import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
@@ -47,6 +48,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -90,7 +92,7 @@ public class Storage {
 
     private static final Pattern NON_URL_CHARACTERS = Pattern.compile("[^a-zA-Z0-9_.]");
 
-    private static Cache<String, VirtualObject> virtualObjectCache =
+    private static final Cache<String, VirtualObject> virtualObjectCache =
             CacheManager.createCoherentCache("virtual-objects");
 
     @Part
@@ -482,11 +484,7 @@ public class Storage {
         VirtualObject object = (VirtualObject) file;
 
         InputStream result = getStorageEngine(object.getBucket()).getData(object.getBucket(), object.getPhysicalKey());
-        if (result == null) {
-            return new ByteArrayInputStream(EMPTY_BUFFER);
-        } else {
-            return result;
-        }
+        return Objects.requireNonNullElseGet(result, () -> new ByteArrayInputStream(EMPTY_BUFFER));
     }
 
     /**
@@ -495,8 +493,8 @@ public class Storage {
      * @param object the object to delete
      */
     public void delete(StoredObject object) {
-        if (object instanceof VirtualObject) {
-            oma.delete((VirtualObject) object);
+        if (object instanceof VirtualObject virtualObject) {
+            oma.delete(virtualObject);
         }
     }
 
@@ -630,9 +628,11 @@ public class Storage {
             result.append(computeHash(downloadBuilder.getPhysicalKey(), 0));
         }
         result.append("/");
-        if (Strings.isFilled(downloadBuilder.getAddonText())) {
-            result.append(Strings.reduceCharacters(NON_URL_CHARACTERS.matcher(downloadBuilder.getAddonText())
-                                                                     .replaceAll("-")));
+        String addonText = downloadBuilder.getAddonText();
+        if (Strings.isFilled(addonText)) {
+            result.append(Strings.cleanup(addonText,
+                                          text -> NON_URL_CHARACTERS.matcher(text).replaceAll("-"),
+                                          StringCleanup::reduceCharacters));
             result.append("--");
         }
         result.append(downloadBuilder.getPhysicalKey());

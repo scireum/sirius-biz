@@ -8,17 +8,19 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -26,7 +28,7 @@ import java.util.function.Predicate;
  * Provides a facility to execute a query into a set of batch descriptions.
  * <p>
  * These batches are described using JSON and can be evaluated into an iterator of entities using
- * {@link #evaluateBatch(JSONObject, Consumer, Consumer)}.
+ * {@link #evaluateBatch(ObjectNode, Consumer, Consumer)}.
  *
  * @param <I> the id type of the entities being processed by this emitter
  * @param <C> the constraint type to be applied on entities processed by this emitter
@@ -50,6 +52,8 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
      */
     public static final String END_ID = "endId";
 
+    private static final String EXPECTED_COUNT = "expectedCount";
+
     @Part
     protected Mixing mixing;
 
@@ -65,7 +69,7 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
     public <E extends B> void computeBatches(Class<E> type,
                                              @Nullable Consumer<Q> queryExtender,
                                              int batchSize,
-                                             Predicate<JSONObject> batchConsumer) {
+                                             Predicate<ObjectNode> batchConsumer) {
         TaskContext taskContext = TaskContext.get();
         ValueHolder<I> lastLimit = ValueHolder.of(null);
         while (taskContext.isActive()) {
@@ -77,19 +81,22 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
                 queryExtender.accept(query);
             }
 
+            AtomicInteger counter = new AtomicInteger();
             ValueHolder<I> nextLimit = ValueHolder.of(null);
             query.orderAsc(BaseEntity.ID).limit(batchSize).iterateAll(e -> {
                 nextLimit.set(e.getId());
+                counter.incrementAndGet();
             });
 
             if (nextLimit.get() == null) {
                 return;
             }
 
-            JSONObject batch = new JSONObject();
+            ObjectNode batch = Json.createObject();
             batch.put(TYPE, Mixing.getNameForType(type));
-            batch.put(START_ID, lastLimit.get());
-            batch.put(END_ID, nextLimit.get());
+            batch.put(EXPECTED_COUNT, counter.get());
+            batch.putPOJO(START_ID, lastLimit.get());
+            batch.putPOJO(END_ID, nextLimit.get());
             if (!batchConsumer.test(batch)) {
                 return;
             }
@@ -109,12 +116,12 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
      * @param entityConsumer   the consumer to be supplied with all entities in the batch
      */
     @SuppressWarnings("unchecked")
-    public <E extends B> void evaluateBatch(JSONObject batchDescription,
+    public <E extends B> void evaluateBatch(ObjectNode batchDescription,
                                             @Nullable Consumer<Q> queryExtender,
                                             Consumer<E> entityConsumer) {
-        String startId = batchDescription.getString(START_ID);
-        String endId = batchDescription.getString(END_ID);
-        String typeName = batchDescription.getString(TYPE);
+        String startId = batchDescription.path(START_ID).asText(null);
+        String endId = batchDescription.path(END_ID).asText(null);
+        String typeName = batchDescription.path(TYPE).asText(null);
 
         Class<E> type = (Class<E>) mixing.getDescriptor(typeName).getType();
         Q query = (Q) getMapper().select(type);

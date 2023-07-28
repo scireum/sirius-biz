@@ -9,9 +9,8 @@
 package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.QueryStringDecoder;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
@@ -22,9 +21,11 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Wait;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
@@ -45,19 +46,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.CookieManager;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -83,6 +82,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
     private static final String MESSAGE_KEY_LOAD_FROM_URL_FAILED = "$VirtualFile.loadFromUrlFailed";
     private static final String MESSAGE_KEY_LOAD_FROM_URL_DISABLED = "$VirtualFile.loadFromUrlDisabled";
+    private static final int NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE = 3;
 
     protected String name;
     protected String description;
@@ -92,6 +92,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected ToLongFunction<VirtualFile> sizeSupplier;
     protected Predicate<VirtualFile> directoryFlagSupplier;
     protected Predicate<VirtualFile> existsFlagSupplier;
+    protected Predicate<VirtualFile> readOnlyFlagSupplier;
+    protected BiPredicate<VirtualFile, Boolean> readOnlyHandler;
     protected Predicate<VirtualFile> canCreateChildrenHandler;
     protected Predicate<VirtualFile> canCreateDirectoryHandler;
     protected Predicate<VirtualFile> createDirectoryHandler;
@@ -116,6 +118,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     @Part
     private static StorageUtils utils;
+
+    @PriorityParts(RemoteFileResolver.class)
+    private static List<RemoteFileResolver> remoteFileResolvers;
 
     /**
      * Internal constructor to create the "/" directory.
@@ -326,7 +331,21 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if this file can be deleted or <tt>false</tt> otherwise
      */
     public boolean canDelete() {
+        return canDelete(false);
+    }
+
+    /**
+     * Determines if this file can (probably) be deleted.
+     *
+     * @param force if <tt>true</tt>, we signalize the file can potentially be deleted even if it is read-only
+     * @return <tt>true</tt> if this file can be deleted or <tt>false</tt> otherwise
+     */
+    public boolean canDelete(boolean force) {
         try {
+            if (readOnly() && !force) {
+                return false;
+            }
+
             if (deleteHandler == null) {
                 return false;
             }
@@ -344,11 +363,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Tries to delete this file.
      *
+     * @param force if <tt>true</tt> the file will be deleted even if it is read-only
      * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
      */
-    public boolean tryDelete() {
+    public boolean tryDelete(boolean force) {
         try {
-            if (!canDelete()) {
+            if (!canDelete(force)) {
                 return false;
             }
 
@@ -364,7 +384,20 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @throws HandledException if the file cannot be deleted
      */
     public void delete() {
-        if (!tryDelete()) {
+        if (!tryDelete(false)) {
+            throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotDelete").set("file", path()).handle();
+        }
+    }
+
+    /**
+     * Deletes this file, also if it's read-only.
+     * <p>
+     * Depending on the underlying storage, a deletion is not always possible if the file is set as read-only.
+     *
+     * @throws HandledException if the file cannot be deleted
+     */
+    public void forceDelete() {
+        if (!tryDelete(true)) {
             throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotDelete").set("file", path()).handle();
         }
     }
@@ -376,7 +409,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canRename() {
         try {
-            if (renameHandler == null) {
+            if (renameHandler == null || readOnly()) {
                 return false;
             }
 
@@ -405,6 +438,24 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return renameHandler.test(this, newName);
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "renameHandler");
+        }
+    }
+
+    /**
+     * Tries to set the read-only flag of this file.
+     *
+     * @param readOnly the value of the read-only flag
+     * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
+     */
+    public boolean updateReadOnlyFlag(boolean readOnly) {
+        try {
+            if (readOnlyHandler == null) {
+                return false;
+            }
+
+            return readOnlyHandler.test(this, readOnly);
+        } catch (Exception exception) {
+            throw handleErrorInCallback(exception, "readOnlyHandler");
         }
     }
 
@@ -456,6 +507,23 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return false;
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "existsFlagSupplier");
+        }
+    }
+
+    /**
+     * Determines if the file is read-only.
+     *
+     * @return <tt>true</tt> if the file is read-only, <tt>false</tt> otherwise
+     */
+    public boolean readOnly() {
+        try {
+            if (readOnlyFlagSupplier == null) {
+                return false;
+            }
+
+            return readOnlyFlagSupplier.test(this);
+        } catch (Exception exception) {
+            throw handleErrorInCallback(exception, "readOnlyFlagSupplier");
         }
     }
 
@@ -605,11 +673,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            if (canCreateChildrenHandler != null) {
-                return canCreateChildrenHandler.test(this);
+            if (canCreateChildrenHandler == null) {
+                return true;
             }
 
-            return true;
+            return canCreateChildrenHandler.test(this);
         } catch (Exception exception) {
             throw handleErrorInCallback(exception, "canCreateChildrenHandler");
         }
@@ -732,7 +800,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * created
      */
     public Optional<OutputStream> tryCreateOutputStream() {
-        if (!canCreateOutputStream()) {
+        if (!canCreateOutputStream() || readOnly()) {
             return Optional.empty();
         }
 
@@ -809,6 +877,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if a stream can be consumed, <tt>false</tt> otherwise
      */
     public boolean canConsumeStream() {
+        if (readOnly()) {
+            return false;
+        }
+
         if (internalCanConsumeStream()) {
             return true;
         }
@@ -901,6 +973,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if a file can be consumed, <tt>false</tt> otherwise
      */
     public boolean canConsumeFile() {
+        if (readOnly()) {
+            return false;
+        }
+
         if (internalCanConsumeFile()) {
             return true;
         }
@@ -980,7 +1056,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if the file is writeable, <tt>false</tt> otherwise
      */
     public boolean isWriteable() {
-        return !isDirectory() && canCreateOutputStream();
+        return !isDirectory() && !readOnly() && canCreateOutputStream();
     }
 
     /**
@@ -1137,7 +1213,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if the file can (probably) be moved, <tt>false</tt> otherwise
      */
     public boolean canMove() {
-        return canDelete() && (isDirectory() || canCreateInputStream());
+        return !readOnly() && canDelete() && (isDirectory() || canCreateInputStream());
     }
 
     /**
@@ -1273,6 +1349,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * <p>
      * If the contents of the file are not newer than the last modification date of this file, nothing will happen
      * unless the <tt>force</tt> parameter is set to <tt>true</tt>.
+     * <p>
+     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
+     * errors to the process without spamming the system logs.
      *
      * @param url  the URL to fetch
      * @param mode determines under which conditions the data from the given URL should be fetched
@@ -1282,7 +1361,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean loadFromUrl(URI url, FetchFromUrlMode mode) {
         Watch watch = Watch.start();
-        if (performLoadFromUrl(url, mode)) {
+        if (performLoadFromUri(url, mode)) {
             TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
             return true;
         } else {
@@ -1291,7 +1370,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
     }
 
-    private boolean performLoadFromUrl(URI url, FetchFromUrlMode mode) {
+    /**
+     * Fetches the given URI and stores the contents in this file.
+     * <p>
+     * Note that this will not increment any timings, use {@link #loadFromUrl(URI, FetchFromUrlMode)} instead if
+     * required.
+     *
+     * @param uri  the URI to fetch
+     * @param mode determines under which conditions the data from the given URI should be fetched
+     * @return <tt>true</tt> if the file was successfully read, or <tt>false</tt> if the server answered with code
+     * {@linkplain HttpResponseStatus#NOT_MODIFIED 304 Not Modified}
+     */
+    public boolean performLoadFromUri(URI uri, FetchFromUrlMode mode) {
         try {
             if (mode == FetchFromUrlMode.NEVER_FETCH) {
                 return false;
@@ -1300,26 +1390,65 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            Outcall outcall = new Outcall(url);
-            outcall.alwaysFollowRedirects();
+            HttpResponse<InputStream> response =
+                    requestFileFromUri(uri, mode, NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE);
 
-            CookieManager cookieManager = new CookieManager();
-            outcall.modifyClient().cookieHandler(cookieManager);
-
-            if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
-                outcall.setIfModifiedSince(lastModifiedDate());
+            if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
+                tryTouch();
+                return false;
             }
 
-            return loadFromOutcall(outcall);
+            loadFromResponse(response);
+
+            return true;
         } catch (IOException exception) {
             throw Exceptions.createHandled()
                             .error(exception)
                             .withNLSKey("VirtualFile.downloadFailed")
-                            .set("url", url)
-                            .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
+                            .set("url", uri)
+                            .hint(ProcessLog.HINT_MESSAGE_TYPE, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                             .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
         }
+    }
+
+    private HttpResponse<InputStream> requestFileFromUri(URI uri, FetchFromUrlMode mode, int retries)
+            throws IOException {
+        Outcall outcall = new Outcall(uri);
+        outcall.alwaysFollowRedirects();
+
+        CookieManager cookieManager = new CookieManager();
+        outcall.modifyClient().cookieHandler(cookieManager);
+
+        if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
+            outcall.setIfModifiedSince(lastModifiedDate());
+        }
+
+        HttpResponse<InputStream> response = outcall.getResponse();
+
+        if (response.statusCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code()) {
+            Streams.exhaust(response.body());
+
+            if (retries > 0) {
+                // Wait 200ms, 700ms, 1200ms...
+                Wait.millis(200 + (NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE - retries) * 500);
+                return requestFileFromUri(uri, mode, retries - 1);
+            }
+
+            throw new IOException(Strings.apply("The server responded with status %s (%s) after %s retries!",
+                                                HttpResponseStatus.valueOf(response.statusCode()).toString(),
+                                                response.statusCode(),
+                                                NUMBER_OF_RETRIES_FOR_SERVICE_UNAVAILABLE));
+        }
+
+        if (response.statusCode() >= 400) {
+            Streams.exhaust(response.body());
+            throw new IOException(Strings.apply("The server responded with status %s (%s)!",
+                                                HttpResponseStatus.valueOf(response.statusCode()).toString(),
+                                                response.statusCode()));
+        }
+
+        return response;
     }
 
     private boolean shouldSkipDownloadForExistingFile(FetchFromUrlMode mode) {
@@ -1330,20 +1459,14 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                                          && lastModifiedDate().isAfter(LocalDate.now().atStartOfDay()));
     }
 
-    private boolean loadFromOutcall(Outcall outcall) throws IOException {
-        HttpResponse<InputStream> response = outcall.getResponse();
-
-        if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
-            tryTouch();
-            return false;
-        }
-
-        if (response.statusCode() >= 400) {
-            Streams.exhaust(response.body());
-            throw new IOException(Strings.apply("The server responded with status %s (%s)!",
-                                                HttpResponseStatus.valueOf(response.statusCode()).toString(),
-                                                response.statusCode()));
-        }
+    /**
+     * Loads the contents of the given response into this file.
+     *
+     * @param response the response to read the contents from
+     * @throws IOException in case of an IO error
+     */
+    public void loadFromResponse(HttpResponse<InputStream> response) throws IOException {
+        assertResponseNotHtml(response);
 
         long length = response.headers().firstValueAsLong(HttpHeaderNames.CONTENT_LENGTH.toString()).orElse(-1);
         if (length >= 0) {
@@ -1353,8 +1476,17 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 Streams.transfer(response.body(), outputStream);
             }
         }
+    }
 
-        return true;
+    private void assertResponseNotHtml(HttpResponse<InputStream> response) throws IOException {
+        List<String> contentTypes = response.headers().allValues(HttpHeaderNames.CONTENT_TYPE.toString());
+
+        if (contentTypes.stream()
+                        .anyMatch(contentType -> contentType.contains(HttpHeaderValues.TEXT_HTML.toString()))) {
+            Streams.exhaust(response.body());
+            throw new IOException(Strings.apply("The server response contains an unexpected content-type (%s)!",
+                                                String.join(", ", contentTypes)));
+        }
     }
 
     /**
@@ -1365,20 +1497,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * <p>
      * As a result, the resolved file will be returned (which was either already there or has been downloaded).
      * <p>
-     * In order to determine the effective filename/path within the given URL we attempt the following steps:
-     * <ol>
-     *     <li>
-     *         Check all parameters in the query string, if one contains a path with an accepted file extension,
-     *         we use this.
-     *     </li>
-     *     <li>
-     *         Otherwise, we check the path in the URL. If it has an accepted file extension, we use this as path.
-     *     </li>
-     *     <li>
-     *         If the two attempts above fail, we emit a HEAD request and try to determine the filename/path by checking
-     *         the <tt>content-disposition</tt> header.
-     *     </li>
-     * </ol>
+     * In order to determine the effective filename/path of the given URL we use the registered
+     * {@linkplain RemoteFileResolver remote file resolvers}.
      * <p>
      * This will increment one of the timings (downloaded or download skipped) and also directly report IO
      * errors to the process without spamming the system logs.
@@ -1397,8 +1517,47 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URI url,
                                                                  FetchFromUrlMode mode,
                                                                  Predicate<String> fileExtensionVerifier) {
+        return resolveOrLoadChildFromURL(url,
+                                         mode,
+                                         fileExtensionVerifier,
+                                         EnumSet.noneOf(RemoteFileResolver.Options.class));
+    }
+
+    /**
+     * Attempts to resolve the file from the given URL or performs a download if the file does not exist.
+     * <p>
+     * Uses the path of the given URL relative to this directory and tries to resolve the child file. If this file
+     * does not exist, or has been modified since its last download, a download will be attempted.
+     * <p>
+     * As a result, the resolved file will be returned (which was either already there or has been downloaded).
+     * <p>
+     * In order to determine the effective filename/path of the given URL we use the registered
+     * {@linkplain RemoteFileResolver remote file resolvers}.
+     * <p>
+     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
+     * errors to the process without spamming the system logs.
+     *
+     * @param url                   the url to fetch
+     * @param mode                  determines under which conditions the data from the given URL should be fetched
+     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
+     *                              ".php" or the like as effective file name. When in doubt, use
+     *                              {@link #notServerSidedScripting(String)} to at least exclude common server-sided
+     *                              scripting languages like PHP.
+     * @param options               additional options for resolving the file
+     * @return the file which has been resolved (and downloaded if necessary) along with a flag which indicates if an
+     * update (download) has been performed
+     * @throws HandledException in case of an any error during the download (or if the effective file path cannot be
+     *                          determined)
+     */
+    public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URI url,
+                                                                 FetchFromUrlMode mode,
+                                                                 Predicate<String> fileExtensionVerifier,
+                                                                 Set<RemoteFileResolver.Options> options) {
         Watch watch = Watch.start();
-        Tuple<VirtualFile, Boolean> fileAndFlag = performResolveOrLoadChildFromURL(url, mode, fileExtensionVerifier);
+
+        Tuple<VirtualFile, Boolean> fileAndFlag =
+                performResolveOrLoadChildFromURL(url, mode, fileExtensionVerifier, options);
+
         if (Boolean.TRUE.equals(fileAndFlag.getSecond())) {
             TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
         } else {
@@ -1408,183 +1567,47 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         return fileAndFlag;
     }
 
-    private Tuple<VirtualFile, Boolean> performResolveOrLoadChildFromURL(URI url,
+    private Tuple<VirtualFile, Boolean> performResolveOrLoadChildFromURL(URI uri,
                                                                          FetchFromUrlMode mode,
-                                                                         Predicate<String> fileExtensionVerifier) {
+                                                                         Predicate<String> fileExtensionVerifier,
+                                                                         Set<RemoteFileResolver.Options> options) {
         try {
-            String path = parsePathFromUrl(url, fileExtensionVerifier);
-            if (Strings.isFilled(path)) {
-                VirtualFile file = resolve(path);
-                return Tuple.create(file, file.performLoadFromUrl(url, mode));
+            for (RemoteFileResolver resolver : remoteFileResolvers) {
+                if (resolver.requiresRequestForPathResolve() && mode == FetchFromUrlMode.NEVER_FETCH) {
+                    continue;
+                }
+
+                Tuple<VirtualFile, Boolean> fileAndFlag =
+                        resolver.resolve(this, uri, mode, fileExtensionVerifier, options);
+
+                if (fileAndFlag != null) {
+                    return fileAndFlag;
+                }
             }
 
             if (mode == FetchFromUrlMode.NEVER_FETCH) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("VirtualFile.loadFromUrl.noValidPathWithoutDownload")
-                                .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_DISABLED)
+                                .hint(ProcessLog.HINT_MESSAGE_TYPE, MESSAGE_KEY_LOAD_FROM_URL_DISABLED)
                                 .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_VERY_LOW)
-                                .set("url", url.toString())
+                                .set("url", uri.toString())
                                 .handle();
             }
 
-            return resolveViaHeadRequest(url, mode, fileExtensionVerifier);
+            throw Exceptions.createHandled()
+                            .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
+                            .hint(ProcessLog.HINT_MESSAGE_TYPE, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
+                            .set("url", uri.toString())
+                            .handle();
         } catch (IOException exception) {
             throw Exceptions.createHandled()
                             .error(exception)
                             .withNLSKey("VirtualFile.downloadFailed")
-                            .set("url", url)
-                            .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
+                            .set("url", uri)
+                            .hint(ProcessLog.HINT_MESSAGE_TYPE, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                             .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
-        }
-    }
-
-    /**
-     * Tries to parse the effective filename from the given URL.
-     * <p>
-     * This will check the path and if this isn't applicable, it will check every parameter of the query string. Note
-     * that this will not perform a HEAD request or the like, to fetch the <tt>Content-Disposition</tt> header.
-     *
-     * @param url                   the URL to check
-     * @param fileExtensionVerifier the verifier used to check if the path or any query string parameter contains a
-     *                              valid file name
-     * @return the extracted filename (with path) or <tt>null</tt> if none could be extracted
-     */
-    @Nullable
-    public static String parsePathFromUrl(URI url, Predicate<String> fileExtensionVerifier) {
-        if (fileExtensionVerifier.test(Files.getFileExtension(url.getPath()))) {
-            return url.getPath();
-        }
-
-        // If the URL has a querystring, we check every parameter and determine if there is one with a valid
-        // filename. Otherwise, we use the filename as provided by the URL path itself...
-        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(url.toString(), StandardCharsets.UTF_8);
-        return queryStringDecoder.parameters()
-                                 .values()
-                                 .stream()
-                                 .flatMap(List::stream)
-                                 .filter(path -> fileExtensionVerifier.test(Files.getFileExtension(path)))
-                                 .findFirst()
-                                 .orElse(null);
-    }
-
-    private Tuple<VirtualFile, Boolean> resolveViaHeadRequest(URI url,
-                                                              FetchFromUrlMode mode,
-                                                              Predicate<String> fileExtensionVerifier)
-            throws IOException {
-        try {
-            Outcall headRequest = new Outcall(url);
-            headRequest.markAsHeadRequest();
-            headRequest.alwaysFollowRedirects();
-            headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
-
-            CookieManager cookieManager = new CookieManager();
-            headRequest.modifyClient().cookieHandler(cookieManager);
-
-            String path = headRequest.parseFileNameFromContentDisposition()
-                                     .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
-                                     .orElse(null);
-
-            URI lastConnectedURL = headRequest.getResponse().request().uri();
-
-            if (Strings.isEmpty(path) && !url.getPath().equals(lastConnectedURL.getPath())) {
-                // We don't have a path yet, but we followed redirects, so we check the new URL
-                if (headRequest.getResponseCode() == HttpResponseStatus.NOT_FOUND.code() && lastConnectedURL.toString()
-                                                                                                            .contains(
-                                                                                                                    "Ã")) {
-                    // We followed a redirect header in UTF-8 that was interpreted as ISO-8859-1, indicated by 'Ã' in the url
-                    // as the starting byte of two byte characters in UTF-8 will always be interpreted as 'Ã' in ISO-8859-1
-                    lastConnectedURL =
-                            new URI(new String(lastConnectedURL.toString().getBytes(StandardCharsets.ISO_8859_1),
-                                               StandardCharsets.UTF_8));
-                }
-                path = parsePathFromUrl(lastConnectedURL, fileExtensionVerifier);
-            }
-
-            if (Strings.isFilled(path)) {
-                VirtualFile file = resolve(path);
-                LocalDateTime lastModifiedHeader =
-                        headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
-                if (lastModifiedHeader == null
-                    || !file.exists()
-                    || mode == FetchFromUrlMode.ALWAYS_FETCH
-                    || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-                    return Tuple.create(file, file.performLoadFromUrl(lastConnectedURL, mode));
-                } else {
-                    return Tuple.create(file, false);
-                }
-            }
-
-            if (!shouldRetryWithGet(headRequest.getResponse())) {
-                throw createInvalidPathError(url);
-            }
-        } catch (HttpTimeoutException | URISyntaxException exception) {
-            Exceptions.ignore(exception);
-        }
-
-        // We either ran into a timeout or the server doesn't support HEAD requests -> re-attempt with a GET
-        return resolveViaGetRequest(url, mode);
-    }
-
-    private HandledException createInvalidPathError(URI url) {
-        return Exceptions.createHandled()
-                         .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
-                         .hint(ProcessLog.HINT_MESSAGE_KEY, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
-                         .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
-                         .set("url", url.toString())
-                         .handle();
-    }
-
-    private boolean shouldRetryWithGet(HttpResponse<?> response) {
-        if (response.statusCode() == HttpResponseStatus.METHOD_NOT_ALLOWED.code() && allowsGet(response)) {
-            // server disallows head request and indicates GET is allowed
-            return true;
-        }
-
-        // some servers will improperly respond with 503 or 501 if HEAD requests are not allowed
-        // - we want to retry anyway
-        return response.statusCode() == HttpResponseStatus.NOT_IMPLEMENTED.code()
-               || response.statusCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code();
-    }
-
-    private boolean allowsGet(HttpResponse<?> response) {
-        return response.headers()
-                       .firstValue(HttpHeaderNames.ALLOW.toString())
-                       .filter(header -> header.toUpperCase().contains(HttpMethod.GET.name()))
-                       .isPresent();
-    }
-
-    private Tuple<VirtualFile, Boolean> resolveViaGetRequest(URI url, FetchFromUrlMode mode) throws IOException {
-        Outcall request = new Outcall(url);
-        request.alwaysFollowRedirects();
-        String path = request.parseFileNameFromContentDisposition().orElse(null);
-        if (Strings.isEmpty(path)) {
-            // Drain any content, the server sent, as we have no way of processing it...
-            Streams.exhaust(request.getResponse().body());
-            throw createInvalidPathError(url);
-        }
-
-        VirtualFile file = resolve(path);
-        if (file.exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
-            // Drain any content, as the mode dictates not to update the file (which might require another upload,
-            // so discarding the data is faster).
-            Streams.exhaust(request.getResponse().body());
-            return Tuple.create(file, false);
-        }
-
-        LocalDateTime lastModifiedHeader =
-                request.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
-        if (lastModifiedHeader == null
-            || !file.exists()
-            || mode == FetchFromUrlMode.ALWAYS_FETCH
-            || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-            file.loadFromOutcall(request);
-            return Tuple.create(file, true);
-        } else {
-            // Drain any content, as the mode dictates not to update the file (which might require another upload,
-            // so discarding the data is faster).
-            Streams.exhaust(request.getResponse().body());
-            return Tuple.create(file, false);
         }
     }
 

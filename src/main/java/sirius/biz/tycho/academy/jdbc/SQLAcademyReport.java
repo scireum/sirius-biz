@@ -14,6 +14,7 @@ import sirius.biz.tycho.academy.AcademyReport;
 import sirius.biz.tycho.academy.AcademyVideoData;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Row;
+import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
@@ -61,7 +62,8 @@ public class SQLAcademyReport extends AcademyReport {
                    int watched = row.getValue(COLUMN_WATCHED).asInt(0);
                    int skipped = row.getValue(COLUMN_SKIPPED).asInt(0);
                    int recommended = row.getValue(COLUMN_RECOMMENDED).asInt(0);
-                   int percentWatched = row.getValue(COLUMN_PERCENT_WATCHED).asInt(0);
+                   Amount percentWatched =
+                           row.getValue(COLUMN_PERCENT_WATCHED).getAmount().fill(Amount.ZERO).times(Amount.ONE_HUNDRED);
 
                    report.addRow(List.of(Tuple.create(COLUMN_TRACK,
                                                       cells.of(academyVideo.getAcademyVideoData().getTrackName())),

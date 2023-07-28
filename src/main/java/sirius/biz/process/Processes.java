@@ -200,6 +200,11 @@ public class Processes {
      * This is used for downstream processing (e.g. writing outputs into a file) after a process has
      * {@link ProcessState#TERMINATED}. Essentially, all this does is verifying the preconditions and setting the
      * state back to {@link ProcessState#RUNNING}.
+     * <p>
+     * When restarting a currently terminated process, the node which executes the process must purge it from its local
+     * cache via {@link #purgeProcessFromFirstLevelCache(String)}. An example for this is the
+     * {@linkplain ProcessController#exportOutput(WebContext, String, String, String) export} of process log messages
+     * performed in {@link ExportLogsAsFileTaskExecutor}.
      *
      * @param processId the id of the process to restart
      * @param reason    the reason to log
@@ -213,6 +218,20 @@ public class Processes {
 
         // we need to wait for elastic to propagate process state changes if running on a different machine
         Wait.seconds(2);
+    }
+
+    /**
+     * Clears the given process from the local cache.
+     * <p>
+     * There is rarely a need to call this method. Manually purging the process is generally necessary when
+     * {@linkplain #restartProcess(String, String) restarting} a currently terminated process. An example for this
+     * is the {@linkplain ProcessController#exportOutput(WebContext, String, String, String) export} of process log
+     * messages performed in {@link ExportLogsAsFileTaskExecutor}.
+     *
+     * @param processId the process to purge from the cache
+     */
+    public void purgeProcessFromFirstLevelCache(String processId) {
+        process1stLevelCache.remove(processId);
     }
 
     /**
@@ -857,7 +876,7 @@ public class Processes {
         } catch (Exception e) {
             throw env.handle(e);
         } finally {
-            env.awaitCompletion();
+            env.awaitSideTaskCompletion();
             CallContext.getCurrent().resetLanguage();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
@@ -947,7 +966,7 @@ public class Processes {
         try {
             return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
         } catch (Exception e) {
-            Exceptions.handle(Log.APPLICATION, e);
+            Exceptions.handle(Log.SYSTEM, e);
             return false;
         }
     }
@@ -1117,7 +1136,7 @@ public class Processes {
             List<String> values = Arrays.asList(logEntry.getType().toString(),
                                                 NLS.toMachineString(logEntry.getTimestamp()),
                                                 logEntry.getMessage(),
-                                                logEntry.getMessageType(),
+                                                NLS.smartGet(logEntry.getMessageType()),
                                                 logEntry.getNode());
             return columnsAndValues.test(columns, values);
         });
