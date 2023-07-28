@@ -91,9 +91,8 @@ public class DatabaseController extends BasicController {
     @DefaultRoute
     public void sql(WebContext ctx) {
         // Only display selectable databases which are properly configured...
-        List<String> availableDatabases = selectableDatabases.stream()
-                                                             .filter(name -> databases.getDatabases().contains(name))
-                                                             .toList();
+        List<String> availableDatabases =
+                selectableDatabases.stream().filter(name -> databases.getDatabases().contains(name)).toList();
         ctx.respondWith().template("/templates/biz/model/sql.html.pasta", availableDatabases, defaultDatabase);
     }
 

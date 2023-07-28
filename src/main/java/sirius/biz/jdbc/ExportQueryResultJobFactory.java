@@ -46,7 +46,7 @@ public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
      * Contains the part-name of this factory.
      */
     public static final String FACTORY_NAME = "export-query-result";
-    
+
     private final Parameter<Database> databaseParameter = new DatabaseParameter().markRequired().build();
     private final Parameter<String> sqlParameter = new TextareaParameter("query", "Query").markRequired().build();
 
