@@ -37,13 +37,9 @@ import sirius.web.security.UserContext;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
-import javax.annotation.Nullable;
-import java.sql.Array;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Provides the management GUI for database related activities.
@@ -81,6 +77,9 @@ public class DatabaseController extends BasicController {
 
     @Part
     private Jobs jobs;
+
+    @Part
+    private DatabaseDisplayUtils databaseDisplayUtils;
 
     /**
      * Renders the UI to execute SQL queries.
@@ -227,29 +226,9 @@ public class DatabaseController extends BasicController {
         }
         out.beginArray("row");
         for (Tuple<String, Object> col : row.getFieldsList()) {
-            out.property("column", formatValue(col.getSecond()));
+            out.property("column", databaseDisplayUtils.formatValueForDisplay(col.getSecond()));
         }
         out.endArray();
-    }
-
-    private String formatValue(@Nullable Object value) {
-        if (value == null) {
-            return "";
-        }
-
-        if (value.getClass().isArray()) {
-            return Arrays.stream((Object[]) value).map(NLS::toUserString).collect(Collectors.joining(", "));
-        }
-
-        if (value instanceof Array sqlArrayValue) {
-            try {
-                return Arrays.stream((Object[]) sqlArrayValue.getArray()).map(NLS::toUserString).collect(Collectors.joining(", "));
-            } catch (SQLException e) {
-                Exceptions.ignore(e);
-            }
-        }
-
-        return NLS.toUserString(value);
     }
 
     /**
