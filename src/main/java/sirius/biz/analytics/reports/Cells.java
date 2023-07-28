@@ -13,13 +13,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.NumberFormat;
+import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
-import sirius.web.templates.ContentHelper;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -337,7 +337,7 @@ public class Cells {
             Exceptions.ignore(exception);
         }
 
-        return ContentHelper.escapeXML(cellValue);
+        return Strings.cleanup(cellValue, StringCleanup::escapeXml);
     }
 
     /**

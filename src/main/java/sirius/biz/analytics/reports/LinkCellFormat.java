@@ -10,8 +10,9 @@ package sirius.biz.analytics.reports;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.StringCleanup;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
-import sirius.web.templates.ContentHelper;
 
 import javax.annotation.Nonnull;
 
@@ -28,9 +29,9 @@ public class LinkCellFormat implements CellFormat {
     @Override
     public String format(ObjectNode data) {
         return "<a href=\""
-               + ContentHelper.escapeXML(data.path(KEY_URL).asText())
+               + Strings.cleanup(data.path(KEY_URL).asText(), StringCleanup::escapeXml)
                + "\" classes=\"link\" target=\"_blank\">"
-               + ContentHelper.escapeXML(data.path(KEY_VALUE).asText())
+               + Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml)
                + "</a>";
     }
 
