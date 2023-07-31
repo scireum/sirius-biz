@@ -21,6 +21,7 @@ import sirius.db.jdbc.Row;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.Permission;
@@ -38,11 +39,14 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
 
+    @Part
+    private DatabaseDisplayUtils databaseDisplayUtils;
+
     /**
      * Contains the part-name of this factory.
      */
     public static final String FACTORY_NAME = "export-query-result";
-    
+
     private final Parameter<Database> databaseParameter = new DatabaseParameter().markRequired().build();
     private final Parameter<String> sqlParameter = new TextareaParameter("query", "Query").markRequired().build();
 
@@ -79,7 +83,11 @@ public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
                 if (monoflop.firstCall()) {
                     export.addListRow(Tuple.firsts(row.getFieldsList()));
                 }
-                export.addListRow(Tuple.seconds(row.getFieldsList()));
+                export.addListRow(row.getFieldsList()
+                                     .stream()
+                                     .map(Tuple::getSecond)
+                                     .map(value -> databaseDisplayUtils.formatValueForDisplay(value))
+                                     .toList());
                 process.incCounter("Row");
             } catch (IOException e) {
                 throw process.handle(e);
