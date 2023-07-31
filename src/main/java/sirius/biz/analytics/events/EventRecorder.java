@@ -231,6 +231,29 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
+     * Counts the number of events which have occurred in the given calendar month based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This method counts the number of events which have occurred in the given calendar month. Therefore, the start
+     * date is the first day of the given month and the end date is the last day of the given month.
+     *
+     * @param eventType     the type of events to query
+     * @param calendarMonth the calendar month to query
+     * @param queryTuner    the actual filter to apply
+     * @param <E>           the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event<E>> int countEventsInCalendarMonth(Class<E> eventType,
+                                                               YearMonth calendarMonth,
+                                                               @Nullable Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
+        LocalDateTime startDate = calendarMonth.atDay(1).atStartOfDay();
+        LocalDateTime endDate = calendarMonth.atEndOfMonth().atTime(LocalTime.MAX);
+        return countEventsInRange(eventType, startDate, endDate, queryTuner);
+    }
+
+    /**
      * Counts the number of events which have occurred in the last month based on the given <tt>queryTuner</tt>.
      * <p>
      * This method counts the number of events which have occurred in the last calendar month. Therefore, the
@@ -248,10 +271,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     public <E extends Event<E>> int countEventsInLastMonth(Class<E> eventType,
                                                            @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
-        YearMonth lastYearMonth = YearMonth.now().minusMonths(1);
-        LocalDateTime startDate = lastYearMonth.atDay(1).atStartOfDay();
-        LocalDateTime endDate = lastYearMonth.atEndOfMonth().atTime(LocalTime.MAX);
-        return countEventsInRange(eventType, startDate, endDate, queryTuner);
+        return countEventsInCalendarMonth(eventType, YearMonth.now().minusMonths(1), queryTuner);
     }
 
     /**
