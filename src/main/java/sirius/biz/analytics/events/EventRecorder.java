@@ -271,10 +271,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     public <E extends Event<E>> int countEventsInLastMonth(Class<E> eventType,
                                                            @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
-        YearMonth lastYearMonth = YearMonth.now().minusMonths(1);
-        LocalDateTime startDate = lastYearMonth.atDay(1).atStartOfDay();
-        LocalDateTime endDate = lastYearMonth.atEndOfMonth().atTime(LocalTime.MAX);
-        return countEventsInRange(eventType, startDate, endDate, queryTuner);
+        return countEventsInCalendarMonth(eventType, YearMonth.now().minusMonths(1), queryTuner);
     }
 
     /**
