@@ -20,19 +20,13 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="row">
-                <div class="col-10">
-                    <div class="input-group">
-                        <input type="text" id="query" name="query"
-                               class="form-control primary-autofocus"
-                               placeholder="@i18n('NLS.searchkey')" autofocus/>
-                        <div class="input-group-append">
-                            <a class="btn btn-outline-secondary" onclick="execute()">
-                                <i class="fa fa-search"></i>
-                            </a>
-                        </div>
-                    </div>
+                <div class="col-12 col-md-10 d-flex align-items-start">
+                    <t:textarea name="query" id="query" value="" class="flex-grow-1 primary-autofocus" rows="1"/>
+                    <a class="btn btn-outline-secondary ml-1" onclick="execute()">
+                        <i class="fa fa-search"></i>
+                    </a>
                 </div>
-                <t:singleSelect name="database" id="db" class="col-2">
+                <t:singleSelect name="database" id="db" class="col-12 col-md-2">
                     <i:for type="String" var="db" items="dbs">
                         <option value="@db" @selected="defaultDB == db">@db</option>
                     </i:for>
