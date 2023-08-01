@@ -115,7 +115,7 @@ public class DatabaseController extends BasicController {
             String sqlStatement = webContext.get(PARAM_QUERY).asString();
             SQLQuery qry = db.createQuery(sqlStatement).markAsLongRunning();
 
-            OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
+            OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s):%n%n%s",
                          UserContext.getCurrentUser().getUserName(),
                          sqlStatement);
 
