@@ -152,7 +152,7 @@
         }
 
         sirius.ready(function () {
-            sirius.addEnterListener(document.getElementById('query'), execute);
+            sirius.addEnterListener(document.getElementById('query'), execute, true);
         });
     </script>
 </t:page>
