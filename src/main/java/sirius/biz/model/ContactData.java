@@ -9,12 +9,15 @@
 package sirius.biz.model;
 
 import sirius.biz.importer.AutoImport;
+import sirius.biz.tenants.EmailAddressValidator;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.LowerCase;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
+import sirius.db.mixing.annotations.ValidatedBy;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -55,10 +58,12 @@ public class ContactData extends Composite {
      */
     public static final Mapping EMAIL = Mapping.named("email");
     @Trim
+    @LowerCase
     @NullAllowed
     @Autoloaded
     @AutoImport
     @Length(150)
+    @ValidatedBy(EmailAddressValidator.class)
     private String email;
 
     /**

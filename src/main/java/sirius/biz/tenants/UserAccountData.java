@@ -25,9 +25,11 @@ import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
+import sirius.db.mixing.annotations.LowerCase;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
+import sirius.db.mixing.annotations.ValidatedBy;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Json;
@@ -87,10 +89,12 @@ public class UserAccountData extends Composite implements MessageProvider {
      */
     public static final Mapping EMAIL = Mapping.named("email");
     @Trim
+    @LowerCase
     @Autoloaded
     @Length(150)
     @NullAllowed
     @AutoImport
+    @ValidatedBy(EmailAddressValidator.class)
     private String email;
 
     /**
@@ -179,11 +183,6 @@ public class UserAccountData extends Composite implements MessageProvider {
         userObject.ifChangedAndFilled(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                    .inner(PersonData.SALUTATION),
                                       getPerson()::verifySalutation);
-
-        userObject.ifChangedAndFilled(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL), () -> {
-            email = email.trim().toLowerCase();
-            ms.failForInvalidEmail(email, null);
-        });
 
         fillAndVerifyUsername();
     }
