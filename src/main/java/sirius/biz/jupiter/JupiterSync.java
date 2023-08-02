@@ -644,7 +644,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
             return tenants.getSystemTenantId();
         }
 
-        return null;
+        throw Exceptions.createHandled().withSystemErrorMessage("Cannot resolve system tenant.").handle();
     }
 
     private String resolveSystemTenantName() {
@@ -652,6 +652,6 @@ public class JupiterSync implements Startable, EndOfDayTask {
             return tenants.getSystemTenantName();
         }
 
-        return null;
+        throw Exceptions.createHandled().withSystemErrorMessage("Cannot resolve system tenant.").handle();
     }
 }
