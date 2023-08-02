@@ -187,6 +187,17 @@ public class MetricQuery {
     }
 
     /**
+     * Calculates the cumulative sum of metrics, commencing from the specified  <tt>startDate</tt> and continuing until the <tt>untilDate</tt> is reached.
+     *
+     * @param startDate the first date to calculate the sum of the metrics for
+     * @param untilDate the last date to calculate the sum of the metrics for
+     * @return the sum of the metrics fetched for the given period
+     */
+    public Integer sum(LocalDate startDate, LocalDate untilDate) {
+        return values(startDate, untilDate).stream().mapToInt(Integer::intValue).sum();
+    }
+
+    /**
      * Fetches a value for each of the dates in the given stream.
      *
      * @param dates the stream of dates to handle
