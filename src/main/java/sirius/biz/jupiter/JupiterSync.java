@@ -218,7 +218,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
         processContext.log(ProcessLog.info().withFormattedMessage("Executing data provider: %s", provider.getName()));
 
         Blob blob = blobStorage.getSpace(localRepoSpaceName)
-                               .findOrCreateByPath(tenants.getTenantUserManager().getSystemTenantId(),
+                               .findOrCreateByPath(tenants.getSystemTenantId(),
                                                    provider.getFilename());
 
         try (OutputStream out = blob.createOutputStream(Files.getFilenameAndExtension(provider.getFilename()))) {
@@ -506,7 +506,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
         try {
             Directory root = blobStorage.getSpace(localRepoSpaceName)
-                                        .getRoot(tenants.getTenantUserManager().getSystemTenantId());
+                                        .getRoot(tenants.getSystemTenantId());
             visitLocalDirectory(processContext,
                                 null,
                                 root,
@@ -634,7 +634,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
             throw new IllegalStateException("No local repository is configured.");
         }
         Blob blob = blobStorage.getSpace(localRepoSpaceName)
-                               .findOrCreateByPath(tenants.getTenantUserManager().getSystemTenantId(), path);
+                               .findOrCreateByPath(tenants.getSystemTenantId(), path);
         return blob.createOutputStream(() -> {
             runInStandbyProcess(processContext -> performSyncInProcess(processContext, false, false, true));
         }, Files.getFilenameAndExtension(path));
