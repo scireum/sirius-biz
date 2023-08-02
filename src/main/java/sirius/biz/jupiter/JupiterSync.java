@@ -166,8 +166,8 @@ public class JupiterSync implements Startable, EndOfDayTask {
         if (automaticUpdate) {
             processes.executeInStandbyProcess("jupiter-sync",
                                               () -> "Jupiter Synchronization",
-                                              tenants.getSystemTenantId(),
-                                              tenants::getSystemTenantName,
+                                              resolveSystemTenantId(),
+                                              this::resolveSystemTenantName,
                                               processContextConsumer);
         }
     }
@@ -218,7 +218,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
         processContext.log(ProcessLog.info().withFormattedMessage("Executing data provider: %s", provider.getName()));
 
         Blob blob = blobStorage.getSpace(localRepoSpaceName)
-                               .findOrCreateByPath(tenants.getSystemTenantId(), provider.getFilename());
+                               .findOrCreateByPath(resolveSystemTenantId(), provider.getFilename());
 
         try (OutputStream out = blob.createOutputStream(Files.getFilenameAndExtension(provider.getFilename()))) {
             provider.execute(out);
@@ -490,7 +490,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                      List<RepositoryFile> repositoryFiles,
                                      Consumer<Runnable> updateTaskConsumer,
                                      Set<String> filesToDelete) {
-        if (blobStorage == null || tenants == null || Strings.isEmpty(localRepoSpaceName)) {
+        String systemTenantId = resolveSystemTenantId();
+
+        if (blobStorage == null || systemTenantId == null || Strings.isEmpty(localRepoSpaceName)) {
             processContext.debug(ProcessLog.info()
                                            .withFormattedMessage(
                                                    "Skipping local repository for %s as no storage space is configured.",
@@ -504,7 +506,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                                              connection.getName()));
 
         try {
-            Directory root = blobStorage.getSpace(localRepoSpaceName).getRoot(tenants.getSystemTenantId());
+            Directory root = blobStorage.getSpace(localRepoSpaceName).getRoot(systemTenantId);
             visitLocalDirectory(processContext,
                                 null,
                                 root,
@@ -631,9 +633,25 @@ public class JupiterSync implements Startable, EndOfDayTask {
         if (Strings.isEmpty(localRepoSpaceName) || blobStorage == null) {
             throw new IllegalStateException("No local repository is configured.");
         }
-        Blob blob = blobStorage.getSpace(localRepoSpaceName).findOrCreateByPath(tenants.getSystemTenantId(), path);
+        Blob blob = blobStorage.getSpace(localRepoSpaceName).findOrCreateByPath(resolveSystemTenantId(), path);
         return blob.createOutputStream(() -> {
             runInStandbyProcess(processContext -> performSyncInProcess(processContext, false, false, true));
         }, Files.getFilenameAndExtension(path));
+    }
+
+    private String resolveSystemTenantId() {
+        if (tenants != null) {
+            return tenants.getSystemTenantId();
+        }
+
+        return null;
+    }
+
+    private String resolveSystemTenantName() {
+        if (tenants != null) {
+            return tenants.getSystemTenantName();
+        }
+
+        return null;
     }
 }
