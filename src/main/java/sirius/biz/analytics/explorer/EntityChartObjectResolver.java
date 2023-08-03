@@ -14,6 +14,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -30,6 +31,7 @@ public abstract class EntityChartObjectResolver<E extends BaseEntity<?>> impleme
     protected Mixing mixing;
 
     @Part
+    @Nullable
     protected Tenants<?, ?, ?> tenants;
 
     @Override
