@@ -17,6 +17,7 @@ import sirius.biz.tenants.Tenant;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -287,6 +288,13 @@ public class Process extends SearchableEntity {
                 persistencePeriod = PersistencePeriod.SIX_YEARS;
             }
         }
+    }
+
+    @BeforeDelete
+    @ComplexDelete
+    protected void truncateLogs() {
+        // Deletes all process logs using delete-by-query
+        elastic.select(ProcessLog.class).eq(ProcessLog.PROCESS, getId()).truncate();
     }
 
     /**
