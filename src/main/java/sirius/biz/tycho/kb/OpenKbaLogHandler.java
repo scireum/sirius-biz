@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Provides a log message handler, which provides an action to directly jump to a {@link KnowledgeBaseArticle}.
@@ -47,12 +48,11 @@ public class OpenKbaLogHandler implements ProcessLogHandler {
 
     @Override
     public List<ProcessLogAction> getActions(ProcessLog log) {
-        KnowledgeBaseArticle article = resolveArticleId(log);
-        if (article == null) {
-            return Collections.emptyList();
-        }
-        return Collections.singletonList(new ProcessLogAction(log, ACTION_OPEN_ARTICLE).withLabel(article.getTitle())
-                                                                                       .withIcon("fa fa-lightbulb"));
+        return resolveArticleId(log).map(article -> {
+            ProcessLogAction action = new ProcessLogAction(log, ACTION_OPEN_ARTICLE).withLabel(article.getTitle())
+                                                                                    .withIcon("fa fa-lightbulb");
+            return Collections.singletonList(action);
+        }).orElse(Collections.emptyList());
     }
 
     @Override
@@ -60,25 +60,19 @@ public class OpenKbaLogHandler implements ProcessLogHandler {
         if (!ACTION_OPEN_ARTICLE.equals(action)) {
             return false;
         }
-        KnowledgeBaseArticle article = resolveArticleId(log);
-        if (article == null) {
-            return false;
-        }
-        request.respondWith().redirectToGet("/kba/" + article.getLanguage() + "/" + article.getArticleId());
-        return true;
+        Optional<KnowledgeBaseArticle> articleOrEmpty = resolveArticleId(log);
+        articleOrEmpty.ifPresent(article -> request.respondWith()
+                                                   .redirectToGet("/kba/"
+                                                                  + article.getLanguage()
+                                                                  + "/"
+                                                                  + article.getArticleId()));
+        return articleOrEmpty.isPresent();
     }
 
-    @Nullable
-    private KnowledgeBaseArticle resolveArticleId(ProcessLog log) {
-        String articleId = log.getContext().get(PARAM_ARTICLE_ID).orElse(null);
-        if (articleId == null) {
-            return null;
-        }
-        KnowledgeBaseArticle article = knowledgeBase.resolve(NLS.getCurrentLanguage(), articleId, false).orElse(null);
-        if (article == null) {
-            return null;
-        }
-        return article;
+    private Optional<KnowledgeBaseArticle> resolveArticleId(ProcessLog log) {
+        return log.getContext()
+                  .get(PARAM_ARTICLE_ID)
+                  .flatMap(articleId -> knowledgeBase.resolve(NLS.getCurrentLanguage(), articleId, false));
     }
 
     @Nonnull
