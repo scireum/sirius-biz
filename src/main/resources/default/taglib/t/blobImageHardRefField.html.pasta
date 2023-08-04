@@ -9,7 +9,7 @@
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
 <i:arg name="btnClass" type="String" default=""
        description="Lists additional CSS classes to apply to the upload button."/>
-<i:arg name="defaultPreview" type="String" default="/assets/images/placeholder.png"/>
+<i:arg name="defaultPreview" type="String" default="/assets/images/blob_image_fallback.png"/>
 <i:arg name="previewVariant" type="String" default="raw"/>
 <i:arg name="acceptedFiles" type="String" default="image/*,application/pdf,svg"/>
 <i:arg name="uploadUrl" type="String" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
