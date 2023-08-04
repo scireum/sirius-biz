@@ -107,7 +107,7 @@ public class ProcessLog extends SearchableEntity {
      * Contains the process for which this log entry was created.
      */
     public static final Mapping PROCESS = Mapping.named("process");
-    private final ElasticRef<Process> process = ElasticRef.writeOnceOn(Process.class, BaseEntityRef.OnDelete.CASCADE);
+    private final ElasticRef<Process> process = ElasticRef.writeOnceOn(Process.class, BaseEntityRef.OnDelete.IGNORE);
 
     /**
      * Contains the type or severity of this log entry.

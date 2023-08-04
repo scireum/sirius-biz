@@ -553,9 +553,17 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean updatePersistence(String processId, PersistencePeriod persistencePeriod) {
-        return modify(processId,
-                      process -> process.getPersistencePeriod() != persistencePeriod,
-                      process -> process.setPersistencePeriod(persistencePeriod));
+        return modify(processId, process -> process.getPersistencePeriod() != persistencePeriod, process -> {
+            PersistencePeriod currentPersistence = process.getPersistencePeriod();
+            process.setPersistencePeriod(persistencePeriod);
+
+            LocalDate expires = process.getExpires();
+            if (expires != null) {
+                expires = currentPersistence.minus(expires);
+                expires = persistencePeriod.plus(expires);
+                process.setExpires(expires);
+            }
+        });
     }
 
     /**
