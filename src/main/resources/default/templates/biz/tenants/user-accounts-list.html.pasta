@@ -23,8 +23,10 @@
                     </div>
                 </i:block>
                 <i:block name="title">
+                    <div class="overflow-hidden text-ellipsis text-nowrap">
                     <t:langFlag lang="@account.getUserAccountData().getLanguage().getValue()"/>
                     <span>@account.getUserAccountData()</span>
+                    </div>
                 </i:block>
                 <i:block name="actions">
                     <i:if test="enableCardActions">
