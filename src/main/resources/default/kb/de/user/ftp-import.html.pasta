@@ -1,38 +1,64 @@
 <k:article code="EAI5V" lang="de" parent="SLEOK"
-           title="Verbindung zum FTP(S)-Server und automatischer Start von Jobs"
+           title="Verbindung zum Upload-Server und automatischer Start von Jobs"
            permissions="flag-logged-in+ftp-server-enabled,flag-logged-in+ssh-server-enabled">
-    <i:block name="description">Erklärt wie Jobs via FTP(S) Verbindung gestartet werden können.</i:block>
+    <i:block name="description">Erklärt wie Jobs via Datei-Upload gestartet werden können.</i:block>
 
-    <k:section heading="Einrichtung des Zugriffs zum FTP-Server">
+    <i:local name="ftpEnabled" value="UserContext.getCurrentUser().hasPermission('ftp-server-enabled')"/>
+    <i:local name="sshEnabled" value="UserContext.getCurrentUser().hasPermission('ssh-server-enabled')"/>
+
+    <k:section heading="Einrichtung des Zugriffs zum Upload-Server">
         <p>
-            Sie können Dateien per FTP(S)-Upload übergeben um diese etwa im Medienpool abzulegen oder automatisch
-            einen Verarbeitungsjob starten zu lassen.
+            Sie können Dateien per
+            <i:if test="ftpEnabled && sshEnabled">
+                FTP oder SSH-Upload
+            </i:if>
+            <i:if test="ftpEnabled && !sshEnabled">
+                FTP-Upload
+            </i:if>
+            <i:if test="!ftpEnabled && sshEnabled">
+                SSH-Upload
+            </i:if>
+            übergeben, um diese etwa im Medienpool abzulegen oder automatisch einen Verarbeitungsjob starten zu lassen.
         </p>
         <p>
             Im Folgenden finden Sie die dafür notwendigen Informationen.
         </p>
     </k:section>
-    <k:section heading="Protokoll und Serveradresse">
-        <p>
-            Es wird der Einsatz von SFTP empfohlen (Secure File Transfer Protocol, SSH File Transfer Protocol). SFTP
-            verwendet standardmäßig Port 22.
-        </p>
-        <k:code>
-            @apply('sftp://sftp.%s', config('product.baseUrl'))
-        </k:code>
-        <p>
-            Alternativ steht auch FTPs zur Verfügung (FTP-SSL bzw. FTP over TLS/SSL). Hier wird standardmäßig Port 21
-            verwendet.
-        </p>
-        <k:code>
-            @apply('ftps://ftp.%s', config('product.baseUrl'))
-        </k:code>
-        <p>
-            <b>Hinweis:</b> Es sind Einschränkungen bekannt bei der Verwendung von FTP-SSL mit der Client-Software
-            FileZilla (TLS-Warnung vom Server). Für andere Client-Software wie z.B. CyberDuck sind diese Einschränkungen
-            nicht bekannt. FTP ohne SSL (nicht empfohlen) funktioniert auch mit FileZilla.
-        </p>
-    </k:section>
+    <t:permission permission="ssh-server-enabled">
+        <i:local name="sshServer" value="@part(sirius.biz.storage.layer3.downlink.ssh.SSHServer.class)"/>
+        <k:section heading="SSH">
+            <p>
+                Es wird der Einsatz von SFTP empfohlen (Secure File Transfer Protocol, SSH File Transfer Protocol).
+            </p>
+            <p>
+                Host: <k:inlineCode>@sshServer.computeExternalHost()</k:inlineCode>
+                <br>
+                Port: <k:inlineCode>@sshServer.computeExternalPort()</k:inlineCode>
+            </p>
+        </k:section>
+    </t:permission>
+    <t:permission permission="ftp-server-enabled">
+        <i:local name="ftpServer" value="@part(sirius.biz.storage.layer3.downlink.ftp.FTPServer.class)"/>
+        <k:section heading="FTP">
+            <p>
+                Host: <k:inlineCode>@ftpServer.computeExternalHost()</k:inlineCode>
+                <br>
+                Port: <k:inlineCode>@ftpServer.computeExternalPort()</k:inlineCode>
+            </p>
+            <i:if test="ftpServer.enabledTLS()">
+                <p>
+                    FTP über TLS (auch FTPS oder FTP verschlüsselt mit TLS) ist aktiv und wird dadurch empfohlen.
+                </p>
+                <p>
+                    <b>Hinweis:</b> Es sind Einschränkungen bekannt bei der Verwendung von FTP-SSL mit der
+                    Client-Software FileZilla (TLS-Warnung vom Server). Für andere Client-Software wie z.B. CyberDuck
+                    sind diese Einschränkungen nicht bekannt. FTP ohne SSL (nicht empfohlen) funktioniert auch mit
+                    FileZilla.
+                </p>
+            </i:if>
+        </k:section>
+
+    </t:permission>
     <k:section heading="Benutzername und Berechtigungen">
         <p>
             Benutzername und Kennwort des entsprechend berechtigten Backend-Benutzers werden benötigt.
