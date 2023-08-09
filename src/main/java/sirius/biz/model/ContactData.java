@@ -108,9 +108,6 @@ public class ContactData extends Composite {
     @Length(150)
     private String mobile;
 
-    @Part
-    private static Mails mails;
-
     /**
      * Verifies that the given phone number is valid using {@link #VALID_PHONE_NUMBER}.
      * <p>
