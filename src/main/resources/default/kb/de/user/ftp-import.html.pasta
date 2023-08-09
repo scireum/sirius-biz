@@ -1,5 +1,6 @@
 <k:article code="EAI5V" lang="de" parent="SLEOK"
-           title="Verbindung zum FTP(S)-Server und automatischer Start von Jobs" permissions="flag-logged-in">
+           title="Verbindung zum FTP(S)-Server und automatischer Start von Jobs"
+           permissions="flag-logged-in+ftp-server-enabled,flag-logged-in+ssh-server-enabled">
     <i:block name="description">Erklärt wie Jobs via FTP(S) Verbindung gestartet werden können.</i:block>
 
     <k:section heading="Einrichtung des Zugriffs zum FTP-Server">

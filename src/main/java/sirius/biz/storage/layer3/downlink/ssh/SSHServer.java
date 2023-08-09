@@ -21,6 +21,8 @@ import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.storage.layer3.downlink.ssh.scp.BridgeScpCommandFactory;
 import sirius.biz.storage.layer3.downlink.ssh.sftp.BridgeSftpSubsystemFactory;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.tenants.AdditionalRolesProvider;
+import sirius.biz.tenants.UserAccount;
 import sirius.kernel.Killable;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
@@ -44,14 +46,20 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 /**
  * Provides a built-in SSH server which provides access to the {@link sirius.biz.storage.layer3.VirtualFile} via
  * <b>SCP</b> and <b>SFTP</b>.
  */
-@Register(classes = {Startable.class, Stoppable.class, Killable.class, SSHServer.class})
-public class SSHServer implements Startable, Stoppable, Killable {
+@Register(classes = {Startable.class, Stoppable.class, Killable.class, AdditionalRolesProvider.class, SSHServer.class})
+public class SSHServer implements Startable, Stoppable, Killable, AdditionalRolesProvider {
+
+    /**
+     * Defines a role defining if the SSH server is enabled in this system.
+     */
+    public static final String ROLE_SSH_SERVER_ENABLED = "ssh-server-enabled";
 
     @ConfigValue("storage.layer3.downlink.ssh.port")
     private int port;
@@ -245,5 +253,12 @@ public class SSHServer implements Startable, Stoppable, Killable {
         }
 
         return port;
+    }
+
+    @Override
+    public void addAdditionalRoles(UserAccount<?, ?> user, Consumer<String> roleConsumer) {
+        if (port > 0) {
+            roleConsumer.accept(ROLE_SSH_SERVER_ENABLED);
+        }
     }
 }

@@ -16,6 +16,8 @@ import org.apache.ftpserver.ftplet.Ftplet;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.tenants.AdditionalRolesProvider;
+import sirius.biz.tenants.UserAccount;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
 import sirius.kernel.commons.Strings;
@@ -29,13 +31,19 @@ import java.io.File;
 import java.time.Duration;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 /**
  * Provides a bridge between the {@link sirius.biz.storage.layer3.VirtualFileSystem} and the Apache FTP server.
  */
-@Register(classes = {Startable.class, Stoppable.class, FTPServer.class})
-public class FTPServer implements Startable, Stoppable {
+@Register(classes = {Startable.class, Stoppable.class, AdditionalRolesProvider.class, FTPServer.class})
+public class FTPServer implements Startable, Stoppable, AdditionalRolesProvider {
+
+    /**
+     * Defines a role defining if the FTP server is enabled in this system.
+     */
+    public static final String ROLE_FTP_SERVER_ENABLED = "ftp-server-enabled";
 
     private FtpServer server;
 
@@ -219,5 +227,12 @@ public class FTPServer implements Startable, Stoppable {
         }
 
         return ftpPort;
+    }
+
+    @Override
+    public void addAdditionalRoles(UserAccount<?, ?> user, Consumer<String> roleConsumer) {
+        if (ftpPort > 0) {
+            roleConsumer.accept(ROLE_FTP_SERVER_ENABLED);
+        }
     }
 }
