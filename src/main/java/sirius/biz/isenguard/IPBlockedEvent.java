@@ -14,7 +14,7 @@ import sirius.db.mixing.Mapping;
 /**
  * Recorded for each IP address blocked by {@link Isenguard#blockIP(String)}.
  */
-public class IPBlockedEvent extends Event {
+public class IPBlockedEvent extends Event<IPBlockedEvent> {
 
     /**
      * Contains the IP address which has been blocked.
@@ -22,11 +22,18 @@ public class IPBlockedEvent extends Event {
     public static final Mapping IP = Mapping.named("ip");
     private String ip;
 
-    public String getIp() {
-        return ip;
+    /**
+     * Sets the IP address which has been blocked.
+     *
+     * @param ip the IP address
+     * @return the event itself for fluent method calls
+     */
+    public IPBlockedEvent withIp(String ip) {
+        this.ip = ip;
+        return this;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
+    public String getIp() {
+        return ip;
     }
 }

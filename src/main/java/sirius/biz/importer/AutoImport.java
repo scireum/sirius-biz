@@ -25,7 +25,7 @@ public @interface AutoImport {
      * makes a reasonable guess.
      */
     enum RequiredStatus {
-        REQUIRED, OPTIONAL, AUTO_DETECT;
+        REQUIRED, OPTIONAL, AUTO_DETECT
     }
 
     /**

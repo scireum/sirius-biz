@@ -25,11 +25,13 @@ import sirius.kernel.di.std.Part;
 import sirius.web.http.MimeHelper;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Stores the metadata for an object managed by the {@link Storage}.
  * <p>
  * Note that the externally visible methods are decalred by {@link StoredObject} which is the public interface.
+ *
  * @deprecated use the new storage APIs
  */
 @Index(name = "object_key_lookup", columns = "objectKey", unique = true)
@@ -160,11 +162,7 @@ public class VirtualObject extends SQLTenantAware implements StoredObject {
     @Override
     public LocalDateTime getLastModified() {
         LocalDateTime result = getTrace().getChangedAt();
-        if (result == null) {
-            return LocalDateTime.now();
-        } else {
-            return result;
-        }
+        return Objects.requireNonNullElseGet(result, LocalDateTime::now);
     }
 
     @AfterDelete

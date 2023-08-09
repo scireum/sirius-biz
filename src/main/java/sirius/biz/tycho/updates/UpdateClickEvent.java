@@ -17,7 +17,7 @@ import sirius.db.mixing.Mapping;
  *
  * @see UpdateManager
  */
-public class UpdateClickEvent extends Event {
+public class UpdateClickEvent extends Event<UpdateClickEvent> {
 
     public static final Mapping UPDATE_GUID = Mapping.named("updateGuid");
     private String updateGuid;

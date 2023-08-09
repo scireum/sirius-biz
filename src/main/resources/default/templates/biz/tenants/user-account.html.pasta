@@ -62,9 +62,11 @@
                     <t:dropdownSection>
                         <i:extensions target="user-account" account="account" point="additionalActions"/>
                     </t:dropdownSection>
-                    <t:dropdownSection>
-                        <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
-                    </t:dropdownSection>
+                    <t:permission permission="permission-delete-user-accounts">
+                        <t:dropdownSection>
+                            <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                        </t:dropdownSection>
+                    </t:permission>
                 </i:if>
             </i:block>
 

@@ -9,9 +9,9 @@
 package sirius.biz.analytics.reports;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
-import sirius.web.templates.ContentHelper;
 
 import javax.annotation.Nonnull;
 
@@ -39,33 +39,33 @@ public class TrendCellFormat implements CellFormat {
         StringBuilder sb = new StringBuilder("<div class=\"text-right\"");
         if (Strings.isFilled(hint)) {
             sb.append(" title=\"");
-            sb.append(ContentHelper.escapeXML(hint));
+            sb.append(Strings.cleanup(hint, StringCleanup::escapeXml));
             sb.append("\"");
         }
         sb.append(">");
         if (Strings.isFilled(value)) {
             if (Strings.isFilled(trend)) {
                 sb.append("<span>");
-                sb.append(ContentHelper.escapeXML(value));
+                sb.append(Strings.cleanup(value, StringCleanup::escapeXml));
                 sb.append("</span> (<span class=\"");
-                sb.append(ContentHelper.escapeXML(classes));
+                sb.append(Strings.cleanup(classes, StringCleanup::escapeXml));
                 sb.append("\">");
-                sb.append(ContentHelper.escapeXML(trend));
+                sb.append(Strings.cleanup(trend, StringCleanup::escapeXml));
                 sb.append("</span>)");
             } else {
-                sb.append(ContentHelper.escapeXML(value));
+                sb.append(Strings.cleanup(value, StringCleanup::escapeXml));
             }
         } else {
             sb.append("<span class=\"");
-            sb.append(ContentHelper.escapeXML(classes));
+            sb.append(Strings.cleanup(classes, StringCleanup::escapeXml));
             sb.append("\">");
-            sb.append(ContentHelper.escapeXML(trend));
+            sb.append(Strings.cleanup(trend, StringCleanup::escapeXml));
             sb.append("</span>");
         }
         if (Strings.isFilled(icon)) {
             if (Strings.isEmpty(trend)) {
                 sb.append("<span class=\"");
-                sb.append(ContentHelper.escapeXML(classes));
+                sb.append(Strings.cleanup(classes, StringCleanup::escapeXml));
                 sb.append("\">");
             }
             sb.append(" <i class=\"" + icon + "\"></i>");

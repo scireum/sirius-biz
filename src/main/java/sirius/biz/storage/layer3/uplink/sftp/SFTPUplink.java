@@ -30,6 +30,7 @@ import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -368,7 +369,7 @@ public class SFTPUplink extends ConfigBasedUplink {
             try {
                 InputStream rawStream = connector.connector().read(path);
 
-                return new WatchableInputStream(rawStream).onCompletion(connector::safeClose);
+                return new WatchableInputStream(new BufferedInputStream(rawStream)).onCompletion(connector::safeClose);
             } catch (Exception e) {
                 connector.safeClose();
                 if (attempt.shouldThrow(e)) {

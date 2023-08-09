@@ -19,13 +19,14 @@ import java.io.OutputStream;
 
 /**
  * Buffers all contents on disk and uploads them in the storage once the stream is closed.
+ *
  * @deprecated use the new storage APIs
  */
 @Deprecated
 class UpdatingOutputStream extends OutputStream {
 
     public static final byte[] EMPTY_BUFFER = new byte[0];
-    private Storage storage;
+    private final Storage storage;
     private StoredObject destination;
     private File bufferFile;
     private FileOutputStream buffer;

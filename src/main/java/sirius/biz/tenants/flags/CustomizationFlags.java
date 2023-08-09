@@ -19,6 +19,7 @@ import sirius.kernel.settings.Settings;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +48,7 @@ public class CustomizationFlags {
     private static final List<CustomizationFlag> knownFlags = new ArrayList<>();
 
     @Part
+    @Nullable
     private Tenants<?, ?, ?> tenants;
 
     protected static synchronized void addKnownFlag(CustomizationFlag flag) {
