@@ -16,6 +16,9 @@ import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import kotlin.test.assertEquals
 
+/**
+ * Tests the [PhoneNumberValidator].
+ */
 @ExtendWith(SiriusExtension::class)
 class PhoneNumberValidatorTest {
 
