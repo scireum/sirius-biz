@@ -73,10 +73,19 @@
             (FTP, ...)" einzuschränken.
         </p>
     </k:section>
-    <k:section heading="Ordnerstruktur auf dem FTP-Server">
+    <k:section heading="Ordnerstruktur auf dem Upload-Server">
         <p>
-            Je nach Berechtigungen finden Sie auf dem FTP-Server unterschiedlich viele Hauptordner vor.
+            Die folgenden Ordner sind auf dem Upload-Server verfügbar:
         </p>
+        <ul>
+            <i:for var="child"
+                   type="sirius.biz.storage.layer3.VirtualFile"
+                   items="@part(VirtualFileSystem.class).root().allChildren().stream().toList()">
+                <li>
+                    @child.name()
+                </li>
+            </i:for>
+        </ul>
     </k:section>
     <k:section heading="Verarbeitungsjob per FTP starten">
         <p>
