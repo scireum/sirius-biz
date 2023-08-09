@@ -87,7 +87,7 @@
             </i:for>
         </ul>
     </k:section>
-    <k:section heading="Verarbeitungsjob per FTP starten">
+    <k:section heading="Verarbeitungsjob per Upload starten">
         <p>
             Alle Verarbeitungsjobs, die Dateien annehmen, können automatisch, d.h. ohne Durchführung von weiteren
             Schritten in der Verwaltungsoberfläche gestartet werden. Dafür muss eine Datei per FTP-Upload bereitgestellt
