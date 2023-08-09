@@ -12,6 +12,7 @@ import sirius.db.mixing.BaseEntity;
 
 import javax.annotation.Nullable;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Provides a database independent API to store and retrieve metrics.
@@ -212,6 +213,15 @@ public interface Metrics {
      * @return a query to be executed against the metrics database
      */
     MetricQuery query();
+
+    /**
+     * Fetches the metric values of the last 12 months for the given entity.
+     *
+     * @param entity the entity to query metrics for
+     * @param metric the metric to query
+     * @return a list of metric values for the last 12 months.
+     */
+    List<Integer> fetchMetricValuesForLast12Months(BaseEntity<?> entity, String metric);
 
     /**
      * Fetches the label for the given metric.

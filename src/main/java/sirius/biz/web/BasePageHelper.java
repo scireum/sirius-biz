@@ -50,7 +50,7 @@ import java.util.function.Function;
  */
 public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constraint, Q extends Query<Q, E, C>, B extends BasePageHelper<E, C, Q, B>> {
 
-    protected static final int DEFAULT_PAGE_SIZE = 25;
+    protected static final int DEFAULT_PAGE_SIZE = 24;
     protected static final String SORT_FACET = "sort";
     protected WebContext webContext;
     protected Function<String, Value> parameterProvider;

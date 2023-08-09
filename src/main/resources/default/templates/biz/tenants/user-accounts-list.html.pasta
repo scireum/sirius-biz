@@ -12,7 +12,7 @@
                     headerLeftAlignmentClass="align-items-stretch text-break break-word"
                     link="@apply('%s/%s', cardBaseUrl , account.getIdAsString())">
                 <i:block name="header">
-                    <div class="pl-2 pr-1 align-self-center">
+                    <div class="pl-3 pr-1 align-self-center">
                         <div class="d-flex flex-column align-items-center justify-content-center"
                              style="width: 80px">
                             <img style="border-radius: 50%; object-fit: cover; object-position: center;"
@@ -23,8 +23,10 @@
                     </div>
                 </i:block>
                 <i:block name="title">
-                    <t:langFlag lang="@account.getUserAccountData().getLanguage().getValue()"/>
-                    <span>@account.getUserAccountData()</span>
+                    <div class="overflow-hidden text-ellipsis text-nowrap">
+                        <t:langFlag lang="@account.getUserAccountData().getLanguage().getValue()"/>
+                        <span>@account.getUserAccountData()</span>
+                    </div>
                 </i:block>
                 <i:block name="actions">
                     <i:if test="enableCardActions">

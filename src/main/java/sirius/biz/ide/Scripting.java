@@ -144,7 +144,7 @@ public class Scripting implements InterconnectHandler {
                                  .substring(0, 6);
 
         // For audit and tracing purposes we also log this into the system logs...
-        Cluster.LOG.INFO("Executing administrative script %s for %s on '%s':%n%s",
+        Cluster.LOG.INFO("Executing administrative script %s for %s on '%s':%n%n%s",
                          jobNumber,
                          UserContext.getCurrentUser().getUserName(),
                          targetNode,

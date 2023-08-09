@@ -192,7 +192,6 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         U userAccount = findForTenant(getUserClass(), accountId);
 
         boolean requestHandled = prepareSave(webContext).withAfterCreateURI("/user-account/${id}")
-                                                        .withAfterSaveURI(LIST_ROUTE)
                                                         .withPreSaveHandler(isNew -> {
                                                             if (isUserLockingHimself(userAccount)) {
                                                                 throw Exceptions.createHandled()
