@@ -63,6 +63,6 @@ public class PhoneNumberValidator implements PropertyValidator {
     @Nonnull
     @Override
     public String getName() {
-        return "email-address-validator";
+        return "phone-number-validator";
     }
 }
