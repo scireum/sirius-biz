@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyValidator;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -27,12 +28,12 @@ public class EmailAddressValidator implements PropertyValidator {
     private static Mails mails;
 
     @Override
-    public void validate(Object value, Consumer<String> validationConsumer) {
+    public void validate(Property property, Object value, Consumer<String> validationConsumer) {
         // Nothing to do here ...
     }
 
     @Override
-    public void beforeSave(Object value) {
+    public void beforeSave(Property property, Object value) {
         if (value instanceof String email && Strings.isFilled(email)) {
             mails.failForInvalidEmail(email, null);
         }
