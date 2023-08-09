@@ -229,6 +229,15 @@ public class FTPServer implements Startable, Stoppable, AdditionalRolesProvider 
         return ftpPort;
     }
 
+    /**
+     * Returns if FTP over TLS is enabled in this server.
+     *
+     * @return <tt>true</tt> if SSH is enabled, <tt>false</tt> otherwise
+     */
+    public boolean enabledTLS() {
+        return Strings.isFilled(keystore);
+    }
+
     @Override
     public void addAdditionalRoles(UserAccount<?, ?> user, Consumer<String> roleConsumer) {
         if (ftpPort > 0) {
