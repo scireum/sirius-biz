@@ -50,7 +50,7 @@ import java.util.logging.Level;
  * Provides a built-in SSH server which provides access to the {@link sirius.biz.storage.layer3.VirtualFile} via
  * <b>SCP</b> and <b>SFTP</b>.
  */
-@Register
+@Register(classes = {Startable.class, Stoppable.class, Killable.class, SSHServer.class})
 public class SSHServer implements Startable, Stoppable, Killable {
 
     @ConfigValue("storage.layer3.downlink.ssh.port")
@@ -64,6 +64,15 @@ public class SSHServer implements Startable, Stoppable, Killable {
 
     @ConfigValue("storage.layer3.downlink.ssh.hostKeyFile")
     private String hostKeyFile;
+
+    @ConfigValue("storage.layer3.downlink.ssh.externalHost")
+    private String externalHost;
+
+    @ConfigValue("storage.layer3.downlink.ssh.externalPort")
+    private int externalPort;
+
+    @ConfigValue("product.baseUrl")
+    private String productBaseUrl;
 
     private SshServer server;
 
@@ -210,5 +219,31 @@ public class SSHServer implements Startable, Stoppable, Killable {
                 StorageUtils.LOG.WARN("Layer 3/SSH: Failed to terminate the SSH server: %s", e.getMessage());
             }
         }
+    }
+
+    /**
+     * Returns the host name as exposed to the outside world.
+     *
+     * @return the host name
+     */
+    public String computeExternalHost() {
+        if (Strings.isFilled(externalHost)) {
+            return externalHost;
+        }
+
+        return productBaseUrl;
+    }
+
+    /**
+     * Returns the port as exposed to the outside world.
+     *
+     * @return the port number
+     */
+    public int computeExternalPort() {
+        if (externalPort > 0) {
+            return externalPort;
+        }
+
+        return port;
     }
 }

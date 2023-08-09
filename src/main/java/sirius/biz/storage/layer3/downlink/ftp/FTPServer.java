@@ -34,7 +34,7 @@ import java.util.logging.Level;
 /**
  * Provides a bridge between the {@link sirius.biz.storage.layer3.VirtualFileSystem} and the Apache FTP server.
  */
-@Register(classes = {Startable.class, Stoppable.class})
+@Register(classes = {Startable.class, Stoppable.class, FTPServer.class})
 public class FTPServer implements Startable, Stoppable {
 
     private FtpServer server;
@@ -68,6 +68,15 @@ public class FTPServer implements Startable, Stoppable {
 
     @ConfigValue("storage.layer3.downlink.ftp.tlsProtocol")
     private String tlsProtocol;
+
+    @ConfigValue("storage.layer3.downlink.ftp.externalHost")
+    private String externalHost;
+
+    @ConfigValue("storage.layer3.downlink.ftp.externalPort")
+    private int externalPort;
+
+    @ConfigValue("product.baseUrl")
+    private String productBaseUrl;
 
     @Override
     public int getPriority() {
@@ -180,5 +189,35 @@ public class FTPServer implements Startable, Stoppable {
     private void disableLogging() {
         // The Apache FTP Server is wayyy too chatty.....
         Log.setLevel("org.apache.ftpserver", Level.SEVERE);
+    }
+
+    /**
+     * Returns the host name as exposed to the outside world.
+     *
+     * @return the host name
+     */
+    public String computeExternalHost() {
+        if (Strings.isFilled(externalHost)) {
+            return externalHost;
+        }
+
+        if (Strings.isFilled(passiveExternalAddress)) {
+            return passiveExternalAddress;
+        }
+
+        return productBaseUrl;
+    }
+
+    /**
+     * Returns the port as exposed to the outside world.
+     *
+     * @return the port number
+     */
+    public int computeExternalPort() {
+        if (externalPort > 0) {
+            return externalPort;
+        }
+
+        return ftpPort;
     }
 }
