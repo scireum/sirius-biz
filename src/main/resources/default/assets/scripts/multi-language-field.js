@@ -49,6 +49,12 @@ MultiLanguageField.prototype.buildSingleline = function () {
     this._addLanguageButton = this._modal.querySelector('.mls-add-language-button');
     this._addLanguageOptions = this._addLanguageButton.querySelector('.dropdown-menu');
 
+    // Open modal when input field is focused
+    const me = this;
+    this._input.addEventListener('focus', function () {
+        $(me._modal).modal('show');
+    });
+
     if (this.mobileOrSmallScreen) {
         this._addLanguageOptions.classList.add('dropdown-menu-right');
     }
@@ -56,7 +62,6 @@ MultiLanguageField.prototype.buildSingleline = function () {
     this._modalBody = this._modal.querySelector('.modal-body');
     this._modalContent = this._modal.querySelector('.modal-content');
 
-    const me = this;
     this._addLanguageButton.addEventListener('click', function () {
         const langOptionCount = me._addLanguageOptions.querySelectorAll('li:not(.d-none)').length;
         const optionsHeight = 48;
@@ -75,7 +80,15 @@ MultiLanguageField.prototype.buildSingleline = function () {
     $(me._modal).on('hidden.bs.modal', function () {
         me.updateHiddenFields();
         me.updateOuterInputField();
-    })
+    });
+
+    $(me._modal).on('shown.bs.modal', function () {
+        // focus the first input field in the modal
+        const _firstInput = me._modalInputs.querySelector('input');
+        if (_firstInput) {
+            _firstInput.focus();
+        }
+    });
 
     this.renderModalBody();
     this.updateHiddenFields();
