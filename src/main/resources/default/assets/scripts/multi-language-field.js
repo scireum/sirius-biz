@@ -75,7 +75,15 @@ MultiLanguageField.prototype.buildSingleline = function () {
     $(me._modal).on('hidden.bs.modal', function () {
         me.updateHiddenFields();
         me.updateOuterInputField();
-    })
+    });
+
+    $(me._modal).on('shown.bs.modal', function () {
+        // focus the first input field in the modal
+        const _firstInput = me._modalInputs.querySelector('input');
+        if (_firstInput) {
+            _firstInput.focus();
+        }
+    });
 
     this.renderModalBody();
     this.updateHiddenFields();
