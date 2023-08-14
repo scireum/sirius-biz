@@ -25,7 +25,7 @@ import sirius.kernel.di.std.Part
 import sirius.kernel.testutil.Reflections
 
 @ExtendWith(SiriusExtension::class)
-class MongoMultiLanguageStringPropertyText {
+class MongoMultiLanguageStringPropertyTest {
 
     companion object {
         @Part
