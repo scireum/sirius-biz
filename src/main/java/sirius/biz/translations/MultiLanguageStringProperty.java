@@ -343,9 +343,6 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @Override
     public boolean loadFromWebContext(WebContext webContext, BaseEntity<?> entity) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
-        if (multiLanguageString.isWithFallback() && webContext.hasParameter(getPropertyName())) {
-            multiLanguageString.setFallback(webContext.getParameter(getPropertyName()));
-        }
 
         if (i18nEnabled && multiLanguageString.isEnabledForCurrentUser()) {
             webContext.getParameterNames()
@@ -357,6 +354,10 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                               multiLanguageString.addText(code, webContext.getParameter(parameter));
                           }
                       });
+        }
+
+        if (multiLanguageString.isWithFallback() && webContext.hasParameter(getPropertyName())) {
+            multiLanguageString.setFallback(webContext.getParameter(getPropertyName()));
         }
 
         return true;
