@@ -354,6 +354,8 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                               multiLanguageString.addText(code, webContext.getParameter(parameter));
                           }
                       });
+        } else {
+            multiLanguageString.clear();
         }
 
         if (multiLanguageString.isWithFallback() && webContext.hasParameter(getPropertyName())) {
