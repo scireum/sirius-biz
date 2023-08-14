@@ -8,8 +8,6 @@
 
 package sirius.biz.translations
 
-import sirius.kernel.BaseSpecification
-
 class MultiLanguageStringSpec extends BaseSpecification {
 
     def "adding a text works"() {

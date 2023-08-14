@@ -10,7 +10,6 @@ package sirius.biz.translations
 
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.es.Elastic
-import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 
 class ESMultiLanguageStringPropertySpec extends BaseSpecification {

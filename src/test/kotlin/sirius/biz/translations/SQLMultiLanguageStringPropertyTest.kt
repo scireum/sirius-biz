@@ -11,7 +11,6 @@ package sirius.biz.translations
 import sirius.biz.codelists.jdbc.SQLCodeLists
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
-import sirius.kernel.BaseSpecification
 import sirius.kernel.async.CallContext
 import sirius.kernel.di.std.Part
 
