@@ -8,12 +8,6 @@
 
 package sirius.biz.translations
 
-import java.util.Optional
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.tenants.TenantsHelper
@@ -23,6 +17,8 @@ import sirius.kernel.SiriusExtension
 import sirius.kernel.async.CallContext
 import sirius.kernel.di.std.Part
 import sirius.kernel.testutil.Reflections
+import java.util.*
+import kotlin.test.*
 
 @ExtendWith(SiriusExtension::class)
 class MongoMultiLanguageStringPropertyTest {
@@ -71,8 +67,8 @@ class MongoMultiLanguageStringPropertyTest {
         assertFalse { output.multiLangText.hasText("fr") }
         assertEquals("Schmetterling", output.multiLangText.fetchText("de"))
         assertNull(output.multiLangText.fetchText("fr"))
-        assertEquals(output.multiLangText.fetchText("en", "de"), "Schmetterling")
-        assertEquals(output.multiLangText.fetchText("en", "fr"), "Butterfly")
+        assertEquals("Schmetterling", output.multiLangText.fetchText("de", "en"))
+        assertEquals("Butterfly", output.multiLangText.fetchText("fr", "en"))
         assertNull(output.multiLangText.fetchText("fr", "es"))
         assertEquals(Optional.of("Schmetterling"), output.multiLangText.getText("de"))
         assertTrue { output.multiLangText.getText("fr").isEmpty }
