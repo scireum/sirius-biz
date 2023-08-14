@@ -46,9 +46,7 @@ class MultiLanguageStringTest {
         val mls = MultiLanguageString()
         mls.addText("en", "some text")
         mls.addText("de", "irgendein text")
-        val map = hashMapOf<String, String?>()
-        map["fr"] = "en français"
-        map["sv"] = "på svensk"
+        val map = mapOf("fr" to "en français", "sv" to "på svensk")
         mls.setData(map)
         assertEquals(2, mls.data().keys.size)
         assertContains(mls.data().keys, "fr")
@@ -60,9 +58,7 @@ class MultiLanguageStringTest {
         val mls = MultiLanguageString()
         mls.addText("en", "some text")
         mls.addText("de", "irgendein text")
-        val map = hashMapOf<String?, String?>()
-        map["en"] = "some text"
-        map[null] = "null key"
+        val map = mapOf("en" to "some text", null to "null key")
         assertThrows<IllegalArgumentException> {
             mls.setData(map)
         }
@@ -73,9 +69,7 @@ class MultiLanguageStringTest {
         val mls = MultiLanguageString()
         mls.addText("en", "some text")
         mls.addText("de", "irgendein text")
-        val map = hashMapOf<String, String>()
-        map["en"] = "some text"
-        map[""] = "empty key"
+        val map = mapOf("en" to "some text", "" to "empty key")
         assertThrows<IllegalArgumentException> {
             mls.setData(map)
         }
