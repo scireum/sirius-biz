@@ -8,78 +8,76 @@
 
 package sirius.biz.translations
 
-class MultiLanguageStringSpec extends BaseSpecification {
+import kotlin.test.Test
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
+import sirius.kernel.SiriusExtension
 
-    def "adding a text works"() {
-        given:
-        MultiLanguageString mls = new MultiLanguageString()
-        when:
+@ExtendWith(SiriusExtension::class)
+class MultiLanguageStringTest {
+
+    @Test
+    fun `adding a text works`() {
+        val mls = MultiLanguageString()
         mls.addText("en", "adding text works")
-        then:
-        noExceptionThrown()
-        mls.fetchText("en") == "adding text works"
+        assertEquals("adding text works", mls.fetchText("en"))
     }
 
-    def "adding a text with null as language key throws IllegalArgumentException"() {
-        given:
-        MultiLanguageString mls = new MultiLanguageString()
-        when:
-        mls.addText(null, "null key")
-        then:
-        thrown(IllegalArgumentException)
+    @Test
+    fun `adding a text with null as language key throws IllegalArgumentException`() {
+        val mls = MultiLanguageString()
+        assertThrows<IllegalArgumentException> {
+            mls.addText(null, "null key")
+        }
     }
 
-    def "adding a text with an empty String as language key throws IllegalArgumentException"() {
-        given:
-        MultiLanguageString mls = new MultiLanguageString()
-        when:
-        mls.addText("", "empty key")
-        then:
-        thrown(IllegalArgumentException)
+    @Test
+    fun `adding a text with an empty String as language key throws IllegalArgumentException`() {
+        val mls = MultiLanguageString()
+        assertThrows<IllegalArgumentException> {
+            mls.addText("", "empty key")
+        }
     }
 
-    def "adding a map of values with valid language keys works"() {
-        given:
-        MultiLanguageString mls = new MultiLanguageString()
-        when:
+    @Test
+    fun `adding a map of values with valid language keys works`() {
+        val mls = MultiLanguageString()
         mls.addText("en", "some text")
         mls.addText("de", "irgendein text")
-        Map<String, String> map = new HashMap<>()
-        map.put("fr", "en français")
-        map.put("sv", "på svensk")
+        val map = hashMapOf<String, String?>()
+        map["fr"] = "en français"
+        map["sv"] = "på svensk"
         mls.setData(map)
-        then:
-        noExceptionThrown()
-        mls.data.keySet().size() == 2
-        mls.data().keySet().containsAll(Arrays.asList("fr", "sv"))
+        assertEquals(2, mls.data().keys.size)
+        assertContains(mls.data().keys, "fr")
+        assertContains(mls.data().keys, "sv")
     }
 
-    def "adding a map of values with null as language key throws IllegalArgumentException"() {
-        given:
-        MultiLanguageString mls = new MultiLanguageString()
-        when:
+    @Test
+    fun `adding a map of values with null as language key throws IllegalArgumentException`() {
+        val mls = MultiLanguageString()
         mls.addText("en", "some text")
         mls.addText("de", "irgendein text")
-        Map<String, String> map = new HashMap<>()
-        map.put("en", "some text")
-        map.put(null, "null key")
-        mls.setData(map)
-        then:
-        thrown(IllegalArgumentException)
+        val map = hashMapOf<String?, String?>()
+        map["en"] = "some text"
+        map[null] = "null key"
+        assertThrows<IllegalArgumentException> {
+            mls.setData(map)
+        }
     }
 
-    def "adding a map of values with an empty String as language key throws IllegalArgumentException"() {
-        given:
-        MultiLanguageString mls = new MultiLanguageString()
-        when:
+    @Test
+    fun `adding a map of values with an empty String as language key throws IllegalArgumentException`() {
+        val mls = MultiLanguageString()
         mls.addText("en", "some text")
         mls.addText("de", "irgendein text")
-        Map<String, String> map = new HashMap<>()
-        map.put("en", "some text")
-        map.put("", "empty key")
-        mls.setData(map)
-        then:
-        thrown(IllegalArgumentException)
+        val map = hashMapOf<String, String>()
+        map["en"] = "some text"
+        map[""] = "empty key"
+        assertThrows<IllegalArgumentException> {
+            mls.setData(map)
+        }
     }
-
 }

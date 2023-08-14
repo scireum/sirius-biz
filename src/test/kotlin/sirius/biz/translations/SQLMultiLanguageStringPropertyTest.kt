@@ -8,57 +8,61 @@
 
 package sirius.biz.translations
 
+import java.util.Optional
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.codelists.jdbc.SQLCodeLists
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
+import sirius.kernel.SiriusExtension
 import sirius.kernel.async.CallContext
 import sirius.kernel.di.std.Part
 
-class SQLMultiLanguageStringPropertySpec extends BaseSpecification {
+@ExtendWith(SiriusExtension::class)
+class SQLMultiLanguageStringPropertyTest {
 
-    @Part
-    private static OMA oma
+    companion object {
+        @Part
+        @JvmStatic
+        private lateinit var oma: OMA
 
-    @Part
-    private static SQLCodeLists codeLists
-
-    def "store retrieve and validate"() {
-        given:
-        TenantsHelper.installTestTenant()
-        def entity = new SQLMultiLanguageStringEntity()
-        entity.getMultiLangText().addText("de", "Schmetterling")
-        entity.getMultiLangText().addText("en", "Butterfly")
-        oma.update(entity)
-
-        when:
-        def output = oma.refreshOrFail(entity)
-
-        then:
-        output.getMultiLangText().size() == 2
-        output.getMultiLangText().hasText("de")
-        !output.getMultiLangText().hasText("fr")
-        output.getMultiLangText().fetchText("de") == "Schmetterling"
-        output.getMultiLangText().fetchText("fr") == null
-        output.getMultiLangText().fetchText("de", "en") == "Schmetterling"
-        output.getMultiLangText().fetchText("fr", "en") == "Butterfly"
-        output.getMultiLangText().fetchText("fr", "es") == null
-        output.getMultiLangText().getText("de") == Optional.of("Schmetterling")
-        output.getMultiLangText().getText("fr") == Optional.empty()
-
-        when:
-        CallContext.getCurrent().setLanguage("en")
-
-        then:
-        output.getMultiLangText().fetchText() == "Butterfly"
-        output.getMultiLangText().getText() == Optional.of("Butterfly")
-
-        when:
-        CallContext.getCurrent().setLanguage("fr")
-
-        then:
-        output.getMultiLangText().fetchText() == null
-        output.getMultiLangText().getText() == Optional.empty()
+        @Part
+        @JvmStatic
+        private lateinit var codeLists: SQLCodeLists
     }
 
+    @Test
+    fun `store retrieve and validate`() {
+        TenantsHelper.installTestTenant()
+        val entity = SQLMultiLanguageStringEntity()
+        entity.multiLangText.addText("de", "Schmetterling")
+        entity.multiLangText.addText("en", "Butterfly")
+        oma.update(entity)
+        val output = oma.refreshOrFail(entity)
 
+        assertEquals(2, output.multiLangText.size())
+        assertTrue { output.multiLangText.hasText("de") }
+        assertFalse { output.multiLangText.hasText("fr") }
+        assertEquals("Schmetterling", output.multiLangText.fetchText("de"))
+        assertNull(output.multiLangText.fetchText("fr"))
+        assertEquals("Schmetterling", output.multiLangText.fetchText("de", "en"))
+        assertEquals("Butterfly", output.multiLangText.fetchText("fr", "en"))
+        assertNull(output.multiLangText.fetchText("fr", "es"))
+        assertEquals(Optional.of("Schmetterling"), output.multiLangText.getText("de"))
+        assertTrue(output.multiLangText.getText("fr").isEmpty)
+
+        CallContext.getCurrent().language = "en"
+
+        assertEquals("Butterfly", output.multiLangText.fetchText())
+        assertEquals(Optional.of("Butterfly"), output.multiLangText.text)
+
+        CallContext.getCurrent().language = "fr"
+
+        assertNull(output.multiLangText.fetchText())
+        assertTrue(output.multiLangText.text.isEmpty)
+    }
 }

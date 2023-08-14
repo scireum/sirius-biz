@@ -8,40 +8,42 @@
 
 package sirius.biz.translations
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.es.Elastic
+import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 
-class ESMultiLanguageStringPropertySpec extends BaseSpecification {
+@ExtendWith(SiriusExtension::class)
+class ESMultiLanguageStringPropertyTest {
 
-    @Part
-    private static Elastic elastic
-
-    def "reading and writing works"() {
-        given:
-        TenantsHelper.installTestTenant()
-        when:
-        def test = new ESMultiLanguageStringEntity()
-        test.getMultiLanguage().put("de", "Das ist ein Test").put("en", "This is a test")
-        elastic.update(test)
-        def resolved = elastic.refreshOrFail(test)
-        then:
-        resolved.getMultiLanguage().size() == 2
-        and:
-        resolved.getMultiLanguage().getText("de").get() == "Das ist ein Test"
-        resolved.getMultiLanguage().getText("en").get() == "This is a test"
-
-        when:
-        resolved.getMultiLanguage().remove("de")
-        and:
-        elastic.update(resolved)
-        and:
-        resolved = elastic.refreshOrFail(test)
-        then:
-        resolved.getMultiLanguage().size() == 1
-        and:
-        !resolved.getMultiLanguage().contains("Das ist ein Test")
-        resolved.getMultiLanguage().getText("en").get() == "This is a test"
+    companion object {
+        @Part
+        @JvmStatic
+        private lateinit var elastic: Elastic
     }
 
+    @Test
+    fun `reading and writing works`() {
+        TenantsHelper.installTestTenant()
+        val test = ESMultiLanguageStringEntity()
+        test.multiLanguage.put("de", "Das ist ein Test").put("en", "This is a test")
+        elastic.update(test)
+        var resolved = elastic.refreshOrFail(test)
+
+        assertEquals(2, resolved.multiLanguage.size())
+        assertEquals("Das ist ein Test", resolved.multiLanguage.getText("de").get())
+        assertEquals("This is a test", resolved.multiLanguage.getText("en").get())
+
+        resolved.multiLanguage.remove("de")
+        elastic.update(resolved)
+        resolved = elastic.refreshOrFail(test)
+
+        assertEquals(1, resolved.multiLanguage.size())
+        assertFalse { resolved.multiLanguage.data().containsValue("Das ist ein Test") }
+        assertEquals("This is a test", resolved.multiLanguage.getText("en").get())
+    }
 }

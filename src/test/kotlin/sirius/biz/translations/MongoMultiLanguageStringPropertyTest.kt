@@ -8,251 +8,223 @@
 
 package sirius.biz.translations
 
+import java.util.Optional
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.mongo.Mango
 import sirius.db.mongo.Mongo
+import sirius.kernel.SiriusExtension
 import sirius.kernel.async.CallContext
 import sirius.kernel.di.std.Part
+import sirius.kernel.testutil.Reflections
 
-class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
+@ExtendWith(SiriusExtension::class)
+class MongoMultiLanguageStringPropertyText {
 
-    @Part
-    private static Mango mango
+    companion object {
+        @Part
+        @JvmStatic
+        private lateinit var mango: Mango
 
-    @Part
-    private static Mongo mongo
+        @Part
+        @JvmStatic
+        private lateinit var mongo: Mongo
+    }
 
-    def "Comparing persisted data with null keys works as expected"() {
-        given:
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangText().addText("de", null)
+    @Test
+    fun `Comparing persisted data with null keys works as expected`() {
+        var entity = MongoMultiLanguageStringEntity()
+        entity.multiLangText.addText("de", null)
         mango.update(entity)
-        when:
         entity = mango.tryRefresh(entity)
-        entity.getMultiLangText().addText("de", null)
+        entity.multiLangText.addText("de", null)
+
         mango.update(entity)
-        then:
-        noExceptionThrown()
-        and:
-        entity.getMultiLangText() == new MultiLanguageString()
+        assertEquals(MultiLanguageString(), entity.multiLangText)
     }
 
-    def "store works without fallback"() {
-        given:
-        def entity = new MongoMultiLanguageStringRequiredNoFallbackEntity()
-
-        entity.getMultiLangText().addText("de", "")
+    @Test
+    fun `store works without fallback`() {
+        val entity = MongoMultiLanguageStringRequiredNoFallbackEntity()
+        entity.multiLangText.addText("de", "")
         mango.update(entity)
-
-        when:
-        def output = mango.refreshOrFail(entity)
-
-        then:
-        noExceptionThrown()
+        mango.refreshOrFail(entity)
     }
 
-    def "store retrieve and validate"() {
-        given:
+    @Test
+    fun `store retrieve and validate`() {
         TenantsHelper.installTestTenant()
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangText().addText("de", "Schmetterling")
-        entity.getMultiLangText().addText("en", "Butterfly")
+        val entity = MongoMultiLanguageStringEntity()
+        entity.multiLangText.addText("de", "Schmetterling")
+        entity.multiLangText.addText("en", "Butterfly")
         mango.update(entity)
+        val output = mango.refreshOrFail(entity)
 
-        when:
-        def output = mango.refreshOrFail(entity)
+        assertEquals(2, output.multiLangText.size())
+        assertTrue { output.multiLangText.hasText("de") }
+        assertFalse { output.multiLangText.hasText("fr") }
+        assertEquals("Schmetterling", output.multiLangText.fetchText("de"))
+        assertNull(output.multiLangText.fetchText("fr"))
+        assertEquals(output.multiLangText.fetchText("en", "de"), "Schmetterling")
+        assertEquals(output.multiLangText.fetchText("en", "fr"), "Butterfly")
+        assertNull(output.multiLangText.fetchText("fr", "es"))
+        assertEquals(Optional.of("Schmetterling"), output.multiLangText.getText("de"))
+        assertTrue { output.multiLangText.getText("fr").isEmpty }
 
-        then:
-        output.getMultiLangText().size() == 2
-        output.getMultiLangText().hasText("de")
-        !output.getMultiLangText().hasText("fr")
-        output.getMultiLangText().fetchText("de") == "Schmetterling"
-        output.getMultiLangText().fetchText("fr") == null
-        output.getMultiLangText().fetchText("de", "en") == "Schmetterling"
-        output.getMultiLangText().fetchText("fr", "en") == "Butterfly"
-        output.getMultiLangText().fetchText("fr", "es") == null
-        output.getMultiLangText().getText("de") == Optional.of("Schmetterling")
-        output.getMultiLangText().getText("fr") == Optional.empty()
+        CallContext.getCurrent().language = "en"
 
-        when:
-        CallContext.getCurrent().setLanguage("en")
+        assertEquals("Butterfly", output.multiLangText.fetchText())
+        assertEquals(Optional.of("Butterfly"), output.multiLangText.text)
 
-        then:
-        output.getMultiLangText().fetchText() == "Butterfly"
-        output.getMultiLangText().getText() == Optional.of("Butterfly")
+        CallContext.getCurrent().language = "fr"
 
-        when:
-        CallContext.getCurrent().setLanguage("fr")
-
-        then:
-        output.getMultiLangText().fetchText() == null
-        output.getMultiLangText().getText() == Optional.empty()
+        assertNull(output.multiLangText.fetchText())
+        assertTrue { output.multiLangText.text.isEmpty }
     }
 
-    def "store using default language"() {
-        given:
+    @Test
+    fun `store using default language`() {
         TenantsHelper.installTestTenant()
-        CallContext.getCurrent().setLanguage("en")
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangText().addText("Butterfly")
+        CallContext.getCurrent().language = "en"
+        val entity = MongoMultiLanguageStringEntity()
+        entity.multiLangText.addText("Butterfly")
         mango.update(entity)
+        val output = mango.refreshOrFail(entity)
 
-        when:
-        def output = mango.refreshOrFail(entity)
-
-        then:
-        output.getMultiLangText().fetchText() == "Butterfly"
-        output.getMultiLangText().fetchText("de") == null
+        assertEquals("Butterfly", output.multiLangText.fetchText())
+        assertNull(output.multiLangText.fetchText("de"))
     }
 
-    def "raw data check"() {
-        given:
+    @Test
+    fun `raw data check`() {
         TenantsHelper.installTestTenant()
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangText().addText("pt", "Borboleta")
-        entity.getMultiLangText().addText("es", "Mariposa")
-        entity.getMultiLangText().addText("en", "")
-        entity.getMultiLangText().addText("de", null)
+        val entity = MongoMultiLanguageStringEntity()
+        entity.multiLangText.addText("pt", "Borboleta")
+        entity.multiLangText.addText("es", "Mariposa")
+        entity.multiLangText.addText("en", "")
+        entity.multiLangText.addText("de", null)
         mango.update(entity)
 
-        when:
-        def expectedString = "[Document{{lang=pt, text=Borboleta}}, Document{{lang=es, text=Mariposa}}]"
-        def storedString = mongo.find()
-                                .where("id", entity.getId())
-                                .singleIn("mongomultilanguagestringentity")
-                                .get()
-                                .get("multiLangText")
-                                .asString()
+        val expectedString = "[Document{{lang=pt, text=Borboleta}}, Document{{lang=es, text=Mariposa}}]"
+        val storedString = mongo.find()
+                .where("id", entity.id)
+                .singleIn("mongomultilanguagestringentity")
+                .get()
+                .get("multiLangText")
+                .asString()
 
-        then:
-        expectedString == storedString
+        assertEquals(expectedString, storedString)
     }
 
-    def "fallback can not be added to field without fallback enabled"() {
-        given:
-        def entity = new MongoMultiLanguageStringEntity()
-        when:
-        entity.getMultiLangText().setFallback("test")
-
-        then:
-        thrown(IllegalStateException)
+    @Test
+    fun `fallback can not be added to field without fallback enabled`() {
+        val entity = MongoMultiLanguageStringEntity()
+        assertThrows<IllegalStateException> {
+            entity.multiLangText.setFallback("test")
+        }
     }
 
-    def "fallback can be added and retrieved"() {
-        given:
+    @Test
+    fun `fallback can be added and retrieved`() {
         TenantsHelper.installTestTenant()
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangTextWithFallback().addText("de", "In Ordnung")
-        entity.getMultiLangTextWithFallback().addText("en", "Fine")
-        entity.getMultiLangTextWithFallback().setFallback("OK")
+        val entity = MongoMultiLanguageStringEntity()
+        entity.multiLangTextWithFallback.addText("de", "In Ordnung")
+        entity.multiLangTextWithFallback.addText("en", "Fine")
+        entity.multiLangTextWithFallback.setFallback("OK")
         mango.update(entity)
+        val output = mango.refreshOrFail(entity)
 
-        when:
-        def output = mango.refreshOrFail(entity)
+        assertEquals(3, output.multiLangTextWithFallback.size())
+        assertTrue { output.multiLangTextWithFallback.hasText("de") }
+        assertTrue { output.multiLangTextWithFallback.hasText("en") }
+        assertEquals(true, Reflections.callPrivateMethod(output.multiLangTextWithFallback, "hasFallback"))
 
-        then:
-        output.getMultiLangTextWithFallback().size() == 3
-        output.getMultiLangTextWithFallback().hasText("de")
-        output.getMultiLangTextWithFallback().hasText("en")
-        output.getMultiLangTextWithFallback().hasFallback()
-        !output.getMultiLangTextWithFallback().hasText("fr")
+        assertEquals("In Ordnung", output.multiLangTextWithFallback.fetchTextOrFallback("de"))
+        assertEquals("Fine", output.multiLangTextWithFallback.fetchTextOrFallback("en"))
+        assertEquals("OK", output.multiLangTextWithFallback.fetchTextOrFallback("fr"))
 
-        output.getMultiLangTextWithFallback().fetchTextOrFallback("de") == "In Ordnung"
-        output.getMultiLangTextWithFallback().fetchTextOrFallback("en") == "Fine"
-        output.getMultiLangTextWithFallback().fetchTextOrFallback("fr") == "OK"
+        assertEquals("In Ordnung", output.multiLangTextWithFallback.fetchText("de"))
+        assertNull(output.multiLangTextWithFallback.fetchText("fr"))
 
-        output.getMultiLangTextWithFallback().fetchText("de") == "In Ordnung"
-        output.getMultiLangTextWithFallback().fetchText("fr") == null
+        assertEquals("In Ordnung", output.multiLangTextWithFallback.fetchText("de"))
+        assertNull(output.multiLangTextWithFallback.fetchText("fr"))
 
-        output.getMultiLangTextWithFallback().getText("de") == Optional.of("In Ordnung")
-        output.getMultiLangTextWithFallback().getText("fr") == Optional.of("OK")
+        assertEquals(Optional.of("In Ordnung"), output.multiLangTextWithFallback.getText("de"))
+        assertEquals(Optional.of("OK"), output.multiLangTextWithFallback.getText("fr"))
 
-        when:
-        CallContext.getCurrent().setLanguage("en")
+        CallContext.getCurrent().language = "en"
 
-        then:
-        output.getMultiLangTextWithFallback().fetchText() == "Fine"
-        output.getMultiLangTextWithFallback().getText() == Optional.of("Fine")
+        assertEquals("Fine", output.multiLangTextWithFallback.fetchText())
+        assertEquals(Optional.of("Fine"), output.multiLangTextWithFallback.text)
 
-        when:
-        CallContext.getCurrent().setLanguage("fr")
+        CallContext.getCurrent().language = "fr"
 
-        then:
-        output.getMultiLangTextWithFallback().fetchTextOrFallback() == "OK"
-        output.getMultiLangTextWithFallback().getText() == Optional.of("OK")
+        assertEquals("OK", output.multiLangTextWithFallback.fetchTextOrFallback())
+        assertEquals(Optional.of("OK"), output.multiLangTextWithFallback.text)
     }
 
-    def "new null values are not stored"() {
-        given:
+    @Test
+    fun `new null values are not stored`() {
         TenantsHelper.installTestTenant()
-        CallContext.getCurrent().setLanguage("en")
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangTextWithFallback().addText(null)
-        entity.getMultiLangTextWithFallback().addText("de", "Super")
-        entity.getMultiLangTextWithFallback().setFallback(null)
+        CallContext.getCurrent().language = "en"
+        val entity = MongoMultiLanguageStringEntity()
+        entity.multiLangTextWithFallback.addText(null)
+        entity.multiLangTextWithFallback.addText("de", "Super")
+        entity.multiLangTextWithFallback.setFallback(null)
         mango.update(entity)
+        val output = mango.refreshOrFail(entity)
 
-        when:
-        def output = mango.refreshOrFail(entity)
-
-        then:
-        output.getMultiLangTextWithFallback().fetchText() == null
-        output.getMultiLangTextWithFallback().fetchText("en") == null
-        output.getMultiLangTextWithFallback().fetchText("de") == "Super"
-        output.getMultiLangTextWithFallback().fetchText("fallback") == null
+        assertNull(output.multiLangTextWithFallback.fetchText())
+        assertNull(output.multiLangTextWithFallback.fetchText("en"))
+        assertEquals("Super", output.multiLangTextWithFallback.fetchText("de"))
+        assertNull(output.multiLangTextWithFallback.fetchText("fallback"))
     }
 
-    def "keys with null values are removed from the underlying map if a key already exists"() {
-        given:
+    @Test
+    fun `keys with null values are removed from the underlying map if a key already exists`() {
         TenantsHelper.installTestTenant()
-        CallContext.getCurrent().setLanguage("en")
-        def entity = new MongoMultiLanguageStringEntity()
-        entity.getMultiLangText().addText("en", "Super")
+        CallContext.getCurrent().language = "en"
+        var entity = MongoMultiLanguageStringEntity()
+        entity.multiLangText.addText("en", "Super")
         mango.update(entity)
-
-        when:
         entity = mango.refreshOrFail(entity)
 
-        then:
-        entity.getMultiLangText().fetchText() == "Super"
+        assertEquals("Super", entity.multiLangText.fetchText())
 
-        when:
-        entity.getMultiLangText().addText("en", null)
+        entity.multiLangText.addText("en", null)
         mango.update(entity)
-        def output = mango.refreshOrFail(entity)
+        val output = mango.refreshOrFail(entity)
 
-        then:
-        output.getMultiLangTextWithFallback().fetchText() == null
+        assertNull(output.multiLangTextWithFallback.fetchText())
     }
 
-    def "asserts setData removes null keys before persisting"() {
-        given:
+    @Test
+    fun `asserts setData removes null keys before persisting`() {
         TenantsHelper.installTestTenant()
-        CallContext.getCurrent().setLanguage("en")
-        def entity = new MongoMultiLanguageStringEntity()
-        Map<String, String> data = new LinkedHashMap<>()
-        data.put("en", "Great")
-        data.put("de", null)
-        entity.getMultiLangText().setData(data)
+        CallContext.getCurrent().language = "en"
+        val entity = MongoMultiLanguageStringEntity()
+        val data = mapOf("en" to "Great", "de" to null)
+        entity.multiLangText.setData(data)
         mango.update(entity)
+        val output = mango.refreshOrFail(entity)
 
-        when:
-        def output = mango.refreshOrFail(entity)
-
-        then:
-        output.getMultiLangText().fetchText("en") == "Great"
-        output.getMultiLangText().fetchText("de") == null
-        output.getMultiLangText().original().size() == 1
+        assertEquals("Great", output.multiLangText.fetchText("en"))
+        assertNull(output.multiLangText.fetchText("de"))
+        assertEquals(1, output.multiLangText.size())
     }
 
-    def "trying to directly call modify should throw an unsupported operation exception"() {
-        given:
-        def entity = new MongoMultiLanguageStringEntity()
+    @Test
+    fun `trying to directly call modify should throw an unsupported operation exception`() {
+        val entity = MongoMultiLanguageStringEntity()
 
-        when:
-        entity.getMultiLangText().modify().put("de", null)
-
-        then:
-        thrown(UnsupportedOperationException)
+        assertThrows<UnsupportedOperationException> {
+            entity.multiLangText.modify()["de"] = null
+        }
     }
 }
