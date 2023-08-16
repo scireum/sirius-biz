@@ -121,6 +121,10 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             GlobalRenderContext context = tagliatelle.createRenderContext();
             template.render(context);
 
+            if (!isArticle(context)) {
+                return;
+            }
+
             String articleId = Value.of(context.getExtraBlock(BLOCK_CODE)).toUpperCase();
             String language = context.getExtraBlock(BLOCK_LANG);
             KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, language);
@@ -147,6 +151,13 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                       .withSystemErrorMessage("Failed to load article %s: %s (%s)", templatePath)
                       .handle();
         }
+    }
+
+    private boolean isArticle(GlobalRenderContext context) {
+        String articleId = context.getExtraBlock(BLOCK_CODE);
+        String language = context.getExtraBlock(BLOCK_LANG);
+        String title = context.getExtraBlock(BLOCK_TITLE);
+        return Strings.isFilled(articleId) && Strings.isFilled(language) && Strings.isFilled(title);
     }
 
     private KnowledgeBaseEntry findOrCreateEntry(String templatePath, String articleId, String language) {
