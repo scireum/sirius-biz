@@ -203,7 +203,7 @@ public interface ProcessContext extends TaskContextAdapter {
     /**
      * Uses the given parameter to read and convert a value from the context of the process.
      * <p>
-     * Thows an exception of no data is available or an conversion error occurs.
+     * Throws an exception if no data is available or a conversion error occurs.
      *
      * @param parameter the parameter used to read and convert
      * @param <V>       the type of the returned value
@@ -220,7 +220,7 @@ public interface ProcessContext extends TaskContextAdapter {
     void addLink(ProcessLink link);
 
     /**
-     * Adds the given reference to the the process.
+     * Adds the given reference to the process.
      *
      * @param reference the reference to attach
      */
@@ -307,7 +307,7 @@ public interface ProcessContext extends TaskContextAdapter {
      * If no "work stealing" threads are available the main thread is blocked and the task is executed there.
      * <p>
      * Note that the process will await the completion of all of its forked side tasks. However, once this state has
-     * been reached no further tasks may be started. Therefore when processing the results of this task, a
+     * been reached no further tasks may be started. Therefore, when processing the results of this task, a
      * {@link sirius.kernel.async.CombinedFuture} has to be used in the main thread, rather than a simple completion
      * handler attached to the promise.
      *

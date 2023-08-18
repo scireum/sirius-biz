@@ -55,7 +55,7 @@ public class SortField extends Composite {
     }
 
     /**
-     * Normalizes the given text using {@link Strings#reduceCharacters(String)}, lower-casing it after.
+     * Normalizes the given text using {@link StringCleanup#reduceCharacters(String)}, lower-casing it after.
      *
      * @param text the text to normalize
      * @return the normalized text in lower-case
