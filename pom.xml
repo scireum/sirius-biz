@@ -18,8 +18,8 @@
 
     <properties>
         <sirius.kernel>dev-38.0.0</sirius.kernel>
-        <sirius.web>dev-68.3.0</sirius.web>
-        <sirius.db>dev-53.0.0</sirius.db>
+        <sirius.web>dev-70.0.0</sirius.web>
+        <sirius.db>dev-54.0.0</sirius.db>
     </properties>
 
     <repositories>
@@ -152,6 +152,12 @@
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>
             <version>1.18.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jdom</groupId>
+                    <artifactId>jdom</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
