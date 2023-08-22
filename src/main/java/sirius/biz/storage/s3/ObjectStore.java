@@ -211,6 +211,15 @@ public class ObjectStore {
     }
 
     /**
+     * Returns the name of the store.
+     *
+     * @return the store's name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * Transforms the given bucket name into the effective name.
      *
      * @param bucket the bucket name to use
