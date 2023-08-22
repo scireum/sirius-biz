@@ -453,10 +453,10 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     @Override
     @SuppressWarnings("java:S2259")
     @Explain("String filled check is performed on filename.")
-    public Optional<String> updateBlob(@Nonnull MongoBlob blob,
-                                       @Nonnull String nextPhysicalId,
-                                       long size,
-                                       @Nullable String filename) throws Exception {
+    protected Optional<String> updateBlob(@Nonnull MongoBlob blob,
+                                          @Nonnull String nextPhysicalId,
+                                          long size,
+                                          @Nullable String filename) throws Exception {
         int retries = UPDATE_BLOB_RETRIES;
         while (retries-- > 0) {
             Updater updater = mongo.update()
