@@ -1215,10 +1215,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws Exception in case of an error while updating the metadata
      */
     @Nonnull
-    protected abstract Optional<String> updateBlob(@Nonnull B blob,
-                                                   @Nonnull String nextPhysicalId,
-                                                   long size,
-                                                   @Nullable String filename) throws Exception;
+    public abstract Optional<String> updateBlob(@Nonnull B blob,
+                                                @Nonnull String nextPhysicalId,
+                                                long size,
+                                                @Nullable String filename) throws Exception;
 
     /**
      * Updates the contents of the given blob with the given stream data and optional filename.

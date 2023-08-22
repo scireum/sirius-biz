@@ -542,10 +542,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Override
     @SuppressWarnings("java:S2259")
     @Explain("String filled check is performed on filename.")
-    protected Optional<String> updateBlob(@Nonnull SQLBlob blob,
-                                          @Nonnull String nextPhysicalId,
-                                          long size,
-                                          @Nullable String filename) throws Exception {
+    public Optional<String> updateBlob(@Nonnull SQLBlob blob,
+                                       @Nonnull String nextPhysicalId,
+                                       long size,
+                                       @Nullable String filename) throws Exception {
         int retries = UPDATE_BLOB_RETRIES;
         while (retries-- > 0) {
             UpdateStatement updateStatement = oma.updateStatement(SQLBlob.class)
