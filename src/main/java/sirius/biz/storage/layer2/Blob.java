@@ -300,4 +300,13 @@ public interface Blob {
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     URLBuilder url();
+
+    /**
+     * Creates a new {@link BlobDuplicator} for this blob.
+     *
+     * @return a new duplicator for this blob
+     */
+    default BlobDuplicator duplicate() {
+        return BlobDuplicator.create(this);
+    }
 }
