@@ -12,6 +12,7 @@ import sirius.db.KeyGenerator;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -88,12 +89,12 @@ public class BlobDuplicator {
     @SuppressWarnings("unchecked")
     public Blob execute() {
         Blob newBlob = blobStorage.getSpace(storageSpace).createTemporaryBlob(blob.getTenantId());
+        BasicBlobStorageSpace space = (BasicBlobStorageSpace) newBlob.getStorageSpace();
         try {
             String newKey = keyGenerator.generateId();
             blob.getStorageSpace()
                 .getPhysicalSpace()
                 .copyPhysicalObject(blob.getPhysicalObjectKey(), newKey, storageSpace);
-            BasicBlobStorageSpace space = (BasicBlobStorageSpace) newBlob.getStorageSpace();
             space.updateBlob(newBlob, newKey, blob.getSize(), blob.getFilename());
         } catch (Exception exception) {
             throw Exceptions.createHandled().error(exception).handle();
@@ -103,7 +104,15 @@ public class BlobDuplicator {
             .stream()
             .filter(blobVariant -> variants.contains(blobVariant.getVariantName()))
             .forEach(blobVariant -> {
-                //TODO variants
+                String newKey = keyGenerator.generateId();
+                try {
+                    blob.getStorageSpace()
+                        .getPhysicalSpace()
+                        .copyPhysicalObject(blobVariant.getPhysicalObjectKey(), newKey, storageSpace);
+                    space.createVariant(newBlob, blobVariant.getVariantName(), newKey, blobVariant.getSize());
+                } catch (IOException exception) {
+                    throw Exceptions.createHandled().error(exception).handle();
+                }
             });
 
         return newBlob;

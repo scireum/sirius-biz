@@ -1860,6 +1860,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract V createVariant(B blob, String variantName);
 
     /**
+     * Creates the required database object for the given variant and physical object key.
+     *
+     * @param blob              the blob for which the variant is to be created
+     * @param variantName       the variant to generate
+     * @param physicalObjectKey the physical object to set
+     * @return the newly created database object
+     */
+    protected abstract V createVariant(B blob, String variantName, String physicalObjectKey, long size);
+
+    /**
      * Detects if the variant is still unique.
      * <p>
      * Note that this is kind of a negative approach - if the method returns <tt>true</tt> a collision was detected

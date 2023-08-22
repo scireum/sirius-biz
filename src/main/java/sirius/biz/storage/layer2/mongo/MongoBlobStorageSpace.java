@@ -796,6 +796,24 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    protected MongoVariant createVariant(MongoBlob blob, String variantName, String physicalObjectKey, long size) {
+        MongoVariant variant = new MongoVariant();
+        variant.getBlob().setValue(blob);
+        variant.setVariantName(variantName);
+        variant.setQueuedForConversion(false);
+        variant.setNumAttempts(0);
+        variant.setConversionDuration(0);
+        variant.setTransferDuration(0);
+        variant.setPhysicalObjectKey(physicalObjectKey);
+        variant.setSize(size);
+        variant.setNode(CallContext.getNodeName());
+        variant.setLastConversionAttempt(LocalDateTime.now());
+        variant.setNumAttempts(1);
+        mango.update(variant);
+        return variant;
+    }
+
+    @Override
     protected boolean detectAndRemoveDuplicateVariant(MongoVariant variant, MongoBlob blob, String variantName) {
         if (mango.select(MongoVariant.class)
                  .ne(MongoVariant.ID, variant.getId())

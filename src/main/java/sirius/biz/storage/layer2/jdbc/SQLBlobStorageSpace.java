@@ -886,6 +886,24 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
+    protected SQLVariant createVariant(SQLBlob blob, String variantName, String physicalObjectKey, long size) {
+        SQLVariant variant = new SQLVariant();
+        variant.getSourceBlob().setValue(blob);
+        variant.setVariantName(variantName);
+        variant.setQueuedForConversion(false);
+        variant.setNumAttempts(0);
+        variant.setConversionDuration(0);
+        variant.setTransferDuration(0);
+        variant.setPhysicalObjectKey(physicalObjectKey);
+        variant.setSize(size);
+        variant.setNode(CallContext.getNodeName());
+        variant.setLastConversionAttempt(LocalDateTime.now());
+        variant.setNumAttempts(1);
+        oma.update(variant);
+        return variant;
+    }
+
+    @Override
     protected boolean detectAndRemoveDuplicateVariant(SQLVariant variant, SQLBlob blob, String variantName) {
         if (oma.select(SQLVariant.class)
                .ne(SQLVariant.ID, variant.getId())
