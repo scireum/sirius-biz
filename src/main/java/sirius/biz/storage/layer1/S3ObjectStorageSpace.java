@@ -246,8 +246,8 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         ObjectStorageSpace targetSpace = objectStorage.getSpace(targetStorageSpace);
         if (targetSpace instanceof S3ObjectStorageSpace s3ObjectStorageSpace) {
             // We want to copy from S3 to S3...
-            if (store.getName().equals(s3ObjectStorageSpace.store.getName())) {
-                // ... and the source and target buckets resides in the same system. We can use a server-side copy.
+            if (canCopyObject(s3ObjectStorageSpace)) {
+                // ... and the source and target buckets permits a server-side copy.
                 store.getClient()
                      .copyObject(bucketName().getName(),
                                  sourceObjectKey,
@@ -261,6 +261,22 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
             // We are copying from S3 to a different storage system (eg. FS). We have to download and upload.
             downloadAndUploadFile(sourceObjectKey, targetObjectKey, targetSpace);
         }
+    }
+
+    private boolean canCopyObject(S3ObjectStorageSpace s3ObjectStorageSpace) {
+        boolean sameStore = store.getName().equals(s3ObjectStorageSpace.store.getName());
+        if (!sameStore) {
+            // Source and target are not in the same store
+            return false;
+        }
+
+        if (bucketName().equals(s3ObjectStorageSpace.bucketName())) {
+            // Source and target are in same store and bucket.
+            return true;
+        }
+
+        // If source or target uses a transformer, we can no longer perform a straight copy.
+        return !hasTransformer() && !s3ObjectStorageSpace.hasTransformer();
     }
 
     private void downloadAndUploadFile(String sourceObjectKey, String targetObjectKey, ObjectStorageSpace targetSpace)
