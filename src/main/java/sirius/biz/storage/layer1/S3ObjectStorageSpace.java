@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer1;
 
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.TransformingInputStream;
 import sirius.biz.storage.s3.BucketName;
@@ -54,6 +55,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
     @Part
     private static ObjectStores objectStores;
+
+    @Part
+    private static ReplicationManager replicationManager;
 
     @Part
     private static Tasks tasks;
@@ -253,6 +257,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
                                  sourceObjectKey,
                                  s3ObjectStorageSpace.bucketName().getName(),
                                  targetObjectKey);
+                long size =
+                        store.getClient().getObjectMetadata(bucketName().getName(), sourceObjectKey).getContentLength();
+                replicationManager.notifyAboutUpdate(s3ObjectStorageSpace, targetObjectKey, size);
             } else {
                 // ... but the source and target buckets resides in different systems. We have to download and upload.
                 downloadAndUploadFile(sourceObjectKey, targetObjectKey, targetSpace);
