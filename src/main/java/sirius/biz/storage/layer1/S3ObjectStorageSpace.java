@@ -272,7 +272,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
         FileHandle fileHandle = optionalFileHandle.get();
         try (fileHandle) {
-            targetSpace.storePhysicalObject(targetObjectKey, fileHandle.getFile());
+            targetSpace.upload(targetObjectKey, fileHandle.getFile());
         }
     }
 }
