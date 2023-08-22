@@ -32,6 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZoneId;
+import java.util.Optional;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
@@ -236,5 +237,42 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
                                                                  .toLocalDateTime(),
                                                          s3Object.getSize()));
         });
+    }
+
+    @Override
+    public void copyPhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace)
+            throws IOException {
+
+        ObjectStorageSpace targetSpace = objectStorage.getSpace(targetStorageSpace);
+        if (targetSpace instanceof S3ObjectStorageSpace s3ObjectStorageSpace) {
+            // We want to copy from S3 to S3...
+            if (store.getName().equals(s3ObjectStorageSpace.store.getName())) {
+                // ... and the source and target buckets resides in the same system. We can use a server-side copy.
+                store.getClient()
+                     .copyObject(bucketName().getName(),
+                                 sourceObjectKey,
+                                 s3ObjectStorageSpace.bucketName().getName(),
+                                 targetObjectKey);
+            } else {
+                // ... but the source and target buckets resides in different systems. We have to download and upload.
+                downloadAndUploadFile(sourceObjectKey, targetObjectKey, targetSpace);
+            }
+        } else {
+            // We are copying from S3 to a different storage system (eg. FS). We have to download and upload.
+            downloadAndUploadFile(sourceObjectKey, targetObjectKey, targetSpace);
+        }
+    }
+
+    private void downloadAndUploadFile(String sourceObjectKey, String targetObjectKey, ObjectStorageSpace targetSpace)
+            throws IOException {
+        Optional<FileHandle> optionalFileHandle = download(sourceObjectKey);
+        if (optionalFileHandle.isEmpty()) {
+            return;
+        }
+
+        FileHandle fileHandle = optionalFileHandle.get();
+        try (fileHandle) {
+            targetSpace.storePhysicalObject(targetObjectKey, fileHandle.getFile());
+        }
     }
 }
