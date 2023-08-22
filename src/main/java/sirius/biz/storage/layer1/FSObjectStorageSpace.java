@@ -297,4 +297,11 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
             }
         });
     }
+
+    @Override
+    public void copyPhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace)
+            throws IOException {
+        File sourceFile = getFile(sourceObjectKey);
+        objectStorage.getSpace(targetStorageSpace).upload(targetObjectKey, sourceFile);
+    }
 }
