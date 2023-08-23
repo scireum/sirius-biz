@@ -133,6 +133,14 @@ public class KnowledgeBase {
     }
 
     /**
+     * Determines the fallback or default languages of the knowledge base.
+     * @return the default languages as two-letter ISO codes
+     */
+    public List<String> getFallbackLanguages() {
+        return fallbackLanguages;
+    }
+
+    /**
      * Queries the list of all languages for which at least one article is present.
      *
      * @return the list of languages (two-letter ISO codes) for which articles are present
