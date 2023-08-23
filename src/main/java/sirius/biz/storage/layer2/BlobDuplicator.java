@@ -37,11 +37,7 @@ public class BlobDuplicator {
      * @param blob the blob to duplicate
      * @return a new duplicator for the given blob
      */
-    public static BlobDuplicator create(Blob blob) {
-        return new BlobDuplicator(blob);
-    }
-
-    private BlobDuplicator(Blob blob) {
+    public BlobDuplicator(Blob blob) {
         this.blob = blob;
         this.storageSpace = blob.getSpaceName();
     }

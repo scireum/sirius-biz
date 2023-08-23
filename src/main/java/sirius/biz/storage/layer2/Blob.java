@@ -307,6 +307,6 @@ public interface Blob {
      * @return a new duplicator for this blob
      */
     default BlobDuplicator duplicate() {
-        return BlobDuplicator.create(this);
+        return new BlobDuplicator(this);
     }
 }
