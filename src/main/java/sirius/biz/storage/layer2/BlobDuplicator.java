@@ -12,7 +12,6 @@ import sirius.db.KeyGenerator;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -90,7 +89,7 @@ public class BlobDuplicator {
             String newKey = keyGenerator.generateId();
             blob.getStorageSpace()
                 .getPhysicalSpace()
-                .copyPhysicalObject(blob.getPhysicalObjectKey(), newKey, storageSpace);
+                .duplicatePhysicalObject(blob.getPhysicalObjectKey(), newKey, storageSpace);
             space.updateBlob(newBlob, newKey, blob.getSize(), blob.getFilename());
         } catch (Exception exception) {
             throw Exceptions.createHandled().error(exception).handle();
@@ -101,14 +100,10 @@ public class BlobDuplicator {
             .filter(blobVariant -> variants.contains(blobVariant.getVariantName()))
             .forEach(blobVariant -> {
                 String newKey = keyGenerator.generateId();
-                try {
-                    blob.getStorageSpace()
-                        .getPhysicalSpace()
-                        .copyPhysicalObject(blobVariant.getPhysicalObjectKey(), newKey, storageSpace);
-                    space.createVariant(newBlob, blobVariant.getVariantName(), newKey, blobVariant.getSize());
-                } catch (IOException exception) {
-                    throw Exceptions.createHandled().error(exception).handle();
-                }
+                blob.getStorageSpace()
+                    .getPhysicalSpace()
+                    .duplicatePhysicalObject(blobVariant.getPhysicalObjectKey(), newKey, storageSpace);
+                space.createVariant(newBlob, blobVariant.getVariantName(), newKey, blobVariant.getSize());
             });
 
         return newBlob;

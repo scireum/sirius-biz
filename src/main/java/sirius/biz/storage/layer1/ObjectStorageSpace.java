@@ -255,20 +255,23 @@ public abstract class ObjectStorageSpace {
      * @param sourceObjectKey    the source object key to copy from
      * @param targetObjectKey    the target object key to copy to
      * @param targetStorageSpace the target storage space to copy to
-     * @throws IOException in case of an IO error
      */
-    public abstract void copyPhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace)
-            throws IOException;
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace) {
+        download(sourceObjectKey).ifPresent(fileHandle -> {
+            try (fileHandle) {
+                objectStorage.getSpace(targetStorageSpace).upload(targetObjectKey, fileHandle.getFile());
+            }
+        });
+    }
 
     /**
      * Copies the given object to the given target object key in the current storage space.
      *
      * @param sourceObjectKey the source object key to copy from
      * @param targetObjectKey the target object key to copy to
-     * @throws IOException in case of an IO error
      */
-    public void copyPhysicalObject(String sourceObjectKey, String targetObjectKey) throws IOException {
-        copyPhysicalObject(sourceObjectKey, targetObjectKey, getName());
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey) {
+        duplicatePhysicalObject(sourceObjectKey, targetObjectKey, getName());
     }
 
     /**

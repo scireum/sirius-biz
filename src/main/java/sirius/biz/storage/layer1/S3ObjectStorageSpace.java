@@ -33,7 +33,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZoneId;
-import java.util.Optional;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
@@ -244,9 +243,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    public void copyPhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace)
-            throws IOException {
-
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace) {
         ObjectStorageSpace targetSpace = objectStorage.getSpace(targetStorageSpace);
         if (targetSpace instanceof S3ObjectStorageSpace s3ObjectStorageSpace) {
             // We want to copy from S3 to S3...
@@ -262,11 +259,11 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
                 replicationManager.notifyAboutUpdate(s3ObjectStorageSpace, targetObjectKey, size);
             } else {
                 // ... but the source and target buckets resides in different systems. We have to download and upload.
-                downloadAndUploadFile(sourceObjectKey, targetObjectKey, targetSpace);
+                super.duplicatePhysicalObject(sourceObjectKey, targetObjectKey, targetStorageSpace);
             }
         } else {
             // We are copying from S3 to a different storage system (eg. FS). We have to download and upload.
-            downloadAndUploadFile(sourceObjectKey, targetObjectKey, targetSpace);
+            super.duplicatePhysicalObject(sourceObjectKey, targetObjectKey, targetStorageSpace);
         }
     }
 
@@ -284,18 +281,5 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
         // If source or target uses a transformer, we can no longer perform a straight copy.
         return !hasTransformer() && !s3ObjectStorageSpace.hasTransformer();
-    }
-
-    private void downloadAndUploadFile(String sourceObjectKey, String targetObjectKey, ObjectStorageSpace targetSpace)
-            throws IOException {
-        Optional<FileHandle> optionalFileHandle = download(sourceObjectKey);
-        if (optionalFileHandle.isEmpty()) {
-            return;
-        }
-
-        FileHandle fileHandle = optionalFileHandle.get();
-        try (fileHandle) {
-            targetSpace.upload(targetObjectKey, fileHandle.getFile());
-        }
     }
 }
