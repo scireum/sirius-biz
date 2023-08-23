@@ -69,6 +69,9 @@ public abstract class ObjectStorageSpace {
     @Part
     private static Tasks tasks;
 
+    @Part
+    protected static ObjectStorage objectStorage;
+
     private static final Counter UPLOADS = new Counter();
     private static final Counter DOWNLOADS = new Counter();
     private static final Counter STREAMS = new Counter();
@@ -245,6 +248,31 @@ public abstract class ObjectStorageSpace {
      */
     protected abstract void storePhysicalObject(String objectKey, File file, ByteBlockTransformer transformer)
             throws IOException;
+
+    /**
+     * Copies the given object to the given target object key in the current storage space.
+     *
+     * @param sourceObjectKey    the source object key to copy from
+     * @param targetObjectKey    the target object key to copy to
+     * @param targetStorageSpace the target storage space to copy to
+     */
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace) {
+        download(sourceObjectKey).ifPresent(fileHandle -> {
+            try (fileHandle) {
+                objectStorage.getSpace(targetStorageSpace).upload(targetObjectKey, fileHandle.getFile());
+            }
+        });
+    }
+
+    /**
+     * Copies the given object to the given target object key in the current storage space.
+     *
+     * @param sourceObjectKey the source object key to copy from
+     * @param targetObjectKey the target object key to copy to
+     */
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey) {
+        duplicatePhysicalObject(sourceObjectKey, targetObjectKey, getName());
+    }
 
     /**
      * Stores the given data for the given object key.

@@ -62,6 +62,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -853,5 +854,18 @@ public class ObjectStore {
                                                            .withPartSize(buffer.readableBytes())
                                                            .withInputStream(new ByteBufInputStream(buffer));
         return getClient().uploadPart(request).getPartETag();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof ObjectStore otherObjectStore) {
+            return name.equals(otherObjectStore.name);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

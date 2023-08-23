@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer1;
 
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.TransformingInputStream;
 import sirius.biz.storage.s3.BucketName;
@@ -53,6 +54,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
     @Part
     private static ObjectStores objectStores;
+
+    @Part
+    private static ReplicationManager replicationManager;
 
     @Part
     private static Tasks tasks;
@@ -236,5 +240,37 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
                                                                  .toLocalDateTime(),
                                                          s3Object.getSize()));
         });
+    }
+
+    @Override
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace) {
+        ObjectStorageSpace targetSpace = objectStorage.getSpace(targetStorageSpace);
+        if (targetSpace instanceof S3ObjectStorageSpace s3ObjectStorageSpace && canCopyObject(s3ObjectStorageSpace)) {
+            // We want to copy from S3 to S3 and the source and target buckets permits a server-side copy.
+            store.getClient()
+                 .copyObject(bucketName().getName(),
+                             sourceObjectKey,
+                             s3ObjectStorageSpace.bucketName().getName(),
+                             targetObjectKey);
+            long size = store.getClient().getObjectMetadata(bucketName().getName(), sourceObjectKey).getContentLength();
+            replicationManager.notifyAboutUpdate(s3ObjectStorageSpace, targetObjectKey, size);
+        } else {
+            super.duplicatePhysicalObject(sourceObjectKey, targetObjectKey, targetStorageSpace);
+        }
+    }
+
+    private boolean canCopyObject(S3ObjectStorageSpace s3ObjectStorageSpace) {
+        if (!store.equals(s3ObjectStorageSpace.store)) {
+            // Source and target are not in the same store
+            return false;
+        }
+
+        if (bucketName().equals(s3ObjectStorageSpace.bucketName())) {
+            // Source and target are in same store and bucket.
+            return true;
+        }
+
+        // If source or target uses a transformer, we can no longer perform a straight copy.
+        return !hasTransformer() && !s3ObjectStorageSpace.hasTransformer();
     }
 }

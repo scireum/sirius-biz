@@ -16,7 +16,6 @@ import sirius.kernel.async.Promise;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
@@ -51,9 +50,6 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
      * Contains the base directory which will contain a subdirectory per storage space.
      */
     public static final String CONFIG_KEY_LAYER1_BASE_DIR = "baseDir";
-
-    @Part
-    private static StorageUtils utils;
 
     private final File baseDir;
 
