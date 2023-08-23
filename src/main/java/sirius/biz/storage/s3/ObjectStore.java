@@ -62,6 +62,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -208,15 +209,6 @@ public class ObjectStore {
      */
     public AmazonS3 getClient() {
         return client;
-    }
-
-    /**
-     * Returns the name of the store.
-     *
-     * @return the store's name
-     */
-    public String getName() {
-        return name;
     }
 
     /**
@@ -862,5 +854,18 @@ public class ObjectStore {
                                                            .withPartSize(buffer.readableBytes())
                                                            .withInputStream(new ByteBufInputStream(buffer));
         return getClient().uploadPart(request).getPartETag();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof ObjectStore otherObjectStore) {
+            return name.equals(otherObjectStore.name);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

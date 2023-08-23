@@ -245,31 +245,22 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     @Override
     public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace) {
         ObjectStorageSpace targetSpace = objectStorage.getSpace(targetStorageSpace);
-        if (targetSpace instanceof S3ObjectStorageSpace s3ObjectStorageSpace) {
-            // We want to copy from S3 to S3...
-            if (canCopyObject(s3ObjectStorageSpace)) {
-                // ... and the source and target buckets permits a server-side copy.
-                store.getClient()
-                     .copyObject(bucketName().getName(),
-                                 sourceObjectKey,
-                                 s3ObjectStorageSpace.bucketName().getName(),
-                                 targetObjectKey);
-                long size =
-                        store.getClient().getObjectMetadata(bucketName().getName(), sourceObjectKey).getContentLength();
-                replicationManager.notifyAboutUpdate(s3ObjectStorageSpace, targetObjectKey, size);
-            } else {
-                // ... but the source and target buckets resides in different systems. We have to download and upload.
-                super.duplicatePhysicalObject(sourceObjectKey, targetObjectKey, targetStorageSpace);
-            }
+        if (targetSpace instanceof S3ObjectStorageSpace s3ObjectStorageSpace && canCopyObject(s3ObjectStorageSpace)) {
+            // We want to copy from S3 to S3 and the source and target buckets permits a server-side copy.
+            store.getClient()
+                 .copyObject(bucketName().getName(),
+                             sourceObjectKey,
+                             s3ObjectStorageSpace.bucketName().getName(),
+                             targetObjectKey);
+            long size = store.getClient().getObjectMetadata(bucketName().getName(), sourceObjectKey).getContentLength();
+            replicationManager.notifyAboutUpdate(s3ObjectStorageSpace, targetObjectKey, size);
         } else {
-            // We are copying from S3 to a different storage system (eg. FS). We have to download and upload.
             super.duplicatePhysicalObject(sourceObjectKey, targetObjectKey, targetStorageSpace);
         }
     }
 
     private boolean canCopyObject(S3ObjectStorageSpace s3ObjectStorageSpace) {
-        boolean sameStore = store.getName().equals(s3ObjectStorageSpace.store.getName());
-        if (!sameStore) {
+        if (!store.equals(s3ObjectStorageSpace.store)) {
             // Source and target are not in the same store
             return false;
         }
