@@ -70,7 +70,7 @@ class VirtualFileWalker implements Spliterator<VirtualFile> {
         }
 
         children = stack.removeLast();
-        return true;
+        return prepareNext();
     }
 
     private boolean shouldProcessAsFile(VirtualFile next) {
@@ -82,7 +82,7 @@ class VirtualFileWalker implements Spliterator<VirtualFile> {
     }
 
     private boolean shouldEnterDirectory() {
-        return (settings.maxDepth < 0 || stack.size() < settings.maxDepth) && children.hasNext();
+        return settings.maxDepth < 0 || stack.size() < settings.maxDepth;
     }
 
     private boolean shouldProcessAsDirectory() {
