@@ -14,7 +14,8 @@
 <i:arg type="String" name="acceptedFiles" default=".jpg,.jpeg,.svg,.png,.gif"/>
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
 <i:arg type="String" name="height" default="350px"/>
-<i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()" description="Allows the user to enter an URL as source of the blob."/>
+<i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()"
+       description="Allows the user to enter an URL as source of the blob."/>
 <i:arg type="String" name="formId" default="mainEditForm" description="The form this field belongs to."/>
 
 <i:local name="previewId" value="@generateId('image-upload-preview-%s')"/>
@@ -43,7 +44,8 @@
                         @i18n("BlobRefField.specifyURL")
                     </button>
                 </i:if>
-                <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
+                <button type="button"
+                        class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
                     @i18n("BlobRefField.resetButton")
                 </button>
                 <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
@@ -66,15 +68,16 @@
 
 <script type="text/javascript">
     {
-        const _outerDiv = document.querySelector('#___id');
         sirius.ready(function () {
+            const _outerDiv = document.querySelector('#___id');
             const _urlButton = _outerDiv.querySelector('[data-popover]');
             const _resetButton = _outerDiv.querySelector('.btn-reset-js');
             const _uploadButton = _outerDiv.querySelector('[data-select-vfs]');
             const _inputField = _outerDiv.querySelector('input[type="hidden"]');
             const _img = _outerDiv.querySelector('img');
             const _fileNameContainer = _outerDiv.querySelector('.img-name');
-            _uploadButton.addEventListener('click', function() {
+
+            _uploadButton.addEventListener('click', function () {
                 selectVFSFile({
                     path: findParentDirectory('___objectRef.getPath()', '___objectRef.getSpace()'),
                     allowDirectories: true,
@@ -87,7 +90,7 @@
                         path: selectedValue.substring('/___objectRef.getSpace()'.length)
                     }, function (json) {
                         _inputField.value = json.fileId;
-                        _img.onerror = function() {
+                        _img.onerror = function () {
                             _img.src = '___defaultPreview';
                         }
                         _img.src = json.downloadUrl;
@@ -104,7 +107,7 @@
                 _fileNameContainer.innerHTML = '';
             }
 
-            if(___urlAllowed) {
+            if (___urlAllowed) {
                 initUrlUploadPopover(_urlButton, _outerDiv, _resetButton, _fileNameContainer, {
                     label: '@i18n("BlobRefField.URL")',
                     ok: '@i18n("NLS.ok")',
