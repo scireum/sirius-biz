@@ -113,14 +113,12 @@
                 });
             }
 
-            if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
-                return;
+            if (_img.src !== '___defaultPreview' && '___previewVariant' !== 'raw') {
+                // if we have a variant preview, set up lazy-loading...
+                _img.dataset.src = _img.src;
+                _img.src = '___defaultPreview';
+                loadImageLazily(_img);
             }
-            
-            // if we have a variant preview, set up lazyloading...
-            _img.dataset.src = _img.src;
-            _img.src = '___defaultPreview';
-            loadImageLazily(_img);
         });
 
         function findParentDirectory(path, fallback) {
