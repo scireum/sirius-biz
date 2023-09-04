@@ -1,5 +1,5 @@
 <k:base code="00000"
-        lang="@part(sirius.biz.tycho.kb.KnowledgeBase.class).getFallbackLanguage()"
+        lang="@part(sirius.biz.tycho.kb.KnowledgeBase.class).fetchDefaultFallbackLanguage()"
         title="@i18n('KnowledgeBase.kb')"
         parent=""
         priority="0"
