@@ -293,4 +293,14 @@ public class KnowledgeBase {
                       .streamList()
                       .filter(KnowledgeBaseEntry::checkPermissions);
     }
+
+    /**
+     * Fetches the default fallback language.
+     * <p>
+     * The default fallback language is the first language specified in the conf file entry <tt>knowledgebase.fallbackLanguages</tt>.
+     * @return the default fallback language or <tt>null</tt> if no fallback language is specified
+     */
+    public String fetchDefaultFallbackLanguage() {
+        return !fallbackLanguages.isEmpty() ? fallbackLanguages.get(0) : null;
+    }
 }
