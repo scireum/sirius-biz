@@ -30,9 +30,7 @@
     <div class="sirius-imageupload blob-ref-field card shadow-sm mb-4 mt-1 @class">
         <div @if (isFilled(height)) { style="height: @height" } id="@id">
             <div class="sirius-upload-content h-100 d-flex flex-column">
-                <div class="img-preview d-flex justify-content-center align-items-center flex-grow-1 mb-1">
-                    <img class="mh-100 mw-100" id="@previewId" src="@currentImage"/>
-                </div>
+                <div class="img-preview preview-container-js d-flex justify-content-center align-items-center flex-grow-1 mb-1"></div>
                 <div class="img-name text-center mb-2">
                     <a href="@currentImage">@objectRef.getFilename()</a>
                 </div>
@@ -74,8 +72,34 @@
             const _resetButton = _outerDiv.querySelector('.btn-reset-js');
             const _uploadButton = _outerDiv.querySelector('[data-select-vfs]');
             const _inputField = _outerDiv.querySelector('input[type="hidden"]');
-            const _img = _outerDiv.querySelector('img');
+            const _previewContainer = _outerDiv.querySelector('.preview-container-js');
             const _fileNameContainer = _outerDiv.querySelector('.img-name');
+
+            function updatePreviewImage(src) {
+                _previewContainer.innerHTML = '';
+
+                const fileExtension = sirius.extractFileExtension(src);
+
+                if (isImage(fileExtension)) {
+                    let _previewImage = document.createElement('img');
+                    _previewImage.className = 'mh-100 mw-100';
+
+                    if (src !== '___defaultPreview' && '___previewVariant' !== 'raw') {
+                        // Set up lazy-loading for variants.
+                        _previewImage.dataset.src = src;
+                        _previewImage.src = '___defaultPreview';
+                        _previewContainer.appendChild(_previewImage);
+                        loadImageLazily(_previewImage);
+                    } else {
+                        _previewImage.src = src;
+                        _previewContainer.appendChild(_previewImage);
+                    }
+                } else {
+                    let _previewIcon = document.createElement('i');
+                    _previewIcon.className = 'fa-5x fa-solid ' + determineFileIcon(fileExtension);
+                    _previewContainer.appendChild(_previewIcon);
+                }
+            }
 
             _uploadButton.addEventListener('click', function () {
                 selectVFSFile({
@@ -90,21 +114,19 @@
                         path: selectedValue.substring('/___objectRef.getSpace()'.length)
                     }, function (json) {
                         _inputField.value = json.fileId;
-                        _img.onerror = function () {
-                            _img.src = '___defaultPreview';
-                        }
-                        _img.src = json.downloadUrl;
                         _fileNameContainer.innerHTML = '<a href="' + json.downloadUrl + '">' + json.filename + '</a>';
                         _resetButton.classList.remove('d-none');
+                        updatePreviewImage(json.downloadUrl);
                     });
                 });
             });
 
             _resetButton.onclick = function () {
                 _inputField.value = '';
-                _img.src = '___defaultPreview';
                 _resetButton.classList.add('d-none');
                 _fileNameContainer.innerHTML = '';
+
+                updatePreviewImage('___defaultPreview');
             }
 
             if (___urlAllowed) {
@@ -116,12 +138,7 @@
                 });
             }
 
-            if (_img.src !== '___defaultPreview' && '___previewVariant' !== 'raw') {
-                // if we have a variant preview, set up lazy-loading...
-                _img.dataset.src = _img.src;
-                _img.src = '___defaultPreview';
-                loadImageLazily(_img);
-            }
+            updatePreviewImage('___currentImage');
         });
 
         function findParentDirectory(path, fallback) {
@@ -130,5 +147,37 @@
             }
             return '/' + path.substring(0, path.lastIndexOf('/') + 1);
         }
+
+        function isImage(extension) {
+            return extension === '.jpg' || extension === '.jpeg' || extension === '.png';
+        }
+
+        function determineFileIcon(extension) {
+            if (extension === '.pdf') {
+                return 'fa-file-pdf';
+            }
+
+            if (extension === '.tif' || extension === '.tiff' || extension === '.bmp' || extension === '.svg') {
+                return 'fa-image';
+            }
+
+            if (extension === '.doc' || extension === '.docx') {
+                return 'fa-file-word';
+            }
+
+            if (extension === '.xls' || extension === '.xlsx') {
+                return 'fa-file-excel';
+            }
+
+            if (extension === '.ppt' || extension === '.pps' || extension === '.pptx' || extension === '.ppsx') {
+                return 'fa-file-powerpoint';
+            }
+
+            if (extension === '.zip' || extension === '.rar') {
+                return 'fa-file-zipper';
+            }
+
+            return 'fa-file';
+        };
     }
 </script>
