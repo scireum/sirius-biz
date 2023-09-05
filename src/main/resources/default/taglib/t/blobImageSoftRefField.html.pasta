@@ -17,6 +17,8 @@
 <i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()"
        description="Allows the user to enter an URL as source of the blob."/>
 <i:arg type="String" name="formId" default="mainEditForm" description="The form this field belongs to."/>
+<i:arg type="String" name="iconClass" default="fa-5x fa-thin"
+       description="Lists additional CSS classes to apply to the preview icon, most likely the icon style and size."/>
 
 <i:local name="previewId" value="@generateId('image-upload-preview-%s')"/>
 <i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
@@ -96,7 +98,7 @@
                     }
                 } else {
                     let _previewIcon = document.createElement('i');
-                    _previewIcon.className = 'fa-5x fa-solid ' + determineFileIcon(fileExtension);
+                    _previewIcon.className = '___iconClass' + ' ' + determineFileIcon(fileExtension);
                     _previewContainer.appendChild(_previewIcon);
                 }
             }
