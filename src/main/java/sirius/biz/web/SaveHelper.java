@@ -37,6 +37,7 @@ public class SaveHelper {
     private List<Mapping> mappings;
     private boolean autoload = true;
     private boolean acceptUnsafePOST = false;
+    private boolean saveMessage = true;
 
     SaveHelper(BizController bizController, WebContext ctx) {
         this.bizController = bizController;
@@ -167,6 +168,16 @@ public class SaveHelper {
     }
 
     /**
+     * Disables the display of the {@linkplain BizController#showSavedMessage() "entity saved"} message.
+     *
+     * @return the helper itself for fluent method calls
+     */
+    public SaveHelper disableSaveMessage() {
+        this.saveMessage = false;
+        return this;
+    }
+
+    /**
      * Applies the configured save login on the given entity.
      *
      * @param entity the entity to update and save
@@ -207,7 +218,9 @@ public class SaveHelper {
                 return true;
             }
 
-            bizController.showSavedMessage();
+            if (saveMessage) {
+                bizController.showSavedMessage();
+            }
 
             if (!entity.getMapper().hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI)) {
                 ctx.respondWith()
