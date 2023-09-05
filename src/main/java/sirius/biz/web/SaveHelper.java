@@ -214,8 +214,8 @@ public class SaveHelper {
                    .redirectToGet(Formatter.create(afterSaveURI).set("id", entity.getIdAsString()).format());
                 return true;
             }
-        } catch (Exception e) {
-            bizController.handle(e);
+        } catch (Exception exception) {
+            bizController.handle(exception);
         }
         return false;
     }
