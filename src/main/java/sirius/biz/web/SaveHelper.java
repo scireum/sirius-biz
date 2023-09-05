@@ -10,6 +10,7 @@ package sirius.biz.web;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.Formatter;
 import sirius.web.http.WebContext;
@@ -183,6 +184,8 @@ public class SaveHelper {
      * @param entity the entity to update and save
      * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
      */
+    @SuppressWarnings({"java:S1541", "java:S3776"})
+    @Explain("The method is understandable and readable.")
     public boolean saveEntity(BaseEntity<?> entity) {
         try {
             if (!((acceptUnsafePOST && ctx.isUnsafePOST()) || ctx.ensureSafePOST())) {
