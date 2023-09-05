@@ -65,7 +65,7 @@
 </div>
 
 <script type="text/javascript">
-    {
+    (function () {
         sirius.ready(function () {
             const _outerDiv = document.querySelector('#___id');
             const _urlButton = _outerDiv.querySelector('[data-popover]');
@@ -80,7 +80,7 @@
 
                 const fileExtension = sirius.extractFileExtension(src);
 
-                if (isImage(fileExtension)) {
+                if (isDisplayableImage(fileExtension)) {
                     let _previewImage = document.createElement('img');
                     _previewImage.className = 'mh-100 mw-100';
 
@@ -148,7 +148,7 @@
             return '/' + path.substring(0, path.lastIndexOf('/') + 1);
         }
 
-        function isImage(extension) {
+        function isDisplayableImage(extension) {
             return extension === '.jpg' || extension === '.jpeg' || extension === '.png';
         }
 
@@ -179,5 +179,5 @@
 
             return 'fa-file';
         };
-    }
+    }());
 </script>
