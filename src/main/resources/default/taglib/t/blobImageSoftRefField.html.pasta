@@ -80,7 +80,7 @@
             function updatePreviewImage(src) {
                 _previewContainer.innerHTML = '';
 
-                const fileExtension = sirius.extractFileExtension(src);
+                const fileExtension = sirius.extractFileExtension(src).toLowerCase();
 
                 if (isDisplayableImage(fileExtension)) {
                     let _previewImage = document.createElement('img');
