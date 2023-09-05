@@ -10,6 +10,7 @@ package sirius.biz.web;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.Formatter;
 import sirius.web.http.WebContext;
@@ -37,6 +38,7 @@ public class SaveHelper {
     private List<Mapping> mappings;
     private boolean autoload = true;
     private boolean acceptUnsafePOST = false;
+    private boolean saveMessage = true;
 
     SaveHelper(BizController bizController, WebContext ctx) {
         this.bizController = bizController;
@@ -167,11 +169,23 @@ public class SaveHelper {
     }
 
     /**
+     * Disables the display of the {@linkplain BizController#showSavedMessage() "entity saved"} message.
+     *
+     * @return the helper itself for fluent method calls
+     */
+    public SaveHelper disableSaveMessage() {
+        this.saveMessage = false;
+        return this;
+    }
+
+    /**
      * Applies the configured save login on the given entity.
      *
      * @param entity the entity to update and save
      * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
      */
+    @SuppressWarnings({"java:S1541", "java:S3776"})
+    @Explain("The method is understandable and readable.")
     public boolean saveEntity(BaseEntity<?> entity) {
         try {
             if (!((acceptUnsafePOST && ctx.isUnsafePOST()) || ctx.ensureSafePOST())) {
@@ -207,15 +221,17 @@ public class SaveHelper {
                 return true;
             }
 
-            bizController.showSavedMessage();
+            if (saveMessage) {
+                bizController.showSavedMessage();
+            }
 
             if (!entity.getMapper().hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI)) {
                 ctx.respondWith()
                    .redirectToGet(Formatter.create(afterSaveURI).set("id", entity.getIdAsString()).format());
                 return true;
             }
-        } catch (Exception e) {
-            bizController.handle(e);
+        } catch (Exception exception) {
+            bizController.handle(exception);
         }
         return false;
     }
