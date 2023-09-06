@@ -14,8 +14,11 @@
 <i:arg type="String" name="acceptedFiles" default=".jpg,.jpeg,.svg,.png,.gif"/>
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
 <i:arg type="String" name="height" default="350px"/>
-<i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()" description="Allows the user to enter an URL as source of the blob."/>
+<i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()"
+       description="Allows the user to enter a URL as source of the blob."/>
 <i:arg type="String" name="formId" default="mainEditForm" description="The form this field belongs to."/>
+<i:arg type="String" name="iconClass" default="fa-5x fa-thin"
+       description="Lists additional CSS classes to apply to the preview icon, most likely the icon style and size."/>
 
 <i:local name="previewId" value="@generateId('image-upload-preview-%s')"/>
 <i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
@@ -29,9 +32,7 @@
     <div class="sirius-imageupload blob-ref-field card shadow-sm mb-4 mt-1 @class">
         <div @if (isFilled(height)) { style="height: @height" } id="@id">
             <div class="sirius-upload-content h-100 d-flex flex-column">
-                <div class="img-preview d-flex justify-content-center align-items-center flex-grow-1 mb-1">
-                    <img class="mh-100 mw-100" id="@previewId" src="@currentImage"/>
-                </div>
+                <div class="img-preview preview-container-js d-flex justify-content-center align-items-center flex-grow-1 mb-1"></div>
                 <div class="img-name text-center mb-2">
                     <a href="@currentImage">@objectRef.getFilename()</a>
                 </div>
@@ -43,7 +44,8 @@
                         @i18n("BlobRefField.specifyURL")
                     </button>
                 </i:if>
-                <button type="button" class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
+                <button type="button"
+                        class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
                     @i18n("BlobRefField.resetButton")
                 </button>
                 <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
@@ -65,16 +67,43 @@
 </div>
 
 <script type="text/javascript">
-    {
-        const _outerDiv = document.querySelector('#___id');
+    (function () {
         sirius.ready(function () {
+            const _outerDiv = document.querySelector('#___id');
             const _urlButton = _outerDiv.querySelector('[data-popover]');
             const _resetButton = _outerDiv.querySelector('.btn-reset-js');
             const _uploadButton = _outerDiv.querySelector('[data-select-vfs]');
             const _inputField = _outerDiv.querySelector('input[type="hidden"]');
-            const _img = _outerDiv.querySelector('img');
+            const _previewContainer = _outerDiv.querySelector('.preview-container-js');
             const _fileNameContainer = _outerDiv.querySelector('.img-name');
-            _uploadButton.addEventListener('click', function() {
+
+            function updatePreviewImage(src) {
+                _previewContainer.innerHTML = '';
+
+                const fileExtension = sirius.extractFileExtension(src).toLowerCase();
+
+                if (isDisplayableImage(fileExtension)) {
+                    let _previewImage = document.createElement('img');
+                    _previewImage.className = 'mh-100 mw-100';
+
+                    if (src !== '___defaultPreview' && '___previewVariant' !== 'raw') {
+                        // Set up lazy-loading for variants.
+                        _previewImage.dataset.src = src;
+                        _previewImage.src = '___defaultPreview';
+                        _previewContainer.appendChild(_previewImage);
+                        loadImageLazily(_previewImage);
+                    } else {
+                        _previewImage.src = src;
+                        _previewContainer.appendChild(_previewImage);
+                    }
+                } else {
+                    let _previewIcon = document.createElement('i');
+                    _previewIcon.className = '___iconClass' + ' ' + determineFileIcon(fileExtension);
+                    _previewContainer.appendChild(_previewIcon);
+                }
+            }
+
+            _uploadButton.addEventListener('click', function () {
                 selectVFSFile({
                     path: findParentDirectory('___objectRef.getPath()', '___objectRef.getSpace()'),
                     allowDirectories: true,
@@ -87,24 +116,22 @@
                         path: selectedValue.substring('/___objectRef.getSpace()'.length)
                     }, function (json) {
                         _inputField.value = json.fileId;
-                        _img.onerror = function() {
-                            _img.src = '___defaultPreview';
-                        }
-                        _img.src = json.downloadUrl;
                         _fileNameContainer.innerHTML = '<a href="' + json.downloadUrl + '">' + json.filename + '</a>';
                         _resetButton.classList.remove('d-none');
+                        updatePreviewImage(json.downloadUrl);
                     });
                 });
             });
 
             _resetButton.onclick = function () {
                 _inputField.value = '';
-                _img.src = '___defaultPreview';
                 _resetButton.classList.add('d-none');
                 _fileNameContainer.innerHTML = '';
+
+                updatePreviewImage('___defaultPreview');
             }
 
-            if(___urlAllowed) {
+            if (___urlAllowed) {
                 initUrlUploadPopover(_urlButton, _outerDiv, _resetButton, _fileNameContainer, {
                     label: '@i18n("BlobRefField.URL")',
                     ok: '@i18n("NLS.ok")',
@@ -113,14 +140,7 @@
                 });
             }
 
-            if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
-                return;
-            }
-            
-            // if we have a variant preview, set up lazyloading...
-            _img.dataset.src = _img.src;
-            _img.src = '___defaultPreview';
-            loadImageLazily(_img);
+            updatePreviewImage('___currentImage');
         });
 
         function findParentDirectory(path, fallback) {
@@ -129,5 +149,37 @@
             }
             return '/' + path.substring(0, path.lastIndexOf('/') + 1);
         }
-    }
+
+        function isDisplayableImage(extension) {
+            return extension === '.jpg' || extension === '.jpeg' || extension === '.png';
+        }
+
+        function determineFileIcon(extension) {
+            if (extension === '.pdf') {
+                return 'fa-file-pdf';
+            }
+
+            if (extension === '.tif' || extension === '.tiff' || extension === '.bmp' || extension === '.svg') {
+                return 'fa-image';
+            }
+
+            if (extension === '.doc' || extension === '.docx') {
+                return 'fa-file-word';
+            }
+
+            if (extension === '.xls' || extension === '.xlsx') {
+                return 'fa-file-excel';
+            }
+
+            if (extension === '.ppt' || extension === '.pps' || extension === '.pptx' || extension === '.ppsx') {
+                return 'fa-file-powerpoint';
+            }
+
+            if (extension === '.zip' || extension === '.rar') {
+                return 'fa-file-zipper';
+            }
+
+            return 'fa-file';
+        };
+    }());
 </script>
