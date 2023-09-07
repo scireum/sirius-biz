@@ -59,7 +59,7 @@ public class ContactData extends Composite {
     @Autoloaded
     @AutoImport
     @Length(150)
-    @ValidatedBy(PhoneNumberValidator.class)
+    @ValidatedBy(value = PhoneNumberValidator.class, strictValidation = false)
     private String phone;
 
     /**
@@ -74,7 +74,7 @@ public class ContactData extends Composite {
     @Autoloaded
     @AutoImport
     @Length(150)
-    @ValidatedBy(PhoneNumberValidator.class)
+    @ValidatedBy(value = PhoneNumberValidator.class, strictValidation = false)
     private String fax;
 
     /**
@@ -89,7 +89,7 @@ public class ContactData extends Composite {
     @Autoloaded
     @AutoImport
     @Length(150)
-    @ValidatedBy(PhoneNumberValidator.class)
+    @ValidatedBy(value = PhoneNumberValidator.class, strictValidation = false)
     private String mobile;
 
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
