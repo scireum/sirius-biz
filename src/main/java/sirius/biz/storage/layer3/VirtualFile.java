@@ -122,6 +122,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     @PriorityParts(RemoteFileResolver.class)
     private static List<RemoteFileResolver> remoteFileResolvers;
 
+    @ConfigValue("storage.layer3.retriesForServiceUnavailable")
+    private static int retriesForServiceUnavailable;
+
     /**
      * Internal constructor to create the "/" directory.
      */
@@ -1390,7 +1393,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            HttpResponse<InputStream> response = requestFileFromUri(uri, mode, getMaxRetriesForServiceUnavailable());
+            HttpResponse<InputStream> response = requestFileFromUri(uri, mode, retriesForServiceUnavailable);
 
             if (response.statusCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
                 tryTouch();
@@ -1430,14 +1433,14 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
             if (retries > 0) {
                 // Wait 200ms, 700ms, 1200ms...
-                Wait.millis(200 + (getMaxRetriesForServiceUnavailable() - retries) * 500);
+                Wait.millis(200 + (retriesForServiceUnavailable - retries) * 500);
                 return requestFileFromUri(uri, mode, retries - 1);
             }
 
             throw new IOException(Strings.apply("The server responded with status %s (%s) after %s retries!",
                                                 HttpResponseStatus.valueOf(response.statusCode()).toString(),
                                                 response.statusCode(),
-                                                getMaxRetriesForServiceUnavailable()));
+                                                retriesForServiceUnavailable));
         }
 
         if (response.statusCode() >= 400) {
@@ -1456,10 +1459,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         // (unless the mode is set to ALWAYS_FETCH...)
         return mode == FetchFromUrlMode.NON_EXISTENT || (mode == FetchFromUrlMode.NON_EXISTENT_OR_MODIFIED
                                                          && lastModifiedDate().isAfter(LocalDate.now().atStartOfDay()));
-    }
-
-    private int getMaxRetriesForServiceUnavailable() {
-        return Sirius.getSettings().get("storage.layer3.retriesForServiceUnavailable").asInt(0);
     }
 
     /**
