@@ -63,11 +63,10 @@
                         <i:extensions target="user-account" account="account" point="additionalActions"/>
                     </t:dropdownSection>
                     <i:if test="!account.getUserAccountData().isOwnUser()">
-                        <t:permission permission="permission-delete-user-accounts">
-                            <t:dropdownSection>
-                                <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
-                            </t:dropdownSection>
-                        </t:permission>
+                        <t:dropdownSection
+                                permission="@sirius.biz.tenants.UserAccountController.PERMISSION_DELETE_USER_ACCOUNTS">
+                            <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                        </t:dropdownSection>
                     </i:if>
                 </i:if>
             </i:block>
