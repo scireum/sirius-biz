@@ -31,7 +31,8 @@
                 <i:block name="actions">
                     <i:if test="enableCardActions">
                         <i:if test="!account.getUserAccountData().isOwnUser()">
-                            <t:dropdownSection>
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
                                 <t:dropdownItem labelKey="TenantController.select"
                                                 icon="fa-solid fa-user-secret"
                                                 url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>

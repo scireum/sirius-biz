@@ -26,7 +26,8 @@
             <i:block name="additionalActions">
                 <i:if test="!account.isNew()">
                     <i:if test="!account.getUserAccountData().isOwnUser()">
-                        <t:dropdownSection>
+                        <t:dropdownSection
+                                permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
                             <t:dropdownItem labelKey="TenantController.select"
                                             icon="fa fa-building"
                                             url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
