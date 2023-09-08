@@ -370,12 +370,22 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     /**
+     * Determines whether this user object describes the {@linkplain UserContext#getCurrentUser() current user}. In this
+     * case, certain operations like spying or deleting are not allowed.
+     *
+     * @return <tt>true</tt> if this is the current user, <tt>false</tt> otherwise
+     */
+    public boolean isOwnUser() {
+        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class), userObject);
+    }
+
+    /**
      * Determines if the current user is able to generate the password for <tt>this</tt> user.
      *
      * @return <tt>true</tt> if the current user can generate a password, <tt>false</tt> otherwise
      */
     public boolean isPasswordGenerationPossible() {
-        return !Objects.equals(UserContext.getCurrentUser().as(UserAccount.class), userObject);
+        return !isOwnUser();
     }
 
     /**
