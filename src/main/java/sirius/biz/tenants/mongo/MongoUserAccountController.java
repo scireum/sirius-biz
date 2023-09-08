@@ -48,7 +48,8 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
 
     @Override
     protected BasePageHelper<MongoUserAccount, ?, ?, ?> getSelectableUsersAsPage() {
-        MongoQuery<MongoUserAccount> baseQuery = mango.select(MongoUserAccount.class);
+        MongoQuery<MongoUserAccount> baseQuery =
+                mango.select(MongoUserAccount.class).ne(MongoUserAccount.ID, fetchRawCurrentUserId());
 
         if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
             baseQuery = baseQuery.eq(UserAccount.TENANT, tenants.getRequiredTenant());

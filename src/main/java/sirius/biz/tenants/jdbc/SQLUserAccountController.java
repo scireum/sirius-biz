@@ -60,6 +60,7 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
     @Override
     protected BasePageHelper<SQLUserAccount, ?, ?, ?> getSelectableUsersAsPage() {
         SmartQuery<SQLUserAccount> baseQuery = oma.select(SQLUserAccount.class)
+                                                  .ne(SQLUserAccount.ID, fetchRawCurrentUserId())
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.LASTNAME))
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
