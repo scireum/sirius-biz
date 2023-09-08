@@ -15,6 +15,7 @@ import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
@@ -704,5 +705,17 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                    user.getUniqueName());
         webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
+    }
+
+    /**
+     * Fetches the raw identifier of the current user's database entity, by removing the prefix indicating the entity's
+     * type.
+     *
+     * @return the raw identifier of the current user's database entity
+     */
+    protected String fetchRawCurrentUserId() {
+        String userId = UserContext.getCurrentUser().getUserId();
+        String prefix = Mixing.getNameForType(matchingTenants.getUserClass()) + '-';
+        return userId.startsWith(prefix) ? userId.substring(prefix.length()) : userId;
     }
 }
