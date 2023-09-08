@@ -137,6 +137,8 @@
                     ok: '@i18n("NLS.ok")',
                     cancel: '@i18n("NLS.cancel")',
                     errorMsg: '@i18n("BlobRefField.malformedURL")'
+                }, function (url) {
+                    updatePreviewImage(url);
                 });
             }
 

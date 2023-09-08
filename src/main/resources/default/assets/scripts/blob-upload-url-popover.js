@@ -9,7 +9,7 @@
  * @param _fileNameContainer The container that shows the filename
  * @param i18n Contains information about the label, the ok-Button and the cancel-Button of the popover
  */
-function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _fileNameContainer, i18n) {
+function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _fileNameContainer, i18n, updateCallback) {
     const body = buildBody(_triggerElement, _uploadContainer, _resetButton);
     const container = buildContainer(_triggerElement.parentElement);
     $(_triggerElement).popover({
@@ -107,16 +107,14 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
      */
     function updateURL(url) {
         if (url.startsWith('http://') || url.startsWith('https://')) {
-            let _img = _uploadContainer.querySelector('.img-preview img');
-            _img.setAttribute('src', url);
-            _img.onerror = function() {
-                _img.setAttribute('src', '/assets/images/blob_image_failed.png');
-            }
             _uploadContainer.querySelector('input[name]').value = url;
             _resetButton.classList.remove('d-none');
             body._errorCol.innerHTML = '';
             _fileNameContainer.innerHTML = '<a href="' + url + '">' + fetchFileName(url) + ' <i class="fa-regular fa-arrow-up-right-from-square"></i></a>';
             $(_triggerElement).popover('hide');
+            if (typeof updateCallback === 'function') {
+                updateCallback(url);
+            }
         } else {
             addErrorMessage(i18n.errorMsg);
         }
