@@ -30,12 +30,12 @@
                 </i:block>
                 <i:block name="actions">
                     <i:if test="enableCardActions">
-                        <t:dropdownSection>
-                            <t:dropdownItem labelKey="TenantController.select"
-                                            icon="fa-solid fa-user-secret"
-                                            url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
-                        </t:dropdownSection>
-                        <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+                        <i:if test="!account.getUserAccountData().isOwnUser()">
+                            <t:dropdownSection>
+                                <t:dropdownItem labelKey="TenantController.select"
+                                                icon="fa-solid fa-user-secret"
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
                             <t:dropdownSection>
                                 <t:dropdownItem
                                         labelKey="LoginData.password.generate"
@@ -48,26 +48,28 @@
                                             url="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-and-send-password', account.getIdAsString()))"/>
                                 </i:if>
                             </t:dropdownSection>
-                        </i:if>
-                        <t:dropdownSection>
-                            <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
-                                <t:dropdownItem
-                                        labelKey="LoginData.unlock"
-                                        icon="fa-solid fa-unlock"
-                                        url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
-                                <i:else>
-                                    <t:dropdownItem
-                                            labelKey="LoginData.lock"
-                                            icon="fa-solid fa-lock"
-                                            url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
-                                </i:else>
-                            </i:if>
-                        </t:dropdownSection>
-                        <t:permission permission="permission-delete-user-accounts">
                             <t:dropdownSection>
-                                <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                                <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                                    <t:dropdownItem
+                                            labelKey="LoginData.unlock"
+                                            icon="fa-solid fa-unlock"
+                                            url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
+                                    <i:else>
+                                        <t:dropdownItem
+                                                labelKey="LoginData.lock"
+                                                icon="fa-solid fa-lock"
+                                                url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
+                                    </i:else>
+                                </i:if>
                             </t:dropdownSection>
-                        </t:permission>
+                            <t:permission permission="permission-delete-user-accounts">
+                                <t:dropdownSection>
+                                    <t:dropdownDeleteItem
+                                            url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                                </t:dropdownSection>
+                            </t:permission>
+                        </i:if>
+
                         <i:else>
                             <t:dropdownSection>
                                 <t:dropdownItem labelKey="TenantController.edit"
