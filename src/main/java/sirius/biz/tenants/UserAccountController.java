@@ -678,6 +678,13 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             return;
         }
 
+        if (user.getUserAccountData().isOwnUser()) {
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
+            selectUserAccounts(webContext);
+            return;
+        }
+
         // If the target user belongs to the system tenant, our current user has to have highest user management
         // permission as otherwise we would perform an unwanted roles delegation (giving the current user higher
         // access rights - right up to the system management level...)
