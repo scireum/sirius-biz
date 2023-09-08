@@ -29,6 +29,12 @@
                     </div>
                 </i:block>
                 <i:block name="actions">
+                    <t:dropdownSection>
+                        <t:dropdownItem labelKey="TenantController.edit"
+                                        icon="fa-solid fa-pencil"
+                                        permission="permission-manage-user-accounts"
+                                        url="@apply('/user-account/%s', account.getIdAsString())"/>
+                    </t:dropdownSection>
                     <i:if test="enableCardActions">
                         <i:if test="!account.getUserAccountData().isOwnUser()">
                             <t:dropdownSection
@@ -69,15 +75,6 @@
                                         url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
                             </t:dropdownSection>
                         </i:if>
-
-                        <i:else>
-                            <t:dropdownSection>
-                                <t:dropdownItem labelKey="TenantController.edit"
-                                                icon="fa-solid fa-pencil"
-                                                permission="permission-manage-user-accounts"
-                                                url="@apply('/user-account/%s', account.getIdAsString())"/>
-                            </t:dropdownSection>
-                        </i:else>
                     </i:if>
                 </i:block>
 
