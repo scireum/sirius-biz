@@ -112,6 +112,9 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @Part
     private Tenants<I, T, U> matchingTenants;
 
+    @Part
+    private ProfileController<I, T, U> profileController;
+
     /**
      * Shows a list of all available users of the current tenant.
      *
@@ -324,6 +327,67 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      */
     public String getSubScopeName(String scope) {
         return NLS.get("SubScope." + scope + ".name");
+    }
+
+    /**
+     * Sets a new password for the given account.
+     *
+     * @param webContext the current request
+     * @param accountId  the account for which a password is to be set
+     */
+    @Routed("/user-account/:1/password")
+    @LoginRequired
+    public void setPassword(final WebContext webContext, String accountId) {
+        U userAccount = findForTenant(getUserClass(), accountId);
+
+        // the own user must not change the password without giving the old one; we just forward to the regular profile
+        // password change site
+        if (userAccount.getUserAccountData().isOwnUser()) {
+            profileController.profileChangePassword(webContext);
+            return;
+        }
+
+        assertProperUserManagementPermission();
+
+        if (webContext.ensureSafePOST()) {
+            try {
+                String newPassword = webContext.get(ProfileController.PARAM_NEW_PASSWORD).asString();
+                String confirmation = webContext.get(ProfileController.PARAM_CONFIRMATION).asString();
+
+                profileController.validateNewPassword(userAccount, newPassword, confirmation);
+                userAccount.getUserAccountData().getLogin().setCleartextPassword(newPassword);
+                userAccount.getMapper().update(userAccount);
+
+                auditLog.neutral("AuditLog.passwordChange")
+                        .causedByCurrentUser()
+                        .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
+                        .forTenant(String.valueOf(userAccount.getTenant().getId()),
+                                   matchingTenants.fetchCachedRequiredTenant(userAccount.getTenant())
+                                                  .getTenantData()
+                                                  .getName())
+                        .log();
+
+                showSavedMessage();
+
+                webContext.respondWith().redirectToGet("/user-account/" + accountId);
+                return;
+            } catch (Exception exception) {
+                auditLog.neutral("AuditLog.passwordChangeFailed")
+                        .causedByCurrentUser()
+                        .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
+                        .forTenant(String.valueOf(userAccount.getTenant().getId()),
+                                   matchingTenants.fetchCachedRequiredTenant(userAccount.getTenant())
+                                                  .getTenantData()
+                                                  .getName())
+                        .log();
+
+                UserContext.handle(exception);
+            }
+        }
+
+        // load the password dialog in "user" mode without requiring the old password
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/profile-change-password.html.pasta", userAccount, "user", false);
     }
 
     /**
