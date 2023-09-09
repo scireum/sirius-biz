@@ -380,6 +380,15 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     /**
+     * Determines whether this user object belongs to the same tenant as the {@linkplain UserContext#getCurrentUser() current user}.
+     *
+     * @return <tt>true</tt> if this user belongs to the current user's tenant, <tt>false</tt> otherwise
+     */
+    public boolean isOwnTenant() {
+        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().fetchValue(), getTenant());
+    }
+
+    /**
      * Determines if the current user is able to generate the password for <tt>this</tt> user.
      *
      * @return <tt>true</tt> if the current user can generate a password, <tt>false</tt> otherwise
