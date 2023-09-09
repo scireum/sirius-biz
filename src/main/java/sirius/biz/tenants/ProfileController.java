@@ -36,8 +36,8 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
         extends BizController {
 
     private static final String PARAM_OLD_PASSWORD = "oldPassword";
-    private static final String PARAM_NEW_PASSWORD = "newPassword";
-    private static final String PARAM_CONFIRMATION = "confirmation";
+    protected static final String PARAM_NEW_PASSWORD = "newPassword";
+    protected static final String PARAM_CONFIRMATION = "confirmation";
 
     @Part
     private AuditLog auditLog;
@@ -162,7 +162,7 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
      * @param newPassword  the new password to set
      * @param confirmation the confirmation given by the user
      */
-    private void validateNewPassword(U userAccount, String newPassword, String confirmation) {
+    protected void validateNewPassword(U userAccount, String newPassword, String confirmation) {
         userAccount.getUserAccountData()
                    .getLogin()
                    .verifyPassword(newPassword, confirmation, userAccount.getUserAccountData().getMinPasswordLength());
