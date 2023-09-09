@@ -15,6 +15,7 @@ import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -30,7 +31,7 @@ import java.io.Serializable;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-@Register(framework = Tenants.FRAMEWORK_TENANTS)
+@Register(classes = {Controller.class, ProfileController.class}, framework = Tenants.FRAMEWORK_TENANTS)
 public class ProfileController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
