@@ -359,7 +359,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                 userAccount.getUserAccountData().getLogin().setCleartextPassword(newPassword);
                 userAccount.getMapper().update(userAccount);
 
-                auditLog.neutral("AuditLog.passwordChange")
+                auditLog.neutral("AuditLog.passwordChangeOther")
                         .causedByCurrentUser()
                         .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
                         .forTenant(String.valueOf(userAccount.getTenant().getId()),
@@ -373,7 +373,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                 webContext.respondWith().redirectToGet(DETAIL_ROUTE_PREFIX + accountId);
                 return;
             } catch (Exception exception) {
-                auditLog.neutral("AuditLog.passwordChangeFailed")
+                auditLog.neutral("AuditLog.passwordChangeOtherFailed")
                         .causedByCurrentUser()
                         .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
                         .forTenant(String.valueOf(userAccount.getTenant().getId()),
