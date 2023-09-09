@@ -25,6 +25,7 @@
 
             <i:block name="additionalActions">
                 <i:if test="!account.isNew()">
+                    <!--@ actions for other users -->
                     <i:if test="!account.getUserAccountData().isOwnUser()">
                         <t:dropdownSection
                                 permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
@@ -33,6 +34,10 @@
                                             url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                         </t:dropdownSection>
                         <t:dropdownSection>
+                            <t:dropdownItem
+                                    labelKey="Model.password.set"
+                                    icon="fa-solid fa-key"
+                                    url="@apply('/user-account/%s/password', account.getIdAsString())"/>
                             <t:dropdownItem
                                     labelKey="LoginData.password.generate"
                                     icon="fa-regular fa-envelope"
@@ -58,6 +63,16 @@
                                 </i:else>
                             </i:if>
                         </t:dropdownSection>
+
+                        <!--@ actions for own user -->
+                        <i:else>
+                            <t:dropdownSection>
+                                <t:dropdownItem
+                                        labelKey="Model.password.set"
+                                        icon="fa-solid fa-key"
+                                        url="@apply('/user-account/%s/password', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:else>
                     </i:if>
                     <t:dropdownSection>
                         <i:extensions target="user-account" account="account" point="additionalActions"/>
