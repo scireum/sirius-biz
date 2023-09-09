@@ -85,6 +85,11 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
         userAccount = userAccount.getMapper().refreshOrFail(userAccount);
         assertNotNew(userAccount);
 
+        String mode = "profile";
+        if (webContext.getRequestedURI().startsWith("/user-account/")) {
+            mode = "user";
+        }
+
         if (webContext.ensureSafePOST()) {
             try {
                 String oldPassword = webContext.get(PARAM_OLD_PASSWORD).asString();
@@ -102,6 +107,11 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
 
                 updateFingerprintInCurrentSession(webContext, userAccount);
 
+                if ("user".equals(mode)) {
+                    webContext.respondWith().redirectToGet("/user-account/" + userAccount.getIdAsString());
+                    return;
+                }
+
                 webContext.respondWith().redirectToGet("/profile");
                 return;
             } catch (Exception exception) {
@@ -111,7 +121,8 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
             }
         }
 
-        webContext.respondWith().template("/templates/biz/tenants/profile-change-password.html.pasta", userAccount);
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/profile-change-password.html.pasta", userAccount, mode);
     }
 
     /**
