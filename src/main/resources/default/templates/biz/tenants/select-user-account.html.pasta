@@ -25,6 +25,6 @@
                   accounts="users"
                   paginationBaseUrl="@('/user-accounts/select')"
                   cardBaseUrl="@('/user-accounts/select')"
-                  enableCardActions="false"/>
+                  cardActionsType="select"/>
     </t:sidebar>
 </t:page>

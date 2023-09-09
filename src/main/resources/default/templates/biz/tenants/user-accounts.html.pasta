@@ -29,6 +29,6 @@
                   accounts="accounts"
                   paginationBaseUrl="@('/user-accounts')"
                   cardBaseUrl="@('/user-account')"
-                  enableCardActions="true"/>
+                  cardActionsType="edit"/>
     </t:sidebar>
 </t:page>

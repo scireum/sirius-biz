@@ -1,7 +1,7 @@
 <i:arg type="Page" name="accounts"/>
 <i:arg type="String" name="paginationBaseUrl"/>
 <i:arg type="String" name="cardBaseUrl"/>
-<i:arg type="boolean" name="enableCardActions"/>
+<i:arg type="String" name="cardActionsType"/>
 
 <t:emptyCheck data="@accounts">
     <t:datacards>
@@ -35,7 +35,7 @@
                                         permission="permission-manage-user-accounts"
                                         url="@apply('/user-account/%s', account.getIdAsString())"/>
                     </t:dropdownSection>
-                    <i:if test="enableCardActions">
+                    <i:if test="cardActionsType == 'edit'">
                         <i:if test="!account.getUserAccountData().isOwnUser()">
                             <t:dropdownSection
                                     permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
