@@ -716,8 +716,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * @return the raw identifier of the current user's database entity
      */
     protected String fetchRawCurrentUserId() {
-        String userId = UserContext.getCurrentUser().getUserId();
-        String prefix = Mixing.getNameForType(matchingTenants.getUserClass()) + '-';
+        String userId = getUser().getUserId();
+        String prefix = Mixing.getNameForType(getUserClass()) + '-';
         return userId.startsWith(prefix) ? userId.substring(prefix.length()) : userId;
     }
 }
