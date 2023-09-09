@@ -29,13 +29,14 @@
                     </div>
                 </i:block>
                 <i:block name="actions">
-                    <t:dropdownSection>
-                        <t:dropdownItem labelKey="TenantController.edit"
-                                        icon="fa-solid fa-pencil"
-                                        permission="permission-manage-user-accounts"
-                                        url="@apply('/user-account/%s', account.getIdAsString())"/>
-                    </t:dropdownSection>
                     <i:if test="cardActionsType == 'edit'">
+                        <t:dropdownSection>
+                            <t:dropdownItem labelKey="TenantController.edit"
+                                            icon="fa-solid fa-pencil"
+                                            permission="permission-manage-user-accounts"
+                                            url="@apply('/user-account/%s', account.getIdAsString())"/>
+                        </t:dropdownSection>
+
                         <i:if test="!account.getUserAccountData().isOwnUser()">
                             <t:dropdownSection
                                     permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
@@ -75,6 +76,23 @@
                                         url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
                             </t:dropdownSection>
                         </i:if>
+                    </i:if>
+
+                    <i:if test="cardActionsType == 'select'">
+                        <i:if test="!account.getUserAccountData().isOwnUser()">
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
+                                <t:dropdownItem labelKey="TenantController.select"
+                                                icon="fa-solid fa-user-secret"
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
+                        <t:dropdownSection>
+                            <t:dropdownItem labelKey="TenantController.edit"
+                                            icon="fa-solid fa-pencil"
+                                            permission="permission-manage-user-accounts"
+                                            url="@apply('/user-account/%s', account.getIdAsString())"/>
+                        </t:dropdownSection>
                     </i:if>
                 </i:block>
 
