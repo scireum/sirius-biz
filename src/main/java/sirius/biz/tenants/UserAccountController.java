@@ -192,25 +192,20 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         U userAccount = findForTenant(getUserClass(), accountId);
 
-        boolean requestHandled = prepareSave(webContext).withAfterCreateURI("/user-account/${id}")
-                                                        .withPreSaveHandler(isNew -> {
-                                                            if (isUserLockingHimself(userAccount)) {
-                                                                throw Exceptions.createHandled()
-                                                                                .withNLSKey(
-                                                                                        "UserAccountController.cannotLockSelf")
-                                                                                .handle();
-                                                            }
+        boolean requestHandled =
+                prepareSave(webContext).withAfterCreateURI("/user-account/${id}").withPreSaveHandler(isNew -> {
+                    if (isUserLockingHimself(userAccount)) {
+                        throw Exceptions.createHandled().withNLSKey("UserAccountController.cannotLockSelf").handle();
+                    }
 
-                                                            List<String> accessiblePermissions = getRoles();
-                                                            packages.loadAccessiblePermissions(webContext.getParameters(
-                                                                                                       "roles"),
-                                                                                               accessiblePermissions::contains,
-                                                                                               userAccount.getUserAccountData()
-                                                                                                          .getPermissions()
-                                                                                                          .getPermissions()
-                                                                                                          .modify());
-                                                        })
-                                                        .saveEntity(userAccount);
+                    List<String> accessiblePermissions = getRoles();
+                    packages.loadAccessiblePermissions(webContext.getParameters("roles"),
+                                                       accessiblePermissions::contains,
+                                                       userAccount.getUserAccountData()
+                                                                  .getPermissions()
+                                                                  .getPermissions()
+                                                                  .modify());
+                }).saveEntity(userAccount);
 
         if (!requestHandled) {
             validate(userAccount);
