@@ -84,6 +84,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     private static final String PARAM_EMAIL = "email";
     private static final String PARAM_REASON = "reason";
     private static final String LIST_ROUTE = "/user-accounts";
+    private static final String DETAIL_ROUTE_PREFIX = "/user-account/";
 
     @Part
     protected Mails mails;
@@ -369,7 +370,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
                 showSavedMessage();
 
-                webContext.respondWith().redirectToGet("/user-account/" + accountId);
+                webContext.respondWith().redirectToGet(DETAIL_ROUTE_PREFIX + accountId);
                 return;
             } catch (Exception exception) {
                 auditLog.neutral("AuditLog.passwordChangeFailed")
@@ -406,7 +407,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         generateNewPassword(userAccount);
         UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
 
-        webContext.respondWith().redirectToGet("/user-account/" + accountId);
+        webContext.respondWith().redirectToGet(DETAIL_ROUTE_PREFIX + accountId);
     }
 
     /**
@@ -457,7 +458,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
-        webContext.respondWith().redirectToGet("/user-account/" + accountId);
+        webContext.respondWith().redirectToGet(DETAIL_ROUTE_PREFIX + accountId);
     }
 
     private void generateNewPassword(U userAccount) {
