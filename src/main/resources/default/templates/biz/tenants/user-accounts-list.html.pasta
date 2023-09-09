@@ -87,12 +87,14 @@
                                                 url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                             </t:dropdownSection>
                         </i:if>
-                        <t:dropdownSection>
-                            <t:dropdownItem labelKey="TenantController.edit"
-                                            icon="fa-solid fa-pencil"
-                                            permission="permission-manage-user-accounts"
-                                            url="@apply('/user-account/%s', account.getIdAsString())"/>
-                        </t:dropdownSection>
+                        <i:if test="account.getUserAccountData().isOwnTenant()">
+                            <t:dropdownSection>
+                                <t:dropdownItem labelKey="TenantController.edit"
+                                                icon="fa-solid fa-pencil"
+                                                permission="permission-manage-user-accounts"
+                                                url="@apply('/user-account/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
                     </i:if>
                 </i:block>
 
