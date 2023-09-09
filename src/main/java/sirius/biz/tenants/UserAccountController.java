@@ -342,7 +342,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         generateNewPassword(userAccount);
         UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
 
-        webContext.respondWith().redirectToGet(LIST_ROUTE);
+        webContext.respondWith().redirectToGet("/user-account/" + accountId);
     }
 
     /**
@@ -393,7 +393,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
-        webContext.respondWith().redirectToGet(LIST_ROUTE);
+        webContext.respondWith().redirectToGet("/user-account/" + accountId);
     }
 
     private void generateNewPassword(U userAccount) {
