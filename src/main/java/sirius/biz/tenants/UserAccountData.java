@@ -37,6 +37,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
+import sirius.web.controller.SubScope;
 import sirius.web.mails.Mails;
 import sirius.web.security.MessageProvider;
 import sirius.web.security.UserContext;
@@ -386,6 +387,16 @@ public class UserAccountData extends Composite implements MessageProvider {
      */
     public boolean isOwnTenant() {
         return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().fetchValue(), getTenant());
+    }
+
+    /**
+     * Determines whether this user can be selected (spied on) by the current user. This requires the current user to
+     * belong to somebody else, and it requires either no sub-scopes or the {@link SubScope#SUB_SCOPE_UI} to be present.
+     *
+     * @return <tt>true</tt> if the current user can select this user, <tt>false</tt> otherwise
+     */
+    public boolean canSelect() {
+        return !isOwnUser() && (subScopes.isEmpty() || subScopes.contains(SubScope.SUB_SCOPE_UI));
     }
 
     /**
