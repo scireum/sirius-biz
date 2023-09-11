@@ -21,6 +21,7 @@ import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
+import sirius.web.controller.SubScope;
 import sirius.web.http.WebContext;
 
 /**
@@ -48,8 +49,16 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
 
     @Override
     protected BasePageHelper<MongoUserAccount, ?, ?, ?> getSelectableUsersAsPage() {
-        MongoQuery<MongoUserAccount> baseQuery =
-                mango.select(MongoUserAccount.class).ne(MongoUserAccount.ID, fetchRawCurrentUserId());
+        MongoQuery<MongoUserAccount> baseQuery = mango.select(MongoUserAccount.class)
+                                                      .ne(MongoUserAccount.ID, fetchRawCurrentUserId())
+                                                      .where(mango.filters()
+                                                                  .or(mango.filters()
+                                                                           .isEmptyList(UserAccount.USER_ACCOUNT_DATA.inner(
+                                                                                   UserAccountData.SUB_SCOPES)),
+                                                                      mango.filters()
+                                                                           .eq(UserAccount.USER_ACCOUNT_DATA.inner(
+                                                                                       UserAccountData.SUB_SCOPES),
+                                                                               SubScope.SUB_SCOPE_UI)));
 
         if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
             baseQuery = baseQuery.eq(UserAccount.TENANT, tenants.getRequiredTenant());

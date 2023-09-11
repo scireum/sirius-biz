@@ -23,6 +23,7 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
+import sirius.web.controller.SubScope;
 import sirius.web.http.WebContext;
 
 /**
@@ -61,6 +62,14 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
     protected BasePageHelper<SQLUserAccount, ?, ?, ?> getSelectableUsersAsPage() {
         SmartQuery<SQLUserAccount> baseQuery = oma.select(SQLUserAccount.class)
                                                   .ne(SQLUserAccount.ID, fetchRawCurrentUserId())
+                                                  .where(oma.filters()
+                                                            .or(oma.filters()
+                                                                   .isEmptyList(UserAccount.USER_ACCOUNT_DATA.inner(
+                                                                           UserAccountData.SUB_SCOPES)),
+                                                                oma.filters()
+                                                                   .eq(UserAccount.USER_ACCOUNT_DATA.inner(
+                                                                               UserAccountData.SUB_SCOPES),
+                                                                       SubScope.SUB_SCOPE_UI)))
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.LASTNAME))
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
