@@ -738,7 +738,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             return;
         }
 
-        if (user.getUserAccountData().isOwnUser()) {
+        if (!user.getUserAccountData().canSelect()) {
             UserContext.get()
                        .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
