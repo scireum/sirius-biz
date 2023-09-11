@@ -27,12 +27,14 @@
                 <i:if test="!account.isNew()">
                     <!--@ actions for other users -->
                     <i:if test="!account.getUserAccountData().isOwnUser()">
-                        <t:dropdownSection
-                                permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
-                            <t:dropdownItem labelKey="TenantController.select"
-                                            icon="fa fa-building"
-                                            url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
-                        </t:dropdownSection>
+                        <i:if test="account.getUserAccountData().canSelect()">
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
+                                <t:dropdownItem labelKey="TenantController.select"
+                                                icon="fa fa-building"
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
                         <t:dropdownSection>
                             <t:dropdownItem
                                     labelKey="Model.password.set"
