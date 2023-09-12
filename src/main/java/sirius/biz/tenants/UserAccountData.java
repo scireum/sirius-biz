@@ -37,6 +37,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
+import sirius.web.controller.SubScope;
 import sirius.web.mails.Mails;
 import sirius.web.security.MessageProvider;
 import sirius.web.security.UserContext;
@@ -370,12 +371,41 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     /**
+     * Determines whether this user object describes the {@linkplain UserContext#getCurrentUser() current user}. In this
+     * case, certain operations like spying or deleting are not allowed.
+     *
+     * @return <tt>true</tt> if this is the current user, <tt>false</tt> otherwise
+     */
+    public boolean isOwnUser() {
+        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class), userObject);
+    }
+
+    /**
+     * Determines whether this user object belongs to the same tenant as the {@linkplain UserContext#getCurrentUser() current user}.
+     *
+     * @return <tt>true</tt> if this user belongs to the current user's tenant, <tt>false</tt> otherwise
+     */
+    public boolean isOwnTenant() {
+        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().fetchValue(), getTenant());
+    }
+
+    /**
+     * Determines whether this user can be selected (spied on) by the current user. This requires the current user to
+     * belong to somebody else, and it requires either no sub-scopes or the {@link SubScope#SUB_SCOPE_UI} to be present.
+     *
+     * @return <tt>true</tt> if the current user can select this user, <tt>false</tt> otherwise
+     */
+    public boolean canSelect() {
+        return !isOwnUser() && (subScopes.isEmpty() || subScopes.contains(SubScope.SUB_SCOPE_UI));
+    }
+
+    /**
      * Determines if the current user is able to generate the password for <tt>this</tt> user.
      *
      * @return <tt>true</tt> if the current user can generate a password, <tt>false</tt> otherwise
      */
     public boolean isPasswordGenerationPossible() {
-        return !Objects.equals(UserContext.getCurrentUser().as(UserAccount.class), userObject);
+        return !isOwnUser();
     }
 
     /**

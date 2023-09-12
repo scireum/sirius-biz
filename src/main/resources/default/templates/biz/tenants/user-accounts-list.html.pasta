@@ -1,7 +1,7 @@
 <i:arg type="Page" name="accounts"/>
 <i:arg type="String" name="paginationBaseUrl"/>
 <i:arg type="String" name="cardBaseUrl"/>
-<i:arg type="boolean" name="enableCardActions"/>
+<i:arg type="String" name="cardActionsType"/>
 
 <t:emptyCheck data="@accounts">
     <t:datacards>
@@ -29,14 +29,29 @@
                     </div>
                 </i:block>
                 <i:block name="actions">
-                    <i:if test="enableCardActions">
+                    <i:if test="cardActionsType == 'edit'">
                         <t:dropdownSection>
-                            <t:dropdownItem labelKey="TenantController.select"
-                                            icon="fa-solid fa-user-secret"
-                                            url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            <t:dropdownItem labelKey="TenantController.edit"
+                                            icon="fa-solid fa-pencil"
+                                            permission="permission-manage-user-accounts"
+                                            url="@apply('/user-account/%s', account.getIdAsString())"/>
                         </t:dropdownSection>
-                        <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+
+                        <!--@ actions for other users -->
+                        <i:if test="!account.getUserAccountData().isOwnUser()">
+                            <i:if test="account.getUserAccountData().canSelect()">
+                                <t:dropdownSection
+                                        permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
+                                    <t:dropdownItem labelKey="TenantController.select"
+                                                    icon="fa-solid fa-user-secret"
+                                                    url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                                </t:dropdownSection>
+                            </i:if>
                             <t:dropdownSection>
+                                <t:dropdownItem
+                                        labelKey="Model.password.set"
+                                        icon="fa-solid fa-key"
+                                        url="@accounts.linkToCurrentPage(apply('/user-account/%s/password', account.getIdAsString()))"/>
                                 <t:dropdownItem
                                         labelKey="LoginData.password.generate"
                                         icon="fa-regular fa-envelope"
@@ -48,34 +63,55 @@
                                             url="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-and-send-password', account.getIdAsString()))"/>
                                 </i:if>
                             </t:dropdownSection>
-                        </i:if>
-                        <t:dropdownSection>
-                            <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
-                                <t:dropdownItem
-                                        labelKey="LoginData.unlock"
-                                        icon="fa-solid fa-unlock"
-                                        url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
-                                <i:else>
-                                    <t:dropdownItem
-                                            labelKey="LoginData.lock"
-                                            icon="fa-solid fa-lock"
-                                            url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
-                                </i:else>
-                            </i:if>
-                        </t:dropdownSection>
-                        <t:permission permission="permission-delete-user-accounts">
                             <t:dropdownSection>
-                                <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                                <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                                    <t:dropdownItem
+                                            labelKey="LoginData.unlock"
+                                            icon="fa-solid fa-unlock"
+                                            url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
+                                    <i:else>
+                                        <t:dropdownItem
+                                                labelKey="LoginData.lock"
+                                                icon="fa-solid fa-lock"
+                                                url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
+                                    </i:else>
+                                </i:if>
                             </t:dropdownSection>
-                        </t:permission>
-                        <i:else>
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.UserAccountController.PERMISSION_DELETE_USER_ACCOUNTS">
+                                <t:dropdownDeleteItem
+                                        url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                            </t:dropdownSection>
+
+                            <!--@ actions for own user -->
+                            <i:else>
+                                <t:dropdownSection>
+                                    <t:dropdownItem
+                                            labelKey="Model.password.set"
+                                            icon="fa-solid fa-key"
+                                            url="@accounts.linkToCurrentPage(apply('/user-account/%s/password', account.getIdAsString()))"/>
+                                </t:dropdownSection>
+                            </i:else>
+                        </i:if>
+                    </i:if>
+
+                    <i:if test="cardActionsType == 'select'">
+                        <i:if test="account.getUserAccountData().canSelect()">
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
+                                <t:dropdownItem labelKey="TenantController.select"
+                                                icon="fa-solid fa-user-secret"
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
+                        <i:if test="account.getUserAccountData().isOwnTenant()">
                             <t:dropdownSection>
                                 <t:dropdownItem labelKey="TenantController.edit"
                                                 icon="fa-solid fa-pencil"
                                                 permission="permission-manage-user-accounts"
                                                 url="@apply('/user-account/%s', account.getIdAsString())"/>
                             </t:dropdownSection>
-                        </i:else>
+                        </i:if>
                     </i:if>
                 </i:block>
 

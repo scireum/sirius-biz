@@ -25,13 +25,21 @@
 
             <i:block name="additionalActions">
                 <i:if test="!account.isNew()">
-                    <t:dropdownSection>
-                        <t:dropdownItem labelKey="TenantController.select"
-                                        icon="fa fa-building"
-                                        url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
-                    </t:dropdownSection>
-                    <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+                    <!--@ actions for other users -->
+                    <i:if test="!account.getUserAccountData().isOwnUser()">
+                        <i:if test="account.getUserAccountData().canSelect()">
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
+                                <t:dropdownItem labelKey="TenantController.select"
+                                                icon="fa fa-building"
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
                         <t:dropdownSection>
+                            <t:dropdownItem
+                                    labelKey="Model.password.set"
+                                    icon="fa-solid fa-key"
+                                    url="@apply('/user-account/%s/password', account.getIdAsString())"/>
                             <t:dropdownItem
                                     labelKey="LoginData.password.generate"
                                     icon="fa-regular fa-envelope"
@@ -43,30 +51,40 @@
                                         url="@apply('/user-account/%s/generate-and-send-password', account.getIdAsString())"/>
                             </i:if>
                         </t:dropdownSection>
-                    </i:if>
-                    <t:dropdownSection>
-                        <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
-                            <t:dropdownItem
-                                    labelKey="LoginData.unlock"
-                                    icon="fa-solid fa-unlock"
-                                    url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
-                            <i:else>
+                        <t:dropdownSection>
+                            <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
                                 <t:dropdownItem
-                                        labelKey="LoginData.lock"
-                                        icon="fa-solid fa-lock"
-                                        url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
-                            </i:else>
-                        </i:if>
-                    </t:dropdownSection>
+                                        labelKey="LoginData.unlock"
+                                        icon="fa-solid fa-unlock"
+                                        url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
+                                <i:else>
+                                    <t:dropdownItem
+                                            labelKey="LoginData.lock"
+                                            icon="fa-solid fa-lock"
+                                            url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
+                                </i:else>
+                            </i:if>
+                        </t:dropdownSection>
 
+                        <!--@ actions for own user -->
+                        <i:else>
+                            <t:dropdownSection>
+                                <t:dropdownItem
+                                        labelKey="Model.password.set"
+                                        icon="fa-solid fa-key"
+                                        url="@apply('/user-account/%s/password', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:else>
+                    </i:if>
                     <t:dropdownSection>
                         <i:extensions target="user-account" account="account" point="additionalActions"/>
                     </t:dropdownSection>
-                    <t:permission permission="permission-delete-user-accounts">
-                        <t:dropdownSection>
+                    <i:if test="!account.getUserAccountData().isOwnUser()">
+                        <t:dropdownSection
+                                permission="@sirius.biz.tenants.UserAccountController.PERMISSION_DELETE_USER_ACCOUNTS">
                             <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
                         </t:dropdownSection>
-                    </t:permission>
+                    </i:if>
                 </i:if>
             </i:block>
 
