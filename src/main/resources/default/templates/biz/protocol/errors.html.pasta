@@ -47,29 +47,29 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <i:for type="sirius.biz.protocol.StoredIncident" var="i" items="errors.getItems()">
+                        <i:for type="sirius.biz.protocol.StoredIncident" var="incident" items="errors.getItems()">
                             <tr>
                                 <td>
                                     <div class="row">
                                         <div class="col-md-4 text-small">
                                             <div>
-                                                <a href="/system/error/@i.getId()">@toUserString(i.getLastOccurrence())</a>
+                                                <a href="/system/error/@incident.getId()">@toUserString(incident.getLastOccurrence())</a>
                                             </div>
-                                            <div class="text-muted">@toUserString(i.getFirstOccurrence())</div>
+                                            <div class="text-muted">@toUserString(incident.getFirstOccurrence())</div>
                                         </div>
                                         <div class="col-md-4 text-small text-muted">
-                                            <div>@i.getNumberOfOccurrences()</div>
-                                            <div>@i.getCategory()</div>
+                                            <div>@incident.getNumberOfOccurrences()</div>
+                                            <div>@incident.getCategory()</div>
                                         </div>
                                         <div class="col-md-4 text-small text-muted">
-                                            <div>@i.getUser()</div>
-                                            <div>@i.getNode()</div>
+                                            <div>@incident.getUser()</div>
+                                            <div>@incident.getNode()</div>
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 error-code">
                                             <pre class="mb-0 pt-2"
-                                                 style="white-space: break-spaces; overflow-wrap: anywhere;">@i.getMessage()</pre>
+                                                 style="white-space: break-spaces; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;">@incident.getMessage()</pre>
                                         </div>
                                     </div>
                                 </td>
