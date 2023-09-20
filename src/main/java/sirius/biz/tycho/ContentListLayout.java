@@ -56,11 +56,12 @@ public class ContentListLayout {
         Optional<UserAccount<?, ?>> user =
                 UserContext.getCurrentUser().tryAs((Class<UserAccount<?, ?>>) (Class<?>) UserAccount.class);
         if (webContext.hasParameter(PARAM_DISPLAY_MODE)) {
-            DisplayMode displayMode = webContext.get(PARAM_DISPLAY_MODE).getEnum(DisplayMode.class).orElse(DEFAULT_DISPLAY_MODE);
+            DisplayMode displayMode =
+                    webContext.get(PARAM_DISPLAY_MODE).getEnum(DisplayMode.class).orElse(DEFAULT_DISPLAY_MODE);
             updateUsersPreference(user, userPreferencesKey, displayMode);
             return displayMode;
         }
-        return determineLayoutByUsersPreference(user, userPreferencesKey, DEFAULT_DISPLAY_MODE);
+        return determineLayoutByUsersPreference(user, userPreferencesKey);
     }
 
     private static void updateUsersPreference(Optional<UserAccount<?, ?>> user,
@@ -68,19 +69,16 @@ public class ContentListLayout {
                                               DisplayMode displayMode) {
         user.ifPresent(userAccount -> {
             if (displayMode == DEFAULT_DISPLAY_MODE) {
-                user.get().updatePreference(userPreferencesKey, null);
+                userAccount.updatePreference(userPreferencesKey, null);
             } else {
-                user.get().updatePreference(userPreferencesKey, displayMode.name());
+                userAccount.updatePreference(userPreferencesKey, displayMode.name());
             }
         });
     }
 
     private static DisplayMode determineLayoutByUsersPreference(Optional<UserAccount<?, ?>> user,
-                                                                String userPreferencesKey,
-                                                                DisplayMode fallback) {
-        if (user.isPresent()) {
-            return user.get().readPreference(userPreferencesKey).getEnum(DisplayMode.class).orElse(fallback);
-        }
-        return fallback;
+                                                                String userPreferencesKey) {
+        return user.flatMap(userAccount -> userAccount.readPreference(userPreferencesKey).getEnum(DisplayMode.class))
+                   .orElse(DEFAULT_DISPLAY_MODE);
     }
 }
