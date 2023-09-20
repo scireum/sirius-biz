@@ -9,8 +9,11 @@
 package sirius.biz.tycho;
 
 import sirius.biz.tenants.UserAccount;
+import sirius.kernel.commons.Explain;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
+
+import java.util.Optional;
 
 /**
  * Contains the {@link DisplayMode} options for lists and handles the user preference.
@@ -47,20 +50,38 @@ public class ContentListLayout {
      * @param userPreferencesKey the user preference key to read
      * @return the {@link DisplayMode} to use
      */
+    @SuppressWarnings("unchecked")
+    @Explain("tryAs raises a generics cast error in this case.")
     public static DisplayMode determineLayout(WebContext webContext, String userPreferencesKey) {
-        UserAccount<?, ?> user = UserContext.getCurrentUser().as(UserAccount.class);
+        Optional<UserAccount<?, ?>> user =
+                UserContext.getCurrentUser().tryAs((Class<UserAccount<?, ?>>) (Class<?>) UserAccount.class);
+        DisplayMode displayMode = DEFAULT_DISPLAY_MODE;
         if (webContext.hasParameter(PARAM_DISPLAY_MODE)) {
-            DisplayMode displayMode =
-                    webContext.get(PARAM_DISPLAY_MODE).getEnum(DisplayMode.class).orElse(DEFAULT_DISPLAY_MODE);
-            if (displayMode == DEFAULT_DISPLAY_MODE) {
-                user.updatePreference(userPreferencesKey, null);
-            } else {
-                user.updatePreference(userPreferencesKey, displayMode.name());
-            }
-
+            displayMode = webContext.get(PARAM_DISPLAY_MODE).getEnum(DisplayMode.class).orElse(DEFAULT_DISPLAY_MODE);
+            updateUsersPreference(user, userPreferencesKey, displayMode);
             return displayMode;
         }
+        return determineLayoutByUsersPreference(user, userPreferencesKey, displayMode);
+    }
 
-        return user.readPreference(userPreferencesKey).getEnum(DisplayMode.class).orElse(DEFAULT_DISPLAY_MODE);
+    private static void updateUsersPreference(Optional<UserAccount<?, ?>> user,
+                                              String userPreferencesKey,
+                                              DisplayMode displayMode) {
+        user.ifPresent(userAccount -> {
+            if (displayMode == DEFAULT_DISPLAY_MODE) {
+                user.get().updatePreference(userPreferencesKey, null);
+            } else {
+                user.get().updatePreference(userPreferencesKey, displayMode.name());
+            }
+        });
+    }
+
+    private static DisplayMode determineLayoutByUsersPreference(Optional<UserAccount<?, ?>> user,
+                                                                String userPreferencesKey,
+                                                                DisplayMode fallback) {
+        if (user.isPresent()) {
+            return user.get().readPreference(userPreferencesKey).getEnum(DisplayMode.class).orElse(fallback);
+        }
+        return fallback;
     }
 }
