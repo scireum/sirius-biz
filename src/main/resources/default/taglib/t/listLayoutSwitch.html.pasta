@@ -5,7 +5,7 @@
      role="group">
     <a class="btn d-inline-flex flex-row align-items-center @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.CARDS) { btn-primary } else { btn-outline-secondary } list-link-cards-js"
        href="#">
-        <i class="fa-solid fa-grid fa-fw"></i>
+        <i class="fa-solid fa-grip fa-fw"></i>
     </a>
     <a class="btn d-inline-flex flex-row align-items-center @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.LIST) { btn-primary } else { btn-outline-secondary } list-link-list-js"
        href="#">
