@@ -55,13 +55,12 @@ public class ContentListLayout {
     public static DisplayMode determineLayout(WebContext webContext, String userPreferencesKey) {
         Optional<UserAccount<?, ?>> user =
                 UserContext.getCurrentUser().tryAs((Class<UserAccount<?, ?>>) (Class<?>) UserAccount.class);
-        DisplayMode displayMode = DEFAULT_DISPLAY_MODE;
         if (webContext.hasParameter(PARAM_DISPLAY_MODE)) {
-            displayMode = webContext.get(PARAM_DISPLAY_MODE).getEnum(DisplayMode.class).orElse(DEFAULT_DISPLAY_MODE);
+            DisplayMode displayMode = webContext.get(PARAM_DISPLAY_MODE).getEnum(DisplayMode.class).orElse(DEFAULT_DISPLAY_MODE);
             updateUsersPreference(user, userPreferencesKey, displayMode);
             return displayMode;
         }
-        return determineLayoutByUsersPreference(user, userPreferencesKey, displayMode);
+        return determineLayoutByUsersPreference(user, userPreferencesKey, DEFAULT_DISPLAY_MODE);
     }
 
     private static void updateUsersPreference(Optional<UserAccount<?, ?>> user,
