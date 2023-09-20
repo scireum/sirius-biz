@@ -1,0 +1,32 @@
+<i:arg name="displayMode" type="sirius.biz.tycho.ContentListLayout$DisplayMode" description="Sets the initial state of the layout"/>
+<i:arg name="class" type="String" default=""/>
+
+<div class="btn-group @class"
+     role="group">
+    <a class="btn d-inline-flex flex-row align-items-center @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.CARDS) { btn-primary } else { btn-outline-secondary } list-link-cards"
+       href="#">
+        <i class="fa-solid fa-grid fa-fw"></i>
+    </a>
+    <a class="btn d-inline-flex flex-row align-items-center @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.LIST) { btn-primary } else { btn-outline-secondary } list-link-list"
+       href="#">
+        <i class="fa-solid fa-list fa-fw"></i>
+    </a>
+</div>
+
+<script>
+    sirius.ready(() => {
+        function extendUrl(currentLocation, key, value) {
+            const url = new URL(currentLocation);
+            url.searchParams.delete(key);
+            url.searchParams.append(key, value);
+            return url.toString();
+        }
+
+        document.querySelectorAll("a.list-link-cards").forEach(_link => {
+            _link.href = extendUrl(window.location.href, "display-mode", "@sirius.biz.tycho.ContentListLayout.DisplayMode.CARDS.name()");
+        });
+        document.querySelectorAll("a.list-link-list").forEach(_link => {
+            _link.href = extendUrl(window.location.href, "display-mode", "@sirius.biz.tycho.ContentListLayout.DisplayMode.LIST.name()");
+        });
+    });
+</script>
