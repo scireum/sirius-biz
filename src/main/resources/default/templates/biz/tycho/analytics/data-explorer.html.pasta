@@ -48,7 +48,7 @@
         </div>
     </div>
 
-    <!--@ This is the UI which renders the chart(s) -->
+    <!--@ This is the UI that renders the chart(s) -->
     <div id="chartsView">
         <div class="card mb-4">
             <div class="card-body">
@@ -370,7 +370,6 @@
 
             const newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
             history.pushState({dataExplorer: true}, '', newRelativePathQuery);
-            // appendHistoryUrl(newRelativePathQuery, true);
 
             updateAllReferences();
         }
