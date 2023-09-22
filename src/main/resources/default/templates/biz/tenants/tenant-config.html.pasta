@@ -3,7 +3,7 @@
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="config">
     <t:codeEditor id="editor" mode="json">@tenant.getTenantData().getConfigString()</t:codeEditor>
-    <t:formBar backButton="false"/>
+    <t:formBar backButton="false" singleClick="false"/>
 
     <script type="text/javascript">
         sirius.ready(function () {

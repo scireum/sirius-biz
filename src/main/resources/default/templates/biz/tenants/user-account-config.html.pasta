@@ -2,7 +2,7 @@
 
 <i:invoke template="/templates/biz/tenants/user-account.html.pasta" account="account" page="config">
     <t:codeEditor id="editor" mode="json">@account.getUserAccountData().getPermissions().getConfigString()</t:codeEditor>
-    <t:formBar backButton="false"/>
+    <t:formBar backButton="false" singleClick="false"/>
 
     <script type="text/javascript">
         sirius.ready(function () {
