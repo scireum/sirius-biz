@@ -48,7 +48,7 @@
         </div>
     </div>
 
-    <!--@ This is the UI which renders the chart(s) -->
+    <!--@ This is the UI that renders the chart(s) -->
     <div id="chartsView">
         <div class="card mb-4">
             <div class="card-body">
@@ -133,7 +133,7 @@
         }
 
         // Adds or updates the chart for the given identifier.
-        function addChart(identifier) {
+        function addChart(identifier, silent) {
             $('#select-entity-modal').modal('hide');
 
             const _existingChart = findChart(identifier);
@@ -158,7 +158,9 @@
             _charts.appendChild(_chart);
 
             hideTypeSelector();
-            updateUrl();
+            if (!silent) {
+                updateUrl();
+            }
 
             return recompute(_chart);
         }
@@ -268,19 +270,33 @@
                 _chart = _chart.parentNode;
             }
 
-            if (_chart !== null) {
-                _chart.parentNode.removeChild(_chart);
+            closeChart(_chart);
+            updateUrl();
+        }
 
-                if (document.querySelectorAll('.chart-js').length === 0) {
-                    openTypeSelector();
+        function closeChart(_chart) {
+            if (_chart === null) {
+                return;
+            }
+            _chart.parentNode.removeChild(_chart);
+            if (document.querySelectorAll('.chart-js').length === 0) {
+                openTypeSelector();
+            }
+        }
+
+        function closeAllCharts(silent, filterPredicate) {
+            document.querySelectorAll('.chart-js').forEach(function (_chart) {
+                if (!filterPredicate || filterPredicate(_chart)) {
+                    closeChart(_chart);
                 }
-
+            });
+            if (!silent) {
                 updateUrl();
             }
         }
 
         // Used to call the callback for each element in a list, but while awaiting the completion of each returned
-        // promise. This is mainly done so that whe don't overload a server by recomputing all charts at once.
+        // promise. This is mainly done so that we don't overload a server by recomputing all charts at once.
         function performForEach(index, list, asyncCallback) {
             if (index < list.length) {
                 asyncCallback(list[index]).then(function () {
@@ -353,7 +369,7 @@
             }
 
             const newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
-            history.replaceState(null, '', newRelativePathQuery);
+            history.pushState({dataExplorer: true}, '', newRelativePathQuery);
 
             updateAllReferences();
         }
@@ -402,7 +418,33 @@
             const params = new URLSearchParams(window.location.search);
             changeRange(params.get('range'));
             changePeriod(params.get('period'));
-            performForEach(0, params.getAll('chart'), addChart);
+            performForEach(0, params.getAll('chart'), function (identifier) {
+                return addChart(identifier, true)
+            });
+
+            window.addEventListener('popstate', function (event) {
+                let state = history.state;
+
+                if ((state === null) || (state === undefined)) state = event.state;
+                if ((state === null) || (state === undefined)) state = window.event.state;
+
+                if (state !== null && state.dataExplorer !== null) {
+                    const params = new URLSearchParams(window.location.search);
+                    changeRange(params.get('range'));
+                    changePeriod(params.get('period'));
+                    const chartsInUrl = params.getAll('chart');
+                    if (chartsInUrl.length === 0) {
+                        closeAllCharts(true);
+                    } else {
+                        closeAllCharts(true, function (_chart) {
+                            return chartsInUrl.indexOf(_chart.dataset.identifier) === -1;
+                        });
+                        performForEach(0, chartsInUrl, function (identifier) {
+                            return addChart(identifier, true)
+                        });
+                    }
+                }
+            });
         });
     </script>
 
