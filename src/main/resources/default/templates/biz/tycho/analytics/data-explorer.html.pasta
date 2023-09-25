@@ -305,12 +305,12 @@
             }
         }
 
-        function refresh() {
-            updateUrl();
+        function refresh(silent) {
+            updateUrl(silent);
             performForEach(0, document.querySelectorAll('.chart-js'), recompute);
         }
 
-        function changeRange(newRange) {
+        function changeRange(newRange, silent) {
             if (range !== newRange && sirius.isFilled(newRange)) {
                 range = newRange;
 
@@ -324,11 +324,11 @@
                     }
                 });
 
-                refresh();
+                refresh(silent);
             }
         }
 
-        function changePeriod(newPeriod) {
+        function changePeriod(newPeriod, silent) {
             if (comparisonPeriod !== newPeriod && sirius.isFilled(newPeriod)) {
                 comparisonPeriod = newPeriod;
 
@@ -342,12 +342,12 @@
                     }
                 });
 
-                refresh();
+                refresh(silent);
             }
         }
 
         // Updates the query string based on the currently visible charts, so that a link can be bookmarked.
-        function updateUrl() {
+        function updateUrl(silent) {
             const searchParams = new URLSearchParams();
             if (range !== "last12Months") {
                 searchParams.set("range", range);
@@ -369,7 +369,10 @@
             }
 
             const newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
-            history.pushState({dataExplorer: true}, '', newRelativePathQuery);
+            if (!silent) {
+                console.log('PUSHING STATE: ', newRelativePathQuery);
+                history.pushState({dataExplorer: true}, '', newRelativePathQuery);
+            }
 
             updateAllReferences();
         }
@@ -416,8 +419,8 @@
             openTypeSelector();
 
             const params = new URLSearchParams(window.location.search);
-            changeRange(params.get('range'));
-            changePeriod(params.get('period'));
+            changeRange(params.get('range') || 'last12Months', true);
+            changePeriod(params.get('period') || 'lastYear', true);
             performForEach(0, params.getAll('chart'), function (identifier) {
                 return addChart(identifier, true)
             });
@@ -430,8 +433,8 @@
 
                 if (state !== null && state.dataExplorer !== null) {
                     const params = new URLSearchParams(window.location.search);
-                    changeRange(params.get('range'));
-                    changePeriod(params.get('period'));
+                    changeRange(params.get('range') || 'last12Months', true);
+                    changePeriod(params.get('period') || 'lastYear', true);
                     const chartsInUrl = params.getAll('chart');
                     if (chartsInUrl.length === 0) {
                         closeAllCharts(true);
@@ -440,7 +443,7 @@
                             return chartsInUrl.indexOf(_chart.dataset.identifier) === -1;
                         });
                         performForEach(0, chartsInUrl, function (identifier) {
-                            return addChart(identifier, true)
+                            return addChart(identifier, true);
                         });
                     }
                 }
