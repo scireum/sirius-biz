@@ -144,21 +144,25 @@
             sirius.getJSON('/jobs/preset/load', {preset: id}).then(function (response) {
                 // Fill a temporary form and submit all parameters to the server
                 // so that these are validated and rendered properly....
-                var _form = sirius.querySelector('#loadForm');
+                const _form = sirius.querySelector('#loadForm');
                 for (var i = 0; i < response.params.length; i++) {
-                    if (Array.isArray(response.params[i].value)) {
-                        for (var j = 0; j < response.params[i].value.length; j++) {
-                            var _field = document.createElement("input");
-                            _field.name = response.params[i].name;
+                    const param = response.params[i];
+
+                    if (Array.isArray(param.value)) {
+                        for (var j = 0; j < param.value.length; j++) {
+                            const value = param.value[j];
+
+                            const _field = document.createElement("input");
+                            _field.name = param.name;
                             _field.type = "hidden";
-                            _field.value = response.params[i].value[j];
+                            _field.value = value;
                             _form.appendChild(_field);
                         }
                     } else {
                         const _field = document.createElement("input");
                         _field.type = "hidden";
-                        _field.name = response.params[i].name;
-                        _field.value = response.params[i].value;
+                        _field.name = param.name;
+                        _field.value = param.value;
                         _form.appendChild(_field);
                     }
                 }
