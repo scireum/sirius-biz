@@ -21,7 +21,9 @@ import sirius.web.services.JSONStructuredOutput;
 
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Provides the database independent part for the controller which is responsible for managing job presets.
@@ -44,6 +46,7 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     private static final String RESPONSE_VALUE = "value";
 
     private static final String LIST_DELIMITER = "|";
+    private static final String DELIMITER_PATTERN = Pattern.quote(LIST_DELIMITER);
 
     /**
      * Returns the entity class being used by this controller.
@@ -125,7 +128,15 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
             preset.getJobConfigData().getConfigMap().forEach((name, value) -> {
                 out.beginObject(RESPONSE_PARAM);
                 out.property(RESPONSE_NAME, name);
-                out.property(RESPONSE_VALUE, value);
+
+                if (value.contains(LIST_DELIMITER)) {
+                    out.beginArray(RESPONSE_VALUE);
+                    Stream.of(value.split(DELIMITER_PATTERN)).forEach(entry -> out.property(null, entry));
+                    out.endArray();
+                } else {
+                    out.property(RESPONSE_VALUE, value);
+                }
+
                 out.endObject();
             });
         }

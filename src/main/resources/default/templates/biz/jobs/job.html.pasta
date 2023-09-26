@@ -146,11 +146,21 @@
                 // so that these are validated and rendered properly....
                 var _form = sirius.querySelector('#loadForm');
                 for (var i = 0; i < response.params.length; i++) {
-                    const _field = document.createElement("input");
-                    _field.type = "hidden";
-                    _field.name = response.params[i].name;
-                    _field.value = response.params[i].value;
-                    _form.appendChild(_field);
+                    if (Array.isArray(response.params[i].value)) {
+                        for (var j = 0; j < response.params[i].value.length; j++) {
+                            var _field = document.createElement("input");
+                            _field.name = response.params[i].name;
+                            _field.type = "hidden";
+                            _field.value = response.params[i].value[j];
+                            _form.appendChild(_field);
+                        }
+                    } else {
+                        const _field = document.createElement("input");
+                        _field.type = "hidden";
+                        _field.name = response.params[i].name;
+                        _field.value = response.params[i].value;
+                        _form.appendChild(_field);
+                    }
                 }
             }).then(function () {
                 sirius.querySelector('#loadForm').submit();
