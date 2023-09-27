@@ -3,9 +3,11 @@
 
 <i:invoke template="/templates/biz/jobs/params/paramMultiSelect.html.pasta" param="param" context="context"
           optional="!param.isRequired()">
-    <i:for var="entry" type="Tuple" items="@param.as(sirius.biz.jobs.params.MultiSelectParameter.class).getValues()">
-        <option value="@entry.getFirst()" @selected="entry.getFirst() == context.get(param.getName())">
-            @entry.getSecond()
+    <i:for var="entry"
+           type="sirius.biz.jobs.params.MultiSelectParameter$MultiSelectValue"
+           items="@param.as(sirius.biz.jobs.params.MultiSelectParameter.class).getValues(context)">
+        <option value="@entry.name()" @selected="entry.selected()">
+            @entry.label()
         </option>
     </i:for>
 </i:invoke>

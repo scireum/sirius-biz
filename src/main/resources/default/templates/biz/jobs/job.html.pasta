@@ -125,9 +125,14 @@
         }
 
         function createPreset() {
-            sirius.postJSON('/jobs/preset/create', getFormData(sirius.querySelector(".edit-form"))).then(function (response) {
-                if (!response.success) {
-                    addErrorMessage(response.message);
+            fetch("/jobs/preset/create", {
+                method: "post",
+                body: new FormData(sirius.querySelector(".edit-form"))
+            }).then(function (response) {
+                return response.json();
+            }).then(function (json) {
+                if (!json.success) {
+                    addErrorMessage(json.message);
                 } else {
                     sirius.querySelector('#updateOnly').value = true;
                     sirius.querySelector('.edit-form').submit();
@@ -139,13 +144,27 @@
             sirius.getJSON('/jobs/preset/load', {preset: id}).then(function (response) {
                 // Fill a temporary form and submit all parameters to the server
                 // so that these are validated and rendered properly....
-                var _form = sirius.querySelector('#loadForm');
+                const _form = sirius.querySelector('#loadForm');
                 for (var i = 0; i < response.params.length; i++) {
-                    const _field = document.createElement("input");
-                    _field.type = "hidden";
-                    _field.name = response.params[i].name;
-                    _field.value = response.params[i].value;
-                    _form.appendChild(_field);
+                    const param = response.params[i];
+
+                    if (Array.isArray(param.value)) {
+                        for (var j = 0; j < param.value.length; j++) {
+                            const value = param.value[j];
+
+                            const _field = document.createElement("input");
+                            _field.name = param.name;
+                            _field.type = "hidden";
+                            _field.value = value;
+                            _form.appendChild(_field);
+                        }
+                    } else {
+                        const _field = document.createElement("input");
+                        _field.type = "hidden";
+                        _field.name = param.name;
+                        _field.value = param.value;
+                        _form.appendChild(_field);
+                    }
                 }
             }).then(function () {
                 sirius.querySelector('#loadForm').submit();

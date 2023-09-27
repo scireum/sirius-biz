@@ -7,6 +7,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,11 +88,14 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
      * @return list of {@linkplain Tuple entries} with the key as first and display value as second tuple items.
      */
     @Override
-    public List<Tuple<String, String>> getValues() {
-        return fetchEntriesMap().keySet()
-                                .stream()
-                                .map(entry -> Tuple.create(entry, NLS.smartGet(fetchEntriesMap().get(entry))))
-                                .toList();
+    public List<MultiSelectValue> getValues(Map<String, String> context) {
+        return fetchEntriesMap().keySet().stream().map(entry -> {
+            String contextValue = context.get(getName());
+            boolean selected =
+                    contextValue != null && Arrays.asList(contextValue.split(Pattern.quote(DELIMITER))).contains(entry);
+
+            return new MultiSelectValue(entry, NLS.smartGet(fetchEntriesMap().get(entry)), selected);
+        }).toList();
     }
 
     @Override
