@@ -13,6 +13,7 @@ import sirius.biz.tenants.Tenants;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
@@ -47,9 +48,14 @@ public class TenantSmartValueProvider implements SmartValueProvider {
             return;
         }
 
-        valueCollector.accept(new SmartValue("fa fa-exchange-alt",
-                                             tenant.getTenantData().getName(),
+        valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
+                                             NLS.get("TenantController.select"),
                                              "/tenants/select/" + tenant.getIdAsString(),
+                                             null));
+
+        valueCollector.accept(new SmartValue("fa-solid fa-pen-to-square",
+                                             NLS.get("TenantController.edit"),
+                                             "/tenant/" + tenant.getIdAsString(),
                                              null));
     }
 
