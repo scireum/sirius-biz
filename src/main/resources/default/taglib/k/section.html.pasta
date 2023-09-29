@@ -28,7 +28,7 @@
                     sirius.ready(function () {
                         document.getElementById('@copyAnchorId').addEventListener('click', function () {
                             const signedArticleId = document.getElementById('urlField').value;
-                            copyToClipboard(signedArticleId + '#@anchor')
+                            sirius.copyToClipboard(signedArticleId + '#@anchor')
 
                             clearMessages();
                             addSuccessMessage('@i18n("KnowledgeBase.urlClipboardSuccess")');
