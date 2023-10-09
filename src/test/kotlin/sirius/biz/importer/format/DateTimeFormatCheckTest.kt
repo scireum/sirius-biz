@@ -8,11 +8,7 @@
 
 package sirius.biz.importer.format
 
-import sirius.kernel.BaseSpecification
-import sirius.kernel.commons.Value
-import spock.lang.Specification
-
-class DateTimeFormatCheckSpec extends BaseSpecification {
+class DateTimeFormatCheckTest extends BaseSpecification {
 
     def "valid dates throws no exception"() {
         when:
@@ -49,7 +45,7 @@ class DateTimeFormatCheckSpec extends BaseSpecification {
         new DateTimeFormatCheck("ddMMuuuu").perform(Value.of(date))
         then:
         thrown IllegalArgumentException
-        where:
+                where:
         date << [1092019, "1092019", "TEST", "01.09.2019"]
     }
 
