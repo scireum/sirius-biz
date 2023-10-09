@@ -8,12 +8,7 @@
 
 package sirius.biz.importer.format
 
-import sirius.kernel.BaseSpecification
-import sirius.kernel.commons.Amount
-import sirius.kernel.commons.NumberFormat
-import sirius.kernel.commons.Value
-
-class AmountRangeCheckSpec extends BaseSpecification {
+class AmountRangeCheckTest extends BaseSpecification {
 
     def "values below the inclusive lower limit are correctly marked as invalid"() {
         when:
@@ -60,7 +55,7 @@ class AmountRangeCheckSpec extends BaseSpecification {
     def "values above the inclusive upper limit are correctly marked as invalid"() {
         when:
         new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withUpperLimitInclusive(Amount.ONE_HUNDRED).
-                perform(Value.of(101))
+        perform(Value.of(101))
         then:
         thrown IllegalArgumentException
     }
@@ -68,7 +63,7 @@ class AmountRangeCheckSpec extends BaseSpecification {
     def "values equal to the inclusive upper limit are correctly marked as valid"() {
         when:
         new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withUpperLimitInclusive(Amount.ONE_HUNDRED).
-                perform(Value.of(100))
+        perform(Value.of(100))
         then:
         noExceptionThrown()
     }
@@ -76,7 +71,7 @@ class AmountRangeCheckSpec extends BaseSpecification {
     def "values below the inclusive upper limit are correctly marked as valid"() {
         when:
         new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withUpperLimitInclusive(Amount.ONE_HUNDRED).
-                perform(Value.of(99))
+        perform(Value.of(99))
         then:
         noExceptionThrown()
     }
@@ -84,7 +79,7 @@ class AmountRangeCheckSpec extends BaseSpecification {
     def "values above the exclusive upper limit are correctly marked as invalid"() {
         when:
         new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withUpperLimitExclusive(Amount.ONE_HUNDRED).
-                perform(Value.of(101))
+        perform(Value.of(101))
         then:
         thrown IllegalArgumentException
     }
@@ -92,7 +87,7 @@ class AmountRangeCheckSpec extends BaseSpecification {
     def "values equal to the exclusive upper limit are correctly marked as invalid"() {
         when:
         new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withUpperLimitExclusive(Amount.ONE_HUNDRED).
-                perform(Value.of(100))
+        perform(Value.of(100))
         then:
         thrown IllegalArgumentException
     }
@@ -100,7 +95,7 @@ class AmountRangeCheckSpec extends BaseSpecification {
     def "values below the exclusive upper limit are correctly marked as valid"() {
         when:
         new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withUpperLimitExclusive(Amount.ONE_HUNDRED).
-                perform(Value.of(99))
+        perform(Value.of(99))
         then:
         noExceptionThrown()
     }
@@ -108,8 +103,8 @@ class AmountRangeCheckSpec extends BaseSpecification {
     def "empty values are ignored"() {
         when:
         new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withLowerLimitInclusive(Amount.ONE).
-                withUpperLimitExclusive(Amount.ONE_HUNDRED).
-                perform(Value.of(Amount.NOTHING))
+        withUpperLimitExclusive(Amount.ONE_HUNDRED).
+        perform(Value.of(Amount.NOTHING))
         then:
         noExceptionThrown()
     }
