@@ -8,55 +8,67 @@
 
 package sirius.biz.importer.format
 
-class DateTimeFormatCheckTest extends BaseSpecification {
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import sirius.kernel.commons.Value
 
-    def "valid dates throws no exception"() {
-        when:
-        new DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("23.10.2019"))
-        new DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("01.05.1854"))
-        new DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("24.12.9000"))
-        then:
-        noExceptionThrown()
+class DateTimeFormatCheckTest {
+
+    @Test
+    fun `valid dates throws no exception`() {
+        DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("23.10.2019"))
+        DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("01.05.1854"))
+        DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("24.12.9000"))
     }
 
-    def "invalid date throws exception"() {
-        when:
-        new DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("31.09.2019"))
-        then:
-        thrown(IllegalArgumentException)
+    @Test
+    fun `invalid date throws exception`() {
+        assertThrows<IllegalArgumentException> {
+            DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("31.09.2019"))
+        }
     }
 
-    def "date with to little numbers is invalid"() {
-        when:
-        new DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("4.4.19"))
-        then:
-        thrown(IllegalArgumentException)
+    @Test
+    fun `date with too few numbers is invalid`() {
+        assertThrows<IllegalArgumentException> {
+            DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("4.4.19"))
+        }
     }
 
-    def "date with to much numbers is invalid"() {
-        when:
-        new DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("4.011.19"))
-        then:
-        thrown(IllegalArgumentException)
+    @Test
+    fun `date with too many numbers is invalid`() {
+        assertThrows<IllegalArgumentException> {
+            DateTimeFormatCheck("dd.MM.uuuu").perform(Value.of("4.011.19"))
+        }
     }
 
-    def "dates not matching the provided format are correctly marked as invalid"() {
-        when:
-        new DateTimeFormatCheck("ddMMuuuu").perform(Value.of(date))
-        then:
-        thrown IllegalArgumentException
-                where:
-        date << [1092019, "1092019", "TEST", "01.09.2019"]
+    @CsvSource(
+            delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        format   | date
+        ddMMuuuu | 1092019
+        ddMMuuuu | '1092019'
+        ddMMuuuu | 'TEST'
+        ddMMuuuu | '01.09.2019'"""
+    )
+    @ParameterizedTest
+    fun `dates not matching the provided format are correctly marked as invalid`(format: String, date: String) {
+        assertThrows<IllegalArgumentException> {
+            DateTimeFormatCheck(format).perform(Value.of(date))
+        }
     }
 
-    def "dates matching the provided format are correctly marked as valid"() {
-        expect:
-        new DateTimeFormatCheck(format).perform(Value.of(date))
-        where:
-        format       | date
-        "ddMMuuuu"   | 11092019
-        "ddMMuuuu"   | "01092019"
-        "ddMMuuuu"   | "11092019"
-        "dd.MM.uuuu" | "01.09.2019"
+    @CsvSource(
+            delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        format     | date
+        ddMMuuuu   | 11092019
+        ddMMuuuu   | '01092019'
+        ddMMuuuu   | '11092019'
+        dd.MM.uuuu | '01.09.2019'"""
+    )
+    @ParameterizedTest
+    fun `dates matching the provided format are correctly marked as valid`(format: String, date: String) {
+        DateTimeFormatCheck(format).perform(Value.of(date))
     }
 }
