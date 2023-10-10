@@ -90,7 +90,7 @@ class ValueCheckTest {
     }
 
     @Test
-    fun `LenghCheck works as expected`() {
+    fun `LengthCheck works as expected`() {
         // Check with proper lengths work and perform an auto-trim
         LengthCheck(5).perform(Value.of("     55555"))
         LengthCheck(5).perform(Value.of("55555"))
