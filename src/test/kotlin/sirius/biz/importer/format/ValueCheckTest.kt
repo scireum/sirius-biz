@@ -8,11 +8,7 @@
 
 package sirius.biz.importer.format
 
-import sirius.kernel.BaseSpecification
-import sirius.kernel.commons.Value
-import spock.lang.Specification
-
-class ValueCheckSpec extends BaseSpecification {
+class ValueCheckTest extends BaseSpecification {
 
     def "amount scale check correctly marks non numeric values as invalid"() {
         when:
@@ -29,7 +25,7 @@ class ValueCheckSpec extends BaseSpecification {
         new AmountScaleCheck(5, 2).perform(Value.of(number))
         then:
         thrown IllegalArgumentException
-        where:
+                where:
         number << [1234, "1234", 123456, "123456", 1234.56, "1234.56"]
     }
 
@@ -38,7 +34,7 @@ class ValueCheckSpec extends BaseSpecification {
         new AmountScaleCheck(5, 2).perform(Value.of(number))
         then:
         thrown IllegalArgumentException
-        where:
+                where:
         number << [0.123, "0.123", 12.345, "12.345"]
     }
 
