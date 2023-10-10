@@ -8,13 +8,7 @@
 
 package sirius.biz.importer
 
-import sirius.biz.importer.format.FieldDefinition
-import sirius.biz.importer.format.ImportDictionary
-import sirius.kernel.BaseSpecification
-import sirius.kernel.commons.Tuple
-import sirius.kernel.commons.Values
-
-class ImportDictionarySpec extends BaseSpecification {
+class ImportDictionaryTest extends BaseSpecification {
 
     def "detectHeaderProblems detects a skipped column"() {
         when:
@@ -93,8 +87,8 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         def problems = new ArrayList()
         def problemDetected = dict.detectHeaderProblems(Values.of("XA", "B", "C", "D"), { problem, errorFlag ->
-            problems.add(Tuple.create(problem, errorFlag))
-        }, true)
+        problems.add(Tuple.create(problem, errorFlag))
+    }, true)
         then:
         problemDetected == false
         and:
@@ -128,5 +122,4 @@ class ImportDictionarySpec extends BaseSpecification {
         problems.get(0) == "Die Spalte 4 ('D') fehlt."
         problems.size() == 1
     }
-
 }
