@@ -8,262 +8,266 @@
 
 package sirius.biz.importer
 
-class ImporterTest extends BaseSpecification {
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.extension.ExtendWith
+import sirius.biz.tenants.Tenant
+import sirius.biz.tenants.TenantData
+import sirius.biz.tenants.TenantsHelper
+import sirius.biz.tenants.jdbc.SQLTenant
+import sirius.db.jdbc.OMA
+import sirius.kernel.SiriusExtension
+import sirius.kernel.di.std.Part
+import sirius.kernel.health.HandledException
+import java.time.Duration
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
-    @Part
-    private static OMA oma
+private const val i1 = 200
 
-            private Importer importer
+/**
+ * Tests the [Importer] class.
+ */
+@ExtendWith(SiriusExtension::class)
+class ImporterTest {
 
-    private static final long NON_EXISTENT_TENANT_ID = 100000L
-
-    def setupSpec() {
-        oma.getReadyFuture().await(Duration.ofSeconds(60))
+    @BeforeEach
+    fun setup() {
+        importer = Importer("ImporterTest")
     }
 
-    def setup() {
-        importer = new Importer("ImporterSpec")
-    }
-
-    def cleanup() {
+    @AfterEach
+    fun cleanup() {
         importer.close()
     }
 
-    def "find existent tenant with importer"() {
-        when:
-        SQLTenant tenant = TenantsHelper.getTestTenant()
-        and:
-        ImportContext context = ImportContext.create().set(SQLTenant.ID, tenant.getId())
-        then:
-        SQLTenant tenant1 = importer.findOrFail(SQLTenant.class, context)
-        and:
-        tenant.getId() == tenant1.getId()
-        and:
-        tenant.getTenantData().getName() == tenant1.getTenantData().getName()
+    @Test
+    fun `find existent tenant with importer`() {
+        val tenant = TenantsHelper.getTestTenant()
+        val context = ImportContext.create().set(SQLTenant.ID, tenant.id)
+        val tenant1 = importer.findOrFail(SQLTenant::class.java, context)
+        assertEquals(tenant.id, tenant1.id)
+        assertEquals(tenant.tenantData.name, tenant1.tenantData.name)
     }
 
-    def "fail on find non existent tenant with importer"() {
-        when:
-        ImportContext context = ImportContext.create().set(SQLTenant.ID, NON_EXISTENT_TENANT_ID)
-        and:
-        importer.findOrFail(SQLTenant.class, context)
-        then:
-        thrown HandledException.class
+    @Test
+    fun `fail on find non existent tenant with importer`() {
+        val context = ImportContext.create().set(SQLTenant.ID, NON_EXISTENT_TENANT_ID)
+        assertThrows<HandledException> {
+            importer.findOrFail(SQLTenant::class.java, context)
+        }
     }
 
-    def "find and load tenant with importer"() {
-        when:
-        SQLTenant tenant = TenantsHelper.getTestTenant()
-        String newTenantName = "Test1234"
-        and:
-        ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
-        and:
-        Tenant tenant1 = importer.findAndLoad(SQLTenant.class, context.set(SQLTenant.ID, tenant.getId()))
-        Tenant tenant2 = importer.findAndLoad(SQLTenant.class, context.set(SQLTenant.ID, NON_EXISTENT_TENANT_ID))
-        then:
-        tenant1.getTenantData().getName() == newTenantName
-        tenant1.getId() == tenant.getId()
-        and:
-        tenant2.getTenantData().getName() == newTenantName
-        tenant2.isNew()
-        and:
-        !oma.select(SQLTenant.class).eq(SQLTenant.ID, NON_EXISTENT_TENANT_ID).first().isPresent()
+    @Test
+    fun `find and load tenant with importer`() {
+        val tenant = TenantsHelper.getTestTenant()
+        val newTenantName = "Test1234"
+        val context = ImportContext.create().set(
+                SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName
+        )
+        val tenant1 = importer.findAndLoad(SQLTenant::class.java, context.set(SQLTenant.ID, tenant.id))
+        val tenant2 = importer.findAndLoad(SQLTenant::class.java, context.set(SQLTenant.ID, NON_EXISTENT_TENANT_ID))
+        assertEquals(tenant.id, tenant1.id)
+        assertEquals(newTenantName, tenant1.tenantData.name)
+        assertEquals(newTenantName, tenant2.tenantData.name)
+        assertTrue { tenant2.isNew }
+        assertFalse { oma.select(SQLTenant::class.java).eq(SQLTenant.ID, NON_EXISTENT_TENANT_ID).first().isPresent }
     }
 
-    def "findOrLoadAndCreate tenant with importer"() {
-        when:
-        String newTenantName = "Importer_Test123456471232"
-        and:
-        ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
-        and:
-        SQLTenant tenant = importer.findOrLoadAndCreate(SQLTenant.class, context)
-        then:
-        tenant.getTenantData().getName() == newTenantName
-        !tenant.isNew()
-        and:
-        oma.select(SQLTenant.class).eq(SQLTenant.ID, tenant.getId()).first().isPresent()
+    @Test
+    fun `findOrLoadAndCreate tenant with importer`() {
+        val newTenantName = "Importer_Test123456471232"
+        val context = ImportContext.create().set(
+                SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName
+        )
+        val tenant = importer.findOrLoadAndCreate(SQLTenant::class.java, context)
+        assertEquals(newTenantName, tenant.tenantData.name)
+        assertFalse { tenant.isNew }
+        assertTrue { oma.select(SQLTenant::class.java).eq(SQLTenant.ID, tenant.id).first().isPresent }
     }
 
-    def "load parent tenant entity ref with importer"() {
-        when:
-        String newTenantName = "Importer_Test_Load"
-        and:
-        SQLTenant tenant = TenantsHelper.getTestTenant()
-        and:
-        ImportContext context = ImportContext.create().
-        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
-        set(Tenant.PARENT, tenant)
-        and:
-        SQLTenant newTenant = importer.load(SQLTenant.class, context)
-        then:
-        newTenant.getParent().getId() == tenant.getId()
+    @Test
+    fun `load parent tenant entity ref with importer`() {
+        val newTenantName = "Importer_Test_Load"
+        val tenant = TenantsHelper.getTestTenant()
+        val context = ImportContext.create().set(
+                SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName
+        ).set(Tenant.PARENT, tenant)
+        val newTenant = importer.load(SQLTenant::class.java, context)
+        assertEquals(tenant.id, newTenant.parent.id)
     }
 
-    def "createOrUpdateNow creating tenant"() {
-        given:
-        String newTenantName = "Importer_createOrUpdateNow_Test"
-        and:
-        ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
-        when:
-        !oma.select(SQLTenant.class).
-        eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
-        first().
-        isPresent()
-                and:
-                SQLTenant tenant = importer.load(SQLTenant.class, context)
-                importer.createOrUpdateNow(tenant)
-                then:
-                !tenant.isNew()
-                        and:
-                        oma.select(SQLTenant.class).
-                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
-                first().
-                isPresent()
-    }
-
-    def "createOrUpdateNow updating tenant"() {
-        given:
-        String newTenantName = "Importer_createOrUpdateNow_Test2"
-        and:
-        ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
-        and:
-        SQLTenant tenant = importer.load(SQLTenant.class, context)
-        tenant = importer.createOrUpdateNow(tenant)
-        when:
-        context = ImportContext.create().
-        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
-        set(SQLTenant.ID, tenant.getId())
-        tenant = importer.tryFind(SQLTenant.class, context).orElse(null)
-        and:
-        tenant = importer.load(SQLTenant.class, context, tenant)
+    @Test
+    fun `createOrUpdateNow creating tenant`() {
+        val newTenantName = "Importer_createOrUpdateNow_Test"
+        val context = ImportContext.create().set(
+                SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName
+        )
+        assertFalse {
+            oma.select(
+                    SQLTenant::class.java
+            ).eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).first().isPresent
+        }
+        val tenant = importer.load(SQLTenant::class.java, context)
         importer.createOrUpdateNow(tenant)
-        then:
-        !oma.select(SQLTenant.class).
-        eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
-        first().
-        isPresent()
-                and:
-                oma.select(SQLTenant.class).
-        eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
-        first().
-        isPresent()
-                and:
-                oma.select(SQLTenant.class).
-        eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
-        queryFirst().
-        getId() == tenant.getId()
+        assertFalse { tenant.isNew }
+        assertTrue {
+            oma.select(SQLTenant::class.java).eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
+                    .first().isPresent
+        }
     }
 
-    def "createOrUpdate in batch inserting tenants"() {
-        given:
-        String basicTenantName = "Importer_batchInsert"
-        and:
-        long tenantCount = oma.select(SQLTenant.class).count()
-        when:
-        for (int i = 0; i < 200; i++) {
-        ImportContext context = ImportContext.create().
-        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
-        and:
-        SQLTenant tenant = importer.load(SQLTenant.class, context)
-        importer.createOrUpdateInBatch(tenant)
-    }
-        and:
-        importer.getContext().getBatchContext().tryCommit()
-        then:
-        tenantCount + 200 == oma.select(SQLTenant.class).count()
+    @Test
+    fun `createOrUpdateNow updating tenant`() {
+        val newTenantName = "Importer_createOrUpdateNow_Test2"
+        var context = ImportContext.create().set(
+                SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName
+        )
+        var tenant = importer.load(SQLTenant::class.java, context)
+        tenant = importer.createOrUpdateNow(tenant)
+        context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new")
+                .set(SQLTenant.ID, tenant.getId())
+        tenant = importer.tryFind(SQLTenant::class.java, context).orElse(null)
+        tenant = importer.load(SQLTenant::class.java, context, tenant)
+        importer.createOrUpdateNow(tenant)
+        assertFalse {
+            oma.select(
+                    SQLTenant::class.java
+            ).eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).first().isPresent
+        }
+        assertTrue {
+            oma.select(SQLTenant::class.java).eq(
+                    SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new"
+            ).first().isPresent
+        }
+        assertEquals(
+                tenant.id, oma.select(SQLTenant::class.java).eq(
+                SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new"
+        ).queryFirst().id
+        )
     }
 
-    def "createOrUpdate in batch updating tenants"() {
-        given:
-        String basicTenantName = "Importer_batchUpdate"
-        and:
-        long tenantCount = oma.select(SQLTenant.class).count()
-                and:
-        for (int i = 0; i < 200; i++) {
-        ImportContext context = ImportContext.create().
-        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
-        SQLTenant tenant = importer.load(SQLTenant.class, context)
-        importer.createOrUpdateInBatch(tenant)
-    }
-        importer.getContext().getBatchContext().tryCommit()
-        when:
-        oma.select(SQLTenant.class).
-        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains(basicTenantName).build()).
-        iterateAll { tenant ->
-            tenant.getTenantData().setName(tenant.getTenantData().getName() + "AFTERUPDATE")
+    @Test
+    fun `createOrUpdate in batch inserting tenants`() {
+        val basicTenantName = "Importer_batchInsert"
+        val tenantCountBefore = oma.select(SQLTenant::class.java).count()
+        val tenantsToCreate = 200
+
+        for (index in 0 until tenantsToCreate) {
+            val context = ImportContext.create().set(
+                    SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + index
+            )
+            val tenant = importer.load(SQLTenant::class.java, context)
             importer.createOrUpdateInBatch(tenant)
         }
-                importer.getContext().getBatchContext().tryCommit()
-                then:
-                oma.select(SQLTenant.class).
-        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains("AFTERUPDATE").build()).
-        count() == 200
+        importer.getContext().getBatchContext().tryCommit()
+
+        assertEquals(tenantCountBefore + tenantsToCreate, oma.select(SQLTenant::class.java).count())
     }
 
-    def "deleteNow"() {
-        given:
-        String basicTenantName = "Importer_delete"
-        and:
-        for (int i = 0; i < 10; i++) {
-        ImportContext context = ImportContext.create().
-        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
-        SQLTenant tenant = importer.load(SQLTenant.class, context)
-        importer.createOrUpdateInBatch(tenant)
-    }
+    @Test
+    fun `createOrUpdate in batch updating tenants`() {
+        val basicTenantName = "Importer_batchUpdate"
+        val tenantsToUpdate: Long = 200
+
+        for (index in 0 until tenantsToUpdate) {
+            val context = ImportContext.create().set(
+                    SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + index
+            )
+            val tenant = importer.load(SQLTenant::class.java, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
         importer.getContext().getBatchContext().tryCommit()
-        and:
-        oma.select(SQLTenant.class).
-        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-        startsWith(basicTenantName).
-        build()).
-        count() == 10
-                when:
-        oma.select(SQLTenant.class).
-        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-        startsWith(basicTenantName).
-        build()).
-        iterateAll() { entity ->
+
+        oma.select(SQLTenant::class.java).where(
+                OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains(basicTenantName).build()
+        ).iterateAll { tenant ->
+            tenant.tenantData.name += "AFTERUPDATE"
+            importer.createOrUpdateInBatch(tenant)
+        }
+        importer.getContext().getBatchContext().tryCommit()
+
+        assertEquals(
+                tenantsToUpdate, oma.select(SQLTenant::class.java).where(
+                OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains("AFTERUPDATE").build()
+        ).count()
+        )
+    }
+
+    @Test
+    fun `deleteNow is deleting tenants as expected`() {
+        val basicTenantName = "Importer_delete"
+        val tenantsToDelete: Long = 10
+
+        // Create the tenants that should be deleted
+        for (i in 0 until tenantsToDelete) {
+            val context = ImportContext.create().set(
+                    SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i
+            )
+            val tenant = importer.load(SQLTenant::class.java, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
+        importer.getContext().getBatchContext().tryCommit()
+
+        val tenantNameConstraint =
+                OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).startsWith(basicTenantName).build()
+        // Check that all tenants were created properly
+        assertEquals(tenantsToDelete, oma.select(SQLTenant::class.java).where(tenantNameConstraint).count())
+
+        // Delete the tenants via the importer
+        oma.select(SQLTenant::class.java).where(tenantNameConstraint).iterateAll { entity ->
             importer.deleteNow(entity)
         }
-                then:
-                oma.select(SQLTenant.class).
-        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-        startsWith(basicTenantName).
-        build()).
-        count() == 0
+
+        // Check that no tenants remain
+        assertEquals(0, oma.select(SQLTenant::class.java).where(tenantNameConstraint).count())
     }
 
-    def "deleteInBatch"() {
-        given:
-        String basicTenantName = "Importer_batchDelete"
-        and:
-        for (int i = 0; i < 200; i++) {
-        ImportContext context = ImportContext.create().
-        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
-        Tenant tenant = importer.load(SQLTenant.class, context)
-        importer.createOrUpdateInBatch(tenant)
-    }
+    @Test
+    fun `deleteInBatch is deleting tenants as expected`() {
+        val basicTenantName = "Importer_batchDelete"
+        val tenantsToDelete: Long = 200
+
+        // Create the tenants that should be deleted
+        for (i in 0 until tenantsToDelete) {
+            val context = ImportContext.create().set(
+                    SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i
+            )
+            val tenant = importer.load(SQLTenant::class.java, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
         importer.getContext().getBatchContext().tryCommit()
-        and:
-        oma.select(SQLTenant.class).
-        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-        startsWith(basicTenantName).
-        build()).count() == 200
-                when:
-        oma.select(SQLTenant.class).
-        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-        startsWith(basicTenantName).
-        build()).
-        iterateAll() { entity ->
+
+        val tenantNameConstraint =
+                OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).startsWith(basicTenantName).build()
+        // Check that all tenants were created properly
+        assertEquals(200, oma.select(SQLTenant::class.java).where(tenantNameConstraint).count())
+
+        // Delete the tenants via the importer
+        oma.select(SQLTenant::class.java).where(
+                tenantNameConstraint
+        ).iterateAll { entity ->
             importer.deleteInBatch(entity)
         }
-                and:
-                importer.getContext().getBatchContext().tryCommit()
-                then:
-                oma.select(SQLTenant.class).
-        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-        startsWith(basicTenantName).
-        build()).
-        count() == 0
+        importer.getContext().getBatchContext().tryCommit()
+
+        // Check that no tenants remain
+        assertEquals(0, oma.select(SQLTenant::class.java).where(tenantNameConstraint).count())
+    }
+
+    companion object {
+        private const val NON_EXISTENT_TENANT_ID = 100000L
+
+        @Part
+        @JvmStatic
+        private lateinit var oma: OMA
+
+        private lateinit var importer: Importer
+
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            oma.readyFuture.await(Duration.ofSeconds(60))
+        }
     }
 }
