@@ -1,22 +1,19 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
 package sirius.biz.importer
 
-import sirius.biz.tenants.Tenant
-import sirius.biz.tenants.TenantData
-import sirius.biz.tenants.TenantsHelper
-import sirius.biz.tenants.jdbc.SQLTenant
-import sirius.db.jdbc.OMA
-import sirius.kernel.BaseSpecification
-import sirius.kernel.di.std.Part
-import sirius.kernel.health.HandledException
-
-import java.time.Duration
-
-class ImporterSpec extends BaseSpecification {
+class ImporterTest extends BaseSpecification {
 
     @Part
     private static OMA oma
 
-    private Importer importer
+            private Importer importer
 
     private static final long NON_EXISTENT_TENANT_ID = 100000L
 
@@ -94,8 +91,8 @@ class ImporterSpec extends BaseSpecification {
         SQLTenant tenant = TenantsHelper.getTestTenant()
         and:
         ImportContext context = ImportContext.create().
-                set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
-                set(Tenant.PARENT, tenant)
+        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
+        set(Tenant.PARENT, tenant)
         and:
         SQLTenant newTenant = importer.load(SQLTenant.class, context)
         then:
@@ -109,16 +106,16 @@ class ImporterSpec extends BaseSpecification {
         ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
         when:
         !oma.select(SQLTenant.class).
-                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
-                first().
-                isPresent()
-        and:
-        SQLTenant tenant = importer.load(SQLTenant.class, context)
-        importer.createOrUpdateNow(tenant)
-        then:
-        !tenant.isNew()
-        and:
-        oma.select(SQLTenant.class).
+        eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
+        first().
+        isPresent()
+                and:
+                SQLTenant tenant = importer.load(SQLTenant.class, context)
+                importer.createOrUpdateNow(tenant)
+                then:
+                !tenant.isNew()
+                        and:
+                        oma.select(SQLTenant.class).
                 eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
                 first().
                 isPresent()
@@ -134,27 +131,27 @@ class ImporterSpec extends BaseSpecification {
         tenant = importer.createOrUpdateNow(tenant)
         when:
         context = ImportContext.create().
-                set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
-                set(SQLTenant.ID, tenant.getId())
+        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
+        set(SQLTenant.ID, tenant.getId())
         tenant = importer.tryFind(SQLTenant.class, context).orElse(null)
         and:
         tenant = importer.load(SQLTenant.class, context, tenant)
         importer.createOrUpdateNow(tenant)
         then:
         !oma.select(SQLTenant.class).
-                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
-                first().
-                isPresent()
-        and:
-        oma.select(SQLTenant.class).
-                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
-                first().
-                isPresent()
-        and:
-        oma.select(SQLTenant.class).
-                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
-                queryFirst().
-                getId() == tenant.getId()
+        eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
+        first().
+        isPresent()
+                and:
+                oma.select(SQLTenant.class).
+        eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
+        first().
+        isPresent()
+                and:
+                oma.select(SQLTenant.class).
+        eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
+        queryFirst().
+        getId() == tenant.getId()
     }
 
     def "createOrUpdate in batch inserting tenants"() {
@@ -164,12 +161,12 @@ class ImporterSpec extends BaseSpecification {
         long tenantCount = oma.select(SQLTenant.class).count()
         when:
         for (int i = 0; i < 200; i++) {
-            ImportContext context = ImportContext.create().
-                    set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
-            and:
-            SQLTenant tenant = importer.load(SQLTenant.class, context)
-            importer.createOrUpdateInBatch(tenant)
-        }
+        ImportContext context = ImportContext.create().
+        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
+        and:
+        SQLTenant tenant = importer.load(SQLTenant.class, context)
+        importer.createOrUpdateInBatch(tenant)
+    }
         and:
         importer.getContext().getBatchContext().tryCommit()
         then:
@@ -181,26 +178,26 @@ class ImporterSpec extends BaseSpecification {
         String basicTenantName = "Importer_batchUpdate"
         and:
         long tenantCount = oma.select(SQLTenant.class).count()
-        and:
+                and:
         for (int i = 0; i < 200; i++) {
-            ImportContext context = ImportContext.create().
-                    set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
-            SQLTenant tenant = importer.load(SQLTenant.class, context)
-            importer.createOrUpdateInBatch(tenant)
-        }
+        ImportContext context = ImportContext.create().
+        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
+        SQLTenant tenant = importer.load(SQLTenant.class, context)
+        importer.createOrUpdateInBatch(tenant)
+    }
         importer.getContext().getBatchContext().tryCommit()
         when:
         oma.select(SQLTenant.class).
-                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains(basicTenantName).build()).
-                iterateAll { tenant ->
-                    tenant.getTenantData().setName(tenant.getTenantData().getName() + "AFTERUPDATE")
-                    importer.createOrUpdateInBatch(tenant)
-                }
-        importer.getContext().getBatchContext().tryCommit()
-        then:
-        oma.select(SQLTenant.class).
-                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains("AFTERUPDATE").build()).
-                count() == 200
+        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains(basicTenantName).build()).
+        iterateAll { tenant ->
+            tenant.getTenantData().setName(tenant.getTenantData().getName() + "AFTERUPDATE")
+            importer.createOrUpdateInBatch(tenant)
+        }
+                importer.getContext().getBatchContext().tryCommit()
+                then:
+                oma.select(SQLTenant.class).
+        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains("AFTERUPDATE").build()).
+        count() == 200
     }
 
     def "deleteNow"() {
@@ -208,32 +205,32 @@ class ImporterSpec extends BaseSpecification {
         String basicTenantName = "Importer_delete"
         and:
         for (int i = 0; i < 10; i++) {
-            ImportContext context = ImportContext.create().
-                    set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
-            SQLTenant tenant = importer.load(SQLTenant.class, context)
-            importer.createOrUpdateInBatch(tenant)
-        }
+        ImportContext context = ImportContext.create().
+        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
+        SQLTenant tenant = importer.load(SQLTenant.class, context)
+        importer.createOrUpdateInBatch(tenant)
+    }
         importer.getContext().getBatchContext().tryCommit()
         and:
         oma.select(SQLTenant.class).
-                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-                              startsWith(basicTenantName).
-                              build()).
-                count() == 10
-        when:
+        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+        startsWith(basicTenantName).
+        build()).
+        count() == 10
+                when:
         oma.select(SQLTenant.class).
-                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-                              startsWith(basicTenantName).
-                              build()).
-                iterateAll() { entity ->
-                    importer.deleteNow(entity)
-                }
-        then:
-        oma.select(SQLTenant.class).
-                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-                              startsWith(basicTenantName).
-                              build()).
-                count() == 0
+        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+        startsWith(basicTenantName).
+        build()).
+        iterateAll() { entity ->
+            importer.deleteNow(entity)
+        }
+                then:
+                oma.select(SQLTenant.class).
+        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+        startsWith(basicTenantName).
+        build()).
+        count() == 0
     }
 
     def "deleteInBatch"() {
@@ -241,32 +238,32 @@ class ImporterSpec extends BaseSpecification {
         String basicTenantName = "Importer_batchDelete"
         and:
         for (int i = 0; i < 200; i++) {
-            ImportContext context = ImportContext.create().
-                    set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
-            Tenant tenant = importer.load(SQLTenant.class, context)
-            importer.createOrUpdateInBatch(tenant)
+        ImportContext context = ImportContext.create().
+        set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
+        Tenant tenant = importer.load(SQLTenant.class, context)
+        importer.createOrUpdateInBatch(tenant)
+    }
+        importer.getContext().getBatchContext().tryCommit()
+        and:
+        oma.select(SQLTenant.class).
+        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+        startsWith(basicTenantName).
+        build()).count() == 200
+                when:
+        oma.select(SQLTenant.class).
+        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+        startsWith(basicTenantName).
+        build()).
+        iterateAll() { entity ->
+            importer.deleteInBatch(entity)
         }
-        importer.getContext().getBatchContext().tryCommit()
-        and:
-        oma.select(SQLTenant.class).
-                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-                              startsWith(basicTenantName).
-                              build()).count() == 200
-        when:
-        oma.select(SQLTenant.class).
-                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-                              startsWith(basicTenantName).
-                              build()).
-                iterateAll() { entity ->
-                    importer.deleteInBatch(entity)
-                }
-        and:
-        importer.getContext().getBatchContext().tryCommit()
-        then:
-        oma.select(SQLTenant.class).
-                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
-                              startsWith(basicTenantName).
-                              build()).
-                count() == 0
+                and:
+                importer.getContext().getBatchContext().tryCommit()
+                then:
+                oma.select(SQLTenant.class).
+        where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+        startsWith(basicTenantName).
+        build()).
+        count() == 0
     }
 }
