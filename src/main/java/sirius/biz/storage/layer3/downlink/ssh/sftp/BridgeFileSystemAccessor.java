@@ -22,6 +22,7 @@ import java.nio.channels.Channel;
 import java.nio.channels.FileLock;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.DirectoryStream;
+import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
@@ -75,7 +76,8 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
     public DirectoryStream<Path> openDirectory(SftpSubsystemProxy subsystem,
                                                DirectoryHandle dirHandle,
                                                Path dir,
-                                               String handle) throws IOException {
+                                               String handle,
+                                               LinkOption... linkOptions) throws IOException {
         return new BridgeDirectoryStream(((BridgePath) dir).getVirtualFile(), (BridgeFileSystem) dir.getFileSystem());
     }
 }
