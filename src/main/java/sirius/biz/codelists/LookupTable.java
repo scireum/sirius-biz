@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +61,7 @@ public abstract class LookupTable {
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
     private final String mappingsField;
 
-    enum CodeCase {
+    protected enum CodeCase {
         LOWER, UPPER, VERBATIM
     }
 
@@ -426,6 +427,19 @@ public abstract class LookupTable {
      */
     public String forceNormalize(String code) {
         return normalize(code).orElseGet(() -> normalizeCodeValue(code));
+    }
+
+    /**
+     * Provides a comparator which sorts codes by the occurrence order within the list.
+     *
+     * @param field the field to sort by. This can be any numeric field. Note that the YAML loader for Jupiter can
+     *              generate such fields when specifying a <tt>rowNumber</tt>.
+     *              See: <a href="https://docs.rs/jupiter/latest/jupiter/idb/idb_yaml_loader/index.html">YAML Loader</a>
+     * @return a comparator to sort codes by their occurrence order
+     */
+    public Comparator<String> comparator(String field) {
+        return Comparator.<String, Integer>comparing(code -> fetchFieldValue(code, field).asInt(100))
+                         .thenComparing(this::normalizeCodeValue);
     }
 
     /**
