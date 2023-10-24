@@ -48,12 +48,14 @@ import sirius.web.util.LinkBuilder;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Base class for all controllers which operate on entities.
@@ -645,6 +647,65 @@ public class BizController extends BasicController {
         }
 
         UserContext.handle(exception);
+    }
+
+    /**
+     * Redirects the given {@linkplain WebContext request} to the referring location if the <em>path</em> matches the
+     * given {@code pattern} and the <em>host</em> is the same we are running on. Else, the request is forwarded to
+     * the given {@code fallback} location.
+     * <p>
+     * This method is primarily intended for routes serving Tycho actions that can be called from both, an overview and
+     * a details page. Query parameters are preserved.
+     *
+     * @param webContext the current request
+     * @param pattern    the pattern to look for in the path of the request's {@code Referer} header, see
+     *                   {@linkplain #createPatternForOverviewAndDetailRoutes(String, String) this helper method} for
+     *                   easily constructing a pattern
+     * @param fallback   the fallback location
+     * @see #createPatternForOverviewAndDetailRoutes(String, String)
+     */
+    protected void redirectToSaneReferer(final WebContext webContext, Pattern pattern, String fallback) {
+        String referer = webContext.getRequest().headers().get("Referer");
+        if (Strings.isEmpty(referer)) {
+            webContext.respondWith().redirectToGet(fallback);
+            return;
+        }
+
+        URI baseUri = URI.create(baseUrl);
+        URI refererUri = URI.create(referer);
+        String refererPath = refererUri.getPath();
+        if (!Strings.areEqual(refererUri.getHost(), baseUri.getHost())
+            || Strings.isEmpty(refererPath)
+            || !pattern.matcher(refererPath).matches()) {
+            webContext.respondWith().redirectToGet(fallback);
+            return;
+        }
+
+        String target = refererUri.toString();
+
+        String query = webContext.getQueryString();
+        if (Strings.isFilled(query)) {
+            target += (target.contains("?") ? "&" : "?") + query;
+        }
+
+        webContext.respondWith().redirectToGet(target);
+    }
+
+    /**
+     * Creates a pattern which matches overview and detail page routes.
+     * <p>
+     * We often have the combination of an overview page and detail pages in the backend that allow to edit entities of
+     * some sort, for instance {@code /entities} and {@code /entity/123}. In order to match both routes, particulalry
+     * when checking {@linkplain #redirectToSaneReferer(WebContext, Pattern, String) a request's referer}, this method
+     * constructs a pattern that matches all respective URLs.
+     *
+     * @param overviewRoute     the name of the route which serves the overview page, for instance {@code /entities}
+     * @param detailRoutePrefix the prefix of the route which serves the detail page, for instance {@code /entity/}
+     * @return a pattern which matches both the given overview and detail routes
+     * @see #redirectToSaneReferer(WebContext, Pattern, String)
+     */
+    protected static Pattern createPatternForOverviewAndDetailRoutes(String overviewRoute, String detailRoutePrefix) {
+        return Pattern.compile("^(" + Pattern.quote(detailRoutePrefix) + "\\w+|" + Pattern.quote(overviewRoute) + ")$");
     }
 
     /**
