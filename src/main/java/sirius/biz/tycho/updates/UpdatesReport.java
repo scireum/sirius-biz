@@ -24,7 +24,7 @@ import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +105,7 @@ public class UpdatesReport extends ReportJobFactory {
 
     private boolean isURL(String guid) {
         try {
-            new URL(guid);
+            URI.create(guid).toURL();
             return true;
         } catch (MalformedURLException e) {
             return false;

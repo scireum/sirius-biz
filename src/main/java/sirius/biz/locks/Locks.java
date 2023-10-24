@@ -68,7 +68,7 @@ public class Locks implements MetricProvider {
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
     public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout) {
-        Long currentThreadId = Thread.currentThread().getId();
+        Long currentThreadId = Thread.currentThread().threadId();
         if (acquireLockLocally(lockName, currentThreadId)) {
             return true;
         }
@@ -93,7 +93,7 @@ public class Locks implements MetricProvider {
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
     public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout, @Nonnull Duration lockTimeout) {
-        Long currentThreadId = Thread.currentThread().getId();
+        Long currentThreadId = Thread.currentThread().threadId();
         if (acquireLockLocally(lockName, currentThreadId)) {
             return true;
         }
@@ -117,7 +117,7 @@ public class Locks implements MetricProvider {
      * @return a transfer function which is invoked by the target thread to which the lock should be transferred
      */
     public Runnable initiateLockTransfer(@Nonnull String lockName) {
-        Long currentThreadId = Thread.currentThread().getId();
+        Long currentThreadId = Thread.currentThread().threadId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
         if (localLockInfo == null || !Objects.equals(currentThreadId, localLockInfo.getFirst())) {
@@ -136,7 +136,7 @@ public class Locks implements MetricProvider {
 
     private void transferLockToCurrentThread(String lockName, Long ownerThreadId) {
         Thread currentThread = Thread.currentThread();
-        Long currentThreadId = currentThread.getId();
+        Long currentThreadId = currentThread.threadId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
         if (localLockInfo == null || (!Objects.equals(ownerThreadId, localLockInfo.getFirst()) && !Objects.equals(
@@ -164,7 +164,7 @@ public class Locks implements MetricProvider {
         return Thread.getAllStackTraces()
                      .keySet()
                      .stream()
-                     .collect(Collectors.toMap(Thread::getId, Function.identity()));
+                     .collect(Collectors.toMap(Thread::threadId, Function.identity()));
     }
 
     private boolean acquireLockLocally(String lockName, Long currentThreadId) {
@@ -229,7 +229,7 @@ public class Locks implements MetricProvider {
      * @return <tt>true</tt> if the lock is currently active, <tt>false</tt> otherwise
      */
     public boolean isLockedByCurrentThread(@Nonnull String lock) {
-        Long currentThreadId = Thread.currentThread().getId();
+        Long currentThreadId = Thread.currentThread().threadId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lock);
 
         return localLockInfo != null && Objects.equals(currentThreadId, localLockInfo.getFirst());
@@ -268,7 +268,7 @@ public class Locks implements MetricProvider {
      * should be globally unlocked.
      */
     private boolean unlockLocally(String lock) {
-        Long currentThreadId = Thread.currentThread().getId();
+        Long currentThreadId = Thread.currentThread().threadId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lock);
 
         if (localLockInfo == null) {
