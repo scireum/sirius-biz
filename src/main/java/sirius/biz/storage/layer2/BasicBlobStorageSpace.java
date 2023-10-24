@@ -53,6 +53,7 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.Normalizer;
@@ -1991,7 +1992,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                + blobKey;
 
         try {
-            return Optional.of(new URL(conversionUrl));
+            return Optional.of(URI.create(conversionUrl).toURL());
         } catch (MalformedURLException e) {
             throw Exceptions.handle(e);
         }

@@ -227,7 +227,7 @@ public class Scripting implements InterconnectHandler {
         logInTranscript(jobNumber,
                         Strings.apply("Starting execution on %s (Thread Id: %s / Thread Name: %s)",
                                       CallContext.getNodeName(),
-                                      Thread.currentThread().getId(),
+                                      Thread.currentThread().threadId(),
                                       Thread.currentThread().getName()));
         try {
             Callable callable = compileScript(event);

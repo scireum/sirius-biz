@@ -29,8 +29,8 @@ import sirius.kernel.settings.Extension;
 import sirius.kernel.settings.PortMapper;
 import sirius.kernel.settings.Settings;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -157,18 +157,18 @@ public class ObjectStores {
                                                                    .withClientConfiguration(config);
 
         try {
-            URL endpoint = new URL(extension.get(KEY_END_POINT).asString());
+            URI endpoint = URI.create(extension.get(KEY_END_POINT).asString());
             int defaultPort =
-                    PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getProtocol()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
+                    PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getScheme()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
             clientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(mapEndpoint(name,
                                                                                                            endpoint,
                                                                                                            defaultPort),
                                                                                                AwsHostNameUtils.parseRegion(
                                                                                                        endpoint.getHost(),
                                                                                                        AmazonS3Client.S3_SERVICE_NAME)));
-        } catch (MalformedURLException e) {
+        } catch (URISyntaxException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(LOG)
                             .withSystemErrorMessage("Invalid endpoint for object store %s: %s - %s (%s)",
                                                     name,
@@ -179,16 +179,19 @@ public class ObjectStores {
         return clientBuilder.build();
     }
 
-    private String mapEndpoint(String name, URL endpoint, int defaultPort) throws MalformedURLException {
+    private String mapEndpoint(String name, URI endpoint, int defaultPort) throws URISyntaxException {
         Tuple<String, Integer> hostAndPort = PortMapper.mapPort(SERVICE_PREFIX_S3 + name,
                                                                 endpoint.getHost(),
                                                                 endpoint.getPort() < 0 ?
                                                                 defaultPort :
                                                                 endpoint.getPort());
 
-        return new URL(endpoint.getProtocol(),
+        return new URI(endpoint.getScheme(),
+                       endpoint.getUserInfo(),
                        hostAndPort.getFirst(),
                        Integer.valueOf(defaultPort).equals(hostAndPort.getSecond()) ? -1 : hostAndPort.getSecond(),
-                       endpoint.getFile()).toString();
+                       endpoint.getPath(),
+                       endpoint.getQuery(),
+                       endpoint.getFragment()).toString();
     }
 }
