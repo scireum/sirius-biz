@@ -36,6 +36,7 @@ public abstract class BaseFieldDefinitionTransformer<S extends Property>
             FieldDefinition field = new FieldDefinition(property.getName(), determineType(property));
             field.addAlias(property.getName());
             field.withLabel(property::getLabel);
+            field.addTranslatedAliases("$" + property.getLabelKey());
 
             processAutoImportSettings(property, field);
             customizeField(property, field);
