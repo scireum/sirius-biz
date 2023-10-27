@@ -457,8 +457,8 @@
 
         <div class="input-group">
             <input type="text" id="entityQueryField"
-                   class="form-control"
-                   placeholder="@i18n('NLS.searchkey')" autofocus/>
+                   class="form-control primary-autofocus-js"
+                   placeholder="@i18n('NLS.searchkey')"/>
             <div class="input-group-append">
                 <a class="btn btn-outline-secondary">
                     <i class="fa fa-search"></i>

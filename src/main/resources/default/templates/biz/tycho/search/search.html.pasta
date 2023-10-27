@@ -18,7 +18,9 @@
             <div class="row">
                 <div class="col-8 col-lg-9">
                     <div class="input-group">
-                        <input type="text" id="queryField" class="form-control primary-autofocus"
+                        <input type="text"
+                               id="queryField"
+                               class="form-control primary-autofocus-js"
                                value="@query"
                                placeholder="@i18n('NLS.searchkey')"/>
                         <div class="input-group-append">
