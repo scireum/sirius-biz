@@ -5,9 +5,9 @@
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
 <i:if test="trace.getCreatedAt() != null && (journal == null || isFilled(journal.getProtocolUri()))">
-    <btn data-toggle="collapse" data-target=".tracing" class="btn btn-outline-info float-right">
+    <button type="button" data-toggle="collapse" data-target=".tracing" class="btn btn-outline-info float-right">
         <i class="fa fa-info"></i>
-    </btn>
+    </button>
 
     <div class="row tracing collapse">
         <t:datacard class="mt-2" title="@i18n('TraceData.infos')">
