@@ -14,7 +14,7 @@
                     <form class="form-inline menu-search-form" method="POST" action="/open-search">
                         <span><i class="fa fa-search"></i></span>
                         <input name="query"
-                               class="form-control autofocus"
+                               class="form-control autofocus-js"
                                type="search"
                                placeholder="@i18n('OpenSearchController.label')"
                                aria-label="Search">

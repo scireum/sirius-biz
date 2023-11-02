@@ -21,7 +21,13 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-12 col-md-10 d-flex align-items-start">
-                    <t:textarea name="query" id="query" value="" class="flex-grow-1 primary-autofocus" rows="1"/>
+                    <t:textarea name="query"
+                                id="query"
+                                value=""
+                                class="flex-grow-1"
+                                fieldClass="primary-autofocus-js"
+                                rows="1"
+                                placeholder="@i18n('NLS.searchkey')"/>
                     <a class="btn btn-outline-secondary ml-1" onclick="execute()">
                         <i class="fa fa-search"></i>
                     </a>

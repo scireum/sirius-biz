@@ -18,7 +18,7 @@
 
     <properties>
         <sirius.kernel>dev-38.5.0</sirius.kernel>
-        <sirius.web>dev-72.2.0</sirius.web>
+        <sirius.web>dev-73.2.1</sirius.web>
         <sirius.db>dev-56.1.0</sirius.db>
     </properties>
 

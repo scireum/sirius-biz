@@ -12,7 +12,7 @@
                 <div class="input-group">
                     <input type="text" id="actionsQueryField"
                            class="form-control primary-autofocus-js"
-                           placeholder="@i18n('NLS.searchkey')" autofocus/>
+                           placeholder="@i18n('NLS.searchkey')"/>
                     <div class="input-group-append">
                         <a class="btn btn-outline-secondary">
                             <i class="fa fa-search"></i>

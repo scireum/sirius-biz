@@ -14,9 +14,8 @@
                            name="query"
                            id="query"
                            placeholder="Enter query here"
-                           class="form-control"
-                           value="@query"
-                           autofocus/>
+                           class="form-control primary-autofocus-js"
+                           value="@query"/>
                     <div class="input-group-append"
                          onclick="sirius.requestSubmitForm(document.querySelector('form.edit-form'))">
                     <span class="btn btn-outline-secondary">
