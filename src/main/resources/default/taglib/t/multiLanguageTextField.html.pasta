@@ -71,16 +71,18 @@
                 <ul class="dropdown-menu w-100"></ul>
             </div>
 
-            <a class="btn btn-primary" data-dismiss="modal">@i18n("MultiLanguageEditor.apply")</a>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">
+                @i18n("MultiLanguageEditor.apply")
+            </button>
         </i:block>
     </t:modal>
 
     <script>
         sirius.ready(function () {
             let validLanguages = {};
-        <i:for type="String" var="lang" items="validLanguages">
-            validLanguages['@lang'] = '@i18n("Language." + lang)';
-        </i:for>
+            <i:for type="String" var="lang" items="validLanguages">
+                validLanguages['@lang'] = '@i18n("Language." + lang)';
+            </i:for>
 
             let field = new MultiLanguageField({
                 fieldName: '___fieldName',
