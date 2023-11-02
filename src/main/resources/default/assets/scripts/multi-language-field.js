@@ -51,7 +51,7 @@ MultiLanguageField.prototype.buildSingleline = function () {
 
     // Open modal when input field is focused
     const me = this;
-    this._input.addEventListener('focus', function () {
+    this._input.addEventListener('focusin', function () {
         $(me._modal).modal('show');
     });
 
