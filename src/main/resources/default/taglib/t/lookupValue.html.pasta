@@ -29,7 +29,7 @@
             const helper = document.getElementById('___id-addon');
             helper.addEventListener('click', getLookupTableInfo);
             helper.addEventListener('keydown', function (e) {
-                if (e.keyCode === 13) {
+                if (event.key === sirius.key.ENTER) {
                     getLookupTableInfo();
                 }
             });
