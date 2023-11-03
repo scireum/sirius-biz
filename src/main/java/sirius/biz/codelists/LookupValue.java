@@ -135,7 +135,7 @@ public class LookupValue {
     }
 
     /**
-     * Determines if the currently stored value is a valid code in the underlying lookp table.
+     * Determines if the currently stored value is a valid code in the underlying lookup table.
      *
      * @throws IllegalArgumentException if the currently stored code is invalid
      */

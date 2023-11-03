@@ -14,7 +14,7 @@ function openSmartValues(elementId, type, payload, signature) {
         $(document).off('keyup.smart-values');
     });
     $(document).on('keyup.smart-values', function (event) {
-        if (event.keyCode === 27) {
+        if (event.key === sirius.key.ESCAPE) {
             $('#' + elementId).tooltip('hide');
             $(document).off('click.smart-values');
             $(document).off('keyup.smart-values');

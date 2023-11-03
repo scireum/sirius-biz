@@ -502,10 +502,10 @@
                 }
                 timer = window.setTimeout(function () {
                     const actions = document.querySelectorAll('.action-js');
-                    if (event.keyCode === 13 && document.getElementById('entityResults').querySelector('.entity-js').length === 1) {
+                    if (event.key === sirius.key.ENTER && document.getElementById('entityResults').querySelector('.entity-js').length === 1) {
                         document.getElementById('entityResults').querySelector('.entity-js a').click();
                         return;
-                    } else if (event.keyCode === 27) {
+                    } else if (event.key === sirius.key.ESCAPE) {
                         event.target.value = '';
                     }
 
