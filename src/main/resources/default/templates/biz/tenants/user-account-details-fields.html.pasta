@@ -15,7 +15,7 @@
 <div class="row">
     <t:lookupValue class="col-12 col-md-6 col-xl-3" name="userAccountData_person_salutation"
                    value="@account.getUserAccountData().getPerson().getSalutation()"
-                   optional="true"
+                   optional="true" allowCustomEntries="false"
                    labelKey="PersonData.salutation"/>
     <t:textfield class="col-12 col-md-6 col-xl-3" name="userAccountData_person_title"
                  value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>

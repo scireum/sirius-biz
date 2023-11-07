@@ -40,7 +40,7 @@
                  labelKey="AddressData.city"/>
     <t:lookupValue class="col-12 col-md-5" name="tenantData_address_country"
                    value="@tenant.getTenantData().getAddress().getCountry()"
-                   optional="true"
+                   optional="true" allowCustomEntries="false"
                    labelKey="InternationalAddressData.country"/>
 </div>
 
