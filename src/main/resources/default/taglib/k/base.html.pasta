@@ -108,44 +108,53 @@
             </i:if>
         </i:block>
 
-        <div class="row">
-            <div class="col-xl-9 col-lg-12">
-                <i:render name="body"/>
-            </div>
-        </div>
+        <t:sidebar renderSidebarIfEmpty="false" class="sticky-sidebar sticky-top mb-4">
+            <i:local name="sidebarContents" value="@renderToString('sidebar')"/>
 
-        <div class="row">
-            <div class="col-xl-9 col-lg-12">
-                <i:local name="references" value="article.queryCrossReferences()"/>
-                <i:if test="!references.isEmpty()">
-                    <k:section heading="@i18n('KnowledgeBase.crossReferencesLabel')">
-                        <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="reference" items="references">
-                            <div class="pb-2">
-                                <div>
-                                    <a href="/kba/@reference.getLanguage()/@reference.getArticleId()">
-                                        <i:if test="reference.isChapter()">
-                                            <i class="fa fa-book"></i>
-                                            <i:else>
-                                                <i class="fa fa-file-alt"></i>
-                                            </i:else>
-                                        </i:if>
-                                        @reference.getTitle()
-                                    </a>
-                                </div>
-                                <div class="text-muted">
-                                    @reference.getDescription()
-                                </div>
-                            </div>
-                        </i:for>
-                    </k:section>
-                </i:if>
+            <i:block name="sidebar">
+                <i:render name="sidebar"/>
+            </i:block>
+
+
+            <div class="row">
+                <div class="@if (isFilled(sidebarContents)) { col } else { col-xl-9 col-lg-12 }">
+                    <i:render name="body"/>
+                </div>
             </div>
-        </div>
+
+            <div class="row">
+                <div class="@if (isFilled(sidebarContents)) { col } else { col-xl-9 col-lg-12 }">
+                    <i:local name="references" value="article.queryCrossReferences()"/>
+                    <i:if test="!references.isEmpty()">
+                        <k:section heading="@i18n('KnowledgeBase.crossReferencesLabel')">
+                            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="reference" items="references">
+                                <div class="pb-2">
+                                    <div>
+                                        <a href="/kba/@reference.getLanguage()/@reference.getArticleId()">
+                                            <i:if test="reference.isChapter()">
+                                                <i class="fa fa-book"></i>
+                                                <i:else>
+                                                    <i class="fa fa-file-alt"></i>
+                                                </i:else>
+                                            </i:if>
+                                            @reference.getTitle()
+                                        </a>
+                                    </div>
+                                    <div class="text-muted">
+                                        @reference.getDescription()
+                                    </div>
+                                </div>
+                            </i:for>
+                        </k:section>
+                    </i:if>
+                </div>
+            </div>
+        </t:sidebar>
 
         <script>
             sirius.ready(function () {
                 PR.prettyPrint();
-                mermaid.initialize({ startOnLoad: true });
+                mermaid.initialize({startOnLoad: true});
             });
         </script>
     </t:page>
