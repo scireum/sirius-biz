@@ -4,6 +4,6 @@
     Renders an entry for the table of content. Should be used within the k:toc tag.
 </i:pragma>
 
-<li class="mt-2">
-    <a href="@link"><i:render name="body"/></a>
-</li>
+<t:navboxLink url="@link">
+    <i:render name="body"/>
+</t:navboxLink>
