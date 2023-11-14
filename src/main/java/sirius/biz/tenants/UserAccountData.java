@@ -273,7 +273,7 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     /**
      * Generates a string representation of this user.
-     * By default this uses the full Name {@link PersonData#toString()}
+     * By default, this uses the full Name {@link PersonData#toString()}
      * If {@link #hasName} is false, returns {@link LoginData#getUsername()}.
      * If this is also empty, {@link #email)} is returned.
      * As last option an anonymous identifier is used.
@@ -297,7 +297,7 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     /**
      * Generates a short name, for this user.
-     * By default this is "Firstname Lastname", if the lastname is filled.
+     * By default, this is "Firstname Lastname", if the lastname is filled.
      * If {@link #hasName} is false, {@link #toString} is called.
      *
      * @return a short name for this user

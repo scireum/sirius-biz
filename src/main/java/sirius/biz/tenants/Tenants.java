@@ -97,7 +97,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     /**
      * Returns the current user or throws an exception if no user is currently available.
      *
-     * @return the currently logged in user
+     * @return the currently logged-in user
      */
     @Nonnull
     public U getRequiredUser() {
@@ -237,7 +237,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     /**
      * Applies an appropriate filter to the given query to only return entities which belong to the current tenant.
      *
-     * @param qry the query to extent
+     * @param qry the query to extend
      * @param <E> the type of entities processed by the query
      * @param <Q> the type of the query which is being extended
      * @return the query with an additional constraint filtering on the current tenant
