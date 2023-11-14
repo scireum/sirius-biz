@@ -131,9 +131,9 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     }
 
     /**
-     * Returns the tenant of the currently logged in user or throws an exception if no user is present.
+     * Returns the tenant of the currently logged-in user or throws an exception if no user is present.
      *
-     * @return the tenant of the currently logged in user
+     * @return the tenant of the currently logged-in user
      */
     @Nonnull
     public T getRequiredTenant() {
