@@ -115,6 +115,9 @@ public class Processes {
     @Part
     private TableProcessOutputType tableProcessOutputType;
 
+    @Part
+    private Tenants<?, ?, ?> tenants;
+
     /**
      * Due to some shortcomings in Elasticsearch (1-second delay until writes are visible), we need a layered cache
      * architecture here.
@@ -938,6 +941,18 @@ public class Processes {
         String tenantId = environment.getTenantId();
 
         if (Strings.isEmpty(userId)) {
+            return;
+        }
+
+        if (Strings.areEqual(userId, Tenants.SYNTHETIC_ADMIN_USER_ID) && Strings.isFilled(tenantId)) {
+            String tenantName =
+                    tenants.fetchCachedTenant(tenantId).map(tenant -> tenant.getTenantData().getName()).orElse(null);
+            userContext.setCurrentUser(UserInfo.Builder.createUser(Tenants.SYNTHETIC_ADMIN_USER_ID)
+                                                       .withUsername(Tenants.SYNTHETIC_ADMIN_USER_NAME)
+                                                       .withTenantId(tenantId)
+                                                       .withTenantName(tenantName)
+                                                       .withEveryPermission(true)
+                                                       .build());
             return;
         }
 
