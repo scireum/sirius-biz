@@ -42,7 +42,7 @@ import java.util.Optional;
 /**
  * Helps for extract the current {@link UserAccount} and {@link Tenant}.
  * <p>
- * Also some boilerplate methods are provided to perform some assertions.
+ * Also, some boilerplate methods are provided to perform some assertions.
  *
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <T> specifies the effective entity type used to represent Tenants
