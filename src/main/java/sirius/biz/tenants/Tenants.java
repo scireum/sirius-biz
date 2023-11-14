@@ -56,6 +56,16 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
      */
     public static final String FRAMEWORK_TENANTS = "biz.tenants";
 
+    /**
+     * Defines the user ID used to represent the synthetic "Administrator" user.
+     */
+    public static final String SYNTHETIC_ADMIN_USER_ID = "ADMIN";
+
+    /**
+     * Defines the name used for the synthetic "Administrator" user.
+     */
+    public static final String SYNTHETIC_ADMIN_USER_NAME = "Administrator";
+
     @Part
     protected Mixing mixing;
 
@@ -561,8 +571,8 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
         UserContext userContext = UserContext.get();
         UserInfo currentUser = userContext.getUser();
         try {
-            userContext.setCurrentUser(UserInfo.Builder.createUser("ADMIN")
-                                                       .withUsername("Administrator")
+            userContext.setCurrentUser(UserInfo.Builder.createUser(SYNTHETIC_ADMIN_USER_ID)
+                                                       .withUsername(SYNTHETIC_ADMIN_USER_NAME)
                                                        .withTenantId(tenantId)
                                                        .withTenantName(tenantName)
                                                        .withEveryPermission(true)
