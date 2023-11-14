@@ -934,10 +934,13 @@ public class Processes {
      * @param env         the process environment to read the user infos from
      */
     private void installUserOfProcess(UserContext userContext, ProcessEnvironment env) {
-        if (env.getUserId() != null) {
-            UserInfo user = userContext.getUserManager().findUserByUserId(env.getUserId());
+        String userId = env.getUserId();
+        String tenantId = env.getTenantId();
+
+        if (userId != null) {
+            UserInfo user = userContext.getUserManager().findUserByUserId(userId);
             if (user != null) {
-                user = userContext.getUserManager().createUserWithTenant(user, env.getTenantId());
+                user = userContext.getUserManager().createUserWithTenant(user, tenantId);
                 userContext.setCurrentUser(user);
             }
         }
