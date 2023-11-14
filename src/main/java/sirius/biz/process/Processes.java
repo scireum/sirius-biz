@@ -462,11 +462,11 @@ public class Processes {
 
                 process2ndLevelCache.put(processId, process);
                 return true;
-            } catch (OptimisticLockException e) {
+            } catch (OptimisticLockException exception) {
                 Wait.randomMillis(250, 500);
                 process = elastic.find(Process.class, processId).orElse(null);
-            } catch (IntegrityConstraintFailedException e) {
-                Exceptions.handle(Log.BACKGROUND, e);
+            } catch (IntegrityConstraintFailedException exception) {
+                Exceptions.handle(Log.BACKGROUND, exception);
                 return false;
             }
         }
@@ -778,10 +778,10 @@ public class Processes {
                 // recover in parallel...
                 elastic.override(logEntry);
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .withSystemErrorMessage("Failed to record a ProcessLog: %s - %s (%s)", logEntry)
-                      .error(e)
+                      .error(exception)
                       .to(Log.BACKGROUND)
                       .handle();
         }
@@ -871,32 +871,32 @@ public class Processes {
         UserInfo userInfoBackup = userContext.getUser();
 
         Watch watch = Watch.start();
-        ProcessEnvironment env = new ProcessEnvironment(processId);
+        ProcessEnvironment environment = new ProcessEnvironment(processId);
         taskContext.setJob(processId);
-        taskContext.setAdapter(env);
+        taskContext.setAdapter(environment);
         try {
-            if (env.isActive()) {
+            if (environment.isActive()) {
                 CallContext.getCurrent().resetLanguage();
-                installUserOfProcess(userContext, env);
+                installUserOfProcess(userContext, environment);
 
-                task.accept(env);
+                task.accept(environment);
             }
-        } catch (Exception e) {
-            throw env.handle(e);
+        } catch (Exception exception) {
+            throw environment.handle(exception);
         } finally {
-            env.awaitSideTaskCompletion();
+            environment.awaitSideTaskCompletion();
             CallContext.getCurrent().resetLanguage();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
 
             int computationTimeInSeconds = (int) watch.elapsed(TimeUnit.SECONDS, false);
             if (complete) {
-                env.markCompleted(computationTimeInSeconds);
+                environment.markCompleted(computationTimeInSeconds);
             } else {
                 modify(processId,
                        process -> process.getState() != ProcessState.STANDBY || computationTimeInSeconds >= 10,
                        process -> process.setComputationTime(process.getComputationTime() + computationTimeInSeconds));
-                env.flushTimings();
+                environment.flushTimings();
             }
         }
     }
@@ -931,11 +931,11 @@ public class Processes {
      * If no user is attached to the process, no modification will be performed.
      *
      * @param userContext the context to update
-     * @param env         the process environment to read the user infos from
+     * @param environment the process environment to read the user infos from
      */
-    private void installUserOfProcess(UserContext userContext, ProcessEnvironment env) {
-        String userId = env.getUserId();
-        String tenantId = env.getTenantId();
+    private void installUserOfProcess(UserContext userContext, ProcessEnvironment environment) {
+        String userId = environment.getUserId();
+        String tenantId = environment.getTenantId();
 
         if (userId != null) {
             UserInfo user = userContext.getUserManager().findUserByUserId(userId);
@@ -976,8 +976,8 @@ public class Processes {
     public boolean hasActiveProcesses() {
         try {
             return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
-        } catch (Exception e) {
-            Exceptions.handle(Log.SYSTEM, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.SYSTEM, exception);
             return false;
         }
     }
