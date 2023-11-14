@@ -127,7 +127,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
      */
     @Nonnull
     public Optional<T> getCurrentTenant() {
-        return getCurrentUser().flatMap(u -> Optional.ofNullable(u.getTenant().fetchValue()));
+        return fetchCachedTenant(UserContext.getCurrentUser().getTenantId());
     }
 
     /**
