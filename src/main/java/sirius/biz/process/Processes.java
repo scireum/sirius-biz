@@ -944,15 +944,10 @@ public class Processes {
             return;
         }
 
-        if (Strings.areEqual(userId, Tenants.SYNTHETIC_ADMIN_USER_ID) && Strings.isFilled(tenantId)) {
+        if (Strings.areEqual(userId, UserInfo.SYNTHETIC_ADMIN_USER_ID) && Strings.isFilled(tenantId)) {
             String tenantName =
                     tenants.fetchCachedTenant(tenantId).map(tenant -> tenant.getTenantData().getName()).orElse(null);
-            userContext.setCurrentUser(UserInfo.Builder.createUser(Tenants.SYNTHETIC_ADMIN_USER_ID)
-                                                       .withUsername(Tenants.SYNTHETIC_ADMIN_USER_NAME)
-                                                       .withTenantId(tenantId)
-                                                       .withTenantName(tenantName)
-                                                       .withEveryPermission(true)
-                                                       .build());
+            userContext.setCurrentUser(UserInfo.Builder.createSyntheticAdminUser(tenantId, tenantName).build());
             return;
         }
 
