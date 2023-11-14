@@ -937,12 +937,14 @@ public class Processes {
         String userId = environment.getUserId();
         String tenantId = environment.getTenantId();
 
-        if (userId != null) {
-            UserInfo user = userContext.getUserManager().findUserByUserId(userId);
-            if (user != null) {
-                user = userContext.getUserManager().createUserWithTenant(user, tenantId);
-                userContext.setCurrentUser(user);
-            }
+        if (Strings.isEmpty(userId)) {
+            return;
+        }
+
+        UserInfo user = userContext.getUserManager().findUserByUserId(userId);
+        if (user != null) {
+            user = userContext.getUserManager().createUserWithTenant(user, tenantId);
+            userContext.setCurrentUser(user);
         }
     }
 
