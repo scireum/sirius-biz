@@ -329,12 +329,12 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Nullable
-    public String getUserId() {
+    public String fetchUserId() {
         return processes.fetchProcess(processId).map(Process::getUserId).orElse(null);
     }
 
     @Nullable
-    public String getTenantId() {
+    public String fetchTenantId() {
         return processes.fetchProcess(processId).map(Process::getTenantId).orElse(null);
     }
 

@@ -937,8 +937,8 @@ public class Processes {
      * @param environment the process environment to read the user infos from
      */
     private void installUserOfProcess(UserContext userContext, ProcessEnvironment environment) {
-        String userId = environment.getUserId();
-        String tenantId = environment.getTenantId();
+        String userId = environment.fetchUserId();
+        String tenantId = environment.fetchTenantId();
 
         if (Strings.isEmpty(userId)) {
             return;
