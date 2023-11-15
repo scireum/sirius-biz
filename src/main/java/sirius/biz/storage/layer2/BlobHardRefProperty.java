@@ -104,9 +104,11 @@ public class BlobHardRefProperty extends BlobRefProperty {
     protected void onAfterDelete(Object entity) {
         BlobHardRef ref = getRef(this.accessPath.apply(entity));
         if (ref.isFilled()) {
-            ref.getBlob()
-               .getStorageSpace()
-               .deleteReferencedBlobs(((BaseEntity<?>) entity).getUniqueName(), getName(), null);
+            ref.fetchBlob()
+               .ifPresent(blob -> blob.getStorageSpace()
+                                      .deleteReferencedBlobs(((BaseEntity<?>) entity).getUniqueName(),
+                                                             getName(),
+                                                             null));
         }
     }
 }
