@@ -328,11 +328,21 @@ class ProcessEnvironment implements ProcessContext {
                         .orElse(false) && tasks.isRunning();
     }
 
+    /**
+     * Fetches the identifier of the user who started the process.
+     *
+     * @return the identifier of the user who started the process
+     */
     @Nullable
     public String fetchUserId() {
         return processes.fetchProcess(processId).map(Process::getUserId).orElse(null);
     }
 
+    /**
+     * Fetches the identifier of the tenant which started the process.
+     *
+     * @return the identifier of the tenant which started the process
+     */
     @Nullable
     public String fetchTenantId() {
         return processes.fetchProcess(processId).map(Process::getTenantId).orElse(null);
