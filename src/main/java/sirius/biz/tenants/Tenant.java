@@ -61,7 +61,7 @@ public interface Tenant<I extends Serializable>
     /**
      * Returns the reference to the parent tenant (if available).
      *
-     * @return the reference to lookup the parent tenant
+     * @return the reference to look up the parent tenant
      */
     BaseEntityRef<I, ? extends Tenant<I>> getParent();
 

@@ -94,7 +94,7 @@ public class Jobs {
      * @param name         the name of the job factory to resolve
      * @param expectedType a type to cast the job factory to
      * @param <J>          the generic version of <tt>expectedType</tt>
-     * @return the job factory with the given name, casted to the given class
+     * @return the job factory with the given name, cast to the given class
      */
     @SuppressWarnings("unchecked")
     public <J extends JobFactory> J findFactory(String name, Class<J> expectedType) {
