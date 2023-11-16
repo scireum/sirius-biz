@@ -552,7 +552,7 @@ public class Processes {
      * @param persistencePeriod specifies the new persistence period
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean updatePersistence(String processId, PersistencePeriod persistencePeriod) {
+    public boolean updatePersistence(String processId, PersistencePeriod persistencePeriod) {
         return modify(processId, process -> process.getPersistencePeriod() != persistencePeriod, process -> {
             PersistencePeriod currentPersistence = process.getPersistencePeriod();
             process.setPersistencePeriod(persistencePeriod);
