@@ -1,82 +1,71 @@
-/*
- * Made with all the love in the world
- * by scireum in Remshalden, Germany
- *
- * Copyright by scireum GmbH
- * http://www.scireum.de - info@scireum.de
- */
-
 package sirius.biz.storage.layer2
+
+
+import org.junit.jupiter.api.extension.ExtendWith
+import sirius.kernel.SiriusExtension
+import org.junit.jupiter.api.Test
 
 
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
-import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
-
 import java.nio.file.Paths
+import org.junit.jupiter.api.assertDoesNotThrow
+import sirius.biz.storage.layer2.jdbc.SQLBlob
+import kotlin.test.assertTrue
 
-class BlobEntityMappingSpec extends BaseSpecification {
-
-    @Part
-    private static OMA oma
-
-            @Part
-            private static BlobStorage blobStorage
-
-            def "store entity with blob hard ref must make the blob non-temporary"() {
-        given: 'an entity and a blob'
-        def testEntity = new BlobRefEntity()
-        Blob blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
-        expect: "the blob is temporary"
-        blob.isTemporary()
-        when: 'storing the blob as hard ref of the entity'
+@ExtendWith(SiriusExtension::class)
+class BlobEntityMappingTest {
+    @Test
+    fun `store entity with blob hard ref must make the blob non-temporary`() {
+        val blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
+        var testEntity = BlobRefEntity()
+        assertTrue { blob.isTemporary() }
         testEntity.getBlobHardRef().setBlob(blob)
         oma.update(testEntity)
         testEntity = oma.refreshOrFail(testEntity)
-        then: "the blob is no longer temporary"
-        !testEntity.getBlobHardRef().getBlob().isTemporary()
+        assertTrue { !testEntity.getBlobHardRef().getBlob()!!.isTemporary() }
     }
-
-    def "store entity with unchanged blob hard ref must not fail"() {
-        given: 'an entity with a hard ref blob'
-        def testEntity = new BlobRefEntity()
-        Blob blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
+    @Test
+    fun `store entity with unchanged blob hard ref must not fail`() {
+        val testEntity = BlobRefEntity()
+        val blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
         testEntity.getBlobHardRef().setBlob(blob)
         oma.update(testEntity)
-        when: 'storing the entity without further edits'
-        def loadedEntity = oma.findOrFail(BlobRefEntity.class, testEntity.getId())
-        oma.update(loadedEntity)
-        then: 'no exceptions must be thrown'
-        noExceptionThrown()
+        val loadedEntity = oma.findOrFail(BlobRefEntity::class.java, testEntity.getId())
+        assertDoesNotThrow { oma.update(loadedEntity) }
     }
-
-    def "store entity with unchanged blob soft ref must not fail"() {
-        given: 'an entity with a soft ref blob'
+    @Test
+    fun `store entity with unchanged blob soft ref must not fail`() {
         TenantsHelper.installTestTenant()
-        def testEntity = new BlobRefEntity()
-        def testFilePath = Paths.get("src/test/resources/test-data/test4blob.txt")
-        Blob blob = blobStorage.getSpace("blob-files").findOrCreateByPath(testFilePath.toString())
+        val testEntity = BlobRefEntity()
+        val testFilePath = Paths.get("src/test/resources/test-data/test4blob.txt")
+        val blob = blobStorage.getSpace("blob-files").findOrCreateByPath(testFilePath.toString())
         testEntity.getBlobSoftRef().setBlob(blob)
         oma.update(testEntity)
-        when: 'storing the entity without further edits'
-        def loadedEntity = oma.findOrFail(BlobRefEntity.class, testEntity.getId())
-        oma.update(loadedEntity)
-        then: 'no exceptions must be thrown'
-        noExceptionThrown()
+        val loadedEntity = oma.findOrFail(BlobRefEntity::class.java, testEntity.getId())
+        assertDoesNotThrow { oma.update(loadedEntity) }
     }
-
-    def "delete entity with blob hard ref must mark the blob for deletion"() {
-        given: 'an entity with a blob hard ref'
-        def testEntity = new BlobRefEntity()
-        Blob blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
+    @Test
+    fun `delete entity with blob hard ref must mark the blob for deletion`() {
+        val testEntity = BlobRefEntity()
+        val blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
         testEntity.getBlobHardRef().setBlob(blob)
         oma.update(testEntity)
-        expect: 'new blob should be there and should not be marked for deletion'
-        !blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).get().isDeleted()
-        when: 'deleting entity'
+        val Blob: SQLBlob? = blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).get() as? SQLBlob
+        if (Blob != null) {
+            assertTrue { !Blob.isDeleted() }
+        }
+        assertTrue { Blob != null }
         oma.delete(testEntity)
-        then: 'blob with deleted referring entity should be gone'
-        !blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).isPresent()
+        assertTrue { !blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).isPresent() }
+    }
+    companion object {
+        @Part
+        @JvmStatic
+        private lateinit var oma: OMA
+        @Part
+        @JvmStatic
+        private lateinit var blobStorage: BlobStorage
     }
 }
