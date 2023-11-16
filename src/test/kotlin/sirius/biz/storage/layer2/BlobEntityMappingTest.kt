@@ -26,6 +26,7 @@ class BlobEntityMappingTest {
         testEntity = oma.refreshOrFail(testEntity)
         assertTrue { !testEntity.getBlobHardRef().getBlob()!!.isTemporary() }
     }
+
     @Test
     fun `store entity with unchanged blob hard ref must not fail`() {
         val testEntity = BlobRefEntity()
@@ -35,6 +36,7 @@ class BlobEntityMappingTest {
         val loadedEntity = oma.findOrFail(BlobRefEntity::class.java, testEntity.getId())
         assertDoesNotThrow { oma.update(loadedEntity) }
     }
+
     @Test
     fun `store entity with unchanged blob soft ref must not fail`() {
         TenantsHelper.installTestTenant()
@@ -46,6 +48,7 @@ class BlobEntityMappingTest {
         val loadedEntity = oma.findOrFail(BlobRefEntity::class.java, testEntity.getId())
         assertDoesNotThrow { oma.update(loadedEntity) }
     }
+
     @Test
     fun `delete entity with blob hard ref must mark the blob for deletion`() {
         val testEntity = BlobRefEntity()
@@ -60,10 +63,12 @@ class BlobEntityMappingTest {
         oma.delete(testEntity)
         assertTrue { !blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).isPresent() }
     }
+
     companion object {
         @Part
         @JvmStatic
         private lateinit var oma: OMA
+
         @Part
         @JvmStatic
         private lateinit var blobStorage: BlobStorage
