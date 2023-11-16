@@ -15,7 +15,7 @@ import sirius.biz.storage.layer2.jdbc.SQLBlob
 import kotlin.test.assertTrue
 
 @ExtendWith(SiriusExtension::class)
-class BlobEntityMappingTest {
+class SQLBlobEntityMappingTest {
     @Test
     fun `store entity with blob hard ref must make the blob non-temporary`() {
         val blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
