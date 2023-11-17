@@ -10,9 +10,6 @@ package sirius.biz.storage.s3
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import sirius.biz.storage.layer2.BlobStorage
-import sirius.db.jdbc.OMA
-import sirius.kernel.BaseSpecification
 import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Files
 import sirius.kernel.commons.Streams
@@ -31,16 +28,14 @@ class ObjectStoresTest {
 
     @Test
     fun `createBucketWorks`() {
-        lateinit var download: File
         val file = File.createTempFile("test", "")
         val fout = FileOutputStream(file)
-        var i = 0
         repeat(10024) {
             fout.write("This is a test.".toByteArray(StandardCharsets.UTF_8))
         }
         fout.close()
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
-        download = stores.store().download(stores.store().getBucketName("test"), "test")
+        val download = stores.store().download(stores.store().getBucketName("test"), "test")
         val expectedContents = com.google.common.io.Files.toString(file, StandardCharsets.UTF_8)
         val downloadedContents = com.google.common.io.Files.toString(download, StandardCharsets.UTF_8)
         assertEquals(expectedContents, downloadedContents)
@@ -50,7 +45,6 @@ class ObjectStoresTest {
 
     @Test
     fun `PUT and GET works`() {
-        lateinit var download: File
         val file = File.createTempFile("test", "")
         val fout = FileOutputStream(file)
         repeat(10024) {
@@ -58,7 +52,7 @@ class ObjectStoresTest {
         }
         fout.close()
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
-        download = stores.store().download(stores.store().getBucketName("test"), "test")
+        val download = stores.store().download(stores.store().getBucketName("test"), "test")
         val c = URL(
             stores.store().objectUrl(stores.store().getBucketName("test"), "test")
         ).openConnection()
