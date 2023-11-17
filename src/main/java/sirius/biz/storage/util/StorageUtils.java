@@ -31,6 +31,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -91,49 +92,40 @@ public class StorageUtils {
     }
 
     /**
-     * Verifies the authentication hash for the given key.
+     * Verifies the authentication hash for the given key and returns the number of days the hash is valid.
+     * <p>
+     * 0 means the hash is valid today. A negative number represents past days and a positive number days in the future.
      *
      * @param key          the key to verify
      * @param hash         the hash to verify
      * @param validityDays the number of days the hash should be valid into the past
-     * @return <tt>true</tt> if the hash verifies the given object key, <tt>false</tt> otherwise
+     * @return the day count from today for which the hash is valid or an empty optional if the hash is invalid
      */
-    public boolean verifyHash(String key, String hash, int validityDays) {
+    public Optional<Integer> verifyHash(String key, String hash, int validityDays) {
         // Check for a hash for today...
         if (Strings.areEqual(hash, computeHash(key, 0))) {
-            return true;
+            return Optional.of(0);
         }
 
         // Check for an eternally valid hash...
         if (Strings.areEqual(hash, computeEternallyValidHash(key))) {
-            return true;
+            return Optional.of(Integer.MAX_VALUE);
         }
 
         // Check for hashes up to X days into the past...
         for (int i = 1; i <= validityDays; i++) {
             if (Strings.areEqual(hash, computeHash(key, -i))) {
-                return true;
+                return Optional.of(-i);
             }
         }
         // Check for hashes up to two days into the future...
         for (int i = 1; i <= DEFAULT_URL_VALIDITY_DAYS; i++) {
             if (Strings.areEqual(hash, computeHash(key, i))) {
-                return true;
+                return Optional.of(i);
             }
         }
 
-        return false;
-    }
-
-    /**
-     * Verifies the authentication hash for the given key.
-     *
-     * @param key  the key to verify
-     * @param hash the hash to verify
-     * @return <tt>true</tt> if the hash verifies the given object key, <tt>false</tt> otherwise
-     */
-    public boolean verifyHash(String key, String hash) {
-        return verifyHash(key, hash, DEFAULT_URL_VALIDITY_DAYS);
+        return Optional.empty();
     }
 
     /**
