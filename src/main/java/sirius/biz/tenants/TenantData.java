@@ -619,7 +619,7 @@ public class TenantData extends Composite implements Journaled {
      * @return a URLBuilder which is used to fetch the small image of this tenant
      */
     public URLBuilder fetchSmallUrl() {
-        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
     }
 
     /**
@@ -628,7 +628,7 @@ public class TenantData extends Composite implements Journaled {
      * @return a URLBuilder which is used to fetch the medium image of this tenant
      */
     public URLBuilder fetchMediumUrl() {
-        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
     }
 
     /**
@@ -637,6 +637,6 @@ public class TenantData extends Composite implements Journaled {
      * @return a URLBuilder which is used to fetch the large image of this tenant
      */
     public URLBuilder fetchLargeUrl() {
-        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_LARGE);
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_LARGE);
     }
 }
