@@ -2,10 +2,21 @@
            lang="en"
            parent="DJELK"
            title="Roles and Permissions"
-           permissions="flag-system-tenant"
->
+           permissions="flag-system-tenant">
     <i:block name="description">Provides an overview of available roles, permissions, and their relationship.</i:block>
-    <k:section heading="Theory of Operation">
+
+    <i:block name="sidebar">
+        <k:toc>
+            <k:tocLink link="#theory-of-operation">Theory of Operation</k:tocLink>
+            <k:tocLink link="#permission-strings">Permission Strings</k:tocLink>
+            <k:tocLink link="#permission">Permissions</k:tocLink>
+            <k:tocLink link="#roles">Roles</k:tocLink>
+            <k:tocLink link="#features">Features / Tenant Permissions</k:tocLink>
+            <k:tocLink link="#profiles">Profiles</k:tocLink>
+        </k:toc>
+    </i:block>
+
+    <k:section heading="Theory of Operation" anchor="theory-of-operation">
         The system uses <b>permissions</b> to check whether the current user can perform a specific action. These
         permissions are defined within the software itself. On the other hand <b>roles</b> (or sometimes called
         <b>features</b> are assigned to users, tenants, and other entities. The link between these two, are
@@ -13,7 +24,7 @@
         If a profile is active, it specifies a set of permissions to grant or to revoke and thus controls the effective
         set of permissions granted to a user.
     </k:section>
-    <k:section heading="Permission Strings">
+    <k:section heading="Permission Strings" anchor="permission-strings">
         <b>Permission strings</b> can be specified in various places of the system. These can either be the name of
         a <b>role</b> or <b>permission</b>. Alternatively, these can be <b>enabled</b> or <b>disabled</b> which are
         always/never fulfilled. Additionally, the absence of a permission or role can be enforced by prepending an
@@ -22,7 +33,7 @@
         be combined, where only one of them must be fulfilled. These strings must be separated by a comma like:
         <b>permission1+permission2,permission3</b>. Note that plus takes precedence over comma.
     </k:section>
-    <k:section heading="Permissions">
+    <k:section heading="Permissions" anchor="permission">
         The following permissions are available (defined in <k:inlineCode>security.permissions</k:inlineCode> in the
         system configuration):
 
@@ -35,7 +46,7 @@
             </i:for>
         </table>
     </k:section>
-    <k:section heading="Roles">
+    <k:section heading="Roles" anchor="roles">
         The following user-roles (<k:inlineCode>security.roles</k:inlineCode>) are defined:
         <table class="table mt-4">
             <i:for type="String" var="role" items="Sirius.getSettings().getStringList('security.roles')">
@@ -53,7 +64,7 @@
         </table>
     </k:section>
 
-    <k:section heading="Features / Tenant Permissions">
+    <k:section heading="Features / Tenant Permissions" anchor="features">
         The following features or tenant permissions (<k:inlineCode>security.tenantPermissions</k:inlineCode>) are defined:
         <table class="table mt-4">
             <i:for type="String" var="role" items="Sirius.getSettings().getStringList('security.tenantPermissions')">
@@ -71,7 +82,7 @@
         </table>
     </k:section>
 
-    <k:section heading="Profiles">
+    <k:section heading="Profiles" anchor="profiles">
         The following profiles (<k:inlineCode>security.profiles</k:inlineCode>) are defined. These provide a mapping from
         roles (or a combination of roles/permissions) to other permissions, by defining which permissions are added or
         removed once the profile is applied:
