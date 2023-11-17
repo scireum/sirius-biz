@@ -61,8 +61,8 @@ public class URLBuilder {
     protected String filename;
     protected String baseURL;
     protected String addonText;
-    protected boolean reusable;
     protected boolean delayResolve;
+    protected boolean eternallyValid;
     protected boolean forceDownload;
     protected boolean suppressCache;
     protected String hook;
@@ -298,9 +298,21 @@ public class URLBuilder {
      * downstream proxy should still be able to leverage its caching capabilities.
      *
      * @return the builder itself for fluent method calls
+     * @deprecated use {@link #delayResolve()} and {@link #eternallyValid()} instead.
      */
+    @Deprecated(forRemoval = true)
     public URLBuilder reusable() {
-        this.reusable = true;
+        return this.delayResolve().eternallyValid();
+    }
+
+    /**
+     * Makes this URL eternally valid.
+     * <p>
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder eternallyValid() {
+        this.eternallyValid = true;
         return this;
     }
 
@@ -388,12 +400,6 @@ public class URLBuilder {
             return new UrlResult(null, UrlType.EMPTY);
         }
 
-        if (reusable) {
-            // If the caller requested a reusable URL (one to be output and sent to 3rd parties), we probably also
-            // want it to be valid as long as the "blob lives" and not to become obsolete once the blob contents
-            // change...
-            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
-        }
         if (suppressCache) {
             // Manual cache control is only supported in virtual calls, not physical...
             return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
@@ -601,7 +607,7 @@ public class URLBuilder {
     }
 
     private String computeAccessToken(String authToken) {
-        if (reusable) {
+        if (eternallyValid) {
             return utils.computeEternallyValidHash(authToken);
         } else {
             return utils.computeHash(authToken, 0);
