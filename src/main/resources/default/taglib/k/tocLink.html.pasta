@@ -4,6 +4,6 @@
     Renders an entry for the table of content. Should be used within the k:toc tag.
 </i:pragma>
 
-<t:navboxLink url="@link">
+<t:navboxLink url="@link" icon="fa-solid fa-chevron-right">
     <i:render name="body"/>
 </t:navboxLink>
