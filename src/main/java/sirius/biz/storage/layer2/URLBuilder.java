@@ -61,8 +61,8 @@ public class URLBuilder {
     protected String filename;
     protected String baseURL;
     protected String addonText;
-    protected boolean reusable;
     protected boolean delayResolve;
+    protected boolean eternallyValid;
     protected boolean forceDownload;
     protected boolean suppressCache;
     protected String hook;
@@ -186,21 +186,6 @@ public class URLBuilder {
     }
 
     /**
-     * Make the URL a download url using the given filename.
-     *
-     * @param path the filename to send to the browser
-     * @return the builder itself for fluent method calls
-     * @deprecated use {@link #withFileName(String)} in combination with {@link #asDownload()} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public URLBuilder asDownload(String path) {
-        this.filename = Files.getFilenameAndExtension(path);
-        this.forceDownload = true;
-
-        return this;
-    }
-
-    /**
      * Make the URL a download url using the filename of the blob.
      *
      * @return the builder itself for fluent method calls
@@ -286,21 +271,13 @@ public class URLBuilder {
     }
 
     /**
-     * Makes this URL reusable.
+     * Makes this URL eternally valid.
      * <p>
-     * Such URLs use a virtual access path so that these URLs remain constant for the same blob whereas physical URLs
-     * change once the underlying blob is updated. Therefore, these URLs can be passed on to 3rd parties as they remain
-     * valid as long as the referenced blob "lives".
-     * <p>
-     * Note however, that these URLs (their responses) are not as cacheable as physical ones (which are infinitely
-     * cached). However, unless {@link #suppressCaching()} is invoked, we still try to keep them in cache for a limited
-     * time. We also redirect to the physical URL once the virtual one is requested (if possible). Therefore, a
-     * downstream proxy should still be able to leverage its caching capabilities.
      *
      * @return the builder itself for fluent method calls
      */
-    public URLBuilder reusable() {
-        this.reusable = true;
+    public URLBuilder eternallyValid() {
+        this.eternallyValid = true;
         return this;
     }
 
@@ -388,12 +365,6 @@ public class URLBuilder {
             return new UrlResult(null, UrlType.EMPTY);
         }
 
-        if (reusable) {
-            // If the caller requested a reusable URL (one to be output and sent to 3rd parties), we probably also
-            // want it to be valid as long as the "blob lives" and not to become obsolete once the blob contents
-            // change...
-            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
-        }
         if (suppressCache) {
             // Manual cache control is only supported in virtual calls, not physical...
             return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
@@ -601,7 +572,7 @@ public class URLBuilder {
     }
 
     private String computeAccessToken(String authToken) {
-        if (reusable) {
+        if (eternallyValid) {
             return utils.computeEternallyValidHash(authToken);
         } else {
             return utils.computeHash(authToken, 0);
