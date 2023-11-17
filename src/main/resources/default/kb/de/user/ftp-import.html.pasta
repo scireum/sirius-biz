@@ -3,10 +3,25 @@
            permissions="flag-logged-in+ftp-server-enabled,flag-logged-in+ssh-server-enabled">
     <i:block name="description">Erklärt wie Jobs via Datei-Upload gestartet werden können.</i:block>
 
+    <i:block name="sidebar">
+        <k:toc>
+            <k:tocLink link="#setup">Einrichtung des Zugriffs zum Upload-Server</k:tocLink>
+            <t:permission permission="ssh-server-enabled">
+                <k:tocLink link="#ssh">SSH</k:tocLink>
+            </t:permission>
+            <t:permission permission="ftp-server-enabled">
+                <k:tocLink link="#ftp">FTP</k:tocLink>
+            </t:permission>
+            <k:tocLink link="#username-permissions">Benutzername und Berechtigungen</k:tocLink>
+            <k:tocLink link="#directory-structure">Ordnerstruktur auf dem Upload-Server</k:tocLink>
+            <k:tocLink link="#start-processing">Verarbeitungsjob per Upload starten</k:tocLink>
+        </k:toc>
+    </i:block>
+
     <i:local name="ftpEnabled" value="UserContext.getCurrentUser().hasPermission('ftp-server-enabled')"/>
     <i:local name="sshEnabled" value="UserContext.getCurrentUser().hasPermission('ssh-server-enabled')"/>
 
-    <k:section heading="Einrichtung des Zugriffs zum Upload-Server">
+    <k:section heading="Einrichtung des Zugriffs zum Upload-Server" anchor="setup">
         <p>
             Sie können Dateien per
             <i:if test="ftpEnabled && sshEnabled">
@@ -26,7 +41,7 @@
     </k:section>
     <t:permission permission="ssh-server-enabled">
         <i:local name="sshServer" value="@part(sirius.biz.storage.layer3.downlink.ssh.SSHServer.class)"/>
-        <k:section heading="SSH">
+        <k:section heading="SSH" anchor="ssh">
             <p>
                 Es wird der Einsatz von SFTP empfohlen (Secure File Transfer Protocol, SSH File Transfer Protocol).
             </p>
@@ -39,7 +54,7 @@
     </t:permission>
     <t:permission permission="ftp-server-enabled">
         <i:local name="ftpServer" value="@part(sirius.biz.storage.layer3.downlink.ftp.FTPServer.class)"/>
-        <k:section heading="FTP">
+        <k:section heading="FTP" anchor="ftp">
             <p>
                 Host: <k:inlineCode>@ftpServer.computeExternalHost()</k:inlineCode>
                 <br>
@@ -59,7 +74,7 @@
         </k:section>
 
     </t:permission>
-    <k:section heading="Benutzername und Berechtigungen">
+    <k:section heading="Benutzername und Berechtigungen" anchor="username-permissions">
         <p>
             Benutzername und Kennwort des entsprechend berechtigten Backend-Benutzers werden benötigt.
         </p>
@@ -73,7 +88,7 @@
             (FTP, ...)" einzuschränken.
         </p>
     </k:section>
-    <k:section heading="Ordnerstruktur auf dem Upload-Server">
+    <k:section heading="Ordnerstruktur auf dem Upload-Server" anchor="directory-structure">
         <p>
             Die folgenden Ordner sind auf dem Upload-Server verfügbar:
         </p>
@@ -87,7 +102,7 @@
             </i:for>
         </ul>
     </k:section>
-    <k:section heading="Verarbeitungsjob per Upload starten">
+    <k:section heading="Verarbeitungsjob per Upload starten" anchor="start-processing">
         <p>
             Alle Verarbeitungsjobs, die Dateien annehmen, können automatisch, d.h. ohne Durchführung von weiteren
             Schritten in der Verwaltungsoberfläche gestartet werden. Dafür muss eine Datei per FTP-Upload bereitgestellt
