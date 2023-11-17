@@ -271,26 +271,6 @@ public class URLBuilder {
     }
 
     /**
-     * Makes this URL reusable.
-     * <p>
-     * Such URLs use a virtual access path so that these URLs remain constant for the same blob whereas physical URLs
-     * change once the underlying blob is updated. Therefore, these URLs can be passed on to 3rd parties as they remain
-     * valid as long as the referenced blob "lives".
-     * <p>
-     * Note however, that these URLs (their responses) are not as cacheable as physical ones (which are infinitely
-     * cached). However, unless {@link #suppressCaching()} is invoked, we still try to keep them in cache for a limited
-     * time. We also redirect to the physical URL once the virtual one is requested (if possible). Therefore, a
-     * downstream proxy should still be able to leverage its caching capabilities.
-     *
-     * @return the builder itself for fluent method calls
-     * @deprecated use {@link #delayResolve()} and {@link #eternallyValid()} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public URLBuilder reusable() {
-        return this.delayResolve().eternallyValid();
-    }
-
-    /**
      * Makes this URL eternally valid.
      * <p>
      *
