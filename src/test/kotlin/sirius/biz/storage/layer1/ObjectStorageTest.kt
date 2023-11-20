@@ -76,7 +76,8 @@ class ObjectStorageTest {
         4096   | s3-zip-aes-test
         8192   | s3-zip-aes-test
         10000  | s3-zip-aes-test
-        16384  | s3-zip-aes-test""", delimiter = '|'
+        16384  | s3-zip-aes-test""",
+        delimiter = '|'
     )
     fun `storing and fetching data works as expected`(length: Int, space: String) {
 
@@ -97,7 +98,8 @@ class ObjectStorageTest {
     @CsvSource(
         textBlock = """   
         fs-test | _
-        s3-test | _""", delimiter = '|'
+        s3-test | _""",
+        delimiter = '|'
     )
     fun `deleting data works as expected`(space: String) {
         val testData = "test".toByteArray(StandardCharsets.UTF_8)
