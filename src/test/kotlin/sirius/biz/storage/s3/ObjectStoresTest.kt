@@ -17,16 +17,18 @@ import sirius.kernel.di.std.Part
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
-import java.nio.file.Files as files_;
+import java.nio.file.Files as files_
 import java.nio.charset.StandardCharsets
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-
+/**
+ * Tests the [ObjectStores].
+ */
 @ExtendWith(SiriusExtension::class)
 class ObjectStoresTest {
 
     @Test
-    fun `createBucketWorks`() {
+    fun `create bucket works`() {
         val file = File.createTempFile("test", "")
         val fout = FileOutputStream(file)
         repeat(10024) {
@@ -67,7 +69,7 @@ class ObjectStoresTest {
     }
 
     @Test
-    fun `ensureBucketExists`() {
+    fun `ensure bucket exists`() {
         stores.store().ensureBucketExists(stores.store().getBucketName("exists"))
         stores.store().doesBucketExist(stores.store().getBucketName("exists"))
         stores.bucketCache.get(
@@ -88,7 +90,7 @@ class ObjectStoresTest {
     }
 
     @Test
-    fun `deleteBucket`() {
+    fun `delete Bucket works`() {
         stores.store().ensureBucketExists(stores.store().getBucketName("deleted"))
         stores.store().doesBucketExist(stores.store().getBucketName("deleted"))
         stores.store().deleteBucket(stores.store().getBucketName("deleted"))
