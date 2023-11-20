@@ -12,6 +12,7 @@ package sirius.biz.storage.layer1
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
 import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Streams
 import sirius.kernel.di.std.Part
@@ -25,13 +26,6 @@ import kotlin.test.assertTrue
 /**
  * Tests the [ObjectStorage].
  */
-fun generateRandomData(length: Int): ByteArray {
-    val rnd = Random()
-    val result = ByteArray(length)
-    rnd.nextBytes(result)
-    return result
-}
-
 @ExtendWith(SiriusExtension::class)
 class ObjectStorageTest {
     @ParameterizedTest
@@ -95,12 +89,7 @@ class ObjectStorageTest {
     }
 
     @ParameterizedTest
-    @CsvSource(
-        textBlock = """   
-        fs-test | _
-        s3-test | _""",
-        delimiter = '|'
-    )
+    @ValueSource(strings = ["fs-test", "s3-test"])
     fun `deleting data works as expected`(space: String) {
         val testData = "test".toByteArray(StandardCharsets.UTF_8)
         val objectSpace = storage.getSpace(space)
@@ -123,5 +112,11 @@ class ObjectStorageTest {
         @JvmStatic
         private lateinit var storage: ObjectStorage
 
+        private fun generateRandomData(length: Int): ByteArray {
+            val rnd = Random()
+            val result = ByteArray(length)
+            rnd.nextBytes(result)
+            return result
+        }
     }
 }
