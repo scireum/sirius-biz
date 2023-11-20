@@ -37,7 +37,7 @@ class ObjectStorageTest {
     @ParameterizedTest
     @CsvSource(
         textBlock = """
-     128    | fs-test
+        128    | fs-test
         4096   | fs-test
         8192   | fs-test
         10000  | fs-test
