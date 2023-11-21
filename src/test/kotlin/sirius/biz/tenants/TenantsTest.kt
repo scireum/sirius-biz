@@ -6,29 +6,44 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants
+package sirius.biz.codelists
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import sirius.biz.codelists.jdbc.SQLCodeList
+import sirius.biz.codelists.jdbc.SQLCodeListEntry
+import sirius.biz.tenants.PhoneNumberValidator
+import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
-import sirius.kernel.BaseSpecification
+import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import sirius.web.security.UserContext
 import sirius.web.security.UserInfo
-
 import java.time.Duration
 
-class TenantsSpec extends BaseSpecification {
+/**
+ * Tests the [SQLTenants].
+ */
+@ExtendWith(SiriusExtension::class)
+class TenantsTest {
 
-    @Part
-    private static OMA oma
+    companion object {
+        @Part
+        private lateinit var oma: OMA
 
-            def setupSpec() {
-        oma.getReadyFuture().await(Duration.ofSeconds(60))
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            oma.readyFuture.await(Duration.ofSeconds(60))
+        }
     }
 
-    def "installTestTenant works"() {
-        when:
+    @Test
+    fun `installTestTenant works`() {
         TenantsHelper.installTestTenant()
-        then:
-        UserContext.get().getUser().hasPermission(UserInfo.PERMISSION_LOGGED_IN)
+        kotlin.test.assertTrue { UserContext.get().getUser().hasPermission(UserInfo.PERMISSION_LOGGED_IN) }
     }
 }
