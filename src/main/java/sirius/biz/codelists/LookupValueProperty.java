@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * Provides the propery used to handle {@link LookupValue lookup values} in database entities.
+ * Provides the property used to handle {@link LookupValue lookup values} in database entities.
  */
 public class LookupValueProperty extends StringProperty {
 
@@ -119,5 +119,13 @@ public class LookupValueProperty extends StringProperty {
     protected Object transformValueFromImport(Value value) {
         String importValue = value.trim();
         return referenceValue.getTable().normalizeInput(importValue).orElse(importValue);
+    }
+
+    @Override
+    protected boolean isConsideredNull(Object propertyValue) {
+        if (propertyValue instanceof String stringValue) {
+            return Strings.isEmpty(stringValue);
+        }
+        return propertyValue == null;
     }
 }
