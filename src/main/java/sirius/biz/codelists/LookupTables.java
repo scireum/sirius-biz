@@ -66,12 +66,12 @@ public class LookupTables {
         // If no IDB config is present or Jupiter is disabled, ...
         if (Strings.isEmpty(baseTable) || jupiter == null) {
             String codeList = extension.get(CONFIG_KEY_CODE_LIST).asString();
-            if (Strings.isEmpty(codeList)) {
-                // ...and no codeList is given
-                return new ConfigLookupTable(extension);
+            if (Strings.isFilled(codeList)) {
+                // ...if configured, use code list based tables
+                return new CodeListLookupTable(extension, codeList);
             } else {
-                // ...we resort to code list based tables
-                return new CodeListLookupTable(extension, Strings.firstFilled(codeList, name));
+                // ...or fallback to configuration based table
+                return new ConfigLookupTable(extension);
             }
         }
 
