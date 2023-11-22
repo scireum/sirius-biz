@@ -165,9 +165,14 @@ public class BlobDispatcher implements WebDispatcher {
      */
     private void physicalDelivery(WebContext request, BlobUri blobUri) {
         Response response = request.respondWith();
-        if (checkHashInvalid(response, blobUri.getAccessToken(), blobUri.getPhysicalKey(), blobUri.getStorageSpace())) {
+        Integer cacheSeconds = computeCacheDurationFromHash(response,
+                                                            blobUri.getAccessToken(),
+                                                            blobUri.getPhysicalKey(),
+                                                            blobUri.getStorageSpace());
+        if (cacheSeconds == null) {
             return;
         }
+        response.cachedForSeconds(cacheSeconds);
 
         if (blobUri.isDownload()) {
             response.download(blobUri.getFilename());
@@ -183,34 +188,33 @@ public class BlobDispatcher implements WebDispatcher {
     }
 
     /**
-     * Checks if the provided accessToken is invalid and calculate the cache headers.
+     * Checks if the provided accessToken is invalid and return the cache time in seconds based on the hash validity.
      *
      * @param response    the response to return
      * @param accessToken the security token to verify
      * @param key         the key to verify
      * @param space       the space which is accessed
-     * @return <tt>true</tt> if the accessToken is invalid, <tt>false</tt> otherwise
+     * @return the cache time in seconds or <tt>null</tt> if the hash is invalid
      */
-    private boolean checkHashInvalid(Response response, String accessToken, String key, String space) {
+    private Integer computeCacheDurationFromHash(Response response, String accessToken, String key, String space) {
         BlobStorageSpace storageSpace = blobStorage.getSpace(space);
         Optional<Integer> optionalHashDays = utils.verifyHash(key, accessToken, storageSpace.getUrlValidityDays());
         if (optionalHashDays.isEmpty()) {
             response.error(HttpResponseStatus.UNAUTHORIZED);
-            return true;
+            return null;
         }
 
         int hashDays = optionalHashDays.get();
         if (hashDays == Integer.MAX_VALUE) {
             // Detected a eternallyValid hash, cache indefinitely
-            response.infinitelyCached();
+            return Response.HTTP_CACHE_INFINITE;
         } else if (hashDays > 0) {
             // Detected a hash in the future, cache for the remaining days
-            response.cachedForSeconds(computeCacheInSeconds(hashDays));
+            return computeCacheInSeconds(hashDays);
         } else {
             // Detected a hash in the past. Subtract the amount of days from the limit defined by the space
-            response.cachedForSeconds(computeCacheInSeconds(storageSpace.getUrlValidityDays() + hashDays));
+            return computeCacheInSeconds(storageSpace.getUrlValidityDays() + hashDays);
         }
-        return false;
     }
 
     private int computeCacheInSeconds(int days) {
@@ -234,9 +238,14 @@ public class BlobDispatcher implements WebDispatcher {
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
 
         Response response = request.respondWith();
-        if (checkHashInvalid(response, blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace())) {
+        Integer cacheSeconds = computeCacheDurationFromHash(response,
+                                                            blobUri.getAccessToken(),
+                                                            effectiveKey,
+                                                            blobUri.getStorageSpace());
+        if (cacheSeconds == null) {
             return;
         }
+        response.cachedForSeconds(cacheSeconds);
 
         BlobStorageSpace storageSpace = blobStorage.getSpace(blobUri.getStorageSpace());
 
@@ -246,7 +255,8 @@ public class BlobDispatcher implements WebDispatcher {
             // HTTP round-trip for the redirect shouldn't hurt too much, as it is most probably optimized away due to
             // keep-alive. However, using a physical delivery with infinite cache settings will enable any downstream
             // reverse-proxies to maximize their cache utilization...
-            URLBuilder.UrlResult urlResult = buildPhysicalRedirectUrl(storageSpace, blobUri);
+            URLBuilder.UrlResult urlResult =
+                    buildPhysicalRedirectUrl(storageSpace, blobUri, cacheSeconds == Response.HTTP_CACHE_INFINITE);
 
             if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
                 response.redirectTemporarily(urlResult.url());
@@ -273,9 +283,14 @@ public class BlobDispatcher implements WebDispatcher {
                              request::markAsLongCall);
     }
 
-    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace, BlobUri blobUri) {
+    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace,
+                                                                 BlobUri blobUri,
+                                                                 boolean eternallyValid) {
         URLBuilder urlBuilder = new URLBuilder(storageSpace, blobUri.getBlobKey());
 
+        if (eternallyValid) {
+            urlBuilder.eternallyValid();
+        }
         if (blobUri.isDownload()) {
             urlBuilder.withFileName(blobUri.getFilename()).asDownload();
         }
