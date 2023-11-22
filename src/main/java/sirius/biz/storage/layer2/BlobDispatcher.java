@@ -165,10 +165,10 @@ public class BlobDispatcher implements WebDispatcher {
      */
     private void physicalDelivery(WebContext request, BlobUri blobUri) {
         Response response = request.respondWith();
-        Integer cacheSeconds = checkHashInvalid(response,
-                                                blobUri.getAccessToken(),
-                                                blobUri.getPhysicalKey(),
-                                                blobUri.getStorageSpace());
+        Integer cacheSeconds = computeCacheDurationFromHash(response,
+                                                            blobUri.getAccessToken(),
+                                                            blobUri.getPhysicalKey(),
+                                                            blobUri.getStorageSpace());
         if (cacheSeconds == null) {
             return;
         }
@@ -196,7 +196,7 @@ public class BlobDispatcher implements WebDispatcher {
      * @param space       the space which is accessed
      * @return the cache time in seconds or <tt>null</tt> if the hash is invalid
      */
-    private Integer checkHashInvalid(Response response, String accessToken, String key, String space) {
+    private Integer computeCacheDurationFromHash(Response response, String accessToken, String key, String space) {
         BlobStorageSpace storageSpace = blobStorage.getSpace(space);
         Optional<Integer> optionalHashDays = utils.verifyHash(key, accessToken, storageSpace.getUrlValidityDays());
         if (optionalHashDays.isEmpty()) {
@@ -238,8 +238,10 @@ public class BlobDispatcher implements WebDispatcher {
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
 
         Response response = request.respondWith();
-        Integer cacheSeconds =
-                checkHashInvalid(response, blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace());
+        Integer cacheSeconds = computeCacheDurationFromHash(response,
+                                                            blobUri.getAccessToken(),
+                                                            effectiveKey,
+                                                            blobUri.getStorageSpace());
         if (cacheSeconds == null) {
             return;
         }
