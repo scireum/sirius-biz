@@ -253,7 +253,8 @@ public class BlobDispatcher implements WebDispatcher {
             // HTTP round-trip for the redirect shouldn't hurt too much, as it is most probably optimized away due to
             // keep-alive. However, using a physical delivery with infinite cache settings will enable any downstream
             // reverse-proxies to maximize their cache utilization...
-            URLBuilder.UrlResult urlResult = buildPhysicalRedirectUrl(storageSpace, blobUri);
+            URLBuilder.UrlResult urlResult =
+                    buildPhysicalRedirectUrl(storageSpace, blobUri, cacheSeconds == Response.HTTP_CACHE_INFINITE);
 
             if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
                 response.redirectTemporarily(urlResult.url());
@@ -280,9 +281,14 @@ public class BlobDispatcher implements WebDispatcher {
                              request::markAsLongCall);
     }
 
-    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace, BlobUri blobUri) {
+    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace,
+                                                                 BlobUri blobUri,
+                                                                 boolean eternallyValid) {
         URLBuilder urlBuilder = new URLBuilder(storageSpace, blobUri.getBlobKey());
 
+        if (eternallyValid) {
+            urlBuilder.eternallyValid();
+        }
         if (blobUri.isDownload()) {
             urlBuilder.withFileName(blobUri.getFilename()).asDownload();
         }
