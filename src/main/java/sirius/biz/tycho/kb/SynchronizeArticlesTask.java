@@ -120,7 +120,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                                                                                            + templatePath));
             GlobalRenderContext context = tagliatelle.createRenderContext();
 
-            if (!isRendering(template, context)) {
+            if (!tryRender(template, context)) {
                 return;
             }
 
@@ -156,7 +156,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         }
     }
 
-    private boolean isRendering(Template template, GlobalRenderContext context) {
+    private boolean tryRender(Template template, GlobalRenderContext context) {
         try {
             template.render(context);
             return true;
