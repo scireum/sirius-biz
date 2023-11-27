@@ -119,7 +119,10 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                                            .orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: "
                                                                                            + templatePath));
             GlobalRenderContext context = tagliatelle.createRenderContext();
-            template.render(context);
+
+            if (!isRendering(template, context)) {
+                return;
+            }
 
             if (!isArticle(context)) {
                 return;
@@ -150,6 +153,15 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                       .error(e)
                       .withSystemErrorMessage("Failed to load article %s: %s (%s)", templatePath)
                       .handle();
+        }
+    }
+
+    private boolean isRendering(Template template, GlobalRenderContext context) {
+        try {
+            template.render(context);
+            return true;
+        } catch (Exception ignored) {
+            return false;
         }
     }
 
