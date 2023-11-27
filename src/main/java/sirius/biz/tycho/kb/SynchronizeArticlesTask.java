@@ -119,11 +119,10 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                                            .orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: "
                                                                                            + templatePath));
             GlobalRenderContext context = tagliatelle.createRenderContext();
-            template.render(context);
-
             if (!isArticle(context)) {
                 return;
             }
+            template.render(context);
 
             String articleId = Value.of(context.getExtraBlock(BLOCK_CODE)).toUpperCase();
             String language = context.getExtraBlock(BLOCK_LANG);
