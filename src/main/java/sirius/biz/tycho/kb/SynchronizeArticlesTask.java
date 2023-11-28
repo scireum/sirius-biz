@@ -37,7 +37,10 @@ import java.util.regex.Pattern;
 /**
  * Scans all available articles and turns them into {@link KnowledgeBaseEntry knowledge base entries}.
  * <p>
- * Note that this also deletes outdated entries or empty chapters.
+ * Note:
+ * - the task also deletes outdated entries or empty chapters.
+ * - the task ignores everything in the "kb/parts" directory as this is meant for shared components.
+ * - the task ignores every template which has a parent directory called "parts" as this is meant for article components.
  */
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 public class SynchronizeArticlesTask implements EndOfDayTask {
@@ -95,19 +98,8 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         Sirius.getClasspath()
               .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
               .map(matcher -> cleanupTemplatePath(matcher.group(0)))
-              .filter(templatePath -> {
-                  // The kb/parts directory (and sub-dirs) only contains article components which are not articles on their own.
-                  // The directory is meant for shared components which are used by multiple articles
-                  if (templatePath.contains("kb/parts/")) {
-                      return false;
-                  }
-
-                  // Everything inside a /parts directory is considered a component of a specific article.
-                  // For example: kb/integration/document/parts
-                  // The main document article is located at /document. Its components are located in /document/parts.
-                  String parentDir = new File(templatePath).getParentFile().getName();
-                  return !"parts".equals(parentDir);
-              })
+              .filter(templatePath -> !(isTemplateInsidePartsDirectory(templatePath) || isTemplateAPartOfAnArticle(
+                      templatePath)))
               .forEach(templatePath -> updateArticle(templatePath, syncId));
 
         elastic.refresh(KnowledgeBaseEntry.class);
@@ -119,6 +111,38 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         }
         checkCrossReferences();
         knowledgeBase.resetLanguages();
+    }
+
+    /**
+     * Determines if the given template is part of an article.
+     * <p>
+     * Note:
+     * - Every template which is inside a parent directory called "parts" is considered a component of an article.
+     * <p>
+     * Example:
+     * kb/integration/document/parts
+     * The main document article is located at /document. Its components are located in /document/parts.
+     *
+     * @param templatePath the template path to check
+     * @return <tt>true</tt> if the template is part of an article, <tt>false</tt> otherwise
+     */
+    private static boolean isTemplateAPartOfAnArticle(String templatePath) {
+        String parentDir = new File(templatePath).getParentFile().getName();
+        return "parts".equals(parentDir);
+    }
+
+    /**
+     * Determines if the given template path is located inside the "kb/parts" directory.
+     * <p>
+     * Note:
+     * - The kb/parts directory (and sub-dirs) only contains article components which are not articles on their own.
+     * - The directory is meant for shared components which are used by multiple articles.
+     *
+     * @param templatePath the template path to check
+     * @return <tt>true</tt> if the template path is located inside the "kb/parts" directory, <tt>false</tt> otherwise
+     */
+    private static boolean isTemplateInsidePartsDirectory(String templatePath) {
+        return templatePath.contains("kb/parts/");
     }
 
     private String cleanupTemplatePath(String templatePath) {
