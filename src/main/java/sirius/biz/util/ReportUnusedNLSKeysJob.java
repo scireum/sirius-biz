@@ -8,6 +8,7 @@
 
 package sirius.biz.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import sirius.biz.cluster.InterconnectClusterManager;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
@@ -83,7 +84,7 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
         clusterManager.callEachNode("/system/nls/unused/" + clusterManager.getClusterAPIToken())
                       .forEach(missingKeysOfNode -> {
                           Set<String> keysOfNode = Json.streamEntries(Json.getArray(missingKeysOfNode, "unused"))
-                                                       .map(Object::toString)
+                                                       .map(JsonNode::asText)
                                                        .collect(Collectors.toSet());
 
                           process.log(ProcessLog.info()
