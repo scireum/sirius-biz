@@ -98,8 +98,8 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         Sirius.getClasspath()
               .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
               .map(matcher -> cleanupTemplatePath(matcher.group(0)))
-              .filter(templatePath -> !(isTemplateInsidePartsDirectory(templatePath) || isTemplateAPartOfAnArticle(
-                      templatePath)))
+              .filter(templatePath -> !isTemplateInsidePartsDirectory(templatePath))
+              .filter(templatePath -> !isTemplateAPartOfAnArticle(templatePath))
               .forEach(templatePath -> updateArticle(templatePath, syncId));
 
         elastic.refresh(KnowledgeBaseEntry.class);
