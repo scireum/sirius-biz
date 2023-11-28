@@ -96,8 +96,17 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
               .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
               .map(matcher -> cleanupTemplatePath(matcher.group(0)))
               .filter(templatePath -> {
+                  // The kb/parts directory (and sub-dirs) only contains article components which are not articles on their own.
+                  // The directory is meant for shared components which are used by multiple articles
+                  if (templatePath.contains("kb/parts/")) {
+                      return false;
+                  }
+
+                  // Everything inside a /parts directory is considered a component of a specific article.
+                  // For example: kb/integration/document/parts
+                  // The main document article is located at /document. Its components are located in /document/parts.
                   String parentDir = new File(templatePath).getParentFile().getName();
-                  return !"part".equals(parentDir);
+                  return !"parts".equals(parentDir);
               })
               .forEach(templatePath -> updateArticle(templatePath, syncId));
 
