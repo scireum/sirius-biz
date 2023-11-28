@@ -26,6 +26,7 @@ import sirius.pasta.tagliatelle.Tagliatelle;
 import sirius.pasta.tagliatelle.Template;
 import sirius.pasta.tagliatelle.rendering.GlobalRenderContext;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -93,7 +94,12 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         String syncId = keyGenerator.generateId();
         Sirius.getClasspath()
               .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
-              .forEach(matcher -> updateArticle(cleanupTemplatePath(matcher.group(0)), syncId));
+              .map(matcher -> cleanupTemplatePath(matcher.group(0)))
+              .filter(templatePath -> {
+                  String parentDir = new File(templatePath).getParentFile().getName();
+                  return !"part".equals(parentDir);
+              })
+              .forEach(templatePath -> updateArticle(templatePath, syncId));
 
         elastic.refresh(KnowledgeBaseEntry.class);
         cleanupOldEntries(syncId);
