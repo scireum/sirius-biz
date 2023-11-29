@@ -135,7 +135,7 @@ public class BridgePath implements Path {
 
     @Override
     public Path resolve(Path other) {
-        throw new UnsupportedOperationException("resolve");
+        return resolve(other.toString());
     }
 
     @Override

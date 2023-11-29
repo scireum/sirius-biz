@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer3.downlink.ssh;
 
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -82,7 +83,11 @@ public class BridgeFileSystem extends FileSystem {
         if (Strings.isEmpty(first)) {
             return new BridgePath(virtualFileSystem.root(), this);
         }
-
+        if (more.length == 0) {
+            VirtualFile topLevelDirectory = virtualFileSystem.root().resolve(first);
+            topLevelDirectory.assertExists();
+            return new BridgePath(topLevelDirectory, this);
+        }
         // We only seem to have to handle the root access - we throw the following exception if our
         // assumption is falsified...
         throw new IllegalArgumentException(Strings.apply(
