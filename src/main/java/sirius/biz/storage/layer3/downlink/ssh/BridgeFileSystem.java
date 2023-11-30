@@ -83,17 +83,12 @@ public class BridgeFileSystem extends FileSystem {
         if (Strings.isEmpty(first)) {
             return new BridgePath(virtualFileSystem.root(), this);
         }
-        if (more.length == 0) {
-            VirtualFile topLevelDirectory = virtualFileSystem.root().resolve(first);
-            topLevelDirectory.assertExists();
-            return new BridgePath(topLevelDirectory, this);
+        VirtualFile topLevelDirectory = virtualFileSystem.root().resolve(first);
+        for (String part : more) {
+            topLevelDirectory = topLevelDirectory.resolve(part);
         }
-        // We only seem to have to handle the root access - we throw the following exception if our
-        // assumption is falsified...
-        throw new IllegalArgumentException(Strings.apply(
-                "A non root directory was requested in BridgeFileSystem.getPath: %s - %s",
-                first,
-                Strings.join(",", more)));
+        topLevelDirectory.assertExists();
+        return new BridgePath(topLevelDirectory, this);
     }
 
     @Override
