@@ -8,7 +8,9 @@
 
 package sirius.biz.jobs;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.jobs.batch.BatchProcessJobFactory;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.web.Autoloaded;
@@ -32,14 +34,18 @@ import sirius.web.http.WebContext;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Represents a composite which can be embedded into a {@link sirius.db.mixing.BaseEntity} and contain all relevant
  * data to describe a job and its start parameters.
  */
 public class JobConfigData extends Composite {
+
+    private static final String LIST_DELIMITER = "|";
 
     /**
      * Contains the name of the {@link JobFactory} to launch.
@@ -80,7 +86,7 @@ public class JobConfigData extends Composite {
     private String configuration;
 
     @Transient
-    private Map<String, String> configMap;
+    private Map<String, Value> configMap;
 
     @Part
     private static Jobs jobs;
@@ -100,12 +106,9 @@ public class JobConfigData extends Composite {
     @BeforeSave
     protected void updateConfig() {
         if (configMap != null) {
-            try {
-                configuration = Json.MAPPER.writeValueAsString(configMap);
-            } catch (JsonProcessingException exception) {
-                Exceptions.handle(exception);
-                configuration = Json.write(Json.createObject());
-            }
+            ObjectNode configObject = Json.createObject();
+            configMap.forEach((key, value) -> configObject.putPOJO(key, value.get()));
+            configuration = Json.write(configObject);
         }
 
         if (Strings.isFilled(job)) {
@@ -138,13 +141,24 @@ public class JobConfigData extends Composite {
      */
     @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
     @Explain("This is intentionally mutable.")
-    public Map<String, String> getConfigMap() {
+    public Map<String, Value> getConfigMap() {
         if (configMap == null) {
             configMap = new HashMap<>();
             if (configuration != null) {
-                Json.parseObject(configuration)
-                    .properties()
-                    .forEach(entry -> configMap.put(entry.getKey(), entry.getValue().asText(null)));
+                Json.parseObject(configuration).properties().forEach(entry -> {
+                    Value value;
+
+                    if (entry.getValue().isArray()) {
+                        value = Value.of(Json.streamEntries((ArrayNode) entry.getValue())
+                                             .map(JsonNode::asText)
+                                             .filter(Strings::isFilled)
+                                             .toList());
+                    } else {
+                        value = Value.of(entry.getValue().asText(null));
+                    }
+
+                    configMap.put(entry.getKey(), value);
+                });
             }
         }
 
@@ -152,7 +166,20 @@ public class JobConfigData extends Composite {
     }
 
     /**
+     * Returns the stored configuration as a parameter context map.
+     *
+     * @return a map containing the parameter context
+     */
+    public Map<String, String> asParameterContext() {
+        return getConfigMap().keySet()
+                             .stream()
+                             .collect(Collectors.toMap(Function.identity(), key -> fetchParameter(key).asString()));
+    }
+
+    /**
      * Returns the parameter value which can be used as provider for {@link JobFactory#startInBackground(Function)}.
+     * <p>
+     * List types are concatenated using {@link #LIST_DELIMITER} in order to be consumable by the parameters.
      *
      * @param key the parameter value to fetch
      * @return the value for the given parameter wrapped as <tt>Value</tt>
@@ -162,7 +189,15 @@ public class JobConfigData extends Composite {
         if (BatchProcessJobFactory.HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD.equals(key)) {
             return Value.of(customPersistencePeriod);
         } else {
-            return Value.of(getConfigMap().get(key));
+            Value value = getConfigMap().get(key);
+
+            if (value.is(List.class)) {
+                return Value.of(((List<?>) value.get(List.class, null)).stream()
+                                                                       .map(String::valueOf)
+                                                                       .collect(Collectors.joining(LIST_DELIMITER)));
+            }
+
+            return value;
         }
     }
 
@@ -183,7 +218,7 @@ public class JobConfigData extends Composite {
         // ...however, store the original user input here as JobFactory.startInBackground will
         // perform another check and transform itself...
         getConfigMap().clear();
-        data.keySet().forEach(key -> getConfigMap().put(key, ctx.getParameter(key)));
+        data.keySet().forEach(key -> getConfigMap().put(key, ctx.get(key)));
 
         if (errorHolder.get() != null) {
             throw errorHolder.get();
@@ -216,5 +251,13 @@ public class JobConfigData extends Composite {
 
     public void setCustomPersistencePeriod(PersistencePeriod customPersistencePeriod) {
         this.customPersistencePeriod = customPersistencePeriod;
+    }
+
+    public String getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(String configuration) {
+        this.configuration = configuration;
     }
 }

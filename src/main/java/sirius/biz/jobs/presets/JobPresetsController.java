@@ -13,7 +13,6 @@ import sirius.biz.process.PersistencePeriod;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
-import sirius.kernel.commons.Value;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.InternalService;
@@ -21,9 +20,6 @@ import sirius.web.services.JSONStructuredOutput;
 
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Provides the database independent part for the controller which is responsible for managing job presets.
@@ -44,9 +40,6 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     private static final String RESPONSE_PARAM = "param";
     private static final String RESPONSE_NAME = "name";
     private static final String RESPONSE_VALUE = "value";
-
-    private static final String LIST_DELIMITER = "|";
-    private static final String DELIMITER_PATTERN = Pattern.quote(LIST_DELIMITER);
 
     /**
      * Returns the entity class being used by this controller.
@@ -93,20 +86,11 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
 
         for (String parameter : ctx.getParameterNames()) {
             if (!IGNORED_PARAMETERS.contains(parameter)) {
-                preset.getJobConfigData().getConfigMap().put(parameter, convertParameterValue(ctx.get(parameter)));
+                preset.getJobConfigData().getConfigMap().put(parameter, ctx.get(parameter));
             }
         }
 
         mixing.getDescriptor(getPresetType()).getMapper().update(preset);
-    }
-
-    private String convertParameterValue(Value value) {
-        if (value.is(List.class)) {
-            return ((List<?>) value.get(List.class, null)).stream()
-                                                          .map(String::valueOf)
-                                                          .collect(Collectors.joining(LIST_DELIMITER));
-        }
-        return value.asString();
     }
 
     /**
@@ -129,9 +113,9 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
                 out.beginObject(RESPONSE_PARAM);
                 out.property(RESPONSE_NAME, name);
 
-                if (value.contains(LIST_DELIMITER)) {
+                if (value.is(List.class)) {
                     out.beginArray(RESPONSE_VALUE);
-                    Stream.of(value.split(DELIMITER_PATTERN)).forEach(entry -> out.property(null, entry));
+                    ((List<?>) value.get(List.class, null)).forEach(entry -> out.property(null, entry));
                     out.endArray();
                 } else {
                     out.property(RESPONSE_VALUE, value);
