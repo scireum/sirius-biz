@@ -19,7 +19,7 @@ class SequencesSpec extends BaseSpecification {
     @Part
     protected static Sequences sequences
 
-    def "a new sequence is automatically created"() {
+            def "a new sequence is automatically created"() {
         setup:
         def id = "__generated" + ThreadLocalRandom.current().nextInt()
         when:

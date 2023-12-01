@@ -8,8 +8,6 @@
 
 package sirius.biz.sequences
 
-import sirius.kernel.di.Injector
-
 class SQLSequencesSpec extends SequencesSpec {
 
     def setupSpec() {

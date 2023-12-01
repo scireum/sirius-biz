@@ -17,7 +17,7 @@ class MongoSequencesSpec extends SequencesSpec {
     @Part
     private static Mango mango
 
-    def setupSpec() {
+            def setupSpec() {
         sequences.sequenceStrategy = Injector.context().getPart("mongo", SequenceStrategy.class)
     }
 
@@ -43,9 +43,9 @@ class MongoSequencesSpec extends SequencesSpec {
         and: "reset sequences that may have been set by other tests"
         sequences.setNextValue(entity1.getTypeName(), 1, true)
         mango.select(SequentialMongoBizEntityA.class).delete()
-        sequences.setNextValue(entity2.getTypeName(), 1, true)
+                sequences.setNextValue(entity2.getTypeName(), 1, true)
         mango.select(SequentialMongoBizEntityB.class).delete()
-        when: "new entities are created"
+                when: "new entities are created"
         mango.update(entity1)
         mango.update(entity2)
         then: "different sequences are used"
