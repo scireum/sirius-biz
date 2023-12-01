@@ -8,10 +8,22 @@
 
 package sirius.biz.locks
 
-class SQLLocksSpec extends LocksSpec {
+import org.junit.jupiter.api.BeforeAll
+import sirius.kernel.di.Injector
 
-    def setupSpec() {
-        locks.manager = Injector.context().getPart("sql", LockManager.class)
+/**
+ * Tests the SQL backed [LockManager] implementation.
+ */
+class SqlLocksTest : LocksSpec() {
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            locks.javaClass.getDeclaredField("manager").apply {
+                isAccessible = true
+                set(locks, Injector.context().getPart("sql", LockManager::class.java))
+            }
+        }
     }
-
 }

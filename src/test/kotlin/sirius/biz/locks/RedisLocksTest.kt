@@ -8,10 +8,22 @@
 
 package sirius.biz.locks
 
-class RedisLocksSpec extends LocksSpec {
+import org.junit.jupiter.api.BeforeAll
+import sirius.kernel.di.Injector
 
-    def setupSpec() {
-        locks.manager = Injector.context().getPart("redis", LockManager.class)
+/**
+ * Tests the Redis backed [LockManager] implementation.
+ */
+class RedisLocksTest : LocksSpec() {
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            locks.javaClass.getDeclaredField("manager").apply {
+                isAccessible = true
+                set(locks, Injector.context().getPart("redis", LockManager::class.java))
+            }
+        }
     }
-
 }

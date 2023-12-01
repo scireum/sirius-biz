@@ -8,55 +8,65 @@
 
 package sirius.biz.locks
 
-abstract class LocksSpec extends BaseSpecification {
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import sirius.kernel.SiriusExtension
+import sirius.kernel.async.Tasks
+import sirius.kernel.di.std.Part
+import java.time.Duration
+import java.util.concurrent.Semaphore
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
-    @Part
-    protected static Locks locks
+@ExtendWith(SiriusExtension::class)
+abstract class LocksSpec {
 
-            @Part
-            protected static Tasks tasks
-
-            def "an acquired lock cannot be locked again unless it has been released"() {
-        when:
+    @Test
+    fun `An acquired lock cannot be locked again unless it has been released`() {
         locks.tryLock("test", Duration.ofSeconds(1))
-        then:
         locks.tryLock("test", Duration.ofSeconds(1))
-        and:
         locks.unlock("test")
-        and:
-        locks.isLocked("test")
-        and:
+        assertTrue { locks.isLocked("test") }
         locks.unlock("test")
-        and:
-        locks.isLocked("test") == false
+        assertFalse { locks.isLocked("test") }
     }
 
-    def "an acquired lock can be transferred to another thread"() {
-        when: "Acquire test lock in main thread"
+    @Test
+    fun `An acquired lock can be transferred to another thread`() {
+        // Acquire test lock in the main thread
         locks.tryLock("test", Duration.ofSeconds(1))
-        and: "Initiate a lock transfer"
-        Runnable lockTransfer = locks.initiateLockTransfer("test")
-        and: "Create a semaphore to sync actions across both threads"
-        Semaphore semaphore = new Semaphore(1)
-        and: "Acquire the semaphore, so that the forked thread doesn't start uncontrolled.."
+        // Initiate a lock transfer
+        val lockTransfer = locks.initiateLockTransfer("test")
+        // Create a semaphore to sync actions across both threads
+        val semaphore = Semaphore(1)
+        // Acquire the semaphore, so that the forked thread doesn't start uncontrolled...
         semaphore.acquire()
-        and: "Fork a thread which transfers the lock to itself and unlocks it"
-        tasks.defaultExecutor().start({ ->
+        // Fork a thread which transfers the lock to itself and unlocks it
+        tasks.defaultExecutor().start { ->
             lockTransfer.run()
             semaphore.acquire()
             locks.unlock("test")
             semaphore.release()
-        })
-        then: "Ensure that the lock is still held (the semaphore blocks the forked thread)"
-        locks.isLocked("test")
-        when: "Enable forked thread to unlock the transferred lock"
+        }
+        // Ensure that the lock is still held (the semaphore blocks the forked thread)
+        assertTrue { locks.isLocked("test") }
+        // Enable forked thread to unlock the transferred lock
         semaphore.release()
-        and: "Await that the thread completed executing..."
+        // Await that the thread completed executing...
         while (locks.isLocked("test")) {
             Thread.yield()
         }
-        then: "The lock is now unlocked by the other thread..."
-        !locks.isLocked("test")
+        // The lock is now unlocked by the other thread...
+        assertFalse { locks.isLocked("test") }
+    }
+
+    companion object {
+        @Part
+        @JvmStatic
+        lateinit var locks: Locks
+
+        @Part
+        lateinit var tasks: Tasks
     }
 
 }
