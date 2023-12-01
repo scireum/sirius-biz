@@ -8,57 +8,65 @@
 
 package sirius.biz.web.autoloading
 
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import sirius.db.mongo.Mango
-import sirius.kernel.BaseSpecification
+import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import sirius.web.http.TestRequest
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
-class AutoloadControllerSpec extends BaseSpecification {
+/**
+ * Tests the auto-loading mechanism via [AutoloadController] by using the [AutoLoadEntity] as a test entity.
+ */
+@ExtendWith(SiriusExtension::class)
+class AutoloadControllerTests {
 
-    @Part
-    private static Mango mango
-
-            def "test creation with autoload"() {
-        when:
-        def response = TestRequest.SAFEPOST("/auto-load-controller/new")
+    @Test
+    fun `Creation with autoload works`() {
+        val response = TestRequest.SAFEPOST("/auto-load-controller/new")
                 .withParameter("stringField", "string1")
                 .withParameter("intField", 42)
-                .withParameter("listField", ["listItem1", "listItem2"])
+                .withParameter("listField", listOf("listItem1", "listItem2"))
                 .execute()
-        then:
-        def id = response.getContentAsJson().path("id").asText(null)
-        id != null
-        and:
-        AutoLoadEntity entity = mango.find(AutoLoadEntity.class, id).get()
-        entity.getStringField() == "string1"
-        entity.getIntField() == 42
-        entity.getListField().size() == 2
-        entity.getListField().data().get(0) == "listItem1"
-        entity.getListField().data().get(1) == "listItem2"
+        val id = response.contentAsJson.path("id").asText(null)
+        assertNotNull(id)
+        mango.find(AutoLoadEntity::class.java, id).get().apply {
+            assertEquals("string1", stringField)
+            assertEquals(42, intField)
+            assertEquals(2, listField.size())
+            assertEquals("listItem1", listField.data()[0])
+            assertEquals("listItem2", listField.data()[1])
+        }
     }
 
-    def "test update with autoload"() {
-        given:
-        AutoLoadEntity entity = new AutoLoadEntity()
-        entity.setStringField("string-not-autoloaded")
-        entity.setIntField(1337)
-        entity.getListField().modify().add("starterListItem")
+    @Test
+    fun `Update with autoload works`() {
+        val entity = AutoLoadEntity()
+        entity.stringField = "string-not-autoloaded"
+        entity.intField = 1337
+        entity.listField.modify().add("starterListItem")
         mango.update(entity)
-        when:
-        def response = TestRequest.SAFEPOST("/auto-load-controller/" + entity.getId())
+        val response = TestRequest.SAFEPOST("/auto-load-controller/" + entity.getId())
                 .withParameter("stringField", "string-autoloaded")
                 .withParameter("intField", 1)
-                .withParameter("listField", ["listItem3", "listItem4"])
+                .withParameter("listField", listOf("listItem3", "listItem4"))
                 .execute()
-        then:
-        def id = response.getContentAsJson().path("id").asText(null)
-        id != null
-        and:
-        AutoLoadEntity entity1 = mango.find(AutoLoadEntity.class, id).get()
-        entity1.getStringField() == "string-autoloaded"
-        entity1.getIntField() == 1
-        entity1.getListField().size() == 2
-        entity1.getListField().data().get(0) == "listItem3"
-        entity1.getListField().data().get(1) == "listItem4"
+        val id = response.contentAsJson.path("id").asText(null)
+        assertNotNull(id)
+        val entity1 = mango.find(AutoLoadEntity::class.java, id).get().apply {
+            assertEquals("string-autoloaded", stringField)
+            assertEquals(1, intField)
+            assertEquals(2, listField.size())
+            assertEquals("listItem3", listField.data()[0])
+            assertEquals("listItem4", listField.data()[1])
+        }
+    }
+
+    companion object {
+        @Part
+        @JvmStatic
+        private lateinit var mango: Mango
     }
 }
