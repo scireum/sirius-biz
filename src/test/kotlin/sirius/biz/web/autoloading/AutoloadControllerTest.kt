@@ -18,13 +18,13 @@ class AutoloadControllerSpec extends BaseSpecification {
     @Part
     private static Mango mango
 
-    def "test creation with autoload"() {
+            def "test creation with autoload"() {
         when:
         def response = TestRequest.SAFEPOST("/auto-load-controller/new")
-                                  .withParameter("stringField", "string1")
-                                  .withParameter("intField", 42)
-                                  .withParameter("listField", ["listItem1", "listItem2"])
-                                  .execute()
+                .withParameter("stringField", "string1")
+                .withParameter("intField", 42)
+                .withParameter("listField", ["listItem1", "listItem2"])
+                .execute()
         then:
         def id = response.getContentAsJson().path("id").asText(null)
         id != null
@@ -46,10 +46,10 @@ class AutoloadControllerSpec extends BaseSpecification {
         mango.update(entity)
         when:
         def response = TestRequest.SAFEPOST("/auto-load-controller/" + entity.getId())
-                                  .withParameter("stringField", "string-autoloaded")
-                                  .withParameter("intField", 1)
-                                  .withParameter("listField", ["listItem3", "listItem4"])
-                                  .execute()
+                .withParameter("stringField", "string-autoloaded")
+                .withParameter("intField", 1)
+                .withParameter("listField", ["listItem3", "listItem4"])
+                .execute()
         then:
         def id = response.getContentAsJson().path("id").asText(null)
         id != null
