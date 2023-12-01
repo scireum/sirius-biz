@@ -8,50 +8,60 @@
 
 package sirius.biz.sequences
 
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import sirius.db.mongo.Mango
 import sirius.kernel.di.Injector
 import sirius.kernel.di.std.Part
+import kotlin.test.assertEquals
 
-class MongoSequencesSpec extends SequencesSpec {
+class MongoSequencesTest : SequencesTest() {
 
-    @Part
-    private static Mango mango
-
-            def setupSpec() {
-        sequences.sequenceStrategy = Injector.context().getPart("mongo", SequenceStrategy.class)
-    }
-
-    def "saving entities with sequential ids works"() {
-        setup:
-        SequentialMongoBizEntityA entity1 = new SequentialMongoBizEntityA()
-        SequentialMongoBizEntityA entity2 = new SequentialMongoBizEntityA()
-        //reset sequences that may have been set by other tests
-        sequences.setNextValue(entity2.getTypeName(), 1, true)
-        when:
+    @Test
+    fun `Saving entities with sequential IDs works`() {
+        val entity1 = SequentialMongoBizEntityA()
+        val entity2 = SequentialMongoBizEntityA()
+        // reset sequences that may have been set by other tests
+        sequences.setNextValue(entity2.typeName, 1, true)
+        mango.select(SequentialMongoBizEntityA::class.java).delete()
+        // new entities are created
         mango.update(entity1)
         mango.update(entity2)
-        then:
-        entity1.getId() == "1"
-        and:
-        entity2.getId() == "2"
+        // the same sequence is used
+        assertEquals("1", entity1.id)
+        assertEquals("2", entity2.id)
     }
 
-    def "different type of entities use different sequences"() {
-        given: "two distinct entity types"
-        SequentialMongoBizEntityA entity1 = new SequentialMongoBizEntityA()
-        SequentialMongoBizEntityB entity2 = new SequentialMongoBizEntityB()
-        and: "reset sequences that may have been set by other tests"
-        sequences.setNextValue(entity1.getTypeName(), 1, true)
-        mango.select(SequentialMongoBizEntityA.class).delete()
-                sequences.setNextValue(entity2.getTypeName(), 1, true)
-        mango.select(SequentialMongoBizEntityB.class).delete()
-                when: "new entities are created"
+    @Test
+    fun `Different type of entities use different sequences`() {
+        // two distinct entity types
+        val entity1 = SequentialMongoBizEntityA()
+        val entity2 = SequentialMongoBizEntityB()
+        // reset sequences that may have been set by other tests
+        sequences.setNextValue(entity1.typeName, 1, true)
+        mango.select(SequentialMongoBizEntityA::class.java).delete()
+        sequences.setNextValue(entity2.typeName, 1, true)
+        mango.select(SequentialMongoBizEntityB::class.java).delete()
+        // new entities are created
         mango.update(entity1)
         mango.update(entity2)
-        then: "different sequences are used"
-        entity1.getId() == "1"
-        and:
-        entity2.getId() == "1"
+        // different sequences are used
+        assertEquals("1", entity1.id)
+        assertEquals("1", entity2.id)
     }
 
+    companion object {
+        @Part
+        @JvmStatic
+        private lateinit var mango: Mango
+
+        @BeforeAll
+        @JvmStatic
+        fun setup(): Unit {
+            sequences.javaClass.getDeclaredField("sequenceStrategy").apply {
+                isAccessible = true
+                set(sequences, Injector.context().getPart("mongo", SequenceStrategy::class.java))
+            }
+        }
+    }
 }

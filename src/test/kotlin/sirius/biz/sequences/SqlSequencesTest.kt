@@ -8,10 +8,20 @@
 
 package sirius.biz.sequences
 
-class SQLSequencesSpec extends SequencesSpec {
+import org.junit.jupiter.api.BeforeAll
+import sirius.kernel.di.Injector
 
-    def setupSpec() {
-        sequences.sequenceStrategy = Injector.context().getPart("sql", SequenceStrategy.class)
+class SQLSequencesTest : SequencesTest() {
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun setup(): Unit {
+            sequences.javaClass.getDeclaredField("sequenceStrategy").apply {
+                isAccessible = true
+                set(sequences, Injector.context().getPart("sql", SequenceStrategy::class.java))
+            }
+        }
     }
 
 }
