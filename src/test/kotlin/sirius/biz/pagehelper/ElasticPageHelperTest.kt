@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.web.pagehelper
+package sirius.biz.pagehelper
 
 import sirius.biz.web.ElasticPageHelper
 import sirius.db.es.Elastic
@@ -20,7 +20,7 @@ class ElasticPageHelperSpec extends BaseSpecification {
     @Part
     private static Elastic elastic
 
-    def setupSpec() {
+            def setupSpec() {
         ElasticPageHelperEntity entity1 = new ElasticPageHelperEntity()
         entity1.setBooleanField(true)
         entity1.setStringField("field-value-a")
@@ -52,8 +52,8 @@ class ElasticPageHelperSpec extends BaseSpecification {
     def "test boolean aggregation without value selected"() {
         given:
         ElasticPageHelper<ElasticPageHelperEntity> ph = ElasticPageHelper.withQuery(elastic.select(ElasticPageHelperEntity.class))
-        WebContext wc = CallContext.getCurrent().get(WebContext.class)
-        wc.queryString = [:]
+                WebContext wc = CallContext.getCurrent().get(WebContext.class)
+                wc.queryString = [:]
         ph.withContext(wc)
         ph.addBooleanAggregation(ElasticPageHelperEntity.BOOLEAN_FIELD)
         when:
@@ -79,8 +79,8 @@ class ElasticPageHelperSpec extends BaseSpecification {
     def "test boolean aggregation with value selected"() {
         given:
         ElasticPageHelper<ElasticPageHelperEntity> ph = ElasticPageHelper.withQuery(elastic.select(ElasticPageHelperEntity.class))
-        WebContext wc = CallContext.getCurrent().get(WebContext.class)
-        wc.queryString = ["booleanField": [1]]
+                WebContext wc = CallContext.getCurrent().get(WebContext.class)
+                wc.queryString = ["booleanField": [1]]
         ph.withContext(wc)
         ph.addBooleanAggregation(ElasticPageHelperEntity.BOOLEAN_FIELD)
         when:

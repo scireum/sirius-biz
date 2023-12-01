@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.web.pagehelper
+package sirius.biz.pagehelper
 
 import sirius.biz.web.MongoPageHelper
 import sirius.db.mongo.Mango
@@ -20,7 +20,7 @@ class MongoPageHelperSpec extends BaseSpecification {
     @Part
     private static Mango mango
 
-    def setupSpec() {
+            def setupSpec() {
         MongoPageHelperEntity entity1 = new MongoPageHelperEntity()
         entity1.setBooleanField(true)
         entity1.setStringField("field-value-a")
@@ -50,8 +50,8 @@ class MongoPageHelperSpec extends BaseSpecification {
     def "test boolean aggregation without value selected"() {
         given:
         MongoPageHelper<MongoPageHelperEntity> ph = MongoPageHelper.withQuery(mango.select(MongoPageHelperEntity.class))
-        WebContext wc = CallContext.getCurrent().get(WebContext.class)
-        wc.queryString = [:]
+                WebContext wc = CallContext.getCurrent().get(WebContext.class)
+                wc.queryString = [:]
         ph.withContext(wc)
         ph.addBooleanAggregation(MongoPageHelperEntity.BOOLEAN_FIELD)
         when:
@@ -77,8 +77,8 @@ class MongoPageHelperSpec extends BaseSpecification {
     def "test boolean aggregation with value selected"() {
         given:
         MongoPageHelper<MongoPageHelperEntity> ph = MongoPageHelper.withQuery(mango.select(MongoPageHelperEntity.class))
-        WebContext wc = CallContext.getCurrent().get(WebContext.class)
-        wc.queryString = ["booleanField": [true]]
+                WebContext wc = CallContext.getCurrent().get(WebContext.class)
+                wc.queryString = ["booleanField": [true]]
         ph.withContext(wc)
         ph.addBooleanAggregation(MongoPageHelperEntity.BOOLEAN_FIELD)
         when:
@@ -101,8 +101,8 @@ class MongoPageHelperSpec extends BaseSpecification {
     def "test term aggregation without value selected"() {
         given:
         MongoPageHelper<MongoPageHelperEntity> ph = MongoPageHelper.withQuery(mango.select(MongoPageHelperEntity.class))
-        WebContext wc = CallContext.getCurrent().get(WebContext.class)
-        wc.queryString = [:]
+                WebContext wc = CallContext.getCurrent().get(WebContext.class)
+                wc.queryString = [:]
         ph.withContext(wc)
         ph.addTermAggregation(MongoPageHelperEntity.STRING_FIELD)
         when:
@@ -128,8 +128,8 @@ class MongoPageHelperSpec extends BaseSpecification {
     def "test term aggregation with value selected"() {
         given:
         MongoPageHelper<MongoPageHelperEntity> ph = MongoPageHelper.withQuery(mango.select(MongoPageHelperEntity.class))
-        WebContext wc = CallContext.getCurrent().get(WebContext.class)
-        wc.queryString = ["stringField": ["field-value-a"]]
+                WebContext wc = CallContext.getCurrent().get(WebContext.class)
+                wc.queryString = ["stringField": ["field-value-a"]]
         ph.withContext(wc)
         ph.addTermAggregation(MongoPageHelperEntity.STRING_FIELD)
         when:
