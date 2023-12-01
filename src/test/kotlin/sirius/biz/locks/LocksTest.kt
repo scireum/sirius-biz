@@ -8,22 +8,15 @@
 
 package sirius.biz.locks
 
-import sirius.kernel.BaseSpecification
-import sirius.kernel.async.Tasks
-import sirius.kernel.di.std.Part
-
-import java.time.Duration
-import java.util.concurrent.Semaphore
-
 abstract class LocksSpec extends BaseSpecification {
 
     @Part
     protected static Locks locks
 
-    @Part
-    protected static Tasks tasks
+            @Part
+            protected static Tasks tasks
 
-    def "an acquired lock cannot be locked again unless it has been released"() {
+            def "an acquired lock cannot be locked again unless it has been released"() {
         when:
         locks.tryLock("test", Duration.ofSeconds(1))
         then:

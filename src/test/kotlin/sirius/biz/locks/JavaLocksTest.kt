@@ -8,8 +8,6 @@
 
 package sirius.biz.locks
 
-import sirius.kernel.di.Injector
-
 class JavaLocksSpec extends LocksSpec {
 
     def setupSpec() {

@@ -8,12 +8,10 @@
 
 package sirius.biz.locks
 
-import sirius.kernel.di.Injector
-
-class RedisLocksSpec extends LocksSpec {
+class SQLLocksSpec extends LocksSpec {
 
     def setupSpec() {
-        locks.manager = Injector.context().getPart("redis", LockManager.class)
+        locks.manager = Injector.context().getPart("sql", LockManager.class)
     }
 
 }
