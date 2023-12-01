@@ -23,21 +23,21 @@ class JupiterSpec extends BaseSpecification {
     @Part
     private static Jupiter jupiter
 
-    @Part
-    private static Resources resources
+            @Part
+            private static Resources resources
 
-    // In case this test starts too early, Jupiter might not have processed its repository contents.
-    // We therefore give it some time to do so.
-    def setupSpec() {
+            // In case this test starts too early, Jupiter might not have processed its repository contents.
+            // We therefore give it some time to do so.
+            def setupSpec() {
         jupiter.getDefault().updateConfig(resources.resolve("jupiter-test/settings.yml").get().getContentAsString())
         jupiter.
-                getDefault().
-                repository().
-                store("/countries.yml", resources.resolve("jupiter-test/countries.yml").get().getContentAsString())
+        getDefault().
+        repository().
+        store("/countries.yml", resources.resolve("jupiter-test/countries.yml").get().getContentAsString())
         jupiter.
-                getDefault().
-                repository().
-                store("/loaders/countries.yml", resources.resolve("jupiter-test/countries_loader.yml").get().getContentAsString())
+        getDefault().
+        repository().
+        store("/loaders/countries.yml", resources.resolve("jupiter-test/countries_loader.yml").get().getContentAsString())
         int attempts = 10
         while (attempts-- > 0) {
             Wait.seconds(1)
