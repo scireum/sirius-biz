@@ -14,7 +14,7 @@ import sirius.kernel.di.Injector
 /**
  * Tests the java backed [LockManager] implementation.
  */
-class JavaLocksTest: LocksSpec() {
+class JavaLocksTest : LocksTest() {
 
     companion object {
         @BeforeAll

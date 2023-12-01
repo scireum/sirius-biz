@@ -14,7 +14,7 @@ import sirius.kernel.di.Injector
 /**
  * Tests the Redis backed [LockManager] implementation.
  */
-class RedisLocksTest : LocksSpec() {
+class RedisLocksTest : LocksTest() {
 
     companion object {
         @BeforeAll

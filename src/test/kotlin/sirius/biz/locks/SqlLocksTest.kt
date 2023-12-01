@@ -14,7 +14,7 @@ import sirius.kernel.di.Injector
 /**
  * Tests the SQL backed [LockManager] implementation.
  */
-class SqlLocksTest : LocksSpec() {
+class SqlLocksTest : LocksTest() {
 
     companion object {
         @BeforeAll

@@ -18,8 +18,11 @@ import java.util.concurrent.Semaphore
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+/**
+ * Provides a base for testing the [Locks] class.
+ */
 @ExtendWith(SiriusExtension::class)
-abstract class LocksSpec {
+abstract class LocksTest {
 
     @Test
     fun `An acquired lock cannot be locked again unless it has been released`() {
