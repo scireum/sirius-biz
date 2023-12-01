@@ -18,7 +18,7 @@ class PrefixSearchableEntitySpec extends BaseSpecification {
     @Part
     private static Mango mango
 
-    def "tokenizing works"() {
+            def "tokenizing works"() {
         given:
 
         PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
@@ -118,10 +118,10 @@ class PrefixSearchableEntitySpec extends BaseSpecification {
         mango.update(e)
         then:
         mango.select(PrefixSearchableTestEntity.class).
-                where(QueryBuilder.FILTERS.prefix(PrefixSearchableEntity.SEARCH_PREFIXES, "som")).first().isPresent()
-        and:
-        mango.select(PrefixSearchableTestEntity.class).
-                where(QueryBuilder.FILTERS.prefix(PrefixSearchableEntity.SEARCH_PREFIXES, "Test")).first().isPresent()
+        where(QueryBuilder.FILTERS.prefix(PrefixSearchableEntity.SEARCH_PREFIXES, "som")).first().isPresent()
+                and:
+                mango.select(PrefixSearchableTestEntity.class).
+        where(QueryBuilder.FILTERS.prefix(PrefixSearchableEntity.SEARCH_PREFIXES, "Test")).first().isPresent()
     }
 
 }
