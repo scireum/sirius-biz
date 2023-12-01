@@ -8,9 +8,6 @@
 
 package sirius.biz.packages
 
-import sirius.kernel.BaseSpecification
-import sirius.kernel.di.std.Part
-
 class PackagesSpec extends BaseSpecification {
 
     @Part
