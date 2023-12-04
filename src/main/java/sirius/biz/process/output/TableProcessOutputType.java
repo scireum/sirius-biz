@@ -100,7 +100,7 @@ public class TableProcessOutputType implements ProcessOutputType {
         ph.addTermAggregation(ProcessLog.NODE);
         ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
-
+        ph.withTotalCount();
         List<String> columns = determineColumns(output);
 
         ctx.respondWith()
