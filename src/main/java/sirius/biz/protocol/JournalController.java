@@ -79,7 +79,7 @@ public class JournalController extends BizController {
                               DateRange.THIS_WEEK,
                               DateRange.LAST_WEEK);
         ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
-
+        ph.withTotalCount();
         ctx.respondWith().template("/templates/biz/protocol/entity_protocol.html.pasta", type, id, ph.asPage());
     }
 }
