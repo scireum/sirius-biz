@@ -78,7 +78,7 @@ class ProcessEnvironment implements ProcessContext {
     private final Map<String, AtomicInteger> messageCountsPerType = new ConcurrentHashMap<>();
 
     private Boolean limitLogMessages = null;
-    private ProgressTracker progressTracker;
+    private final ProgressTracker progressTracker = new ProgressTracker(this);
 
     @Part
     @Nullable
@@ -370,28 +370,8 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void startTracking(long total) {
-        progressTracker = new ProgressTracker(this, total);
-    }
-
-    @Override
-    public void incrementTracking() {
-        progressTracker.increment();
-    }
-
-    @Override
-    public void incrementTracking(long amount) {
-        progressTracker.increment(amount);
-    }
-
-    @Override
-    public void finishTracking() {
-        progressTracker.finish();
-    }
-
-    @Override
-    public void appendTrackingMessage(@Nullable String message) {
-        progressTracker.updateMessage(message);
+    public ProgressTracker getProgressTracker() {
+        return progressTracker;
     }
 
     @Override

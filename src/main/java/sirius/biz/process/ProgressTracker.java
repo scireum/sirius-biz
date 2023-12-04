@@ -20,8 +20,8 @@ import java.util.Optional;
  * Allows to track the progress of a long-running operation and calculates the estimated completion time.
  */
 public class ProgressTracker {
-    private final long total;
-    private final LocalDateTime start;
+    private long total;
+    private LocalDateTime start;
     private final ProcessContext processContext;
     private long current = 0;
 
@@ -30,18 +30,25 @@ public class ProgressTracker {
     private String message = null;
 
     /**
-     * Initializes the progress tracker with a total amount of units.
+     * Initializes a new instance of the progress tracker for the given process.
      *
      * @param processContext the process context to update the state message
-     * @param total          the total amount of units to track
      */
-    public ProgressTracker(ProcessContext processContext, long total) {
+    public ProgressTracker(ProcessContext processContext) {
+        this.processContext = processContext;
+    }
+
+    /**
+     * Starts the progress tracker with a total amount of units.
+     *
+     * @param total the total amount of units to track
+     */
+    public void start(long total) {
         if (total < 0) {
             throw new IllegalArgumentException("Total must be >= 0");
         }
         this.start = LocalDateTime.now();
         this.total = total;
-        this.processContext = processContext;
     }
 
     /**
@@ -144,7 +151,7 @@ public class ProgressTracker {
     }
 
     private void assertTrackingStarted() {
-        if (processContext == null) {
+        if (start == null) {
             throw new IllegalStateException("The progress tracker has not been started yet!");
         }
     }

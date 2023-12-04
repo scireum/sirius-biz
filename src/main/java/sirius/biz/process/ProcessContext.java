@@ -376,34 +376,9 @@ public interface ProcessContext extends TaskContextAdapter {
                             BiPredicate<List<String>, List<String>> columnsAndValues);
 
     /**
-     * Initializes the progress tracker with a total amount of units.
+     * Get the {@link ProgressTracker} initialized by the process.
      *
-     * @param total the total amount of units to track
+     * @return the progress tracker
      */
-
-    void startTracking(long total);
-
-    /**
-     * Increments the progress tracker by one unit.
-     */
-    void incrementTracking();
-
-    /**
-     * Increments the progress tracker by the given amount of units.
-     *
-     * @param amount the amount of units to increment
-     */
-    void incrementTracking(long amount);
-
-    /**
-     * Finishes the progress tracking and updates the process with a final message containing the total elapsed time.
-     */
-    void finishTracking();
-
-    /**
-     * Appends the given message to the current progress standard message.
-     *
-     * @param message the message to append
-     */
-    void appendTrackingMessage(@Nullable String message);
+    ProgressTracker getProgressTracker();
 }
