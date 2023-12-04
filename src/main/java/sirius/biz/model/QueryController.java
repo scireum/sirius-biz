@@ -245,10 +245,12 @@ public class QueryController extends BizController {
     }
 
     private boolean filterMatch(String effectiveQuery, EntityDescriptor descriptor) {
-        return descriptor.getName().toLowerCase().contains(effectiveQuery) || descriptor.getType()
-                                                                                        .getSimpleName()
-                                                                                        .toLowerCase()
-                                                                                        .contains(effectiveQuery);
+        return filterMatch(effectiveQuery, descriptor.getName()) || filterMatch(effectiveQuery,
+                                                                                descriptor.getType().getSimpleName());
+    }
+
+    private boolean filterMatch(String effectiveQuery, String searchedValue) {
+        return searchedValue.toLowerCase().contains(effectiveQuery);
     }
 
     private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
