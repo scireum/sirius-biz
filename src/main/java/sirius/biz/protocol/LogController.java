@@ -50,6 +50,7 @@ public class LogController extends BizController {
                               DateRange.THIS_WEEK,
                               DateRange.LAST_WEEK);
         ph.withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD));
+        ph.withTotalCount();
 
         ctx.respondWith().template("/templates/biz/protocol/logs.html.pasta", ph.asPage());
     }
