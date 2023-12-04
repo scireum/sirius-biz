@@ -49,7 +49,7 @@ public class MailController extends BizController {
                               DateRange.THIS_WEEK,
                               DateRange.LAST_WEEK);
         ph.withSearchFields(QueryField.contains(MailProtocol.SEARCH_FIELD));
-
+        ph.withTotalCount();
         ctx.respondWith().template("/templates/biz/protocol/mails.html.pasta", ph.asPage());
     }
 
