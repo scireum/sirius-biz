@@ -22,6 +22,7 @@ import java.util.Optional;
 public class ProgressTracker {
     private final long total;
     private final LocalDateTime start;
+    private final ProcessContext processContext;
     private long current = 0;
 
     private boolean finished = false;
@@ -31,91 +32,86 @@ public class ProgressTracker {
     /**
      * Initializes the progress tracker with a total amount of units.
      *
-     * @param total the total amount of units to track
-     * @return the progress tracker
+     * @param processContext the process context to update the state message
+     * @param total          the total amount of units to track
      */
-    public static ProgressTracker start(long total) {
-        return new ProgressTracker(total);
-    }
-
-    private ProgressTracker(long total) {
+    public ProgressTracker(ProcessContext processContext, long total) {
         if (total < 0) {
             throw new IllegalArgumentException("Total must be >= 0");
         }
         this.start = LocalDateTime.now();
         this.total = total;
+        this.processContext = processContext;
     }
 
     /**
      * Increments the processed unit by one and recalculates the progress.
-     *
-     * @param process the process context to update the state message
      */
-    public void increment(ProcessContext process) {
-        increment(process, 1);
+    public void increment() {
+        increment(1);
     }
 
     /**
      * Increments the processed unit by the amount given and recalculates the progress.
      *
-     * @param amount  the amount to increment the processed units by
-     * @param process the process context to update the state message
+     * @param amount the amount to increment the processed units by
      */
-    public void increment(ProcessContext process, long amount) {
+    public void increment(long amount) {
+        assertTrackingStarted();
         if (finished) {
             throw new IllegalStateException("Cannot increment a finished progress tracker");
         }
 
         current = current + amount;
-        updateIntermediateState(process);
+        updateIntermediateState();
     }
 
     /**
      * Finishes the progress tracking and updates the process with a final message containing the total elapsed time.
-     *
-     * @param process the process context to update the state message
      */
-    public void finish(ProcessContext process) {
+    public void finish() {
+        assertTrackingStarted();
         finished = true;
-        updateFinalState(process);
+        updateFinalState();
     }
 
     /**
      * Updates the plain-text additional message
      *
-     * @param process the process context to update the state message
      * @param message the message to display
      */
-    public void updateMessage(ProcessContext process, @Nullable String message) {
+    public void updateMessage(@Nullable String message) {
+        assertTrackingStarted();
         this.message = message;
-        updateState(process);
+        updateState();
     }
 
-    private void updateState(ProcessContext process) {
+    private void updateState() {
         if (finished) {
-            updateFinalState(process);
+            updateFinalState();
         } else {
-            updateIntermediateState(process);
+            updateIntermediateState();
         }
     }
 
-    private void updateIntermediateState(ProcessContext process) {
-        process.tryUpdateState(NLS.fmtr("ProgressTracker.state")
-                                  .set("progress", computeProgress())
-                                  .set("remaining",
-                                       computeRemainingTime().map(remaining -> NLS.convertDuration(remaining,
-                                                                                                   true,
-                                                                                                   false)).orElse(null))
-                                  .set("completion", computeCompletionTime().map(NLS::toUserString).orElse(null))
-                                  .set("message", message)
-                                  .smartFormat());
+    private void updateIntermediateState() {
+        processContext.tryUpdateState(NLS.fmtr("ProgressTracker.state")
+                                         .set("progress", computeProgress())
+                                         .set("remaining",
+                                              computeRemainingTime().map(remaining -> NLS.convertDuration(remaining,
+                                                                                                          true,
+                                                                                                          false))
+                                                                    .orElse(null))
+                                         .set("completion", computeCompletionTime().map(NLS::toUserString).orElse(null))
+                                         .set("message", message)
+                                         .smartFormat());
     }
 
-    private void updateFinalState(ProcessContext process) {
-        process.forceUpdateState(NLS.fmtr("ProgressTracker.total")
-                                    .set("total", NLS.convertDuration(computeElapsedDuration(), true, false))
-                                    .set("message", message)
-                                    .smartFormat());
+    private void updateFinalState() {
+        processContext.forceUpdateState(NLS.fmtr("ProgressTracker.total")
+                                           .set("total", NLS.convertDuration(computeElapsedDuration(), true, false))
+                                           .set("message", message)
+                                           .smartFormat());
     }
 
     private int computeProgress() {
@@ -145,5 +141,11 @@ public class ProgressTracker {
 
     private Duration computeElapsedDuration() {
         return Duration.between(start, LocalDateTime.now());
+    }
+
+    private void assertTrackingStarted() {
+        if (processContext == null) {
+            throw new IllegalStateException("The progress tracker has not been started yet!");
+        }
     }
 }

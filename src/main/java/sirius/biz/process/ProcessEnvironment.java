@@ -371,37 +371,27 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void startTracking(long total) {
-        progressTracker = ProgressTracker.start(total);
+        progressTracker = new ProgressTracker(this, total);
     }
 
     @Override
     public void incrementTracking() {
-        assertTrackingStarted();
-        progressTracker.increment(this);
+        progressTracker.increment();
     }
 
     @Override
     public void incrementTracking(long amount) {
-        assertTrackingStarted();
-        progressTracker.increment(this, amount);
+        progressTracker.increment(amount);
     }
 
     @Override
     public void finishTracking() {
-        assertTrackingStarted();
-        progressTracker.finish(this);
+        progressTracker.finish();
     }
 
     @Override
     public void appendTrackingMessage(@Nullable String message) {
-        assertTrackingStarted();
-        progressTracker.updateMessage(this, message);
-    }
-
-    private void assertTrackingStarted() {
-        if (progressTracker == null) {
-            throw new IllegalStateException("The progress tracker has not been started yet!");
-        }
+        progressTracker.updateMessage(message);
     }
 
     @Override
