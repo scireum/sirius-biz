@@ -17,7 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 /**
- * Allows to track the progress of a long running operation and calculates the estimated completion time.
+ * Allows to track the progress of a long-running operation and calculates the estimated completion time.
  */
 public class ProgressTracker {
     private final long total;
