@@ -256,7 +256,7 @@ public class L3Uplink implements VFSRoot {
             // We always query for a bit too many result so that we know that there is "more" to page to...
             while (children.size() > result.getPageSize()) {
                 result.withHasMore(true);
-                children.remove(children.size() - 1);
+                children.removeLast();
             }
 
             result.withItems(children);

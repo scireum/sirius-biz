@@ -210,7 +210,7 @@ public abstract class OnboardingEngine {
             return Optional.empty();
         }
 
-        OnboardingVideo example = videos.get(0);
+        OnboardingVideo example = videos.getFirst();
         AcademyVideoData exampleAcademyVideoData = example.fetchAcademyVideoData();
         AcademyTrackInfo track = new AcademyTrackInfo(exampleAcademyVideoData.getTrackId(),
                                                       exampleAcademyVideoData.getTrackName(),
