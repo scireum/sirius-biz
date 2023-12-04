@@ -237,16 +237,13 @@ public class QueryController extends BizController {
     public void entityTypeAutocomplete(WebContext webContext) {
         AutocompleteHelper.handle(webContext, ((query, result) -> {
             String effectiveQuery = query.toLowerCase();
-            fetchRelevantDescriptors().filter(descriptor -> filterMatch(effectiveQuery, descriptor))
+            fetchRelevantDescriptors().filter(descriptor -> fuzzyMatches(effectiveQuery, descriptor.getName())
+                                                            || fuzzyMatches(effectiveQuery,
+                                                                            descriptor.getType().getSimpleName()))
                                       .map(this::createCompletion)
                                       .limit(AutocompleteHelper.DEFAULT_LIMIT)
                                       .forEach(result);
         }));
-    }
-
-    private boolean filterMatch(String effectiveQuery, EntityDescriptor descriptor) {
-        return fuzzyMatches(effectiveQuery, descriptor.getName()) || fuzzyMatches(effectiveQuery,
-                                                                                  descriptor.getType().getSimpleName());
     }
 
     /**
