@@ -245,12 +245,35 @@ public class QueryController extends BizController {
     }
 
     private boolean filterMatch(String effectiveQuery, EntityDescriptor descriptor) {
-        return filterMatch(effectiveQuery, descriptor.getName()) || filterMatch(effectiveQuery,
-                                                                                descriptor.getType().getSimpleName());
+        return fuzzyMatches(effectiveQuery, descriptor.getName()) || fuzzyMatches(effectiveQuery,
+                                                                                  descriptor.getType().getSimpleName());
     }
 
-    private boolean filterMatch(String effectiveQuery, String searchedValue) {
-        return searchedValue.toLowerCase().contains(effectiveQuery);
+    /**
+     * Checks if the given query is contained in the searched value.
+     * <p>
+     * This checks if the characters of the query are contained in the searched value in the correct order.
+     * It also ignores casing.
+     *
+     * @param effectiveQuery the lower-cased query text to search for
+     * @param searchedValue  the value to search in
+     * @return <tt>true</tt> if the query is contained in the searched value
+     */
+    private boolean fuzzyMatches(String effectiveQuery, String searchedValue) {
+        String effectiveSearchedValue = searchedValue.toLowerCase();
+        int queryIndex = 0;
+        // Iterate over the characters of the searched value.
+        // Break if we reached the end of the query or searched value.
+        for (int targetIndex = 0;
+             targetIndex < effectiveSearchedValue.length() && queryIndex < effectiveQuery.length();
+             targetIndex++) {
+            if (effectiveQuery.charAt(queryIndex) == effectiveSearchedValue.charAt(targetIndex)) {
+                // If the current character matches, we move to the next character in the query
+                queryIndex++;
+            }
+        }
+        // If we reached the end of the query, we found a match
+        return queryIndex == effectiveQuery.length();
     }
 
     private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
