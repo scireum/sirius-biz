@@ -441,7 +441,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     protected void enforcePaging(Page<E> result, List<E> items) {
         if (items.size() > pageSize) {
             result.withHasMore(true);
-            items.remove(items.size() - 1);
+            items.removeLast();
             if (withTotalCount) {
                 result.withTotalItems((int) baseQuery.count());
             }

@@ -74,7 +74,7 @@ public class ScriptingController extends BizController {
                                                    .map(name -> Tuple.create(name, name))
                                                    .collect(Collectors.toList());
 
-        nodes.add(0, Tuple.create("Current Machine", Scripting.LOCAL_NODE));
+        nodes.addFirst(Tuple.create("Current Machine", Scripting.LOCAL_NODE));
         nodes.add(Tuple.create("All Machines", Scripting.ALL_NODES));
 
         webContext.respondWith().template("/templates/biz/ide/scripting.html.pasta", nodes);
