@@ -27,15 +27,15 @@ public class LogController extends BizController {
     /**
      * Lists all recorded log entries.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/logs")
-    public void logs(WebContext ctx) {
+    public void logs(WebContext webContext) {
         ElasticPageHelper<LoggedMessage> pageHelper =
                 ElasticPageHelper.withQuery(elastic.select(LoggedMessage.class).orderDesc(LoggedMessage.TOD));
-        pageHelper.withContext(ctx)
+        pageHelper.withContext(webContext)
                   .withPageSize(100)
                   .addTermAggregation(LoggedMessage.CATEGORY, 100)
                   .addTermAggregation(LoggedMessage.LEVEL)
@@ -52,6 +52,6 @@ public class LogController extends BizController {
                   .withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD))
                   .withTotalCount();
 
-        ctx.respondWith().template("/templates/biz/protocol/logs.html.pasta", pageHelper.asPage());
+        webContext.respondWith().template("/templates/biz/protocol/logs.html.pasta", pageHelper.asPage());
     }
 }
