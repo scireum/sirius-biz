@@ -67,10 +67,10 @@ public class LogsProcessOutputType implements ProcessOutputType {
         }
 
         ElasticPageHelper<ProcessLog> pageHelper = ElasticPageHelper.withQuery(query);
-        pageHelper.withContext(webContext);
-        pageHelper.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
-        pageHelper.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
-        pageHelper.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
+        pageHelper.withContext(webContext)
+                  .addTermAggregation(ProcessLog.TYPE, ProcessLogType.class)
+                  .addTermAggregation(ProcessLog.STATE, ProcessLogState.class)
+                  .addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         if (user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
             pageHelper.addBooleanAggregation(ProcessLog.SYSTEM_MESSAGE);
         }
@@ -78,9 +78,9 @@ public class LogsProcessOutputType implements ProcessOutputType {
                                       false,
                                       DateRange.LAST_FIVE_MINUTES,
                                       DateRange.LAST_FIFTEEN_MINUTES,
-                                      DateRange.LAST_TWO_HOURS);
-        pageHelper.addTermAggregation(ProcessLog.NODE);
-        pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
+                                      DateRange.LAST_TWO_HOURS)
+                  .addTermAggregation(ProcessLog.NODE)
+                  .withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         webContext.respondWith()
                   .template("/templates/biz/process/process-output-logs.html.pasta",
