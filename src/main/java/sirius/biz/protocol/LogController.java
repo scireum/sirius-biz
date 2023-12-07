@@ -35,12 +35,12 @@ public class LogController extends BizController {
     public void logs(WebContext ctx) {
         ElasticPageHelper<LoggedMessage> pageHelper =
                 ElasticPageHelper.withQuery(elastic.select(LoggedMessage.class).orderDesc(LoggedMessage.TOD));
-        pageHelper.withContext(ctx);
-        pageHelper.withPageSize(100);
-        pageHelper.addTermAggregation(LoggedMessage.CATEGORY, 100);
-        pageHelper.addTermAggregation(LoggedMessage.LEVEL);
-        pageHelper.addTermAggregation(LoggedMessage.NODE);
-        pageHelper.addTimeAggregation(LoggedMessage.TOD,
+        pageHelper.withContext(ctx)
+                  .withPageSize(100)
+                  .addTermAggregation(LoggedMessage.CATEGORY, 100)
+                  .addTermAggregation(LoggedMessage.LEVEL)
+                  .addTermAggregation(LoggedMessage.NODE)
+                  .addTimeAggregation(LoggedMessage.TOD,
                                       false,
                                       DateRange.LAST_FIVE_MINUTES,
                                       DateRange.LAST_FIFTEEN_MINUTES,
@@ -48,9 +48,9 @@ public class LogController extends BizController {
                                       DateRange.TODAY,
                                       DateRange.YESTERDAY,
                                       DateRange.THIS_WEEK,
-                                      DateRange.LAST_WEEK);
-        pageHelper.withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD));
-        pageHelper.withTotalCount();
+                                      DateRange.LAST_WEEK)
+                  .withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD))
+                  .withTotalCount();
 
         ctx.respondWith().template("/templates/biz/protocol/logs.html.pasta", pageHelper.asPage());
     }
