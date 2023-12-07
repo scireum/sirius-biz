@@ -69,8 +69,8 @@ public class JournalController extends BizController {
                                                                                             type)
                                                                                         .eq(JournalEntry.TARGET_ID, id)
                                                                                         .orderDesc(JournalEntry.TOD));
-        pageHelper.withContext(webContext);
-        pageHelper.addTimeAggregation(JournalEntry.TOD,
+        pageHelper.withContext(webContext)
+                  .addTimeAggregation(JournalEntry.TOD,
                                       false,
                                       DateRange.LAST_FIVE_MINUTES,
                                       DateRange.LAST_FIFTEEN_MINUTES,
@@ -78,9 +78,10 @@ public class JournalController extends BizController {
                                       DateRange.TODAY,
                                       DateRange.YESTERDAY,
                                       DateRange.THIS_WEEK,
-                                      DateRange.LAST_WEEK);
-        pageHelper.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
-        pageHelper.withTotalCount();
+                                      DateRange.LAST_WEEK)
+                  .withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD))
+                  .withTotalCount();
+
         webContext.respondWith()
                   .template("/templates/biz/protocol/entity_protocol.html.pasta", type, id, pageHelper.asPage());
     }
