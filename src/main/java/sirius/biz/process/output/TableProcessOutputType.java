@@ -91,16 +91,16 @@ public class TableProcessOutputType implements ProcessOutputType {
                                                 .orderAsc(ProcessLog.SORT_KEY);
 
         ElasticPageHelper<ProcessLog> pageHelper = ElasticPageHelper.withQuery(query);
-        pageHelper.withContext(webContext);
-        pageHelper.addTimeAggregation(ProcessLog.TIMESTAMP,
+        pageHelper.withContext(webContext)
+                  .addTimeAggregation(ProcessLog.TIMESTAMP,
                                       false,
                                       DateRange.LAST_FIVE_MINUTES,
                                       DateRange.LAST_FIFTEEN_MINUTES,
-                                      DateRange.LAST_TWO_HOURS);
-        pageHelper.addTermAggregation(ProcessLog.NODE);
-        pageHelper.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
-        pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
-        pageHelper.withTotalCount();
+                                      DateRange.LAST_TWO_HOURS)
+                  .addTermAggregation(ProcessLog.NODE)
+                  .addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet)
+                  .withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD))
+                  .withTotalCount();
         List<String> columns = determineColumns(output);
 
         webContext.respondWith()
