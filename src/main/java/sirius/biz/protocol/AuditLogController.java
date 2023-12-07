@@ -40,12 +40,12 @@ public class AuditLogController extends BizController {
     /**
      * Renders some metrics to determine system growth.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @LoginRequired
     @Routed("/audit-log")
     @Permission(PERMISSION_VIEW_AUDIT_LOGS)
-    public void auditLog(WebContext ctx) {
+    public void auditLog(WebContext webContext) {
         ElasticQuery<AuditLogEntry> query = elastic.select(AuditLogEntry.class).orderDesc(AuditLogEntry.TIMESTAMP);
 
         if (!hasPermission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)) {
@@ -64,20 +64,20 @@ public class AuditLogController extends BizController {
             query.eq(AuditLogEntry.HIDDEN, false);
         }
 
-        ElasticPageHelper<AuditLogEntry> ph = ElasticPageHelper.withQuery(query);
-        ph.withContext(ctx);
-        ph.withPageSize(100);
-        ph.addTimeAggregation(AuditLogEntry.TIMESTAMP,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS,
-                              DateRange.TODAY,
-                              DateRange.YESTERDAY,
-                              DateRange.THIS_WEEK,
-                              DateRange.LAST_WEEK);
-        ph.withSearchFields(QueryField.contains(AuditLogEntry.SEARCH_FIELD));
+        ElasticPageHelper<AuditLogEntry> pageHelper = ElasticPageHelper.withQuery(query);
+        pageHelper.withContext(webContext);
+        pageHelper.withPageSize(100);
+        pageHelper.addTimeAggregation(AuditLogEntry.TIMESTAMP,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK);
+        pageHelper.withSearchFields(QueryField.contains(AuditLogEntry.SEARCH_FIELD));
 
-        ctx.respondWith().template("/templates/biz/protocol/audit_logs.html.pasta", ph.asPage());
+        webContext.respondWith().template("/templates/biz/protocol/audit_logs.html.pasta", pageHelper.asPage());
     }
 }
