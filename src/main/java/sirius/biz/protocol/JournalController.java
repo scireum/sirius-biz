@@ -54,32 +54,34 @@ public class JournalController extends BizController {
     /**
      * Displays all changes on entries recorded for a given entity by the protocol.
      *
-     * @param ctx  the current request
-     * @param type the type of the object to report the journal for
-     * @param id   the id of the object to report the journal for
+     * @param webContext the current request
+     * @param type       the type of the object to report the journal for
+     * @param id         the id of the object to report the journal for
      */
     @Routed("/system/protocol/:1/:2")
-    public void entityProtocol(WebContext ctx, String type, String id) {
-        if (!verifySignedLink(ctx)) {
+    public void entityProtocol(WebContext webContext, String type, String id) {
+        if (!verifySignedLink(webContext)) {
             return;
         }
 
-        ElasticPageHelper<JournalEntry> ph = ElasticPageHelper.withQuery(elastic.select(JournalEntry.class)
-                                                                                .eq(JournalEntry.TARGET_TYPE, type)
-                                                                                .eq(JournalEntry.TARGET_ID, id)
-                                                                                .orderDesc(JournalEntry.TOD));
-        ph.withContext(ctx);
-        ph.addTimeAggregation(JournalEntry.TOD,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS,
-                              DateRange.TODAY,
-                              DateRange.YESTERDAY,
-                              DateRange.THIS_WEEK,
-                              DateRange.LAST_WEEK);
-        ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
-        ph.withTotalCount();
-        ctx.respondWith().template("/templates/biz/protocol/entity_protocol.html.pasta", type, id, ph.asPage());
+        ElasticPageHelper<JournalEntry> pageHelper = ElasticPageHelper.withQuery(elastic.select(JournalEntry.class)
+                                                                                        .eq(JournalEntry.TARGET_TYPE,
+                                                                                            type)
+                                                                                        .eq(JournalEntry.TARGET_ID, id)
+                                                                                        .orderDesc(JournalEntry.TOD));
+        pageHelper.withContext(webContext);
+        pageHelper.addTimeAggregation(JournalEntry.TOD,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK);
+        pageHelper.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
+        pageHelper.withTotalCount();
+        webContext.respondWith()
+                  .template("/templates/biz/protocol/entity_protocol.html.pasta", type, id, pageHelper.asPage());
     }
 }
