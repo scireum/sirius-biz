@@ -65,9 +65,9 @@ public class AuditLogController extends BizController {
         }
 
         ElasticPageHelper<AuditLogEntry> pageHelper = ElasticPageHelper.withQuery(query);
-        pageHelper.withContext(webContext);
-        pageHelper.withPageSize(100);
-        pageHelper.addTimeAggregation(AuditLogEntry.TIMESTAMP,
+        pageHelper.withContext(webContext)
+                  .withPageSize(100)
+                  .addTimeAggregation(AuditLogEntry.TIMESTAMP,
                                       false,
                                       DateRange.LAST_FIVE_MINUTES,
                                       DateRange.LAST_FIFTEEN_MINUTES,
@@ -75,8 +75,8 @@ public class AuditLogController extends BizController {
                                       DateRange.TODAY,
                                       DateRange.YESTERDAY,
                                       DateRange.THIS_WEEK,
-                                      DateRange.LAST_WEEK);
-        pageHelper.withSearchFields(QueryField.contains(AuditLogEntry.SEARCH_FIELD));
+                                      DateRange.LAST_WEEK)
+                  .withSearchFields(QueryField.contains(AuditLogEntry.SEARCH_FIELD));
 
         webContext.respondWith().template("/templates/biz/protocol/audit_logs.html.pasta", pageHelper.asPage());
     }
