@@ -33,25 +33,25 @@ public class LogController extends BizController {
     @DefaultRoute
     @Routed("/system/logs")
     public void logs(WebContext ctx) {
-        ElasticPageHelper<LoggedMessage> ph =
+        ElasticPageHelper<LoggedMessage> pageHelper =
                 ElasticPageHelper.withQuery(elastic.select(LoggedMessage.class).orderDesc(LoggedMessage.TOD));
-        ph.withContext(ctx);
-        ph.withPageSize(100);
-        ph.addTermAggregation(LoggedMessage.CATEGORY, 100);
-        ph.addTermAggregation(LoggedMessage.LEVEL);
-        ph.addTermAggregation(LoggedMessage.NODE);
-        ph.addTimeAggregation(LoggedMessage.TOD,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS,
-                              DateRange.TODAY,
-                              DateRange.YESTERDAY,
-                              DateRange.THIS_WEEK,
-                              DateRange.LAST_WEEK);
-        ph.withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD));
-        ph.withTotalCount();
+        pageHelper.withContext(ctx);
+        pageHelper.withPageSize(100);
+        pageHelper.addTermAggregation(LoggedMessage.CATEGORY, 100);
+        pageHelper.addTermAggregation(LoggedMessage.LEVEL);
+        pageHelper.addTermAggregation(LoggedMessage.NODE);
+        pageHelper.addTimeAggregation(LoggedMessage.TOD,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK);
+        pageHelper.withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD));
+        pageHelper.withTotalCount();
 
-        ctx.respondWith().template("/templates/biz/protocol/logs.html.pasta", ph.asPage());
+        ctx.respondWith().template("/templates/biz/protocol/logs.html.pasta", pageHelper.asPage());
     }
 }
