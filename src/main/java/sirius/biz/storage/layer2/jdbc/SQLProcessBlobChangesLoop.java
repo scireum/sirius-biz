@@ -31,7 +31,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteBlobs(Runnable counter) {
-        buildBaseQuery(SQLBlob.class, query -> query.eq(SQLBlob.DELETED, true)).streamBlockwise().forEach(blob -> {
+        buildBaseQuery(SQLBlob.class, query -> query.eq(SQLBlob.DELETED, true)).iterateAll(blob -> {
             try {
                 deletePhysicalObject(blob);
                 oma.delete(blob);
@@ -45,7 +45,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     @Override
     protected void deleteDirectories(Runnable counter) {
         buildBaseQuery(SQLDirectory.class, query -> {
-            query.eq(SQLDirectory.DELETED, true).streamBlockwise().forEach(dir -> {
+            query.eq(SQLDirectory.DELETED, true).iterateAll(dir -> {
                 try {
                     propagateDelete(dir);
                     oma.delete(dir);
@@ -110,7 +110,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     @Override
     protected void processRenamedDirectories(Runnable counter) {
         buildBaseQuery(SQLDirectory.class, query -> {
-            query.eq(SQLDirectory.RENAMED, true).streamBlockwise().forEach(dir -> {
+            query.eq(SQLDirectory.RENAMED, true).iterateAll(dir -> {
                 try {
                     propagateRename(dir);
                     oma.updateStatement(SQLDirectory.class)
@@ -161,7 +161,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                                       String updateExceptionType,
                                       Runnable counter) {
         SmartQuery<SQLBlob> query = buildBaseQuery(SQLBlob.class, queryExtender);
-        query.streamBlockwise().forEach(blob -> {
+        query.iterateAll(blob -> {
             blobConsumer.accept(blob);
 
             try {
