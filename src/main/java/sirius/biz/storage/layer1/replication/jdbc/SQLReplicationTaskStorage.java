@@ -109,7 +109,7 @@ public class SQLReplicationTaskStorage
             SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
             query.eq(SQLReplicationTask.FAILED, false);
             query.eq(SQLReplicationTask.TRANSACTION_ID, txnId);
-            query.iterateAll(this::executeTask);
+            query.streamBlockwise().forEach(this::executeTask);
         }
     }
 
