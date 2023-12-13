@@ -245,6 +245,7 @@ public class L3Uplink implements VFSRoot {
             List<VirtualFile> children = new ArrayList<>();
 
             BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper = directory.queryChildBlobsAsPage(webContext);
+            blobPageHelper.withTotalCount();
             if (!blobPageHelper.hasFacetFilters()) {
                 // We only query for directories if there are no filters (facets) are active,
                 // as we know that we cannot satisfy them anyway...
@@ -291,6 +292,10 @@ public class L3Uplink implements VFSRoot {
                     .map(blob -> wrapBlob(parent, blob, false))
                     .forEach(children::add);
             blobPage.getFacets().forEach(result::addFacet);
+
+            if (blobPage.getTotal() > 0) {
+                result.withTotalItems(blobPage.getTotal());
+            }
         }
     }
 
