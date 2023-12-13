@@ -84,32 +84,32 @@ public class TableProcessOutputType implements ProcessOutputType {
     }
 
     @Override
-    public void render(WebContext ctx, Process process, ProcessOutput output) {
+    public void render(WebContext webContext, Process process, ProcessOutput output) {
         ElasticQuery<ProcessLog> query = elastic.select(ProcessLog.class)
                                                 .eq(ProcessLog.OUTPUT, output.getName())
                                                 .eq(ProcessLog.PROCESS, process)
                                                 .orderAsc(ProcessLog.SORT_KEY);
 
-        ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
-        ph.withContext(ctx);
-        ph.addTimeAggregation(ProcessLog.TIMESTAMP,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS);
-        ph.addTermAggregation(ProcessLog.NODE);
-        ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
-        ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
-
+        ElasticPageHelper<ProcessLog> pageHelper = ElasticPageHelper.withQuery(query);
+        pageHelper.withContext(webContext)
+                  .addTimeAggregation(ProcessLog.TIMESTAMP,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS)
+                  .addTermAggregation(ProcessLog.NODE)
+                  .addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet)
+                  .withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD))
+                  .withTotalCount();
         List<String> columns = determineColumns(output);
 
-        ctx.respondWith()
-           .template("/templates/biz/process/process-output-table.html.pasta",
-                     cells,
-                     process,
-                     ph.asPage(),
-                     output.getName(),
-                     columns,
-                     determineLabels(output, columns));
+        webContext.respondWith()
+                  .template("/templates/biz/process/process-output-table.html.pasta",
+                            cells,
+                            process,
+                            pageHelper.asPage(),
+                            output.getName(),
+                            columns,
+                            determineLabels(output, columns));
     }
 }
