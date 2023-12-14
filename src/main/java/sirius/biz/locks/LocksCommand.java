@@ -29,8 +29,8 @@ public class LocksCommand implements Command {
     @Override
     public void execute(Output output, String... params) throws Exception {
         if (params.length > 0) {
-            output.apply("Unlocking: %s", params[0]);
-            locks.unlock(params[0], true);
+            String name = params[0];
+            unlock(output, name);
         }
         output.line("Use locks <name> to forcefully unlock a lock.");
         output.apply("%-20s %-20s %-20s %-20s", "NAME", "OWNER", "THREAD", "ACQUIRED");
@@ -43,6 +43,11 @@ public class LocksCommand implements Command {
                          NLS.toUserString(lock.getAcquired()));
         });
         output.separator();
+    }
+
+    private void unlock(Output output, String name) {
+        output.apply("Unlocking: %s", name);
+        locks.unlock(name, true);
     }
 
     @Override
