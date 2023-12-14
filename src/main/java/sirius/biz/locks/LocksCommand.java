@@ -34,12 +34,16 @@ public class LocksCommand implements Command {
 
             if (Strings.areEqual(name, "*") || Strings.areEqual(name, "all")) {
                 unlockAll(output);
-                return;
+            } else {
+                unlock(output, name);
             }
 
-            unlock(output, name);
+            output.blankLine();
         }
+
         output.line("Use `locks <name>` to forcefully unlock a lock. Use `locks all` to unlock all locks.");
+        output.blankLine();
+
         output.apply("%-20s %-20s %-20s %-20s", "NAME", "OWNER", "THREAD", "ACQUIRED");
         output.separator();
         locks.getLocks().forEach(lock -> {
