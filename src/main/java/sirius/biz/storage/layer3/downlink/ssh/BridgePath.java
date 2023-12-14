@@ -110,7 +110,7 @@ public class BridgePath implements Path {
 
         VirtualFile parentFile = virtualFile;
         for (int i = 0; i < steps; i++) {
-            parentFile = virtualFile.parent();
+            parentFile = parentFile.parent();
         }
 
         return new StringPath(parentFile.name());

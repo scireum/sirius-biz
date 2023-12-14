@@ -237,7 +237,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                 return;
             }
             entries.forEach(entryProcessor);
-            lastArticleId = entries.get(entries.size() - 1).getArticleId();
+            lastArticleId = entries.getLast().getArticleId();
         }
     }
 

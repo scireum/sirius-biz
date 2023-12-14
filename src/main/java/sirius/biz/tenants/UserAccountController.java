@@ -499,7 +499,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             throw Exceptions.createHandled().withNLSKey("UserAccountController.tooManyUsersFoundForEmail").handle();
         }
 
-        U account = accounts.get(0);
+        U account = accounts.getFirst();
         if (account.getUserAccountData().getLogin().isAccountLocked()) {
             auditLog.negative("AuditLog.resetPasswordRejected")
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())

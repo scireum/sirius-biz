@@ -78,6 +78,7 @@ class ProcessEnvironment implements ProcessContext {
     private final Map<String, AtomicInteger> messageCountsPerType = new ConcurrentHashMap<>();
 
     private Boolean limitLogMessages = null;
+    private final ProgressTracker progressTracker = new ProgressTracker(this);
 
     @Part
     @Nullable
@@ -366,6 +367,11 @@ class ProcessEnvironment implements ProcessContext {
     @Nullable
     public String fetchTenantName() {
         return processes.fetchProcess(processId).map(Process::getTenantName).orElse(null);
+    }
+
+    @Override
+    public ProgressTracker getProgressTracker() {
+        return progressTracker;
     }
 
     @Override

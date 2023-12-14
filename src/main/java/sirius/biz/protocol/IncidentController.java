@@ -48,7 +48,7 @@ public class IncidentController extends BizController {
                                       DateRange.THIS_WEEK,
                                       DateRange.LAST_WEEK);
         pageHelper.withSearchFields(QueryField.contains(StoredIncident.SEARCH_FIELD));
-
+        pageHelper.withTotalCount();
         webContext.respondWith()
                   .template("/templates/biz/protocol/errors.html.pasta",
                             pageHelper.asPage(),

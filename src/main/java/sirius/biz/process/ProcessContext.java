@@ -374,4 +374,11 @@ public interface ProcessContext extends TaskContextAdapter {
     void fetchOutputEntries(@Nullable String outputName,
                             BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
                             BiPredicate<List<String>, List<String>> columnsAndValues);
+
+    /**
+     * Get the {@link ProgressTracker} initialized by the process.
+     *
+     * @return the progress tracker
+     */
+    ProgressTracker getProgressTracker();
 }

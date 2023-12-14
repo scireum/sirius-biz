@@ -229,7 +229,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         List<VirtualFile> result = new ArrayList<>();
         VirtualFile current = this;
         while (current != null && !Objects.equals(current, rootParent)) {
-            result.add(0, current);
+            result.addFirst(current);
             current = current.parent();
         }
 
@@ -249,7 +249,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         List<VirtualFile> result = new ArrayList<>();
         VirtualFile current = this;
         while (current != null) {
-            result.add(0, current);
+            result.addFirst(current);
             current = current.parent();
         }
         return result;

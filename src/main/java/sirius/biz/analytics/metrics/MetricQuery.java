@@ -268,8 +268,7 @@ public class MetricQuery {
         LocalDate date = endDate;
         AtomicInteger limit = new AtomicInteger(Math.min(numberOfValues, determineLimit(interval)));
         while (limit.decrementAndGet() >= 0) {
-            result.add(0,
-                       metrics.executeQuery(interval,
+            result.addFirst(metrics.executeQuery(interval,
                                             targetType,
                                             targetId,
                                             metricName,

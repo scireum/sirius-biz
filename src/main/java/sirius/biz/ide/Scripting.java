@@ -182,7 +182,7 @@ public class Scripting implements InterconnectHandler {
                                                event.path(TASK_TIMESTAMP).asLong(),
                                                event.path(TASK_MESSAGE).asText(null)));
             if (messages.size() > MAX_MESSAGES) {
-                messages.remove(0);
+                messages.removeFirst();
             }
         }
     }

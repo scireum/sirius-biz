@@ -47,6 +47,18 @@ public class KnowledgeBaseController extends BizController {
     }
 
     /**
+     * Redirects to the entry point of the knowledge base in the current language.
+     * <p>
+     * Sometimes, users may open the wrong URL. Therefore, we redirect to the correct one.
+     *
+     * @param webContext the current request to respond to
+     */
+    @Routed("/kba")
+    public void kbRedirect(WebContext webContext) {
+        webContext.respondWith().redirectPermanently("/kb");
+    }
+
+    /**
      * Renders the entry point of the knowledge base in the given language.
      *
      * @param webContext the current request to respond to
