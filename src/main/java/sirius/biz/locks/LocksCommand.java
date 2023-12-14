@@ -8,6 +8,7 @@
 
 package sirius.biz.locks;
 
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -36,9 +37,8 @@ public class LocksCommand implements Command {
                 unlockAll(output);
             } else {
                 unlock(output, name);
+                output.blankLine();
             }
-
-            output.blankLine();
         }
 
         output.line("Use `locks <name>` to forcefully unlock a lock. Use `locks all` to unlock all locks.");
@@ -62,9 +62,16 @@ public class LocksCommand implements Command {
     }
 
     private void unlockAll(Output output) {
+        Monoflop unlocked = Monoflop.create();
+
         locks.getLocks().forEach(lock -> {
             unlock(output, lock.getName());
+            unlocked.toggle();
         });
+
+        if (unlocked.isToggled()) {
+            output.blankLine();
+        }
     }
 
     @Override
