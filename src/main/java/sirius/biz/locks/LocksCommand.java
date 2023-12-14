@@ -8,6 +8,7 @@
 
 package sirius.biz.locks;
 
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.console.Command;
@@ -30,6 +31,12 @@ public class LocksCommand implements Command {
     public void execute(Output output, String... params) throws Exception {
         if (params.length > 0) {
             String name = params[0];
+
+            if (Strings.areEqual(name, "*") || Strings.areEqual(name, "all")) {
+                unlockAll(output);
+                return;
+            }
+
             unlock(output, name);
         }
         output.line("Use locks <name> to forcefully unlock a lock.");
@@ -48,6 +55,12 @@ public class LocksCommand implements Command {
     private void unlock(Output output, String name) {
         output.apply("Unlocking: %s", name);
         locks.unlock(name, true);
+    }
+
+    private void unlockAll(Output output) {
+        locks.getLocks().forEach(lock -> {
+            unlock(output, lock.getName());
+        });
     }
 
     @Override
