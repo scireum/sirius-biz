@@ -93,7 +93,7 @@ public class UplinkConnectorPool {
         uplinkConnectorFactory.linkToPool(pool);
         pool.setMaxIdle(uplinkConnectorConfig.maxIdle);
         pool.setMaxTotal(uplinkConnectorConfig.maxActive);
-        pool.setTimeBetweenEvictionRuns(TIME_BETWEEN_EVICTION_RUNS);
+        pool.setDurationBetweenEvictionRuns(TIME_BETWEEN_EVICTION_RUNS);
         pool.setNumTestsPerEvictionRun(NUM_TESTS_PER_EVICTION_RUN);
         pool.setTestOnBorrow(true);
         pool.setTestWhileIdle(true);
