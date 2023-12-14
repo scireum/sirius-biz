@@ -39,7 +39,7 @@ public class LocksCommand implements Command {
 
             unlock(output, name);
         }
-        output.line("Use locks <name> to forcefully unlock a lock.");
+        output.line("Use `locks <name>` to forcefully unlock a lock. Use `locks all` to unlock all locks.");
         output.apply("%-20s %-20s %-20s %-20s", "NAME", "OWNER", "THREAD", "ACQUIRED");
         output.separator();
         locks.getLocks().forEach(lock -> {
