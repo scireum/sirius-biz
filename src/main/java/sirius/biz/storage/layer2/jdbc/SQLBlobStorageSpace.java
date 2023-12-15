@@ -992,7 +992,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .eq(SQLBlob.DELETED, false)
                .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
                .where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED, LocalDateTime.now().minusDays(retentionDays)))
-               .iterateAll(this::markBlobAsDeleted);
+               .streamBlockwise()
+               .forEach(this::markBlobAsDeleted);
         } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
@@ -1009,7 +1010,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .eq(SQLBlob.DELETED, false)
                .eq(SQLBlob.TEMPORARY, true)
                .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
-               .iterateAll(this::markBlobAsDeleted);
+               .streamBlockwise()
+               .forEach(this::markBlobAsDeleted);
         } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)

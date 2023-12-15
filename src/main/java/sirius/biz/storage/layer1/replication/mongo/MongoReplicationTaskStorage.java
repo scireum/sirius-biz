@@ -115,7 +115,7 @@ public class MongoReplicationTaskStorage
             MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
             query.eq(MongoReplicationTask.FAILED, false);
             query.eq(MongoReplicationTask.TRANSACTION_ID, txnId);
-            query.iterateAll(this::executeTask);
+            query.streamBlockwise().forEach(this::executeTask);
         }
     }
 

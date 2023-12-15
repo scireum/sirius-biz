@@ -44,14 +44,16 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteDirectories(Runnable counter) {
-        buildBaseQuery(SQLDirectory.class, query -> query.eq(SQLDirectory.DELETED, true)).iterateAll(dir -> {
-            try {
-                propagateDelete(dir);
-                oma.delete(dir);
-                counter.run();
-            } catch (Exception e) {
-                handleDirectoryDeletionException(dir, e);
-            }
+        buildBaseQuery(SQLDirectory.class, query -> {
+            query.eq(SQLDirectory.DELETED, true).iterateAll(dir -> {
+                try {
+                    propagateDelete(dir);
+                    oma.delete(dir);
+                    counter.run();
+                } catch (Exception e) {
+                    handleDirectoryDeletionException(dir, e);
+                }
+            });
         });
     }
 
@@ -107,17 +109,19 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processRenamedDirectories(Runnable counter) {
-        buildBaseQuery(SQLDirectory.class, query -> query.eq(SQLDirectory.RENAMED, true)).iterateAll(dir -> {
-            try {
-                propagateRename(dir);
-                oma.updateStatement(SQLDirectory.class)
-                   .set(SQLDirectory.RENAMED, false)
-                   .where(SQLDirectory.ID, dir.getId())
-                   .executeUpdate();
-                counter.run();
-            } catch (Exception e) {
-                handleDirectoryDeletionException(dir, e);
-            }
+        buildBaseQuery(SQLDirectory.class, query -> {
+            query.eq(SQLDirectory.RENAMED, true).iterateAll(dir -> {
+                try {
+                    propagateRename(dir);
+                    oma.updateStatement(SQLDirectory.class)
+                       .set(SQLDirectory.RENAMED, false)
+                       .where(SQLDirectory.ID, dir.getId())
+                       .executeUpdate();
+                    counter.run();
+                } catch (Exception e) {
+                    handleDirectoryDeletionException(dir, e);
+                }
+            });
         });
     }
 
