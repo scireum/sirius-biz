@@ -11,8 +11,10 @@ package sirius.biz.jobs
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.kernel.SiriusExtension
-import sirius.kernel.commons.Value
+import sirius.kernel.commons.Strings
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Tests the [JobConfigData] class.
@@ -23,7 +25,7 @@ class JobConfigDataTest {
     @Test
     fun `string configs are stored correctly`() {
         val data = JobConfigData()
-        data.configMap["foo"] = Value.of("bar")
+        data.configMap["foo"] = listOf("bar")
         data.updateConfig()
         assertEquals("{\"foo\":\"bar\"}", data.configuration)
     }
@@ -32,14 +34,15 @@ class JobConfigDataTest {
     fun `string configs are read correctly`() {
         val data = JobConfigData()
         data.configuration = "{\"foo\":\"bar\"}"
-        assertEquals("bar", data.configMap["foo"].toString())
-        assertEquals("bar", data.fetchParameter("foo").asString())
+        assertEquals(listOf("bar"), data.configMap["foo"])
+        assertEquals("bar", data.fetchParameter("foo").get())
+        assertEquals("bar", data.asParameterContext()["foo"])
     }
 
     @Test
     fun `array configs are stored correctly`() {
         val data = JobConfigData()
-        data.configMap["foo"] = Value.of(arrayOf("bar1", "bar2"))
+        data.configMap["foo"] = listOf("bar1", "bar2")
         data.updateConfig()
         assertEquals("{\"foo\":[\"bar1\",\"bar2\"]}", data.configuration)
     }
@@ -48,9 +51,42 @@ class JobConfigDataTest {
     fun `array configs are read correctly`() {
         val data = JobConfigData()
         data.configuration = "{\"foo\":[\"bar1\",\"bar2\"]}"
-        val list = data.configMap["foo"]?.get() as List<*>
-        assertEquals("bar1", list[0])
-        assertEquals("bar2", list[1])
-        assertEquals("bar1|bar2", data.fetchParameter("foo").asString())
+        assertEquals(listOf("bar1", "bar2"), data.configMap["foo"])
+        assertEquals(listOf("bar1", "bar2"), data.fetchParameter("foo").get())
+        assertEquals("bar1|bar2", data.asParameterContext()["foo"])
+    }
+
+    @Test
+    fun `null configs are stored correctly`() {
+        val data = JobConfigData()
+        data.configMap["foo"] = listOf(null)
+        data.updateConfig()
+        assertEquals("{\"foo\":null}", data.configuration)
+    }
+
+    @Test
+    fun `null configs are read correctly`() {
+        val data = JobConfigData()
+        data.configuration = "{\"foo\":null}"
+        assertTrue(data.configMap["foo"]!!.isEmpty())
+        assertEquals("", data.fetchParameter("foo").get())
+        assertTrue(Strings.isEmpty(data.asParameterContext()["foo"]))
+    }
+
+    @Test
+    fun `empty strings are stored as null`() {
+        val data = JobConfigData()
+        data.configMap["foo"] = listOf("")
+        data.updateConfig()
+        assertEquals("{\"foo\":null}", data.configuration)
+    }
+
+    @Test
+    fun `missing config keys are supported`() {
+        val data = JobConfigData()
+        data.configuration = "{}"
+        assertNull(data.configMap["foo"])
+        assertNull(data.fetchParameter("foo").get())
+        assertTrue(Strings.isEmpty(data.asParameterContext()["foo"]))
     }
 }

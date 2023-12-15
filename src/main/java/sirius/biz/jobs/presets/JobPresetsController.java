@@ -13,12 +13,12 @@ import sirius.biz.process.PersistencePeriod;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.commons.Json;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -86,7 +86,7 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
 
         for (String parameter : ctx.getParameterNames()) {
             if (!IGNORED_PARAMETERS.contains(parameter)) {
-                preset.getJobConfigData().getConfigMap().put(parameter, ctx.get(parameter));
+                preset.getJobConfigData().getConfigMap().put(parameter, ctx.getParameters(parameter));
             }
         }
 
@@ -109,16 +109,16 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
                          .orElse(null);
         if (preset != null) {
             assertTenant(preset);
-            preset.getJobConfigData().getConfigMap().forEach((name, value) -> {
+            preset.getJobConfigData().getConfigMap().forEach((name, values) -> {
                 out.beginObject(RESPONSE_PARAM);
                 out.property(RESPONSE_NAME, name);
 
-                if (value.is(List.class)) {
-                    out.beginArray(RESPONSE_VALUE);
-                    ((List<?>) value.get(List.class, null)).forEach(entry -> out.property(null, entry));
-                    out.endArray();
+                if (values.isEmpty()) {
+                    out.property(RESPONSE_VALUE, null);
+                } else if (values.size() == 1) {
+                    out.property(RESPONSE_VALUE, values.get(0));
                 } else {
-                    out.property(RESPONSE_VALUE, value);
+                    out.property(RESPONSE_VALUE, Json.createArray(values));
                 }
 
                 out.endObject();
