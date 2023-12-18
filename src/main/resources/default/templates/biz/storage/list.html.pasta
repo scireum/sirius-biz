@@ -102,7 +102,12 @@
                                         </div>
                                         <div>
                                             <small class="text-muted">
-                                                <i:raw>@child.description()</i:raw>
+                                                <i:if test="child.htmlDescription()==null">
+                                                    @child.description()
+                                                    <i:else>
+                                                        <i:raw>@child.htmlDescription()</i:raw>
+                                                    </i:else>
+                                                </i:if>
                                             </small>
                                         </div>
                                     </td>
