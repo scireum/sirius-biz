@@ -101,7 +101,9 @@
                                             </a>
                                         </div>
                                         <div>
-                                            <small class="text-muted">@child.description()</small>
+                                            <small class="text-muted">
+                                                <i:raw>@child.description()</i:raw>
+                                            </small>
                                         </div>
                                     </td>
                                     <td class="text-right">
