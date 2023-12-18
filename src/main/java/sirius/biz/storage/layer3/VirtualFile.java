@@ -291,7 +291,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     @Nullable
     public String htmlDescription() {
-        return NLS.smartGet(htmlDescription);
+        return htmlDescription;
     }
 
     /**
