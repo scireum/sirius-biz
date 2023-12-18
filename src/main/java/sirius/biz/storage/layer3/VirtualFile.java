@@ -16,7 +16,6 @@ import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.kernel.Sirius;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
@@ -86,6 +85,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     protected String name;
     protected String description;
+    protected String htmlDescription;
     protected VirtualFile parent;
     protected ChildProvider childProvider;
     protected ToLongFunction<VirtualFile> lastModifiedSupplier;
@@ -282,6 +282,16 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     @Nullable
     public String description() {
         return NLS.smartGet(description);
+    }
+
+    /**
+     * Returns a short description, containing html tags, of the file.
+     *
+     * @return the description, containing html tags, of the file
+     */
+    @Nullable
+    public String htmlDescription() {
+        return NLS.smartGet(htmlDescription);
     }
 
     /**
