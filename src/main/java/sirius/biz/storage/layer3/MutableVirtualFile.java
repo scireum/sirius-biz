@@ -118,6 +118,18 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
+     * Provides an additional description, containing html tags, which can be shown in the web based UI.
+     *
+     * @param htmlDescription the description to show
+     *                    (this will be {@link sirius.kernel.nls.NLS#smartGet(String) smart translated}).
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withHtmlDescription(String htmlDescription) {
+        this.htmlDescription = htmlDescription;
+        return this;
+    }
+
+    /**
      * Determines if children can be created for this file.
      *
      * @param canCreateChildrenHandler the predicate used to determine if children can be created for the given file
