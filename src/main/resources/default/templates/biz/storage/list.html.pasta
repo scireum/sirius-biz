@@ -102,10 +102,10 @@
                                         </div>
                                         <div>
                                             <small class="text-muted">
-                                                <i:if test="child.htmlDescription()==null">
-                                                    @child.description()
+                                                <i:if test="isFilled(child.htmlDescription())">
+                                                    <i:raw>@child.htmlDescription()</i:raw>
                                                     <i:else>
-                                                        <i:raw>@child.htmlDescription()</i:raw>
+                                                        @child.description()
                                                     </i:else>
                                                 </i:if>
                                             </small>
