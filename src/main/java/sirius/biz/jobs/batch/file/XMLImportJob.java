@@ -67,23 +67,27 @@ public abstract class XMLImportJob extends FileImportJob {
 
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
-        if (isValid(inputSupplier)) {
-            Monoflop firstStage = Monoflop.create();
-            for (Consumer<BiConsumer<String, NodeHandler>> handlerConsumer : fetchStages()) {
-                if (firstStage.successiveCall()) {
-                    // If an import is split into several stages, we almost always want to await the completion of
-                    // any running side-task before starting the next stage....
-                    process.awaitSideTaskCompletion();
-                }
-
-                try (InputStream inputStream = inputSupplier.create()) {
-                    executeProcessingStage(inputStream, handlerConsumer);
-                }
-            }
-        } else {
+        if (!isValid(inputSupplier)) {
             process.log(ProcessLog.error()
                                   .withNLSKey("XMLImportJob.invalidXMLDetected")
                                   .withContext("fileName", filename));
+            return;
+        }
+
+        Monoflop firstStage = Monoflop.create();
+        for (Consumer<BiConsumer<String, NodeHandler>> handlerConsumer : fetchStages()) {
+            if (firstStage.successiveCall()) {
+                // If an import is split into several stages, we almost always want to await the completion of
+                // any running side-task before starting the next stage....
+                process.awaitSideTaskCompletion();
+            }
+
+            try (InputStream inputStream = inputSupplier.create()) {
+                executeProcessingStage(inputStream, handlerConsumer);
+            } catch (Exception exception) {
+                process.handle(exception);
+                break;
+            }
         }
     }
 
