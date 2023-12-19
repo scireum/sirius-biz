@@ -83,12 +83,10 @@ public abstract class XMLImportJob extends FileImportJob {
             }
 
             try (InputStream inputStream = inputSupplier.create()) {
-                try {
-                    executeProcessingStage(inputStream, handlerConsumer);
-                } catch (Exception exception) {
-                    process.handle(exception);
-                    break;
-                }
+                executeProcessingStage(inputStream, handlerConsumer);
+            } catch (Exception exception) {
+                process.handle(exception);
+                break;
             }
         }
     }
