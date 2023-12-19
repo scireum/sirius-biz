@@ -101,7 +101,14 @@
                                             </a>
                                         </div>
                                         <div>
-                                            <small class="text-muted">@child.description()</small>
+                                            <small class="text-muted">
+                                                <i:if test="isFilled(child.htmlDescription())">
+                                                    <i:raw>@child.htmlDescription()</i:raw>
+                                                    <i:else>
+                                                        @child.description()
+                                                    </i:else>
+                                                </i:if>
+                                            </small>
                                         </div>
                                     </td>
                                     <td class="text-right">
