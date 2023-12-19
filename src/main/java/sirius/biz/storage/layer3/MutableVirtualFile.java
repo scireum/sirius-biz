@@ -108,8 +108,7 @@ public class MutableVirtualFile extends VirtualFile {
     /**
      * Provides an additional description which can be shown in the web based UI.
      *
-     * @param description the description to show
-     *                    (this will be {@link sirius.kernel.nls.NLS#smartGet(String) smart translated}).
+     * @param description the description to show (this will be {@link sirius.kernel.nls.NLS#smartGet(String) smart translated}).
      * @return the file itself for fluent method calls
      */
     public MutableVirtualFile withDescription(String description) {
@@ -120,8 +119,7 @@ public class MutableVirtualFile extends VirtualFile {
     /**
      * Provides an additional description, containing html tags, which can be shown in the web based UI.
      *
-     * @param htmlDescription the description to show
-     *                    (this will be {@link sirius.kernel.nls.NLS#smartGet(String) smart translated}).
+     * @param htmlDescription the description, containing html tags, to show.
      * @return the file itself for fluent method calls
      */
     public MutableVirtualFile withHtmlDescription(String htmlDescription) {
