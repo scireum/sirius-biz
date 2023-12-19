@@ -119,7 +119,7 @@
                    items="entry.getJobConfigData().getJobFactory().getParameters()">
                 <i:dynamicInvoke template="@param.getTemplateName()"
                                  param="@param"
-                                 context="@entry.getJobConfigData().getConfigMap()"/>
+                                 context="@entry.getJobConfigData().asParameterContext()"/>
             </i:for>
         </div>
 
