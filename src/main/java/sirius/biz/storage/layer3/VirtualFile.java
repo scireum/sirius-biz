@@ -287,7 +287,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Returns a short description, containing html tags, of the file.
      *
-     * @return the description, containing html tags, of the file
+     * @return the description of the file, containing html tags
      */
     @Nullable
     public String htmlDescription() {

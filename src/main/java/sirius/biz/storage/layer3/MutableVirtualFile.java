@@ -117,9 +117,9 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
-     * Provides an additional description, containing html tags, which can be shown in the web based UI.
+     * Provides an additional description, containing html tags, which can be shown in the web-based UI.
      *
-     * @param htmlDescription the description, containing html tags, to show.
+     * @param htmlDescription the description to show, containing html tags.
      * @return the file itself for fluent method calls
      */
     public MutableVirtualFile withHtmlDescription(String htmlDescription) {
