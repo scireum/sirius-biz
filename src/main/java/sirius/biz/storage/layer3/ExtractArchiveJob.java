@@ -137,19 +137,17 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                               .withContext("size", NLS.formatSize(sourceFile.size())));
 
         try (FileHandle archive = sourceFile.download()) {
-            try {
-                extractor.extractAll(sourceFile.name(),
-                                     archive.getFile(),
-                                     null,
-                                     file -> handleExtractedFile(file,
-                                                                 process,
-                                                                 overrideMode,
-                                                                 targetDirectory,
-                                                                 flattenDirs));
-                process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
-            } catch (Exception exception) {
-                process.handle(exception);
-            }
+            extractor.extractAll(sourceFile.name(),
+                                 archive.getFile(),
+                                 null,
+                                 file -> handleExtractedFile(file,
+                                                             process,
+                                                             overrideMode,
+                                                             targetDirectory,
+                                                             flattenDirs));
+            process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
+        } catch (Exception exception) {
+            process.log(ProcessLog.error().withMessage(exception.getMessage()));
         }
 
         if (!process.isErroneous() && process.require(deleteArchiveParameter).booleanValue()) {
