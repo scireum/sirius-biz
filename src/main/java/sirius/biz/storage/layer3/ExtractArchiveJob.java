@@ -148,7 +148,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                                                  flattenDirs));
                 process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
             } catch (Exception exception) {
-                process.handle(exception);
+                process.log(ProcessLog.error().withMessage(exception.getMessage()));
             }
         }
 
