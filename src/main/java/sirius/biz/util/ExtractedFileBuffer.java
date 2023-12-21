@@ -46,7 +46,9 @@ class ExtractedFileBuffer {
      * @param tempFilePrefix    the prefix of the temporary file which will be created if the memory threshold is reached
      */
     ExtractedFileBuffer(int memoryThreshold, int initialBufferSize, String tempFilePrefix) {
-        buffer = new DeferredFileOutputStream(memoryThreshold, initialBufferSize, tempFilePrefix, null, null);
+        DeferredFileOutputStream.Builder builder = new DeferredFileOutputStream.Builder();
+        builder.setThreshold(memoryThreshold).setBufferSize(initialBufferSize).setPrefix(tempFilePrefix);
+        buffer = builder.get();
     }
 
     /**
