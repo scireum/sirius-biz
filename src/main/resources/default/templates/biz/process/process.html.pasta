@@ -52,10 +52,12 @@
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING || process.getState() == sirius.biz.process.ProcessState.STANDBY">
                     <i:if test="process.isDebugging()">
                         <t:dropdownItem labelKey="ProcessController.disableDebugging"
+                                        icon="fa-solid fa-bug-slash fa-fw"
                                         permission="permission-manage-processes"
                                         url="@apply('/ps/%s/toggleDebugging', process.getId())"/>
                         <i:else>
                             <t:dropdownItem labelKey="ProcessController.enableDebugging"
+                                            icon="fa-solid fa-bug fa-fw"
                                             permission="permission-manage-processes"
                                             url="@apply('/ps/%s/toggleDebugging', process.getId())"/>
                         </i:else>
@@ -63,6 +65,7 @@
                 </i:if>
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
                     <t:dropdownItem labelKey="NLS.cancel"
+                                    icon="fa-solid fa-ban fa-fw"
                                     url="@apply('/ps/%s/cancel', process.getId())"
                                     class="text-sirius-red danger"/>
                 </i:if>
