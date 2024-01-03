@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit;
  * This is used to distribute background tasks ({@link BackgroundLoop}, {@link EveryDay}) across all
  * cluster members while still ensuring that a single job only runs on one node concurrently.
  * <p>
- * Also the provides a possibility to globally or locally disable a certain background activity.
+ * Also, the provides a possibility to globally or locally disable a certain background activity.
  * <p>
  * Locally the synchronization of background jobs can be controlled via the system configuration
  * providing a key like <tt>orchestration.job-name = SYNC-TYPE</tt> - use a name of {@link SynchronizeType} to specify
@@ -166,7 +166,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     }
 
     /**
-     * Enables or Disables the given background job globally on all nodes.
+     * Enables or disables the given background job globally on all nodes.
      *
      * @param name    the name of the background job - provided by {@link #getLocalBackgroundInfo()}
      * @param enabled <tt>true</tt> to enable to job, <tt>false</tt> to disable it
@@ -185,7 +185,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     }
 
     /**
-     * Disables the given bacckground job locally on the given node.
+     * Disables the given background job locally on the given node.
      *
      * @param node        the node to disable the job on
      * @param name        the name of the background job - provided by {@link #getLocalBackgroundInfo()}
@@ -346,7 +346,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
      * Determines if the given queue is enabled.
      * <p>
      * Note that this only ensures that the queue isn't <tt>DISABLED</tt>. Both, <tt>LOCAL</tt> and <tt>CLUSTER</tt>
-     * behave the same as queues are inherent capable of clustering.
+     * behave the same as queues are inherently capable of clustering.
      *
      * @param queue the queue to check
      * @return <tt>true</tt> if the queue is enabled, <tt>false</tt> otherwise

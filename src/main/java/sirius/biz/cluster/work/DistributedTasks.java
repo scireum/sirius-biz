@@ -416,7 +416,6 @@ public class DistributedTasks implements MetricProvider {
      * @param queueName the queue to create
      * @return a <tt>Redis</tt> based implementation or a local one if no configuration for redis is present
      */
-
     private PrioritizedQueue createPrioritizedQueue(String queueName) {
         if (redis.isConfigured()) {
             return new RedisPrioritizedQueue(redis, queueName);
@@ -431,7 +430,7 @@ public class DistributedTasks implements MetricProvider {
      * Iterates over {@link #getQueues()} using a round-robin approach via {@link #fetchAndMoveNextQueueIndex()}
      * and tries to poll each queue up until an executable work item is found.
      * <p>
-     * Queues which require a <tt>concurrencyToken</tt> which is already exhaused are skipped.
+     * Queues which require a <tt>concurrencyToken</tt> which is already exhausted are skipped.
      *
      * @return a work item wrapped as optional or an empty optional to indicate that currently no executable work was
      * found.
@@ -471,7 +470,7 @@ public class DistributedTasks implements MetricProvider {
     /**
      * Reads and increments the index for pulling work.
      * <p>
-     * This will also wrap the inex back to 0 if it reached the number of queues.
+     * This will also wrap the index back to 0 if it reached the number of queues.
      *
      * @return the current index to poll work from
      */
