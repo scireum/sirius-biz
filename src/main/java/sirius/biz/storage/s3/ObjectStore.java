@@ -36,7 +36,6 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Operation;
 import sirius.kernel.async.Promise;
 import sirius.kernel.async.TaskContext;
@@ -308,7 +307,7 @@ public class ObjectStore {
      */
     public void listObjects(BucketName bucket, @Nullable String prefix, Predicate<S3ObjectSummary> consumer) {
         ObjectListing objectListing = null;
-        TaskContext taskContext = CallContext.getCurrent().get(TaskContext.class);
+        TaskContext taskContext = TaskContext.get();
 
         do {
             try (Operation operation = new Operation(() -> Strings.apply("S3: Fetching objects from %s (prefix: %s)",

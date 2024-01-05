@@ -17,7 +17,6 @@ import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.SpyUser;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
@@ -414,7 +413,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * @return the original tenant id of the currently active user (without spy overwrites)
      */
     public String getOriginalTenantId() {
-        return getOriginalTenantId(CallContext.getCurrent().get(WebContext.class));
+        return getOriginalTenantId(WebContext.getCurrent());
     }
 
     /**
@@ -433,7 +432,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * @return the original user id of the currently active user (without spy overwrites)
      */
     public String getOriginalUserId() {
-        return getOriginalUserId(CallContext.getCurrent().get(WebContext.class));
+        return getOriginalUserId(WebContext.getCurrent());
     }
 
     @Override
@@ -912,7 +911,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
               .map(flag -> ROLE_PREFIX_PERFORMANCE_FLAG + flag)
               .forEach(roles::add);
 
-        Set<String> excludedPermissions = new HashSet<>(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        Set<String> excludedPermissions =
+                new HashSet<>(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
         Set<String> transformedRoles = transformRoles(roles, excludedPermissions);
         excludedPermissions.forEach(transformedRoles::remove);
 
@@ -939,7 +939,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         // also apply profiles and revokes to additional roles
-        Set<String> excludedPermissions = new HashSet<>(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        Set<String> excludedPermissions =
+                new HashSet<>(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
         Permissions.applyProfiles(result, excludedPermissions);
         excludedPermissions.forEach(result::remove);
 

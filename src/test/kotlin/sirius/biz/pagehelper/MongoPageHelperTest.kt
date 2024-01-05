@@ -32,7 +32,7 @@ class MongoPageHelperTest {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf<String, List<String>>())
@@ -62,7 +62,7 @@ class MongoPageHelperTest {
                         MongoPageHelperEntity::class.java
                 )
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf("booleanField" to listOf("true")))
@@ -87,7 +87,7 @@ class MongoPageHelperTest {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf<String, List<String>>())
@@ -115,7 +115,7 @@ class MongoPageHelperTest {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf("stringField" to listOf("field-value-a")))

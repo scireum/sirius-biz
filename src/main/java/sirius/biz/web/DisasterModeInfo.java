@@ -201,7 +201,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
 
     @Override
     public boolean isLocked() {
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (webContext.getRequest() != null && isWhitelistedURI(webContext.getRequestedURI())) {
             return false;
         }

@@ -63,7 +63,7 @@ public class RateLimitReportJobFactory extends ReportJobFactory {
     }
 
     private void reportForIP(Report report) {
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (webContext.isValid()) {
             String ip = webContext.getRemoteIP().getHostAddress();
             for (String realm : isenguard.getRealmsByType(Isenguard.REALM_TYPE_IP)) {

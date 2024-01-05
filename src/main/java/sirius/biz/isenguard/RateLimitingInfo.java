@@ -69,7 +69,7 @@ public class RateLimitingInfo {
     public static RateLimitingInfo fromCurrentContext() {
         UserInfo currentUser = UserContext.getCurrentUser();
         String tenantId = currentUser.isLoggedIn() ? currentUser.getTenantId() : null;
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (webContext.isValid()) {
             return new RateLimitingInfo(webContext.getRemoteIP().getHostAddress(),
                                         tenantId,

@@ -40,7 +40,6 @@ class ReplicationTest {
         val downloaded = storage.getSpace("reply-secondary").download("repl-update-test")
         assertTrue { downloaded.isPresent() }
 
-        val res = InputStreamReader(downloaded.get().getInputStream(), StandardCharsets.UTF_8)
         assertEquals("test", InputStreamReader(downloaded.get().getInputStream(), StandardCharsets.UTF_8).readText())
     }
 

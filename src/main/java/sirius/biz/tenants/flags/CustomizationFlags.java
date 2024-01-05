@@ -11,7 +11,6 @@ package sirius.biz.tenants.flags;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -73,7 +72,7 @@ public class CustomizationFlags {
     }
 
     private Optional<Tuple<Boolean, String>> readFromUserAgent(String flagName) {
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (webContext.isValid()) {
             if (webContext.getUserAgent().contains("flag-" + flagName + "-disabled")) {
                 return Optional.of(Tuple.create(false, "user-agent"));

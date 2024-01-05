@@ -32,7 +32,7 @@ class ElasticPageHelperTest {
         val pageHelper = ElasticPageHelper.withQuery(
                 elastic.select(ElasticPageHelperEntity::class.java)
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf<String, List<String>>())
@@ -60,9 +60,7 @@ class ElasticPageHelperTest {
         val pageHelper = ElasticPageHelper.withQuery(
                 elastic.select(ElasticPageHelperEntity::class.java)
         )
-        val webContext = CallContext.getCurrent().get(
-                WebContext::class.java
-        )
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf("booleanField" to listOf("1")))

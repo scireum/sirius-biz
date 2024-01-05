@@ -10,7 +10,6 @@ package sirius.biz.protocol;
 
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.di.Initializable;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -60,7 +59,7 @@ public class AuditLog implements Initializable {
         }
 
         private String getCurrentIP() {
-            WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+            WebContext webContext = WebContext.getCurrent();
             if (webContext.isValid()) {
                 return webContext.getRemoteIP().getHostAddress();
             }
