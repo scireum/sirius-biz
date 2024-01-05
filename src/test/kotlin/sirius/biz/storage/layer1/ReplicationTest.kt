@@ -32,7 +32,7 @@ import kotlin.test.assertTrue
 @ExtendWith(SiriusExtension::class)
 class ReplicationTest {
     @Test
-    fun `updates are replicated correctly`() {
+    fun `Updates are replicated correctly`() {
         val testData = "test".toByteArray(StandardCharsets.UTF_8)
         storage.getSpace("repl-primary")
                 .upload("repl-update-test", ByteArrayInputStream(testData), testData.size.toLong())
@@ -40,12 +40,11 @@ class ReplicationTest {
         val downloaded = storage.getSpace("reply-secondary").download("repl-update-test")
         assertTrue { downloaded.isPresent() }
 
-        val res = InputStreamReader(downloaded.get().getInputStream(), StandardCharsets.UTF_8)
         assertEquals("test", InputStreamReader(downloaded.get().getInputStream(), StandardCharsets.UTF_8).readText())
     }
 
     @Test
-    fun `deletes are replicated correctly`() {
+    fun `Deletions are replicated correctly`() {
 
         val testData = "test".toByteArray(StandardCharsets.UTF_8)
         storage.getSpace("repl-primary")
@@ -70,6 +69,5 @@ class ReplicationTest {
             // Give the sync some time to actually complete its tasks...
             Wait.seconds(10.0)
         }
-
     }
 }

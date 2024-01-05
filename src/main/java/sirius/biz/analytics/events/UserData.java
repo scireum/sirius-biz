@@ -12,7 +12,6 @@ import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Strings;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
@@ -45,13 +44,13 @@ public class UserData extends Composite {
 
     @BeforeSave
     protected void fill() {
-        UserContext ctx = CallContext.getCurrent().get(UserContext.class);
-        if (ctx.getScope() != ScopeInfo.DEFAULT_SCOPE && Strings.isEmpty(scopeId)) {
-            scopeId = ctx.getScope().getScopeId();
+        UserContext userContext = UserContext.get();
+        if (userContext.getScope() != ScopeInfo.DEFAULT_SCOPE && Strings.isEmpty(scopeId)) {
+            scopeId = userContext.getScope().getScopeId();
         }
-        if (ctx.isUserPresent() && ctx.getUser().isLoggedIn() && Strings.isEmpty(userId)) {
-            userId = ctx.getUser().getUserId();
-            tenantId = ctx.getUser().getTenantId();
+        if (userContext.isUserPresent() && userContext.getUser().isLoggedIn() && Strings.isEmpty(userId)) {
+            userId = userContext.getUser().getUserId();
+            tenantId = userContext.getUser().getTenantId();
         }
     }
 

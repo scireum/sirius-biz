@@ -28,11 +28,11 @@ import kotlin.test.assertTrue
 class MongoPageHelperTest {
 
     @Test
-    fun `test boolean aggregation without value selected`() {
+    fun `Boolean aggregation without value selected`() {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf<String, List<String>>())
@@ -56,13 +56,13 @@ class MongoPageHelperTest {
     }
 
     @Test
-    fun `test boolean aggregation with value selected`() {
+    fun `Boolean aggregation with value selected`() {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(
                         MongoPageHelperEntity::class.java
                 )
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf("booleanField" to listOf("true")))
@@ -83,11 +83,11 @@ class MongoPageHelperTest {
     }
 
     @Test
-    fun `test term aggregation without value selected`() {
+    fun `Term aggregation without value selected`() {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf<String, List<String>>())
@@ -111,11 +111,11 @@ class MongoPageHelperTest {
     }
 
     @Test
-    fun `test term aggregation with value selected`() {
+    fun `Term aggregation with value selected`() {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )
-        val webContext = CallContext.getCurrent().get(WebContext::class.java)
+        val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
             set(webContext, mapOf("stringField" to listOf("field-value-a")))

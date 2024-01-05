@@ -55,7 +55,7 @@ class AutoloadControllerTests {
                 .execute()
         val id = response.contentAsJson.path("id").asText(null)
         assertNotNull(id)
-        val entity1 = mango.find(AutoLoadEntity::class.java, id).get().apply {
+        mango.find(AutoLoadEntity::class.java, id).get().apply {
             assertEquals("string-autoloaded", stringField)
             assertEquals(1, intField)
             assertEquals(2, listField.size())

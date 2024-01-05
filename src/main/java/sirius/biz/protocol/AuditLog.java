@@ -10,7 +10,6 @@ package sirius.biz.protocol;
 
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.di.Initializable;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -60,7 +59,7 @@ public class AuditLog implements Initializable {
         }
 
         private String getCurrentIP() {
-            WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+            WebContext webContext = WebContext.getCurrent();
             if (webContext.isValid()) {
                 return webContext.getRemoteIP().getHostAddress();
             }
@@ -75,21 +74,21 @@ public class AuditLog implements Initializable {
          */
         @CheckReturnValue
         public AuditLogBuilder forCurrentUser() {
-            UserInfo user = UserContext.getCurrentUser();
-            return forUser(user.getUserId(), user.getProtocolUsername()).forTenant(user.getTenantId(),
-                                                                                   user.getTenantName());
+            UserInfo userInfo = UserContext.getCurrentUser();
+            return forUser(userInfo.getUserId(), userInfo.getProtocolUsername()).forTenant(userInfo.getTenantId(),
+                                                                                           userInfo.getTenantName());
         }
 
         /**
          * Creates the entry for the given user.
          *
-         * @param id   the ID of the user
-         * @param name the name of the user
+         * @param userId the ID of the user
+         * @param name   the name of the user
          * @return the builder for fluent method calls
          */
         @CheckReturnValue
-        public AuditLogBuilder forUser(@Nullable String id, @Nullable String name) {
-            entry.setUser(id);
+        public AuditLogBuilder forUser(@Nullable String userId, @Nullable String name) {
+            entry.setUser(userId);
             entry.setUserName(name);
 
             return this;
@@ -102,21 +101,21 @@ public class AuditLog implements Initializable {
          */
         @CheckReturnValue
         public AuditLogBuilder causedByCurrentUser() {
-            UserInfo user = UserContext.getCurrentUser();
-            return causedByUser(user.getUserId(), user.getProtocolUsername());
+            UserInfo userInfo = UserContext.getCurrentUser();
+            return causedByUser(userInfo.getUserId(), userInfo.getProtocolUsername());
         }
 
         /**
          * Marks the entry as caused by the given user.
          *
-         * @param id   the ID of the user
-         * @param name the name of the user
+         * @param userId   the ID of the user
+         * @param userName the name of the user
          * @return the builder for fluent method calls
          */
         @CheckReturnValue
-        public AuditLogBuilder causedByUser(@Nullable String id, @Nullable String name) {
-            entry.setCausedByUser(id);
-            entry.setCausedByUserName(name);
+        public AuditLogBuilder causedByUser(@Nullable String userId, @Nullable String userName) {
+            entry.setCausedByUser(userId);
+            entry.setCausedByUserName(userName);
 
             return this;
         }
@@ -124,14 +123,14 @@ public class AuditLog implements Initializable {
         /**
          * Creates the entry for the given tenant.
          *
-         * @param id   the ID of the tenant
-         * @param name the name of the tenant
+         * @param tenantId   the ID of the tenant
+         * @param tenantName the name of the tenant
          * @return the builder for fluent method calls
          */
         @CheckReturnValue
-        public AuditLogBuilder forTenant(@Nullable String id, @Nullable String name) {
-            entry.setTenant(id);
-            entry.setTenantName(name);
+        public AuditLogBuilder forTenant(@Nullable String tenantId, @Nullable String tenantName) {
+            entry.setTenant(tenantId);
+            entry.setTenantName(tenantName);
 
             return this;
         }
@@ -166,8 +165,8 @@ public class AuditLog implements Initializable {
                     elastic.update(entry);
                     logToSyslog();
                 }
-            } catch (Exception e) {
-                Exceptions.ignore(e);
+            } catch (Exception exception) {
+                Exceptions.ignore(exception);
             }
         }
 
