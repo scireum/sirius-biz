@@ -13,12 +13,12 @@
     <packaging>jar</packaging>
 
     <name>SIRIUS biz</name>
-    <description>Provides a framework for building web based business applications</description>
-    <url>http://www.sirius-lib.net</url>
+    <description>Provides a framework for building web-based business applications</description>
+    <url>https://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-42.0.0</sirius.kernel>
-        <sirius.web>dev-75.0.0</sirius.web>
+        <sirius.kernel>dev-42.1.0</sirius.kernel>
+        <sirius.web>dev-75.1.0</sirius.web>
         <sirius.db>dev-57.0.0</sirius.db>
     </properties>
 
