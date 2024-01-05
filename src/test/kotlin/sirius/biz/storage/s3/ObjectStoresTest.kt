@@ -29,13 +29,13 @@ import java.nio.file.Files as files_
 class ObjectStoresTest {
 
     @Test
-    fun `create bucket works`() {
+    fun `Create bucket works`() {
         val file = File.createTempFile("test", "")
-        val fout = FileOutputStream(file)
+        val outputStream = FileOutputStream(file)
         repeat(10024) {
-            fout.write("This is a test.".toByteArray(StandardCharsets.UTF_8))
+            outputStream.write("This is a test.".toByteArray(StandardCharsets.UTF_8))
         }
-        fout.close()
+        outputStream.close()
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
         val download = stores.store().download(stores.store().getBucketName("test"), "test")
         val expectedContents = files_.readString(file.toPath(), StandardCharsets.UTF_8)
@@ -48,11 +48,11 @@ class ObjectStoresTest {
     @Test
     fun `PUT and GET works`() {
         val file = File.createTempFile("test", "")
-        val fout = FileOutputStream(file)
+        val outputStream = FileOutputStream(file)
         repeat(10024) {
-            fout.write("This is a test.".toByteArray(StandardCharsets.UTF_8))
+            outputStream.write("This is a test.".toByteArray(StandardCharsets.UTF_8))
         }
-        fout.close()
+        outputStream.close()
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
         val download = stores.store().download(stores.store().getBucketName("test"), "test")
         val c = URI(
@@ -70,7 +70,7 @@ class ObjectStoresTest {
     }
 
     @Test
-    fun `ensure bucket exists`() {
+    fun `Ensure bucket exists`() {
         stores.store().ensureBucketExists(stores.store().getBucketName("exists"))
         stores.store().doesBucketExist(stores.store().getBucketName("exists"))
         stores.bucketCache.get(
@@ -91,7 +91,7 @@ class ObjectStoresTest {
     }
 
     @Test
-    fun `delete Bucket works`() {
+    fun `Delete bucket works`() {
         stores.store().ensureBucketExists(stores.store().getBucketName("deleted"))
         stores.store().doesBucketExist(stores.store().getBucketName("deleted"))
         stores.store().deleteBucket(stores.store().getBucketName("deleted"))
@@ -110,6 +110,5 @@ class ObjectStoresTest {
         @Part
         @JvmStatic
         private lateinit var stores: ObjectStores
-
     }
 }

@@ -83,16 +83,16 @@ public class WebData extends Composite {
 
     @BeforeSave
     protected void fill() {
-        WebContext ctx = WebContext.getCurrent();
-        if (ctx.isValid()) {
+        WebContext webContext = WebContext.getCurrent();
+        if (webContext.isValid()) {
             if (Strings.isEmpty(url)) {
-                url = ctx.getRequestedURL();
+                url = webContext.getRequestedURL();
             }
             if (Strings.isEmpty(userAgent)) {
-                persistUserAgent(ctx.getUserAgent());
+                persistUserAgent(webContext.getUserAgent());
             }
-            if (ctx.getTTFBMillis() > 0 && responseTime == null) {
-                responseTime = ctx.getTTFBMillis();
+            if (webContext.getTTFBMillis() > 0 && responseTime == null) {
+                responseTime = webContext.getTTFBMillis();
             }
         }
     }

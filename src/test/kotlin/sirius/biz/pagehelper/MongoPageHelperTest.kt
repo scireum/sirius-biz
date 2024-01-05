@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
 class MongoPageHelperTest {
 
     @Test
-    fun `test boolean aggregation without value selected`() {
+    fun `Boolean aggregation without value selected`() {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )
@@ -56,7 +56,7 @@ class MongoPageHelperTest {
     }
 
     @Test
-    fun `test boolean aggregation with value selected`() {
+    fun `Boolean aggregation with value selected`() {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(
                         MongoPageHelperEntity::class.java
@@ -83,7 +83,7 @@ class MongoPageHelperTest {
     }
 
     @Test
-    fun `test term aggregation without value selected`() {
+    fun `Term aggregation without value selected`() {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )
@@ -111,7 +111,7 @@ class MongoPageHelperTest {
     }
 
     @Test
-    fun `test term aggregation with value selected`() {
+    fun `Term aggregation with value selected`() {
         val pageHelper = MongoPageHelper.withQuery(
                 mango.select(MongoPageHelperEntity::class.java)
         )

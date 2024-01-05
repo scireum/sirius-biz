@@ -44,13 +44,13 @@ public class UserData extends Composite {
 
     @BeforeSave
     protected void fill() {
-        UserContext ctx = UserContext.get();
-        if (ctx.getScope() != ScopeInfo.DEFAULT_SCOPE && Strings.isEmpty(scopeId)) {
-            scopeId = ctx.getScope().getScopeId();
+        UserContext userContext = UserContext.get();
+        if (userContext.getScope() != ScopeInfo.DEFAULT_SCOPE && Strings.isEmpty(scopeId)) {
+            scopeId = userContext.getScope().getScopeId();
         }
-        if (ctx.isUserPresent() && ctx.getUser().isLoggedIn() && Strings.isEmpty(userId)) {
-            userId = ctx.getUser().getUserId();
-            tenantId = ctx.getUser().getTenantId();
+        if (userContext.isUserPresent() && userContext.getUser().isLoggedIn() && Strings.isEmpty(userId)) {
+            userId = userContext.getUser().getUserId();
+            tenantId = userContext.getUser().getTenantId();
         }
     }
 

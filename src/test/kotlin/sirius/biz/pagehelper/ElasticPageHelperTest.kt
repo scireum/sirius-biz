@@ -15,7 +15,6 @@ import sirius.biz.web.ElasticPageHelper
 import sirius.biz.web.pagehelper.ElasticPageHelperEntity
 import sirius.db.es.Elastic
 import sirius.kernel.SiriusExtension
-import sirius.kernel.async.CallContext
 import sirius.kernel.di.std.Part
 import sirius.web.http.WebContext
 import kotlin.test.assertEquals
@@ -28,7 +27,7 @@ import kotlin.test.assertTrue
 class ElasticPageHelperTest {
 
     @Test
-    fun `test boolean aggregation without value selected`() {
+    fun `Boolean aggregation without value selected`() {
         val pageHelper = ElasticPageHelper.withQuery(
                 elastic.select(ElasticPageHelperEntity::class.java)
         )
@@ -56,7 +55,7 @@ class ElasticPageHelperTest {
     }
 
     @Test
-    fun `test boolean aggregation with value selected`() {
+    fun `Boolean aggregation with value selected`() {
         val pageHelper = ElasticPageHelper.withQuery(
                 elastic.select(ElasticPageHelperEntity::class.java)
         )

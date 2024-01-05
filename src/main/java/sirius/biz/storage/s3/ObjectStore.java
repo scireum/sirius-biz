@@ -255,10 +255,10 @@ public class ObjectStore {
         if (!doesBucketExist(bucket)) {
             try {
                 client.createBucket(bucket.getName());
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(ObjectStores.LOG)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage("Failed to create: %s - %s (%s)", bucket)
                           .handle();
             }
@@ -320,8 +320,8 @@ public class ObjectStore {
                 }
             }
 
-            for (S3ObjectSummary obj : objectListing.getObjectSummaries()) {
-                if (!consumer.test(obj) || !taskContext.isActive()) {
+            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+                if (!consumer.test(objectSummary) || !taskContext.isActive()) {
                     return;
                 }
             }
@@ -339,10 +339,10 @@ public class ObjectStore {
                                                                      objectId,
                                                                      bucket), Duration.ofMinutes(1))) {
             getClient().deleteObject(bucket.getName(), objectId);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to delete object %s from bucket %s - %s (%s)",
                                                     objectId,
                                                     bucket)
@@ -368,10 +368,10 @@ public class ObjectStore {
                                                                      targetBucket,
                                                                      targetObjectId), Duration.ofMinutes(5))) {
             getClient().copyObject(sourceBucket.getName(), sourceObjectId, targetBucket.getName(), targetObjectId);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to copy object from %s/%s to %s/%s - %s (%s)",
                                                     sourceBucket,
                                                     sourceObjectId,
@@ -393,10 +393,10 @@ public class ObjectStore {
                                                  Duration.ofMinutes(1))) {
             getClient().deleteBucket(bucket.getName());
             stores.bucketCache.remove(Tuple.create(name, bucket.getName()));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to delete bucket %s - %s (%s)", bucket.getName())
                             .handle();
         }
@@ -405,10 +405,10 @@ public class ObjectStore {
     private boolean checkExistence(BucketName bucket) {
         try {
             return client.doesBucketExistV2(bucket.getName());
-        } catch (SdkClientException e) {
+        } catch (SdkClientException exception) {
             Exceptions.handle()
                       .to(ObjectStores.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to check if %s exists: %s (%s)", bucket)
                       .handle();
 
@@ -464,35 +464,35 @@ public class ObjectStore {
                                      dest,
                                      new MonitoringProgressListener(false)).waitForCompletion();
             return dest;
-        } catch (InterruptedException e) {
+        } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             Files.delete(dest);
 
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Got interrupted while waiting for a download to complete: %s/%s - %s (%s)",
                                     bucket,
                                     objectId)
                             .handle();
-        } catch (AmazonS3Exception e) {
+        } catch (AmazonS3Exception exception) {
             Files.delete(dest);
-            if (e.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(objectId);
             } else {
-                throw handleDownloadError(bucket, objectId, e);
+                throw handleDownloadError(bucket, objectId, exception);
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Files.delete(dest);
-            throw handleDownloadError(bucket, objectId, e);
+            throw handleDownloadError(bucket, objectId, exception);
         }
     }
 
-    private HandledException handleDownloadError(BucketName bucket, String objectId, Exception e) {
+    private HandledException handleDownloadError(BucketName bucket, String objectId, Exception exception) {
         return Exceptions.handle()
                          .to(ObjectStores.LOG)
-                         .error(e)
+                         .error(exception)
                          .withSystemErrorMessage("An error occurred while trying to download: %s/%s - %s (%s)",
                                                  bucket,
                                                  objectId)
@@ -520,14 +520,14 @@ public class ObjectStore {
                 Streams.transfer(input, output);
                 return output.toByteArray();
             }
-        } catch (AmazonS3Exception e) {
-            if (e.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+        } catch (AmazonS3Exception exception) {
+            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(objectId);
             } else {
-                throw handleDownloadError(bucket, objectId, e);
+                throw handleDownloadError(bucket, objectId, exception);
             }
-        } catch (Exception e) {
-            throw handleDownloadError(bucket, objectId, e);
+        } catch (Exception exception) {
+            throw handleDownloadError(bucket, objectId, exception);
         }
     }
 
@@ -549,16 +549,16 @@ public class ObjectStore {
                                      dest,
                                      new AsyncDownloadListener(bucket.getName(), objectId, dest, promise));
             return promise;
-        } catch (AmazonS3Exception e) {
+        } catch (AmazonS3Exception exception) {
             Files.delete(dest);
-            if (e.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(objectId);
             }
 
-            throw handleDownloadError(bucket, objectId, e);
-        } catch (Exception e) {
+            throw handleDownloadError(bucket, objectId, exception);
+        } catch (Exception exception) {
             Files.delete(dest);
-            throw handleDownloadError(bucket, objectId, e);
+            throw handleDownloadError(bucket, objectId, exception);
         }
     }
 
@@ -588,10 +588,10 @@ public class ObjectStore {
             ensureBucketExists(bucket);
             return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, data).withMetadata(metadata),
                                           new MonitoringProgressListener(true));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("An error occurred while trying to upload: %s/%s - %s (%s)",
                                                     bucket,
                                                     objectId)
@@ -622,11 +622,11 @@ public class ObjectStore {
         try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
                                                  Duration.ofHours(4))) {
             uploadAsync(bucket, objectId, data, metadata).waitForUploadResult();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
                                     bucket,
@@ -673,10 +673,10 @@ public class ObjectStore {
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.getName(), objectId, inputStream, metadata);
             putObjectRequest.getRequestClientOptions().setReadLimit(MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE);
             return transferManager.upload(putObjectRequest, new MonitoringProgressListener(true));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("An error occurred while trying to upload: %s/%s - %s (%s)",
                                                     bucket,
                                                     objectId)
@@ -717,11 +717,11 @@ public class ObjectStore {
                                                                          objectId,
                                                                          bucket), Duration.ofMinutes(30))) {
                 uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
                 throw Exceptions.handle()
                                 .to(ObjectStores.LOG)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage(
                                         "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
                                         bucket,
@@ -769,11 +769,11 @@ public class ObjectStore {
                                                                                        multipartUpload.getUploadId(),
                                                                                        eTags));
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             abortMultipartUpload(bucket, objectId, multipartUpload);
-            if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
+            if (exception instanceof InterruptedIOException || exception.getCause() instanceof InterruptedIOException) {
                 throw Exceptions.createHandled()
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage("Interrupted multipart upload for %s (%s): %s (%s)",
                                                         objectId,
                                                         bucket.getName())
@@ -781,7 +781,7 @@ public class ObjectStore {
             }
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to perform a multipart upload for %s (%s): %s (%s)",
                                                     objectId,
                                                     bucket.getName())

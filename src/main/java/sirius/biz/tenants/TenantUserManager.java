@@ -236,15 +236,15 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     }
 
     @Override
-    protected UserInfo findUserInSession(WebContext ctx) {
-        UserInfo rootUser = super.findUserInSession(ctx);
+    protected UserInfo findUserInSession(WebContext webContext) {
+        UserInfo rootUser = super.findUserInSession(webContext);
         if (rootUser == null || defaultUser.equals(rootUser)) {
             return rootUser;
         }
 
         checkAndUpdateLastSeen(rootUser);
 
-        String spyId = ctx.getSessionValue(scope.getScopeId() + SPY_ID_SUFFIX).asString();
+        String spyId = webContext.getSessionValue(scope.getScopeId() + SPY_ID_SUFFIX).asString();
         if (Strings.isFilled(spyId)) {
             UserInfo spy = becomeSpyUser(spyId, rootUser);
             if (spy != null) {
@@ -252,7 +252,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             }
         }
 
-        String tenantSpyId = ctx.getSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX).asString();
+        String tenantSpyId = webContext.getSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX).asString();
         if (Strings.isFilled(tenantSpyId)) {
             return createUserWithTenant(rootUser, tenantSpyId);
         }
@@ -273,10 +273,10 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         recordUserActivityEvent(userInfo);
     }
 
-    private void recordUserActivityEvent(UserInfo rootUser) {
+    private void recordUserActivityEvent(UserInfo userInfo) {
         UserActivityEvent userActivityEvent = new UserActivityEvent();
-        userActivityEvent.getUserData().setTenantId(rootUser.getTenantId());
-        userActivityEvent.getUserData().setCustomUserId(rootUser.getUserId());
+        userActivityEvent.getUserData().setTenantId(userInfo.getTenantId());
+        userActivityEvent.getUserData().setCustomUserId(userInfo.getUserId());
         userActivityEvent.getUserData().setScopeId(ScopeInfo.DEFAULT_SCOPE.getScopeId());
         eventRecorder.record(userActivityEvent);
     }
@@ -293,11 +293,11 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * <p>
      * See {@link UserAccountController#selectUserAccount}.
      *
-     * @param spyId    the id of the user to become
-     * @param rootUser the original user that is becoming another user
+     * @param spyId        the id of the user to become
+     * @param rootUserInfo the original user that is becoming another user
      * @return the new user that was switched to
      */
-    private UserInfo becomeSpyUser(String spyId, UserInfo rootUser) {
+    private UserInfo becomeSpyUser(String spyId, UserInfo rootUserInfo) {
         U spyUser = fetchAccount(spyId);
         if (spyUser == null) {
             return null;
@@ -306,9 +306,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         extraRoles.add(PERMISSION_SPY_USER);
         extraRoles.add(PERMISSION_SELECT_USER_ACCOUNT);
-        if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
+        if (rootUserInfo.hasPermission(PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
             extraRoles.add(PERMISSION_SYSTEM_TENANT_AFFILIATE);
-            if (rootUser.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR)) {
+            if (rootUserInfo.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR)) {
                 extraRoles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
             }
         }
@@ -316,22 +316,22 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         UserInfo spyUserInfo = asUser(spyUser,
                                       extraRoles,
                                       () -> Strings.apply("%s - %s",
-                                                          computeUsername(null, rootUser.getUserId()),
-                                                          computeTenantname(null, rootUser.getTenantId())));
-        spyUserInfo.attach(SpyUser.class, new SpyUser(rootUser));
+                                                          computeUsername(null, rootUserInfo.getUserId()),
+                                                          computeTenantname(null, rootUserInfo.getTenantId())));
+        spyUserInfo.attach(SpyUser.class, new SpyUser(rootUserInfo));
         return spyUserInfo;
     }
 
     @Override
-    public UserInfo createUserWithTenant(UserInfo originalUser, String tenantId) {
-        if (Strings.isEmpty(tenantId) || Strings.areEqual(originalUser.getTenantId(), tenantId)) {
-            return originalUser;
+    public UserInfo createUserWithTenant(UserInfo originalUserInfo, String tenantId) {
+        if (Strings.isEmpty(tenantId) || Strings.areEqual(originalUserInfo.getTenantId(), tenantId)) {
+            return originalUserInfo;
         }
         T tenant = fetchTenant(tenantId);
         if (tenant == null) {
-            return originalUser;
+            return originalUserInfo;
         }
-        return switchTenant(originalUser, tenant);
+        return switchTenant(originalUserInfo, tenant);
     }
 
     /**
@@ -339,32 +339,33 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * <p>
      * See {@link TenantController#selectTenant}.
      *
-     * @param originalUser the user to be switched
-     * @param tenant       the tenant to switch to
+     * @param originalUserInfo the user to be switched
+     * @param tenant           the tenant to switch to
      * @return user the new user, now belonging to the given tenant
      */
-    private UserInfo switchTenant(UserInfo originalUser, T tenant) {
+    private UserInfo switchTenant(UserInfo originalUserInfo, T tenant) {
         // Copy all relevant data into a new object (outside of the cache)...
-        U modifiedUser = cloneUser(originalUser);
+        U modifiedUser = cloneUser(originalUserInfo);
 
         // And overwrite with the new tenant...
         modifiedUser.getTenant().setValue(tenant);
 
         Set<String> roles = computeRoles(modifiedUser,
                                          tenant,
-                                         Strings.areEqual(systemTenant, String.valueOf(originalUser.getTenantId())));
+                                         Strings.areEqual(systemTenant,
+                                                          String.valueOf(originalUserInfo.getTenantId())));
         roles.add(PERMISSION_SPY_USER);
         roles.add(PERMISSION_SELECT_TENANT);
 
         UserInfo userInOtherTenant =
-                asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUser.getTenantId()));
-        userInOtherTenant.attach(SpyUser.class, new SpyUser(originalUser));
+                asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUserInfo.getTenantId()));
+        userInOtherTenant.attach(SpyUser.class, new SpyUser(originalUserInfo));
         return userInOtherTenant;
     }
 
-    protected U cloneUser(UserInfo originalUser) {
+    protected U cloneUser(UserInfo originalUserInfo) {
         try {
-            U currentUser = originalUser.getUserObject(getUserClass());
+            U currentUser = originalUserInfo.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
 
             modifiedUser.setId(currentUser.getId());
@@ -373,8 +374,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             });
 
             return modifiedUser;
-        } catch (Exception e) {
-            throw Exceptions.handle(Log.APPLICATION, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(Log.APPLICATION, exception);
         }
     }
 
@@ -400,11 +401,11 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     /**
      * Determines the original tenant ID.
      *
-     * @param ctx the current web request
+     * @param webContext the current web request
      * @return the original tenant id of the currently active user (without spy overwrites)
      */
-    public String getOriginalTenantId(WebContext ctx) {
-        return ctx.getSessionValue(this.scope.getScopeId() + "-tenant-id").asString();
+    public String getOriginalTenantId(WebContext webContext) {
+        return webContext.getSessionValue(this.scope.getScopeId() + "-tenant-id").asString();
     }
 
     /**
@@ -419,11 +420,11 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     /**
      * Determines the original user ID.
      *
-     * @param ctx the current web request
+     * @param webContext the current web request
      * @return the original user id of the currently active user (without spy overwrites)
      */
-    public String getOriginalUserId(WebContext ctx) {
-        return ctx.getSessionValue(this.scope.getScopeId() + "-user-id").asString();
+    public String getOriginalUserId(WebContext webContext) {
+        return webContext.getSessionValue(this.scope.getScopeId() + "-user-id").asString();
     }
 
     /**
@@ -436,7 +437,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     }
 
     @Override
-    public UserInfo findUserByName(@Nullable WebContext ctx, String user) {
+    public UserInfo findUserByName(@Nullable WebContext webContext, String user) {
         if (Strings.isEmpty(user)) {
             return null;
         }
@@ -491,11 +492,11 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Nonnull
     @Override
-    public UserInfo bindToRequest(@Nonnull WebContext ctx) {
-        UserInfo info = super.bindToRequest(ctx);
+    public UserInfo bindToRequest(@Nonnull WebContext webContext) {
+        UserInfo info = super.bindToRequest(webContext);
         if (info.isLoggedIn()) {
-            // We only need to verify the IP range for users being logged in....
-            return verifyIpRange(ctx, info);
+            // We only need to verify the IP range for users being logged in...
+            return verifyIpRange(webContext, info);
         } else {
             return info;
         }
@@ -509,12 +510,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      * <p>
      * This is a security feature to prevent unwanted access to certain features from anywhere but a valid ip range.
      *
-     * @param ctx  the current request
-     * @param info the current user
+     * @param webContext the current request
+     * @param info       the current user
      * @return the current user but possibly with less permissions
      */
-    private UserInfo verifyIpRange(WebContext ctx, UserInfo info) {
-        String actualUser = ctx.getSessionValue(scope.getScopeId() + "-user-id").asString();
+    private UserInfo verifyIpRange(WebContext webContext, UserInfo info) {
+        String actualUser = webContext.getSessionValue(scope.getScopeId() + "-user-id").asString();
 
         U account = fetchAccount(actualUser);
 
@@ -524,7 +525,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         T tenant = account.getTenant().fetchValue();
 
-        if (tenant != null && !tenant.getTenantData().matchesIPRange(ctx)) {
+        if (tenant != null && !tenant.getTenantData().matchesIPRange(webContext)) {
             return createUserWithLimitedRoles(info, tenant.getTenantData().getRolesToKeepAsSet());
         }
 
@@ -612,22 +613,22 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     }
 
     @Override
-    protected boolean checkSubScope(UserInfo user, String scope) {
-        if (!user.isLoggedIn()) {
+    protected boolean checkSubScope(UserInfo userInfo, String scope) {
+        if (!userInfo.isLoggedIn()) {
             return true;
         }
 
-        UserAccountData userAccountData = user.getUserObject(UserAccount.class).getUserAccountData();
+        UserAccountData userAccountData = userInfo.getUserObject(UserAccount.class).getUserAccountData();
         return userAccountData.getSubScopes().isEmpty() || userAccountData.getSubScopes().contains(scope);
     }
 
     @Override
-    public UserInfo findUserByCredentials(@Nullable WebContext ctx, String user, String password) {
+    public UserInfo findUserByCredentials(@Nullable WebContext webContext, String user, String password) {
         if (Strings.isEmpty(password)) {
             return null;
         }
 
-        UserInfo result = findUserByName(ctx, user);
+        UserInfo result = findUserByName(webContext, user);
         if (result == null) {
             auditLog.negative("AuditLog.lockedOrNonexistentUserTriedLogin").forUser(null, user).log();
             return null;
@@ -729,8 +730,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                                    .withPermissions(info.getPermissions())
                                    .withUserSupplier(u -> freshAccount)
                                    .build();
-        } catch (Exception e) {
-            Exceptions.handle(Log.APPLICATION, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.APPLICATION, exception);
             return info;
         }
     }
@@ -760,22 +761,22 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     }
 
     @Override
-    protected void recordUserLogin(WebContext ctx, UserInfo user) {
+    protected void recordUserLogin(WebContext webContext, UserInfo userInfo) {
         // Ignored, as findUserByCredentials already records all logins.
     }
 
     /**
      * Handles an external login (e.g. via SAML).
      *
-     * @param ctx  the current request
-     * @param user the user which logged in
+     * @param webContext the current request
+     * @param userInfo   the user which logged in
      */
-    public void onExternalLogin(WebContext ctx, UserInfo user) {
-        updateLoginCookie(ctx, user, true);
-        recordLogin(user, true);
+    public void onExternalLogin(WebContext webContext, UserInfo userInfo) {
+        updateLoginCookie(webContext, userInfo, true);
+        recordLogin(userInfo, true);
     }
 
-    protected abstract void recordLogin(UserInfo user, boolean external);
+    protected abstract void recordLogin(UserInfo userInfo, boolean external);
 
     @Override
     protected U getUserObject(UserInfo userInfo) {
@@ -813,33 +814,33 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     }
 
     @Override
-    public void updateLoginCookie(WebContext ctx, UserInfo user, boolean keepLogin) {
-        super.updateLoginCookie(ctx, user, keepLogin);
-        installFingerprintInSession(ctx,
-                                    user.getUserObject(UserAccount.class)
-                                        .getUserAccountData()
-                                        .getLogin()
-                                        .getFingerprint());
+    public void updateLoginCookie(WebContext webContext, UserInfo userInfo, boolean keepLogin) {
+        super.updateLoginCookie(webContext, userInfo, keepLogin);
+        installFingerprintInSession(webContext,
+                                    userInfo.getUserObject(UserAccount.class)
+                                            .getUserAccountData()
+                                            .getLogin()
+                                            .getFingerprint());
     }
 
     /**
      * Installs the given fingerprint into the session of the given request.
      * <p>
      * This is made externally available so that the {@link ProfileController} can instantly
-     * update the fingerprint after the user changed its password. Otherwise an
+     * update the fingerprint after the user changed its password. Otherwise, an
      * immediate logout would happen which would be kind of a strange user experience.
      *
-     * @param ctx         the request used to update the session cookie
+     * @param webContext  the request used to update the session cookie
      * @param fingerprint the new fingerprint to use
      */
-    public void installFingerprintInSession(WebContext ctx, String fingerprint) {
-        ctx.setSessionValue(scope.getScopeId() + SUFFIX_FINGERPRINT, fingerprint);
+    public void installFingerprintInSession(WebContext webContext, String fingerprint) {
+        webContext.setSessionValue(scope.getScopeId() + SUFFIX_FINGERPRINT, fingerprint);
     }
 
     @Override
     @SuppressWarnings({"squid:S1126", "RedundantIfStatement"})
     @Explain("Using explicit abort conditions, and a final true makes all checks obvious")
-    protected boolean isUserStillValid(String userId, WebContext ctx) {
+    protected boolean isUserStillValid(String userId, WebContext webContext) {
         U user = fetchAccount(userId);
 
         if (user == null) {
@@ -853,7 +854,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return false;
         }
 
-        String fingerprintInSession = ctx.getSessionValue(scope.getScopeId() + SUFFIX_FINGERPRINT).asString();
+        String fingerprintInSession = webContext.getSessionValue(scope.getScopeId() + SUFFIX_FINGERPRINT).asString();
         if (Strings.isFilled(loginData.getFingerprint()) && !Strings.areEqual(loginData.getFingerprint(),
                                                                               fingerprintInSession)) {
             return false;
@@ -948,7 +949,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     }
 
     @Override
-    protected Set<String> computeRoles(WebContext ctx, String accountUniqueName) {
+    protected Set<String> computeRoles(WebContext webContext, String accountUniqueName) {
         Tuple<Set<String>, String> cachedRoles = rolesCache.get(accountUniqueName);
         if (cachedRoles != null) {
             return cachedRoles.getFirst();
@@ -970,7 +971,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Nonnull
     @Override
-    protected String computeUsername(@Nullable WebContext ctx, String userId) {
+    protected String computeUsername(@Nullable WebContext webContext, String userId) {
         U account = fetchAccount(userId);
         if (account == null) {
             return "(unknown)";
@@ -981,7 +982,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Nonnull
     @Override
-    protected String computeTenantname(@Nullable WebContext ctx, String tenantId) {
+    protected String computeTenantname(@Nullable WebContext webContext, String tenantId) {
         T tenant = fetchTenant(tenantId);
         if (tenant == null) {
             return "(unknown)";
@@ -1009,10 +1010,10 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     }
 
     @Override
-    public void logout(@Nonnull WebContext ctx) {
-        super.logout(ctx);
-        ctx.setSessionValue(scope.getScopeId() + SPY_ID_SUFFIX, null);
-        ctx.setSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX, null);
+    public void logout(@Nonnull WebContext webContext) {
+        super.logout(webContext);
+        webContext.setSessionValue(scope.getScopeId() + SPY_ID_SUFFIX, null);
+        webContext.setSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX, null);
     }
 
     /**
