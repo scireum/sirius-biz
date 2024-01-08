@@ -3,7 +3,7 @@
 <t:page titleKey="DisasterController.title">
     <i:block name="breadcrumbs">
         <li>
-            <a href="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">@i18n("DisasterController.title")</a>
+            <a href="@WebContext.getCurrent().getRequestedURI()">@i18n("DisasterController.title")</a>
         </li>
     </i:block>
 
@@ -11,7 +11,7 @@
         <t:pageHeader titleKey="DisasterController.title"/>
     </i:block>
 
-    <t:editForm url="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">
+    <t:editForm url="@WebContext.getCurrent().getRequestedURI()">
         <t:heading labelKey="DisasterController.maintenanceMessage"/>
         <t:textfield name="previewMessage"
                      helpKey="DisasterController.previewMessageHelp"
