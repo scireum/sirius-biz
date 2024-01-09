@@ -19,18 +19,22 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Counter;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.Metrics;
 import sirius.kernel.info.Product;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
+import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
+import sirius.web.security.UserContext;
 import sirius.web.services.Format;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
@@ -371,5 +375,39 @@ public class ClusterController extends BasicController {
     public void localSwitch(WebContext webContext, String setting, String node, String jobKey) {
         neighborhoodWatch.changeLocalOverwrite(node, jobKey, FLAG_DISABLE.equals(setting));
         waitAndRedirectToClusterUI(webContext);
+    }
+
+    /**
+     * Releases a single currently held lock.
+     *
+     * @param webContext the request to handle
+     * @param name       the name of the lock to release
+     */
+    @Routed("/system/cluster/locks/release/:1")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void releaseSingleLock(WebContext webContext, String name) {
+        locks.unlock(name, true);
+
+        UserContext.message(Message.success().withTextMessage(Strings.apply("Released '%s' lock.", name)));
+        webContext.respondWith().redirectToGet("/system/cluster");
+    }
+
+    /**
+     * Releases all currently held locks.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/system/cluster/locks/release-all")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void releaseAllLocks(WebContext webContext) {
+        Counter counter = new Counter();
+
+        locks.getLocks().forEach(lock -> {
+            locks.unlock(lock.getName(), true);
+            counter.inc();
+        });
+
+        UserContext.message(Message.success().withTextMessage(Strings.apply("Released %d locks.", counter.getCount())));
+        webContext.respondWith().redirectToGet("/system/cluster");
     }
 }
