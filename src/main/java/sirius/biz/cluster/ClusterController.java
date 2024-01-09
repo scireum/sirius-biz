@@ -85,6 +85,7 @@ public class ClusterController extends BasicController {
     public static final String RESPONSE_EXECUTION_INFO = "executionInfo";
     public static final String FLAG_ENABLE = "enable";
     public static final String FLAG_DISABLE = "disable";
+    private static final String CUSTER_URI = "/system/cluster";
 
     @Part
     private Cluster cluster;
@@ -189,7 +190,7 @@ public class ClusterController extends BasicController {
      *
      * @param webContext the request to handle
      */
-    @Routed("/system/cluster")
+    @Routed(CUSTER_URI)
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void cluster(WebContext webContext) {
         List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
@@ -233,7 +234,7 @@ public class ClusterController extends BasicController {
 
     protected void waitAndRedirectToClusterUI(WebContext webContext) {
         webContext.markAsLongCall();
-        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> webContext.respondWith().redirectToGet("/system/cluster"));
+        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> webContext.respondWith().redirectToGet(CUSTER_URI));
     }
 
     /**
@@ -389,7 +390,7 @@ public class ClusterController extends BasicController {
         locks.unlock(name, true);
 
         UserContext.message(Message.success().withTextMessage(Strings.apply("Released '%s' lock.", name)));
-        webContext.respondWith().redirectToGet("/system/cluster");
+        webContext.respondWith().redirectToGet(CUSTER_URI);
     }
 
     /**
@@ -408,6 +409,6 @@ public class ClusterController extends BasicController {
         });
 
         UserContext.message(Message.success().withTextMessage(Strings.apply("Released %d locks.", counter.getCount())));
-        webContext.respondWith().redirectToGet("/system/cluster");
+        webContext.respondWith().redirectToGet(CUSTER_URI);
     }
 }
