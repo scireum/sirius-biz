@@ -7,7 +7,6 @@
         <li><a href="/system/cluster/background-jobs">Background Jobs</a></li>
     </i:block>
 
-    <t:heading>Background Jobs</t:heading>
     <t:datacards size="large">
         <i:for type="String" var="job" items="keys">
             <i:local name="referenceInfo"

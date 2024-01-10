@@ -5,7 +5,6 @@
         <li><a href="/system/cluster">Nodes</a></li>
     </i:block>
 
-    <t:heading>Nodes</t:heading>
     <t:datacards>
         <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
             <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())"
