@@ -28,6 +28,8 @@ import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.Metrics;
 import sirius.kernel.info.Product;
 import sirius.kernel.nls.NLS;
+import sirius.kernel.timer.EndOfDayTaskExecutor;
+import sirius.kernel.timer.EndOfDayTaskInfo;
 import sirius.web.controller.BasicController;
 import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
@@ -46,6 +48,7 @@ import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -88,6 +91,7 @@ public class ClusterController extends BasicController {
     public static final String FLAG_DISABLE = "disable";
     private static final String CLUSTER_URI = "/system/cluster";
     private static final String BACKGROUND_JOBS_URI = "/system/cluster/background-jobs";
+    private static final String EOD_TASKS_URI = "/system/cluster/eod-tasks";
     private static final String LOCKS_URI = "/system/cluster/locks";
 
     @Part
@@ -111,6 +115,9 @@ public class ClusterController extends BasicController {
 
     @Part
     private DistributedTasks distributedTasks;
+
+    @Part
+    private EndOfDayTaskExecutor endOfDayTaskExecutor;
 
     @Override
     public void onError(WebContext webContext, HandledException error) {
@@ -222,6 +229,17 @@ public class ClusterController extends BasicController {
                                                                                 (a, b) -> a));
         webContext.respondWith()
                   .template("/templates/biz/cluster/background-jobs.html.pasta", clusterInfo, descriptions, jobKeys);
+    }
+
+    /**
+     * Lists the end of day tasks registered in the cluster.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed(EOD_TASKS_URI)
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void eodTasks(WebContext webContext) {
+        webContext.respondWith().template("/templates/biz/cluster/eod-tasks.html.pasta");
     }
 
     /**
@@ -436,5 +454,25 @@ public class ClusterController extends BasicController {
 
         UserContext.message(Message.success().withTextMessage(Strings.apply("Released %d locks.", counter.getCount())));
         webContext.respondWith().redirectToGet(LOCKS_URI);
+    }
+
+    /**
+     * Runs a single {@link sirius.kernel.timer.EndOfDayTask}.
+     *
+     * @param webContext the request to handle
+     * @param name       the name of the task to run
+     */
+    @Routed("/system/cluster/eod-tasks/run/:1")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void runSingleEodTask(WebContext webContext, String name) {
+        Optional<EndOfDayTaskInfo> taskInfo = endOfDayTaskExecutor.executeNow(name);
+
+        if (taskInfo.isPresent()) {
+            UserContext.message(Message.success().withTextMessage(Strings.apply("Executed EOD task '%s'.", name)));
+        } else {
+            UserContext.message(Message.warn().withTextMessage(Strings.apply("Unknown EOD task '%s'.", name)));
+        }
+
+        webContext.respondWith().redirectToGet(EOD_TASKS_URI);
     }
 }

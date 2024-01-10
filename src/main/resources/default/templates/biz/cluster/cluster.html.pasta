@@ -26,6 +26,10 @@
                               label="Background Jobs"
                               url="/system/cluster/background-jobs"
                               active="page == 'background-jobs'"/>
+                <t:navboxLink icon="fa-regular fa-clock"
+                              label="End of Day Tasks"
+                              url="/system/cluster/eod-tasks"
+                              active="page == 'eod-tasks'"/>
                 <i:if test="locks != null">
                     <t:navboxLink icon="fa fa-lock" label="Locks" url="/system/cluster/locks" active="page == 'locks'"/>
                 </i:if>
