@@ -212,7 +212,6 @@ public class ClusterController extends BasicController {
                             jobKeys,
                             descriptions,
                             clusterInfo,
-                            webContext.get("groupByNode").asBoolean(),
                             locks);
     }
 
