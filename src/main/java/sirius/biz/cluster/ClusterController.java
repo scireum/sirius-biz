@@ -40,6 +40,7 @@ import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.services.PublicService;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.Comparator;
@@ -186,15 +187,25 @@ public class ClusterController extends BasicController {
     }
 
     /**
-     * Provides an overview of the cluster, its members and their background activities.
+     * Lists the nodes of the cluster.
      *
      * @param webContext the request to handle
      */
     @Routed(CUSTER_URI)
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void cluster(WebContext webContext) {
-        List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
-        clusterInfo.sort(Comparator.comparing(BackgroundInfo::getNodeName));
+        webContext.respondWith().template("/templates/biz/cluster/nodes.html.pasta", fetchSortedClusterInfo());
+    }
+
+    /**
+     * Lists the background jobs and their orchestration state.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/system/cluster/background-jobs")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void backgroundJobs(WebContext webContext) {
+        List<BackgroundInfo> clusterInfo = fetchSortedClusterInfo();
 
         List<String> jobKeys = clusterInfo.stream()
                                           .flatMap(node -> node.getJobs().keySet().stream())
@@ -208,11 +219,25 @@ public class ClusterController extends BasicController {
                                                                                 e -> e.getValue().getDescription(),
                                                                                 (a, b) -> a));
         webContext.respondWith()
-                  .template("/templates/biz/cluster/cluster.html.pasta",
-                            jobKeys,
-                            descriptions,
-                            clusterInfo,
-                            locks);
+                  .template("/templates/biz/cluster/background-jobs.html.pasta", clusterInfo, descriptions, jobKeys);
+    }
+
+    /**
+     * Lists the locks currently held by the cluster.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/system/cluster/locks")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void locks(WebContext webContext) {
+        webContext.respondWith().template("/templates/biz/cluster/locks.html.pasta", locks);
+    }
+
+    @Nonnull
+    private List<BackgroundInfo> fetchSortedClusterInfo() {
+        List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
+        clusterInfo.sort(Comparator.comparing(BackgroundInfo::getNodeName));
+        return clusterInfo;
     }
 
     /**

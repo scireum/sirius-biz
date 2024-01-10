@@ -1,0 +1,86 @@
+<i:arg type="List" name="nodes"/>
+<i:arg type="Map" name="descriptions"/>
+<i:arg type="List" name="keys"/>
+
+<i:invoke template="/templates/biz/cluster/cluster.html.pasta" page="background-jobs" title="Background Jobs">
+    <i:block name="breadcrumbs">
+        <li><a href="/system/cluster/background-jobs">Background Jobs</a></li>
+    </i:block>
+
+    <t:heading>Background Jobs</t:heading>
+    <t:datacards size="large">
+        <i:for type="String" var="job" items="keys">
+            <i:local name="referenceInfo"
+                     value="@nodes.stream()
+                                  .map(| node | node.as(sirius.biz.cluster.BackgroundInfo.class).getJobs().get(job))
+                                  .filter(|job| job != null)
+                                  .findFirst().orElse(null).as(sirius.biz.cluster.BackgroundJobInfo.class)"/>
+            <i:if test="referenceInfo != null">
+                <t:datacard title="@job" subTitle="@toUserString(descriptions.get(job))">
+                    <i:block name="actions">
+                        <i:if test="referenceInfo.isGloballyEnabled()">
+                            <t:dropdownItem label="Disable Globally"
+                                            url="@apply('/system/cluster/global/disable/%s', job)"/>
+                            <i:else>
+                                <t:dropdownItem label="Enable Globally"
+                                                url="@apply('/system/cluster/global/enable/%s', job)"/>
+                            </i:else>
+                        </i:if>
+                    </i:block>
+
+                    <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
+                        <i:local name="jobInfo"
+                                 value="@node.getJobs().get(job)"/>
+                        <i:if test="jobInfo != null">
+                            <div class="mb-4 d-flex flex-row">
+                                <div class="mr-auto">
+                                    <div class="d-flex flex-row">
+                                        <t:dot color="@jobInfo.isLocalOverwrite() ? 'red' : 'green'"><b>@node.getNodeName()</b>
+                                        </t:dot>
+                                        <i:switch test="@jobInfo.getSynchronizeType().toString()">
+                                            <i:block name="LOCAL">
+                                                <t:tag color="blue">@jobInfo.getSynchronizeType()</t:tag>
+                                            </i:block>
+                                            <i:block name="CLUSTER">
+                                                <t:tag color="violet">@jobInfo.getSynchronizeType()</t:tag>
+                                            </i:block>
+                                            <i:block name="DISABLED">
+                                                <t:tag color="yellow">@jobInfo.getSynchronizeType()</t:tag>
+                                            </i:block>
+                                        </i:switch>
+                                    </div>
+                                    <div class="text-muted small">@jobInfo.getExecutionInfo()</div>
+                                </div>
+                                <div>
+                                    <i:if test="jobInfo.isLocalOverwrite()">
+                                        <a href="/system/cluster/local/enable/@node.getNodeName()/@job"
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-check"></i><span
+                                                class="d-none d-xl-inline"> Enable</span>
+                                        </a>
+                                        <i:else>
+                                            <a href="/system/cluster/local/disable/@node.getNodeName()/@job"
+                                               class="btn btn-outline-secondary btn-sm">
+                                                <i class="fa fa-power-off"></i><span
+                                                    class="d-none d-xl-inline"> Disable</span>
+                                            </a>
+                                        </i:else>
+                                    </i:if>
+                                </div>
+                            </div>
+                        </i:if>
+                    </i:for>
+
+                    <i:block name="footer">
+                        <i:if test="referenceInfo.isGloballyEnabled()">
+                            <t:dot color="green">Globally Enabled</t:dot>
+                            <i:else>
+                                <t:dot color="red">Globally Disabled</t:dot>
+                            </i:else>
+                        </i:if>
+                    </i:block>
+                </t:datacard>
+            </i:if>
+        </i:for>
+    </t:datacards>
+</i:invoke>
