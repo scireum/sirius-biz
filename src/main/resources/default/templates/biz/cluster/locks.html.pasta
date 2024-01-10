@@ -1,6 +1,6 @@
-<i:arg type="sirius.biz.locks.Locks" name="locks"/>
-
 <i:invoke template="/templates/biz/cluster/cluster.html.pasta" page="locks" title="Locks">
+    <i:local name="locks" value="Injector.context().getPart(sirius.biz.locks.Locks.class)"/>
+
     <i:block name="breadcrumbs">
         <li><a href="/system/cluster/locks">Locks</a></li>
     </i:block>

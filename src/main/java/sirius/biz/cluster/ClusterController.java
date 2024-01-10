@@ -230,7 +230,7 @@ public class ClusterController extends BasicController {
     @Routed("/system/cluster/locks")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void locks(WebContext webContext) {
-        webContext.respondWith().template("/templates/biz/cluster/locks.html.pasta", locks);
+        webContext.respondWith().template("/templates/biz/cluster/locks.html.pasta");
     }
 
     @Nonnull

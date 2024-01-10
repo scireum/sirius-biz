@@ -2,6 +2,8 @@
 <i:arg name="page" type="String"/>
 
 <t:page title="@title">
+    <i:local name="locks" value="Injector.context().getPart(sirius.biz.locks.Locks.class)"/>
+
     <i:block name="breadcrumbs">
         <li><a href="/system/cluster">Cluster State</a></li>
         <i:render name="breadcrumbs"/>
@@ -20,8 +22,13 @@
         <i:block name="sidebar">
             <t:navbox labelKey="Model.links">
                 <t:navboxLink icon="fa fa-server" label="Nodes" url="/system/cluster" active="page == 'nodes'"/>
-                <t:navboxLink icon="fa fa-hammer" label="Background Jobs" url="/system/cluster/background-jobs" active="page == 'background-jobs'"/>
-                <t:navboxLink icon="fa fa-lock" label="Locks" url="/system/cluster/locks" active="page == 'locks'"/>
+                <t:navboxLink icon="fa fa-hammer"
+                              label="Background Jobs"
+                              url="/system/cluster/background-jobs"
+                              active="page == 'background-jobs'"/>
+                <i:if test="locks != null">
+                    <t:navboxLink icon="fa fa-lock" label="Locks" url="/system/cluster/locks" active="page == 'locks'"/>
+                </i:if>
             </t:navbox>
         </i:block>
 
