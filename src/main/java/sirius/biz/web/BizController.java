@@ -681,14 +681,7 @@ public class BizController extends BasicController {
             return;
         }
 
-        String target = refererUri.toString();
-
-        String query = webContext.getQueryString();
-        if (Strings.isFilled(query)) {
-            target += (target.contains("?") ? "&" : "?") + query;
-        }
-
-        webContext.respondWith().redirectToGet(target);
+        webContext.respondWith().redirectToGet(refererUri.toString());
     }
 
     /**
