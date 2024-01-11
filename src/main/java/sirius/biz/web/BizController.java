@@ -698,7 +698,8 @@ public class BizController extends BasicController {
      * @see #redirectToSaneReferer(WebContext, Pattern, String)
      */
     protected static Pattern createPatternForOverviewAndDetailRoutes(String overviewRoute, String detailRoutePrefix) {
-        return Pattern.compile("^(" + Pattern.quote(detailRoutePrefix) + "[0-9a-zA-Z_\\-]+|" + Pattern.quote(overviewRoute) + ")$");
+        return Pattern.compile("^(" + Pattern.quote(detailRoutePrefix) + "[0-9a-zA-Z_\\-]+|" + Pattern.quote(
+                overviewRoute) + ")$");
     }
 
     /**
