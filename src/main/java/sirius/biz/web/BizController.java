@@ -152,8 +152,8 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()}
-     * write-once semantic.
+     * Properly creates or maintains a reference to an entity with {@linkplain BaseEntityRef#hasWriteOnceSemantics()
+     * write-once semantic}.
      * <p>
      * For new entities (owner), the given reference is initialized with the given target. For existing entities
      * it is verified, that the given reference points to the given target. Also, we pre-fill the
