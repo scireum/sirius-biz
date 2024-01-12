@@ -9,17 +9,17 @@
 package sirius.biz.jobs.interactive;
 
 /**
- * Provides a base implementation for interactive dougnut charts.
+ * Provides a base implementation for interactive doughnut charts.
  */
-public abstract class DougnutChartJobFactory extends SingleDatasetChartJobFactory {
+public abstract class DoughnutChartJobFactory extends SingleDatasetChartJobFactory {
 
     @Override
     public String getIcon() {
-        return "fas fa-chart-pie";
+        return "fa-solid fa-chart-pie";
     }
 
     @Override
     protected String getTemplate() {
-        return "/templates/biz/jobs/dougnutchart.html.pasta";
+        return "/templates/biz/jobs/doughnutchart.html.pasta";
     }
 }
