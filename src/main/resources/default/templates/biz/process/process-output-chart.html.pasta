@@ -27,7 +27,9 @@
                         polarAreaChart('#chart-@id', chartData.labels, chartData.data);
                     } else if (chartData.type === 'dougnut') {
                         $('#chart-@id').attr('height', 180);
-                        dougnutChart('#chart-@id', chartData.labels, chartData.data);
+                        doughnutChart('#chart-@id', chartData.labels, chartData.data, {
+                            maintainAspectRatio: false
+                        });
                     }
                 });
             }
