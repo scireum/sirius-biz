@@ -107,7 +107,7 @@ class CustomLookupTable extends LookupTable {
                              baseTable.performSearch(searchTerm, Limit.UNLIMITED, language))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
-                     .collect(Collectors.toMap(LookupTableEntry::getCode, Function.identity(), (a, b) -> a))
+                     .collect(filterCustomDuplicateCollector())
                      .values()
                      .stream();
     }
