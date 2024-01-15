@@ -13,13 +13,18 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Combines two {@link LookupTable lookup tables} into a single lookup table.
  * <p>
  * Using this approach, the custom table is always queried first and then complemented by the base table.
+ * If there is a custom entry with the same key as in the base table, the custom entry is used.
  */
 class CustomLookupTable extends LookupTable {
 
@@ -90,7 +95,10 @@ class CustomLookupTable extends LookupTable {
         return Stream.concat(customTable.performSuggest(Limit.UNLIMITED, searchTerm, language),
                              baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language))
                      .skip(limit.getItemsToSkip())
-                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
+                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
+                     .collect(filterCustomDuplicateCollector())
+                     .values()
+                     .stream();
     }
 
     @Override
@@ -98,14 +106,20 @@ class CustomLookupTable extends LookupTable {
         return Stream.concat(customTable.performSearch(searchTerm, Limit.UNLIMITED, language),
                              baseTable.performSearch(searchTerm, Limit.UNLIMITED, language))
                      .skip(limit.getItemsToSkip())
-                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
+                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
+                     .collect(Collectors.toMap(LookupTableEntry::getCode, Function.identity(), (a, b) -> a))
+                     .values()
+                     .stream();
     }
 
     @Override
     public Stream<LookupTableEntry> scan(String language, Limit limit) {
         return Stream.concat(customTable.scan(language, Limit.UNLIMITED), baseTable.scan(language, Limit.UNLIMITED))
                      .skip(limit.getItemsToSkip())
-                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
+                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
+                     .collect(filterCustomDuplicateCollector())
+                     .values()
+                     .stream();
     }
 
     @Override
@@ -116,6 +130,13 @@ class CustomLookupTable extends LookupTable {
     @Override
     protected Stream<LookupTableEntry> performQuery(String language, String lookupPath, String lookupValue) {
         return Stream.concat(customTable.performQuery(language, lookupPath, lookupValue),
-                             baseTable.performQuery(language, lookupPath, lookupValue));
+                             baseTable.performQuery(language, lookupPath, lookupValue))
+                     .collect(filterCustomDuplicateCollector())
+                     .values()
+                     .stream();
+    }
+
+    private Collector<LookupTableEntry, ?, Map<String, LookupTableEntry>> filterCustomDuplicateCollector() {
+        return Collectors.toMap(LookupTableEntry::getCode, Function.identity(), (a, b) -> a);
     }
 }
