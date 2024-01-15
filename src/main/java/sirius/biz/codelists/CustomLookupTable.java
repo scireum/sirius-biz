@@ -95,10 +95,10 @@ class CustomLookupTable extends LookupTable {
         return Stream.concat(customTable.performSuggest(Limit.UNLIMITED, searchTerm, language),
                              baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language))
                      .skip(limit.getItemsToSkip())
-                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
                      .collect(filterCustomDuplicateCollector())
                      .values()
-                     .stream();
+                     .stream()
+                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
@@ -106,20 +106,20 @@ class CustomLookupTable extends LookupTable {
         return Stream.concat(customTable.performSearch(searchTerm, Limit.UNLIMITED, language),
                              baseTable.performSearch(searchTerm, Limit.UNLIMITED, language))
                      .skip(limit.getItemsToSkip())
-                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
                      .collect(filterCustomDuplicateCollector())
                      .values()
-                     .stream();
+                     .stream()
+                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
     public Stream<LookupTableEntry> scan(String language, Limit limit) {
         return Stream.concat(customTable.scan(language, Limit.UNLIMITED), baseTable.scan(language, Limit.UNLIMITED))
                      .skip(limit.getItemsToSkip())
-                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
                      .collect(filterCustomDuplicateCollector())
                      .values()
-                     .stream();
+                     .stream()
+                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
