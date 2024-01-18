@@ -29,7 +29,7 @@
                     <t:permission permission="flag-system-administrator">
                         <t:dropdownSection>
                             <t:dropdownItem labelKey="TenantController.select"
-                                            icon="fa fa-building"
+                                            icon="fa-solid fa-building"
                                             url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
                         </t:dropdownSection>
                     </t:permission>

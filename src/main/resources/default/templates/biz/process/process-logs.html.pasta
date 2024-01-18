@@ -12,7 +12,8 @@
             <t:permission permission="permission-manage-processes">
                 <t:dropdown labelKey="Process.persistencePeriod"
                             labelClass="d-none d-xl-inline"
-                            icon="fa fa-archive" class="mr-2">
+                            icon="fa-solid fa-archive"
+                            class="me-2">
                     <i:for type="sirius.biz.process.PersistencePeriod"
                            var="period"
                            items="enumValues(sirius.biz.process.PersistencePeriod.class)">
@@ -23,8 +24,8 @@
                 </t:dropdown>
             </t:permission>
             <t:dropdown labelKey="ProcessController.export"
-                        icon="fa fa-file-export"
-                        class="mr-2"
+                        icon="fa-solid fa-file-export"
+                        class="me-2"
                         labelClass="d-none d-xl-inline">
                 <i:for type="sirius.biz.jobs.batch.file.ExportFileType"
                        var="type"
@@ -47,7 +48,7 @@
                         <th>
                             @i18n("ProcessLog.message")
                         </th>
-                        <th class="text-right">
+                        <th class="text-end">
                             @i18n("ProcessLog.timestamp")
                         </th>
                     </tr>
@@ -56,22 +57,22 @@
                     <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="logs.getItems()">
                         <tr>
                             <td class="sci-left-border-@log.getRowColor()">
-                                <div class="overflow-hidden text-monospace text-small text-break whitespace-pre-line">
+                                <div class="overflow-hidden font-monospace text-small text-break whitespace-pre-line">
                                     @log.getMessage()
                                 </div>
                                 <div class="text-small text-muted mt-2">
                                     <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action"
                                            items="log.getActions()">
-                                        <span class="d-flex flex-row align-items-center mr-2">
-                                        <i class="fa @action.getIcon()"></i>
+                                        <span class="d-flex flex-row align-items-center me-2">
+                                        <i class="fa-solid @action.getIcon()"></i>
                                         <a href="@action.getUri()?returnUrl=@urlEncode(apply('/ps/%s', process.getId()))"
-                                           class="ml-1 link link-inline">
+                                           class="ms-1 link link-inline">
                                             @action.getLabel()</a>
                                         </span>
                                     </i:for>
                                 </div>
                             </td>
-                            <td class="text-right">
+                            <td class="text-end">
                                 <div class="cycle-js link text-small whitespace-no-wrap" data-cycle="@log.getNode()">
                                     @log.getTimestampAsString()
                                 </div>

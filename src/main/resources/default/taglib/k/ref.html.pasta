@@ -10,13 +10,13 @@
     <a class="@class"
        target="_blank"
        href="/kba/@referencedArticle.getLanguage()/@code"
-       data-toggle="tooltip"
-       data-placement="top"
+       data-bs-toggle="tooltip"
+       data-bs-placement="top"
        title="@referencedArticle.getDescription()">
         <i:if test="referencedArticle.isChapter()">
-            <i class="fa fa-book"></i>
+            <i class="fa-solid fa-book"></i>
             <i:else>
-                <i class="fa fa-file-alt"></i>
+                <i class="fa-solid fa-file-alt"></i>
             </i:else>
         </i:if>
         @referencedArticle.getTitle()

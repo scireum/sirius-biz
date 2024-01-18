@@ -28,10 +28,10 @@
                         </td>
                         <td>@toUserString(task.getLastExecution())</td>
                         <td>@task.getFormattedLastDuration()</td>
-                        <td class="col-2 text-right">
+                        <td class="col-2 text-end">
                             <a href="@apply('/system/cluster/eod-tasks/run/%s', task.getTask().getName())"
                                class="btn btn-outline-secondary btn-sm confirm-link-js">
-                                <i class="fa fa-play"></i><span class="d-none d-xl-inline"> Run</span>
+                                <i class="fa-solid fa-play"></i><span class="d-none d-xl-inline"> Run</span>
                             </a>
                         </td>
                     </tr>

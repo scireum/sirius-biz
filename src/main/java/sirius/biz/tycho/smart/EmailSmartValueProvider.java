@@ -29,7 +29,7 @@ public class EmailSmartValueProvider implements SmartValueProvider {
     public void collectValues(String type, Object payload, Consumer<SmartValue> valueCollector) {
         if (Strings.isFilled(payload) && VALUE_TYPE_EMAIL.equals(type)) {
             String email = payload.toString();
-            valueCollector.accept(new SmartValue("fa fa-envelope", email, "mailto:" + Strings.urlEncode(email), email));
+            valueCollector.accept(new SmartValue("fa-solid fa-envelope", email, "mailto:" + Strings.urlEncode(email), email));
         }
     }
 

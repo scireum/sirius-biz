@@ -38,7 +38,7 @@ function loadImageLazily(_img) {
         });
     }
 
-    _container.innerHTML = '<i class="fa fa-sync-alt fa-spin"></i>';
+    _container.innerHTML = '<i class="fa-solid fa-sync-alt fa-spin"></i>';
     attemptLoad(3);
 }
 

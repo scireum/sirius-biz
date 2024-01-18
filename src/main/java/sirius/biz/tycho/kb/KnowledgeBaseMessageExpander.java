@@ -34,7 +34,7 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
             return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(2), false).map(kba -> {
                 return match.group(1) + Strings.apply("""
                                                               <span class="d-inline-flex flex-row align-items-baseline">
-                                                                  <i class="fa fa-lightbulb"></i><a class="pl-1" href="/kba/%s/%s">%s</a>
+                                                                  <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s">%s</a>
                                                               </span>
                                                               """,
                                                       kba.getLanguage(),
@@ -46,7 +46,7 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
             return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(1), true).map(kba -> {
                 return Strings.apply("""
                                              <span class="d-inline-flex flex-row align-items-baseline">
-                                                 <i class="fa fa-lightbulb"></i><a class="pl-1" href="/kba/%s/%s">%s</a>
+                                                 <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s">%s</a>
                                              </span>
                                              """, kba.getLanguage(), kba.getArticleId(), kba.getTitle());
             }).orElse("kba:" + match.group());

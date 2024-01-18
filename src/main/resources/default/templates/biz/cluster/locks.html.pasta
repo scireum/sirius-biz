@@ -10,7 +10,7 @@
         <i:if test="currentLocks != null && !currentLocks.isEmpty()">
             <a href="@apply('/system/cluster/locks/release-all')"
                class="btn btn-outline-danger confirm-link-js">
-                <i class="fa fa-unlock"></i><span class="d-none d-xl-inline"> Release all</span>
+                <i class="fa-solid fa-unlock"></i><span class="d-none d-xl-inline"> Release all</span>
             </a>
         </i:if>
     </i:block>
@@ -31,10 +31,10 @@
                         <td>@lock.getOwner()</td>
                         <td>@lock.getThread()</td>
                         <td>@toUserString(lock.getAcquired())</td>
-                        <td class="col-2 text-right">
+                        <td class="col-2 text-end">
                             <a href="@apply('/system/cluster/locks/release/%s', lock.getName())"
                                class="btn btn-outline-danger btn-sm confirm-link-js">
-                                <i class="fa fa-unlock"></i><span class="d-none d-xl-inline"> Release</span>
+                                <i class="fa-solid fa-unlock"></i><span class="d-none d-xl-inline"> Release</span>
                             </a>
                         </td>
                     </tr>

@@ -25,11 +25,14 @@
 <i:local name="modalId" value="@('mls-modal-' + idPart)"/>
 
 <i:if test="value.isEnabled()">
-    <div id="@wrapperId" class="form-group @UserContext.get().signalFieldError(name) @class">
+    <div id="@wrapperId"
+         class="form-group @UserContext.get().signalFieldError(name) @class">
         <i:if test="isFilled(label) || forceLabel">
             <label><span>@label</span></label>
         </i:if>
-        <div class="input-group cursor-pointer" data-toggle="modal" data-target="#___modalId">
+        <div class="input-group cursor-pointer"
+             data-bs-toggle="modal"
+             data-bs-target="#___modalId">
             <input id="@id"
                    type="text"
                    class="form-control input-block-level mls-input cursor-pointer"
@@ -38,11 +41,12 @@
                    @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
             <div class="input-group-append">
                 <span class="input-group-text">
-                    <span class="fa fa-globe"></span>
+                    <span class="fa-solid fa-globe"></span>
                 </span>
             </div>
         </div>
-        <div id="@('hidden-inputs-' + fieldName)" class="mls-hidden-inputs">
+        <div id="@('hidden-inputs-' + fieldName)"
+             class="mls-hidden-inputs">
         </div>
 
         <i:if test="isFilled(help)">
@@ -63,15 +67,20 @@
 
         </div>
         <i:block name="footer">
-            <div class="mls-add-language-button dropup mr-auto d-none">
-                <button type="button" class="btn btn-link text-decoration-none" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")
+            <div class="mls-add-language-button dropup me-auto d-none">
+                <button type="button"
+                        class="btn btn-link text-decoration-none"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false">
+                    <i class="fa-solid fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")
                 </button>
                 <ul class="dropdown-menu w-100"></ul>
             </div>
 
-            <button type="button" class="btn btn-primary" data-dismiss="modal">
+            <button type="button"
+                    class="btn btn-primary"
+                    data-bs-dismiss="modal">
                 @i18n("MultiLanguageEditor.apply")
             </button>
         </i:block>

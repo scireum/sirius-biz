@@ -56,7 +56,7 @@ MultiLanguageField.prototype.buildSingleline = function () {
     });
 
     if (this.mobileOrSmallScreen) {
-        this._addLanguageOptions.classList.add('dropdown-menu-right');
+        this._addLanguageOptions.classList.add('dropdown-menu-end');
     }
 
     this._modalBody = this._modal.querySelector('.modal-body');
@@ -106,8 +106,8 @@ MultiLanguageField.prototype.buildMultiline = function () {
     this.MAX_TABS_VISIBLE = 3;
 
     if (this.mobileOrSmallScreen) {
-        this._addLanguageOptions.classList.add('dropdown-menu-right');
-        this._toggleLanguageOptions.classList.add('dropdown-menu-right');
+        this._addLanguageOptions.classList.add('dropdown-menu-end');
+        this._toggleLanguageOptions.classList.add('dropdown-menu-end');
     }
 
     this.renderMultilineHeaderAndContent();

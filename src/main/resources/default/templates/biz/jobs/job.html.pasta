@@ -19,13 +19,13 @@
                 <i:if test="!job.getJobInfos().isEmpty()">
                     <a class="btn btn-outline-link"
                        href="/jobs/infos/@job.getName()">
-                        <span><i class="fa fa-book"></i></span>
+                        <span><i class="fa-solid fa-book"></i></span>
                         @i18n("JobsController.showInfos")
                     </a>
                 </i:if>
             </i:block>
 
-            <t:iconInlineInfo icon="fa fa-info-circle">
+            <t:iconInlineInfo icon="fa-solid fa-info-circle">
                 <i:if test="isFilled(job.getHTMLDescription())">
                     <i:raw>@job.getHTMLDescription()</i:raw>
                     <i:else>
@@ -50,7 +50,7 @@
                     <div class="d-flex flex-column card card-border">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <i class="fas fa-save"></i>
+                                <i class="fa-solid fa-save"></i>
                                 @i18n("JobsController.presets")
                             </h5>
                         </div>
@@ -62,14 +62,14 @@
                                     <div class="btn-group" role="group">
                                         <a class="btn btn-outline-link text-nowrap"
                                            href="javascript:loadPreset('@preset.getIdAsString()')">
-                                            <i class="fa fa-check"></i>
+                                            <i class="fa-solid fa-check"></i>
                                             <span class="d-sm-inline-block d-md-none d-xl-inline-block">
                                                 @i18n("JobsController.usePreset")
                                             </span>
                                         </a>
                                         <a class="btn btn-outline-danger pull-right text-nowrap"
                                            href="javascript:deletePreset('@preset.getIdAsString()')">
-                                            <i class="fa fa-trash"></i>
+                                            <i class="fa-solid fa-trash"></i>
                                             <span class="d-sm-inline-block d-md-none d-xl-inline-block">
                                                 @i18n("NLS.delete")
                                             </span>
@@ -80,7 +80,7 @@
                         </ul>
                         <div class="d-flex flex-row justify-content-between card-body">
                             <a class="btn btn-outline-primary" href="javascript:showCreatePresetModal()">
-                                <i class="fa fa-plus"></i>
+                                <i class="fa-solid fa-plus"></i>
                                 @i18n("JobsController.createPreset")</a>
                         </div>
                     </div>

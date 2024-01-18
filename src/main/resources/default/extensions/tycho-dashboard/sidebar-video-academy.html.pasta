@@ -15,7 +15,7 @@
                                   owner="@user().getUserId()"
                                   accessToken="@onboardingEngine.computeAccessToken(user().getUserId())">
                             <i:block name="footer-navbox">
-                                <t:navboxLink labelKey="OnboardingController.showAllVideos" url="/academy" icon="fa fa-video"/>
+                                <t:navboxLink labelKey="OnboardingController.showAllVideos" url="/academy" icon="fa-solid fa-video"/>
                             </i:block>
                         </i:invoke>
                     </div>

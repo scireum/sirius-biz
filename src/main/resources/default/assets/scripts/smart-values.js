@@ -4,7 +4,7 @@ function openSmartValues(elementId, type, payload, signature) {
         sanitize: false,
         trigger: 'manual',
         template: '<div class="tooltip smart-values" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>',
-        title: '<i class="fa fa-sync fa-spin"></i>',
+        title: '<i class="fa-solid fa-sync fa-spin"></i>',
         delay: {start: 0, hide: 1000}
     }).tooltip('show');
 
@@ -37,16 +37,16 @@ function openSmartValues(elementId, type, payload, signature) {
             '<div class="d-flex flex-row align-items-center">' +
             '   <a href="{{action}}" class="smart-value-link btn btn-link d-flex flex-row align-items-center overflow-hidden flex-grow-1">' +
             '       <i class="{{icon}}"></i>' +
-            '       <span class="pl-2">{{label}}</span>' +
+            '       <span class="ps-2">{{label}}</span>' +
             '   </a>' +
             '   {{#copyPayload}}' +
-            '       <a href="javascript:sirius.copyToClipboard(\'{{copyPayload}}\')" class="smart-value-link btn btn-link ml-2 text-small">' +
-            '          <i class="far fa-clipboard"></i>' +
+            '       <a href="javascript:sirius.copyToClipboard(\'{{copyPayload}}\')" class="smart-value-link btn btn-link ms-2 text-small">' +
+            '          <i class="fa-regular fa-clipboard"></i>' +
             '       </a>' +
             '   {{/copyPayload}}' +
             '   {{^copyPayload}}' +
-            '       <a class="btn btn-link disabled ml-2 text-small">' +
-            '          <i class="far fa-clipboard"></i>' +
+            '       <a class="btn btn-link disabled ms-2 text-small">' +
+            '          <i class="fa-regular fa-clipboard"></i>' +
             '       </a>' +
             '   {{/copyPayload}}' +
             '</div>' +

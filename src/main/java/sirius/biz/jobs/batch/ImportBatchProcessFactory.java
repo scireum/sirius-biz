@@ -38,7 +38,7 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa fa-upload";
+        return "fa-solid fa-upload";
     }
 
     @Override

@@ -1,7 +1,7 @@
 <i:arg type="String" name="id" default="" description="Defines the id."/>
 <i:arg type="String" name="link" description="Defines a url or link."/>
 <i:arg type="String" name="name" default="" description="Defines a speaking name or description."/>
-<i:arg type="String" name="icon" default="fas fa-external-link-alt" description="Defines the icon left to the link name."/>
+<i:arg type="String" name="icon" default="fa-solid fa-external-link-alt" description="Defines the icon left to the link name."/>
 <i:arg type="String" name="target" default="_self" description="Defines the target where to display the linked url or link."/>
 
 <i:pragma name="description">
@@ -9,5 +9,5 @@
 </i:pragma>
 
 <a @if (isFilled(id)) { id="@id" } href="@link" target="@target">
-    <i class="@icon"></i><i:if test="isFilled(name)"><span class="ml-1">@name</span></i:if>
+    <i class="@icon"></i><i:if test="isFilled(name)"><span class="ms-1">@name</span></i:if>
 </a>

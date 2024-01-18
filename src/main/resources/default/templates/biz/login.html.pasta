@@ -70,7 +70,7 @@
     <i:if test="technologies.size() > 0">
         <div class="card mt-5 mb-4">
             <div class="card-body">
-                <h5 class="card-title text-small font-weight-light">This service is based on Open Source Software:</h5>
+                <h5 class="card-title text-small fw-light">This service is based on Open Source Software:</h5>
                 <div class="d-flex flex-row flex-wrap overflow-hidden align-items-center">
                     <i:for type="Tuple" var="technology" items="technologies">
                         <div class="p-4">

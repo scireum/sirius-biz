@@ -82,7 +82,7 @@ public class Cells {
 
         return new Cell(Json.createObject()
                             .put(KEY_TYPE, CSSCellFormat.TYPE)
-                            .put(CSSCellFormat.KEY_CLASSES, "text-right")
+                            .put(CSSCellFormat.KEY_CLASSES, "text-end")
                             .put(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
@@ -170,7 +170,7 @@ public class Cells {
 
         return new Cell(Json.createObject()
                             .put(KEY_TYPE, CSSCellFormat.TYPE)
-                            .put(CSSCellFormat.KEY_CLASSES, "text-right " + color)
+                            .put(CSSCellFormat.KEY_CLASSES, "text-end " + color)
                             .put(CSSCellFormat.KEY_VALUE, safeFormat(value, formatter)));
     }
 
@@ -251,11 +251,11 @@ public class Cells {
             return of(safeFormat(value, formatter));
         }
 
-        String icon = "fa fa-arrow-right";
+        String icon = "fa-solid fa-arrow-right";
         if (delta.isPositive()) {
-            icon = "fa fa-arrow-up";
+            icon = "fa-solid fa-arrow-up";
         } else if (delta.isNegative()) {
-            icon = "fa fa-arrow-down";
+            icon = "fa-solid fa-arrow-down";
         }
 
         String color = computeCellColor(delta);

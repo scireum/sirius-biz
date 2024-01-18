@@ -246,7 +246,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getIcon() {
-        return "far fa-file-archive";
+        return "fa-regular fa-file-archive";
     }
 
     @Override

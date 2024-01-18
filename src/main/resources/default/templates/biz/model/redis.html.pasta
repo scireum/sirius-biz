@@ -23,7 +23,7 @@
                                placeholder="@i18n('NLS.searchkey')"/>
                         <div class="input-group-append">
                             <a class="btn btn-outline-secondary" onclick="execute()">
-                                <i class="fa fa-search"></i>
+                                <i class="fa-solid fa-search"></i>
                             </a>
                         </div>
                     </div>
@@ -41,7 +41,7 @@
     <div class="card mb-2 d-none" id="resultBox">
         <div class="card-body">
             <div class="overflow-auto">
-                <div id="result" class="whitespace-pre-wrap text-monospace"></div>
+                <div id="result" class="whitespace-pre-wrap font-monospace"></div>
             </div>
         </div>
     </div>

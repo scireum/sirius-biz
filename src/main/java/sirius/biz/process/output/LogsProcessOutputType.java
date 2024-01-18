@@ -51,7 +51,7 @@ public class LogsProcessOutputType implements ProcessOutputType {
 
     @Override
     public String getIcon() {
-        return "fa fa-bars";
+        return "fa-solid fa-bars";
     }
 
     @Override

@@ -28,7 +28,7 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
 
     @Override
     public String getIcon() {
-        return "fas fa-table";
+        return "fa-solid fa-table";
     }
 
     @Override

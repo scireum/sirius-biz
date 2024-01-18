@@ -25,7 +25,7 @@
                                placeholder="@i18n('NLS.searchkey')"/>
                         <div class="input-group-append">
                             <a id="searchBtn" class="btn btn-outline-secondary cursor-pointer">
-                                <i class="fa fa-search"></i>
+                                <i class="fa-solid fa-search"></i>
                             </a>
                         </div>
                     </div>

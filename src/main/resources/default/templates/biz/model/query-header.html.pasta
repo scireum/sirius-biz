@@ -19,7 +19,7 @@
                     <div class="input-group-append"
                          onclick="sirius.requestSubmitForm(document.querySelector('form.edit-form'))">
                     <span class="btn btn-outline-secondary">
-                    <i class="fa fa-search"></i>
+                    <i class="fa-solid fa-search"></i>
                     </span>
                     </div>
                 </div>

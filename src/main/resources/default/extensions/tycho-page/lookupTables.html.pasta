@@ -9,16 +9,16 @@
                 <input class="form-control query-input-js" type="text" autocomplete="off"/>
                 <div class="input-group-append">
                     <a class="btn btn-outline-secondary">
-                        <i class="fa fa-search"></i>
+                        <i class="fa-solid fa-search"></i>
                     </a>
                 </div>
             </div>
             <table class="table table-striped entries mb-3"></table>
             <i:block name="footer">
-                <div class="mr-auto d-flex flex-row align-items-center">
-                    <a class="btn btn-outline-secondary pagination-left-js"><i class="fa fa-chevron-left"></i></a>
-                    <div class="pagination-info-js pl-2 pr-2 text-center" style="min-width: 125px"></div>
-                    <a class="btn btn-outline-secondary pagination-right-js"><i class="fa fa-chevron-right"></i></a>
+                <div class="me-auto d-flex flex-row align-items-center">
+                    <a class="btn btn-outline-secondary pagination-left-js"><i class="fa-solid fa-chevron-left"></i></a>
+                    <div class="pagination-info-js ps-2 pe-2 text-center" style="min-width: 125px"></div>
+                    <a class="btn btn-outline-secondary pagination-right-js"><i class="fa-solid fa-chevron-right"></i></a>
                 </div>
                 <button class="btn btn-secondary" data-dismiss="modal">@i18n("NLS.close")</button>
             </i:block>

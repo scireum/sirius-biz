@@ -8,7 +8,7 @@
                 <a href="/user-accounts/select/main" class="badge text-white bg-sirius-orange-light">
                     @currentUserName()
                     <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
-                    <i class="ml-1 fa fa-times"></i>
+                    <i class="ms-1 fa-solid fa-times"></i>
                 </a>
             </t:permission>
         </div>

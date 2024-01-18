@@ -4,7 +4,7 @@
 <i:switch test="@point">
     <i:block name="help-navbox">
         <i:if test="isFrameworkEnabled('tycho.knowledge-base')">
-            <t:navboxLink labelKey="KnowledgeBase.kb" url="/kb" icon="fa fa-lightbulb"/>
+            <t:navboxLink labelKey="KnowledgeBase.kb" url="/kb" icon="fa-solid fa-lightbulb"/>
         </i:if>
     </i:block>
 </i:switch>

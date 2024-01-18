@@ -27,7 +27,7 @@
                         <div class="pb-2">
                             <div>
                                 <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()">
-                                    <i class="fa fa-book"></i> @chapter.getTitle()
+                                    <i class="fa-solid fa-book"></i> @chapter.getTitle()
                                 </a>
                             </div>
                             <div class="text-muted">
@@ -48,7 +48,7 @@
                             <div>
                                 <a href="/kb/@language">
                                     <t:langFlag lang="@language"/>
-                                    <span class="@if (language == article.getLanguage()) { font-weight-bold }">
+                                    <span class="@if (language == article.getLanguage()) { fw-bold }">
                                             @part(sirius.biz.util.Languages.class).all().resolveName(language, language).orElse(language)
                                     </span>
                                 </a>

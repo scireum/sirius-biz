@@ -5,8 +5,11 @@
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
 <i:if test="trace.getCreatedAt() != null && (journal == null || isFilled(journal.getProtocolUri()))">
-    <button type="button" data-toggle="collapse" data-target=".tracing" class="btn btn-outline-info float-right">
-        <i class="fa fa-info"></i>
+    <button type="button"
+            data-bs-toggle="collapse"
+            data-bs-target=".tracing"
+            class="btn btn-outline-info float-end">
+        <i class="fa-solid fa-info"></i>
     </button>
 
     <div class="row tracing collapse">
@@ -51,7 +54,7 @@
             <i:block name="actions">
                 <i:if test="journal != null">
                     <t:dropdownItem labelKey="JournalEntry.plural"
-                                    icon="fa fa-external-link-alt"
+                                    icon="fa-solid fa-external-link-alt"
                                     url="@journal.getProtocolUri()"/>
                 </i:if>
             </i:block>

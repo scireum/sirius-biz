@@ -31,7 +31,7 @@
                             <t:dropdownSection
                                     permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
                                 <t:dropdownItem labelKey="TenantController.select"
-                                                icon="fa fa-building"
+                                                icon="fa-solid fa-building"
                                                 url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                             </t:dropdownSection>
                         </i:if>

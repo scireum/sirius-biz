@@ -12,7 +12,7 @@
             <i:if test="isFrameworkEnabled('tycho.open-search')">
                 <li class="nav-item dropdown right-menu-icon d-none d-xxl-inline">
                     <form class="form-inline menu-search-form" method="POST" action="/open-search">
-                        <span><i class="fa fa-search"></i></span>
+                        <span><i class="fa-solid fa-search"></i></span>
                         <input name="query"
                                class="form-control autofocus-js"
                                type="search"
@@ -22,7 +22,7 @@
                 </li>
                 <li class="nav-item dropdown right-menu-icon d-xxl-none">
                     <a class="nav-link" href="/open-search">
-                        <i class="fa fa-search fa-w-20"></i>
+                        <i class="fa-solid fa-search fa-w-20"></i>
                         <span class="d-lg-none">@i18n('OpenSearchController.label')</span>
                     </a>
                 </li>
