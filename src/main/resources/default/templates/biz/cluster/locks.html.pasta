@@ -1,12 +1,16 @@
 <i:invoke template="/templates/biz/cluster/cluster.html.pasta" page="locks" title="Locks">
     <i:local name="locks" value="Injector.context().getPart(sirius.biz.locks.Locks.class)"/>
-    <i:local name="currentLocks" value="locks != null ? locks.getLocks() : java.util.ArrayList.new()"/>
+    <i:local name="currentLocks"
+             value="locks != null ? locks.getLocks() : java.util.ArrayList.new().stream().toList()"/>
 
     <i:block name="breadcrumbs">
         <li><a href="/system/cluster/locks">Locks</a></li>
     </i:block>
 
     <i:block name="actions">
+        <i:local name="locks" value="Injector.context().getPart(sirius.biz.locks.Locks.class)"/>
+        <i:local name="currentLocks"
+                 value="locks != null ? locks.getLocks() : java.util.ArrayList.new().stream().toList()"/>
         <i:if test="currentLocks != null && !currentLocks.isEmpty()">
             <a href="@apply('/system/cluster/locks/release-all')"
                class="btn btn-outline-danger confirm-link-js">
