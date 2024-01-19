@@ -162,7 +162,7 @@
                                                 </t:dropdownSection>
                                             </i:if>
 
-                                            <t:permission permission="flag-system-administrator">
+                                            <t:permission permission="permission-unlock-files">
                                                 <i:if test="child.readOnly()">
                                                     <t:dropdownItem
                                                             url="@apply('/fs/unlock?path=%s', urlEncode(child.path()))"

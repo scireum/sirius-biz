@@ -40,6 +40,11 @@ import java.util.function.Function;
 public class VirtualFileSystem {
 
     /**
+     * Contains the permission required to unlock files.
+     */
+    public static final String PERMISSION_UNLOCK_FILES = "permission-unlock-files";
+
+    /**
      * Defines the name of the sub scope used by the {@link sirius.biz.storage.layer3.downlink.ftp.FTPServer} and
      * {@link sirius.biz.storage.layer3.downlink.ssh.SSHServer} which grants access per FTP, SFTP or SCP.
      */
