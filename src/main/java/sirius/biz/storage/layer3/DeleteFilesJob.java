@@ -11,6 +11,7 @@ package sirius.biz.storage.layer3;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
+import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
@@ -25,6 +26,11 @@ import java.util.function.Consumer;
  * Defines a job which deletes files in the background.
  */
 public class DeleteFilesJob extends BatchJob {
+
+    private static final Parameter<VirtualFile> SOURCE_PATH_PARAMETER =
+            new FileParameter("sourcePath", "$DeleteFilesJob.sourcePath").withDescription(
+                    "$DeleteFilesJob.sourcePath.help").directoriesOnly().markRequired().build();
+
     /**
      * Creates a new batch job for the given batch process.
      * <p>
@@ -50,7 +56,7 @@ public class DeleteFilesJob extends BatchJob {
 
         @Override
         protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
-
+            parameterCollector.accept(SOURCE_PATH_PARAMETER);
         }
 
         @Override
@@ -65,7 +71,7 @@ public class DeleteFilesJob extends BatchJob {
 
         @Override
         protected String createProcessTitle(Map<String, String> context) {
-            return getLabel();
+            return getLabel() + " - " + context.get(SOURCE_PATH_PARAMETER.getName());
         }
 
         @Override
