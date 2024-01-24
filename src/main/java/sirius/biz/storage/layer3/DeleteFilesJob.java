@@ -117,6 +117,11 @@ public class DeleteFilesJob extends BatchJob {
     }
 
     private boolean handleFile(VirtualFile file) {
+        if (file.readOnly()) {
+            process.log(ProcessLog.warn().withNLSKey("DeleteFileJob.file.readOnly").withContext(PATH_KEY, file.path()));
+            return false;
+        }
+
         if (!file.canDelete()) {
             process.log(ProcessLog.warn()
                                   .withNLSKey("DeleteFilesJob.file.cannotDelete")
