@@ -11,12 +11,14 @@ package sirius.biz.storage.layer3;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
+import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
 
@@ -33,6 +35,10 @@ public class DeleteFilesJob extends BatchJob {
     private static final Parameter<VirtualFile> SOURCE_PATH_PARAMETER =
             new FileParameter("sourcePath", "$DeleteFilesJob.sourcePath").withDescription(
                     "$DeleteFilesJob.sourcePath.help").directoriesOnly().markRequired().build();
+
+    private static final Parameter<Boolean> SIMULATION_PARAMETER =
+            new BooleanParameter("simulation", "$DeleteFilesJob.simulation").withDescription(
+                    "$DeleteFilesJob.simulation.help").withDefaultTrue().build();
 
     private static final String PATH_KEY = "path";
 
@@ -96,7 +102,9 @@ public class DeleteFilesJob extends BatchJob {
         }
 
         try {
-            directory.delete();
+            if (Boolean.FALSE.equals(process.require(SIMULATION_PARAMETER))) {
+                directory.delete();
+            }
             process.log(ProcessLog.info()
                                   .withNLSKey("DeleteFilesJob.directory.deleted")
                                   .withContext(PATH_KEY, directory.path()));
@@ -117,7 +125,9 @@ public class DeleteFilesJob extends BatchJob {
         }
 
         try {
-            file.delete();
+            if (Boolean.FALSE.equals(process.require(SIMULATION_PARAMETER))) {
+                file.delete();
+            }
             process.log(ProcessLog.info().withNLSKey("DeleteFilesJob.file.deleted").withContext(PATH_KEY, file.path()));
         } catch (HandledException exception) {
             process.log(ProcessLog.error().withMessage(exception.getMessage()));
@@ -136,6 +146,7 @@ public class DeleteFilesJob extends BatchJob {
         @Override
         protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
             parameterCollector.accept(SOURCE_PATH_PARAMETER);
+            parameterCollector.accept(SIMULATION_PARAMETER);
         }
 
         @Override
@@ -150,7 +161,13 @@ public class DeleteFilesJob extends BatchJob {
 
         @Override
         protected String createProcessTitle(Map<String, String> context) {
-            return getLabel() + " - " + context.get(SOURCE_PATH_PARAMETER.getName());
+            if (SIMULATION_PARAMETER.get(context).orElse(false)) {
+                return Strings.apply("%s (%s) - %s",
+                                     getLabel(),
+                                     SIMULATION_PARAMETER.getLabel(),
+                                     context.get(SOURCE_PATH_PARAMETER.getName()));
+            }
+            return Strings.apply("%s - %s", getLabel(), context.get(SOURCE_PATH_PARAMETER.getName()));
         }
 
         @Override
