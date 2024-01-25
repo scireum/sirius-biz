@@ -67,6 +67,9 @@ public class VirtualFileSystem {
     @PriorityParts(VFSRoot.class)
     private List<VFSRoot> rootProviders;
 
+    @PriorityParts(DeletionCheckHandler.class)
+    private List<DeletionCheckHandler> deletionCheckHandlers;
+
     /**
      * Inline implementation which delegates all calls to the collected <tt>rootProviders</tt>.
      */
@@ -206,5 +209,15 @@ public class VirtualFileSystem {
         return virtualFile.tryAs(BlobStorageSpace.class)
                           .filter(storageSpace -> storageSpace.getRetentionDays() > 0)
                           .isPresent();
+    }
+
+    /**
+     * Checks if the given file is considered "in use".
+     *
+     * @param virtualFile the {@link VirtualFile} to check
+     * @return <tt>true</tt> if the file is considered "in use"
+     */
+    public boolean isInUse(VirtualFile virtualFile) {
+        return deletionCheckHandlers.stream().anyMatch(handler -> handler.isInUse(virtualFile));
     }
 }
