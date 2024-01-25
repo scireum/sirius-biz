@@ -54,6 +54,10 @@ public class DeleteFilesJob extends BatchJob {
 
     private static final String PATH_KEY = "path";
 
+    private boolean simulation;
+    private boolean recursive;
+    private boolean deleteEmpty;
+
     /**
      * Creates a new batch job for the given batch process.
      * <p>
@@ -75,18 +79,20 @@ public class DeleteFilesJob extends BatchJob {
                                   .withContext(PATH_KEY, sourcePath.path()));
             return;
         }
-        handleDirectory(sourcePath,
-                        process.require(DELETE_RECURSIVE_PARAMETER),
-                        process.require(DELETE_EMPTY_DIRECTORIES_PARAMETER));
+
+        simulation = process.require(SIMULATION_PARAMETER);
+        recursive = process.require(DELETE_RECURSIVE_PARAMETER);
+        deleteEmpty = process.require(DELETE_EMPTY_DIRECTORIES_PARAMETER);
+        handleDirectory(sourcePath);
     }
 
-    private boolean handleDirectory(VirtualFile directory, boolean recursive, boolean deleteEmpty) {
+    private boolean handleDirectory(VirtualFile directory) {
         AtomicBoolean childSkipped = new AtomicBoolean(false);
 
         if (recursive) {
             directory.allChildren().excludeFiles().subTreeOnly().maxDepth(1).iterate(subDirectory -> {
                 if (process.isActive()) {
-                    childSkipped.set(!handleDirectory(subDirectory, true, deleteEmpty));
+                    childSkipped.set(!handleDirectory(subDirectory));
                 } else {
                     childSkipped.set(true);
                 }
@@ -145,7 +151,7 @@ public class DeleteFilesJob extends BatchJob {
 
     private boolean deleteVirtualFile(VirtualFile file) {
         try {
-            if (Boolean.FALSE.equals(process.require(SIMULATION_PARAMETER))) {
+            if (!simulation) {
                 file.delete();
             }
             String messageKey = file.isDirectory() ? "DeleteFilesJob.directory.deleted" : "DeleteFilesJob.file.deleted";
