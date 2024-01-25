@@ -22,6 +22,7 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
 
@@ -67,6 +68,10 @@ public class DeleteFilesJob extends BatchJob {
             new LocalDateParameter("lastModifiedBefore", "$DeleteFilesJob.lastModifiedBefore").withDescription(
                     "$DeleteFilesJob.lastModifiedBefore.help").build();
 
+    private static final Parameter<Boolean> ONLY_UNUSED_PARAMETER =
+            new BooleanParameter("onlyUnused", "$DeleteFilesJob.onlyUnused").withDescription(
+                    "$DeleteFilesJob.onlyUnused.help").withDefaultTrue().build();
+
     private static final String PATH_KEY = "path";
 
     private boolean simulation;
@@ -74,6 +79,10 @@ public class DeleteFilesJob extends BatchJob {
     private boolean deleteEmpty;
     private LocalDateTime lastModifiedBefore;
     private PathMatcher pathMatcher;
+    private boolean onlyUnused;
+
+    @Part
+    private static VirtualFileSystem vfs;
 
     /**
      * Creates a new batch job for the given batch process.
@@ -100,6 +109,7 @@ public class DeleteFilesJob extends BatchJob {
         simulation = process.require(SIMULATION_PARAMETER);
         recursive = process.require(DELETE_RECURSIVE_PARAMETER);
         deleteEmpty = process.require(DELETE_EMPTY_DIRECTORIES_PARAMETER);
+        onlyUnused = process.require(ONLY_UNUSED_PARAMETER);
         process.getParameter(PATH_FILTER_PARAMETER).ifPresent(this::initializePathMatcher);
         process.getParameter(LAST_MODIFIED_BEFORE_PARAMETER)
                .ifPresent(date -> lastModifiedBefore = date.atStartOfDay());
@@ -169,7 +179,14 @@ public class DeleteFilesJob extends BatchJob {
         }
 
         if (file.readOnly()) {
-            process.log(ProcessLog.warn().withNLSKey("DeleteFileJob.file.readOnly").withContext(PATH_KEY, file.path()));
+            process.log(ProcessLog.warn()
+                                  .withNLSKey("DeleteFilesJob.file.readOnly")
+                                  .withContext(PATH_KEY, file.path()));
+            return false;
+        }
+
+        if (onlyUnused && vfs.isInUse(file)) {
+            process.log(ProcessLog.warn().withNLSKey("DeleteFilesJob.file.inUse").withContext(PATH_KEY, file.path()));
             return false;
         }
 
@@ -213,6 +230,7 @@ public class DeleteFilesJob extends BatchJob {
             parameterCollector.accept(DELETE_EMPTY_DIRECTORIES_PARAMETER);
             parameterCollector.accept(PATH_FILTER_PARAMETER);
             parameterCollector.accept(LAST_MODIFIED_BEFORE_PARAMETER);
+            parameterCollector.accept(ONLY_UNUSED_PARAMETER);
             parameterCollector.accept(SIMULATION_PARAMETER);
         }
 
