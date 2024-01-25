@@ -130,7 +130,7 @@ public class DeleteFilesJob extends BatchJob {
             return false;
         }
 
-        if (!childSkipped.isToggled() && !deleteEmpty) {
+        if (!deleteEmpty) {
             // No children were skipped, but we are not allowed to delete empty dirs.
             return false;
         }
