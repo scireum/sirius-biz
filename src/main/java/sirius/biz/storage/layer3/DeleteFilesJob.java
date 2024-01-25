@@ -124,19 +124,7 @@ public class DeleteFilesJob extends BatchJob {
             return false;
         }
 
-        try {
-            if (Boolean.FALSE.equals(process.require(SIMULATION_PARAMETER))) {
-                directory.delete();
-            }
-            process.log(ProcessLog.info()
-                                  .withNLSKey("DeleteFilesJob.directory.deleted")
-                                  .withContext(PATH_KEY, directory.path()));
-        } catch (HandledException exception) {
-            process.log(ProcessLog.error().withMessage(exception.getMessage()));
-            return false;
-        }
-
-        return true;
+        return deleteVirtualFile(directory);
     }
 
     private boolean handleFile(VirtualFile file) {
@@ -152,11 +140,16 @@ public class DeleteFilesJob extends BatchJob {
             return false;
         }
 
+        return deleteVirtualFile(file);
+    }
+
+    private boolean deleteVirtualFile(VirtualFile file) {
         try {
             if (Boolean.FALSE.equals(process.require(SIMULATION_PARAMETER))) {
                 file.delete();
             }
-            process.log(ProcessLog.info().withNLSKey("DeleteFilesJob.file.deleted").withContext(PATH_KEY, file.path()));
+            String messageKey = file.isDirectory() ? "DeleteFilesJob.directory.deleted" : "DeleteFilesJob.file.deleted";
+            process.log(ProcessLog.info().withNLSKey(messageKey).withContext(PATH_KEY, file.path()));
         } catch (HandledException exception) {
             process.log(ProcessLog.error().withMessage(exception.getMessage()));
             return false;
