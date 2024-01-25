@@ -19,6 +19,7 @@ import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
@@ -27,7 +28,6 @@ import javax.annotation.Nonnull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -98,39 +98,40 @@ public class DeleteFilesJob extends BatchJob {
     }
 
     private boolean handleDirectory(VirtualFile directory) {
-        AtomicBoolean childSkipped = new AtomicBoolean(false);
+        Monoflop childSkipped = Monoflop.create();
 
         if (recursive) {
+            // Only enters child directories in recursive mode
             directory.allChildren().excludeFiles().subTreeOnly().maxDepth(1).iterate(subDirectory -> {
-                if (process.isActive()) {
-                    childSkipped.set(!handleDirectory(subDirectory));
-                } else {
-                    childSkipped.set(true);
+                if (!handleDirectory(subDirectory)) {
+                    childSkipped.toggle();
                 }
                 return process.isActive();
             });
         }
 
         directory.allChildren().excludeDirectories().subTreeOnly().maxDepth(1).iterate(file -> {
-            if (process.isActive()) {
-                childSkipped.set(!handleFile(file));
-            } else {
-                childSkipped.set(true);
+            if (!handleFile(file)) {
+                childSkipped.toggle();
             }
             return process.isActive();
         });
 
         if (!recursive) {
+            // non-recursive mode will not delete the start directory itself, so we early abort here.
             return false;
         }
 
-        if (childSkipped.get() && deleteEmpty) {
+        if (childSkipped.isToggled() && deleteEmpty) {
+            // We want to delete empty directories, but some children were skipped, so we can't delete this directory.
             process.log(ProcessLog.warn()
                                   .withNLSKey("DeleteFilesJob.directory.notEmpty")
                                   .withContext(PATH_KEY, directory.path()));
             return false;
         }
-        if (!childSkipped.get() && !deleteEmpty) {
+
+        if (!childSkipped.isToggled() && !deleteEmpty) {
+            // No children were skipped, but we are not allowed to delete empty dirs.
             return false;
         }
 
