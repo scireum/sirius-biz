@@ -15,6 +15,7 @@ import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.LocalDateParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
@@ -25,6 +26,9 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -55,6 +59,10 @@ public class DeleteFilesJob extends BatchJob {
                                                                                       DELETE_RECURSIVE_PARAMETER)
                                                                               .build();
 
+    private static final Parameter<String> PATH_FILTER_PARAMETER =
+            new StringParameter("filter", "$DeleteFilesJob.pathFilter").withDescription(
+                    "$DeleteFilesJob.pathFilter.help").build();
+
     private static final Parameter<LocalDate> LAST_MODIFIED_BEFORE_PARAMETER =
             new LocalDateParameter("lastModifiedBefore", "$DeleteFilesJob.lastModifiedBefore").withDescription(
                     "$DeleteFilesJob.lastModifiedBefore.help").build();
@@ -65,6 +73,7 @@ public class DeleteFilesJob extends BatchJob {
     private boolean recursive;
     private boolean deleteEmpty;
     private LocalDateTime lastModifiedBefore;
+    private PathMatcher pathMatcher;
 
     /**
      * Creates a new batch job for the given batch process.
@@ -91,10 +100,21 @@ public class DeleteFilesJob extends BatchJob {
         simulation = process.require(SIMULATION_PARAMETER);
         recursive = process.require(DELETE_RECURSIVE_PARAMETER);
         deleteEmpty = process.require(DELETE_EMPTY_DIRECTORIES_PARAMETER);
-
+        process.getParameter(PATH_FILTER_PARAMETER).ifPresent(this::initializePathMatcher);
         process.getParameter(LAST_MODIFIED_BEFORE_PARAMETER)
                .ifPresent(date -> lastModifiedBefore = date.atStartOfDay());
         handleDirectory(sourcePath);
+    }
+
+    private void initializePathMatcher(String filter) {
+        // We do not want to force end-user to provide full paths (including the starting folder).
+        // this makes sure that inputs like *.jpg, /foo/*.jpg and foo/*.* matches these patterns
+        // inside the subtree
+        String pattern = "glob:**";
+        if (!filter.startsWith("/")) {
+            pattern += "/";
+        }
+        pathMatcher = FileSystems.getDefault().getPathMatcher(pattern + filter);
     }
 
     private boolean handleDirectory(VirtualFile directory) {
@@ -139,6 +159,10 @@ public class DeleteFilesJob extends BatchJob {
     }
 
     private boolean handleFile(VirtualFile file) {
+        if (pathMatcher != null && !pathMatcher.matches(Path.of(file.path()))) {
+            return false;
+        }
+
         if (lastModifiedBefore != null && file.lastModifiedDate() != null && !file.lastModifiedDate()
                                                                                   .isBefore(lastModifiedBefore)) {
             return false;
@@ -187,6 +211,7 @@ public class DeleteFilesJob extends BatchJob {
             parameterCollector.accept(SOURCE_PATH_PARAMETER);
             parameterCollector.accept(DELETE_RECURSIVE_PARAMETER);
             parameterCollector.accept(DELETE_EMPTY_DIRECTORIES_PARAMETER);
+            parameterCollector.accept(PATH_FILTER_PARAMETER);
             parameterCollector.accept(LAST_MODIFIED_BEFORE_PARAMETER);
             parameterCollector.accept(SIMULATION_PARAMETER);
         }
