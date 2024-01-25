@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.FileParameter;
+import sirius.biz.jobs.params.LocalDateParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
@@ -23,6 +24,8 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -52,11 +55,16 @@ public class DeleteFilesJob extends BatchJob {
                                                                                       DELETE_RECURSIVE_PARAMETER)
                                                                               .build();
 
+    private static final Parameter<LocalDate> LAST_MODIFIED_BEFORE_PARAMETER =
+            new LocalDateParameter("lastModifiedBefore", "$DeleteFilesJob.lastModifiedBefore").withDescription(
+                    "$DeleteFilesJob.lastModifiedBefore.help").build();
+
     private static final String PATH_KEY = "path";
 
     private boolean simulation;
     private boolean recursive;
     private boolean deleteEmpty;
+    private LocalDateTime lastModifiedBefore;
 
     /**
      * Creates a new batch job for the given batch process.
@@ -83,6 +91,9 @@ public class DeleteFilesJob extends BatchJob {
         simulation = process.require(SIMULATION_PARAMETER);
         recursive = process.require(DELETE_RECURSIVE_PARAMETER);
         deleteEmpty = process.require(DELETE_EMPTY_DIRECTORIES_PARAMETER);
+
+        process.getParameter(LAST_MODIFIED_BEFORE_PARAMETER)
+               .ifPresent(date -> lastModifiedBefore = date.atStartOfDay());
         handleDirectory(sourcePath);
     }
 
@@ -134,6 +145,11 @@ public class DeleteFilesJob extends BatchJob {
     }
 
     private boolean handleFile(VirtualFile file) {
+        if (lastModifiedBefore != null && file.lastModifiedDate() != null && !file.lastModifiedDate()
+                                                                                  .isBefore(lastModifiedBefore)) {
+            return false;
+        }
+
         if (file.readOnly()) {
             process.log(ProcessLog.warn().withNLSKey("DeleteFileJob.file.readOnly").withContext(PATH_KEY, file.path()));
             return false;
@@ -175,6 +191,7 @@ public class DeleteFilesJob extends BatchJob {
             parameterCollector.accept(SOURCE_PATH_PARAMETER);
             parameterCollector.accept(DELETE_RECURSIVE_PARAMETER);
             parameterCollector.accept(DELETE_EMPTY_DIRECTORIES_PARAMETER);
+            parameterCollector.accept(LAST_MODIFIED_BEFORE_PARAMETER);
             parameterCollector.accept(SIMULATION_PARAMETER);
         }
 
