@@ -44,6 +44,14 @@ public class DeleteFilesJob extends BatchJob {
             new BooleanParameter("recursive", "$DeleteFilesJob.recursive").withDescription(
                     "$DeleteFilesJob.recursive.help").withDefaultTrue().build();
 
+    private static final Parameter<Boolean> DELETE_EMPTY_DIRECTORIES_PARAMETER =
+            new BooleanParameter("deleteEmpty", "$DeleteFilesJob.deleteEmpty").withDescription(
+                                                                                      "$DeleteFilesJob.deleteEmpty.help")
+                                                                              .withDefaultTrue()
+                                                                              .hideWhenFalseOrEmpty(
+                                                                                      DELETE_RECURSIVE_PARAMETER)
+                                                                              .build();
+
     private static final String PATH_KEY = "path";
 
     /**
@@ -67,16 +75,18 @@ public class DeleteFilesJob extends BatchJob {
                                   .withContext(PATH_KEY, sourcePath.path()));
             return;
         }
-        handleDirectory(sourcePath, process.require(DELETE_RECURSIVE_PARAMETER));
+        handleDirectory(sourcePath,
+                        process.require(DELETE_RECURSIVE_PARAMETER),
+                        process.require(DELETE_EMPTY_DIRECTORIES_PARAMETER));
     }
 
-    private boolean handleDirectory(VirtualFile directory, boolean recursive) {
+    private boolean handleDirectory(VirtualFile directory, boolean recursive, boolean deleteEmpty) {
         AtomicBoolean childSkipped = new AtomicBoolean(false);
 
         if (recursive) {
             directory.allChildren().excludeFiles().subTreeOnly().maxDepth(1).iterate(subDirectory -> {
                 if (process.isActive()) {
-                    childSkipped.set(!handleDirectory(subDirectory, true));
+                    childSkipped.set(!handleDirectory(subDirectory, true, deleteEmpty));
                 } else {
                     childSkipped.set(true);
                 }
@@ -104,10 +114,13 @@ public class DeleteFilesJob extends BatchJob {
             return false;
         }
 
-        if (childSkipped.get()) {
+        if (childSkipped.get() && deleteEmpty) {
             process.log(ProcessLog.warn()
                                   .withNLSKey("DeleteFilesJob.directory.notEmpty")
                                   .withContext(PATH_KEY, directory.path()));
+            return false;
+        }
+        if (!childSkipped.get() && !deleteEmpty) {
             return false;
         }
 
@@ -162,6 +175,7 @@ public class DeleteFilesJob extends BatchJob {
         protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
             parameterCollector.accept(SOURCE_PATH_PARAMETER);
             parameterCollector.accept(DELETE_RECURSIVE_PARAMETER);
+            parameterCollector.accept(DELETE_EMPTY_DIRECTORIES_PARAMETER);
             parameterCollector.accept(SIMULATION_PARAMETER);
         }
 
