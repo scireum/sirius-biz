@@ -40,6 +40,10 @@ public class DeleteFilesJob extends BatchJob {
             new BooleanParameter("simulation", "$DeleteFilesJob.simulation").withDescription(
                     "$DeleteFilesJob.simulation.help").withDefaultTrue().build();
 
+    private static final Parameter<Boolean> DELETE_RECURSIVE_PARAMETER =
+            new BooleanParameter("recursive", "$DeleteFilesJob.recursive").withDescription(
+                    "$DeleteFilesJob.recursive.help").withDefaultTrue().build();
+
     private static final String PATH_KEY = "path";
 
     /**
@@ -63,20 +67,22 @@ public class DeleteFilesJob extends BatchJob {
                                   .withContext(PATH_KEY, sourcePath.path()));
             return;
         }
-        handleDirectory(sourcePath);
+        handleDirectory(sourcePath, process.require(DELETE_RECURSIVE_PARAMETER));
     }
 
-    private boolean handleDirectory(VirtualFile directory) {
+    private boolean handleDirectory(VirtualFile directory, boolean recursive) {
         AtomicBoolean childSkipped = new AtomicBoolean(false);
 
-        directory.allChildren().excludeFiles().subTreeOnly().maxDepth(1).iterate(subDirectory -> {
-            if (process.isActive()) {
-                childSkipped.set(!handleDirectory(subDirectory));
-            } else {
-                childSkipped.set(true);
-            }
-            return process.isActive();
-        });
+        if (recursive) {
+            directory.allChildren().excludeFiles().subTreeOnly().maxDepth(1).iterate(subDirectory -> {
+                if (process.isActive()) {
+                    childSkipped.set(!handleDirectory(subDirectory, true));
+                } else {
+                    childSkipped.set(true);
+                }
+                return process.isActive();
+            });
+        }
 
         directory.allChildren().excludeDirectories().subTreeOnly().maxDepth(1).iterate(file -> {
             if (process.isActive()) {
@@ -86,6 +92,10 @@ public class DeleteFilesJob extends BatchJob {
             }
             return process.isActive();
         });
+
+        if (!recursive) {
+            return false;
+        }
 
         if (!directory.canDelete()) {
             process.log(ProcessLog.warn()
@@ -151,6 +161,7 @@ public class DeleteFilesJob extends BatchJob {
         @Override
         protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
             parameterCollector.accept(SOURCE_PATH_PARAMETER);
+            parameterCollector.accept(DELETE_RECURSIVE_PARAMETER);
             parameterCollector.accept(SIMULATION_PARAMETER);
         }
 
