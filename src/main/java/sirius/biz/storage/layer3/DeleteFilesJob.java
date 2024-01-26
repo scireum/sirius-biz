@@ -321,7 +321,7 @@ public class DeleteFilesJob extends BatchJob {
 
         @Override
         protected PersistencePeriod getPersistencePeriod() {
-            return PersistencePeriod.ONE_YEAR;
+            return PersistencePeriod.THREE_MONTHS;
         }
 
         @Override
