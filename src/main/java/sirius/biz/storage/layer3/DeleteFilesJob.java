@@ -25,8 +25,10 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
+import sirius.web.http.QueryString;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -294,6 +296,21 @@ public class DeleteFilesJob extends BatchJob {
         @Override
         protected BatchJob createJob(ProcessContext process) throws Exception {
             return new DeleteFilesJob(process);
+        }
+
+        @Override
+        protected void computePresetFor(@Nonnull QueryString queryString,
+                                        @Nullable Object targetObject,
+                                        Map<String, Object> preset) {
+            if (targetObject instanceof VirtualFile virtualFile && virtualFile.isDirectory()) {
+                preset.put(SOURCE_PATH_PARAMETER.getName(), virtualFile.path());
+            }
+            super.computePresetFor(queryString, targetObject, preset);
+        }
+
+        @Override
+        protected boolean hasPresetFor(@Nonnull QueryString queryString, @Nullable Object targetObject) {
+            return (targetObject instanceof VirtualFile virtualFile && virtualFile.isDirectory());
         }
 
         @Nonnull
