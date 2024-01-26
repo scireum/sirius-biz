@@ -129,6 +129,7 @@ public class DeleteFilesJob extends BatchJob {
 
     private boolean handleDirectory(VirtualFile directory) {
         Monoflop childSkipped = Monoflop.create();
+        boolean isRoot = "/".equals(directory.parent().path());
 
         if (recursive) {
             // Only enters child directories in recursive mode
@@ -147,8 +148,9 @@ public class DeleteFilesJob extends BatchJob {
             return process.isActive();
         });
 
-        if (!recursive) {
-            // non-recursive mode will not delete the start directory itself, so we early abort here.
+        if (!recursive || isRoot) {
+            // non-recursive mode will not delete the start directory itself, the same for the root directory,
+            // so we early abort here.
             return false;
         }
 
