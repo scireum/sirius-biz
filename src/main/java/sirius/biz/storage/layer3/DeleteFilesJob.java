@@ -26,6 +26,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
 import sirius.web.http.QueryString;
+import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -254,6 +255,7 @@ public class DeleteFilesJob extends BatchJob {
      * Defines a factory to create new instances of {@link DeleteFilesJob}.
      */
     @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
+    @Permission(VirtualFileSystemController.PERMISSION_VIEW_FILES)
     public static class DeleteFilesJobFactory extends DefaultBatchProcessFactory {
 
         @Override
