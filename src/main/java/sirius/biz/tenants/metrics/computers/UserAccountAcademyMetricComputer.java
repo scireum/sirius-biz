@@ -58,6 +58,9 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
 
     @Override
     public void compute(MetricComputerContext context, E userAccount) throws Exception {
+        if (!context.periodOutsideOfCurrentInterest()) {
+            return;
+        }
         long totalVideos = queryEligibleOnboardingVideos(userAccount).count();
 
         if (totalVideos == 0) {
@@ -77,12 +80,10 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
         int educationLevel = (int) (watchedVideos * 100 / totalVideos);
         metrics.updateMonthlyMetric(userAccount, METRIC_USER_EDUCATION_LEVEL, context.date(), educationLevel);
 
-        if (!context.periodOutsideOfCurrentInterest()) {
-            userAccount.getPerformanceData()
-                       .modify()
-                       .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
-                       .commit();
-        }
+        userAccount.getPerformanceData()
+                   .modify()
+                   .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
+                   .commit();
     }
 
     /**
