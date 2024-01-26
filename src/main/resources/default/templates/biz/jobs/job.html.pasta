@@ -69,7 +69,7 @@
                                         </a>
                                         <a class="btn btn-outline-danger pull-right text-nowrap"
                                            href="javascript:deletePreset('@preset.getIdAsString()')">
-                                            <i class="fa fa-trash"></i>
+                                            <i class="fa-solid fa-trash"></i>
                                             <span class="d-sm-inline-block d-md-none d-xl-inline-block">
                                                 @i18n("NLS.delete")
                                             </span>
