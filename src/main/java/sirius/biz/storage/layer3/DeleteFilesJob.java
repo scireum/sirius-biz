@@ -158,11 +158,13 @@ public class DeleteFilesJob extends BatchJob {
                                   .withNLSKey("DeleteFilesJob.directory.notEmpty")
                                   .withContext(PATH_KEY, directory.path())
                                   .withMessageType("$DeleteFilesJob.warn.notEmpty"));
+            incrementDirectorySkipped();
             return false;
         }
 
         if (!deleteEmpty) {
             // No children were skipped, but we are not allowed to delete empty dirs.
+            incrementDirectorySkipped();
             return false;
         }
 
@@ -171,11 +173,13 @@ public class DeleteFilesJob extends BatchJob {
 
     private boolean handleFile(VirtualFile file) {
         if (pathMatcher != null && !pathMatcher.matches(Path.of(file.path()))) {
+            incrementFileSkipped();
             return false;
         }
 
         if (lastModifiedBefore != null && file.lastModifiedDate() != null && !file.lastModifiedDate()
                                                                                   .isBefore(lastModifiedBefore)) {
+            incrementFileSkipped();
             return false;
         }
 
@@ -184,6 +188,7 @@ public class DeleteFilesJob extends BatchJob {
                                   .withNLSKey("DeleteFilesJob.file.readOnly")
                                   .withContext(PATH_KEY, file.path())
                                   .withMessageType("$DeleteFilesJob.warn.readOnly"));
+            incrementFileSkipped();
             return false;
         }
 
@@ -192,6 +197,7 @@ public class DeleteFilesJob extends BatchJob {
                                   .withNLSKey("DeleteFilesJob.file.inUse")
                                   .withContext(PATH_KEY, file.path())
                                   .withMessageType("$DeleteFilesJob.warn.inUse"));
+            incrementFileSkipped();
             return false;
         }
 
@@ -199,30 +205,45 @@ public class DeleteFilesJob extends BatchJob {
     }
 
     private boolean deleteVirtualFile(VirtualFile file) {
+        boolean isDirectory = file.isDirectory();
         try {
             if (!file.canDelete()) {
-                String messageKey = file.isDirectory() ?
-                                    "DeleteFilesJob.directory.cannotDelete" :
-                                    "DeleteFilesJob.file.cannotDelete";
+                String messageKey =
+                        isDirectory ? "DeleteFilesJob.directory.cannotDelete" : "DeleteFilesJob.file.cannotDelete";
                 process.log(ProcessLog.warn()
                                       .withNLSKey(messageKey)
                                       .withContext(PATH_KEY, file.path())
                                       .withMessageType("$DeleteFilesJob.warn.cannotDelete"));
+                if (isDirectory) {
+                    incrementDirectorySkipped();
+                } else {
+                    incrementFileSkipped();
+                }
                 return false;
             }
 
             if (!simulation) {
                 file.delete();
             }
-
-            String messageKey = file.isDirectory() ? "DeleteFilesJob.directory.deleted" : "DeleteFilesJob.file.deleted";
+            String messageKey = isDirectory ? "DeleteFilesJob.directory.deleted" : "DeleteFilesJob.file.deleted";
             process.log(ProcessLog.info().withNLSKey(messageKey).withContext(PATH_KEY, file.path()));
+            process.incCounter(isDirectory ?
+                               "DeleteFilesJob.count.directoriesDeleted" :
+                               "DeleteFilesJob.count.filesDeleted");
         } catch (HandledException exception) {
             process.log(ProcessLog.error().withMessage(exception.getMessage()));
             return false;
         }
 
         return true;
+    }
+
+    private void incrementFileSkipped() {
+        process.incCounter("DeleteFilesJob.count.filesSkipped");
+    }
+
+    private void incrementDirectorySkipped() {
+        process.incCounter("DeleteFilesJob.count.directoriesSkipped");
     }
 
     /**
