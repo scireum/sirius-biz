@@ -156,7 +156,8 @@ public class DeleteFilesJob extends BatchJob {
             // We want to delete empty directories, but some children were skipped, so we can't delete this directory.
             process.log(ProcessLog.warn()
                                   .withNLSKey("DeleteFilesJob.directory.notEmpty")
-                                  .withContext(PATH_KEY, directory.path()));
+                                  .withContext(PATH_KEY, directory.path())
+                                  .withMessageType("$DeleteFilesJob.warn.notEmpty"));
             return false;
         }
 
@@ -181,12 +182,16 @@ public class DeleteFilesJob extends BatchJob {
         if (file.readOnly()) {
             process.log(ProcessLog.warn()
                                   .withNLSKey("DeleteFilesJob.file.readOnly")
-                                  .withContext(PATH_KEY, file.path()));
+                                  .withContext(PATH_KEY, file.path())
+                                  .withMessageType("$DeleteFilesJob.warn.readOnly"));
             return false;
         }
 
         if (onlyUnused && vfs.isInUse(file)) {
-            process.log(ProcessLog.warn().withNLSKey("DeleteFilesJob.file.inUse").withContext(PATH_KEY, file.path()));
+            process.log(ProcessLog.warn()
+                                  .withNLSKey("DeleteFilesJob.file.inUse")
+                                  .withContext(PATH_KEY, file.path())
+                                  .withMessageType("$DeleteFilesJob.warn.inUse"));
             return false;
         }
 
@@ -199,7 +204,10 @@ public class DeleteFilesJob extends BatchJob {
                 String messageKey = file.isDirectory() ?
                                     "DeleteFilesJob.directory.cannotDelete" :
                                     "DeleteFilesJob.file.cannotDelete";
-                process.log(ProcessLog.warn().withNLSKey(messageKey).withContext(PATH_KEY, file.path()));
+                process.log(ProcessLog.warn()
+                                      .withNLSKey(messageKey)
+                                      .withContext(PATH_KEY, file.path())
+                                      .withMessageType("$DeleteFilesJob.warn.cannotDelete"));
                 return false;
             }
 
