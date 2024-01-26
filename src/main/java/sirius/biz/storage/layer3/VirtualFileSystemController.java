@@ -50,7 +50,7 @@ public class VirtualFileSystemController extends BizController {
     /**
      * Permissions required to view files.
      */
-    private static final String PERMISSION_VIEW_FILES = "permission-view-files";
+    public static final String PERMISSION_VIEW_FILES = "permission-view-files";
 
     @Part
     private VirtualFileSystem vfs;
