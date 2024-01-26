@@ -119,10 +119,15 @@ public class DeleteFilesJob extends BatchJob {
         handleDirectory(sourcePath);
     }
 
+    /**
+     * Initializes the path matcher used to filter files using the GLOB pattern.
+     * <p>
+     * We do not want to force end-user to provide full paths (including the starting folder). This makes sure that
+     * inputs like *.jpg, /foo/*.jpg and foo/*.* matches these patterns inside the subtree
+     *
+     * @param filter the string to use as filter
+     */
     private void initializePathMatcher(String filter) {
-        // We do not want to force end-user to provide full paths (including the starting folder).
-        // this makes sure that inputs like *.jpg, /foo/*.jpg and foo/*.* matches these patterns
-        // inside the subtree
         String pattern = "glob:**";
         if (!filter.startsWith("/")) {
             pattern += "/";
@@ -130,6 +135,18 @@ public class DeleteFilesJob extends BatchJob {
         pathMatcher = FileSystems.getDefault().getPathMatcher(pattern + filter);
     }
 
+    /**
+     * Handles the given directory.
+     * <p>
+     * As first step, this function is called recursively for all child directories.
+     * Then all child files are processed, and finally the directory itself is deleted if it was left empty, and we
+     * are allowed to do so (nothing was skipped and the user requested the deletion of empty directories).
+     * <p>
+     * Note that in non-recursive mode, only the children of the start directory are processed.
+     *
+     * @param directory the  {@link VirtualFile} representing a directory
+     * @return <tt>true</tt> if the directory has been deleted, <tt>false</tt> otherwise
+     */
     private boolean handleDirectory(VirtualFile directory) {
         Monoflop childSkipped = Monoflop.create();
         boolean isRoot = "/".equals(directory.parent().path());
@@ -176,6 +193,12 @@ public class DeleteFilesJob extends BatchJob {
         return deleteVirtualFile(directory);
     }
 
+    /**
+     * Handles the given file.
+     *
+     * @param file the  {@link VirtualFile} representing a file
+     * @return <tt>true</tt> if the file has been deleted, <tt>false</tt> otherwise
+     */
     private boolean handleFile(VirtualFile file) {
         if (pathMatcher != null && !pathMatcher.matches(Path.of(file.path()))) {
             incrementFileSkipped();
@@ -209,6 +232,12 @@ public class DeleteFilesJob extends BatchJob {
         return deleteVirtualFile(file);
     }
 
+    /**
+     * Deletes the given virtual file.
+     *
+     * @param file a {@link VirtualFile} to delete
+     * @return <tt>true</tt> if the file has been deleted, <tt>false</tt> otherwise
+     */
     private boolean deleteVirtualFile(VirtualFile file) {
         boolean isDirectory = file.isDirectory();
         try {
