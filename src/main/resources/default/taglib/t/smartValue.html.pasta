@@ -1,6 +1,14 @@
-<i:arg type="String" name="type" description="Contains the type of the payload" />
-<i:arg type="String" name="payload" default="" description="Contains the payload data itself." />
-<i:arg type="String" name="label" default="" description="Contains the textual representation of the payload to show as link" />
+<i:arg name="type"
+       type="String"
+       description="Contains the type of the payload"/>
+<i:arg name="payload"
+       type="String"
+       default=""
+       description="Contains the payload data itself."/>
+<i:arg name="label"
+       type="String"
+       default=""
+       description="Contains the textual representation of the payload to show as link"/>
 
 <i:pragma name="description">
     Permits to show a link in the UI when (on click) will load additional data and show this as tooltip. This can
@@ -8,9 +16,11 @@
 </i:pragma>
 
 <i:if test="isFilled(payload)">
-    <i:local name="signature" value="@computeAuthSignature(apply('%s/%s', type, payload))" />
-    <i:local name="id" value="@generateId()" />
-    <a id="@id" class="text-black link" href="javascript:openSmartValues('@id', '@type','@payload', '@signature')">@label</a>
+    <i:local name="signature" value="@computeAuthSignature(apply('%s/%s', type, payload))"/>
+    <i:local name="id" value="@generateId('smarty-%s')"/>
+    <a id="@id"
+       class="text-black link smart-values-link-js"
+       href="javascript:openSmartValues('@id', '@type','@payload', '@signature')">@label</a>
     <i:else>
         <i:if test="isFilled(label)">@label</i:if>
     </i:else>
