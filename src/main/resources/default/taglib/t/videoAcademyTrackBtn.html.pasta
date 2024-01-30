@@ -23,7 +23,7 @@
            data-bs-toggle="tooltip"
            data-bs-placement="top"
            title="@track.getTrackName()">
-            <i class="fa-regulat fa-play-circle"></i><span class="d-none d-xl-inline ps-2">@label</span>
+            <i class="fa-regular fa-play-circle"></i><span class="d-none d-xl-inline ps-2">@label</span>
         </a>
     </i:if>
 </i:if>
