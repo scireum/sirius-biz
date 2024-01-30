@@ -24,8 +24,9 @@
         </div>
      </span>
     <script type="text/javascript">
-        sirius.ready(function () {
-            $('#tycho-page-help-dropdown').on('show.bs.dropdown', function () {
+        sirius.ready(() => {
+            const _footerToggle = document.getElementById('tycho-page-help-toggle');
+            _footerToggle.addEventListener('show.bs.dropdown', () => {
                 const _footerContents = document.getElementById('tycho-page-footer-help');
                 _footerContents.innerHTML = '@raw { @escapeJS(contents) }';
                 sirius.executeEmbeddedScripts(_footerContents);
