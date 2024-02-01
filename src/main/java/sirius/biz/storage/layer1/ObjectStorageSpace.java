@@ -35,6 +35,7 @@ import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ClosedChannelException;
@@ -350,6 +351,9 @@ public abstract class ObjectStorageSpace {
             } else {
                 return Optional.ofNullable(getData(objectId));
             }
+        } catch (FileNotFoundException exception) {
+            StorageUtils.LOG.WARN(exception.getMessage());
+            return Optional.empty();
         } catch (IOException exception) {
             throw Exceptions.handle()
                             .error(exception)
@@ -460,6 +464,9 @@ public abstract class ObjectStorageSpace {
             } else {
                 return Optional.ofNullable(getAsStream(objectId));
             }
+        } catch (FileNotFoundException exception) {
+            StorageUtils.LOG.WARN(exception.getMessage());
+            return Optional.empty();
         } catch (IOException exception) {
             throw Exceptions.handle()
                             .error(exception)
