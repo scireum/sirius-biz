@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer1;
 
+import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
@@ -219,14 +220,13 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey) throws IOException {
-        return store.getClient().getObject(bucketName().getName(), objectKey).getObjectContent();
+        return getS3Object(objectKey).getObjectContent();
     }
 
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey, ByteBlockTransformer transformer) throws IOException {
-        S3ObjectInputStream rawStream =
-                store.getClient().getObject(bucketName().getName(), objectKey).getObjectContent();
+        S3ObjectInputStream rawStream = getS3Object(objectKey).getObjectContent();
         return new TransformingInputStream(rawStream, transformer);
     }
 
@@ -272,5 +272,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
         // If source or target uses a transformer, we can no longer perform a straight copy.
         return !hasTransformer() && !s3ObjectStorageSpace.hasTransformer();
+    }
+
+    private S3Object getS3Object(String objectKey) {
+        return store.getClient().getObject(bucketName().getName(), objectKey);
     }
 }
