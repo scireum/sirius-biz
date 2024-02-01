@@ -10,6 +10,7 @@ package sirius.biz.storage.layer1;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.apache.http.ConnectionClosedException;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.CipherFactory;
@@ -550,7 +551,10 @@ public abstract class ObjectStorageSpace {
     }
 
     private void handleDeliveryError(Response response, String objectId, Exception exception) {
-        if (exception instanceof ClosedChannelException || exception.getCause() instanceof ClosedChannelException) {
+        if (exception instanceof ClosedChannelException
+            || exception.getCause() instanceof ClosedChannelException
+            || exception instanceof ConnectionClosedException
+            || exception.getCause() instanceof ConnectionClosedException) {
             // If the user unexpectedly closes the connection, we do not need to log an error...
             Exceptions.ignore(exception);
             return;
