@@ -217,9 +217,9 @@ public abstract class ObjectStorageSpace {
                 storePhysicalObject(objectId, file);
                 replicationManager.notifyAboutUpdate(this, objectId, file.length());
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when uploading %s to %s (%s): %s (%s)",
                                                     file.getAbsolutePath(),
@@ -291,9 +291,9 @@ public abstract class ObjectStorageSpace {
                 storePhysicalObject(objectId, inputStream, contentLength);
                 replicationManager.notifyAboutUpdate(this, objectId, contentLength);
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when uploading data to %s (%s): %s (%s)",
                                                     objectId,
@@ -350,9 +350,9 @@ public abstract class ObjectStorageSpace {
             } else {
                 return Optional.ofNullable(getData(objectId));
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when downloading %s (%s): %s (%s)",
                                                     objectId,
@@ -460,9 +460,9 @@ public abstract class ObjectStorageSpace {
             } else {
                 return Optional.ofNullable(getAsStream(objectId));
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
                                     "Layer 1: An error occurred when obtaining an input stream for %s (%s): %s (%s)",
@@ -636,9 +636,9 @@ public abstract class ObjectStorageSpace {
         try {
             deletePhysicalObject(objectId);
             replicationManager.notifyAboutDelete(this, objectId);
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when deleting %s (%s): %s (%s)",
                                                     objectId,
