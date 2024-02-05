@@ -259,26 +259,35 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         while (performCheck.get()) {
             performCheck.set(false);
             blockwiseIterate(entry -> {
-                if (entry.isChapter()) {
-                    boolean hasChildren = elastic.select(KnowledgeBaseEntry.class)
-                                                 .eq(KnowledgeBaseEntry.PARENT_ID, entry.getArticleId())
-                                                 .eq(KnowledgeBaseEntry.LANGUAGE, entry.getLanguage())
-                                                 .exists();
-                    if (!hasChildren) {
-                        KnowledgeBase.LOG.INFO("Deleting empty chapter %s (%s) in language %s",
-                                               entry.getArticleId(),
-                                               entry.getTitle(),
-                                               entry.getLanguage());
-                        elastic.delete(entry);
-                        performCheck.set(true);
-                    }
-                }
+                cleanupEmptyChapter(entry, performCheck);
             });
 
             if (performCheck.get()) {
                 elastic.getLowLevelClient().refresh(mixing.getDescriptor(KnowledgeBaseEntry.class).getRelationName());
             }
         }
+    }
+
+    private void cleanupEmptyChapter(KnowledgeBaseEntry entry, AtomicBoolean performCheck) {
+        if (!entry.isChapter()) {
+            // The checked entry is not a chapter
+            return;
+        }
+
+        boolean hasChildren = elastic.select(KnowledgeBaseEntry.class)
+                                     .eq(KnowledgeBaseEntry.PARENT_ID, entry.getArticleId())
+                                     .eq(KnowledgeBaseEntry.LANGUAGE, entry.getLanguage())
+                                     .exists();
+        if (hasChildren) {
+            // The checked chapter actually has children
+            return;
+        }
+        KnowledgeBase.LOG.INFO("Deleting empty chapter %s (%s) in language %s",
+                               entry.getArticleId(),
+                               entry.getTitle(),
+                               entry.getLanguage());
+        elastic.delete(entry);
+        performCheck.set(true);
     }
 
     private void checkCrossReferences() {
