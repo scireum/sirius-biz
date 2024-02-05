@@ -94,6 +94,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     }
 
     private void synchronizeArticles() {
+        LocalDate syncStart = LocalDate.now();
         String syncId = keyGenerator.generateId();
         Sirius.getClasspath()
               .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
@@ -107,7 +108,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         if (!Sirius.isDev()) {
             // We only remove empty chapters from production instances as in development systems it might
             // be helpful to see these chapters to know their ID.
-            cleanupEmptyChapters();
+            cleanupEmptyChapters(syncStart);
         }
         checkCrossReferences();
         knowledgeBase.resetLanguages();
@@ -254,12 +255,12 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         });
     }
 
-    private void cleanupEmptyChapters() {
+    private void cleanupEmptyChapters(LocalDate syncStart) {
         AtomicBoolean performCheck = new AtomicBoolean(true);
         while (performCheck.get()) {
             performCheck.set(false);
             blockwiseIterate(entry -> {
-                cleanupEmptyChapter(entry, performCheck);
+                cleanupEmptyChapter(entry, performCheck, syncStart);
             });
 
             if (performCheck.get()) {
@@ -268,7 +269,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         }
     }
 
-    private void cleanupEmptyChapter(KnowledgeBaseEntry entry, AtomicBoolean performCheck) {
+    private void cleanupEmptyChapter(KnowledgeBaseEntry entry, AtomicBoolean performCheck, LocalDate syncStart) {
         if (!entry.isChapter()) {
             // The checked entry is not a chapter
             return;
@@ -282,10 +283,14 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             // The checked chapter actually has children
             return;
         }
-        KnowledgeBase.LOG.INFO("Deleting empty chapter %s (%s) in language %s",
-                               entry.getArticleId(),
-                               entry.getTitle(),
-                               entry.getLanguage());
+
+        if (entry.getCreated().isBefore(syncStart)) {
+            // Only log when a previously filled existing chapter is deleted
+            KnowledgeBase.LOG.INFO("Deleting empty chapter %s (%s) in language %s",
+                                   entry.getArticleId(),
+                                   entry.getTitle(),
+                                   entry.getLanguage());
+        }
         elastic.delete(entry);
         performCheck.set(true);
     }
