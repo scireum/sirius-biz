@@ -8,7 +8,10 @@
 
 package sirius.biz.storage.layer1;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.TransformingInputStream;
@@ -20,6 +23,7 @@ import sirius.kernel.async.Promise;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
@@ -219,14 +223,13 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey) throws IOException {
-        return store.getClient().getObject(bucketName().getName(), objectKey).getObjectContent();
+        return getS3Object(objectKey).getObjectContent();
     }
 
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey, ByteBlockTransformer transformer) throws IOException {
-        S3ObjectInputStream rawStream =
-                store.getClient().getObject(bucketName().getName(), objectKey).getObjectContent();
+        S3ObjectInputStream rawStream = getS3Object(objectKey).getObjectContent();
         return new TransformingInputStream(rawStream, transformer);
     }
 
@@ -272,5 +275,18 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
         // If source or target uses a transformer, we can no longer perform a straight copy.
         return !hasTransformer() && !s3ObjectStorageSpace.hasTransformer();
+    }
+
+    private S3Object getS3Object(String objectKey) throws IOException {
+        try {
+            return store.getClient().getObject(bucketName().getName(), objectKey);
+        } catch (AmazonS3Exception exception) {
+            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+                throw new FileNotFoundException(Strings.apply("Layer 1: No object found for key '%s' in bucket '%s'",
+                                                              objectKey,
+                                                              bucketName()));
+            }
+            throw new IOException(exception);
+        }
     }
 }

@@ -10,6 +10,7 @@ package sirius.biz.storage.layer1;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.apache.http.ConnectionClosedException;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.CipherFactory;
@@ -35,6 +36,7 @@ import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ClosedChannelException;
@@ -217,9 +219,9 @@ public abstract class ObjectStorageSpace {
                 storePhysicalObject(objectId, file);
                 replicationManager.notifyAboutUpdate(this, objectId, file.length());
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when uploading %s to %s (%s): %s (%s)",
                                                     file.getAbsolutePath(),
@@ -291,9 +293,9 @@ public abstract class ObjectStorageSpace {
                 storePhysicalObject(objectId, inputStream, contentLength);
                 replicationManager.notifyAboutUpdate(this, objectId, contentLength);
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when uploading data to %s (%s): %s (%s)",
                                                     objectId,
@@ -350,9 +352,12 @@ public abstract class ObjectStorageSpace {
             } else {
                 return Optional.ofNullable(getData(objectId));
             }
-        } catch (IOException e) {
+        } catch (FileNotFoundException exception) {
+            StorageUtils.LOG.WARN(exception.getMessage());
+            return Optional.empty();
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when downloading %s (%s): %s (%s)",
                                                     objectId,
@@ -460,9 +465,12 @@ public abstract class ObjectStorageSpace {
             } else {
                 return Optional.ofNullable(getAsStream(objectId));
             }
-        } catch (IOException e) {
+        } catch (FileNotFoundException exception) {
+            StorageUtils.LOG.WARN(exception.getMessage());
+            return Optional.empty();
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
                                     "Layer 1: An error occurred when obtaining an input stream for %s (%s): %s (%s)",
@@ -543,7 +551,10 @@ public abstract class ObjectStorageSpace {
     }
 
     private void handleDeliveryError(Response response, String objectId, Exception exception) {
-        if (exception instanceof ClosedChannelException || exception.getCause() instanceof ClosedChannelException) {
+        if (exception instanceof ClosedChannelException
+            || exception.getCause() instanceof ClosedChannelException
+            || exception instanceof ConnectionClosedException
+            || exception.getCause() instanceof ConnectionClosedException) {
             // If the user unexpectedly closes the connection, we do not need to log an error...
             Exceptions.ignore(exception);
             return;
@@ -636,9 +647,9 @@ public abstract class ObjectStorageSpace {
         try {
             deletePhysicalObject(objectId);
             replicationManager.notifyAboutDelete(this, objectId);
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when deleting %s (%s): %s (%s)",
                                                     objectId,
