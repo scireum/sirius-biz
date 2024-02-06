@@ -151,7 +151,7 @@
             _chart.innerHTML =
                 '<button type="button" data-chart="' + identifier + '" ' +
                 '        style="position: absolute; right: 0.5rem; top: 0.5rem;"' +
-                '        class="btn btn-link" onclick="closeChart(event.target)">' +
+                '        class="btn btn-link" onclick="closeChartViaButton(event.target)">' +
                 '   <i class="fa-solid fa-times"></i>' +
                 '</button>' +
                 '<div class="card-body d-flex flex-column"></div>';
@@ -264,7 +264,7 @@
             document.querySelectorAll('.chart-js').forEach(updateReferences);
         }
 
-        function closeChart(_closeBtn) {
+        function closeChartViaButton(_closeBtn) {
             let _chart = _closeBtn;
             while (!_chart.classList.contains('chart-js') && _chart !== null) {
                 _chart = _chart.parentNode;
