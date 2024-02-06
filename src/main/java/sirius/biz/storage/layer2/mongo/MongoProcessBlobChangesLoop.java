@@ -92,10 +92,14 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
         String directoryId = dir.getIdAsString();
         mongo.update()
              .set(MongoDirectory.DELETED, true)
+             .where(MongoDirectory.SPACE_NAME, dir.getSpaceName())
+             .where(MongoDirectory.DELETED, false)
              .where(MongoDirectory.PARENT, directoryId)
              .executeForMany(MongoDirectory.class);
         mongo.update()
              .set(MongoBlob.DELETED, true)
+             .where(MongoBlob.SPACE_NAME, dir.getSpaceName())
+             .where(MongoBlob.DELETED, false)
              .where(MongoBlob.PARENT, directoryId)
              .executeForMany(MongoBlob.class);
     }
