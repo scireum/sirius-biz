@@ -91,11 +91,15 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             oma.updateStatement(SQLDirectory.class)
                .set(SQLDirectory.DELETED, true)
                .set(SQLDirectory.PARENT, null)
+               .where(SQLDirectory.SPACE_NAME, dir.getSpaceName())
+               .where(SQLDirectory.DELETED, false)
                .where(SQLDirectory.PARENT, directoryId)
                .executeUpdate();
             oma.updateStatement(SQLBlob.class)
                .set(SQLBlob.DELETED, true)
                .set(SQLBlob.PARENT, null)
+               .where(SQLBlob.SPACE_NAME, dir.getSpaceName())
+               .where(SQLBlob.DELETED, false)
                .where(SQLBlob.PARENT, directoryId)
                .executeUpdate();
         } catch (SQLException e) {
