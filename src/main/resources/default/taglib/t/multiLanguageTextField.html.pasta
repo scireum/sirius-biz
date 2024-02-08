@@ -26,9 +26,9 @@
 
 <i:if test="value.isEnabled()">
     <div id="@wrapperId"
-         class="form-group @UserContext.get().signalFieldError(name) @class">
+         class="form-group mb-3 0@UserContext.get().signalFieldError(name) @class">
         <i:if test="isFilled(label) || forceLabel">
-            <label><span>@label</span></label>
+            <label class="form-label"><span>@label</span></label>
         </i:if>
         <div class="input-group cursor-pointer"
              data-bs-toggle="modal"

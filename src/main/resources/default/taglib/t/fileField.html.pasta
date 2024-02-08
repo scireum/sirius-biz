@@ -25,9 +25,9 @@
 <i:pragma name="description"
           value="Renders a text input field along with a select file button within a Tycho template"/>
 
-<div class="form-group @UserContext.get().signalFieldError(name) @class">
+<div class="form-group mb-3 @UserContext.get().signalFieldError(name) @class">
     <i:if test="isFilled(label)">
-        <label>
+        <label class="form-label">
         <span>
             @label
         </span>

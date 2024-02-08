@@ -5,8 +5,8 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <t:editForm url="/system/query" class="row">
-            <div class="form-group col-xl-8 col-12">
-                <label>
+            <div class="form-group mb-3 col-xl-8 col-12">
+                <label class="form-label">
                     Query
                 </label>
                 <div class="input-group">

@@ -25,7 +25,7 @@
                 </div>
             </div>
             <form class="row search-form-js">
-                <div class="col form-group">
+                <div class="col form-group mb-3">
                     <div class="input-group">
                         <input type="text" class="form-control" placeholder="@i18n('NLS.search')">
                         <div class="input-group-append search-btn-js">
@@ -37,7 +37,7 @@
                 </div>
             </form>
             <div class="row select-file-table">
-                <label class="search-result-js col" hidden>@i18n("NLS.searchResult")</label>
+                <label class="search-result-js col form-label" hidden>@i18n("NLS.searchResult")</label>
                 <div class="col-12">
                     <table class="table table-sm table-hover">
                         <tbody class="select-file-table-js">
