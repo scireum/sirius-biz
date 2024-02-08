@@ -61,6 +61,7 @@ public class ImportDictionary {
 
     private final Map<String, FieldDefinition> fields = new LinkedHashMap<>();
     private final Map<String, String> aliases = new LinkedHashMap<>();
+    private final Set<String> fieldLabels = new HashSet<>();
     private List<String> mappingFunction;
     private final List<Function<String, FieldDefinition>> computedFieldLookups = new ArrayList<>();
     private boolean hasIdentityMapping;
@@ -83,6 +84,8 @@ public class ImportDictionary {
                                                              field.getName()));
         }
 
+        ensureFieldLabelsUnique(field);
+
         this.fields.put(field.getName(), field);
 
         Set<String> aliasDuplicatesToRemove = new HashSet<>();
@@ -93,6 +96,14 @@ public class ImportDictionary {
         aliasDuplicatesToRemove.forEach(field::removeAlias);
 
         return this;
+    }
+
+    private void ensureFieldLabelsUnique(FieldDefinition field) {
+        // if the label is already present and would no longer be unique, qualify the label including the field name
+        if (fieldLabels.contains(field.getLabel())) {
+            field.withLabel(field.getLabel() + "_" + field.getName());
+        }
+        fieldLabels.add(field.getLabel());
     }
 
     private void addCheckedAlias(FieldDefinition field, String alias, Consumer<String> duplicateConsumer) {
