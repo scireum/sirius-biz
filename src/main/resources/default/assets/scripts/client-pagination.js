@@ -9,22 +9,27 @@
 function Pagination(_paginationContainer, pageSize, update) {
     const self = this;
 
+    _paginationContainer.classList.add('d-flex', 'justify-content-center');
     _paginationContainer.innerHTML = '';
 
     const _paginationGroup = document.createElement('div');
     _paginationGroup.classList.add('input-group')
-    _paginationGroup.classList.add('justify-content-center')
     _paginationGroup.classList.add('mb-4')
+    _paginationGroup.style.width = 'fit-content';
     _paginationContainer.appendChild(_paginationGroup);
 
-    this._previousBtn = document.createElement("div");
-    this._previousBtn.classList.add('input-group-prepend');
-    this._previousBtn.innerHTML = "<a href='#' class='btn btn-outline-secondary' aria-label='Previous'><span aria-hidden='true'>&#8592;</span></a>";
-    this._nextBtn = document.createElement('div');
-    this._nextBtn.classList.add('input-group-append');
-    this._nextBtn.innerHTML = "<a href='#' class='btn btn-outline-secondary' aria-label='Next'><span aria-hidden='true'>&#8594;</span></a>";
+    this._previousBtn = document.createElement("a");
+    this._previousBtn.href = '#';
+    this._previousBtn.classList.add('btn', 'btn-outline-secondary');
+    this._previousBtn.ariaLabel = 'Previous';
+    this._previousBtn.innerHTML = "<span aria-hidden='true'>&#8592;</span>";
+    this._nextBtn = document.createElement('a');
+    this._nextBtn.href = '#';
+    this._nextBtn.classList.add('btn', 'btn-outline-secondary');
+    this._nextBtn.ariaLabel = 'Next';
+    this._nextBtn.innerHTML = "<span aria-hidden='true'>&#8594;</span>";
     this._pageIndicator = document.createElement('input');
-    this._pageIndicator.classList.add('text-center');
+    this._pageIndicator.classList.add('text-center', 'form-control');
     this._pageIndicator.type = 'text';
     this._pageIndicator.readOnly = true;
 

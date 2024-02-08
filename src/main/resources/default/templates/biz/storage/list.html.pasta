@@ -225,42 +225,57 @@
     </form>
     <script type="text/javascript">
         function renameFile(path, name) {
-            let modalElement = $("#rename-modal");
-            modalElement.find("#rename-name").val(name);
-            modalElement.find("#rename-path").val(path);
+            const _modalElement = document.getElementById("rename-modal");
+            if (!_modalElement.modal) {
+                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            }
 
-            modalElement.on('shown.bs.modal', function () {
-                modalElement.find("#rename-name").focus();
-            }).modal('show');
+            _modalElement.querySelector("#rename-name").value = name;
+            _modalElement.querySelector("#rename-path").value = path;
+
+            _modalElement.addEventListener('shown.bs.modal', () => {
+                _modalElement.querySelector("#rename-name").focus();
+            });
+            _modalElement.modal.show();
         }
 
         function moveFile(filePath) {
-            $form = $('#move-file-form');
+            const _form = document.getElementById('move-file-form');
 
             selectVFSFile({
                 path: '@dir.path()',
                 allowDirectories: true,
                 allowFiles: false,
                 modalTitle: '___i18n("VFSController.selectDirectory")'
-            }).then(function (newParent) {
-                $form.find("input[name='path']").val(filePath);
-                $form.find("input[name='newParent']").val(newParent);
-                $form.submit();
+            }).then(newParent => {
+                _form.querySelector("input[name='path']").value = filePath;
+                _form.querySelector("input[name='newParent']").value = newParent;
+                _form.submit();
             });
         }
 
         function createDirectory() {
-            let modalElement = $("#create-directory-modal");
-            modalElement.on('shown.bs.modal', function () {
-                modalElement.find("#directory-name").focus();
-            }).modal('show');
+            const _modalElement = document.getElementById("create-directory-modal");
+            if (!_modalElement.modal) {
+                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            }
+
+            _modalElement.addEventListener('shown.bs.modal', () => {
+                _modalElement.querySelector("#directory-name").focus();
+            });
+            _modalElement.modal.show();
         }
 
         function createFile() {
-            let modalElement = $("#create-file-modal");
-            modalElement.on('shown.bs.modal', function () {
-                modalElement.find("#select-file-modal-search-filter").focus();
-            }).modal('show');
+            const _modalElement = document.getElementById("create-file-modal");
+            if (!_modalElement.modal) {
+                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            }
+
+            _modalElement.addEventListener('shown.bs.modal', () => {
+                _modalElement.querySelector("#select-file-modal-search-filter").focus();
+            });
+            _modalElement.modal.show();
         }
     </script>
 </t:page>
