@@ -5,7 +5,8 @@
     <i:block name="nav-right">
         <div class="overflow-hidden text-nowrap">
             <t:permission permission="flag-logged-in+flag-spy-user">
-                <a href="/user-accounts/select/main" class="badge text-white bg-sirius-orange-light">
+                <a href="/user-accounts/select/main"
+                   class="badge text-white bg-sirius-orange-light text-decoration-none">
                     @currentUserName()
                     <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
                     <i class="ms-1 fa-solid fa-times"></i>

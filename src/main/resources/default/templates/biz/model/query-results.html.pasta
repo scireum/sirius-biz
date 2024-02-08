@@ -72,8 +72,10 @@
                                             <span class="ps-2 pe-2">-</span>
                                             <span class="text-small">
                                             <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
+                                               class="text-decoration-none"
                                                target="_blank">
-                                                <i class="fa-solid fa-external-link-alt"></i> Query
+                                                <i class="fa-solid fa-external-link-alt"></i>
+                                                <span class="text-decoration-underline">Query</span>
                                             </a>
                                             </span>
                                         </i:if>

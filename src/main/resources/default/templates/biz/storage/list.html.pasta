@@ -70,9 +70,10 @@
                             <i:if test="dir.parent() != null">
                                 <tr>
                                     <td>
-                                        <a class="link" href="/fs?path=@urlEncode(dir.parent().path())">
+                                        <a class="link text-decoration-none"
+                                           href="/fs?path=@urlEncode(dir.parent().path())">
                                             <i class="fa-solid fa-folder-open"></i>
-                                            ..
+                                            <span class="text-decoration-underline">..</span>
                                         </a>
                                     </td>
                                     <td></td>
@@ -85,14 +86,17 @@
                                 <tr>
                                     <td>
                                         <div>
-                                            <a class="link" href="/fs?path=@urlEncode(child.path())">
+                                            <a class="link text-decoration-none"
+                                               href="/fs?path=@urlEncode(child.path())">
                                                 <i:if test="child.isDirectory()">
                                                     <i class="fa-solid fa-folder-open"></i>
                                                     <i:else>
                                                         <i class="fa-solid fa-file"></i>
                                                     </i:else>
                                                 </i:if>
-                                                @child.name()
+                                                <span class="text-decoration-underline">
+                                                    @child.name()
+                                                </span>
                                                 <i:if test="child.readOnly()">
                                                     <div>
                                                         <t:tag color="orange">@i18n("VirtualFile.readOnly")</t:tag>
