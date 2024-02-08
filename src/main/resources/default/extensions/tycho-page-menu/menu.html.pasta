@@ -11,7 +11,7 @@
         <t:permission permission="flag-logged-in">
             <i:if test="isFrameworkEnabled('tycho.open-search')">
                 <li class="nav-item dropdown right-menu-icon d-none d-xxl-inline">
-                    <form class="form-inline menu-search-form" method="POST" action="/open-search">
+                    <form class="d-flex menu-search-form align-items-baseline" method="POST" action="/open-search">
                         <span><i class="fa-solid fa-search"></i></span>
                         <input name="query"
                                class="form-control autofocus-js"
