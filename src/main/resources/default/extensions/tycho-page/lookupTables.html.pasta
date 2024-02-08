@@ -7,11 +7,9 @@
             <div class="mb-3 text-small text-muted lookuptable-description-js"></div>
             <div class="input-group mb-3">
                 <input class="form-control query-input-js" type="text" autocomplete="off"/>
-                <div class="input-group-append">
-                    <a class="btn btn-outline-secondary">
-                        <i class="fa-solid fa-search"></i>
-                    </a>
-                </div>
+                <a class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-search"></i>
+                </a>
             </div>
             <table class="table table-striped entries mb-3"></table>
             <i:block name="footer">

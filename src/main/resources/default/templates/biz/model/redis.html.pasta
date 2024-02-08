@@ -21,11 +21,9 @@
                                name="query"
                                class="form-control primary-autofocus-js"
                                placeholder="@i18n('NLS.searchkey')"/>
-                        <div class="input-group-append">
-                            <a class="btn btn-outline-secondary" onclick="execute()">
-                                <i class="fa-solid fa-search"></i>
-                            </a>
-                        </div>
+                        <a class="btn btn-outline-secondary" onclick="execute()">
+                            <i class="fa-solid fa-search"></i>
+                        </a>
                     </div>
                 </div>
                 <t:singleSelect name="pool" id="pool" class="col-2">

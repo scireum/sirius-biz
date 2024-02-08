@@ -42,11 +42,9 @@
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
                @if (readonly) { readonly } @if (autofocus) { autofocus }
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
-        <div class="input-group-append select-btn">
-            <span class="input-group-text">
-                <span class="fa-solid @if (allowFiles) {fa-cloud-upload-alt} else {fa-folder-open} cursor-pointer"></span>
-            </span>
-        </div>
+        <span class="input-group-text select-btn-js">
+            <span class="fa-solid @if (allowFiles) {fa-cloud-upload-alt} else {fa-folder-open} cursor-pointer"></span>
+        </span>
     </div>
     <i:if test="allowFiles && isFilled(basePath)">
         <div id="sirius-upload-progress-@localId" class="mt-3 d-none mb-3 dropzone-items">
@@ -63,7 +61,7 @@
             if (___allowFiles && ___isFilled(basePath)) {
                 createInplaceDropzone('___basePath', '___localId', _input, '___allowedExtensions', '___i18n("VirtualFile.onlyOneFile")');
             }
-            document.querySelector('#___localId .select-btn').addEventListener('click', function () {
+            document.querySelector('#___localId .select-btn-js').addEventListener('click', function () {
                 let value = _input.value;
 
                 if (value == null || value === '') {

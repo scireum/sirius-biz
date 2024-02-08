@@ -23,11 +23,10 @@
                                class="form-control primary-autofocus-js"
                                value="@query"
                                placeholder="@i18n('NLS.searchkey')"/>
-                        <div class="input-group-append">
-                            <a id="searchBtn" class="btn btn-outline-secondary cursor-pointer">
-                                <i class="fa-solid fa-search"></i>
-                            </a>
-                        </div>
+                        <a id="searchBtn"
+                           class="btn btn-outline-secondary cursor-pointer">
+                            <i class="fa-solid fa-search"></i>
+                        </a>
                     </div>
                 </div>
             </div>

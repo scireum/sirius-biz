@@ -459,11 +459,9 @@
             <input type="text" id="entityQueryField"
                    class="form-control primary-autofocus-js"
                    placeholder="@i18n('NLS.searchkey')"/>
-            <div class="input-group-append">
-                <a class="btn btn-outline-secondary">
-                    <i class="fa-solid fa-search"></i>
-                </a>
-            </div>
+            <a class="btn btn-outline-secondary">
+                <i class="fa-solid fa-search"></i>
+            </a>
         </div>
 
         <div id="entityResults" class="mt-4 mb-2">

@@ -13,11 +13,9 @@
                     <input type="text" id="actionsQueryField"
                            class="form-control primary-autofocus-js"
                            placeholder="@i18n('NLS.searchkey')"/>
-                    <div class="input-group-append">
-                        <a class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-search"></i>
-                        </a>
-                    </div>
+                    <a class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-search"></i>
+                    </a>
                 </div>
             </div>
             <div class="col-4 col-xl-3 d-flex flex-row justify-content-end">

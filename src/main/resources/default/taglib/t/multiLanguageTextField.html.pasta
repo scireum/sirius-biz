@@ -39,11 +39,9 @@
                    readonly
                    @if (isFilled(placeholder)) { placeholder="@placeholder" }
                    @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
-            <div class="input-group-append">
-                <span class="input-group-text">
-                    <span class="fa-solid fa-globe"></span>
-                </span>
-            </div>
+            <span class="input-group-text">
+                <span class="fa-solid fa-globe"></span>
+            </span>
         </div>
         <div id="@('hidden-inputs-' + fieldName)"
              class="mls-hidden-inputs">

@@ -28,11 +28,9 @@
                 <div class="col form-group mb-3">
                     <div class="input-group">
                         <input type="text" class="form-control" placeholder="@i18n('NLS.search')">
-                        <div class="input-group-append search-btn-js">
-                            <span class="input-group-text">
-                                <span class="fa-solid fa-search"></span>
-                            </span>
-                        </div>
+                        <span class="input-group-text search-btn-js">
+                            <span class="fa-solid fa-search"></span>
+                        </span>
                     </div>
                 </div>
             </form>
