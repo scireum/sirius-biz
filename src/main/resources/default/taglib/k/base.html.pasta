@@ -59,8 +59,10 @@
                     <i:local name="parent" value="@article.queryParent().orElse(null)"/>
                     <i:if test="parent != null">
                         <t:inlineInfo>
-                            <a href="/kba/@parent.getLanguage()/@parent.getArticleId()">
-                                <i class="fa-solid fa-book"></i> @parent.getTitle()
+                            <a href="/kba/@parent.getLanguage()/@parent.getArticleId()"
+                               class="text-decoration-none">
+                                <i class="fa-solid fa-book"></i>
+                                <span class="text-decoration-underline">@parent.getTitle()</span>
                             </a>
                         </t:inlineInfo>
                     </i:if>
@@ -72,7 +74,8 @@
 
                     <i:block name="actions">
                         <div class="dropdown d-none d-md-inline" id="urlDropdown">
-                            <a class="btn btn-link dropdown-toggle" data-bs-toggle="dropdown">
+                            <a class="btn btn-link dropdown-toggle text-decoration-none"
+                               data-bs-toggle="dropdown">
                                 <i class="fa-solid fa-link"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end p-4" style="width: 400px">
@@ -85,8 +88,8 @@
                                 <div>@i18n('KnowledgeBase.urlCopyInfo')</div>
                             </div>
                             <script>
-                                sirius.ready(function () {
-                                    $('#urlDropdown').on('shown.bs.dropdown', function () {
+                                sirius.ready(() => {
+                                    document.getElementById('urlDropdown').addEventListener('shown.bs.dropdown', () => {
                                         const copyMsg = document.querySelector('#copy-msg');
                                         const copyTextarea = document.querySelector('#urlField');
                                         copyTextarea.focus();
@@ -129,14 +132,15 @@
                             <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="reference" items="references">
                                 <div class="pb-2">
                                     <div>
-                                        <a href="/kba/@reference.getLanguage()/@reference.getArticleId()">
+                                        <a href="/kba/@reference.getLanguage()/@reference.getArticleId()"
+                                            class="text-decoration-none">
                                             <i:if test="reference.isChapter()">
                                                 <i class="fa-solid fa-book"></i>
                                                 <i:else>
                                                     <i class="fa-solid fa-file-alt"></i>
                                                 </i:else>
                                             </i:if>
-                                            @reference.getTitle()
+                                            <span class="text-decoration-underline">@reference.getTitle()</span>
                                         </a>
                                     </div>
                                     <div class="text-muted">

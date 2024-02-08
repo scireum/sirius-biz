@@ -26,8 +26,10 @@
                     <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
                         <div class="pb-2">
                             <div>
-                                <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()">
-                                    <i class="fa-solid fa-book"></i> @chapter.getTitle()
+                                <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()"
+                                   class="text-decoration-none">
+                                    <i class="fa-solid fa-book"></i>
+                                    <span class="text-decoration-underline">@chapter.getTitle()</span>
                                 </a>
                             </div>
                             <div class="text-muted">
@@ -46,10 +48,10 @@
                            items="@part(sirius.biz.tycho.kb.KnowledgeBase.class).queryLanguages()">
                         <div class="pb-1">
                             <div>
-                                <a href="/kb/@language">
+                                <a href="/kb/@language" class="text-decoration-none">
                                     <t:langFlag lang="@language"/>
-                                    <span class="@if (language == article.getLanguage()) { fw-bold }">
-                                            @part(sirius.biz.util.Languages.class).all().resolveName(language, language).orElse(language)
+                                    <span class="@if (language == article.getLanguage()) { fw-bold } text-decoration-underline">
+                                        @part(sirius.biz.util.Languages.class).all().resolveName(language, language).orElse(language)
                                     </span>
                                 </a>
                             </div>

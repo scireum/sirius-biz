@@ -8,6 +8,7 @@
     Renders a link uniformly with a speaking name or description.
 </i:pragma>
 
-<a @if (isFilled(id)) { id="@id" } href="@link" target="@target">
-    <i class="@icon"></i><i:if test="isFilled(name)"><span class="ms-1">@name</span></i:if>
+<a @if (isFilled(id)) { id="@id" } href="@link" class="text-decoration-none" target="@target">
+    <i class="@icon"></i>
+    <i:if test="isFilled(name)"><span class="ms-1 text-decoration-underline">@name</span></i:if>
 </a>

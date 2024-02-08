@@ -7,7 +7,7 @@
 <i:local name="referencedArticle"
          value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(currentArticle != null ? currentArticle.getLanguage() : NLS.getCurrentLanguage(), code, true).orElse(null)"/>
 <i:if test="referencedArticle != null">
-    <a class="@class"
+    <a class="@class text-decoration-none"
        target="_blank"
        href="/kba/@referencedArticle.getLanguage()/@code"
        data-bs-toggle="tooltip"
@@ -19,7 +19,7 @@
                 <i class="fa-solid fa-file-alt"></i>
             </i:else>
         </i:if>
-        @referencedArticle.getTitle()
+        <span class="text-decoration-underline">@referencedArticle.getTitle()</span>
     </a>
     <i:else>
         <i>Missing KnowledgeBase article.</i>
