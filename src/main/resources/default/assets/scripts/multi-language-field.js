@@ -49,10 +49,11 @@ MultiLanguageField.prototype.buildSingleline = function () {
     this._addLanguageButton = this._modal.querySelector('.mls-add-language-button');
     this._addLanguageOptions = this._addLanguageButton.querySelector('.dropdown-menu');
 
+    const modal = new bootstrap.Modal(this._modal);
+
     // Open modal when input field is focused
-    const me = this;
-    this._input.addEventListener('focusin', function () {
-        $(me._modal).modal('show');
+    this._input.addEventListener('focusin', () => {
+        modal.show(null);
     });
 
     if (this.mobileOrSmallScreen) {
@@ -62,29 +63,29 @@ MultiLanguageField.prototype.buildSingleline = function () {
     this._modalBody = this._modal.querySelector('.modal-body');
     this._modalContent = this._modal.querySelector('.modal-content');
 
-    this._addLanguageButton.addEventListener('click', function () {
-        const langOptionCount = me._addLanguageOptions.querySelectorAll('li:not(.d-none)').length;
+    this._addLanguageButton.addEventListener('click', () => {
+        const langOptionCount = this._addLanguageOptions.querySelectorAll('li:not(.d-none)').length;
         const optionsHeight = 48;
         const menuPadding = 8;
         const menuBorder = 1;
         const totalRowsHeight = (langOptionCount * optionsHeight) + (menuPadding * 2) + (menuBorder * 2);
 
-        if (totalRowsHeight > me._modalBody.clientHeight) {
-            me._addLanguageOptions.style.maxHeight = me._modalBody.clientHeight + 'px';
+        if (totalRowsHeight > this._modalBody.clientHeight) {
+            this._addLanguageOptions.style.maxHeight = this._modalBody.clientHeight + 'px';
         } else {
-            me._addLanguageOptions.style.maxHeight = totalRowsHeight + 'px';
+            this._addLanguageOptions.style.maxHeight = totalRowsHeight + 'px';
         }
     });
 
     // have to use jquery here as bootstrap modals only trigger jquery events
-    $(me._modal).on('hidden.bs.modal', function () {
-        me.updateHiddenFields();
-        me.updateOuterInputField();
+    this._modal.addEventListener('hidden.bs.modal', () => {
+        this.updateHiddenFields();
+        this.updateOuterInputField();
     });
 
-    $(me._modal).on('shown.bs.modal', function () {
+    this._modal.addEventListener('shown.bs.modal', () => {
         // focus the first input field in the modal
-        const _firstInput = me._modalInputs.querySelector('input');
+        const _firstInput = this._modalInputs.querySelector('input');
         if (_firstInput) {
             _firstInput.focus();
         }
@@ -127,6 +128,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode) {
     const _row = document.createElement('div');
     _row.classList.add('row');
     _row.classList.add('form-group');
+    _row.classList.add('mb-3');
 
     const _labelColumn = document.createElement('div');
     _labelColumn.classList.add('col-md-3');
