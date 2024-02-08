@@ -16,7 +16,10 @@
                     <span><i class="fa-solid fa-plus"></i></span>
                     <span class="d-none ms-2 d-xl-inline-block">@i18n("DataExplorerController.addChart")</span>
                 </button>
-                <button type="button" id="exportBtn" class="btn btn-link me-2" style="display: none"
+                <button type="button"
+                        id="exportBtn"
+                        class="btn btn-link me-2 text-decoration-none"
+                        style="display: none"
                         onclick="exportCharts()">
                     <span><i class="fa-solid fa-download"></i></span>
                     <span class="d-none ms-2 d-xl-inline-block">@i18n("DataExplorerController.export")</span>
