@@ -116,15 +116,20 @@
 
             _emailField.value = _userField.value;
 
-            // This bootstrap call still needs jQuery :(...
-            $('#forgotPassword').modal('show');
+            const _forgotPassword = document.getElementById('forgotPassword');
+            if (!_forgotPassword.modal) {
+                _forgotPassword.modal = new bootstrap.Modal(_forgotPassword);
+            }
+            _forgotPassword.modal.show();
         }
 
         function submitForgotPassword() {
             const _emailField = document.getElementById('mailField');
 
-            // This bootstrap call still needs jQuery :(...
-            $('#forgotPassword').modal('hide');
+            const _forgotPassword = document.getElementById('forgotPassword');
+            if (_forgotPassword.modal) {
+                _forgotPassword.modal.hide();
+            }
 
             if (sirius.isEmpty(_emailField.value)) {
                 clearMessages();
