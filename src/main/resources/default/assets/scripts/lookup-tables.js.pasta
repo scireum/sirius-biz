@@ -5,8 +5,8 @@ function LookupTableInfo(options) {
     this.labelFormat = options.labelFormat;
     this.query = options.query || "";
 
-
     this._modal = document.getElementById('lookup-modal');
+    this._modal.modal = new bootstrap.Modal(this._modal);
 
     // Get rid of all previously registered event listeners etc. by re-creating the inner DOM...
     this._modal.innerHTML = this._modal.innerHTML;
@@ -19,22 +19,20 @@ function LookupTableInfo(options) {
     this._description = this._modal.querySelector('.lookuptable-description-js');
     this._output = this._modal.querySelector('.entries');
 
-    const me = this;
-
     this.entriesToSkip = 0;
     this._paginationLeft = this._modal.querySelector('.pagination-left-js');
-    this._paginationLeft.addEventListener('click', function (event) {
-        if (this.dataset.skip != null) {
-            me.entriesToSkip = this.dataset.skip;
-            me.reload();
+    this._paginationLeft.addEventListener('click', event => {
+        if (event.target.dataset.skip != null) {
+            this.entriesToSkip = event.target.dataset.skip;
+            this.reload();
         }
         event.preventDefault();
     });
     this._paginationRight = this._modal.querySelector('.pagination-right-js');
-    this._paginationRight.addEventListener('click', function (event) {
-        if (this.dataset.skip != null) {
-            me.entriesToSkip = this.dataset.skip;
-            me.reload();
+    this._paginationRight.addEventListener('click', event => {
+        if (event.target.dataset.skip != null) {
+            this.entriesToSkip = event.target.dataset.skip;
+            this.reload();
         }
         event.preventDefault();
     });
@@ -43,24 +41,24 @@ function LookupTableInfo(options) {
 
     // Add a key-listener with some easing...
     let timeout = -1;
-    this._queryField.addEventListener('keyup', function () {
-        me.entriesToSkip = 0;
+    this._queryField.addEventListener('keyup', () => {
+        this.entriesToSkip = 0;
         clearTimeout(timeout);
-        timeout = setTimeout(function () {
-            me.reload();
+        timeout = setTimeout(() => {
+            this.reload();
         }, 100);
     });
 
     // Load data and show modal...
-    this.reload().then(function () {
-        $(me._modal).modal('show');
-        $(me._modal).on('shown.bs.modal', function () {
-            me._queryField.focus();
+    this.reload().then(() => {
+        this._modal.modal.show(null);
+        this._modal.addEventListener('shown.bs.modal', () => {
+            this._queryField.focus();
         });
     });
 }
 
-LookupTableInfo.prototype.ENTRY_TEMPLATE = '<td>' +
+LookupTableInfo.prototype.ENTRY_TEMPLATE = '<td class="border-top">' +
     '<div class="d-flex flex-row">' +
     '   <div class="me-auto">' +
     '       <a class="fw-bold code-link-js" data-label="{{label}}" data-code="{{code}}">{{name}}</a>' +
@@ -116,7 +114,7 @@ LookupTableInfo.prototype.reload = function () {
                 _codeLink.setAttribute("href", "#");
                 _codeLink.addEventListener('click', function (e) {
                     e.preventDefault();
-                    $(me._modal).modal('hide');
+                    me._modal.modal.hide();
                     me.codeCallback(this.dataset.code, this.dataset.label);
                 });
             }
