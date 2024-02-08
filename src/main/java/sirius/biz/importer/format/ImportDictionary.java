@@ -138,7 +138,7 @@ public class ImportDictionary {
     /**
      * Returns a list of all fields in this record.
      * <p>
-     * Note that this is not neccessarily in the expected order. Use the <tt>mapping function</tt> to specify the order.
+     * Note that this is not necessarily in the expected order. Use the <tt>mapping function</tt> to specify the order.
      *
      * @return the fields in this dictionary
      */
