@@ -119,9 +119,15 @@
 
     <script type="text/javascript">
         function showCreatePresetModal() {
-            $('#createPreset').on('shown.bs.modal', function () {
-                $('*[name="presetName"]').focus();
-            }).modal('show');
+            const _createPresetElement = document.querySelector('#createPreset');
+            if (!_createPresetElement.modal) {
+                _createPresetElement.modal = new bootstrap.Modal(_createPresetElement);
+            }
+
+            _createPresetElement.addEventListener('shown.bs.modal', () => {
+                document.querySelector('*[name="presetName"]').focus();
+            });
+            _createPresetElement.modal.show();
         }
 
         function createPreset() {
