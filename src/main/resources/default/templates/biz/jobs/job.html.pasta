@@ -109,7 +109,7 @@
             </fieldset>
             <i:block name="footer">
                 <a onclick="createPreset()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">@i18n("NLS.cancel")</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@i18n("NLS.cancel")</button>
             </i:block>
         </t:modal>
         <t:formBar btnLabelKey="JobFactory.execute"/>

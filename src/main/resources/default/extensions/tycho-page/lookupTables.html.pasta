@@ -18,7 +18,7 @@
                     <div class="pagination-info-js ps-2 pe-2 text-center" style="min-width: 125px"></div>
                     <a class="btn btn-outline-secondary pagination-right-js"><i class="fa-solid fa-chevron-right"></i></a>
                 </div>
-                <button class="btn btn-secondary" data-dismiss="modal">@i18n("NLS.close")</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">@i18n("NLS.close")</button>
             </i:block>
         </t:modal>
     </i:block>
