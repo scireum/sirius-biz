@@ -134,7 +134,10 @@
 
         // Adds or updates the chart for the given identifier.
         function addChart(identifier, silent) {
-            $('#select-entity-modal').modal('hide');
+            const modal = document.getElementById('select-entity-modal').modal;
+            if (modal) {
+                modal.hide();
+            }
 
             const _existingChart = findChart(identifier);
             if (_existingChart) {
@@ -476,7 +479,7 @@
     <!-- This whole block controls the entity selection process -->
     <script type="text/javascript">
         function selectEntity(chartType, uri) {
-            sirius.getJSON(uri, {}).then(function (json) {
+            sirius.getJSON(uri, {}).then(json => {
                 if (json.completions.length === 1) {
                     addChart(chartType + ':' + json.completions[0].value);
                     return;
@@ -486,8 +489,8 @@
                 _entityQueryField.dataset.chartType = chartType;
                 _entityQueryField.dataset.uri = uri;
                 _entityQueryField.value = '';
-                fetchEntitySuggestions().then(function () {
-                    $('#select-entity-modal').modal('show');
+                fetchEntitySuggestions().then(() => {
+                    document.getElementById('select-entity-modal').modal.show();
                 });
             });
         }
@@ -511,7 +514,9 @@
                 }, 150);
             });
 
-            $('#select-entity-modal').on('shown.bs.modal', function (e) {
+            const _selectEntityModal = document.getElementById('select-entity-modal');
+            _selectEntityModal.modal = new bootstrap.Modal(_selectEntityModal);
+            _selectEntityModal.addEventListener('shown.bs.modal', () => {
                 document.getElementById('entityQueryField').focus();
             })
         });
