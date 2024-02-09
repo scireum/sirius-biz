@@ -289,7 +289,7 @@ MultiLanguageField.prototype.renderLanguageLink = function (langCode, active) {
         _anchor.classList.add('active');
     }
     _anchor.href = '#' + this.fieldName + '-' + langCode;
-    _anchor.dataset.toggle = 'tab';
+    _anchor.dataset.bsToggle = 'tab';
 
     const _flag = this.renderFlag(langCode);
     _anchor.appendChild(_flag);
@@ -392,7 +392,7 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
     const _link = document.createElement('a');
     _link.classList.add('dropdown-item');
     _link.href = '#' + this.fieldName + '-' + langCode;
-    _link.dataset.toggle = 'tab';
+    _link.dataset.bsToggle = 'tab';
 
     const _languageLi = document.createElement('li');
 
