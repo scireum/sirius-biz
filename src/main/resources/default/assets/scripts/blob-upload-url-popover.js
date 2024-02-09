@@ -12,16 +12,19 @@
 function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _fileNameContainer, i18n, updateCallback) {
     const body = buildBody(_triggerElement, _uploadContainer, _resetButton);
     const container = buildContainer(_triggerElement.parentElement);
-    $(_triggerElement).popover({
-        html: true,
-        trigger: 'manual',
-        content: body._container,
-        container: container,
-        placement: 'top'
-    });
 
-    _triggerElement.addEventListener('click', function() {
-        $(_triggerElement).popover('toggle');
+    if (!_triggerElement.popover) {
+        _triggerElement.popover = new bootstrap.Tooltip(_triggerElement, {
+            html: true,
+            trigger: 'manual',
+            content: body._container,
+            container: container,
+            placement: 'top'
+        });
+    }
+
+    _triggerElement.addEventListener('click', () => {
+        _triggerElement.popover.toggle();
     });
 
     _resetButton.addEventListener('click', function() {
@@ -56,6 +59,7 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
 
         body._formGroup = document.createElement('div');
         body._formGroup.classList.add('form-group');
+        body._formGroup.classList.add('mb-3');
         body._formGroup.append(body._inputLabel, body._inputField);
 
         body._inputCol = document.createElement('div');
@@ -82,7 +86,7 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
         body._buttonCancel.classList.add('btn', 'btn-block', 'btn-close', 'btn-outline-secondary');
         body._buttonCancel.innerHTML = i18n.cancel + ' <i class="fa-solid fa-close"></i>';
         body._buttonCancel.addEventListener('click', function () {
-            $(_triggerElement).popover('toggle');
+            _triggerElement.popover.toggle();
         });
         body._rightCol = document.createElement('div');
         body._rightCol.classList.add('col', 'col-12', 'col-md-6');
@@ -111,7 +115,7 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
             _resetButton.classList.remove('d-none');
             body._errorCol.innerHTML = '';
             _fileNameContainer.innerHTML = '<a href="' + url + '">' + fetchFileName(url) + ' <i class="fa-regular fa-arrow-up-right-from-square"></i></a>';
-            $(_triggerElement).popover('hide');
+            _triggerElement.popover.hide();
             if (typeof updateCallback === 'function') {
                 updateCallback(url);
             }
@@ -150,7 +154,6 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
         _msg.querySelector('.msgContent').textContent = message;
         body._errorCol.innerHTML = '';
         body._errorCol.appendChild(_msg);
-        $(_triggerElement).popover('update');
+        _triggerElement.popover.update();
     }
 }
-
