@@ -390,28 +390,26 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
 
 MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
     const _link = document.createElement('a');
-    _link.classList.add('dropdown-item');
+    _link.classList.add('text-decoration-none', 'dropdown-item');
     _link.href = '#' + this.fieldName + '-' + langCode;
     _link.dataset.bsToggle = 'tab';
 
-    const _languageLi = document.createElement('li');
-
     const _flag = this.renderFlag(langCode);
-    _languageLi.appendChild(_flag);
+    _link.appendChild(_flag);
     const _text = document.createTextNode(this.getLanguageName(langCode));
-    _languageLi.appendChild(_text);
+    _link.appendChild(_text);
 
+    const _languageLi = document.createElement('li');
     _languageLi.dataset.lang = langCode;
-    _link.appendChild(_languageLi);
+    _languageLi.appendChild(_link);
 
-    const me = this;
-    _link.addEventListener('click', function () {
-        me.updateLanguageSwitcherLabel(langCode);
+    _link.addEventListener('click', () => {
+        this.updateLanguageSwitcherLabel(langCode);
         // Mark the element as selected in the list of language entries
-        me.markLanguageItemAsSelected(langCode);
+        this.markLanguageItemAsSelected(langCode);
     });
 
-    return _link;
+    return _languageLi;
 }
 
 MultiLanguageField.prototype.buildAddLanguageEntry = function (langCode) {
@@ -444,7 +442,7 @@ MultiLanguageField.prototype.updateLanguageSwitcherLabel = function (langCode) {
 
 MultiLanguageField.prototype.markLanguageItemAsSelected = function (langCode) {
     // add custom selection class 'language-selected' as Bootstrap does not allow multiple active elements in the same nav
-    this._toggleLanguageOptions.querySelectorAll('ul>li.cursor-pointer').forEach(function (_li) {
+    this._toggleLanguageOptions.querySelectorAll('ul>li').forEach(function (_li) {
         if (_li.dataset.lang === langCode) {
             _li.classList.add('language-selected');
         } else {
