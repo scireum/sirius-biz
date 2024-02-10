@@ -165,6 +165,12 @@ MultiLanguageField.prototype.renderLanguageTab = function (langCode, active) {
     const _anchor = this.renderLanguageLink(langCode, active);
     _li.appendChild(_anchor);
 
+    _anchor.addEventListener('click', () => {
+        setTimeout(() => {
+            this._multilineContent.querySelector('div.tab-pane > textarea[data-lang=' + langCode + ']').focus();
+        }, 0);
+    });
+
     return _li;
 };
 
@@ -341,11 +347,15 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     // this method simulates a link on the selected language to propagate the correct state to the tab bar, followed by
     // a simulated click on the dropdown toggle to close the dropdown
     function simulateClickOnSelectedLanguage() {
+        me.__autonomousClick = true;
+
         const _selectedLanguageEntry = me._wrapper.querySelector("li.language-selected a");
         if (_selectedLanguageEntry) {
             _selectedLanguageEntry.click();
         }
         me._wrapper.querySelector('.dropdown-toggle').click();
+
+        delete me.__autonomousClick;
     }
 
     this.forEachValidLanguage(function (langCode) {
@@ -432,6 +442,12 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
         this.updateLanguageSwitcherLabel(langCode);
         // Mark the element as selected in the list of language entries
         this.markLanguageItemAsSelected(langCode);
+
+        if (!this.__autonomousClick) {
+            setTimeout(() => {
+                this._multilineContent.querySelector('div.tab-pane > textarea[data-lang=' + langCode + ']').focus();
+            }, 0);
+        }
     });
 
     return _languageLi;
