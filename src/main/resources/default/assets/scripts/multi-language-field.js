@@ -280,15 +280,15 @@ MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
 
 MultiLanguageField.prototype.renderLanguageLink = function (langCode, active) {
     const _anchor = document.createElement('a');
-    if (this.multiline) {
-        _anchor.classList.add('nav-link');
-    }
-    _anchor.classList.add('mls-language-label');
+    _anchor.classList.add('mls-language-label', 'text-decoration-none');
     if (active) {
         _anchor.classList.add('active');
     }
     _anchor.href = '#' + this.fieldName + '-' + langCode;
-    _anchor.dataset.bsToggle = 'tab';
+    if (this.multiline) {
+        _anchor.classList.add('nav-link');
+        _anchor.dataset.bsToggle = 'tab';
+    }
 
     const _flag = this.renderFlag(langCode);
     _anchor.appendChild(_flag);
