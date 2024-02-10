@@ -335,6 +335,16 @@ MultiLanguageField.prototype.addLanguage = function (langCode, active) {
 MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     const me = this;
 
+    // this method simulates a link on the selected language to propagate the correct state to the tab bar, followed by
+    // a simulated click on the dropdown toggle to close the dropdown
+    function simulateClickOnSelectedLanguage() {
+        const _selectedLanguageEntry = me._wrapper.querySelector("li.language-selected a");
+        if (_selectedLanguageEntry) {
+            _selectedLanguageEntry.click();
+        }
+        me._wrapper.querySelector('.dropdown-toggle').click();
+    }
+
     this.forEachValidLanguage(function (langCode) {
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
             me.addLanguage(langCode, false)
@@ -345,6 +355,11 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     if (me.shouldRenderDropdownInsteadOfTabs()) {
         me.removeAllLanguageTabs();
         me.showLanguageToggleButton();
+
+        // artificially click on the fallback language to propagate the correct state to the tab bar
+        me.markLanguageItemAsSelected(me.FALLBACK_CODE);
+        simulateClickOnSelectedLanguage();
+        console.log("on start")
     } else {
         // Set the current tab active
         this._multilineHeader.querySelector('li.mls-language-tab .nav-link').classList.add('active');
@@ -377,6 +392,10 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 if (me.shouldRenderDropdownInsteadOfTabs()) {
                     me.removeAllLanguageTabs();
                     me.showLanguageToggleButton();
+
+                    // artificially click on the new language to propagate the correct state to the tab bar
+                    me.markLanguageItemAsSelected(langCode);
+                    simulateClickOnSelectedLanguage();
                 }
 
                 me.updateLanguageSwitcherLabel(langCode);
@@ -414,6 +433,7 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
 
 MultiLanguageField.prototype.buildAddLanguageEntry = function (langCode) {
     const _link = document.createElement('a');
+    _link.classList.add('text-decoration-none');
 
     const _flag = this.renderFlag(langCode);
     _link.appendChild(_flag);
