@@ -358,7 +358,6 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         // artificially click on the fallback language to propagate the correct state to the tab bar
         me.markLanguageItemAsSelected(me.FALLBACK_CODE);
         simulateClickOnSelectedLanguage();
-        console.log("on start")
     } else {
         // Set the current tab active
         this._multilineHeader.querySelector('li.mls-language-tab .nav-link').classList.add('active');
