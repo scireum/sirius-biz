@@ -228,6 +228,10 @@ MultiLanguageField.prototype.renderModalBody = function () {
                 me._modalInputs.appendChild(_row);
                 me.hideModalLanguagePlaceholder();
                 me.updateLanguageManagementOptions();
+
+                setTimeout(() => {
+                    _row.querySelector('input[type=text]').focus();
+                }, 0);
             });
             _language.appendChild(_link);
             me._addLanguageOptions.appendChild(_language);
@@ -384,6 +388,10 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 me._multilineContent.querySelectorAll('div.tab-pane>textarea').forEach(function (_textarea) {
                     if (_textarea.dataset.lang !== langCode) {
                         _textarea.parentElement.classList.remove('active');
+                    } else {
+                        setTimeout(() => {
+                            _textarea.focus();
+                        }, 0);
                     }
                 });
 
