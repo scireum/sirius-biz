@@ -77,7 +77,6 @@ MultiLanguageField.prototype.buildSingleline = function () {
         }
     });
 
-    // have to use jquery here as bootstrap modals only trigger jquery events
     this._modal.addEventListener('hidden.bs.modal', () => {
         this.updateHiddenFields();
         this.updateOuterInputField();
