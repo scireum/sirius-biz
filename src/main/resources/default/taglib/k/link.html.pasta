@@ -10,5 +10,5 @@
 
 <a @if (isFilled(id)) { id="@id" } href="@link" class="text-decoration-none" target="@target">
     <i class="@icon"></i>
-    <i:if test="isFilled(name)"><span class="ms-1 text-decoration-underline">@name</span></i:if>
+    <i:if test="isFilled(name)"><span class="text-decoration-underline">@name</span></i:if>
 </a>
