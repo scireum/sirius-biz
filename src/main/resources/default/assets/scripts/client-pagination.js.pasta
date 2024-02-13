@@ -21,12 +21,12 @@ function Pagination(_paginationContainer, pageSize, update) {
     this._previousBtn = document.createElement("a");
     this._previousBtn.href = '#';
     this._previousBtn.classList.add('btn', 'btn-outline-secondary');
-    this._previousBtn.ariaLabel = 'Previous';
+    this._previousBtn.ariaLabel = '@i18n("Pagination.previous")';
     this._previousBtn.innerHTML = "<span aria-hidden='true'>&#8592;</span>";
     this._nextBtn = document.createElement('a');
     this._nextBtn.href = '#';
     this._nextBtn.classList.add('btn', 'btn-outline-secondary');
-    this._nextBtn.ariaLabel = 'Next';
+    this._nextBtn.ariaLabel = '@i18n("Pagination.next")';
     this._nextBtn.innerHTML = "<span aria-hidden='true'>&#8594;</span>";
     this._pageIndicator = document.createElement('input');
     this._pageIndicator.classList.add('text-center', 'form-control');
