@@ -1,8 +1,6 @@
 /**
  * Inits the url upload popover.
  *
- * Uses jQuery to init bootstraps popover.
- *
  * @param _triggerElement The element (e.g. Button) that triggers the popover to enter an URL
  * @param _uploadContainer The container the _triggerElement and other components belongs to
  * @param _resetButton The button that resets the upload field
