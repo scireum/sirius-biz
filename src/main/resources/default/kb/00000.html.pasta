@@ -26,11 +26,9 @@
                     <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
                         <div class="pb-2">
                             <div>
-                                <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()"
-                                   class="text-decoration-none">
-                                    <i class="fa-solid fa-book"></i>
-                                    <span class="text-decoration-underline">@chapter.getTitle()</span>
-                                </a>
+                                <k:link link="@apply('/kba/%s/%s', chapter.getLanguage(), chapter.getArticleId())"
+                                        icon="fa-solid fa-book"
+                                        name="@chapter.getTitle()"/>
                             </div>
                             <div class="text-muted">
                                 @chapter.getDescription()
