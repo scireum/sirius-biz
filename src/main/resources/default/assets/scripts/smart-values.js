@@ -1,35 +1,39 @@
-function openSmartValues(elementId, type, payload, signature) {
-    $('#' + elementId).tooltip({
-        html: true,
-        sanitize: false,
-        trigger: 'manual',
-        template: '<div class="tooltip smart-values" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>',
-        title: '<i class="fa fa-sync fa-spin"></i>',
-        delay: {start: 0, hide: 1000}
-    }).tooltip('show');
-
-    $(document).on('click.smart-values', function (event) {
-        $('#' + elementId).tooltip('hide');
-        $(document).off('click.smart-values');
-        $(document).off('keyup.smart-values');
-    });
-    $(document).on('keyup.smart-values', function (event) {
-        if (event.key === sirius.key.ESCAPE) {
-            $('#' + elementId).tooltip('hide');
-            $(document).off('click.smart-values');
-            $(document).off('keyup.smart-values');
+function hideAllSmartValues(_excludedElement) {
+    document.querySelectorAll('.smart-values-link-js').forEach(_element => {
+        if (_element !== _excludedElement && _element.tooltip) {
+            _element.tooltip.hide();
         }
     });
+}
+
+function openSmartValues(elementId, type, payload, signature) {
+    const _element = document.querySelector('#' + elementId);
+    hideAllSmartValues(_element);
+
+    if (!_element.tooltip) {
+        _element.tooltip = new bootstrap.Tooltip(_element, {
+            animation: false,
+            html: true,
+            sanitize: false,
+            trigger: 'manual',
+            template: '<div class="tooltip smart-values" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
+            title: '<i class="fa-solid fa-sync fa-spin"></i>',
+            delay: {show: 0, hide: 0},
+        });
+    }
+
+    _element.tooltip.toggle();
 
     sirius.getJSON("/tycho/smartValues", {
         type: type,
         payload: payload,
         securityHash: signature
-    }).then(function (json) {
+    }).then(json => {
         if (json.values.length === 0) {
-            $('#' + elementId).tooltip('hide').removeClass('link').attr('href', '');
-            $(document).off('click.smart-values');
-            $(document).off('keyup.smart-values');
+            _element.tooltip.hide();
+            _element.classList.add('text-decoration-none');
+            _element.classList.remove('link');
+            _element.href = '';
             return;
         }
 
@@ -37,21 +41,29 @@ function openSmartValues(elementId, type, payload, signature) {
             '<div class="d-flex flex-row align-items-center">' +
             '   <a href="{{action}}" class="smart-value-link btn btn-link d-flex flex-row align-items-center overflow-hidden flex-grow-1">' +
             '       <i class="{{icon}}"></i>' +
-            '       <span class="pl-2">{{label}}</span>' +
+            '       <span class="ps-2">{{label}}</span>' +
             '   </a>' +
             '   {{#copyPayload}}' +
-            '       <a href="javascript:sirius.copyToClipboard(\'{{copyPayload}}\')" class="smart-value-link btn btn-link ml-2 text-small">' +
-            '          <i class="far fa-clipboard"></i>' +
-            '       </a>' +
-            '   {{/copyPayload}}' +
-            '   {{^copyPayload}}' +
-            '       <a class="btn btn-link disabled ml-2 text-small">' +
-            '          <i class="far fa-clipboard"></i>' +
+            '       <a href="javascript:sirius.copyToClipboard(\'{{copyPayload}}\')" class="smart-value-link btn btn-link ms-2 text-small">' +
+            '          <i class="fa-regular fa-clipboard"></i>' +
             '       </a>' +
             '   {{/copyPayload}}' +
             '</div>' +
             '{{/values}}', json);
 
-        $('#' + elementId).attr('data-original-title', html).tooltip('show');
+        _element.tooltip.setContent({'.tooltip-inner': html});
     });
 }
+
+sirius.ready(() => {
+    document.addEventListener('click', event => {
+        if (!event.target.classList.contains('smart-values-link-js')) {
+            hideAllSmartValues();
+        }
+    });
+    document.addEventListener('keyup', event => {
+        if (event.key === sirius.key.ESCAPE) {
+            hideAllSmartValues();
+        }
+    });
+});

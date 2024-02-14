@@ -36,7 +36,7 @@ public class TrendCellFormat implements CellFormat {
         String hint = data.path(KEY_HINT).asText();
         String icon = data.path(KEY_ICON).asText();
 
-        StringBuilder sb = new StringBuilder("<div class=\"text-right\"");
+        StringBuilder sb = new StringBuilder("<div class=\"text-end\"");
         if (Strings.isFilled(hint)) {
             sb.append(" title=\"");
             sb.append(Strings.cleanup(hint, StringCleanup::escapeXml));

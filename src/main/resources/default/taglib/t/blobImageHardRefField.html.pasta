@@ -19,10 +19,12 @@
 
 <i:local name="currentImage" value="objectRef.url().withVariant(previewVariant).buildURL().orElse(defaultPreview)"/>
 
-<div class="form-group @UserContext.get().signalFieldError(name) @class">
+<div class="form-group mb-3 @UserContext.get().signalFieldError(name) @class">
     <i:if test="isFilled(label)">
         <div>
-            <label><span>@label</span></label>
+            <label class="form-label">
+                <span>@label</span>
+            </label>
         </div>
     </i:if>
     <div @if (isFilled(height)) { style="height: @height" }>

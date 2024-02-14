@@ -15,7 +15,7 @@ public abstract class PolarAreaChartJobFactory extends SingleDatasetChartJobFact
 
     @Override
     public String getIcon() {
-        return "fas fa-chart-pie";
+        return "fa-solid fa-chart-pie";
     }
 
     @Override

@@ -7,13 +7,13 @@ Willkommen in der Knowledge Base von @sirius.kernel.info.Product.getProduct().ge
 </p>
 <p>
     Hier finden Sie eine Übersicht über alle Hilfeseiten und Anleitungen die wir für Sie bereitstellen. Bitte beachten
-    Sie, dass Sie auch die <a href="/open-search"><i class="fa fa-search"></i> Systemweite Suche</a> verwenden können,
-    um entsprechende Hilfeseiten zu finden.
+    Sie, dass Sie auch die <k:link link="/open-search" icon="fa-solid fa-search" name="Systemweite Suche"/> verwenden
+    können, um entsprechende Hilfeseiten zu finden.
 
     Passende Anleitungen oder Erklärungen finden Sie auch direkt in den Anwendungen. Achten Sie hierfür auf dieses
-    Symbol <a class="btn btn-info"><i class="fa fa-lightbulb"></i></a> im rechten oberen Bereich.
+    Symbol <a class="btn btn-info"><i class="fa-solid fa-lightbulb"></i></a> im rechten oberen Bereich.
 
     Bitte beachten Sie, dass einige Hilfeseiten nur mit einer entsprechenden Berechtigung und nach einem Login sichtbar
     sind. Wenn Sie eine Hilfeseite an weitere Personen versenden möchten, nutzen Sie hierfür den Button
-    <a class="btn btn-outline-secondary"><i class="fa fa-link"></i></a> im rechten oberen Bereich.
+    <a class="btn btn-outline-secondary"><i class="fa-solid fa-link"></i></a> im rechten oberen Bereich.
 </p>

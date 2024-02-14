@@ -69,11 +69,13 @@
                                             </i:if>
                                             @reference.getValue(entity)
                                             <span class="text-muted">(@reference.getReferencedDescriptor().getType().getName())</span>
-                                            <span class="pl-2 pr-2">-</span>
+                                            <span class="ps-2 pe-2">-</span>
                                             <span class="text-small">
                                             <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
+                                               class="text-decoration-none"
                                                target="_blank">
-                                                <i class="fa fa-external-link-alt"></i> Query
+                                                <i class="fa-solid fa-external-link-alt"></i>
+                                                <span class="text-decoration-underline">Query</span>
                                             </a>
                                             </span>
                                         </i:if>
@@ -105,7 +107,7 @@
                                                                         <i:local name="enumValue"
                                                                                  value="@property.getValue(entity)"/>
 
-                                                                        <span class="pr-2">@toUserString(enumValue)</span>
+                                                                        <span class="pe-2">@toUserString(enumValue)</span>
                                                                         <t:tag color="@sirius.biz.model.QueryController.determineEnumTagColor(enumValue.as(java.lang.Enum.class))">
                                                                             @enumValue.as(java.lang.Enum.class).name()
                                                                         </t:tag>
@@ -122,7 +124,7 @@
                                         </i:else>
                                     </i:if>
                                     <i:if test="property.getValue(entity) != null && !type.isFetched(entity, property)">
-                                        <t:tag color="red" class="ml-2 ms-2">
+                                        <t:tag color="red" class="ms-2">
                                             Empty in DB
                                         </t:tag>
                                     </i:if>

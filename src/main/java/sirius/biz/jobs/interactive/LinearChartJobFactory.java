@@ -39,7 +39,7 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
 
     @Override
     public String getIcon() {
-        return "fas fa-chart-area";
+        return "fa-solid fa-chart-area";
     }
 
     @Override

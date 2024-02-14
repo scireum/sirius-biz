@@ -20,11 +20,11 @@
     <i:block name="page-header">
         <t:pageHeader>
             <i:block name="title">@job.getCurrentLabel(context)</i:block>
-            <t:iconInlineInfo icon="fa fa-info-circle">@job.getCurrentDescription(context)</t:iconInlineInfo>
+            <t:iconInlineInfo icon="fa-solid fa-info-circle">@job.getCurrentDescription(context)</t:iconInlineInfo>
             <i:block name="actions">
                 <i:if test="!job.getJobInfos().isEmpty()">
                     <a class="btn btn-outline-link" href="/jobs/infos/@job.getName()">
-                        <span><i class="fa fa-book"></i></span> @i18n("JobsController.showInfos")
+                        <span><i class="fa-solid fa-book"></i></span> @i18n("JobsController.showInfos")
                     </a>
                 </i:if>
             </i:block>
@@ -40,7 +40,7 @@
                             <div class="text-small text-ellipsis overflow-hidden flex-grow-0">
                                 @toUserString(metric.getFirst())
                             </div>
-                            <div class="text-small font-weight-bold text-right flex-grow-1 pl-2 pr-2">
+                            <div class="text-small fw-bold text-end flex-grow-1 ps-2 pe-2">
                                 <i:raw>
                                     @metric.getSecond().as(sirius.biz.analytics.reports.Cell.class).render()
                                 </i:raw>

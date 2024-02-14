@@ -9,8 +9,8 @@
     <i:block name="page-header">
     <t:pageHeader titleKey="DatabaseController.schema">
         <i:block name="actions">
-            <a class="btn btn-link mr-2 d-none d-md-inline-block" href="#" onclick="refreshChanges()">
-                <i class="fa fa-sync"></i>
+            <a class="btn btn-link me-2 d-none d-md-inline-block" href="#" onclick="refreshChanges()">
+                <i class="fa-solid fa-sync"></i>
             </a>
             <t:kbBtn code="S1Q2L"/>
         </i:block>
@@ -20,7 +20,7 @@
     <div class="card">
         <div class="card-body" id="schemaChanges">
             <div class="mb-4 mt-4 d-flex flex-column align-items-center">
-                <i class="fa fa-spin fa-spinner"></i>
+                <i class="fa-solid fa-spin fa-spinner"></i>
             </div>
         </div>
     </div>
@@ -67,7 +67,7 @@
             '       </td>' +
             '       <td>{{realm}}</td>' +
             '       {{^executed}}' +
-            '       <td class="text-right"><a href="javascript: executeChange(\'{{id}}\')" class="btn ' +
+            '       <td class="text-end"><a href="javascript: executeChange(\'{{id}}\')" class="btn ' +
             '{{#dataLossPossible}}' +
             'btn-outline-danger ' +
             '{{/dataLossPossible}}' +

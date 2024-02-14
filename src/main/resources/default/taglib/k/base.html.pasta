@@ -59,23 +59,24 @@
                     <i:local name="parent" value="@article.queryParent().orElse(null)"/>
                     <i:if test="parent != null">
                         <t:inlineInfo>
-                            <a href="/kba/@parent.getLanguage()/@parent.getArticleId()">
-                                <i class="fa fa-book"></i> @parent.getTitle()
-                            </a>
+                            <k:link link="@apply('/kba/%s/%s', parent.getLanguage(), parent.getArticleId())"
+                                    icon="fa-solid fa-book"
+                                    name="@parent.getTitle()"/>
                         </t:inlineInfo>
                     </i:if>
                     <t:inlineInfo>
-                        <span class="text-muted text-monospace">
-                            <i class="fa fa-tag"></i> @article.getArticleId()
+                        <span class="text-muted font-monospace">
+                            <i class="fa-solid fa-tag"></i> @article.getArticleId()
                         </span>
                     </t:inlineInfo>
 
                     <i:block name="actions">
                         <div class="dropdown d-none d-md-inline" id="urlDropdown">
-                            <a class="btn btn-link dropdown-toggle" data-toggle="dropdown">
-                                <i class="fa fa-link"></i>
+                            <a class="btn btn-link dropdown-toggle text-decoration-none"
+                               data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-link"></i>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right p-4" style="width: 400px">
+                            <div class="dropdown-menu dropdown-menu-end p-4" style="width: 400px">
                                 <div class="mb-3">
                                     <label class="form-label">URL</label>
                                     <input type="text" class="form-control" id="urlField" readonly
@@ -85,8 +86,8 @@
                                 <div>@i18n('KnowledgeBase.urlCopyInfo')</div>
                             </div>
                             <script>
-                                sirius.ready(function () {
-                                    $('#urlDropdown').on('shown.bs.dropdown', function () {
+                                sirius.ready(() => {
+                                    document.getElementById('urlDropdown').addEventListener('shown.bs.dropdown', () => {
                                         const copyMsg = document.querySelector('#copy-msg');
                                         const copyTextarea = document.querySelector('#urlField');
                                         copyTextarea.focus();
@@ -129,15 +130,9 @@
                             <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="reference" items="references">
                                 <div class="pb-2">
                                     <div>
-                                        <a href="/kba/@reference.getLanguage()/@reference.getArticleId()">
-                                            <i:if test="reference.isChapter()">
-                                                <i class="fa fa-book"></i>
-                                                <i:else>
-                                                    <i class="fa fa-file-alt"></i>
-                                                </i:else>
-                                            </i:if>
-                                            @reference.getTitle()
-                                        </a>
+                                        <k:link link="@apply('/kba/%s/%s', reference.getLanguage(), reference.getArticleId())"
+                                                icon="@(reference.isChapter() ? 'fa-solid fa-book' : 'fa-solid fa-file-alt')"
+                                                name="@reference.getTitle()"/>
                                     </div>
                                     <div class="text-muted">
                                         @reference.getDescription()

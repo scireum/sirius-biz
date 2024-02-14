@@ -52,7 +52,7 @@
                         </td>
                         <td class="col-md-2 align-left">
                             <a class="link" href="/storage/object/@object.getBucket()/@object.getObjectKey()">
-                                <i class="fa fa-pencil"></i> @i18n("Model.details")
+                                <i class="fa-solid fa-pencil"></i> @i18n("Model.details")
                             </a>
 
                             <i:if test="bucket.isCanDelete()">

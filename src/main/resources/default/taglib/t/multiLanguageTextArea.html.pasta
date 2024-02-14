@@ -24,28 +24,40 @@
 
 <i:if test="value.isEnabled()">
 
-    <div id="@wrapperId" class="form-group @UserContext.get().signalFieldError(name) @class">
-        <div class="w-100  d-inline-flex flex-row-reverse justify-content-between align-items-end">
-            <ul class="nav nav-tabs mls-tab-list" role="tablist">
-                <li class="nav-item dropdown mls-toggle-language-button d-none" role="presentation">
-                    <a class="nav-link dropdown-toggle mls-language-label" data-toggle="dropdown" href="#">Dropdown</a>
-                    <ul class="dropdown-menu dropdown-menu-right toggle-language-data"></ul>
+    <div id="@wrapperId"
+         class="form-group mb-3 @UserContext.get().signalFieldError(name) @class">
+        <div class="w-100 d-inline-flex flex-row-reverse justify-content-between align-items-end">
+            <ul class="nav nav-tabs mls-tab-list"
+                role="tablist">
+                <li class="nav-item dropdown mls-toggle-language-button d-none"
+                    role="presentation">
+                    <a class="nav-link dropdown-toggle mls-language-label"
+                       data-bs-toggle="dropdown"
+                       href="#">Dropdown</a>
+                    <ul class="dropdown-menu dropdown-menu-end toggle-language-data"></ul>
                 </li>
 
-                <li class="dropdown mls-add-language-button d-none" role="presentation">
-                    <a class="nav-link mls-add-language-link" data-toggle="dropdown" href="#" role="button"
-                       aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
-                        <i class="fa fa-plus"></i>
+                <li class="dropdown mls-add-language-button d-none"
+                    role="presentation">
+                    <a class="nav-link mls-add-language-link"
+                       data-bs-toggle="dropdown"
+                       href="#"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false"
+                       title="@i18n('MultiLanguageEditor.addLanguage')">
+                        <i class="fa-solid fa-plus"></i>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-right"></ul>
+                    <ul class="dropdown-menu dropdown-menu-end"></ul>
                 </li>
             </ul>
             <i:if test="isFilled(label)">
-                <label><span>@label</span></label>
+                <label class="form-label"><span>@label</span></label>
             </i:if>
         </div>
 
-        <div @id="@id" class="tab-content mls-tab-content @fieldClass">
+        <div @id="@id"
+             class="tab-content mls-tab-content @fieldClass">
         </div>
 
         <i:if test="isFilled(help)">

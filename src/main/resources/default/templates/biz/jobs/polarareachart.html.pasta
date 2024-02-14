@@ -14,7 +14,7 @@
 
     <script type="text/javascript">
         @raw {
-            $(document).ready(function () {
+            sirius.ready(() => {
                 polarAreaChart('#chart', [ @labels ], [ @dataset ]);
             });
         }

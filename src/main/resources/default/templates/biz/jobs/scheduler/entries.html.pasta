@@ -32,7 +32,7 @@
                     <i:block name="actions">
                         <t:dropdownItem
                                 url="@apply('/ps?reference=%s&reference-label=%s', entry.getUniqueName(), urlEncode(entry.toString()))"
-                                icon="fa fa-list"
+                                icon="fa-solid fa-list"
                                 labelKey="SchedulerEntry.performedExecutions"/>
                         <t:dropdownDeleteItem
                                 url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())"/>

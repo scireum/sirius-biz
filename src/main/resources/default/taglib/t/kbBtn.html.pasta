@@ -7,13 +7,13 @@
 <i:local name="referencedArticle"
          value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(NLS.getCurrentLanguage(), code, true).orElse(null)"/>
 <i:if test="referencedArticle != null">
-    <a class="btn btn-info ml-2 @class"
+    <a class="btn btn-info ms-2 @class"
        target="_blank"
        href="/kba/@referencedArticle.getLanguage()/@code#@anchor"
-       data-toggle="tooltip"
-       data-placement="top"
+       data-bs-toggle="tooltip"
+       data-bs-placement="top"
        title="@referencedArticle.getTitle()">
-        <i class="fa fa-lightbulb"></i>
-        <span class="d-none d-xl-inline pl-2">@i18n('KnowledgeBase.helpBtn')</span>
+        <i class="fa-solid fa-lightbulb"></i>
+        <span class="d-none d-xl-inline ps-2">@i18n('KnowledgeBase.helpBtn')</span>
     </a>
 </i:if>

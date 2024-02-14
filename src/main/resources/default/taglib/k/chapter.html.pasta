@@ -37,9 +37,9 @@
             <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
                 <div class="pb-2">
                     <div>
-                        <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()">
-                            <i class="fa fa-book"></i> @chapter.getTitle()
-                        </a>
+                        <k:link link="@apply('/kba/%s/%s', chapter.getLanguage(), chapter.getArticleId())"
+                                icon="fa-solid fa-book"
+                                name="@chapter.getTitle()"/>
                     </div>
                     <div class="text-muted">
                         @chapter.getDescription()
@@ -55,9 +55,9 @@
             <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="child" items="children">
                 <div class="pb-2">
                     <div>
-                        <a href="/kba/@child.getLanguage()/@child.getArticleId()">
-                            <i class="fa fa-file-alt"></i> @child.getTitle()
-                        </a>
+                        <k:link link="@apply('/kba/%s/%s', child.getLanguage(), child.getArticleId())"
+                                icon="fa-solid fa-file-alt"
+                                name="@child.getTitle()"/>
                     </div>
                     <div class="text-muted">
                         @child.getDescription()

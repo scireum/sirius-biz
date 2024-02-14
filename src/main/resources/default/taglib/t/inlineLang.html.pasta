@@ -2,4 +2,4 @@
 <i:arg type="String" name="class" default="" />
 <i:arg type="boolean" name="short" default="false" />
 
-<t:lang lang="@lang" class="@apply('text-small mb-2 mr-2 %s', class)" short="short" />
+<t:lang lang="@lang" class="@apply('text-small mb-2 me-2 %s', class)" short="short" />

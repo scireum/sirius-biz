@@ -13,11 +13,9 @@
                     <input type="text" id="actionsQueryField"
                            class="form-control primary-autofocus-js"
                            placeholder="@i18n('NLS.searchkey')"/>
-                    <div class="input-group-append">
-                        <a class="btn btn-outline-secondary">
-                            <i class="fa fa-search"></i>
-                        </a>
-                    </div>
+                    <a class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-search"></i>
+                    </a>
                 </div>
             </div>
             <div class="col-4 col-xl-3 d-flex flex-row justify-content-end">
@@ -36,7 +34,7 @@
                     <i:for type="sirius.biz.web.Action" var="action" items="actionsPerCategory.get(category)">
                         <div class="action-js">
                             <div class="mt-3 mb-3 d-flex align-items-center">
-                                <div class="flex-grow-0 flex-shrink-0 pr-3 d-flex flex-column align-items-center"
+                                <div class="flex-grow-0 flex-shrink-0 pe-3 d-flex flex-column align-items-center"
                                      style="width:48px;">
                                     <a href="@action.getUrl()">
                                         <i style="font-size: 32px;"
@@ -45,7 +43,7 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <div>
-                                        <a href="@action.getUrl()" class="font-weight-bold label-js">
+                                        <a href="@action.getUrl()" class="fw-bold label-js">
                                             @action.getLabel()
                                         </a>
                                     </div>

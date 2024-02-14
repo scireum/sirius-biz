@@ -40,7 +40,7 @@
         <table class="table mt-4">
             <i:for type="Tuple" var="permissionAndDescription" items="sirius.web.security.Permissions.getAllPermissions()">
                 <tr>
-                    <td class="font-weight-bold">@permissionAndDescription.getFirst()</td>
+                    <td class="fw-bold">@permissionAndDescription.getFirst()</td>
                     <td>@permissionAndDescription.getSecond()</td>
                 </tr>
             </i:for>
@@ -53,7 +53,7 @@
                 <i:local name="label" value="sirius.web.security.Permissions.getTranslatedPermission(role)" />
                 <tr>
                     <td>
-                        <span class="text-nowrap font-weight-bold">@role</span>
+                        <span class="text-nowrap fw-bold">@role</span>
                         <i:if test="role != label">
                             <br><span class="text-muted text-nowrap">(@label)</span>
                         </i:if>
@@ -71,7 +71,7 @@
                 <i:local name="label" value="sirius.web.security.Permissions.getTranslatedPermission(role)" />
                 <tr>
                     <td>
-                        <span class="text-nowrap font-weight-bold">@role</span>
+                        <span class="text-nowrap fw-bold">@role</span>
                         <i:if test="role != label">
                             <br><span class="text-muted text-nowrap">(@label)</span>
                         </i:if>

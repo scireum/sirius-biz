@@ -49,12 +49,12 @@
             <i:for type="sirius.biz.tenants.flags.CustomizationFlag" var="flag" items="flags.getKnownFlags()">
                 <i:local name="enabledAndSource" value="flag.check()"/>
                 <tr>
-                    <td class="font-weight-bold">@flag.getName()</td>
-                    <td class="text-right">
+                    <td class="fw-bold">@flag.getName()</td>
+                    <td class="text-end">
                         <b class="@if (enabledAndSource.getFirst()) { sci-text-green-dark } else { sci-text-gray-darker} ">
                             @toUserString(enabledAndSource.getFirst())
                         </b>
-                        <span class="ml-1 text-small text-muted">@enabledAndSource.getSecond()</span>
+                        <span class="ms-1 text-small text-muted">@enabledAndSource.getSecond()</span>
                     </td>
                 </tr>
             </i:for>

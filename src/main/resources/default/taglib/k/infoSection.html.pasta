@@ -10,6 +10,6 @@
            anchor="@anchor"
            class="full-border border-sirius-blue-light"
            headingClass="text-sirius-blue-light"
-           headingIcon="fas fa-info-circle">
+           headingIcon="fa-solid fa-info-circle">
     <i:render name="body"/>
 </k:section>

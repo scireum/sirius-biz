@@ -17,12 +17,12 @@
                  data-type="KeyMetric"
                  data-provider="@metric.getProviderName()"
                  data-metric="@metric.getMetricName()"
-                 data-target="@metric.getTargetName()"
-                 data-toggle="tooltip"
-                 data-placement="top"
+                 data-bs-target="@metric.getTargetName()"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
                  title="@metric.getDescription()">
                 <div class="text-small text-ellipsis overflow-hidden flex-grow-0">@metric.getLabel()</div>
-                <div class="text-small font-weight-bold  text-right flex-grow-1 pl-2 pr-2 metric-value-js"></div>
+                <div class="text-small fw-bold text-end flex-grow-1 ps-2 pe-2 metric-value-js"></div>
                 <div>
                     <canvas style="width:100%; max-width: 32px" height="16"></canvas>
                 </div>

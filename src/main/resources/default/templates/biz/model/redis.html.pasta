@@ -21,11 +21,9 @@
                                name="query"
                                class="form-control primary-autofocus-js"
                                placeholder="@i18n('NLS.searchkey')"/>
-                        <div class="input-group-append">
-                            <a class="btn btn-outline-secondary" onclick="execute()">
-                                <i class="fa fa-search"></i>
-                            </a>
-                        </div>
+                        <a class="btn btn-outline-secondary" onclick="execute()">
+                            <i class="fa-solid fa-search"></i>
+                        </a>
                     </div>
                 </div>
                 <t:singleSelect name="pool" id="pool" class="col-2">
@@ -41,7 +39,7 @@
     <div class="card mb-2 d-none" id="resultBox">
         <div class="card-body">
             <div class="overflow-auto">
-                <div id="result" class="whitespace-pre-wrap text-monospace"></div>
+                <div id="result" class="whitespace-pre-wrap font-monospace"></div>
             </div>
         </div>
     </div>

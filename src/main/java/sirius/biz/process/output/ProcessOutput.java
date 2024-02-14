@@ -65,7 +65,7 @@ public class ProcessOutput extends Nested {
 
     public String getIcon() {
         if (isSystemOutput()) {
-            return "fa fa-lock";
+            return "fa-solid fa-lock";
         }
         return typeToIcons.computeIfAbsent(type, this::computeIcon);
     }
@@ -73,7 +73,7 @@ public class ProcessOutput extends Nested {
     private String computeIcon(String outputType) {
         return Optional.of(globalContext.getPart(outputType, ProcessOutputType.class))
                        .map(ProcessOutputType::getIcon)
-                       .orElse("fa fa-bars");
+                       .orElse("fa-solid fa-bars");
     }
 
     /**

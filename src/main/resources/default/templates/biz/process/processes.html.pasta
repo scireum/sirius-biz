@@ -14,7 +14,7 @@
                         framework="biz.jobs"
                         permission="permission-execute-jobs"
                         url="/jobs"
-                        icon="fas fa-external-link-alt"
+                        icon="fa-solid fa-external-link-alt"
                         labelKey="JobFactory.plural"/>
             </i:block>
         </t:pageHeader>
@@ -32,7 +32,7 @@
                     <t:datacard link="@apply('/ps/%s', process.getId())">
                         <i:block name="title">
                             <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
-                                <span class="pr-1"><i class="fa fa-spin fa-sync"></i></span>
+                                <span class="pe-1"><i class="fa-solid fa-spin fa-sync"></i></span>
                             </i:if>
                             @limit(process.getTitle(), 65)
                         </i:block>
@@ -68,20 +68,20 @@
                         </div>
                         <div class="mt-2">
                             <i:if test="process.getTenantId() != user().getTenantId()">
-                                <t:iconInlineInfo icon="fa fa-industry">
+                                <t:iconInlineInfo icon="fa-solid fa-industry">
                                     <t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()" />
                                 </t:iconInlineInfo>
                             </i:if>
-                            <t:iconInlineInfo icon="fa fa-user">
+                            <t:iconInlineInfo icon="fa-solid fa-user">
                                 <t:smartValue type="user-account" payload="@process.getUserId()" label="@process.getUserName()" />
                             </t:iconInlineInfo>
                             <i:if test="process.getStarted() != null">
                                 <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
-                                    <t:iconInlineInfo icon="fa fa-wave-square">
+                                    <t:iconInlineInfo icon="fa-solid fa-wave-square">
                                         <t:smartFormatTemporal date="process.getStarted()"/>
                                     </t:iconInlineInfo>
                                     <i:else>
-                                        <t:iconInlineInfo icon="fa fa-clock">
+                                        <t:iconInlineInfo icon="fa-solid fa-clock">
                                             <t:smartFormatTemporal date="process.getStarted()"/>
                                         </t:iconInlineInfo>
                                     </i:else>

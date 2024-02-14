@@ -42,7 +42,7 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa fa-code";
+        return "fa-solid fa-code";
     }
 
     /**
