@@ -25,14 +25,19 @@ public class LinkCellFormat implements CellFormat {
     protected static final String TYPE = "link";
     protected static final String KEY_URL = "url";
     protected static final String KEY_VALUE = "value";
+    protected static final String KEY_TARGET_BLANK = "targetBlank";
 
     @Override
     public String format(ObjectNode data) {
-        return "<a href=\""
-               + Strings.cleanup(data.path(KEY_URL).asText(), StringCleanup::escapeXml)
-               + "\" classes=\"link\" target=\"_blank\">"
-               + Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml)
-               + "</a>";
+        boolean newTab = data.get(KEY_TARGET_BLANK).asBoolean();
+        String html = "<a href=\""
+                      + Strings.cleanup(data.path(KEY_URL).asText(), StringCleanup::escapeXml)
+                      + "\" classes=\"link\" ";
+        if (newTab) {
+            html += "target=\"_blank\" ";
+        }
+        html += ">" + Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml) + "</a>";
+        return html;
     }
 
     @Override
