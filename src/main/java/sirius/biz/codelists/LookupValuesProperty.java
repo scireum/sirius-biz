@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Provides the propery used to handle {@link LookupValues lookup values} in database entities.
+ * Provides the property used to handle {@link LookupValues lookup values} in database entities.
  */
 public class LookupValuesProperty extends StringListProperty {
 
