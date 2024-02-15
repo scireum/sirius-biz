@@ -34,6 +34,7 @@ public class FieldDefinition {
 
     protected String name;
     protected String type;
+    protected String typeUrl;
     protected Supplier<String> label;
     protected boolean hidden;
     protected Set<String> aliases = new HashSet<>();
@@ -244,6 +245,17 @@ public class FieldDefinition {
     }
 
     /**
+     * Specifies the url to use for this field.
+     *
+     * @param typeUrl the url to link for this type
+     * @return the field itself for fluent method calls
+     */
+    public FieldDefinition withTypeUrl(String typeUrl) {
+        this.typeUrl = typeUrl;
+        return this;
+    }
+
+    /**
      * Adds a check for the field.
      *
      * @param check the check to add
@@ -407,6 +419,15 @@ public class FieldDefinition {
      */
     public String getType() {
         return type;
+    }
+
+    /**
+     * Returns the url to link for this type.
+     *
+     * @return the url to link for this type
+     */
+    public String getTypeUrl() {
+        return typeUrl;
     }
 
     /**

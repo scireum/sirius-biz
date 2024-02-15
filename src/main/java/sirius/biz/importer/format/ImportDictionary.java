@@ -8,6 +8,8 @@
 
 package sirius.biz.importer.format;
 
+import sirius.biz.analytics.reports.Cell;
+import sirius.biz.analytics.reports.Cells;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Monoflop;
@@ -658,8 +660,15 @@ public class ImportDictionary {
             report.addColumn("remarks", NLS.get("FieldDefinition.remarks"));
 
             getFields().stream().filter(field -> !field.isHidden()).forEach(field -> {
-                report.addCells(cells.of(field.getLabel()), cells.of(field.getType()), cells.list(field.getRemarks()));
+                report.addCells(cells.of(field.getLabel()), getTypeCell(cells, field), cells.list(field.getRemarks()));
             });
         });
+    }
+
+    private Cell getTypeCell(Cells cells, FieldDefinition field) {
+        if (Strings.isFilled(field.getTypeUrl())) {
+            return cells.link(field.getType(), field.getTypeUrl(), false);
+        }
+        return cells.of(field.getType());
     }
 }
