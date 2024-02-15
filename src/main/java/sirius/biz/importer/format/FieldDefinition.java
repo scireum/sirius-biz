@@ -214,6 +214,24 @@ public class FieldDefinition {
     }
 
     /**
+     * Helper to create a type description for a field with a value from a LookupTable.
+     *
+     * @return a description to be shown to the user
+     */
+    public static String typeLookupValueProperty() {
+        return NLS.get("FieldDefinition.typeLookupValueProperty");
+    }
+
+    /**
+     * Helper to create a type description for a field with values from a LookupTable.
+     *
+     * @return a description to be shown to the user
+     */
+    public static String typeLookupValuesProperty() {
+        return NLS.get("FieldDefinition.typeLookupValuesProperty");
+    }
+
+    /**
      * Helper to create a type description for a field with an unknown type.
      *
      * @return a description to be shown to the user
