@@ -48,6 +48,9 @@
                         class="btn btn-outline-secondary btn-reset-js mt-2 @if(!showResetButton) { d-none }">
                     @i18n("BlobRefField.resetButton")
                 </button>
+                <div id="saveHint" class="alert alert-warning mt-2 d-none">
+                    @i18n("StoredObject.saveHint")
+                </div>
                 <input @if (isFilled(formId)) { form="@formId" } type="hidden" name="@name" value="@value"/>
             </div>
         </div>
@@ -76,6 +79,7 @@
             const _inputField = _outerDiv.querySelector('input[type="hidden"]');
             const _previewContainer = _outerDiv.querySelector('.preview-container-js');
             const _fileNameContainer = _outerDiv.querySelector('.img-name');
+            const initialFileName = _fileNameContainer.textContent;
 
             function updatePreviewImage(src) {
                 _previewContainer.innerHTML = '';
@@ -119,6 +123,11 @@
                         _fileNameContainer.innerHTML = '<a href="' + json.downloadUrl + '">' + json.filename + '</a>';
                         _resetButton.classList.remove('d-none');
                         updatePreviewImage(json.downloadUrl);
+                        if (initialFileName !== json.filename) {
+                            document.getElementById('saveHint').classList.remove('d-none');
+                        } else {
+                            document.getElementById('saveHint').classList.add('d-none');
+                        }
                     });
                 });
             });
@@ -129,6 +138,11 @@
                 _fileNameContainer.innerHTML = '';
 
                 updatePreviewImage('___defaultPreview');
+                if (initialFileName !== '') {
+                    document.getElementById('saveHint').classList.remove('d-none');
+                } else {
+                    document.getElementById('saveHint').classList.add('d-none');
+                }
             }
 
             if (___urlAllowed) {
@@ -139,6 +153,11 @@
                     errorMsg: '@i18n("BlobRefField.malformedURL")'
                 }, function (url) {
                     updatePreviewImage(url);
+                    if (initialFileName !== '') {
+                        document.getElementById('saveHint').classList.remove('d-none');
+                    } else {
+                        document.getElementById('saveHint').classList.add('d-none');
+                    }
                 });
             }
 
