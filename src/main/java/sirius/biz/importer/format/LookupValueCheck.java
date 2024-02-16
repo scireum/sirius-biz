@@ -16,7 +16,7 @@ import sirius.kernel.nls.NLS;
  */
 public class LookupValueCheck implements ValueCheck {
 
-    boolean allowCustomValues;
+    private final boolean allowCustomValues;
 
     /**
      * Creates a new check which will be used to validate a lookup value.
