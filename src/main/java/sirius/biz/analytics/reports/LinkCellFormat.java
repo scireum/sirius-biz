@@ -30,14 +30,14 @@ public class LinkCellFormat implements CellFormat {
     @Override
     public String format(ObjectNode data) {
         boolean newTab = data.get(KEY_TARGET_BLANK).asBoolean();
-        String html = "<a href=\""
-                      + Strings.cleanup(data.path(KEY_URL).asText(), StringCleanup::escapeXml)
-                      + "\" classes=\"link\" ";
-        if (newTab) {
-            html += "target=\"_blank\" ";
-        }
-        html += ">" + Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml) + "</a>";
-        return html;
+        String keyUrl = Strings.cleanup(data.path(KEY_URL).asText(), StringCleanup::escapeXml);
+        String keyValue = Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml);
+        String newTabLink = " <i class=\"fa-regular fa-arrow-up-right-from-square\"></i>";
+        String html = """
+                <a href="%s" class="link" target="%s">%s%s</a>
+                """;
+
+        return Strings.apply(html, keyUrl, newTab ? "_blank" : "_self", keyValue, newTab ? newTabLink : "");
     }
 
     @Override
