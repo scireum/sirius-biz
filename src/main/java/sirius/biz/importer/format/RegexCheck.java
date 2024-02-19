@@ -38,7 +38,7 @@ public class RegexCheck extends StringCheck {
      * @param pattern      the {@link Pattern} which will be used to check the value
      * @param remark       the remark to show in the documentation. Can be <tt>null</tt> if there is no remark. This
      *                     value will be {@link NLS#smartGet(String) smart translated}
-     * @param errorMessage containts the error message to show for non matching inputs. This may contain
+     * @param errorMessage contains the error message to show for non matching inputs. This may contain
      *                     <tt>{@literal ${value}}</tt> which will be replaced by the actual value. Also, this will be
      *                     {@link NLS#smartGet(String) smart translated}
      */

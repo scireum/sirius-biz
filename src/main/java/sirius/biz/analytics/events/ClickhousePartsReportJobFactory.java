@@ -98,7 +98,7 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
         for (Row row : query.queryList()) {
             String tableName = row.getValue(COLUMN_TABLE).asString();
             report.addCells(cells.of(row.getValue(COLUMN_DATABASE).get()),
-                            cells.link(tableName, determineLinkToSizeChart(tableName)),
+                            cells.link(tableName, determineLinkToSizeChart(tableName), true),
                             cells.rightAligned(row.getValue(COLUMN_ROWS).getAmount()),
                             cells.rightAligned(NLS.formatSize(row.getValue(COLUMN_SIZE).asLong(0))),
                             cells.rightAligned(NLS.formatSize(row.getValue(COLUMN_DISK_SIZE).asLong(0))),

@@ -269,19 +269,21 @@ public class Cells {
     }
 
     /**
-     * Creates a link with the given label and url.
+     * Creates a link with the given label and url and allows to specify if the link should be opened in a new tab.
      *
-     * @param value the value / label to show
-     * @param url   the url of the link
+     * @param value       the value / label to show
+     * @param url         the url of the link
+     * @param targetBlank determines if the link should be opened in a new tab
      * @return a cell rendered as link
      */
-    public Cell link(Object value, String url) {
+    public Cell link(Object value, String url, boolean targetBlank) {
         if (Strings.isEmpty(value) || Strings.isEmpty(url)) {
             return of(value);
         }
 
         return new Cell(Json.createObject()
                             .put(KEY_TYPE, LinkCellFormat.TYPE)
+                            .put(LinkCellFormat.KEY_TARGET_BLANK, targetBlank)
                             .put(LinkCellFormat.KEY_URL, url)
                             .put(LinkCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
