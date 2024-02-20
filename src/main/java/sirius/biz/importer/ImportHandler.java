@@ -134,6 +134,13 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     E findAndLoad(Context data);
 
     /**
+     * Creates a new entity of the handled entity type.
+     *
+     * @return new entity instance
+     */
+    E newEntity();
+
+    /**
      * Tries to find an entity using the supplied <tt>data</tt> - creates, loads and persists a new entity if no match
      * was found.
      *
