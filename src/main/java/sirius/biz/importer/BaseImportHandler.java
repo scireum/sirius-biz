@@ -368,13 +368,9 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return tryFindInCache(data).orElseGet(() -> createOrUpdateNow(load(data, newEntity())));
     }
 
-    /**
-     * Creates a new entity of the handled entity type.
-     *
-     * @return new entity instance
-     */
+    @Override
     @SuppressWarnings("unchecked")
-    protected E newEntity() {
+    public E newEntity() {
         try {
             return (E) descriptor.getType().getConstructor().newInstance();
         } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
