@@ -20,7 +20,7 @@ services:
     hostname: mongo
 
   mariadb:
-    image: mariadb:10.11.5-jammy
+    image: mariadb:10.11.7-jammy
     ports:
       - "3306"
     environment:
