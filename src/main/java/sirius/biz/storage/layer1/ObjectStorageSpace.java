@@ -552,10 +552,10 @@ public abstract class ObjectStorageSpace {
     }
 
     private void handleDeliveryError(Response response, String objectId, Exception exception) {
-        if (canIgnoreException(exception, ClosedChannelException.class)
-            || canIgnoreException(exception,
-                                  ConnectionClosedException.class)
-            || canIgnoreException(exception, SocketException.class)) {
+        if (isExceptionOf(exception, ClosedChannelException.class)
+            || isExceptionOf(exception,
+                             ConnectionClosedException.class)
+            || isExceptionOf(exception, SocketException.class)) {
             // If the user unexpectedly closes the connection, we do not need to log an error...
             Exceptions.ignore(exception);
             return;
@@ -575,7 +575,7 @@ public abstract class ObjectStorageSpace {
                         .handle();
     }
 
-    private boolean canIgnoreException(Exception exception, Class<? extends Exception> clazz) {
+    private boolean isExceptionOf(Exception exception, Class<? extends Exception> clazz) {
         return clazz.isInstance(exception) || clazz.isInstance(exception.getCause());
     }
 
