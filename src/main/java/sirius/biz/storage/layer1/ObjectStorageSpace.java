@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -551,10 +552,10 @@ public abstract class ObjectStorageSpace {
     }
 
     private void handleDeliveryError(Response response, String objectId, Exception exception) {
-        if (exception instanceof ClosedChannelException
-            || exception.getCause() instanceof ClosedChannelException
-            || exception instanceof ConnectionClosedException
-            || exception.getCause() instanceof ConnectionClosedException) {
+        if (canIgnoreException(exception, ClosedChannelException.class)
+            || canIgnoreException(exception,
+                                  ConnectionClosedException.class)
+            || canIgnoreException(exception, SocketException.class)) {
             // If the user unexpectedly closes the connection, we do not need to log an error...
             Exceptions.ignore(exception);
             return;
@@ -572,6 +573,10 @@ public abstract class ObjectStorageSpace {
                                                 name,
                                                 response.getWebContext().getRequestedURI())
                         .handle();
+    }
+
+    private boolean canIgnoreException(Exception exception, Class<? extends Exception> clazz) {
+        return clazz.isInstance(exception) || clazz.isInstance(exception.getCause());
     }
 
     private void deliverLarge(Response response, String objectId) {
