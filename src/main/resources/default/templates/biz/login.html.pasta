@@ -1,6 +1,6 @@
 <i:arg type="String" name="originalUrl"/>
 <i:arg type="boolean" name="noindex"
-       default="@('/' != CallContext.getCurrent().get(WebContext.class).getRawRequestedURI())"/>
+       default="@('/' != WebContext.getCurrent().getRawRequestedURI())"/>
 
 <t:page titleKey="Model.login" noindex="@noindex">
     <i:block name="menu"></i:block>
@@ -30,7 +30,7 @@
                                        name="user"
                                        type="text"
                                        autocomplete="off"
-                                       value="@CallContext.getCurrent().get(WebContext.class).get('user').asString()"
+                                       value="@WebContext.getCurrent().get('user').asString()"
                                        class="form-control input-block-level"/>
                             </div>
                             <div class="form-group">

@@ -14,9 +14,8 @@
                            name="query"
                            id="query"
                            placeholder="Enter query here"
-                           class="form-control"
-                           value="@query"
-                           autofocus/>
+                           class="form-control primary-autofocus-js"
+                           value="@query"/>
                     <div class="input-group-append"
                          onclick="sirius.requestSubmitForm(document.querySelector('form.edit-form'))">
                     <span class="btn btn-outline-secondary">
@@ -51,7 +50,7 @@
             _editForm.action += '?query=' + queryString + '&class=' + clazz + `&limit=` + limit;
         });
         _editForm.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter') {
+            if (event.key === sirius.key.ENTER) {
                 sirius.requestSubmitForm(_editForm);
                 return false;
             }

@@ -1,4 +1,4 @@
-<i:arg type="String" name="uri" default="@CallContext.getCurrent().get(WebContext.class).getRequest().uri()"/>
+<i:arg type="String" name="uri" default="@WebContext.getCurrent().getRequest().uri()"/>
 <i:arg type="Object" name="target"/>
 
 <i:local name="explorer" value="part(sirius.biz.analytics.explorer.DataExplorerController.class)"/>

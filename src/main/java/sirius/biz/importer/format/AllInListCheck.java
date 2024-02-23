@@ -61,7 +61,7 @@ public class AllInListCheck extends ValueInListCheck {
 
         if (invalidItems.size() == 1) {
             throw new IllegalArgumentException(NLS.fmtr("ValueInListCheck.errorMsg")
-                                                  .setDirect("value", invalidItems.get(0))
+                                                  .setDirect("value", invalidItems.getFirst())
                                                   .format());
         } else {
             throw new IllegalArgumentException(NLS.fmtr("AllInListCheck.errorMsg")

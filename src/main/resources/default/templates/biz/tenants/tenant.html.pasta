@@ -63,35 +63,37 @@
             </i:if>
 
             <t:sidebarKeyMetrics target="@tenant"/>
+            <i:if test="@!tenant.isNew()">
+                <t:navbox labelKey="Model.links">
+                    <t:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getIdAsString())"
+                                  active="page == 'details'"/>
+                    <i:if test="tenant.getTenantData().getPackageData().hasAvailablePackagesOrUpgrades()">
+                        <t:navboxLink labelKey="PackageData.packageString"
+                                      url="@apply('/tenant/%s/package', tenant.getIdAsString())"
+                                      active="page == 'package'"/>
+                    </i:if>
+                    <i:if test="!controller.getPermissions().isEmpty()">
+                        <t:navboxLink labelKey="Tenant.permissions"
+                                      url="@apply('/tenant/%s/permissions', tenant.getIdAsString())"
+                                      active="page == 'permissions'"/>
+                    </i:if>
+                    <i:extensions target="tenant" point="sidebar-menu" tenant="tenant" controller="controller"
+                                  page="page"/>
+                    <t:navboxLink labelKey="Model.extended" url="@apply('/tenant/%s/extended', tenant.getIdAsString())"
+                                  active="page == 'extended'"/>
+                    <t:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getIdAsString())"
+                                  active="page == 'config'"/>
+                    <t:navboxLink labelKey="Model.saml" url="@apply('/tenant/%s/saml', tenant.getIdAsString())"
+                                  active="page == 'saml'"/>
+                    <i:extensions target="tenant" point="sidebar-menu-bottom" tenant="tenant" controller="controller"
+                                  page="page"/>
+                </t:navbox>
 
-            <t:navbox labelKey="Model.links">
-                <t:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getIdAsString())"
-                              active="page == 'details'"/>
-                <i:if test="tenant.getTenantData().getPackageData().hasAvailablePackagesOrUpgrades()">
-                    <t:navboxLink labelKey="PackageData.packageString"
-                                  url="@apply('/tenant/%s/package', tenant.getIdAsString())"
-                                  active="page == 'package'"/>
-                </i:if>
-                <i:if test="!controller.getPermissions().isEmpty()">
-                    <t:navboxLink labelKey="Tenant.permissions"
-                                  url="@apply('/tenant/%s/permissions', tenant.getIdAsString())"
-                                  active="page == 'permissions'"/>
-                </i:if>
-                <i:extensions target="tenant" point="sidebar-menu" tenant="tenant" controller="controller" page="page"/>
-                <t:navboxLink labelKey="Model.extended" url="@apply('/tenant/%s/extended', tenant.getIdAsString())"
-                              active="page == 'extended'"/>
-                <t:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getIdAsString())"
-                              active="page == 'config'"/>
-                <t:navboxLink labelKey="Model.saml" url="@apply('/tenant/%s/saml', tenant.getIdAsString())"
-                              active="page == 'saml'"/>
-                <i:extensions target="tenant" point="sidebar-menu-bottom" tenant="tenant" controller="controller"
-                              page="page"/>
-            </t:navbox>
+                <t:jobs target="tenant"/>
+                <t:charts target="tenant"/>
 
-            <t:jobs target="tenant"/>
-            <t:charts target="tenant"/>
-
-            <i:extensions target="tenant" point="sidebar" tenant="tenant" controller="controller" page="page"/>
+                <i:extensions target="tenant" point="sidebar" tenant="tenant" controller="controller" page="page"/>
+            </i:if>
         </i:block>
 
         <i:render name="body"/>

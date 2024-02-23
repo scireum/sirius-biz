@@ -2,10 +2,17 @@
            lang="en"
            parent="DJELK"
            title="Customization Flags"
-           permissions="flag-system-tenant"
->
+           permissions="flag-system-tenant">
     <i:block name="description">Permits to enable or disable certain functionalities for certain user groups.</i:block>
-    <k:section heading="Theory of Operation">
+
+    <i:block name="sidebar">
+        <k:toc>
+            <k:tocLink link="#theory-of-operation">Theory of Operation</k:tocLink>
+            <k:tocLink link="#current-state">Current State</k:tocLink>
+        </k:toc>
+    </i:block>
+
+    <k:section heading="Theory of Operation" anchor="theory-of-operation">
         Permits to disable or enable specific functions based on the current user, scope, browser setting etc.
         <p>
             This is mainly intended for migration projects where functionality needs either to be enabled for specific
@@ -34,7 +41,7 @@
             levels.
         </p>
     </k:section>
-    <k:section heading="Current State">
+    <k:section heading="Current State" anchor="current-state">
         The following flags are available:
 
         <i:local name="flags" value="part(sirius.biz.tenants.flags.CustomizationFlags.class)"/>

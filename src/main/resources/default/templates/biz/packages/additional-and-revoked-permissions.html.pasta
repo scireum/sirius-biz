@@ -9,7 +9,7 @@
         <table class="table">
             <thead>
             <tr>
-                <th style="vertical-align: top">
+                <th class="col-8" style="vertical-align: top">
                     <div>@i18n("Packages.permission.name")</div>
                     <div class="text-small text-muted">@i18n("Packages.permission.description")</div>
                 </th>

@@ -50,11 +50,13 @@ public class DeleteExpiredProcessesTask implements EndOfDayTask {
         elastic.select(Process.class)
                .eq(Process.STATE, ProcessState.TERMINATED)
                .where(Elastic.FILTERS.lte(Process.EXPIRES, LocalDate.now()))
-               .iterateAll(this::deleteProcess);
+               .streamBlockwise()
+               .forEach(this::deleteProcess);
 
         elastic.select(Process.class)
                .eq(Process.STATE, ProcessState.STANDBY)
-               .iterateAll(this::deleteExpiredStandbyLogs);
+               .streamBlockwise()
+               .forEach(this::deleteExpiredStandbyLogs);
     }
 
     private void deleteProcess(Process process) {

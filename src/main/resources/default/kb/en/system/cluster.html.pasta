@@ -3,15 +3,24 @@
            parent="DJELK"
            title="Cluster Overview"
            permissions="flag-system-tenant"
-           crossReferences="SHJEK"
->
+           crossReferences="SHJEK">
     <i:block name="description">Describes the functionality which comes with the cluster view.</i:block>
-    <k:section>
+
+    <i:block name="sidebar">
+        <k:toc>
+            <k:tocLink link="#common">Common</k:tocLink>
+            <k:tocLink link="#nodes">Nodes</k:tocLink>
+            <k:tocLink link="#background-jobs">Background Jobs</k:tocLink>
+            <k:tocLink link="#locks">Locks</k:tocLink>
+        </k:toc>
+    </i:block>
+
+    <k:section heading="Common" anchor="common">
         The <a href="/system/cluster" target="_blank">Cluster View</a> can be used to view all nodes which are visible
         to the cluster. It also shows all background tasks and their state/configuration on an individual node. Finally
         a list of cluster-wide locks is shown.
     </k:section>
-    <k:section heading="Nodes">
+    <k:section heading="Nodes" anchor="nodes">
         <p>
             The node list shows the software version and uptime of each node. This also permits to remove a stale node from
             the cluster (Note: If the node is still physically present, it will re-appear quickly). It also permits to
@@ -24,7 +33,7 @@
             <a href="/system/api/cluster" target="_blank">Cluster Health API</a>.
         </p>
     </k:section>
-    <k:section heading="Background Jobs">
+    <k:section heading="Background Jobs" anchor="background-jobs">
         Lists all jobs which can run in the background. These are:
         <ul>
             <li><b>Background Loops</b>, which more or less run constantly in back background.</li>
@@ -45,7 +54,7 @@
             This can be used to setup the cluster topology so that specific jobs only run on chosen nodes.
         </p>
     </k:section>
-    <k:section heading="Locks">
+    <k:section heading="Locks" anchor="locks">
         Show all system-wide obtained locks. Note that the <a href="/system/console" target="_blank">console</a> command
         <k:inlineCode>locks</k:inlineCode> shows an equivalent output and also permits to kill a lock forcefully.
     </k:section>

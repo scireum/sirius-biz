@@ -4,8 +4,12 @@
 <script type="text/javascript">
     sirius.ready(function () {
         function onChange() {
-            const formData = getFormData(sirius.querySelector(".edit-form"));
-            sirius.getJSON("/job/params/___job.getName()", formData).then(handleParameterUpdates);
+            return fetch("/job/params/___job.getName()", {
+                method: "post",
+                body: new FormData(sirius.querySelector(".edit-form"))
+            }).then(function (response) {
+                return response.json();
+            }).then(handleParameterUpdates);
         }
 
         function handleParameterUpdates(json) {

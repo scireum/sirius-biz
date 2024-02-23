@@ -42,7 +42,7 @@ import java.util.Optional;
 /**
  * Helps for extract the current {@link UserAccount} and {@link Tenant}.
  * <p>
- * Also some boilerplate methods are provided to perform some assertions.
+ * Also, some boilerplate methods are provided to perform some assertions.
  *
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <T> specifies the effective entity type used to represent Tenants
@@ -97,7 +97,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     /**
      * Returns the current user or throws an exception if no user is currently available.
      *
-     * @return the currently logged in user
+     * @return the currently logged-in user
      */
     @Nonnull
     public U getRequiredUser() {
@@ -127,13 +127,13 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
      */
     @Nonnull
     public Optional<T> getCurrentTenant() {
-        return getCurrentUser().flatMap(u -> Optional.ofNullable(u.getTenant().fetchValue()));
+        return fetchCachedTenant(UserContext.getCurrentUser().getTenantId());
     }
 
     /**
-     * Returns the tenant of the currently logged in user or throws an exception if no user is present.
+     * Returns the tenant of the currently logged-in user or throws an exception if no user is present.
      *
-     * @return the tenant of the currently logged in user
+     * @return the tenant of the currently logged-in user
      */
     @Nonnull
     public T getRequiredTenant() {
@@ -237,7 +237,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     /**
      * Applies an appropriate filter to the given query to only return entities which belong to the current tenant.
      *
-     * @param qry the query to extent
+     * @param qry the query to extend
      * @param <E> the type of entities processed by the query
      * @param <Q> the type of the query which is being extended
      * @return the query with an additional constraint filtering on the current tenant
@@ -561,12 +561,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
         UserContext userContext = UserContext.get();
         UserInfo currentUser = userContext.getUser();
         try {
-            userContext.setCurrentUser(UserInfo.Builder.createUser("ADMIN")
-                                                       .withUsername("Administrator")
-                                                       .withTenantId(tenantId)
-                                                       .withTenantName(tenantName)
-                                                       .withEveryPermission(true)
-                                                       .build());
+            userContext.setCurrentUser(UserInfo.Builder.createSyntheticAdminUser(tenantId, tenantName).build());
             return task.create();
         } finally {
             userContext.setCurrentUser(currentUser);

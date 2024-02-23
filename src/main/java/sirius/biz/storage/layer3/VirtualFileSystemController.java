@@ -10,7 +10,6 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.storage.layer2.Blob;
-import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tycho.QuickAction;
 import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
@@ -51,7 +50,7 @@ public class VirtualFileSystemController extends BizController {
     /**
      * Permissions required to view files.
      */
-    private static final String PERMISSION_VIEW_FILES = "permission-view-files";
+    public static final String PERMISSION_VIEW_FILES = "permission-view-files";
 
     @Part
     private VirtualFileSystem vfs;
@@ -324,7 +323,7 @@ public class VirtualFileSystemController extends BizController {
      */
     @LoginRequired
     @Routed("/fs/unlock")
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    @Permission(VirtualFileSystem.PERMISSION_UNLOCK_FILES)
     public void unlock(WebContext webContext) {
         VirtualFile file = vfs.resolve(webContext.get("path").asString());
         if (!file.exists()) {

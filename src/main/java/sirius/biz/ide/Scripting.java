@@ -182,7 +182,7 @@ public class Scripting implements InterconnectHandler {
                                                event.path(TASK_TIMESTAMP).asLong(),
                                                event.path(TASK_MESSAGE).asText(null)));
             if (messages.size() > MAX_MESSAGES) {
-                messages.remove(0);
+                messages.removeFirst();
             }
         }
     }
@@ -227,7 +227,7 @@ public class Scripting implements InterconnectHandler {
         logInTranscript(jobNumber,
                         Strings.apply("Starting execution on %s (Thread Id: %s / Thread Name: %s)",
                                       CallContext.getNodeName(),
-                                      Thread.currentThread().getId(),
+                                      Thread.currentThread().threadId(),
                                       Thread.currentThread().getName()));
         try {
             Callable callable = compileScript(event);

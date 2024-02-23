@@ -101,7 +101,14 @@
                                             </a>
                                         </div>
                                         <div>
-                                            <small class="text-muted">@child.description()</small>
+                                            <small class="text-muted">
+                                                <i:if test="isFilled(child.htmlDescription())">
+                                                    <i:raw>@child.htmlDescription()</i:raw>
+                                                    <i:else>
+                                                        @child.description()
+                                                    </i:else>
+                                                </i:if>
+                                            </small>
                                         </div>
                                     </td>
                                     <td class="text-right">
@@ -115,7 +122,7 @@
                                     <td class="text-right">
                                         <t:additionalActions labelKey="template.html.additionalActions"
                                                              labelClass="d-none d-xl-inline-block">
-                                            <i:if test="!child.readOnly()">
+                                            <i:if test="!child.readOnly() || child.isDirectory()">
                                                 <t:dropdownSection>
                                                     <i:local name="quickActions"
                                                              value="@controller.resolveQuickActionsForFile(child)"/>
@@ -142,7 +149,7 @@
                                                 </i:if>
                                                 <i:if test="!child.isDirectory()">
                                                     <t:dropdownItem
-                                                            url="@apply('javascript:copyToClipboard(\'%s\')', child.path().replace('\'', '\\\''))"
+                                                            url="@apply('javascript:sirius.copyToClipboard(\'%s\')', child.path().replace('\'', '\\\''))"
                                                             icon="fa fa-copy" labelKey="VFSController.copyPath"/>
                                                 </i:if>
                                             </t:dropdownSection>
@@ -155,7 +162,7 @@
                                                 </t:dropdownSection>
                                             </i:if>
 
-                                            <t:permission permission="flag-system-administrator">
+                                            <t:permission permission="permission-unlock-files">
                                                 <i:if test="child.readOnly()">
                                                     <t:dropdownItem
                                                             url="@apply('/fs/unlock?path=%s', urlEncode(child.path()))"
@@ -250,23 +257,6 @@
             modalElement.on('shown.bs.modal', function () {
                 modalElement.find("#select-file-modal-search-filter").focus();
             }).modal('show');
-        }
-
-        function copyToClipboard(value) {
-            if (!navigator.clipboard) {
-                fallbackCopyToClipboard(value);
-            } else {
-                navigator.clipboard.writeText(value)
-            }
-        }
-
-        function fallbackCopyToClipboard(value) {
-            const fakeElem = document.createElement('textarea');
-            fakeElem.value = value;
-            document.body.appendChild(fakeElem);
-            fakeElem.select();
-            document.execCommand('copy');
-            document.body.removeChild(fakeElem);
         }
     </script>
 </t:page>

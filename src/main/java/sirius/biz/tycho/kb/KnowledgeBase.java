@@ -301,6 +301,6 @@ public class KnowledgeBase {
      * @return the default fallback language or <tt>null</tt> if no fallback language is specified
      */
     public String fetchDefaultFallbackLanguage() {
-        return !fallbackLanguages.isEmpty() ? fallbackLanguages.get(0) : null;
+        return !fallbackLanguages.isEmpty() ? fallbackLanguages.getFirst() : null;
     }
 }

@@ -14,7 +14,7 @@
     <div class="card-body">
         <div class="d-flex justify-content-between @if (!isFilled(heading)) { flex-row-reverse }">
             <i:if test="isFilled(heading)">
-                <h5 id="@anchor" class="card-title @headingClass">
+                <h5 id="@anchor" class="card-title @headingClass" style="scroll-margin-top: 100px;">
                     <i:if test="isFilled(headingIcon)">
                         <i class="@headingIcon"></i>
                     </i:if>
@@ -28,7 +28,7 @@
                     sirius.ready(function () {
                         document.getElementById('@copyAnchorId').addEventListener('click', function () {
                             const signedArticleId = document.getElementById('urlField').value;
-                            copyToClipboard(signedArticleId + '#@anchor')
+                            sirius.copyToClipboard(signedArticleId + '#@anchor')
 
                             clearMessages();
                             addSuccessMessage('@i18n("KnowledgeBase.urlClipboardSuccess")');

@@ -30,7 +30,7 @@ public abstract class DeleteMongoEntitiesTask<E extends MongoTenantAware> extend
 
     @Override
     public void execute(ProcessContext processContext, Tenant<?> tenant) {
-        getQuery(tenant).iterateAll(entity -> {
+        getQuery(tenant).streamBlockwise().forEach(entity -> {
             Watch watch = Watch.start();
             beforeDelete(entity);
             mango.delete(entity);

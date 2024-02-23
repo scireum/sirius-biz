@@ -27,10 +27,10 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Responsible for loading available work into our local thread pool.
  * <p>
- * This loop checks if regular intervals if work if our local thread pool has free resources and also if work is
- * available and schedules tasks accordingly. Also note, that once a task is completed,
- * {@link #executeWork(DistributedTasks.DistributedTask)} immediatelly tries to find another task. Therefore the
- * performance is not limited by the rather slow running background loop.
+ * This loop checks in regular intervals if our local thread pool has free resources and also if work is available, and
+ * schedules tasks accordingly. Also note, that once a task is completed,
+ * {@link #executeWork(DistributedTasks.DistributedTask)} immediately tries to find another task. Therefore, the
+ * performance is not limited by the rather slow-running background loop.
  */
 @Register
 public class WorkLoaderLoop extends BackgroundLoop {

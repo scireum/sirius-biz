@@ -120,7 +120,7 @@ public class TimeSeries {
      * @return the start of the period to query
      */
     public LocalDate getStart() {
-        return ranges.get(0).getFirst();
+        return ranges.getFirst().getFirst();
     }
 
     /**
@@ -141,7 +141,7 @@ public class TimeSeries {
      * @return the end of the last range to query
      */
     public LocalDate getEnd() {
-        return ranges.get(ranges.size() - 1).getSecond();
+        return ranges.getLast().getSecond();
     }
 
     public Granularity getGranularity() {

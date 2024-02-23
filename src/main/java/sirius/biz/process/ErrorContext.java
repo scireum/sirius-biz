@@ -45,7 +45,7 @@ public class ErrorContext implements SubContext {
      * @return the current error context
      */
     public static ErrorContext get() {
-        return CallContext.getCurrent().get(ErrorContext.class);
+        return CallContext.getCurrent().getOrCreateSubContext(ErrorContext.class);
     }
 
     /**

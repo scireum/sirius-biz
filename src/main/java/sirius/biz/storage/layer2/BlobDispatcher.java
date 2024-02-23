@@ -19,6 +19,8 @@ import sirius.web.http.Response;
 import sirius.web.http.WebContext;
 import sirius.web.http.WebDispatcher;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Optional;
 
 /**
@@ -162,11 +164,15 @@ public class BlobDispatcher implements WebDispatcher {
      * @param blobUri the parsed blob URI
      */
     private void physicalDelivery(WebContext request, BlobUri blobUri) {
-        if (checkHashInvalid(request, blobUri.getAccessToken(), blobUri.getPhysicalKey(), blobUri.getStorageSpace())) {
+        Response response = request.respondWith();
+        Integer cacheSeconds = computeCacheDurationFromHash(response,
+                                                            blobUri.getAccessToken(),
+                                                            blobUri.getPhysicalKey(),
+                                                            blobUri.getStorageSpace());
+        if (cacheSeconds == null) {
             return;
         }
-
-        Response response = request.respondWith().infinitelyCached();
+        response.cachedForSeconds(cacheSeconds);
 
         if (blobUri.isDownload()) {
             response.download(blobUri.getFilename());
@@ -182,20 +188,42 @@ public class BlobDispatcher implements WebDispatcher {
     }
 
     /**
-     * Checks if the provided accessToken is invalid.
+     * Checks if the provided accessToken is invalid and return the cache time in seconds based on the hash validity.
      *
-     * @param request     the request to handle
+     * @param response    the response to return
      * @param accessToken the security token to verify
      * @param key         the key to verify
      * @param space       the space which is accessed
-     * @return <tt>true</tt> if the accessToken is invalid, <tt>false</tt> otherwise
+     * @return the cache time in seconds or <tt>null</tt> if the hash is invalid
      */
-    private boolean checkHashInvalid(WebContext request, String accessToken, String key, String space) {
-        if (!utils.verifyHash(key, accessToken, blobStorage.getSpace(space).getUrlValidityDays())) {
-            request.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
-            return true;
+    private Integer computeCacheDurationFromHash(Response response, String accessToken, String key, String space) {
+        BlobStorageSpace storageSpace = blobStorage.getSpace(space);
+        Optional<Integer> optionalHashDays = utils.verifyHash(key, accessToken, storageSpace.getUrlValidityDays());
+        if (optionalHashDays.isEmpty()) {
+            response.error(HttpResponseStatus.UNAUTHORIZED);
+            return null;
         }
-        return false;
+
+        int hashDays = optionalHashDays.get();
+        if (hashDays == Integer.MAX_VALUE) {
+            // Detected a eternallyValid hash, cache indefinitely
+            return Response.HTTP_CACHE_INFINITE;
+        } else if (hashDays > 0) {
+            // Detected a hash in the future, cache for the remaining days
+            return computeCacheInSeconds(hashDays);
+        } else {
+            // Detected a hash in the past. Subtract the amount of days from the limit defined by the space
+            return computeCacheInSeconds(storageSpace.getUrlValidityDays() + hashDays);
+        }
+    }
+
+    private int computeCacheInSeconds(int days) {
+        LocalTime now = LocalDateTime.now().toLocalTime();
+        int secondsToMidnight = 86400 - (now.getSecond() + now.getMinute() * 60 + now.getHour() * 3600);
+        if (days == 0) {
+            return secondsToMidnight;
+        }
+        return secondsToMidnight + (days - 1) * 86400;
     }
 
     /**
@@ -209,22 +237,26 @@ public class BlobDispatcher implements WebDispatcher {
         String variant = blobUri.getVariant();
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
 
-        if (checkHashInvalid(request, blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace())) {
+        Response response = request.respondWith();
+        Integer cacheSeconds = computeCacheDurationFromHash(response,
+                                                            blobUri.getAccessToken(),
+                                                            effectiveKey,
+                                                            blobUri.getStorageSpace());
+        if (cacheSeconds == null) {
             return;
         }
+        response.cachedForSeconds(cacheSeconds);
 
         BlobStorageSpace storageSpace = blobStorage.getSpace(blobUri.getStorageSpace());
-        Response response = request.respondWith();
 
         if (blobUri.isCacheable()) {
-            response.cached();
-
             // If a virtual request is marked as cacheable, we try to redirect to the proper physical blob key
             // as this will remain in cache much longer (and the redirect itself will also be cached). The additional
             // HTTP round-trip for the redirect shouldn't hurt too much, as it is most probably optimized away due to
             // keep-alive. However, using a physical delivery with infinite cache settings will enable any downstream
             // reverse-proxies to maximize their cache utilization...
-            URLBuilder.UrlResult urlResult = buildPhysicalRedirectUrl(storageSpace, blobUri);
+            URLBuilder.UrlResult urlResult =
+                    buildPhysicalRedirectUrl(storageSpace, blobUri, cacheSeconds == Response.HTTP_CACHE_INFINITE);
 
             if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
                 response.redirectTemporarily(urlResult.url());
@@ -251,9 +283,14 @@ public class BlobDispatcher implements WebDispatcher {
                              request::markAsLongCall);
     }
 
-    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace, BlobUri blobUri) {
+    private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace,
+                                                                 BlobUri blobUri,
+                                                                 boolean eternallyValid) {
         URLBuilder urlBuilder = new URLBuilder(storageSpace, blobUri.getBlobKey());
 
+        if (eternallyValid) {
+            urlBuilder.eternallyValid();
+        }
         if (blobUri.isDownload()) {
             urlBuilder.withFileName(blobUri.getFilename()).asDownload();
         }

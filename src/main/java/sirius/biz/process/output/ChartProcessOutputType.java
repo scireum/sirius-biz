@@ -69,19 +69,19 @@ public class ChartProcessOutputType implements ProcessOutputType {
     }
 
     @Override
-    public void render(WebContext ctx, Process process, ProcessOutput output) {
+    public void render(WebContext webContext, Process process, ProcessOutput output) {
         ElasticQuery<ProcessLog> query = elastic.select(ProcessLog.class)
                                                 .eq(ProcessLog.OUTPUT, output.getName())
                                                 .eq(ProcessLog.PROCESS, process)
                                                 .orderAsc(ProcessLog.SORT_KEY);
 
-        ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
-        ph.withContext(ctx);
-        ctx.respondWith()
-           .template("/templates/biz/process/process-output-chart.html.pasta",
-                     this,
-                     process,
-                     ph.asPage(),
-                     output.getName());
+        ElasticPageHelper<ProcessLog> pageHelper = ElasticPageHelper.withQuery(query);
+        pageHelper.withContext(webContext);
+        webContext.respondWith()
+                  .template("/templates/biz/process/process-output-chart.html.pasta",
+                            this,
+                            process,
+                            pageHelper.asPage(),
+                            output.getName());
     }
 }

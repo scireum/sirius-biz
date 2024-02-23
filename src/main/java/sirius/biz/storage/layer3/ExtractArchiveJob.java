@@ -145,9 +145,10 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                                              overrideMode,
                                                              targetDirectory,
                                                              flattenDirs));
+            process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
+        } catch (Exception exception) {
+            process.log(ProcessLog.error().withMessage(exception.getMessage()));
         }
-
-        process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
 
         if (!process.isErroneous() && process.require(deleteArchiveParameter).booleanValue()) {
             process.log(ProcessLog.info().withNLSKey("ExtractArchiveJob.deletingArchive"));

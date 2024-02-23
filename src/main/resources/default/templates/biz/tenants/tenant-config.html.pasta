@@ -22,6 +22,7 @@
                         } else {
                             addInfoMessage('@i18n("BasicController.changesSaved")');
                         }
+                        window.scrollTo(0, 0);
                         editor.resize();
                     });
             });

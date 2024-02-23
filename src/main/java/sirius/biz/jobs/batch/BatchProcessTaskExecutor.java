@@ -39,15 +39,14 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
     @Override
     public void executeWork(ObjectNode context) throws Exception {
         String factoryId = context.path(BatchProcessJobFactory.CONTEXT_JOB_FACTORY).asText(null);
+        String processId = context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null);
 
         setupTaskContext(factoryId);
 
         if (shouldExecutePartially()) {
-            processes.partiallyExecute(context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null),
-                                       process -> partiallyExecuteInProcess(factoryId, process));
+            processes.partiallyExecute(processId, process -> partiallyExecuteInProcess(factoryId, process));
         } else {
-            processes.execute(context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null),
-                              process -> executeInProcess(factoryId, process));
+            processes.execute(processId, process -> executeInProcess(factoryId, process));
         }
     }
 

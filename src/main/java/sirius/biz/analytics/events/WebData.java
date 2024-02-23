@@ -13,7 +13,6 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Strings;
 import sirius.web.http.UserAgent;
 import sirius.web.http.WebContext;
@@ -84,16 +83,16 @@ public class WebData extends Composite {
 
     @BeforeSave
     protected void fill() {
-        WebContext ctx = CallContext.getCurrent().get(WebContext.class);
-        if (ctx.isValid()) {
+        WebContext webContext = WebContext.getCurrent();
+        if (webContext.isValid()) {
             if (Strings.isEmpty(url)) {
-                url = ctx.getRequestedURL();
+                url = webContext.getRequestedURL();
             }
             if (Strings.isEmpty(userAgent)) {
-                persistUserAgent(ctx.getUserAgent());
+                persistUserAgent(webContext.getUserAgent());
             }
-            if (ctx.getTTFBMillis() > 0 && responseTime == null) {
-                responseTime = ctx.getTTFBMillis();
+            if (webContext.getTTFBMillis() > 0 && responseTime == null) {
+                responseTime = webContext.getTTFBMillis();
             }
         }
     }

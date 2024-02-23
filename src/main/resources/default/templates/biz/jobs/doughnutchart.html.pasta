@@ -1,0 +1,24 @@
+<i:arg type="sirius.biz.jobs.interactive.InteractiveJobFactory" name="job"/>
+<i:arg type="Map" name="context"/>
+<i:arg type="String" name="labels"/>
+<i:arg type="String" name="dataset"/>
+<i:arg type="List" name="additionalMetrics"/>
+
+<i:invoke template="/templates/biz/jobs/interactive-job.html.pasta"
+          job="job"
+          context="context"
+          additionalMetrics="additionalMetrics">
+    <div style="height: 60vh;">
+        <canvas id="chart" class="d-block"></canvas>
+    </div>
+
+    <script type="text/javascript">
+        @raw {
+            sirius.ready(function () {
+                doughnutChart('#chart', [ @labels ], [ @dataset ], {
+                    maintainAspectRatio: false
+                });
+            });
+        }
+    </script>
+</i:invoke>

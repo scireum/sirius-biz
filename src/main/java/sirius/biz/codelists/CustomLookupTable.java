@@ -13,13 +13,16 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
  * Combines two {@link LookupTable lookup tables} into a single lookup table.
  * <p>
  * Using this approach, the custom table is always queried first and then complemented by the base table.
+ * If there is a custom entry with the same key as in the base table, the custom entry is used.
  */
 class CustomLookupTable extends LookupTable {
 
@@ -87,23 +90,29 @@ class CustomLookupTable extends LookupTable {
 
     @Override
     protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
+        Set<String> codes = new HashSet<>();
         return Stream.concat(customTable.performSuggest(Limit.UNLIMITED, searchTerm, language),
                              baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language))
+                     .filter(entry -> codes.add(entry.getCode()))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
     protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
+        Set<String> codes = new HashSet<>();
         return Stream.concat(customTable.performSearch(searchTerm, Limit.UNLIMITED, language),
                              baseTable.performSearch(searchTerm, Limit.UNLIMITED, language))
+                     .filter(entry -> codes.add(entry.getCode()))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
     public Stream<LookupTableEntry> scan(String language, Limit limit) {
+        Set<String> codes = new HashSet<>();
         return Stream.concat(customTable.scan(language, Limit.UNLIMITED), baseTable.scan(language, Limit.UNLIMITED))
+                     .filter(entry -> codes.add(entry.getCode()))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
@@ -115,7 +124,9 @@ class CustomLookupTable extends LookupTable {
 
     @Override
     protected Stream<LookupTableEntry> performQuery(String language, String lookupPath, String lookupValue) {
+        Set<String> codes = new HashSet<>();
         return Stream.concat(customTable.performQuery(language, lookupPath, lookupValue),
-                             baseTable.performQuery(language, lookupPath, lookupValue));
+                             baseTable.performQuery(language, lookupPath, lookupValue))
+                     .filter(entry -> codes.add(entry.getCode()));
     }
 }

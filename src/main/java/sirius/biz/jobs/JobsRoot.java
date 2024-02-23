@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  * Provides a {@link VFSRoot} to trigger jobs via the built-in {@link VirtualFileSystem}.
  * <p>
  * This will provide a <b>jobs</b> folder (if {@link JobPresets} are enabled and the current user is allowed to
- * execute jobs). Within this directory, there is a sub-directory for each job which accepts a file. Each job folder
+ * execute jobs). Within this directory, there is a subdirectory for each job which accepts a file. Each job folder
  * contains on folder per preset (as any other parameter than the file has to be specified elsewhere).
  * <p>
  * If a file is uploaded into a preset folder it is put into the {@link TmpRoot temporary space} and a job

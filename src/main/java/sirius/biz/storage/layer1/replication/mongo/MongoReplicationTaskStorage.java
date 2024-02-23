@@ -115,7 +115,7 @@ public class MongoReplicationTaskStorage
             MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
             query.eq(MongoReplicationTask.FAILED, false);
             query.eq(MongoReplicationTask.TRANSACTION_ID, txnId);
-            query.iterateAll(this::executeTask);
+            query.streamBlockwise().forEach(this::executeTask);
         }
     }
 
@@ -157,8 +157,17 @@ public class MongoReplicationTaskStorage
                                        .set(MongoReplicationTask.EARLIEST_EXECUTION,
                                             LocalDateTime.now().plus(retryReplicationDelay))
                                        .inc(MongoReplicationTask.FAILURE_COUNTER, 1);
-                if (task.getFailureCounter() + 1 > maxReplicationAttempts) {
+                if (!task.isPerformDelete() && fetchIsEquivalentDeletionTaskQueued(task)) {
                     updater.set(MongoReplicationTask.FAILED, true);
+
+                    StorageUtils.LOG.WARN(
+                            "Layer 1/replication: A storage replication task (%s) was marked as failed as a deletion task for the same object is already queued: Primary space: %s, object: %s",
+                            task.getIdAsString(),
+                            task.getPrimarySpace(),
+                            task.getObjectKey());
+                } else if (task.getFailureCounter() + 1 > maxReplicationAttempts) {
+                    updater.set(MongoReplicationTask.FAILED, true);
+
                     Exceptions.handle()
                               .to(StorageUtils.LOG)
                               .error(ex)
@@ -175,5 +184,13 @@ public class MongoReplicationTaskStorage
                 Exceptions.handle(StorageUtils.LOG, e);
             }
         }
+    }
+
+    private boolean fetchIsEquivalentDeletionTaskQueued(MongoReplicationTask task) {
+        return mango.select(MongoReplicationTask.class)
+                    .eq(MongoReplicationTask.PRIMARY_SPACE, task.getPrimarySpace())
+                    .eq(MongoReplicationTask.OBJECT_KEY, task.getObjectKey())
+                    .eq(MongoReplicationTask.PERFORM_DELETE, true)
+                    .exists();
     }
 }

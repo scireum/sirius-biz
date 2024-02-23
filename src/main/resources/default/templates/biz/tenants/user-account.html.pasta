@@ -136,22 +136,24 @@
 
             <t:sidebarKeyMetrics target="@account"/>
 
-            <t:navbox labelKey="Model.links">
-                <t:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getIdAsString())"
-                              active="page == 'details'"/>
-                <t:permission permission="feature-user-account-config">
-                    <t:navboxLink labelKey="Model.config"
-                                  url="@apply('/user-account/%s/config', account.getIdAsString())"
-                                  active="page == 'config'"/>
-                </t:permission>
+            <i:if test="@!account.isNew()">
+                <t:navbox labelKey="Model.links">
+                    <t:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getIdAsString())"
+                                  active="page == 'details'"/>
+                    <t:permission permission="feature-user-account-config">
+                        <t:navboxLink labelKey="Model.config"
+                                      url="@apply('/user-account/%s/config', account.getIdAsString())"
+                                      active="page == 'config'"/>
+                    </t:permission>
 
-                <i:extensions target="user-account" point="sidebar-menu" account="account" page="page"/>
-            </t:navbox>
+                    <i:extensions target="user-account" point="sidebar-menu" account="account" page="page"/>
+                </t:navbox>
 
-            <t:jobs target="@account"/>
-            <t:charts target="@account"/>
+                <t:jobs target="@account"/>
+                <t:charts target="@account"/>
 
-            <i:extensions target="user-account" point="sidebar" account="account" page="page"/>
+                <i:extensions target="user-account" point="sidebar" account="account" page="page"/>
+            </i:if>
         </i:block>
 
 

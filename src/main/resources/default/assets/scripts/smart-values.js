@@ -14,7 +14,7 @@ function openSmartValues(elementId, type, payload, signature) {
         $(document).off('keyup.smart-values');
     });
     $(document).on('keyup.smart-values', function (event) {
-        if (event.keyCode === 27) {
+        if (event.key === sirius.key.ESCAPE) {
             $('#' + elementId).tooltip('hide');
             $(document).off('click.smart-values');
             $(document).off('keyup.smart-values');
@@ -40,7 +40,7 @@ function openSmartValues(elementId, type, payload, signature) {
             '       <span class="pl-2">{{label}}</span>' +
             '   </a>' +
             '   {{#copyPayload}}' +
-            '       <a href="javascript:copyToClipboard(\'{{copyPayload}}\')" class="smart-value-link btn btn-link ml-2 text-small">' +
+            '       <a href="javascript:sirius.copyToClipboard(\'{{copyPayload}}\')" class="smart-value-link btn btn-link ml-2 text-small">' +
             '          <i class="far fa-clipboard"></i>' +
             '       </a>' +
             '   {{/copyPayload}}' +
@@ -55,4 +55,3 @@ function openSmartValues(elementId, type, payload, signature) {
         $('#' + elementId).attr('data-original-title', html).tooltip('show');
     });
 }
-

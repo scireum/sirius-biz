@@ -40,6 +40,11 @@ import java.util.function.Function;
 public class VirtualFileSystem {
 
     /**
+     * Contains the permission required to unlock files.
+     */
+    public static final String PERMISSION_UNLOCK_FILES = "permission-unlock-files";
+
+    /**
      * Defines the name of the sub scope used by the {@link sirius.biz.storage.layer3.downlink.ftp.FTPServer} and
      * {@link sirius.biz.storage.layer3.downlink.ssh.SSHServer} which grants access per FTP, SFTP or SCP.
      */
@@ -61,6 +66,9 @@ public class VirtualFileSystem {
 
     @PriorityParts(VFSRoot.class)
     private List<VFSRoot> rootProviders;
+
+    @PriorityParts(DeletionCheckHandler.class)
+    private List<DeletionCheckHandler> deletionCheckHandlers;
 
     /**
      * Inline implementation which delegates all calls to the collected <tt>rootProviders</tt>.
@@ -201,5 +209,15 @@ public class VirtualFileSystem {
         return virtualFile.tryAs(BlobStorageSpace.class)
                           .filter(storageSpace -> storageSpace.getRetentionDays() > 0)
                           .isPresent();
+    }
+
+    /**
+     * Checks if the given file is considered "in use".
+     *
+     * @param virtualFile the {@link VirtualFile} to check
+     * @return <tt>true</tt> if the file is considered "in use"
+     */
+    public boolean isInUse(VirtualFile virtualFile) {
+        return deletionCheckHandlers.stream().anyMatch(handler -> handler.isInUse(virtualFile));
     }
 }

@@ -273,7 +273,7 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     /**
      * Generates a string representation of this user.
-     * By default this uses the full Name {@link PersonData#toString()}
+     * By default, this uses the full Name {@link PersonData#toString()}
      * If {@link #hasName} is false, returns {@link LoginData#getUsername()}.
      * If this is also empty, {@link #email)} is returned.
      * As last option an anonymous identifier is used.
@@ -297,7 +297,7 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     /**
      * Generates a short name, for this user.
-     * By default this is "Firstname Lastname", if the lastname is filled.
+     * By default, this is "Firstname Lastname", if the lastname is filled.
      * If {@link #hasName} is false, {@link #toString} is called.
      *
      * @return a short name for this user
@@ -487,7 +487,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return a URLBuilder which is used to fetch the small image of this user
      */
     public URLBuilder fetchSmallUrl() {
-        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
     }
 
     /**
@@ -496,7 +496,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return a URLBuilder which is used to fetch the medium image of this user
      */
     public URLBuilder fetchMediumUrl() {
-        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
     }
 
     /**
@@ -505,6 +505,6 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return a URLBuilder which is used to fetch the large image of this user
      */
     public URLBuilder fetchLargeUrl() {
-        return image.url().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_LARGE);
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_LARGE);
     }
 }

@@ -30,7 +30,7 @@ public abstract class DeleteSQLEntitiesTask<E extends SQLTenantAware> extends De
 
     @Override
     public void execute(ProcessContext processContext, Tenant<?> tenant) throws Exception {
-        getQuery(tenant).iterateAll(entity -> {
+        getQuery(tenant).streamBlockwise().forEach(entity -> {
             Watch watch = Watch.start();
             beforeDelete(entity);
             oma.delete(entity);
