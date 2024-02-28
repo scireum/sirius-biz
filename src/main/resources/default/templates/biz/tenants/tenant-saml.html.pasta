@@ -18,19 +18,21 @@
             <t:textfield class="col-12"
                          name="tenantData_samlIssuerName" value="@tenant.getTenantData().getSamlIssuerName()"
                          labelKey="TenantData.samlIssuerName" helpKey="TenantData.samlIssuerName.help"/>
-            <t:textfield class="col-12"
-                         name="tenantData_samlFingerprint"
-                         id="tenantData_samlFingerprint"
-                         value="@tenant.getTenantData().getSamlFingerprint()"
-                         labelKey="TenantData.samlFingerprint"
-                         helpKey="TenantData.samlFingerprint.help"/>
-            <script>
-                const _inputElement = document.getElementById('tenantData_samlFingerprint');
-                _inputElement.addEventListener("input", () => {
-                    const regex = new RegExp("[^A-Za-z0-9,]", "g")
-                    _inputElement.value = _inputElement.value.replace(regex, "")
-                })
-            </script>
+            <div class="form-group col-12">
+                <label class="form-label">
+                    @i18n("TenantData.samlFingerprint")
+                </label>
+                <div>
+                    <input type="text"
+                           name="tenantData_samlFingerprint"
+                           pattern="^[a-zA-Z0-9,]*$"
+                           class="form-control"
+                           value="@tenant.getTenantData().getSamlFingerprint()"/>
+                </div>
+                <small class="form-text text-muted">
+                    @i18n("TenantData.samlFingerprint.help")
+                </small>
+            </div>
         </div>
         <t:formBar backButton="false"/>
     </t:editForm>
