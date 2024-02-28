@@ -238,7 +238,7 @@ public class StorageUtils {
         if (Strings.isEmpty(name)) {
             return true;
         }
-        return SANITIZE_ILLEGAL_FILE_CHARS.split(name).length > 1 || SANITIZE_SLASHES.split(name).length > 1;
+        return SANITIZE_ILLEGAL_FILE_CHARS.matcher(name).find() || SANITIZE_SLASHES.matcher(name).find();
     }
 
     /**
