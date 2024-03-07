@@ -26,7 +26,7 @@
 
 <i:if test="value.isEnabled()">
     <div id="@wrapperId"
-         class="form-group mb-3 0@UserContext.get().signalFieldError(name) @class">
+         class="form-group mb-3 @UserContext.get().signalFieldError(name) @class">
         <i:if test="isFilled(label) || forceLabel">
             <label class="form-label"><span>@label</span></label>
         </i:if>
