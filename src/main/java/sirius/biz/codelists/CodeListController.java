@@ -121,17 +121,16 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
      *
      * @param webContext the current request
      * @param codeListId the code list of the entry
+     * @param entryId    the id of the entry or new if a new entry should be created
      */
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
-    @Routed("/code-list/:1/entry")
-    public void codeListEntry(WebContext webContext, String codeListId) {
+    @Routed("/code-list/:1/entry/:2")
+    public void codeListEntry(WebContext webContext, String codeListId, String entryId) {
         L codeList = findForTenant(codeLists.getListType(), codeListId);
         assertNotNew(codeList);
 
-        String code =
-                webContext.get(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).toString()).asString();
-        E codeListEntry = findOrCreateEntry(codeList, code);
+        E codeListEntry = find(codeLists.getEntryType(), entryId);
         setOrVerify(codeListEntry, codeListEntry.getCodeList(), codeList);
 
         boolean requestHandled =
@@ -142,8 +141,6 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
                       .template("/templates/biz/codelists/code-list-entry.html.pasta", codeList, codeListEntry);
         }
     }
-
-    protected abstract E findOrCreateEntry(L codeList, String code);
 
     /**
      * Deletes a code list.
