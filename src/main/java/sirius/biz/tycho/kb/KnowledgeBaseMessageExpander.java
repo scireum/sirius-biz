@@ -23,22 +23,24 @@ import java.util.regex.Pattern;
 @Register
 public class KnowledgeBaseMessageExpander implements MessageExpander {
 
-    @Part
-    private KnowledgeBase knowledgeBase;
-
     private static final Pattern LOCKED_KBA_PATTERN =
             Pattern.compile("\\[(.*?)kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?(.*)]");
     private static final Pattern KBA_PATTERN = Pattern.compile("kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?");
+
+    private static final String EXPANDED_LINK_TEMPLATE = """
+            <span class="d-inline-flex flex-row align-items-baseline">
+                <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s%s">%s</a>
+            </span>
+            """;
+
+    @Part
+    private KnowledgeBase knowledgeBase;
 
     @Override
     public String expand(String message) {
         message = LOCKED_KBA_PATTERN.matcher(message).replaceAll(match -> {
             return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(2), false).map(kba -> {
-                return match.group(1) + Strings.apply("""
-                                                              <span class="d-inline-flex flex-row align-items-baseline">
-                                                                  <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s%s">%s</a>
-                                                              </span>
-                                                              """,
+                return match.group(1) + Strings.apply(EXPANDED_LINK_TEMPLATE,
                                                       kba.getLanguage(),
                                                       kba.getArticleId(),
                                                       Optional.ofNullable(match.group(3)).orElse(""),
@@ -47,11 +49,7 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
         });
         return KBA_PATTERN.matcher(message).replaceAll(match -> {
             return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(1), true).map(kba -> {
-                return Strings.apply("""
-                                             <span class="d-inline-flex flex-row align-items-baseline">
-                                                 <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s%s">%s</a>
-                                             </span>
-                                             """,
+                return Strings.apply(EXPANDED_LINK_TEMPLATE,
                                      kba.getLanguage(),
                                      kba.getArticleId(),
                                      Optional.ofNullable(match.group(2)).orElse(""),
