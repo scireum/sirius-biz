@@ -17,7 +17,7 @@ import sirius.web.controller.MessageExpander;
 import java.util.regex.Pattern;
 
 /**
- * Expands blocks like <tt>kba:ABDCE</tt> or <tt>[... kba:ABDCE]</tt> into proper links to a {@link KnowledgeBaseEntry}.
+ * Expands blocks like <tt>kba:ABDCE#section-anchor</tt> or <tt>[... kba:ABDCE#section-anchor ...]</tt> into proper links to a {@link KnowledgeBaseEntry}.
  */
 @Register
 public class KnowledgeBaseMessageExpander implements MessageExpander {
