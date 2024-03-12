@@ -14,6 +14,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.MessageExpander;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -25,7 +26,8 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
     @Part
     private KnowledgeBase knowledgeBase;
 
-    private static final Pattern LOCKED_KBA_PATTERN = Pattern.compile("\\[(.*?)kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?(.*)]");
+    private static final Pattern LOCKED_KBA_PATTERN =
+            Pattern.compile("\\[(.*?)kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?(.*)]");
     private static final Pattern KBA_PATTERN = Pattern.compile("kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?");
 
     @Override
@@ -39,7 +41,7 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
                                                               """,
                                                       kba.getLanguage(),
                                                       kba.getArticleId(),
-                                                      match.group(3),
+                                                      Optional.ofNullable(match.group(3)).orElse(""),
                                                       kba.getTitle()) + match.group(4);
             }).orElse("");
         });
@@ -49,7 +51,11 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
                                              <span class="d-inline-flex flex-row align-items-baseline">
                                                  <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s%s">%s</a>
                                              </span>
-                                             """, kba.getLanguage(), kba.getArticleId(), match.group(2), kba.getTitle());
+                                             """,
+                                     kba.getLanguage(),
+                                     kba.getArticleId(),
+                                     Optional.ofNullable(match.group(2)).orElse(""),
+                                     kba.getTitle());
             }).orElse("kba:" + match.group());
         });
     }
