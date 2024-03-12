@@ -14,6 +14,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.MessageExpander;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -39,22 +40,22 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
     @Override
     public String expand(String message) {
         message = LOCKED_KBA_PATTERN.matcher(message).replaceAll(match -> {
-            return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(2), false).map(kba -> {
-                return match.group(1) + Strings.apply(EXPANDED_LINK_TEMPLATE,
-                                                      kba.getLanguage(),
-                                                      kba.getArticleId(),
-                                                      Optional.ofNullable(match.group(3)).orElse(""),
-                                                      kba.getTitle()) + match.group(4);
-            }).orElse("");
+            return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(2), false)
+                                .map(kba -> match.group(1) + renderTemplate(kba, match.group(3)) + match.group(4))
+                                .orElse("");
         });
         return KBA_PATTERN.matcher(message).replaceAll(match -> {
-            return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(1), true).map(kba -> {
-                return Strings.apply(EXPANDED_LINK_TEMPLATE,
-                                     kba.getLanguage(),
-                                     kba.getArticleId(),
-                                     Optional.ofNullable(match.group(2)).orElse(""),
-                                     kba.getTitle());
-            }).orElse("kba:" + match.group());
+            return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(1), true)
+                                .map(kba -> renderTemplate(kba, match.group(2)))
+                                .orElse("kba:" + match.group());
         });
+    }
+
+    private static String renderTemplate(KnowledgeBaseArticle kba, @Nullable String anchor) {
+        return Strings.apply(EXPANDED_LINK_TEMPLATE,
+                             kba.getLanguage(),
+                             kba.getArticleId(),
+                             Optional.ofNullable(anchor).orElse(""),
+                             kba.getTitle());
     }
 }
