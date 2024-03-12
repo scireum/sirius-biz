@@ -25,8 +25,8 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
     @Part
     private KnowledgeBase knowledgeBase;
 
-    private static final Pattern LOCKED_KBA_PATTERN = Pattern.compile("\\[(.*?)kba:([a-zA-Z0-9]+)(.*)]");
-    private static final Pattern KBA_PATTERN = Pattern.compile("kba:([a-zA-Z0-9]+)");
+    private static final Pattern LOCKED_KBA_PATTERN = Pattern.compile("\\[(.*?)kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?(.*)]");
+    private static final Pattern KBA_PATTERN = Pattern.compile("kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?");
 
     @Override
     public String expand(String message) {
@@ -34,21 +34,22 @@ public class KnowledgeBaseMessageExpander implements MessageExpander {
             return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(2), false).map(kba -> {
                 return match.group(1) + Strings.apply("""
                                                               <span class="d-inline-flex flex-row align-items-baseline">
-                                                                  <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s">%s</a>
+                                                                  <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s%s">%s</a>
                                                               </span>
                                                               """,
                                                       kba.getLanguage(),
                                                       kba.getArticleId(),
-                                                      kba.getTitle()) + match.group(3);
+                                                      match.group(3),
+                                                      kba.getTitle()) + match.group(4);
             }).orElse("");
         });
         return KBA_PATTERN.matcher(message).replaceAll(match -> {
             return knowledgeBase.resolve(NLS.getCurrentLanguage(), match.group(1), true).map(kba -> {
                 return Strings.apply("""
                                              <span class="d-inline-flex flex-row align-items-baseline">
-                                                 <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s">%s</a>
+                                                 <i class="fa-solid fa-lightbulb"></i><a class="ps-1" href="/kba/%s/%s%s">%s</a>
                                              </span>
-                                             """, kba.getLanguage(), kba.getArticleId(), kba.getTitle());
+                                             """, kba.getLanguage(), kba.getArticleId(), match.group(2), kba.getTitle());
             }).orElse("kba:" + match.group());
         });
     }
