@@ -21,16 +21,20 @@
         <a class="btn btn-outline-secondary" id="@id-addon"><i class="fa-solid fa-bolt"></i></a>
     </i:block>
     <i:block name="script">
-        const helper = document.getElementById('___id-addon');
-        helper.addEventListener('click', function () {
-            new LookupTableInfo({
-                tableName: '___table',
-                labelFormat: '___values.getDisplay()',
-                codeCallback: function (code, name) {
-                    autocomplete.addToken({value: code, text: name});
-                }
+            const helper = document.getElementById('___id-addon');
+            helper.addEventListener('click', function () {
+                new LookupTableInfo({
+                    tableName: '___table',
+                    labelFormat: '___values.getDisplay()',
+                    codeCallback: function (code, name) {
+                        if (!autocomplete.val().includes(code)) {
+                            autocomplete.addToken({value: code, text: name});
+                        } else {
+                            autocomplete.select.removeTokenWithText(name);
+                        }
+                    }
+                });
             });
-        });
     </i:block>
     <i:for var="tuple"
            type="Tuple"
