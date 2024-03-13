@@ -287,7 +287,7 @@ public class Processes {
         if (process != null) {
             modify(process.getId(), p -> p.getState() == ProcessState.STANDBY, p -> p.setStarted(LocalDateTime.now()));
         } else {
-            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier.get());
+            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier);
         }
 
         partiallyExecute(process.getId(), task);
@@ -326,13 +326,16 @@ public class Processes {
     /**
      * Tries to fetch the appropriate standby process while holding a lock and also after waiting an appropriate amount of time.
      *
-     * @param type       the type of the standby process to find or create
-     * @param title      the title of the process
-     * @param tenantId   the id of the tenant used to find the appropriate process
-     * @param tenantName the name of the tenant
+     * @param type               the type of the standby process to find or create
+     * @param title              the title of the process
+     * @param tenantId           the id of the tenant used to find the appropriate process
+     * @param tenantNameSupplier a supplier which yields the name of the tenant if the process has to be created
      * @return the process which was either resolved after waiting an appropriate amount of time or created
      */
-    private Process fetchStandbyProcessInLock(String type, String title, String tenantId, String tenantName) {
+    private Process fetchStandbyProcessInLock(String type,
+                                              String title,
+                                              String tenantId,
+                                              Supplier<String> tenantNameSupplier) {
         String lockName = LOCK_CREATE_STANDBY_PROCESS + "-" + type + "-" + tenantId;
         if (!locks.tryLock(lockName, Duration.ofSeconds(30))) {
             throw Exceptions.handle()
@@ -340,7 +343,7 @@ public class Processes {
                                     "Cannot acquire a lock (%s} to create or fetch a standby process of type %s for %s (%s)",
                                     lockName,
                                     type,
-                                    tenantName,
+                                    tenantNameSupplier.get(),
                                     tenantId)
                             .handle();
         }
@@ -358,7 +361,7 @@ public class Processes {
                 Wait.millis(300);
             }
 
-            return createStandbyProcessInLock(type, title, tenantId, tenantName);
+            return createStandbyProcessInLock(type, title, tenantId, tenantNameSupplier.get());
         } finally {
             locks.unlock(lockName);
         }
