@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -138,6 +139,19 @@ public abstract class ArchiveImportJob extends FileImportJob {
 
         return Arrays.stream(fileNamesToCheck)
                      .allMatch(fileName -> zipEntries.stream().anyMatch(entry -> entry.getName().equals(fileName)));
+    }
+
+    /**
+     * Streams all entries of the archive.
+     * <p>
+     * Technically, this method just wraps the method {@link #extractAllFiles(Consumer)} into a {@link Stream}.
+     *
+     * @return a stream of all entries in the archive
+     */
+    protected Stream<ExtractedZipFile> streamEntries() {
+        Stream.Builder<ExtractedZipFile> builder = Stream.builder();
+        extractAllFiles(builder);
+        return builder.build();
     }
 
     /**
