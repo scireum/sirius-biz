@@ -20,6 +20,7 @@ import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
@@ -116,16 +117,20 @@ public abstract class ArchiveImportJob extends FileImportJob {
 
     protected void handleMissingFile(String fileName, boolean isRequired) {
         if (isRequired) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("ArchiveImportJob.errorMsg.requiredFileMissing")
-                            .set("fileName", fileName)
-                            .handle();
+            throw createMissingFileException(fileName);
         } else {
             process.log(ProcessLog.info()
                                   .withNLSKey("ArchiveImportJob.errorMsg.optionalFileMissing")
                                   .withContext("fileName", fileName)
                                   .withMessageType("$ArchiveImportJob.errorMsg.optionalFileMissing.messageType"));
         }
+    }
+
+    protected HandledException createMissingFileException(String fileName) {
+        return Exceptions.createHandled()
+                         .withNLSKey("ArchiveImportJob.errorMsg.requiredFileMissing")
+                         .set("fileName", fileName)
+                         .handle();
     }
 
     /**
