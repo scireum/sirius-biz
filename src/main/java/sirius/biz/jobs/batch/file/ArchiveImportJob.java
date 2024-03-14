@@ -20,6 +20,7 @@ import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
@@ -31,6 +32,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -115,16 +117,20 @@ public abstract class ArchiveImportJob extends FileImportJob {
 
     protected void handleMissingFile(String fileName, boolean isRequired) {
         if (isRequired) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("ArchiveImportJob.errorMsg.requiredFileMissing")
-                            .set("fileName", fileName)
-                            .handle();
+            throw createMissingFileException(fileName);
         } else {
             process.log(ProcessLog.info()
                                   .withNLSKey("ArchiveImportJob.errorMsg.optionalFileMissing")
                                   .withContext("fileName", fileName)
                                   .withMessageType("$ArchiveImportJob.errorMsg.optionalFileMissing.messageType"));
         }
+    }
+
+    protected HandledException createMissingFileException(String fileName) {
+        return Exceptions.createHandled()
+                         .withNLSKey("ArchiveImportJob.errorMsg.requiredFileMissing")
+                         .set("fileName", fileName)
+                         .handle();
     }
 
     /**
@@ -138,6 +144,19 @@ public abstract class ArchiveImportJob extends FileImportJob {
 
         return Arrays.stream(fileNamesToCheck)
                      .allMatch(fileName -> zipEntries.stream().anyMatch(entry -> entry.getName().equals(fileName)));
+    }
+
+    /**
+     * Streams all entries of the archive.
+     * <p>
+     * Technically, this method just wraps the method {@link #extractAllFiles(Consumer)} into a {@link Stream}.
+     *
+     * @return a stream of all entries in the archive
+     */
+    protected Stream<ExtractedZipFile> streamEntries() {
+        Stream.Builder<ExtractedZipFile> builder = Stream.builder();
+        extractAllFiles(builder);
+        return builder.build();
     }
 
     /**
