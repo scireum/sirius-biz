@@ -184,12 +184,8 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                   .forEach(crossReference -> entry.getRelatesTo().modify().add(crossReference));
 
             elastic.update(entry);
-        } catch (Exception e) {
-            Exceptions.handle()
-                      .to(KnowledgeBase.LOG)
-                      .error(e)
-                      .withSystemErrorMessage("Failed to load article %s: %s (%s)", templatePath)
-                      .handle();
+        } catch (Exception exception) {
+            KnowledgeBase.LOG.SEVERE("Failed to load article %s, reason: %s", templatePath, exception.getMessage());
         }
     }
 
