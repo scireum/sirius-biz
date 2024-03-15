@@ -185,11 +185,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
 
             elastic.update(entry);
         } catch (Exception e) {
-            Exceptions.handle()
-                      .to(KnowledgeBase.LOG)
-                      .error(e)
-                      .withSystemErrorMessage("Failed to load article %s: %s (%s)", templatePath)
-                      .handle();
+            KnowledgeBase.LOG.SEVERE("Failed to load article %s, reason: %s", templatePath, e.getMessage());
         }
     }
 
