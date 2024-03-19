@@ -364,8 +364,8 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         Watch watch = Watch.start();
         try {
             export.addListRow(exportAsRow(null, entity));
-        } catch (IOException e) {
-            throw process.handle(e);
+        } catch (IOException exception) {
+            throw process.handle(exception);
         } finally {
             process.addTiming(descriptor.getPluralLabel(), watch.elapsedMillis());
         }
@@ -400,8 +400,8 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
                                       .asSystemMessage());
             }
             this.importer.close();
-        } catch (IOException e) {
-            process.handle(e);
+        } catch (IOException exception) {
+            process.handle(exception);
         }
         super.close();
     }

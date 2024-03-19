@@ -184,10 +184,10 @@ class BridgeFile implements FtpFile {
                 }
             }
             return this.delete();
-        } catch (IOException e) {
+        } catch (IOException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer3/FTP: Cannot move file %s to %s - %s (%s)",
                                               getAbsolutePath(),
                                               destination.getAbsolutePath());

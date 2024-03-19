@@ -370,11 +370,11 @@ public class Transfer {
             try (InputStream input = sourceFile.createInputStream()) {
                 destinationFile.consumeStream(input, sourceFile.size());
                 return;
-            } catch (Exception e) {
-                if (attempt.shouldThrow(e)) {
+            } catch (Exception exception) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage(
                                             "Layer 3/VFS: An error occurred when transferring '%s' to '%s': %s (%s)",
                                             sourceFile.path(),

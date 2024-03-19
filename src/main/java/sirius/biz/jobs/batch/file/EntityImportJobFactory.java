@@ -66,8 +66,8 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
             ImportDictionary dictionary = importer.getImportDictionary(getImportType());
             enhanceDictionary(importer, dictionary);
             return dictionary;
-        } catch (Exception e) {
-            throw Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 

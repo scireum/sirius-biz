@@ -93,8 +93,8 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
             try {
                 buffer.write(data);
                 return data.length;
-            } catch (IOException e) {
-                throw new SevenZipException(e);
+            } catch (IOException exception) {
+                throw new SevenZipException(exception);
             }
         };
     }
@@ -136,8 +136,8 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
                 try {
                     // the string has an encoding error with very very very high probability, repair it...
                     return new String(filePath.getBytes(StandardCharsets.ISO_8859_1), "IBM437");
-                } catch (UnsupportedEncodingException e) {
-                    Exceptions.ignore(e);
+                } catch (UnsupportedEncodingException exception) {
+                    Exceptions.ignore(exception);
                     break;
                 }
             }

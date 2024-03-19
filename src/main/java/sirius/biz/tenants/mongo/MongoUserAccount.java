@@ -163,10 +163,10 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
                  .where(MongoUserAccount.ID, id)
                  .executeForOne(MongoUserAccount.class);
             TenantUserManager.flushCacheForUserAccount(this);
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to update user preference '%s' to '%s' for %s: %s (%s)",
                                                     key,
                                                     value,

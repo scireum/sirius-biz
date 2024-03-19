@@ -85,10 +85,10 @@ public class LookupValuesProperty extends StringListProperty {
         Object target = accessPath.apply(entity);
         try {
             return (LookupValues) field.get(target);
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException exception) {
             throw Exceptions.handle()
                             .to(Mixing.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot read property '%s' (from '%s'): %s (%s)",
                                                     getName(),
                                                     getDefinition())

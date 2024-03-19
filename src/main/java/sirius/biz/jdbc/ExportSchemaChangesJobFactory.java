@@ -63,8 +63,8 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
     private void safeCloseWriter(PrintWriter writer, ProcessContext processContext) {
         try {
             writer.close();
-        } catch (Exception e) {
-            processContext.handle(e);
+        } catch (Exception exception) {
+            processContext.handle(exception);
         }
     }
 
@@ -73,8 +73,8 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
         try {
             process.log(ProcessLog.info().withFormattedMessage("Creating export for realm '%s'", realm));
             return new PrintWriter(new OutputStreamWriter(process.addFile(realm + ".sql")));
-        } catch (IOException e) {
-            throw process.handle(e);
+        } catch (IOException exception) {
+            throw process.handle(exception);
         }
     }
 

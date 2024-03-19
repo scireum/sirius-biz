@@ -87,8 +87,8 @@ class NoopShell implements AsyncCommand {
             outputStream.writeBuffer(future.getBuffer());
             readBuffer.clear();
             inputStream.read(readBuffer).addListener(this::processInput);
-        } catch (IOException e) {
-            Exceptions.ignore(e);
+        } catch (IOException exception) {
+            Exceptions.ignore(exception);
             exitCallback.onExit(-1);
         }
     }

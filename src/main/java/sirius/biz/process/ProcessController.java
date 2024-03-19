@@ -266,8 +266,8 @@ public class ProcessController extends BizController {
             }
 
             handleDefaultAction(webContext, log, action, returnUrl);
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
             webContext.respondWith().redirectToGet(returnUrl);
         }
     }
@@ -335,8 +335,8 @@ public class ProcessController extends BizController {
                                        .withTextMessage(NLS.fmtr("ProcessController.unknownOutput")
                                                            .set("output", name)
                                                            .format()));
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
             webContext.respondWith().redirectToGet("/ps/" + processId);
         }
     }

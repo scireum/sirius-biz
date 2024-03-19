@@ -40,8 +40,8 @@ public class StorageCleanupTask implements EndOfDayTask {
         if (blobStorage != null) {
             try {
                 blobStorage.getSpaces().forEach(BlobStorageSpace::runCleanup);
-            } catch (Exception e) {
-                Exceptions.handle(Log.BACKGROUND, e);
+            } catch (Exception exception) {
+                Exceptions.handle(Log.BACKGROUND, exception);
             }
         }
     }

@@ -97,10 +97,10 @@ public class MongoReplicationTaskStorage
                  .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                  .where(MongoReplicationTask.ID, task.getId())
                  .executeForOne(MongoReplicationTask.class);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 1/replication: Failed to mark MongoDB replication task %s as scheduled: %s (%s)",
                               task.getId())
@@ -147,7 +147,7 @@ public class MongoReplicationTaskStorage
                                                       task.getContentLength(),
                                                       task.isPerformDelete());
             mango.delete(task);
-        } catch (Exception ex) {
+        } catch (Exception exception) {
             try {
                 Updater updater = mongo.update()
                                        .where(MongoReplicationTask.ID, task.getId())
@@ -170,7 +170,7 @@ public class MongoReplicationTaskStorage
 
                     Exceptions.handle()
                               .to(StorageUtils.LOG)
-                              .error(ex)
+                              .error(exception)
                               .withSystemErrorMessage(
                                       "Layer 1/replication: A storage replication task (%s) ultimately failed: Primary space: %s, object: %s - %s (%s)",
                                       task.getIdAsString(),
@@ -180,8 +180,8 @@ public class MongoReplicationTaskStorage
                 }
 
                 updater.executeForOne(MongoReplicationTask.class);
-            } catch (Exception e) {
-                Exceptions.handle(StorageUtils.LOG, e);
+            } catch (Exception innerException) {
+                Exceptions.handle(StorageUtils.LOG, innerException);
             }
         }
     }

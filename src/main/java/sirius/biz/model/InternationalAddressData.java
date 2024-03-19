@@ -101,11 +101,11 @@ public class InternationalAddressData extends AddressData {
     public void verifyCountry(@Nullable String fieldLabel) {
         try {
             country.verifyValue();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.createHandled()
                             .withNLSKey("AddressData.invalidCountry")
                             .set("name", determineFieldLabel(fieldLabel))
-                            .set("error", e.getMessage())
+                            .set("error", exception.getMessage())
                             .handle();
         }
     }
@@ -123,10 +123,10 @@ public class InternationalAddressData extends AddressData {
     public void validateCountry(@Nullable String fieldLabel, Consumer<String> validationMessageConsumer) {
         try {
             country.verifyValue();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             validationMessageConsumer.accept(NLS.fmtr("AddressData.invalidCountry")
                                                 .set("name", determineFieldLabel(fieldLabel))
-                                                .set("error", e.getMessage())
+                                                .set("error", exception.getMessage())
                                                 .format());
         }
     }
@@ -153,8 +153,8 @@ public class InternationalAddressData extends AddressData {
                                 .set("zip", getZip())
                                 .handle();
             }
-        } catch (PatternSyntaxException e) {
-            Exceptions.handle(e);
+        } catch (PatternSyntaxException exception) {
+            Exceptions.handle(exception);
         }
     }
 
@@ -180,8 +180,8 @@ public class InternationalAddressData extends AddressData {
                                                     .set("zip", getZip())
                                                     .format());
             }
-        } catch (PatternSyntaxException e) {
-            Exceptions.handle(e);
+        } catch (PatternSyntaxException exception) {
+            Exceptions.handle(exception);
         }
     }
 

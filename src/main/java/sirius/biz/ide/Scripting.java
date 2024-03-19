@@ -209,10 +209,10 @@ public class Scripting implements InterconnectHandler {
         if (tenants != null) {
             try {
                 tenants.runAsAdmin(() -> handleTaskForNode(event, jobNumber));
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(Log.SYSTEM)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage("A fatal error occurred in task %s: %s (%s)", jobNumber)
                           .handle();
             }
@@ -234,10 +234,10 @@ public class Scripting implements InterconnectHandler {
 
             TaskContext.get().setAdapter(new JobTaskContextAdapter(this, jobNumber));
             callable.call(new SimpleEnvironment());
-        } catch (CompileException | ScriptingException | HandledException e) {
-            logInTranscript(jobNumber, e.getMessage());
-        } catch (Exception e) {
-            logInTranscript(jobNumber, Exceptions.handle(Pasta.LOG, e).getMessage());
+        } catch (CompileException | ScriptingException | HandledException exception) {
+            logInTranscript(jobNumber, exception.getMessage());
+        } catch (Exception exception) {
+            logInTranscript(jobNumber, Exceptions.handle(Pasta.LOG, exception).getMessage());
         }
 
         logInTranscript(jobNumber, Strings.apply("Execution completed (%s)", watch.duration()));

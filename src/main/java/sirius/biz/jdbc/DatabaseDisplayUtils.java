@@ -44,8 +44,8 @@ public class DatabaseDisplayUtils {
                 return Arrays.stream((Object[]) sqlArrayValue.getArray())
                              .map(NLS::toUserString)
                              .collect(Collectors.joining(", "));
-            } catch (SQLException e) {
-                Exceptions.ignore(e);
+            } catch (SQLException exception) {
+                Exceptions.ignore(exception);
             }
         }
 

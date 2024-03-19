@@ -84,10 +84,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
                                             parent)));
             File child = new File(parentFile, name);
             return wrapFile(parent, child);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot resolve file: %s in parent: %s - %s (%s)",
                                                     name,
                                                     parent)
@@ -125,10 +125,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
         try {
             Files.move(file.as(File.class).toPath(), new File(newParent.as(File.class), file.name()).toPath());
             return true;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot move %s to %s: %s (%s)", file, name)
                             .handle();
         }
@@ -144,10 +144,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
         try {
             File unwrappedFile = file.as(File.class);
             return unwrappedFile.renameTo(new File(unwrappedFile.getParentFile(), name));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot rename %s to %s: %s (%s)", file, name)
                             .handle();
         }
@@ -162,10 +162,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
                 return unwrappedFile.getParentFile() == null || !Files.isWritable(unwrappedFile.getParentFile()
                                                                                                .toPath());
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot determine if %s is read-only: %s (%s)", file)
                             .handle();
         }
@@ -175,10 +175,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
         try {
             File unwrappedFile = file.as(File.class);
             return unwrappedFile.setWritable(!readOnly);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot set %s writable to %s: %s (%s)",
                                                     file,
                                                     !readOnly)
@@ -189,10 +189,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private boolean createDirectoryHandler(VirtualFile file) {
         try {
             return file.as(File.class).mkdirs();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot create %s as directory: %s (%s)", file)
                             .handle();
         }
@@ -201,10 +201,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private boolean existsFlagSupplier(VirtualFile file) {
         try {
             return file.as(File.class).exists();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot determine if %s exists: %s (%s)", file)
                             .handle();
         }
@@ -218,10 +218,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
                 sirius.kernel.commons.Files.delete(file.as(File.class));
             }
             return true;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot delete %s: %s (%s)", file)
                             .handle();
         }
@@ -230,10 +230,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private boolean isDirectoryFlagSupplier(VirtualFile file) {
         try {
             return file.as(File.class).isDirectory();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot determine if %s is a directory: %s (%s)", file)
                             .handle();
         }
@@ -242,10 +242,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private long sizeSupplier(VirtualFile file) {
         try {
             return file.as(File.class).length();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot determine the size of %s - %s (%s)", file)
                             .handle();
         }
@@ -254,10 +254,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private long lastModifiedSupplier(VirtualFile file) {
         try {
             return file.as(File.class).lastModified();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot determine the last modified of %s - %s (%s)",
                                                     file)
                             .handle();
@@ -271,10 +271,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private InputStream inputStreamSupplier(VirtualFile file) {
         try {
             return new FileInputStream(file.as(File.class));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot open input stream of %s - %s (%s)", file)
                             .handle();
         }
@@ -283,10 +283,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private FileHandle fileHandleSupplier(VirtualFile file) {
         try {
             return FileHandle.permanentFileHandle(file.as(File.class));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot create a file handle of %s - %s (%s)", file)
                             .handle();
         }
@@ -295,10 +295,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private OutputStream outputStreamSupplier(VirtualFile file) {
         try {
             return new FileOutputStream(file.as(File.class));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot open output stream of %s - %s (%s)", file)
                             .handle();
         }
@@ -321,10 +321,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
                     return;
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/FS: Cannot iterate over children of %s - %s (%s)", parent)
                             .handle();
         }

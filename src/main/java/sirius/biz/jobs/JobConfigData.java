@@ -133,10 +133,10 @@ public class JobConfigData extends Composite {
     public JobFactory getJobFactory() {
         try {
             return jobs.findFactory(getJob(), JobFactory.class);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
             throw Exceptions.handle()
                             .to(Log.BACKGROUND)
-                            .error(e)
+                            .error(exception)
                             .withNLSKey("JobConfigData.unknownJob")
                             .set("job", job)
                             .handle();

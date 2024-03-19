@@ -396,8 +396,8 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
                                                    baseQuery.count(),
                                                    w.elapsedMillis())));
             }
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
         }
 
         return result;

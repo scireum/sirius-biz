@@ -103,10 +103,10 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
                 if (shouldExecute) {
                     task.execute(process, tenant);
                 }
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 process.handle(Exceptions.handle()
                                          .to(Log.BACKGROUND)
-                                         .error(e)
+                                         .error(exception)
                                          .withSystemErrorMessage(
                                                  "An error occurred while executing the deletion task %s: %s (%s)",
                                                  task.getClass().getName())

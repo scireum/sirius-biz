@@ -140,10 +140,10 @@ class IDBFilteredLookupTable extends LookupTable {
     public int count() {
         try {
             return jupiter.fetchFromSmallCache(CACHE_PREFIX_CARDINALITY + filterSet.getName(), filterSet::size);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to fetch entry count of set '%s': %s (%s)", filterSet.getName())
                       .handle();
             return 0;

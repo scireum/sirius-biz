@@ -108,7 +108,7 @@ public class UpdatesReport extends ReportJobFactory {
         try {
             URI.create(guid).toURL();
             return true;
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException exception) {
             return false;
         }
     }

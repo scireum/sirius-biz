@@ -140,8 +140,8 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
             }
 
             return user;
-        } catch (Exception e) {
-            throw Exceptions.handle(BizController.LOG, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(BizController.LOG, exception);
         }
     }
 

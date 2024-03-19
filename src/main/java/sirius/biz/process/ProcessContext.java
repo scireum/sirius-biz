@@ -119,10 +119,10 @@ public interface ProcessContext extends TaskContextAdapter {
      * <p>
      * This will invoke {@link Exceptions#handle()} and log the result.
      *
-     * @param e the exception to handle
+     * @param exception the exception to handle
      * @return the handled exception for further processing
      */
-    HandledException handle(Exception e);
+    HandledException handle(Exception exception);
 
     /**
      * Logs the given log entry.

@@ -45,8 +45,8 @@ public class FSStorageEngine implements PhysicalStorageEngine {
             if (!root.exists()) {
                 try {
                     root.mkdirs();
-                } catch (Exception e) {
-                    Exceptions.handle(Storage.LOG, e);
+                } catch (Exception exception) {
+                    Exceptions.handle(Storage.LOG, exception);
                 }
             } else {
                 if (!root.isDirectory()) {
@@ -102,8 +102,8 @@ public class FSStorageEngine implements PhysicalStorageEngine {
 
         try {
             return new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            Exceptions.ignore(e);
+        } catch (FileNotFoundException exception) {
+            Exceptions.ignore(exception);
             return null;
         }
     }

@@ -51,8 +51,8 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
                     return true;
                 });
             }
-        } catch (Exception e) {
-            Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 

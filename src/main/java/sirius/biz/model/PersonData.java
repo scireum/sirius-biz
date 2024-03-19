@@ -106,10 +106,10 @@ public class PersonData extends Composite {
     public void verifySalutation() {
         try {
             salutation.verifyValue();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.createHandled()
                             .withNLSKey("PersonData.invalidSalutation")
-                            .set("error", e.getMessage())
+                            .set("error", exception.getMessage())
                             .handle();
         }
     }
@@ -126,9 +126,9 @@ public class PersonData extends Composite {
     public void validateSalutation(Consumer<String> validationMessageConsumer) {
         try {
             salutation.verifyValue();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             validationMessageConsumer.accept(NLS.fmtr("PersonData.invalidSalutation")
-                                                .set("error", e.getMessage())
+                                                .set("error", exception.getMessage())
                                                 .format());
         }
     }

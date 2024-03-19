@@ -95,8 +95,8 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
                     process.debug(ProcessLog.info()
                                             .withFormattedMessage("Ignored unmodified object: %s", metadata.getKey()));
                 }
-            } catch (Exception e) {
-                process.handle(e);
+            } catch (Exception exception) {
+                process.handle(exception);
             }
 
             return true;

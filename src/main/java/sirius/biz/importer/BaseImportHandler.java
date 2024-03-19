@@ -374,9 +374,9 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         try {
             return (E) descriptor.getType().getConstructor().newInstance();
         } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
+                 IllegalAccessException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot create an instance of: %s", descriptor.getType().getName())
                             .handle();
         }

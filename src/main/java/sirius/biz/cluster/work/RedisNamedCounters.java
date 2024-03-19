@@ -53,7 +53,7 @@ class RedisNamedCounters implements NamedCounters {
         } else {
             try {
                 return Optional.of(Long.parseLong(value));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException exception) {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
                           .withSystemErrorMessage("Failed to parse counter value '%s' in counter '%s' of '%s'",

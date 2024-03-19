@@ -503,13 +503,13 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
                 processes.execute(processId, processContext -> {
                     try {
                         task.invoke(processContext);
-                    } catch (Exception ex) {
-                        processContext.handle(ex);
+                    } catch (Exception exception) {
+                        processContext.handle(exception);
                     }
                 });
             });
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(exception);
         }
     }
 

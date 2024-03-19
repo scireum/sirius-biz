@@ -69,9 +69,9 @@ class SFTPUplinkConnectorConfig extends UplinkConnectorConfig<SftpClient> {
     protected SftpClient create() {
         try {
             return createSession();
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 3/SFTP: An error occurred while connecting the uplink %s: %s (%s)",
                                     this)
@@ -85,12 +85,12 @@ class SFTPUplinkConnectorConfig extends UplinkConnectorConfig<SftpClient> {
             session.addPasswordIdentity(password);
             session.auth().verify(connectTimeoutMillis);
             return DefaultSftpClientFactory.INSTANCE.createSftpClient(session);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             safeAbortLaunch(session);
 
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 3/SFTP: An error occurred while connecting the uplink %s: %s (%s)",
                                     this)
@@ -101,8 +101,8 @@ class SFTPUplinkConnectorConfig extends UplinkConnectorConfig<SftpClient> {
     private void safeAbortLaunch(ClientSession session) {
         try {
             session.close();
-        } catch (Exception ex) {
-            Exceptions.ignore(ex);
+        } catch (Exception exception) {
+            Exceptions.ignore(exception);
         }
     }
 
@@ -116,10 +116,10 @@ class SFTPUplinkConnectorConfig extends UplinkConnectorConfig<SftpClient> {
         ClientSession session = connector.getSession();
         try {
             connector.close();
-        } catch (IOException e) {
+        } catch (IOException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 3/SFTP: An error occurred while disconnecting the uplink %s: %s (%s)",
                               this)
@@ -127,10 +127,10 @@ class SFTPUplinkConnectorConfig extends UplinkConnectorConfig<SftpClient> {
         }
         try {
             session.close();
-        } catch (IOException e) {
+        } catch (IOException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 3/SFTP: An error occurred while disconnecting the uplink %s: %s (%s)",
                               this)

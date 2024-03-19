@@ -172,10 +172,10 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
         Watch watch = Watch.start();
         try {
             ((AnalyticalTask<B>) task).compute(date, entity, useBestEffortScheduling());
-        } catch (Exception ex) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(AnalyticalEngine.LOG)
-                      .error(ex)
+                      .error(exception)
                       .withSystemErrorMessage("The analytical task %s for entity %s (%s) failed: %s (%s)",
                                               task.getClass().getName(),
                                               entity == null ? "-" : entity.getIdAsString(),

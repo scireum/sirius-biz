@@ -374,10 +374,10 @@ public class Storage {
                .set("reference", reference)
                .set("objectKey", objectKey)
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("An error occurred, when marking the object '%s' as used: %s (%s)",
                                               objectKey)
                       .handle();
@@ -408,10 +408,10 @@ public class Storage {
                 String md5 = calculateMd5(data);
                 updateFile(file, in, filename, md5, data.length());
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot upload the file: %s (%s) - %s (%s)", file, filename)
                             .handle();
         }
@@ -455,8 +455,8 @@ public class Storage {
 
             // Delete old file
             engine.deletePhysicalObject(object.getBucket(), oldPhysicalKey);
-        } catch (IOException e) {
-            throw Exceptions.handle().to(LOG).error(e).withNLSKey("Storage.uploadFailed").handle();
+        } catch (IOException exception) {
+            throw Exceptions.handle().to(LOG).error(exception).withNLSKey("Storage.uploadFailed").handle();
         }
     }
 

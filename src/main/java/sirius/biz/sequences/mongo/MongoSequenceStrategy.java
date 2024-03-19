@@ -86,15 +86,15 @@ public class MongoSequenceStrategy implements SequenceStrategy {
                  .into(MongoSequenceCounter.class);
 
             return 1L;
-        } catch (MongoWriteException e) {
-            if (e.getError().getCode() == 11000) {
+        } catch (MongoWriteException exception) {
+            if (exception.getError().getCode() == 11000) {
                 // This only happens if another thread / server inserted the entity already...
-                Exceptions.ignore(e);
+                Exceptions.ignore(exception);
                 return null;
             } else {
                 throw Exceptions.handle()
                                 .to(Mongo.LOG)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage("Failed to create the sequence: %s - %s (%s)", sequence)
                                 .handle();
             }

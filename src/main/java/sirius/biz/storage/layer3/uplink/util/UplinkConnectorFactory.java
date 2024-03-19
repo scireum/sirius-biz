@@ -94,8 +94,8 @@ class UplinkConnectorFactory implements PooledObjectFactory<UplinkConnector<?>> 
 
         try {
             pooledObject.getObject().operation.close();
-        } catch (Exception e) {
-            Exceptions.ignore(e);
+        } catch (Exception exception) {
+            Exceptions.ignore(exception);
         }
 
         pooledObject.getObject().operation = null;

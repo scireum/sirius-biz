@@ -99,10 +99,10 @@ public class BlobSoftRefProperty extends BlobRefProperty {
         if (blobSoftRef == null) {
             try {
                 blobSoftRef = (BlobSoftRef) field.get(accessPath.apply(descriptor.getReferenceInstance()));
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 throw Exceptions.handle()
                                 .to(Mixing.LOG)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage(
                                         "Unable to obtain a reference object from blob ref field ('%s' in '%s'): %s (%s)",
                                         getName(),
@@ -131,12 +131,12 @@ public class BlobSoftRefProperty extends BlobRefProperty {
 
                 forEachBlobType(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteSetNull));
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Mixing.LOG.WARN("Error when linking property %s of %s: %s (%s)",
                             this,
                             getDescriptor(),
-                            e.getMessage(),
-                            e.getClass().getSimpleName());
+                            exception.getMessage(),
+                            exception.getClass().getSimpleName());
         }
     }
 

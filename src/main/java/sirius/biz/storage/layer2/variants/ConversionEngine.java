@@ -156,9 +156,9 @@ public class ConversionEngine {
         try {
             return globalContext.findPart(variantConfigSupplier.apply(CONFIG_KEY_TYPE).asString(),
                                           ConverterFactory.class).createConverter(variantConfigSupplier);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
-                      .error(e)
+                      .error(exception)
                       .to(StorageUtils.LOG)
                       .withSystemErrorMessage("Failed to create a converter of type %s for %s: %s (%s)",
                                               variantConfigSupplier.apply(CONFIG_KEY_CONVERTER),

@@ -61,7 +61,7 @@ public class DateTimeFormatCheck implements ValueCheck {
         String stringValue = value.asString();
         try {
             LocalDate.parse(stringValue, formatter);
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException exception) {
             throw new IllegalArgumentException(NLS.fmtr("DateTimeFormatCheck.errorMsg")
                                                   .set("value", stringValue)
                                                   .set("format", format)

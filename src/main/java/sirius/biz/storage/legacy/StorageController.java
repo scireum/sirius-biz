@@ -259,9 +259,9 @@ public class StorageController extends BizController {
 
             out.property(RESPONSE_FILE_ID, file.getObjectKey());
             out.property(RESPONSE_REFRESH, true);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             storage.delete(file);
-            throw Exceptions.createHandled().error(e).handle();
+            throw Exceptions.createHandled().error(exception).handle();
         }
     }
 
@@ -301,8 +301,8 @@ public class StorageController extends BizController {
 
             out.property(RESPONSE_FILE_ID, file.getObjectKey());
             out.property(RESPONSE_REFRESH, true);
-        } catch (Exception e) {
-            throw Exceptions.createHandled().error(e).handle();
+        } catch (Exception exception) {
+            throw Exceptions.createHandled().error(exception).handle();
         }
     }
 
@@ -347,9 +347,9 @@ public class StorageController extends BizController {
 
             out.property(RESPONSE_FILE_ID, file.getObjectKey());
             out.property("previewUrl", file.prepareURL().buildURL().orElse(""));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             storage.delete(file);
-            throw Exceptions.createHandled().error(e).handle();
+            throw Exceptions.createHandled().error(exception).handle();
         }
     }
 

@@ -85,14 +85,14 @@ public class BlobController extends BizController {
                 out.property(KEY_SIZE, blob.getSize());
                 out.property(KEY_FORMATTED_SIZE, NLS.formatSize(blob.getSize()));
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             blob.delete();
-            throw Exceptions.createHandled().error(e).handle();
-        } catch (Exception e) {
+            throw Exceptions.createHandled().error(exception).handle();
+        } catch (Exception exception) {
             blob.delete();
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to upload a file into space '%s': %s (%s)", spaceName)
                             .handle();
         }

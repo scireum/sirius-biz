@@ -151,12 +151,12 @@ public class VirtualFileSystem {
             return globalContext.findPart(generatedId, UplinkFactory.class)
                                 .make(Strings.generateCode(32), provideShortIdleTimeout(config))
                                 .getFile(root());
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
                                     "Layer 3: An error occurred while initializing a temporary uplink: %s")
-                            .error(e)
+                            .error(exception)
                             .handle();
         }
     }

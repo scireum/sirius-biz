@@ -128,8 +128,8 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
                     }
                 }
                 process.addTiming("Success", watch.elapsedMillis());
-            } catch (Exception e) {
-                HandledException handledException = Exceptions.handle(BizController.LOG, e);
+            } catch (Exception exception) {
+                HandledException handledException = Exceptions.handle(BizController.LOG, exception);
                 process.addTiming("Failure", watch.elapsedMillis());
                 process.log(ProcessLog.error()
                                       .withFormattedMessage("Failed to save entity %s with id: %s - %s",

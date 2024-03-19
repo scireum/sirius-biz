@@ -169,10 +169,10 @@ public class DistributedTasks implements MetricProvider {
         private void tryExecute(DistributedTaskExecutor exec) {
             try {
                 exec.executeWork(task);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage(
                                   "The DistributedTaskExecutor '%s' failed with: %s (%s) for the task '%s'",
                                   exec.getClass().getName(),
@@ -195,8 +195,8 @@ public class DistributedTasks implements MetricProvider {
                 if (Strings.isFilled(penaltyToken) && penaltyTokens != null) {
                     penaltyTokens.decrementAndGet(queue + "-" + penaltyToken);
                 }
-            } catch (Exception e) {
-                Exceptions.handle(Log.BACKGROUND, e);
+            } catch (Exception exception) {
+                Exceptions.handle(Log.BACKGROUND, exception);
             }
         }
     }
@@ -502,8 +502,8 @@ public class DistributedTasks implements MetricProvider {
             if (task != null) {
                 return new DistributedTask(queue, task);
             }
-        } catch (Exception e) {
-            Exceptions.handle(LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(LOG, exception);
         }
 
         // Release the concurrency token acquired above, as we didn't yield any task...

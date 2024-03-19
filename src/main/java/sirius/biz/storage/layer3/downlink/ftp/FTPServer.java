@@ -107,10 +107,10 @@ public class FTPServer implements Startable, Stoppable, AdditionalRolesProvider 
         if (server != null) {
             try {
                 server.stop();
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(StorageUtils.LOG)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage("Layer3/FTP: Failed to stop FTP server on port %s (%s): %s (%s)",
                                                   ftpPort,
                                                   bindAddress)
@@ -123,10 +123,10 @@ public class FTPServer implements Startable, Stoppable, AdditionalRolesProvider 
         try {
             server.start();
             StorageUtils.LOG.INFO("Layer3/FTP: Started FTP server on port %s (%s)", ftpPort, bindAddress);
-        } catch (FtpException e) {
+        } catch (FtpException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer3/FTP: Failed to start FTP server on port %s (%s): %s (%s)",
                                               ftpPort,
                                               bindAddress)

@@ -154,7 +154,7 @@ public class JobsController extends BizController {
         try {
             JobFactory factory = jobs.findFactory(jobType, JobFactory.class);
             out.property("process", factory.startInBackground(webContext::get));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
             throw Exceptions.createHandled()
                             .withDirectMessage(Strings.apply("Unknown factory: %s", jobType))
                             .hint(Controller.HTTP_STATUS, HttpResponseStatus.NOT_FOUND.code())

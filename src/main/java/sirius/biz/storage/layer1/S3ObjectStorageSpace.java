@@ -156,8 +156,8 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     protected FileHandle getData(String objectKey) throws IOException {
         try {
             return FileHandle.temporaryFileHandle(store.download(bucketName(), objectKey));
-        } catch (FileNotFoundException e) {
-            Exceptions.ignore(e);
+        } catch (FileNotFoundException exception) {
+            Exceptions.ignore(exception);
             return null;
         }
     }
@@ -166,8 +166,8 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     protected Promise<FileHandle> getDataAsync(String objectId) {
         try {
             return store.downloadAsync(bucketName(), objectId);
-        } catch (FileNotFoundException ex) {
-            Exceptions.ignore(ex);
+        } catch (FileNotFoundException exception) {
+            Exceptions.ignore(exception);
             return new Promise<>(null);
         }
     }
@@ -183,11 +183,11 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
                 Streams.transfer(in, out);
             }
             return FileHandle.temporaryFileHandle(dest);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Files.delete(dest);
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 1/S3: An error occurred while trying to download: %s/%s - %s (%s)",
                                     name,
@@ -205,9 +205,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         tasks.executor(ObjectStore.EXECUTOR_S3).fork(() -> {
             try {
                 result.success(getData(objectId, transformer));
-            } catch (Exception ex) {
+            } catch (Exception exception) {
                 result.fail(Exceptions.handle()
-                                      .error(ex)
+                                      .error(exception)
                                       .to(StorageUtils.LOG)
                                       .withSystemErrorMessage(
                                               "Layer 1/S3: An error occurred when downloading %s (%s): %s (%s)",

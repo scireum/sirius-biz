@@ -70,8 +70,8 @@ public class SQLOnboardingEngine extends OnboardingEngine {
                    video.getAcademyVideoData().setLastUpdated(LocalDateTime.now());
                    video.getAcademyVideoData().setDeleted(true);
                    oma.update(video);
-               } catch (Exception e) {
-                   Exceptions.handle(Log.BACKGROUND, e);
+               } catch (Exception exception) {
+                   Exceptions.handle(Log.BACKGROUND, exception);
                }
            });
     }
@@ -135,8 +135,8 @@ public class SQLOnboardingEngine extends OnboardingEngine {
                    video.getOnboardingVideoData().setLastUpdated(LocalDateTime.now());
                    video.getOnboardingVideoData().setDeleted(true);
                    oma.update(video);
-               } catch (Exception e) {
-                   Exceptions.handle(Log.BACKGROUND, e);
+               } catch (Exception exception) {
+                   Exceptions.handle(Log.BACKGROUND, exception);
                }
            });
     }
@@ -215,12 +215,12 @@ public class SQLOnboardingEngine extends OnboardingEngine {
                .inc(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.NUM_SHOWN_IN_UI))
                .where(SQLOnboardingVideo.ID, Long.parseLong(videoId))
                .executeUpdate();
-        } catch (NumberFormatException e) {
-            Exceptions.ignore(e);
-        } catch (SQLException e) {
+        } catch (NumberFormatException exception) {
+            Exceptions.ignore(exception);
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Failed to record that an onboarding video was offered to the user: %s (%s)")
                       .handle();
@@ -235,12 +235,12 @@ public class SQLOnboardingEngine extends OnboardingEngine {
                .inc(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.NUM_WATCHED))
                .where(SQLOnboardingVideo.ID, Long.parseLong(videoId))
                .executeUpdate();
-        } catch (NumberFormatException e) {
-            Exceptions.ignore(e);
-        } catch (SQLException e) {
+        } catch (NumberFormatException exception) {
+            Exceptions.ignore(exception);
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Failed to record that playback of an onboarding video was commenced: %s (%s)")
                       .handle();
@@ -276,12 +276,12 @@ public class SQLOnboardingEngine extends OnboardingEngine {
                .set(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.WATCHED), markAsWatched)
                .where(SQLOnboardingVideo.ID, video.getId())
                .executeUpdate();
-        } catch (NumberFormatException e) {
-            Exceptions.ignore(e);
-        } catch (SQLException e) {
+        } catch (NumberFormatException exception) {
+            Exceptions.ignore(exception);
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to record the view progress of an onboarding video: %s (%s)")
                       .handle();
         }
@@ -296,12 +296,12 @@ public class SQLOnboardingEngine extends OnboardingEngine {
                .where(SQLOnboardingVideo.ID, Long.parseLong(videoId))
                .where(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.WATCHED), false)
                .executeUpdate();
-        } catch (NumberFormatException e) {
-            Exceptions.ignore(e);
-        } catch (SQLException e) {
+        } catch (NumberFormatException exception) {
+            Exceptions.ignore(exception);
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to record that an onboarding video should be skipped: %s (%s)")
                       .handle();
         }

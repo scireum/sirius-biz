@@ -182,16 +182,16 @@ public class VirtualFileSystemController extends BizController {
 
             out.property("file", file.path());
             out.property("refresh", true);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             if (!exists) {
                 try {
                     file.delete();
-                } catch (Exception ex) {
-                    Exceptions.ignore(ex);
+                } catch (Exception innerException) {
+                    Exceptions.ignore(innerException);
                 }
             }
 
-            throw Exceptions.createHandled().error(e).handle();
+            throw Exceptions.createHandled().error(exception).handle();
         }
     }
 
@@ -211,8 +211,8 @@ public class VirtualFileSystemController extends BizController {
                     file.delete();
                     showDeletedMessage();
                 }
-            } catch (Exception e) {
-                UserContext.handle(e);
+            } catch (Exception exception) {
+                UserContext.handle(exception);
             }
             webContext.respondWith()
                       .redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
@@ -238,8 +238,8 @@ public class VirtualFileSystemController extends BizController {
                     file.rename(name);
                     UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.renamed")));
                 }
-            } catch (Exception e) {
-                UserContext.handle(e);
+            } catch (Exception exception) {
+                UserContext.handle(exception);
             }
             webContext.respondWith()
                       .redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
@@ -272,8 +272,8 @@ public class VirtualFileSystemController extends BizController {
                 UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
                 webContext.respondWith()
                           .redirectToGet(new LinkBuilder("/fs").append("path", newDirectory.path()).toString());
-            } catch (Exception e) {
-                UserContext.handle(e);
+            } catch (Exception exception) {
+                UserContext.handle(exception);
                 webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", parent.path()).toString());
             }
         } else {
@@ -309,8 +309,8 @@ public class VirtualFileSystemController extends BizController {
                     UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.moved")));
                 }
             }
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
         }
 
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
@@ -333,8 +333,8 @@ public class VirtualFileSystemController extends BizController {
 
         try {
             file.updateReadOnlyFlag(false);
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
         }
 
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());

@@ -130,7 +130,7 @@ public class ImporterContext {
     private ImportHelper instantiateHelper(Class<?> aClass) {
         try {
             return (ImportHelper) aClass.getConstructor(ImporterContext.class).newInstance(this);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .withSystemErrorMessage("Cannot find or create the import helper of type: %s", aClass)
                             .handle();
@@ -164,10 +164,10 @@ public class ImporterContext {
     protected void close() throws IOException {
         try {
             commit();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Importer.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("An error occurred while commiting an ImporterContext: %s (%s)")
                       .handle();
         }

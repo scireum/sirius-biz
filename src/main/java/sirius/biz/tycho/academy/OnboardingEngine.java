@@ -80,8 +80,8 @@ public abstract class OnboardingEngine {
                                                   ACADEMY_VIDEOS_FETCHED_FLAG,
                                                   LocalDateTime.now(),
                                                   Period.ofDays(2));
-            } catch (Exception e) {
-                throw Exceptions.handle(Log.BACKGROUND, e);
+            } catch (Exception exception) {
+                throw Exceptions.handle(Log.BACKGROUND, exception);
             }
         }
 

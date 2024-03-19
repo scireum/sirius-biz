@@ -26,8 +26,8 @@ import java.io.IOException;
  *     try {
  *         ...do something
  *         return;
- *     } catch(Exception e) {
- *         if (attempt.shouldThrow(e)) {
+ *     } catch(Exception exception) {
+ *         if (attempt.shouldThrow(exception)) {
  *             throw Exceptions.handle...
  *         }
  *     }

@@ -77,10 +77,10 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
                                       extension.getId(),
                                       root);
                 root.mkdirs();
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 throw Exceptions.handle()
                                 .to(StorageUtils.LOG)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage(
                                         "Layer 1/fs: Unable to resolve the base directory of space '%s' ('%s')"
                                         + " into a directory: %s (%s)!",
@@ -220,11 +220,11 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
                 Streams.transfer(in, out);
             }
             return FileHandle.temporaryFileHandle(dest);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Files.delete(dest);
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 1/fs: An error occurred while trying to download: %s/%s - %s (%s)",
                                     name,
@@ -239,8 +239,8 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
         Promise<FileHandle> result = new Promise<>();
         try {
             result.success(getData(objectId, transformer));
-        } catch (IOException e) {
-            result.fail(e);
+        } catch (IOException exception) {
+            result.fail(exception);
         }
 
         return result;

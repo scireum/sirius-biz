@@ -100,8 +100,8 @@ public class SQLPageHelper<E extends SQLEntity>
                     }
                     facet.addItem(key, labelProvider.apply(label), -1);
                 }, new Limit(0, 100));
-            } catch (SQLException e) {
-                Exceptions.handle(OMA.LOG, e);
+            } catch (SQLException exception) {
+                Exceptions.handle(OMA.LOG, exception);
             }
         });
     }
