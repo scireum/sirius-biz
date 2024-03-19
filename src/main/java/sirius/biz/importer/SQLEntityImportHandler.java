@@ -144,7 +144,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      */
     protected Collection<Mapping> getMappingsToLoadForFind() {
         return findQueries.stream()
-                          .flatMap(qry -> qry.getSecond().get().getFilterMappings().stream().map(Mapping::named))
+                          .flatMap(query -> query.getSecond().get().getFilterMappings().stream().map(Mapping::named))
                           .collect(Collectors.toSet());
     }
 

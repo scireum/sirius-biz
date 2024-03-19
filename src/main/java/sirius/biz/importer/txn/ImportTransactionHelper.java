@@ -179,7 +179,7 @@ public class ImportTransactionHelper extends ImportHelper {
                                                                                         Object value,
                                                                                         @Nullable
                                                                                         Consumer<E> entityCallback) {
-        deleteUnmarked(entityType, qry -> qry.eq(field, value), entityCallback);
+        deleteUnmarked(entityType, query -> query.eq(field, value), entityCallback);
     }
 
     /**

@@ -512,10 +512,10 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
                               Map<Class<? extends Event<?>>, InsertQuery<Event<?>>> queries,
                               Event<?> event) {
         try {
-            InsertQuery<Event<?>> qry = queries.computeIfAbsent((Class<Event<?>>) event.getClass(),
-                                                                type -> (InsertQuery<Event<?>>) ctx.insertQuery(type,
-                                                                                                                false));
-            qry.insert(event, false, true);
+            InsertQuery<Event<?>> query = queries.computeIfAbsent((Class<Event<?>>) event.getClass(),
+                                                                  type -> (InsertQuery<Event<?>>) ctx.insertQuery(type,
+                                                                                                                  false));
+            query.insert(event, false, true);
         } catch (Exception exception) {
             if (!event.retried) {
                 event.retried = true;

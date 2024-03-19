@@ -113,7 +113,7 @@ public class DatabaseController extends BasicController {
             String database = webContext.get(PARAM_DATABASE).asString(defaultDatabase);
             Database db = determineDatabase(database);
             String sqlStatement = webContext.get(PARAM_QUERY).asString();
-            SQLQuery qry = db.createQuery(sqlStatement).markAsLongRunning();
+            SQLQuery query = db.createQuery(sqlStatement).markAsLongRunning();
 
             OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s):%n%n%s",
                          UserContext.getCurrentUser().getUserName(),
@@ -130,13 +130,13 @@ public class DatabaseController extends BasicController {
                                     .handle();
                 }
 
-                output.property("rowModified", qry.executeUpdate());
+                output.property("rowModified", query.executeUpdate());
             } else if (isModifyStatement(sqlStatement)) {
-                output.property("rowModified", qry.executeUpdate());
+                output.property("rowModified", query.executeUpdate());
             } else {
                 Monoflop monoflop = Monoflop.create();
-                qry.iterateAll(r -> outputRow(output, monoflop, r),
-                               new Limit(0, webContext.get("limit").asInt(DEFAULT_LIMIT)));
+                query.iterateAll(r -> outputRow(output, monoflop, r),
+                                 new Limit(0, webContext.get("limit").asInt(DEFAULT_LIMIT)));
                 if (monoflop.successiveCall()) {
                     output.endArray();
                 }
@@ -207,8 +207,8 @@ public class DatabaseController extends BasicController {
                || lowerCaseQuery.startsWith(KEYWORD_DELETE);
     }
 
-    private boolean isDDLStatement(String qry) {
-        String lowerCaseQuery = qry.toLowerCase().trim();
+    private boolean isDDLStatement(String query) {
+        String lowerCaseQuery = query.toLowerCase().trim();
         return lowerCaseQuery.startsWith(KEYWORD_ALTER)
                || lowerCaseQuery.startsWith(KEYWORD_DROP)
                || lowerCaseQuery.startsWith(KEYWORD_CREATE);

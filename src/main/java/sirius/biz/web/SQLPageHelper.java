@@ -87,8 +87,8 @@ public class SQLPageHelper<E extends SQLEntity>
             }
         }, (facet, query) -> {
             try {
-                SQLQuery qry = queryTransformer.apply(query);
-                qry.iterateAll(r -> {
+                SQLQuery smartQuery = queryTransformer.apply(query);
+                smartQuery.iterateAll(r -> {
                     Iterator<Tuple<String, Object>> iter = r.getFieldsList().iterator();
                     if (!iter.hasNext()) {
                         return;

@@ -162,8 +162,10 @@ public class ProcessController extends BizController {
                                       DateRange.THIS_MONTH,
                                       DateRange.LAST_MONTH);
         pageHelper.addTermAggregation(ProcessLog.NODE);
-        pageHelper.addSortFacet(Tuple.create("$ProcessController.sortDesc", qry -> qry.orderDesc(ProcessLog.SORT_KEY)),
-                                Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));
+        pageHelper.addSortFacet(Tuple.create("$ProcessController.sortDesc",
+                                             query -> query.orderDesc(ProcessLog.SORT_KEY)),
+                                Tuple.create("$ProcessController.sortAsc",
+                                             query -> query.orderAsc(ProcessLog.SORT_KEY)));
         pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         webContext.respondWith()
