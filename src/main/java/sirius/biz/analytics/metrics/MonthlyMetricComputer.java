@@ -60,6 +60,13 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
     }
 
     @Override
+    public void resetDurations() {
+        this.avgDurationMillis.getAndClear();
+        this.maxDurationMillis = 0;
+
+    }
+
+    @Override
     public long getMaxDurationMillis() {
         return maxDurationMillis;
     }

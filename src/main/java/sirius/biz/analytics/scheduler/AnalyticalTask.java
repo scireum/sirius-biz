@@ -69,6 +69,11 @@ public interface AnalyticalTask<E extends BaseEntity<?>> {
     void trackDuration(long durationMillis);
 
     /**
+     * Resets the currently kept average and maximum durations.
+     */
+    void resetDurations();
+
+    /**
      * Returns the maximum duration of computations in milliseconds.
      *
      * @return the maximum duration of computations in milliseconds

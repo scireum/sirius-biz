@@ -3,6 +3,13 @@
         <li><a href="/system/cluster/analytics">Analytics</a></li>
     </i:block>
 
+    <i:block name="actions">
+        <a href="/system/cluster/analytics/reset-durations"
+           class="btn btn-outline-danger confirm-link-js">
+            <i class="fa-solid fa-trash"></i><span class="d-none d-xl-inline"> Reset</span>
+        </a>
+    </i:block>
+
     <i:local name="analyticalEngine" value="part(sirius.biz.analytics.scheduler.AnalyticalEngine.class)"/>
     <i:local name="distributedTasks" value="part(sirius.biz.cluster.work.DistributedTasks.class)"/>
     <i:local name="schedulers" value="analyticalEngine.getActiveSchedulers()"/>

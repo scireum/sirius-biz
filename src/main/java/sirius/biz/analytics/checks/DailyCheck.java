@@ -70,6 +70,13 @@ public abstract class DailyCheck<E extends BaseEntity<?>> implements AnalyticalT
     }
 
     @Override
+    public void resetDurations() {
+        this.avgDurationMillis.getAndClear();
+        this.maxDurationMillis = 0;
+
+    }
+
+    @Override
     public long getMaxDurationMillis() {
         return maxDurationMillis;
     }
