@@ -146,7 +146,7 @@ public class OnboardingController extends BizController {
      * Provides a JSON API to update the statistics which record which video has been viewed or skipped.
      *
      * @param webContext  the request to respond to
-     * @param out         the JSON response
+     * @param output      the JSON response
      * @param target      the target entity
      * @param accessToken the security token to authenticate the target
      * @param videoId     the id of the onboarding video to update
@@ -154,7 +154,7 @@ public class OnboardingController extends BizController {
     @Routed(value = "/academy/:1/:2/update/:3", priority = 999)
     @InternalService
     public void updateVideo(WebContext webContext,
-                            JSONStructuredOutput out,
+                            JSONStructuredOutput output,
                             String target,
                             String accessToken,
                             String videoId) {

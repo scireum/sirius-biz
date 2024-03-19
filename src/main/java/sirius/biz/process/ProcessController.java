@@ -395,7 +395,7 @@ public class ProcessController extends BizController {
      * Provides a JSON representation of the given process.
      *
      * @param webContext the current request
-     * @param out        the output to write the JSON data to
+     * @param output     the output to write the JSON data to
      * @param processId  the process to output
      */
     @Routed("/ps/:1/api")
@@ -440,7 +440,7 @@ public class ProcessController extends BizController {
             example = "KR8E6I36AK7POAK0IP9L3KB0Q1")
     @LoginRequired
     @Permission(PERMISSION_VIEW_PROCESSES)
-    public void processAPI(WebContext webContext, JSONStructuredOutput out, String processId) {
+    public void processAPI(WebContext webContext, JSONStructuredOutput output, String processId) {
         Process process = processes.fetchProcessForUser(processId).orElse(null);
         if (process == null) {
             throw Exceptions.createHandled()
@@ -449,44 +449,44 @@ public class ProcessController extends BizController {
                             .handle();
         }
 
-        out.property("id", processId);
-        out.property("title", process.getTitle());
-        out.property("state", process.getState());
-        out.property("started", process.getStarted());
-        out.property("completed", process.getCompleted());
-        out.property("erroneous", process.isErrorneous());
-        out.property("processType", process.getProcessType());
-        out.property("stateMessage", process.getStateMessage());
-        out.beginArray("counters");
+        output.property("id", processId);
+        output.property("title", process.getTitle());
+        output.property("state", process.getState());
+        output.property("started", process.getStarted());
+        output.property("completed", process.getCompleted());
+        output.property("erroneous", process.isErrorneous());
+        output.property("processType", process.getProcessType());
+        output.property("stateMessage", process.getStateMessage());
+        output.beginArray("counters");
         for (String counter : process.getCounterList()) {
-            out.beginObject("counter");
-            out.property("name", counter);
-            out.property("counter", process.getCounterValue(counter));
-            out.property("timing", process.getCounterTiming(counter));
-            out.endObject();
+            output.beginObject("counter");
+            output.property("name", counter);
+            output.property("counter", process.getCounterValue(counter));
+            output.property("timing", process.getCounterTiming(counter));
+            output.endObject();
         }
-        out.endArray();
+        output.endArray();
 
-        out.beginArray("links");
+        output.beginArray("links");
         for (ProcessLink link : process.getLinks()) {
-            out.beginObject("link");
-            out.property("label", link.getLabel());
-            out.property("uri", link.getUri());
-            out.endObject();
+            output.beginObject("link");
+            output.property("label", link.getLabel());
+            output.property("uri", link.getUri());
+            output.endObject();
         }
-        out.endArray();
+        output.endArray();
 
-        out.beginArray("lastMessages");
+        output.beginArray("lastMessages");
         for (ProcessLog log : buildLogsQuery(process).limit(50).orderDesc(ProcessLog.SORT_KEY).queryList()) {
-            out.beginObject("message");
-            out.property("type", log.getType().name());
-            out.property("timestamp", log.getTimestamp());
-            out.property("message", log.getMessage());
-            out.property("node", log.getNode());
-            out.property("state", log.getState() != null ? log.getState().name() : null);
-            out.property("messageType", log.getMessageType());
-            out.endObject();
+            output.beginObject("message");
+            output.property("type", log.getType().name());
+            output.property("timestamp", log.getTimestamp());
+            output.property("message", log.getMessage());
+            output.property("node", log.getNode());
+            output.property("state", log.getState() != null ? log.getState().name() : null);
+            output.property("messageType", log.getMessageType());
+            output.endObject();
         }
-        out.endArray();
+        output.endArray();
     }
 }

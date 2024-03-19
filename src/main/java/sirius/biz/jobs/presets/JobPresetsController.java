@@ -54,13 +54,13 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * This will create or update the job preset with the given name (and job factory) for the current tenant.
      *
      * @param webContext the request to handle
-     * @param out the JSON response to populate (in this case no actual output is expected)
+     * @param output     the JSON response to populate (in this case no actual output is expected)
      * @throws Exception in case of an error when populating the entity
      */
     @SuppressWarnings("unchecked")
     @Routed("/jobs/preset/create")
     @InternalService
-    public void create(WebContext webContext, JSONStructuredOutput out) throws Exception {
+    public void create(WebContext webContext, JSONStructuredOutput output) throws Exception {
         P preset = (P) mixing.getDescriptor(getPresetType())
                              .getMapper()
                              .select(getPresetType())
@@ -81,8 +81,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
 
         preset.getJobConfigData()
               .setCustomPersistencePeriod(webContext.get(PARAM_CUSTOM_PERSISTENCE_PERIOD)
-                                             .getEnum(PersistencePeriod.class)
-                                             .orElse(null));
+                                                    .getEnum(PersistencePeriod.class)
+                                                    .orElse(null));
 
         for (String parameter : webContext.getParameterNames()) {
             if (!IGNORED_PARAMETERS.contains(parameter)) {
@@ -97,12 +97,12 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * Outputs the stored configuration (parameters) for the requested job preset.
      *
      * @param webContext the request to handle
-     * @param out the JSON response to populate
+     * @param output     the JSON response to populate
      */
     @Routed("/jobs/preset/load")
     @InternalService
-    public void load(WebContext webContext, JSONStructuredOutput out) {
-        out.beginArray(RESPONSE_PARAMS);
+    public void load(WebContext webContext, JSONStructuredOutput output) {
+        output.beginArray(RESPONSE_PARAMS);
         P preset = mixing.getDescriptor(getPresetType())
                          .getMapper()
                          .find(getPresetType(), webContext.get(PARAM_PRESET).asString())
@@ -110,32 +110,32 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
         if (preset != null) {
             assertTenant(preset);
             preset.getJobConfigData().getConfigMap().forEach((name, values) -> {
-                out.beginObject(RESPONSE_PARAM);
-                out.property(RESPONSE_NAME, name);
+                output.beginObject(RESPONSE_PARAM);
+                output.property(RESPONSE_NAME, name);
 
                 if (values.isEmpty()) {
-                    out.property(RESPONSE_VALUE, null);
+                    output.property(RESPONSE_VALUE, null);
                 } else if (values.size() == 1) {
-                    out.property(RESPONSE_VALUE, values.get(0));
+                    output.property(RESPONSE_VALUE, values.get(0));
                 } else {
-                    out.property(RESPONSE_VALUE, Json.createArray(values));
+                    output.property(RESPONSE_VALUE, Json.createArray(values));
                 }
 
-                out.endObject();
+                output.endObject();
             });
         }
-        out.endArray();
+        output.endArray();
     }
 
     /**
      * Deletes the requested job preset.
      *
      * @param webContext the request to handle
-     * @param out the JSON response to populate (in this case no actual output is expected)
+     * @param output     the JSON response to populate (in this case no actual output is expected)
      */
     @Routed("/jobs/preset/delete")
     @InternalService
-    public void delete(WebContext webContext, JSONStructuredOutput out) {
+    public void delete(WebContext webContext, JSONStructuredOutput output) {
         if (webContext.isSafePOST()) {
             P preset = mixing.getDescriptor(getPresetType())
                              .getMapper()

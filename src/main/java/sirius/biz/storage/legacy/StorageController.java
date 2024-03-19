@@ -220,14 +220,14 @@ public class StorageController extends BizController {
      * Uploads a new file / object to a bucket
      *
      * @param webContext the request to handle
-     * @param out        the response to the AJAX call
+     * @param output     the response to the AJAX call
      * @param bucketName the name of the bucket to upload to
      * @param upload     the data being uploaded
      */
     @Routed(value = "/storage/upload/:1", preDispatchable = true, jsonCall = true)
     @LoginRequired
     public void uploadObject(final WebContext webContext,
-                             JSONStructuredOutput out,
+                             JSONStructuredOutput output,
                              String bucketName,
                              InputStreamHandler upload) {
         StoredObject file = null;
@@ -257,8 +257,8 @@ public class StorageController extends BizController {
                                    Long.parseLong(webContext.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
             }
 
-            out.property(RESPONSE_FILE_ID, file.getObjectKey());
-            out.property(RESPONSE_REFRESH, true);
+            output.property(RESPONSE_FILE_ID, file.getObjectKey());
+            output.property(RESPONSE_REFRESH, true);
         } catch (Exception exception) {
             storage.delete(file);
             throw Exceptions.createHandled().error(exception).handle();
@@ -269,7 +269,7 @@ public class StorageController extends BizController {
      * Uploads new contents for the given file.
      *
      * @param webContext the request to handle
-     * @param out        the response to the AJAX call
+     * @param output     the response to the AJAX call
      * @param bucketName the name of the bucket to upload to
      * @param objectId   the id of the object for replace
      * @param upload     the upload to handle
@@ -277,7 +277,7 @@ public class StorageController extends BizController {
     @Routed(value = "/storage/replace/:1/:2", preDispatchable = true, jsonCall = true)
     @LoginRequired
     public void uploadObject(final WebContext webContext,
-                             JSONStructuredOutput out,
+                             JSONStructuredOutput output,
                              String bucketName,
                              String objectId,
                              InputStreamHandler upload) {
@@ -299,8 +299,8 @@ public class StorageController extends BizController {
                                    Long.parseLong(webContext.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
             }
 
-            out.property(RESPONSE_FILE_ID, file.getObjectKey());
-            out.property(RESPONSE_REFRESH, true);
+            output.property(RESPONSE_FILE_ID, file.getObjectKey());
+            output.property(RESPONSE_REFRESH, true);
         } catch (Exception exception) {
             throw Exceptions.createHandled().error(exception).handle();
         }
@@ -313,7 +313,7 @@ public class StorageController extends BizController {
      * xx
      *
      * @param webContext the request to handle
-     * @param out        the response to the AJAX call
+     * @param output     the response to the AJAX call
      * @param bucketName the bucket name to put the object into
      * @param reference  the reference for which an object is uploaded
      * @param upload     the content of the upload
@@ -321,7 +321,7 @@ public class StorageController extends BizController {
     @Routed(value = "/storage/upload-reference/:1/:2", preDispatchable = true, jsonCall = true)
     @LoginRequired
     public void uploadObjectForReference(final WebContext webContext,
-                                         JSONStructuredOutput out,
+                                         JSONStructuredOutput output,
                                          String bucketName,
                                          String reference,
                                          InputStreamHandler upload) {
@@ -345,8 +345,8 @@ public class StorageController extends BizController {
                                    Long.parseLong(webContext.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
             }
 
-            out.property(RESPONSE_FILE_ID, file.getObjectKey());
-            out.property("previewUrl", file.prepareURL().buildURL().orElse(""));
+            output.property(RESPONSE_FILE_ID, file.getObjectKey());
+            output.property("previewUrl", file.prepareURL().buildURL().orElse(""));
         } catch (Exception exception) {
             storage.delete(file);
             throw Exceptions.createHandled().error(exception).handle();

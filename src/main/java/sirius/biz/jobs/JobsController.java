@@ -95,14 +95,15 @@ public class JobsController extends BizController {
      * accordingly.
      *
      * @param webContext the web context
-     * @param out        the output to write the JSON response to
+     * @param output     the output to write the JSON response to
      * @param jobType    the type of the job, so we can find a suitable job factory
      */
     @Routed("/job/params/:1")
     @InternalService
     @LoginRequired
-    public void params(WebContext webContext, JSONStructuredOutput out, String jobType) {
-        out.property("params", jobs.findFactory(jobType, JobFactory.class).computeRequiredParameterUpdates(webContext));
+    public void params(WebContext webContext, JSONStructuredOutput output, String jobType) {
+        output.property("params",
+                        jobs.findFactory(jobType, JobFactory.class).computeRequiredParameterUpdates(webContext));
     }
 
     /**
@@ -122,7 +123,7 @@ public class JobsController extends BizController {
      * Uses a JSON call to invoke a job.
      *
      * @param webContext the current request
-     * @param out        the output to write the JSON response to
+     * @param output     the output to write the JSON response to
      * @param jobType    the name of the job to launch
      */
     @Routed("/jobs/api/:1")
@@ -148,12 +149,12 @@ public class JobsController extends BizController {
             required = true,
             example = "jupiter-sync")
     @LoginRequired
-    public void jsonApi(WebContext webContext, JSONStructuredOutput out, String jobType) {
+    public void jsonApi(WebContext webContext, JSONStructuredOutput output, String jobType) {
         enforceMethodPost(webContext);
 
         try {
             JobFactory factory = jobs.findFactory(jobType, JobFactory.class);
-            out.property("process", factory.startInBackground(webContext::get));
+            output.property("process", factory.startInBackground(webContext::get));
         } catch (IllegalArgumentException exception) {
             throw Exceptions.createHandled()
                             .withDirectMessage(Strings.apply("Unknown factory: %s", jobType))
@@ -166,13 +167,13 @@ public class JobsController extends BizController {
      * A route that can handle autocompletes of parameter input fields via the {@link Autocompleter}.
      *
      * @param webContext        the web context
-     * @param out               the output to write the JSON response to
+     * @param output            the output to write the JSON response to
      * @param autocompleterName the name of the autocompleter
      */
     @Routed("/jobs/parameter-autocomplete/:1")
     @InternalService
     @LoginRequired
-    public void autocomplete(WebContext webContext, JSONStructuredOutput out, String autocompleterName) {
+    public void autocomplete(WebContext webContext, JSONStructuredOutput output, String autocompleterName) {
         Autocompleter<?> autocompleter = Injector.context().getPart(autocompleterName, Autocompleter.class);
         AutocompleteHelper.handle(webContext, (query, result) -> autocompleter.suggest(query, webContext, result));
     }

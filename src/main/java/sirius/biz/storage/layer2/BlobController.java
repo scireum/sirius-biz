@@ -54,16 +54,16 @@ public class BlobController extends BizController {
      * deleted. However, if an entity references the blob via a {@link BlobHardRef}, it will be marked
      * as permanent.
      *
-     * @param webContext       the request to handle
-     * @param out       the response to the AJAX call
-     * @param spaceName the {@link BlobStorageSpace} to store the object in
-     * @param upload    the content of the upload
+     * @param webContext the request to handle
+     * @param output     the response to the AJAX call
+     * @param spaceName  the {@link BlobStorageSpace} to store the object in
+     * @param upload     the content of the upload
      */
     @Routed(value = "/dasd/upload-file/:1", preDispatchable = true)
     @InternalService
     @LoginRequired
     public void uploadFile(final WebContext webContext,
-                           JSONStructuredOutput out,
+                           JSONStructuredOutput output,
                            String spaceName,
                            InputStreamHandler upload) {
         Blob blob = blobStorage.getSpace(spaceName).createTemporaryBlob();
@@ -74,16 +74,20 @@ public class BlobController extends BizController {
                 String name = webContext.get(KEY_FILENAME).asString(webContext.get(KEY_FILE).asString());
                 blob.updateContent(name, upload, Long.parseLong(webContext.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
 
-                out.property(KEY_FILE_ID, blob.getBlobKey());
+                output.property(KEY_FILE_ID, blob.getBlobKey());
 
                 // TODO SIRI-96 remove once the blobHardRefField has been refactored
-                out.property(KEY_PREVIEW_URL, blob.url().asDownload().buildURL().orElse(""));
-                out.property(KEY_IMAGE_URL, blob.url().withVariant(webContext.get("variant").asString("raw")).buildURL().orElse(""));
+                output.property(KEY_PREVIEW_URL, blob.url().asDownload().buildURL().orElse(""));
+                output.property(KEY_IMAGE_URL,
+                                blob.url()
+                                    .withVariant(webContext.get("variant").asString("raw"))
+                                    .buildURL()
+                                    .orElse(""));
 
-                out.property(KEY_DOWNLOAD_URL, blob.url().asDownload().buildURL().orElse(""));
-                out.property(KEY_FILENAME, blob.getFilename());
-                out.property(KEY_SIZE, blob.getSize());
-                out.property(KEY_FORMATTED_SIZE, NLS.formatSize(blob.getSize()));
+                output.property(KEY_DOWNLOAD_URL, blob.url().asDownload().buildURL().orElse(""));
+                output.property(KEY_FILENAME, blob.getFilename());
+                output.property(KEY_SIZE, blob.getSize());
+                output.property(KEY_FORMATTED_SIZE, NLS.formatSize(blob.getSize()));
             }
         } catch (IOException exception) {
             blob.delete();
@@ -102,13 +106,13 @@ public class BlobController extends BizController {
      * Finds the {@link Blob} for a given path and returns info about it.
      *
      * @param webContext the request to handle
-     * @param out        the response to the AJAX call
+     * @param output     the response to the AJAX call
      * @param spaceName  the {@link BlobStorageSpace} to find the object in
      */
     @Routed("/dasd/blob-info-for-path/:1")
     @InternalService
     @LoginRequired
-    public void blobInfoForPath(final WebContext webContext, JSONStructuredOutput out, String spaceName) {
+    public void blobInfoForPath(final WebContext webContext, JSONStructuredOutput output, String spaceName) {
         String path = webContext.getParameter(KEY_PATH);
 
         BlobStorageSpace space = blobStorage.getSpace(spaceName);
@@ -127,10 +131,10 @@ public class BlobController extends BizController {
                                                               spaceName)
                                                       .handle());
 
-        out.property(KEY_FILE_ID, blob.getBlobKey());
-        out.property(KEY_FILENAME, blob.getFilename());
-        out.property(KEY_SIZE, blob.getSize());
-        out.property(KEY_FORMATTED_SIZE, NLS.formatSize(blob.getSize()));
-        out.property(KEY_DOWNLOAD_URL, blob.url().asDownload().buildURL().orElse(""));
+        output.property(KEY_FILE_ID, blob.getBlobKey());
+        output.property(KEY_FILENAME, blob.getFilename());
+        output.property(KEY_SIZE, blob.getSize());
+        output.property(KEY_FORMATTED_SIZE, NLS.formatSize(blob.getSize()));
+        output.property(KEY_DOWNLOAD_URL, blob.url().asDownload().buildURL().orElse(""));
     }
 }

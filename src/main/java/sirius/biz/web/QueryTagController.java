@@ -41,29 +41,29 @@ public class QueryTagController extends BasicController {
     /**
      * Provides suggestions for the given entity type and query.
      *
-     * @param webContext  the current request
-     * @param out  the JSON response
-     * @param type the entity type for provide suggestions for
+     * @param webContext the current request
+     * @param output     the JSON response
+     * @param type       the entity type for provide suggestions for
      */
     @LoginRequired
     @SuppressWarnings("unchecked")
     @Routed("/system/search/suggestions/:1")
     @InternalService
-    public void suggestions(WebContext webContext, JSONStructuredOutput out, String type) {
+    public void suggestions(WebContext webContext, JSONStructuredOutput output, String type) {
         String query = webContext.get("query").asString();
-        out.beginArray("suggestions");
+        output.beginArray("suggestions");
         if (Strings.isFilled(query)) {
             Class<?> entityType = mixing.findDescriptor(type).map(EntityDescriptor::getType).orElse(null);
             for (QueryTagSuggester suggester : suggesters) {
                 suggester.computeQueryTags(type, (Class<? extends BaseEntity<?>>) entityType, query, tag -> {
-                    out.beginObject("suggestion");
-                    out.property("name", tag.getLabel());
-                    out.property("color", tag.getColor());
-                    out.property("value", tag.toString());
-                    out.endObject();
+                    output.beginObject("suggestion");
+                    output.property("name", tag.getLabel());
+                    output.property("color", tag.getColor());
+                    output.property("value", tag.toString());
+                    output.endObject();
                 });
             }
         }
-        out.endArray();
+        output.endArray();
     }
 }

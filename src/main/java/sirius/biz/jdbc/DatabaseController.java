@@ -100,13 +100,13 @@ public class DatabaseController extends BasicController {
      * Executes the given sql query.
      *
      * @param webContext the current request
-     * @param out        the JSON response
+     * @param output     the JSON response
      * @throws SQLException in case of a database error
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/sql/api/execute")
     @InternalService
-    public void executeQuery(WebContext webContext, JSONStructuredOutput out) throws SQLException {
+    public void executeQuery(WebContext webContext, JSONStructuredOutput output) throws SQLException {
         Watch w = Watch.start();
 
         try {
@@ -130,18 +130,18 @@ public class DatabaseController extends BasicController {
                                     .handle();
                 }
 
-                out.property("rowModified", qry.executeUpdate());
+                output.property("rowModified", qry.executeUpdate());
             } else if (isModifyStatement(sqlStatement)) {
-                out.property("rowModified", qry.executeUpdate());
+                output.property("rowModified", qry.executeUpdate());
             } else {
                 Monoflop monoflop = Monoflop.create();
-                qry.iterateAll(r -> outputRow(out, monoflop, r),
+                qry.iterateAll(r -> outputRow(output, monoflop, r),
                                new Limit(0, webContext.get("limit").asInt(DEFAULT_LIMIT)));
                 if (monoflop.successiveCall()) {
-                    out.endArray();
+                    output.endArray();
                 }
             }
-            out.property("duration", w.duration());
+            output.property("duration", w.duration());
         } catch (SQLException exception) {
             // In case of an invalid query, we do not want to log this into the syslog but
             // rather just directly output the message to the user....
@@ -214,20 +214,20 @@ public class DatabaseController extends BasicController {
                || lowerCaseQuery.startsWith(KEYWORD_CREATE);
     }
 
-    private void outputRow(JSONStructuredOutput out, Monoflop monoflop, Row row) {
+    private void outputRow(JSONStructuredOutput output, Monoflop monoflop, Row row) {
         if (monoflop.firstCall()) {
-            out.beginArray("columns");
+            output.beginArray("columns");
             for (Tuple<String, Object> col : row.getFieldsList()) {
-                out.property("column", col.getFirst());
+                output.property("column", col.getFirst());
             }
-            out.endArray();
-            out.beginArray("rows");
+            output.endArray();
+            output.beginArray("rows");
         }
-        out.beginArray("row");
+        output.beginArray("row");
         for (Tuple<String, Object> col : row.getFieldsList()) {
-            out.property("column", databaseDisplayUtils.formatValueForDisplay(col.getSecond()));
+            output.property("column", databaseDisplayUtils.formatValueForDisplay(col.getSecond()));
         }
-        out.endArray();
+        output.endArray();
     }
 
     /**
@@ -245,45 +245,45 @@ public class DatabaseController extends BasicController {
      * Lists all required changes as JSON
      *
      * @param webContext the current request
-     * @param out the JSON response
+     * @param output     the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/schema/api/list")
     @InternalService
-    public void changesList(WebContext webContext, JSONStructuredOutput out) {
+    public void changesList(WebContext webContext, JSONStructuredOutput output) {
         schema.computeRequiredSchemaChanges();
-        out.beginArray("changes");
+        output.beginArray("changes");
         for (SchemaUpdateAction action : schema.getSchemaUpdateActions()) {
-            out.beginObject("change");
-            out.property("id", action.getId());
-            out.property("reason", action.getReason());
-            out.property("realm", action.getRealm());
-            out.property("sql", String.join(";\n", action.getSql()) + ";");
-            out.property("executed", action.isExecuted());
-            out.property("failed", action.isFailed());
-            out.property("error", Value.of(action.getError()).asString());
-            out.property("dataLossPossible", action.isDataLossPossible());
-            out.endObject();
+            output.beginObject("change");
+            output.property("id", action.getId());
+            output.property("reason", action.getReason());
+            output.property("realm", action.getRealm());
+            output.property("sql", String.join(";\n", action.getSql()) + ";");
+            output.property("executed", action.isExecuted());
+            output.property("failed", action.isFailed());
+            output.property("error", Value.of(action.getError()).asString());
+            output.property("dataLossPossible", action.isDataLossPossible());
+            output.endObject();
         }
-        out.endArray();
+        output.endArray();
     }
 
     /**
      * Executes the given schema change.
      *
      * @param webContext the current request
-     * @param out the JSON response
+     * @param output     the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/schema/api/execute")
     @InternalService
-    public void execute(WebContext webContext, JSONStructuredOutput out) {
+    public void execute(WebContext webContext, JSONStructuredOutput output) {
         SchemaUpdateAction result = schema.executeSchemaUpdateAction(webContext.get("id").asString());
 
         if (result != null) {
-            out.property("errorMessage", Value.of(result.getError()).asString());
+            output.property("errorMessage", Value.of(result.getError()).asString());
         } else {
-            out.property("errorMessage", NLS.get("DatabaseController.unknownChange"));
+            output.property("errorMessage", NLS.get("DatabaseController.unknownChange"));
         }
     }
 }
