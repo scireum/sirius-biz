@@ -54,6 +54,12 @@
         </t:datacard>
     </t:emptyCheck>
 
+    <t:helpbox>
+        Note: The average and maximum durations shown below are only representing the metrics calculated on the current
+        node.
+        It may be a good idea to switch to a specific node via the <a href="/system/cluster">Nodes</a> screen.
+    </t:helpbox>
+
     <i:invoke template="/templates/biz/cluster/analytics-tasks-cards.html.pasta"
               heading="Daily Checks"
               tasks="@analyticalEngine.getDailyChecks()"/>
