@@ -190,6 +190,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
                                       getName(),
                                       watch.duration());
         }
+        task.trackDuration(watch.elapsedMillis());
         if (Microtiming.isEnabled()) {
             watch.submitMicroTiming(AnalyticalEngine.MICROTIMING_KEY_ANALYTICS,
                                     Strings.apply("Executed task '%s' for '%s'",

@@ -12,6 +12,7 @@ import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Average;
 
 import javax.annotation.Nullable;
 import java.time.LocalDate;
@@ -35,9 +36,37 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
     @Nullable
     protected Metrics metrics;
 
+    /**
+     * Contains the maximum duration of a computation in milliseconds.
+     */
+    private long maxDurationMillis = 0;
+
+    /**
+     * Contains the average duration of computations in milliseconds.
+     * <p>
+     * This keeps track of the average duration via a sliding window.
+     */
+    private final Average avgDurationMillis = new Average();
+
     @Override
     public int getLevel() {
         return AnalyticalTask.DEFAULT_LEVEL;
+    }
+
+    @Override
+    public void trackDuration(long durationMillis) {
+        this.avgDurationMillis.addValue(durationMillis);
+        this.maxDurationMillis = Math.max(this.maxDurationMillis, durationMillis);
+    }
+
+    @Override
+    public long getMaxDurationMillis() {
+        return maxDurationMillis;
+    }
+
+    @Override
+    public Average getAvgDurationMillis() {
+        return avgDurationMillis;
     }
 
     @Override

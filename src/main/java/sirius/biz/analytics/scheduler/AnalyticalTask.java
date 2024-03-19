@@ -9,6 +9,7 @@
 package sirius.biz.analytics.scheduler;
 
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.health.Average;
 
 import java.time.LocalDate;
 
@@ -59,6 +60,27 @@ public interface AnalyticalTask<E extends BaseEntity<?>> {
      * @return the priority level of this task. Use {@link #DEFAULT_LEVEL} is this task doesn't depend on any other task
      */
     int getLevel();
+
+    /**
+     * Tracks the duration of the last computation.
+     *
+     * @param durationMillis the duration of the last computation in milliseconds
+     */
+    void trackDuration(long durationMillis);
+
+    /**
+     * Returns the maximum duration of computations in milliseconds.
+     *
+     * @return the maximum duration of computations in milliseconds
+     */
+    long getMaxDurationMillis();
+
+    /**
+     * Returns the average duration of computations in milliseconds.
+     *
+     * @return the average duration of computations in milliseconds
+     */
+    Average getAvgDurationMillis();
 
     /**
      * Executes the analytical task for the given entity and reference date.

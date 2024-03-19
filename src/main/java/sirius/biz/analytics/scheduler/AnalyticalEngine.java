@@ -8,12 +8,18 @@
 
 package sirius.biz.analytics.scheduler;
 
+import sirius.biz.analytics.checks.DailyCheck;
 import sirius.biz.analytics.flags.ExecutionFlags;
+import sirius.biz.analytics.metrics.DailyMetricComputer;
+import sirius.biz.analytics.metrics.MonthlyLargeMetricComputer;
+import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Json;
+import sirius.kernel.commons.MultiMap;
+import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
@@ -89,6 +95,9 @@ public class AnalyticalEngine implements EveryDay {
     @Part
     private DistributedTasks cluster;
 
+    @Part
+    private GlobalContext globalContext;
+
     /**
      * Contains the implementation which stores which scheduler was executed when.
      * <p>
@@ -102,6 +111,11 @@ public class AnalyticalEngine implements EveryDay {
     private PartCollection<AnalyticsScheduler> schedulers;
     private List<AnalyticsScheduler> activeSchedulers;
 
+    private MultiMap<Class<?>, AnalyticalTask<?>> dailyChecks;
+    private MultiMap<Class<?>, AnalyticalTask<?>> dailyMetricComputers;
+    private MultiMap<Class<?>, AnalyticalTask<?>> monthlyMetricComputers;
+    private MultiMap<Class<?>, AnalyticalTask<?>> monthlyLargeMetricComputers;
+
     @Override
     public String getConfigKeyName() {
         return "analytical-engine";
@@ -114,12 +128,81 @@ public class AnalyticalEngine implements EveryDay {
         }
     }
 
-    protected List<AnalyticsScheduler> getActiveSchedulers() {
+    /**
+     * Returns a list of all active {@linkplain AnalyticsScheduler schedulers}.
+     *
+     * @return a list of all active schedulers
+     */
+    public List<AnalyticsScheduler> getActiveSchedulers() {
         if (activeSchedulers == null) {
             initialize();
         }
 
         return Collections.unmodifiableList(activeSchedulers);
+    }
+
+    /**
+     * Returns a map of all active {@linkplain DailyCheck daily checks} grouped by the entity type they are working on.
+     *
+     * @return a map of all active daily checks
+     */
+    public MultiMap<Class<?>, AnalyticalTask<?>> getDailyChecks() {
+        if (dailyChecks == null) {
+            dailyChecks = collectEnabledTasks(DailyCheck.class);
+        }
+        return dailyChecks;
+    }
+
+    /**
+     * Returns a map of all active {@linkplain DailyMetricComputer daily metric computers} grouped by the entity type they are working on.
+     *
+     * @return a map of all active daily metric computers
+     */
+    public MultiMap<Class<?>, AnalyticalTask<?>> getDailyMetricComputers() {
+        if (dailyMetricComputers == null) {
+            dailyMetricComputers = collectEnabledTasks(DailyMetricComputer.class);
+        }
+        return dailyMetricComputers;
+    }
+
+    /**
+     * Returns a map of all active {@linkplain MonthlyMetricComputer monthly metric computers} grouped by the entity type they are working on.
+     *
+     * @return a map of all active monthly metric computers
+     */
+    public MultiMap<Class<?>, AnalyticalTask<?>> getMonthlyMetricComputers() {
+        if (monthlyMetricComputers == null) {
+            monthlyMetricComputers = collectEnabledTasks(MonthlyMetricComputer.class);
+        }
+        return monthlyMetricComputers;
+    }
+
+    /**
+     * Returns a map of all active {@linkplain MonthlyLargeMetricComputer monthly large metric computers} grouped by the entity type they are working on.
+     *
+     * @return a map of all active monthly large metric computers
+     */
+    public MultiMap<Class<?>, AnalyticalTask<?>> getMonthlyLargeMetricComputers() {
+        if (monthlyLargeMetricComputers == null) {
+            monthlyLargeMetricComputers = collectEnabledTasks(MonthlyLargeMetricComputer.class);
+        }
+        return monthlyLargeMetricComputers;
+    }
+
+    /**
+     * Collects all enabled tasks of the given type.
+     *
+     * @param taskType the type of tasks to collect
+     * @return a map of all enabled tasks of the given type
+     */
+    @SuppressWarnings("unchecked")
+    private MultiMap<Class<?>, AnalyticalTask<?>> collectEnabledTasks(Class<?> taskType) {
+        MultiMap<Class<?>, AnalyticalTask<?>> result = MultiMap.create();
+        globalContext.getParts((Class<AnalyticalTask<?>>) taskType)
+                     .stream()
+                     .filter(AnalyticalTask::isEnabled)
+                     .forEach(task -> result.put(task.getType(), task));
+        return result;
     }
 
     protected void initialize() {
@@ -264,7 +347,7 @@ public class AnalyticalEngine implements EveryDay {
      * @param scheduler the scheduler to check the last execution for
      * @return the last execution timestamp or an empty optional
      */
-    protected Optional<LocalDateTime> getLastExecution(AnalyticsScheduler scheduler) {
+    public Optional<LocalDateTime> getLastExecution(AnalyticsScheduler scheduler) {
         return flags.readExecutionFlag(computeExecutionFlagName(scheduler), EXECUTION_FLAG);
     }
 }
