@@ -53,12 +53,12 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
     /**
      * Lists all possible SAML tenants or permits to create a login form for a custom SAML provider.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Routed(SAML_URI_PREFIX)
-    public void saml(WebContext ctx) {
+    public void saml(WebContext webContext) {
         List<T> tenants = querySAMLTenants();
-        ctx.respondWith().template("/templates/biz/tenants/saml.html.pasta", tenants);
+        webContext.respondWith().template("/templates/biz/tenants/saml.html.pasta", tenants);
     }
 
     /**
@@ -74,16 +74,16 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
     /**
      * Processes a SAML response and tries to create or update a user which is then logged in.
      *
-     * @param ctx the SAML response as request
+     * @param webContext the SAML response as request
      */
     @Routed(SAML_URI_PREFIX + "/login")
-    public void samlLogin(WebContext ctx) {
-        if (!ctx.isUnsafePOST()) {
-            ctx.respondWith().redirectToGet(SAML_URI_PREFIX);
+    public void samlLogin(WebContext webContext) {
+        if (!webContext.isUnsafePOST()) {
+            webContext.respondWith().redirectToGet(SAML_URI_PREFIX);
             return;
         }
 
-        SAMLResponse response = saml.parseSAMLResponse(ctx);
+        SAMLResponse response = saml.parseSAMLResponse(webContext);
 
         if (Strings.isEmpty(response.getNameId())) {
             throw Exceptions.createHandled()
@@ -93,25 +93,25 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
 
         TenantUserManager<?, ?, ?> manager =
                 (TenantUserManager<?, ?, ?>) UserContext.getCurrentScope().getUserManager();
-        UserInfo user = manager.findUserByName(ctx, response.getNameId());
+        UserInfo user = manager.findUserByName(webContext, response.getNameId());
 
         if (user == null) {
-            user = tryCreateUser(ctx, response);
+            user = tryCreateUser(webContext, response);
         } else {
             verifyUser(response, user);
         }
-        manager.onExternalLogin(ctx, user);
+        manager.onExternalLogin(webContext, user);
 
         // Re-resolve and install the newly created or updated user in the session.
         // This also flushes all caches again, as we updated some internal data within
         // "onExternalLogin" above...
         UserContext userContext = UserContext.get();
-        userContext.setCurrentUser(manager.findUserByName(ctx, response.getNameId()));
+        userContext.setCurrentUser(manager.findUserByName(webContext, response.getNameId()));
 
-        ctx.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
+        webContext.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
     }
 
-    private UserInfo tryCreateUser(WebContext ctx, SAMLResponse response) {
+    private UserInfo tryCreateUser(WebContext webContext, SAMLResponse response) {
         if (Strings.isEmpty(response.getIssuer())) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: No issuer in request!").handle();
         }
@@ -134,7 +134,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
 
             TenantUserManager<?, ?, ?> manager =
                     (TenantUserManager<?, ?, ?>) UserContext.getCurrentScope().getUserManager();
-            UserInfo user = manager.findUserByName(ctx, response.getNameId());
+            UserInfo user = manager.findUserByName(webContext, response.getNameId());
             if (user == null) {
                 throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Failed to create a user").handle();
             }

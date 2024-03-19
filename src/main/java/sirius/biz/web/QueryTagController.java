@@ -41,7 +41,7 @@ public class QueryTagController extends BasicController {
     /**
      * Provides suggestions for the given entity type and query.
      *
-     * @param ctx  the current request
+     * @param webContext  the current request
      * @param out  the JSON response
      * @param type the entity type for provide suggestions for
      */
@@ -49,8 +49,8 @@ public class QueryTagController extends BasicController {
     @SuppressWarnings("unchecked")
     @Routed("/system/search/suggestions/:1")
     @InternalService
-    public void suggestions(WebContext ctx, JSONStructuredOutput out, String type) {
-        String query = ctx.get("query").asString();
+    public void suggestions(WebContext webContext, JSONStructuredOutput out, String type) {
+        String query = webContext.get("query").asString();
         out.beginArray("suggestions");
         if (Strings.isFilled(query)) {
             Class<?> entityType = mixing.findDescriptor(type).map(EntityDescriptor::getType).orElse(null);

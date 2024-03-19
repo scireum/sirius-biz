@@ -348,10 +348,10 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Checks if the ip of the request matches the ip range of the tenant.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @return <tt>true</tt> if the ip address matches the range or if non was configured, <tt>false</tt> otherwise
      */
-    public boolean matchesIPRange(WebContext ctx) {
+    public boolean matchesIPRange(WebContext webContext) {
         if (Strings.isEmpty(ipRange)) {
             return true;
         }
@@ -366,7 +366,7 @@ public class TenantData extends Composite implements Journaled {
             }
         }
 
-        return rangeSet.accepts(ctx.getRemoteIP());
+        return rangeSet.accepts(webContext.getRemoteIP());
     }
 
     /**

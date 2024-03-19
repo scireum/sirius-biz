@@ -109,10 +109,10 @@ public class FSStorageEngine implements PhysicalStorageEngine {
     }
 
     @Override
-    public void deliver(WebContext ctx, String bucket, String physicalKey, String fileExtension) {
+    public void deliver(WebContext webContext, String bucket, String physicalKey, String fileExtension) {
         File file = getFile(bucket, physicalKey);
-        Response response = ctx.respondWith().infinitelyCached();
-        String name = ctx.get("name").asString();
+        Response response = webContext.respondWith().infinitelyCached();
+        String name = webContext.get("name").asString();
         if (Strings.isFilled(name)) {
             response.download(name);
         } else {

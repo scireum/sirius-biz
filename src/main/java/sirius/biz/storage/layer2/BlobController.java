@@ -54,7 +54,7 @@ public class BlobController extends BizController {
      * deleted. However, if an entity references the blob via a {@link BlobHardRef}, it will be marked
      * as permanent.
      *
-     * @param ctx       the request to handle
+     * @param webContext       the request to handle
      * @param out       the response to the AJAX call
      * @param spaceName the {@link BlobStorageSpace} to store the object in
      * @param upload    the content of the upload
@@ -62,23 +62,23 @@ public class BlobController extends BizController {
     @Routed(value = "/dasd/upload-file/:1", preDispatchable = true)
     @InternalService
     @LoginRequired
-    public void uploadFile(final WebContext ctx,
+    public void uploadFile(final WebContext webContext,
                            JSONStructuredOutput out,
                            String spaceName,
                            InputStreamHandler upload) {
         Blob blob = blobStorage.getSpace(spaceName).createTemporaryBlob();
         try {
             try (upload) {
-                ctx.markAsLongCall();
+                webContext.markAsLongCall();
                 //TODO SIRI-96 remove legacy qqfile once library is updated...
-                String name = ctx.get(KEY_FILENAME).asString(ctx.get(KEY_FILE).asString());
-                blob.updateContent(name, upload, Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
+                String name = webContext.get(KEY_FILENAME).asString(webContext.get(KEY_FILE).asString());
+                blob.updateContent(name, upload, Long.parseLong(webContext.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
 
                 out.property(KEY_FILE_ID, blob.getBlobKey());
 
                 // TODO SIRI-96 remove once the blobHardRefField has been refactored
                 out.property(KEY_PREVIEW_URL, blob.url().asDownload().buildURL().orElse(""));
-                out.property(KEY_IMAGE_URL, blob.url().withVariant(ctx.get("variant").asString("raw")).buildURL().orElse(""));
+                out.property(KEY_IMAGE_URL, blob.url().withVariant(webContext.get("variant").asString("raw")).buildURL().orElse(""));
 
                 out.property(KEY_DOWNLOAD_URL, blob.url().asDownload().buildURL().orElse(""));
                 out.property(KEY_FILENAME, blob.getFilename());

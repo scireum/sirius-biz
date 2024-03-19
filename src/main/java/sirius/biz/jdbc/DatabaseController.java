@@ -84,16 +84,16 @@ public class DatabaseController extends BasicController {
     /**
      * Renders the UI to execute SQL queries.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/sql")
     @DefaultRoute
-    public void sql(WebContext ctx) {
+    public void sql(WebContext webContext) {
         // Only display selectable databases which are properly configured...
         List<String> availableDatabases =
                 selectableDatabases.stream().filter(name -> databases.getDatabases().contains(name)).toList();
-        ctx.respondWith().template("/templates/biz/model/sql.html.pasta", availableDatabases, defaultDatabase);
+        webContext.respondWith().template("/templates/biz/model/sql.html.pasta", availableDatabases, defaultDatabase);
     }
 
     /**
@@ -233,24 +233,24 @@ public class DatabaseController extends BasicController {
     /**
      * Renders the schema list view.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/schema")
-    public void changes(WebContext ctx) {
-        ctx.respondWith().template("/templates/biz/model/schema.html.pasta");
+    public void changes(WebContext webContext) {
+        webContext.respondWith().template("/templates/biz/model/schema.html.pasta");
     }
 
     /**
      * Lists all required changes as JSON
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @param out the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/schema/api/list")
     @InternalService
-    public void changesList(WebContext ctx, JSONStructuredOutput out) {
+    public void changesList(WebContext webContext, JSONStructuredOutput out) {
         schema.computeRequiredSchemaChanges();
         out.beginArray("changes");
         for (SchemaUpdateAction action : schema.getSchemaUpdateActions()) {
@@ -271,14 +271,14 @@ public class DatabaseController extends BasicController {
     /**
      * Executes the given schema change.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @param out the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/schema/api/execute")
     @InternalService
-    public void execute(WebContext ctx, JSONStructuredOutput out) {
-        SchemaUpdateAction result = schema.executeSchemaUpdateAction(ctx.get("id").asString());
+    public void execute(WebContext webContext, JSONStructuredOutput out) {
+        SchemaUpdateAction result = schema.executeSchemaUpdateAction(webContext.get("id").asString());
 
         if (result != null) {
             out.property("errorMessage", Value.of(result.getError()).asString());

@@ -539,17 +539,17 @@ public class Storage {
     /**
      * Delivers a pyhsical file or object.
      *
-     * @param ctx           the request to respond to
+     * @param webContext           the request to respond to
      * @param bucket        the bucket to deliver from
      * @param physicalKey   the physical file to deliver
      * @param fileExtension the file extension of the file (to determine the <tt>Content-Type</tt>)
      */
-    protected void deliverPhysicalFile(WebContext ctx, String bucket, String physicalKey, String fileExtension) {
+    protected void deliverPhysicalFile(WebContext webContext, String bucket, String physicalKey, String fileExtension) {
         if (shouldLogDeprecated(bucket)) {
-            DEPRECATION_LOG.WARN("A file from the deprecated storage was requested: %s", ctx.getRequest().toString());
+            DEPRECATION_LOG.WARN("A file from the deprecated storage was requested: %s", webContext.getRequest().toString());
         }
 
-        getStorageEngine(bucket).deliver(ctx, bucket, physicalKey, fileExtension);
+        getStorageEngine(bucket).deliver(webContext, bucket, physicalKey, fileExtension);
     }
 
     /**

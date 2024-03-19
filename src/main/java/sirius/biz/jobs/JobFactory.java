@@ -190,10 +190,10 @@ public interface JobFactory extends Named, Priorized {
     /**
      * Computes a JsonNode containing the required update operations for the JavaScript frontend.
      *
-     * @param ctx the web context containing the values of all the parameters
+     * @param webContext the web context containing the values of all the parameters
      * @return a JsonNode that can be handled by the JavaScript
      */
-    JsonNode computeRequiredParameterUpdates(WebContext ctx);
+    JsonNode computeRequiredParameterUpdates(WebContext webContext);
 
     /**
      * Computes a JsonNode containing the required update operations for the JavaScript frontend.
