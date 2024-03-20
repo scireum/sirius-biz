@@ -206,4 +206,16 @@ public class ImportTransactionHelper extends ImportHelper {
 
         return deleteMode == SyncSourceDeleteMode.ALL;
     }
+
+    /**
+     * Sets a new value for the source.
+     * This is useful e.g. in migration scenarios where the source in one transaction could be differ.
+     *
+     * @param source the new source
+     * @deprecated Only use this method if you are sure that you want to change the source in one and the same transaction.
+     */
+    @Deprecated
+    public void setSource(String source) {
+        this.source = source;
+    }
 }
