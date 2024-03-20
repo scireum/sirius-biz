@@ -202,8 +202,8 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
             processContext.log(ProcessLog.info().withMessage("Flushing local cache..."));
             jupiter.flushCaches();
-        } catch (Exception e) {
-            processContext.handle(e);
+        } catch (Exception exception) {
+            processContext.handle(exception);
         }
     }
 
@@ -230,11 +230,11 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                          .withFormattedMessage("Creating '%s' took %s...",
                                                                provider.getFilename(),
                                                                watch.duration()));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             processContext.log(ProcessLog.error()
                                          .withMessage(Exceptions.handle()
                                                                 .to(Jupiter.LOG)
-                                                                .error(e)
+                                                                .error(exception)
                                                                 .withSystemErrorMessage(
                                                                         "Failed to execute data provider %s: %s (%s)",
                                                                         provider.getName())
@@ -249,11 +249,11 @@ public class JupiterSync implements Startable, EndOfDayTask {
             if (connection.isConfigured()) {
                 try {
                     updateJupiterConfig(processContext, connection);
-                } catch (HandledException e) {
+                } catch (HandledException exception) {
                     processContext.log(ProcessLog.error()
                                                  .withFormattedMessage("Failed to update config of %s: %s",
                                                                        instance,
-                                                                       e.getMessage()));
+                                                                       exception.getMessage()));
                 }
             } else {
                 processContext.log(ProcessLog.info()
@@ -282,9 +282,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                            .withFormattedMessage("Updated config for %s:%n%s",
                                                                  connection.getName(),
                                                                  configString));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             processContext.handle(Exceptions.handle()
-                                            .error(e)
+                                            .error(exception)
                                             .withSystemErrorMessage("Failed to update Jupiter config of %s: %s (%s)",
                                                                     connection.getName())
                                             .handle());
@@ -306,12 +306,12 @@ public class JupiterSync implements Startable, EndOfDayTask {
                 try {
                     syncRepository(processContext, connection);
                     awaitNextEpoch(processContext, connection);
-                } catch (HandledException e) {
+                } catch (HandledException exception) {
                     processContext.log(ProcessLog.error()
                                                  .withFormattedMessage("Failed to sync repository contents of %s: %s",
                                                                        instance,
-                                                                       e.getMessage()));
-                    Jupiter.LOG.SEVERE(e);
+                                                                       exception.getMessage()));
+                    Jupiter.LOG.SEVERE(exception);
                 }
             } else {
                 processContext.log(ProcessLog.info()
@@ -352,9 +352,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                            .withFormattedMessage(
                                                    "Successfully synchronized the repository contents of %s.",
                                                    connection.getName()));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             processContext.handle(Exceptions.handle()
-                                            .error(e)
+                                            .error(exception)
                                             .withSystemErrorMessage(
                                                     "Failed to synchronize the repository contents of %s: %s (%s)",
                                                     connection.getName())
@@ -366,8 +366,8 @@ public class JupiterSync implements Startable, EndOfDayTask {
         for (Runnable runnable : updateTasks) {
             try {
                 runnable.run();
-            } catch (Exception ex) {
-                processContext.handle(ex);
+            } catch (Exception exception) {
+                processContext.handle(exception);
             }
         }
     }
@@ -518,9 +518,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                 repositoryFiles,
                                 updateTaskConsumer,
                                 filesToDelete);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             processContext.handle(Exceptions.handle()
-                                            .error(e)
+                                            .error(exception)
                                             .withSystemErrorMessage(
                                                     "Failed to check the local repository %s for %s: %s (%s)",
                                                     localRepoSpaceName,

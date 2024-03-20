@@ -887,10 +887,10 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                                        LocalDateTime.now().minusDays(retentionDays)))
                  .streamBlockwise()
                  .forEach(this::markBlobAsDeleted);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 2/Mongo: Failed to delete old blobs in %s: %s (%s)", spaceName)
                       .handle();
         }
@@ -905,10 +905,10 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                  .where(QueryBuilder.FILTERS.lt(MongoBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
                  .streamBlockwise()
                  .forEach(this::markBlobAsDeleted);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 2/Mongo: Failed to delete temporary blobs in %s: %s (%s)",
                                               spaceName)
                       .handle();

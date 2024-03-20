@@ -332,8 +332,8 @@ public abstract class BasicJobFactory implements JobFactory {
 
                     context.put(parameter.getName(), value);
                 }
-            } catch (HandledException e) {
-                errorConsumer.accept(parameter, e);
+            } catch (HandledException exception) {
+                errorConsumer.accept(parameter, exception);
             }
         }
 

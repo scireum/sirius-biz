@@ -83,8 +83,8 @@ public abstract class ImportJob extends BatchJob {
                                       .asSystemMessage());
             }
             this.importer.close();
-        } catch (IOException e) {
-            process.handle(e);
+        } catch (IOException exception) {
+            process.handle(exception);
         }
         super.close();
     }

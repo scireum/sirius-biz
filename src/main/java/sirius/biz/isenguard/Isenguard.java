@@ -97,12 +97,12 @@ public class Isenguard {
     public boolean isIPBlacklisted(String ipAddress) {
         try {
             return limiter != null && limiter.isIPBLacklisted(ipAddress);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             // In case of an error e.g. Redis might not be available,
             // we resort to ignoring any checks and let the application run.
             // The other option would be to block everything and essentially
             // shut down the application, which isn't feasible either...
-            Exceptions.handle(LOG, e);
+            Exceptions.handle(LOG, exception);
             return false;
         }
     }
@@ -218,12 +218,12 @@ public class Isenguard {
                     limitReachedOnce.run();
                 }
             });
-        } catch (Exception e) {
+        } catch (Exception exception) {
             // In case of an error e.g. Redis might not be available,
             // we resort to ignoring any limits and let the application run.
             // The other option would be to block everything and essentially
             // shut down the application, which isn't feasible either...
-            Exceptions.handle(LOG, e);
+            Exceptions.handle(LOG, exception);
             return false;
         }
     }

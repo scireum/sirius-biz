@@ -107,8 +107,8 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
                 onboardingEngine.markOutdatedOnboardingVideosAsDeleted(academy, entity.getUniqueName(), syncToken);
                 updateStatistics();
                 persistStatistics();
-            } catch (Exception e) {
-                Exceptions.handle(Log.BACKGROUND, e);
+            } catch (Exception exception) {
+                Exceptions.handle(Log.BACKGROUND, exception);
             }
         }
 

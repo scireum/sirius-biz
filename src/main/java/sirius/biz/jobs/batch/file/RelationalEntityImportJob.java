@@ -221,11 +221,11 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
             } else {
                 process.addTiming(NLS.get("EntityImportJob.entityUpdated"), watch.elapsedMillis());
             }
-        } catch (HandledException e) {
+        } catch (HandledException exception) {
             throw Exceptions.createHandled()
                             .withNLSKey("EntityImportJob.cannotHandleEntity")
                             .set("entity", entity.toString())
-                            .set("message", e.getMessage())
+                            .set("message", exception.getMessage())
                             .handle();
         }
     }

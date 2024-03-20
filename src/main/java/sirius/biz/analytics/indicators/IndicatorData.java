@@ -70,8 +70,8 @@ public class IndicatorData extends Composite {
         for (Indicator<?> indicator : indicators) {
             try {
                 executeIndicator(indicator);
-            } catch (Exception e) {
-                Exceptions.handle(Log.BACKGROUND, e);
+            } catch (Exception exception) {
+                Exceptions.handle(Log.BACKGROUND, exception);
                 updateIndication(indicator.getName(), false);
             }
         }

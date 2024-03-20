@@ -32,16 +32,16 @@ import java.util.Optional;
 public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUserAccount> {
 
     @Override
-    protected BasePageHelper<SQLTenant, ?, ?, ?> getTenantsAsPage(WebContext ctx) {
+    protected BasePageHelper<SQLTenant, ?, ?, ?> getTenantsAsPage(WebContext webContext) {
         SmartQuery<SQLTenant> query = oma.select(SQLTenant.class).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME));
-        SQLPageHelper<SQLTenant> pageHelper = createTenantPageHelper(ctx, query);
+        SQLPageHelper<SQLTenant> pageHelper = createTenantPageHelper(webContext, query);
         pageHelper.applyExtenders("/tenants");
 
         return pageHelper;
     }
 
-    private SQLPageHelper<SQLTenant> createTenantPageHelper(WebContext ctx, SmartQuery<SQLTenant> query) {
-        SQLPageHelper<SQLTenant> pageHelper = SQLPageHelper.withQuery(query).withContext(ctx);
+    private SQLPageHelper<SQLTenant> createTenantPageHelper(WebContext webContext, SmartQuery<SQLTenant> query) {
+        SQLPageHelper<SQLTenant> pageHelper = SQLPageHelper.withQuery(query).withContext(webContext);
         pageHelper.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
                                     QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
                                     QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
@@ -56,10 +56,11 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
     }
 
     @Override
-    protected BasePageHelper<SQLTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx, SQLTenant currentTenant) {
+    protected BasePageHelper<SQLTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext webContext,
+                                                                            SQLTenant currentTenant) {
         SmartQuery<SQLTenant> query =
                 queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME));
-        SQLPageHelper<SQLTenant> pageHelper = createTenantPageHelper(ctx, query);
+        SQLPageHelper<SQLTenant> pageHelper = createTenantPageHelper(webContext, query);
         pageHelper.applyExtenders("/tenants/select");
 
         return pageHelper;

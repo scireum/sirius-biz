@@ -55,8 +55,8 @@ public class PBKDF2SHA256Function implements PasswordHashFunction {
             SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
             byte[] hash = f.generateSecret(spec).getEncoded();
             return Base64.getEncoder().encodeToString(hash);
-        } catch (Exception e) {
-            Exceptions.handle(Log.APPLICATION, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.APPLICATION, exception);
             return null;
         }
     }

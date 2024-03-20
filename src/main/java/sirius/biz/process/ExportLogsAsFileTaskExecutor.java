@@ -106,10 +106,10 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
             processContext.fetchOutputEntries(outputName, (columns, labels) -> {
                 try {
                     export.addListRow(labels);
-                } catch (IOException e) {
+                } catch (IOException exception) {
                     throw Exceptions.handle()
                                     .to(Log.BACKGROUND)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage("An error occurred while exporting a row: %s (%s)")
                                     .handle();
                 }
@@ -120,18 +120,18 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
                                                      .format());
                     export.addListRow(values);
                     return true;
-                } catch (IOException e) {
+                } catch (IOException exception) {
                     throw Exceptions.handle()
                                     .to(Log.BACKGROUND)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage("An error occurred while exporting a row: %s (%s)")
                                     .handle();
                 }
             });
 
             processContext.forceUpdateState(NLS.fmtr("Process.rowsExported").set("rows", rowCount.get()).format());
-        } catch (Exception e) {
-            processContext.handle(e);
+        } catch (Exception exception) {
+            processContext.handle(exception);
         }
         processContext.log(ProcessLog.success().withNLSKey("ExportLogsAsFileTaskExecutor.completed"));
     }

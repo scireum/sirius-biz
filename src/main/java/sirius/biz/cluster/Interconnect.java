@@ -72,8 +72,8 @@ public class Interconnect implements Subscriber {
         }
         try {
             redis.publish(TOPIC_INTERCONNECT, msg);
-        } catch (Exception e) {
-            Exceptions.handle(LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(LOG, exception);
         }
     }
 
@@ -90,8 +90,8 @@ public class Interconnect implements Subscriber {
             }
             ObjectNode msgAsJSON = Json.parseObject(message);
             dispatchLocally(msgAsJSON);
-        } catch (Exception e) {
-            Exceptions.handle(LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(LOG, exception);
         }
     }
 

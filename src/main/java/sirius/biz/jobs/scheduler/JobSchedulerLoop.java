@@ -80,10 +80,10 @@ public class JobSchedulerLoop extends BackgroundLoop {
                     executeJob(provider, entry, now);
                     startedJobs++;
                 }
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage(
                                   "An error occurred while checking a scheduled task of %s: %s - %s (%s)",
                                   provider.getClass().getSimpleName(),
@@ -99,10 +99,10 @@ public class JobSchedulerLoop extends BackgroundLoop {
         try {
             UserInfo user = UserContext.get().getUserManager().findUserByUserId(entry.getSchedulerData().getUserId());
             UserContext.get().runAs(user, () -> executeJobAsUser(provider, entry, now));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("An error occurred while starting a scheduled task of %s: %s - %s (%s)",
                                               provider.getClass().getSimpleName(),
                                               entry)

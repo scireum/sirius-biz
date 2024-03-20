@@ -81,10 +81,10 @@ public class MongoPerformanceFlagModifier implements PerformanceFlagModifier {
                      .addEachToSet(PerformanceFlagged.PERFORMANCE_DATA.inner(MongoPerformanceData.FLAGS), flagsToAdd)
                      .executeFor((MongoEntity) target.getOwner());
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to update performance flags of %s (%s): %s (%s)",
                                               target.getOwner().getIdAsString(),
                                               target.getOwner().getClass().getName())

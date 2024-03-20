@@ -285,10 +285,10 @@ public class StorageUtils {
         return createLocalBuffer(bufferFile -> {
             try (InputStream in = new FileInputStream(bufferFile)) {
                 dataConsumer.accept(in);
-            } catch (IOException e) {
+            } catch (IOException exception) {
                 throw Exceptions.handle()
                                 .to(StorageUtils.LOG)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage(
                                         "An error occurred while reading from a temporary buffer: %s (%s)")
                                 .handle();

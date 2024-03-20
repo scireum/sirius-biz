@@ -42,8 +42,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 deletePhysicalObject(blob);
                 mango.delete(blob);
                 counter.run();
-            } catch (Exception e) {
-                handleBlobDeletionException(blob, e);
+            } catch (Exception exception) {
+                handleBlobDeletionException(blob, exception);
             }
         });
     }
@@ -55,8 +55,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 propagateDelete(dir);
                 mango.delete(dir);
                 counter.run();
-            } catch (Exception e) {
-                handleDirectoryDeletionException(dir, e);
+            } catch (Exception exception) {
+                handleDirectoryDeletionException(dir, exception);
             }
         });
     }
@@ -114,8 +114,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                      .where(MongoDirectory.ID, dir.getId())
                      .executeForOne(MongoDirectory.class);
                 counter.run();
-            } catch (Exception e) {
-                handleDirectoryRenameException(dir, e);
+            } catch (Exception exception) {
+                handleDirectoryRenameException(dir, exception);
             }
         });
     }

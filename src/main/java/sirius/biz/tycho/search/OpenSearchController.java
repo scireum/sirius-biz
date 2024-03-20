@@ -169,13 +169,13 @@ public class OpenSearchController extends BizController {
 
             allTasksCompleted.asFuture().await(SEARCH_TIMEOUT);
             outputStream.write(RESPONSE_COMPLETED_MESSAGE);
-        } catch (IOException e) {
-            Exceptions.ignore(e);
+        } catch (IOException exception) {
+            Exceptions.ignore(exception);
         } finally {
             try {
                 outputStream.close();
-            } catch (IOException e) {
-                Exceptions.ignore(e);
+            } catch (IOException exception) {
+                Exceptions.ignore(exception);
             }
         }
     }
@@ -206,12 +206,12 @@ public class OpenSearchController extends BizController {
                 }
                 outputStream.flush();
             }
-        } catch (IOException e) {
-            Exceptions.ignore(e);
-        } catch (Exception e) {
+        } catch (IOException exception) {
+            Exceptions.ignore(exception);
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.APPLICATION)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to execute an OpenSearchProvider (%s): %s (%s)",
                                               provider.getClass().getName())
                       .handle();

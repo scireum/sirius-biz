@@ -46,11 +46,11 @@ public class DistributedTaskExecutorLoadAction implements ClassLoadAction {
             mutableGlobalContext.registerPart(anInstance.getClass().getName(),
                                               anInstance,
                                               DistributedTaskExecutor.class);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Injector.LOG.WARN("Cannot register %s as DistributedTaskExecutor: %s (%s)",
                               aClass.getName(),
-                              e.getMessage(),
-                              e.getClass().getName());
+                              exception.getMessage(),
+                              exception.getClass().getName());
         }
     }
 }

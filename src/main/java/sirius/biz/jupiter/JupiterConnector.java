@@ -139,8 +139,8 @@ public class JupiterConnector {
         } catch (JedisConnectionException ignored) {
             executeOnFailover.run();
             return performWithoutFailover(description, task, fallback);
-        } catch (Exception e) {
-            throw Exceptions.handle(Jupiter.LOG, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(Jupiter.LOG, exception);
         }
     }
 
@@ -148,8 +148,8 @@ public class JupiterConnector {
         try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
-        } catch (Exception e) {
-            throw Exceptions.handle(Jupiter.LOG, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(Jupiter.LOG, exception);
         }
     }
 
@@ -157,10 +157,10 @@ public class JupiterConnector {
         Watch watch = Watch.start();
         try {
             return task.apply(jedis.getClient());
-        } catch (JedisConnectionException e) {
-            throw e;
-        } catch (Exception e) {
-            throw Exceptions.handle(Jupiter.LOG, e);
+        } catch (JedisConnectionException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw Exceptions.handle(Jupiter.LOG, exception);
         } finally {
             jupiter.callDuration.addValue(watch.elapsedMillis());
             if (Microtiming.isEnabled()) {

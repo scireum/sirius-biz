@@ -114,10 +114,10 @@ class IDBLookupTable extends LookupTable {
                                                           .map(row -> row.at(0))
                                                           .filter(Value::isFilled)
                                                           .orElse(Value.EMPTY));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Error on fetch field with code '%s' field '%s' table '%s': %s (%s)",
                                               code,
                                               targetField,
@@ -145,10 +145,10 @@ class IDBLookupTable extends LookupTable {
                                                           .singleRow(targetField)
                                                           .map(row -> row.at(0).asString())
                                                           .filter(Strings::isFilled));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Error on fetch translated field with code '%s' field '%s' lang '%s' table '%s': %s (%s)",
                               code,
@@ -170,10 +170,10 @@ class IDBLookupTable extends LookupTable {
                                                           .singleRow(codeField)
                                                           .map(row -> row.at(0).asString())
                                                           .filter(Strings::isFilled));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Error on normalize code '%s' table '%s': %s (%s)", code, table.getName())
                       .handle();
             return Optional.empty();
@@ -195,10 +195,10 @@ class IDBLookupTable extends LookupTable {
                                                           .singleRow(codeField)
                                                           .map(row -> row.at(0).asString())
                                                           .filter(Strings::isFilled));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Error on normalize code '%s' mapping '%s' table '%s': %s (%s)",
                                               code,
                                               mapping,
@@ -218,10 +218,10 @@ class IDBLookupTable extends LookupTable {
                                                           .singleRow(codeField)
                                                           .map(row -> row.at(0).asString())
                                                           .filter(Strings::isFilled));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Error on reverse lookup name '%s' table '%s': %s (%s)",
                                               name,
                                               table.getName())
@@ -247,10 +247,10 @@ class IDBLookupTable extends LookupTable {
                         .searchValue(code)
                         .singleRow(COL_SOURCE)
                         .map(row -> makeObject(type, Json.parseObject(row.at(0).asString())));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Error on fetch object type '%s' code '%s' table '%s': %s (%s)",
                                               type.getName(),
                                               code,
@@ -264,10 +264,10 @@ class IDBLookupTable extends LookupTable {
         try {
             Constructor<T> constructor = type.getConstructor(ObjectNode.class);
             return constructor.newInstance(jsonData);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw new IllegalArgumentException(
                     "Cannot create a payload object for %s - A public accessible constructor accepting a value is required!",
-                    e);
+                    exception);
         }
     }
 
@@ -283,10 +283,10 @@ class IDBLookupTable extends LookupTable {
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
                                                          row.at(1).asString(),
                                                          row.at(2).getString()));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Error on suggest searchterm '%s' lang '%s' table '%s': %s (%s)",
                                               searchTerm,
                                               language,
@@ -303,10 +303,10 @@ class IDBLookupTable extends LookupTable {
                         .translate(language)
                         .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
                         .map(this::processSearchOrScanRow);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", language, table.getName())
                       .handle();
             return Stream.empty();
@@ -322,10 +322,10 @@ class IDBLookupTable extends LookupTable {
                         .translate(language)
                         .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
                         .map(this::processSearchOrScanRow);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", language, table.getName())
                       .handle();
             return Stream.empty();
@@ -341,8 +341,8 @@ class IDBLookupTable extends LookupTable {
         if (row.at(4).isFilled()) {
             try {
                 entry.withSource(Json.parseObject(row.at(4).asString()));
-            } catch (Exception e) {
-                Exceptions.ignore(e);
+            } catch (Exception exception) {
+                Exceptions.ignore(exception);
             }
         }
 
@@ -353,10 +353,10 @@ class IDBLookupTable extends LookupTable {
     public int count() {
         try {
             return jupiter.fetchFromSmallCache(CACHE_PREFIX_COUNT + table.getName(), table::size);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to fetch entry count of table '%s': %s (%s)", table.getName())
                       .handle();
             return 0;
@@ -375,10 +375,10 @@ class IDBLookupTable extends LookupTable {
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
                                                          row.at(1).asString(),
                                                          row.at(2).getString()));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Error on lookup scan lang '%s' lookupPath '%s' lookupValue '%s' table '%s': %s (%s)",
                               language,

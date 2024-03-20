@@ -63,8 +63,8 @@ public class CombinedTransformer implements ByteBlockTransformer {
     protected Optional<ByteBuf> forwardToSecond(ByteBuf intermediateBuffer) {
         try {
             return second.apply(intermediateBuffer);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+        } catch (IOException exception) {
+            throw new IllegalStateException(exception);
         }
     }
 }

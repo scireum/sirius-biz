@@ -133,10 +133,10 @@ public class JobConfigData extends Composite {
     public JobFactory getJobFactory() {
         try {
             return jobs.findFactory(getJob(), JobFactory.class);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
             throw Exceptions.handle()
                             .to(Log.BACKGROUND)
-                            .error(e)
+                            .error(exception)
                             .withNLSKey("JobConfigData.unknownJob")
                             .set("job", job)
                             .handle();
@@ -219,21 +219,22 @@ public class JobConfigData extends Composite {
     /**
      * Reads and validates all parameters from the given web context.
      *
-     * @param ctx the request to read the parameter values from
+     * @param webContext the request to read the parameter values from
      */
-    public void loadFromContext(WebContext ctx) {
+    public void loadFromContext(WebContext webContext) {
         // Check all parameters here to notify the user about config short comings...
         ValueHolder<HandledException> errorHolder = new ValueHolder<>(null);
-        Map<String, String> data = getJobFactory().buildAndVerifyContext(ctx::get, true, (parameter, exception) -> {
-            if (errorHolder.get() == null) {
-                errorHolder.accept(exception);
-            }
-        });
+        Map<String, String> data =
+                getJobFactory().buildAndVerifyContext(webContext::get, true, (parameter, exception) -> {
+                    if (errorHolder.get() == null) {
+                        errorHolder.accept(exception);
+                    }
+                });
 
         // ...however, store the original user input here as JobFactory.startInBackground will
         // perform another check and transform itself...
         getConfigMap().clear();
-        data.keySet().forEach(key -> getConfigMap().put(key, ctx.getParameters(key)));
+        data.keySet().forEach(key -> getConfigMap().put(key, webContext.getParameters(key)));
 
         if (errorHolder.get() != null) {
             throw errorHolder.get();

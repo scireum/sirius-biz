@@ -60,8 +60,8 @@ public class StorageCleanupTask implements EveryDay {
         try {
             cleanupTemporaryUploads();
             cleanupBuckets();
-        } catch (Exception e) {
-            Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 

@@ -161,10 +161,10 @@ public class PermissionData extends Composite {
             if (Strings.isFilled(configString)) {
                 try {
                     config = ConfigFactory.parseString(configString);
-                } catch (Exception e) {
+                } catch (Exception exception) {
                     throw Exceptions.handle()
                                     .to(BizController.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage("Cannot load config of %s (%s): %s (%s)",
                                                             parent,
                                                             parent.getId())

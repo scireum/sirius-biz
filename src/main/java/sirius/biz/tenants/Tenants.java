@@ -237,14 +237,14 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     /**
      * Applies an appropriate filter to the given query to only return entities which belong to the current tenant.
      *
-     * @param qry the query to extend
-     * @param <E> the type of entities processed by the query
-     * @param <Q> the type of the query which is being extended
+     * @param query the query to extend
+     * @param <E>   the type of entities processed by the query
+     * @param <Q>   the type of the query which is being extended
      * @return the query with an additional constraint filtering on the current tenant
      * @throws sirius.kernel.health.HandledException if there is currently no user / tenant available
      */
-    public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q qry) {
-        return qry.eq(TenantAware.TENANT, getRequiredTenant());
+    public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q query) {
+        return query.eq(TenantAware.TENANT, getRequiredTenant());
     }
 
     /**
@@ -503,13 +503,13 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
                 processes.execute(processId, processContext -> {
                     try {
                         task.invoke(processContext);
-                    } catch (Exception ex) {
-                        processContext.handle(ex);
+                    } catch (Exception exception) {
+                        processContext.handle(exception);
                     }
                 });
             });
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(exception);
         }
     }
 

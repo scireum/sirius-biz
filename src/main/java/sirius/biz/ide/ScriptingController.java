@@ -132,8 +132,8 @@ public class ScriptingController extends BizController {
                 output.property(RESPONSE_JOB_MESSAGE,
                                 NLS.fmtr("ScriptingController.jobMessage").set(RESPONSE_JOB, jobNumber).format());
             }
-        } catch (CompileException e) {
-            throw Exceptions.createHandled().withDirectMessage(e.getMessage()).handle();
+        } catch (CompileException exception) {
+            throw Exceptions.createHandled().withDirectMessage(exception.getMessage()).handle();
         }
     }
 

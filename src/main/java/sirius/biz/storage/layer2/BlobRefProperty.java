@@ -60,10 +60,10 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPr
     public BlobHardRef getRef(Object entity) {
         try {
             return (BlobHardRef) super.getValueFromField(entity);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(OMA.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Unable to obtain the BlobHardRef object from blob ref field ('%s' in '%s'): %s (%s)",
                                     getName(),

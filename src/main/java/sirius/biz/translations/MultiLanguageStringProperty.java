@@ -187,10 +187,10 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     public MultiLanguageString getMultiLanguageString(Object target) {
         try {
             return (MultiLanguageString) field.get(accessPath.apply(target));
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException exception) {
             throw Exceptions.handle()
                             .to(Mixing.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot read property '%s' (from '%s'): %s (%s)",
                                                     getName(),
                                                     getDefinition())

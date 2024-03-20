@@ -131,16 +131,16 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
             try {
                 in.close();
                 in = null;
-            } catch (IOException e) {
-                Exceptions.ignore(e);
+            } catch (IOException exception) {
+                Exceptions.ignore(exception);
             }
         }
         if (out != null) {
             try {
                 out.close();
                 out = null;
-            } catch (IOException e) {
-                Exceptions.ignore(e);
+            } catch (IOException exception) {
+                Exceptions.ignore(exception);
             }
         }
     }

@@ -127,8 +127,8 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
         handlers.forEach(handler -> {
             try {
                 handler.execute(blob);
-            } catch (Exception e) {
-                buildStorageException(e).withSystemErrorMessage(
+            } catch (Exception exception) {
+                buildStorageException(exception).withSystemErrorMessage(
                         "Layer 2: %s failed to process %s blob %s (%s) in %s: (%s)",
                         changeType,
                         handler.getClass().getSimpleName(),
@@ -139,31 +139,31 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
         });
     }
 
-    protected void handleBlobDeletionException(@Nonnull Blob blob, Exception e) {
-        buildStorageException(e).withSystemErrorMessage("Layer 2: Failed to finally delete the blob %s (%s) in %s: (%s)",
+    protected void handleBlobDeletionException(@Nonnull Blob blob, Exception exception) {
+        buildStorageException(exception).withSystemErrorMessage("Layer 2: Failed to finally delete the blob %s (%s) in %s: (%s)",
                                                         blob.getBlobKey(),
                                                         blob.getFilename(),
                                                         blob.getSpaceName()).handle();
     }
 
-    protected void handleDirectoryDeletionException(@Nonnull Directory dir, Exception e) {
-        buildStorageException(e).withSystemErrorMessage(
+    protected void handleDirectoryDeletionException(@Nonnull Directory dir, Exception exception) {
+        buildStorageException(exception).withSystemErrorMessage(
                 "Layer 2: Failed to finally delete the directory %s (%s) in %s: (%s)",
                 dir.getIdAsString(),
                 dir.getName(),
                 dir.getSpaceName()).handle();
     }
 
-    protected void handleDirectoryRenameException(@Nonnull Directory dir, Exception e) {
-        buildStorageException(e).withSystemErrorMessage(
+    protected void handleDirectoryRenameException(@Nonnull Directory dir, Exception exception) {
+        buildStorageException(exception).withSystemErrorMessage(
                 "Layer 2: Failed to process rename of directory %s (%s) in %s: (%s)",
                 dir.getIdAsString(),
                 dir.getName(),
                 dir.getSpaceName()).handle();
     }
 
-    protected Exceptions.ErrorHandler buildStorageException(Exception e) {
-        return Exceptions.handle().to(StorageUtils.LOG).error(e);
+    protected Exceptions.ErrorHandler buildStorageException(Exception exception) {
+        return Exceptions.handle().to(StorageUtils.LOG).error(exception);
     }
 
     /**

@@ -47,17 +47,17 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Provides a list of all code lists.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @DefaultRoute
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-lists")
-    public void codeLists(WebContext ctx) {
+    public void codeLists(WebContext webContext) {
         BasePageHelper<L, ?, ?, ?> pageHelper = getListsAsPage();
-        pageHelper.withContext(ctx);
+        pageHelper.withContext(webContext);
         applyCodeListSearchFields(pageHelper);
-        ctx.respondWith().template("/templates/biz/codelists/code-lists.html.pasta", pageHelper.asPage());
+        webContext.respondWith().template("/templates/biz/codelists/code-lists.html.pasta", pageHelper.asPage());
     }
 
     protected abstract BasePageHelper<L, ?, ?, ?> getListsAsPage();
@@ -65,48 +65,48 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Provides an editor for a code list.
      *
-     * @param ctx        the current request
+     * @param webContext the current request
      * @param codeListId the id of the code list
      */
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1")
-    public void codeList(WebContext ctx, String codeListId) {
-        codeListHandler(ctx, codeListId, false);
+    public void codeList(WebContext webContext, String codeListId) {
+        codeListHandler(webContext, codeListId, false);
     }
 
     /**
      * Provides an editor for a code list.
      *
-     * @param ctx        the current request
+     * @param webContext        the current request
      * @param codeListId the id of the code list
      */
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/details")
-    public void codeListDetails(WebContext ctx, String codeListId) {
-        codeListHandler(ctx, codeListId, true);
+    public void codeListDetails(WebContext webContext, String codeListId) {
+        codeListHandler(webContext, codeListId, true);
     }
 
-    private void codeListHandler(WebContext ctx, String codeListId, boolean forceDetails) {
+    private void codeListHandler(WebContext webContext, String codeListId, boolean forceDetails) {
         L codeList = findForTenant(codeLists.getListType(), codeListId);
 
         if (codeList.isNew() || forceDetails) {
             boolean requestHandled =
-                    prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(codeList);
+                    prepareSave(webContext).withAfterCreateURI("/code-list/${id}/details").saveEntity(codeList);
             if (!requestHandled) {
-                ctx.respondWith().template("/templates/biz/codelists/code-list-details.html.pasta", codeList);
+                webContext.respondWith().template("/templates/biz/codelists/code-list-details.html.pasta", codeList);
             }
         } else {
-            renderCodeList(ctx, codeList);
+            renderCodeList(webContext, codeList);
         }
     }
 
-    private void renderCodeList(WebContext ctx, L codeList) {
+    private void renderCodeList(WebContext webContext, L codeList) {
         BasePageHelper<E, ?, ?, ?> pageHelper = getEntriesAsPage(codeList);
-        pageHelper.withContext(ctx);
+        pageHelper.withContext(webContext);
         applyCodeListEntrySearchFields(pageHelper);
-        ctx.respondWith()
+        webContext.respondWith()
            .template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
     }
 
@@ -145,33 +145,33 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Deletes a code list.
      *
-     * @param ctx        the current request
+     * @param webContext        the current request
      * @param codeListId the code list to delete
      */
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete")
-    public void deleteCodeList(WebContext ctx, String codeListId) {
+    public void deleteCodeList(WebContext webContext, String codeListId) {
         L cl = tryFindForTenant(codeLists.getListType(), codeListId).orElse(null);
         if (cl != null) {
             cl.getMapper().delete(cl);
             showDeletedMessage();
         }
 
-        ctx.respondWith().redirectToGet("/code-lists");
+        webContext.respondWith().redirectToGet("/code-lists");
     }
 
     /**
      * Deletes a code list entry.
      *
-     * @param ctx        the current request
+     * @param webContext        the current request
      * @param codeListId the code list of the entry
      * @param entryId    the entry to delete
      */
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete-entry/:2")
-    public void deleteCodeListEntry(WebContext ctx, String codeListId, String entryId) {
+    public void deleteCodeListEntry(WebContext webContext, String codeListId, String entryId) {
         L cl = findForTenant(codeLists.getListType(), codeListId);
         assertNotNew(cl);
 
@@ -181,7 +181,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
             showDeletedMessage();
         }
 
-        renderCodeList(ctx, cl);
+        renderCodeList(webContext, cl);
     }
 
     /**

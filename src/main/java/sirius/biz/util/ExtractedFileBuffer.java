@@ -74,7 +74,7 @@ class ExtractedFileBuffer {
         }
         try {
             return new FileInputStream(buffer.getFile());
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException exception) {
             throw Exceptions.createHandled().withSystemErrorMessage("No file found inside buffer").handle();
         }
     }
@@ -101,10 +101,10 @@ class ExtractedFileBuffer {
             if (!buffer.isInMemory()) {
                 Files.delete(buffer.getFile());
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.SYSTEM)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Failed to close a temporary buffer created when extracting an archive: %s (%s)");
         }

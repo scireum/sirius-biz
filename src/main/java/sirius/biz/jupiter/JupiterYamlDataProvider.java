@@ -36,9 +36,9 @@ public abstract class JupiterYamlDataProvider implements JupiterDataProvider {
                 try {
                     yaml.dump(yamlObject, writer);
                     writer.write("---\n");
-                } catch (IOException e) {
+                } catch (IOException exception) {
                     throw Exceptions.handle()
-                                    .error(e)
+                                    .error(exception)
                                     .to(Jupiter.LOG)
                                     .withSystemErrorMessage("Failed to write %s (%s): %s (%s)",
                                                             getFilename(),

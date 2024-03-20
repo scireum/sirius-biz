@@ -124,8 +124,8 @@ public class VersionedFiles {
         }
         try (InputStream data = storage.getData(file.getStoredFile().getObject())) {
             return new BufferedReader(new InputStreamReader(data)).lines().collect(Collectors.toList());
-        } catch (IOException e) {
-            throw Exceptions.handle(Storage.LOG, e);
+        } catch (IOException exception) {
+            throw Exceptions.handle(Storage.LOG, exception);
         }
     }
 
@@ -184,8 +184,8 @@ public class VersionedFiles {
 
         try (OutputStream out = storage.updateFile(object)) {
             out.write(code.getBytes());
-        } catch (IOException e) {
-            throw Exceptions.handle(Storage.LOG, e);
+        } catch (IOException exception) {
+            throw Exceptions.handle(Storage.LOG, exception);
         }
 
         return object;

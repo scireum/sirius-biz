@@ -76,8 +76,8 @@ public class SQLAcademyReport extends AcademyReport {
                                          Tuple.create(COLUMN_SKIPPED, cells.of(skipped)),
                                          Tuple.create(COLUMN_RECOMMENDED, cells.of(recommended)),
                                          Tuple.create(COLUMN_PERCENT_WATCHED, cells.of(percentWatched))));
-               } catch (SQLException e) {
-                   throw Exceptions.handle(Log.APPLICATION, e);
+               } catch (SQLException exception) {
+                   throw Exceptions.handle(Log.APPLICATION, exception);
                }
            });
     }

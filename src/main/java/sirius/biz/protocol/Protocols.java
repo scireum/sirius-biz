@@ -134,8 +134,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             si.setLastOccurrence(LocalDateTime.now());
 
             elastic.update(si);
-        } catch (Exception e) {
-            Elastic.LOG.SEVERE(e);
+        } catch (Exception exception) {
+            Elastic.LOG.SEVERE(exception);
             disableForOneMinute();
         }
     }
@@ -155,8 +155,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setUser(UserContext.getCurrentUser().getProtocolUsername());
 
             autoBatch.insertAsync(msg);
-        } catch (Exception e) {
-            Exceptions.ignore(e);
+        } catch (Exception exception) {
+            Exceptions.ignore(exception);
             disableForOneMinute();
         }
     }
@@ -226,8 +226,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setType(type);
 
             elastic.update(msg);
-        } catch (Exception e) {
-            Exceptions.handle(e);
+        } catch (Exception exception) {
+            Exceptions.handle(exception);
         }
     }
 }

@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import sirius.biz.analytics.scheduler.AnalyticalEngine;
+import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.locks.Locks;
 import sirius.kernel.Sirius;
@@ -92,6 +94,7 @@ public class ClusterController extends BasicController {
     private static final String CLUSTER_URI = "/system/cluster";
     private static final String BACKGROUND_JOBS_URI = "/system/cluster/background-jobs";
     private static final String EOD_TASKS_URI = "/system/cluster/eod-tasks";
+    private static final String ANALYTICS_URI = "/system/cluster/analytics";
     private static final String LOCKS_URI = "/system/cluster/locks";
 
     @Part
@@ -118,6 +121,9 @@ public class ClusterController extends BasicController {
 
     @Part
     private EndOfDayTaskExecutor endOfDayTaskExecutor;
+
+    @Part
+    private AnalyticalEngine analyticalEngine;
 
     @Override
     public void onError(WebContext webContext, HandledException error) {
@@ -240,6 +246,33 @@ public class ClusterController extends BasicController {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void eodTasks(WebContext webContext) {
         webContext.respondWith().template("/templates/biz/cluster/eod-tasks.html.pasta");
+    }
+
+    /**
+     * Lists the analytics schedulers and computers registered in the cluster.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed(ANALYTICS_URI)
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void analytics(WebContext webContext) {
+        webContext.respondWith().template("/templates/biz/cluster/analytics.html.pasta");
+    }
+
+    /**
+     * Lists the analytics schedulers and computers registered in the cluster.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/system/cluster/analytics/reset-durations")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void resetAnalyticsDurations(WebContext webContext) {
+        analyticalEngine.getDailyChecks().values().forEach(AnalyticalTask::resetDurations);
+        analyticalEngine.getDailyMetricComputers().values().forEach(AnalyticalTask::resetDurations);
+        analyticalEngine.getMonthlyMetricComputers().values().forEach(AnalyticalTask::resetDurations);
+        analyticalEngine.getMonthlyLargeMetricComputers().values().forEach(AnalyticalTask::resetDurations);
+
+        webContext.respondWith().redirectToGet(ANALYTICS_URI);
     }
 
     /**

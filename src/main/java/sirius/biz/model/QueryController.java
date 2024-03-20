@@ -131,12 +131,12 @@ public class QueryController extends BizController {
             }
 
             return result;
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
             // The QueryCompiler generates an IllegalArgumentException for invalid fields and tokens.
             // In our case we don't want to write them into the syslog but just output the message...
-            UserContext.message(Message.error().withTextMessage(e.getMessage()));
-        } catch (Exception e) {
-            handle(e);
+            UserContext.message(Message.error().withTextMessage(exception.getMessage()));
+        } catch (Exception exception) {
+            handle(exception);
         }
 
         return Collections.emptyList();

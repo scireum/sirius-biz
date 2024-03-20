@@ -117,10 +117,10 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
                .where(SQLUserAccount.ID, id)
                .executeUpdate();
             TenantUserManager.flushCacheForUserAccount(this);
-        } catch (SQLException | JsonProcessingException e) {
+        } catch (SQLException | JsonProcessingException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to update user preference '%s' to '%s' for %s: %s (%s)",
                                                     key,
                                                     value,

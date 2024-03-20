@@ -69,8 +69,8 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
                     buffer.delete();
                 }
             }, filename);
-        } catch (Exception e) {
-            throw Exceptions.handle(e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(exception);
         }
     }
 

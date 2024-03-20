@@ -1086,17 +1086,17 @@ public class Processes {
      *
      * @param processLog the log entry to modify
      * @param newState   the new state to set
-     * @param ctx        the request to respond to
+     * @param webContext        the request to respond to
      * @param returnUrl  the URL to redirect the request to once the modification has been performed and is visible
      */
     public void updateProcessLogStateAndReturn(ProcessLog processLog,
                                                ProcessLogState newState,
-                                               WebContext ctx,
+                                               WebContext webContext,
                                                String returnUrl) {
         processLog.withState(newState);
         elastic.update(processLog);
         JournalData.addJournalEntry(processLog, NLS.get("ProcessLog.state") + ": " + newState.toString());
-        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet(returnUrl));
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> webContext.respondWith().redirectToGet(returnUrl));
     }
 
     protected Optional<ProcessOutput> fetchOutput(String processId, String outputName) {

@@ -539,21 +539,21 @@ public class ImportDictionary {
             String fieldName = field.getName();
             try {
                 field.verify(record.apply(fieldName));
-            } catch (IllegalArgumentException | HandledException e) {
+            } catch (IllegalArgumentException | HandledException exception) {
                 problemDetected.toggle();
                 problemConsumer.accept(fieldName,
                                        NLS.fmtr("ImportDictionary.fieldError")
                                           .set(PARAM_FIELD, fieldName)
                                           .set(PARAM_LABEL, field.getLabel())
-                                          .set(PARAM_MESSAGE, e.getMessage())
+                                          .set(PARAM_MESSAGE, exception.getMessage())
                                           .format());
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 problemDetected.toggle();
                 problemConsumer.accept(fieldName,
                                        NLS.fmtr("ImportDictionary.severeFieldError")
                                           .set(PARAM_FIELD, fieldName)
                                           .set(PARAM_LABEL, field.getLabel())
-                                          .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, e).getMessage())
+                                          .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, exception).getMessage())
                                           .format());
             }
         }

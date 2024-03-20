@@ -551,22 +551,21 @@ public abstract class ObjectStorageSpace {
         return largeFileExpected && !response.getWebContext().getHeaderValue(HttpHeaderNames.RANGE).isFilled();
     }
 
-    private void handleDeliveryError(Response response, String objectId, Exception exception) {
-        if (isExceptionOf(exception, ClosedChannelException.class)
-            || isExceptionOf(exception,
-                             ConnectionClosedException.class)
-            || isExceptionOf(exception, SocketException.class)) {
+    private void handleDeliveryError(Response response, String objectId, Exception error) {
+        if (isExceptionOf(error, ClosedChannelException.class)
+            || isExceptionOf(error, ConnectionClosedException.class)
+            || isExceptionOf(error, SocketException.class)) {
             // If the user unexpectedly closes the connection, we do not need to log an error...
-            Exceptions.ignore(exception);
+            Exceptions.ignore(error);
             return;
         }
         try {
             response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception ex) {
-            Exceptions.ignore(ex);
+        } catch (Exception exception) {
+            Exceptions.ignore(exception);
         }
         throw Exceptions.handle()
-                        .error(exception)
+                        .error(error)
                         .to(StorageUtils.LOG)
                         .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
                                                 objectId,

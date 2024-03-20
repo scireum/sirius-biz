@@ -84,8 +84,8 @@ public class OpenSearchResult {
             TemplateCompiler templateCompiler = new TemplateCompiler(context);
             templateCompiler.compile();
             this.htmlDescription = context.getTemplate().renderToString(args);
-        } catch (RenderException | CompileException e) {
-            Exceptions.handle(Log.APPLICATION, e);
+        } catch (RenderException | CompileException exception) {
+            Exceptions.handle(Log.APPLICATION, exception);
         }
         return this;
     }
@@ -105,8 +105,8 @@ public class OpenSearchResult {
                 return this;
             }
             this.htmlDescription = template.get().renderToString(args);
-        } catch (RenderException | CompileException e) {
-            Exceptions.handle(Log.APPLICATION, e);
+        } catch (RenderException | CompileException exception) {
+            Exceptions.handle(Log.APPLICATION, exception);
         }
         return this;
     }

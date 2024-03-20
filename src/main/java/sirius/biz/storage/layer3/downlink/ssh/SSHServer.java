@@ -117,8 +117,8 @@ public class SSHServer implements Startable, Stoppable, Killable, AdditionalRole
 
             server.start();
             StorageUtils.LOG.INFO("Layer 3/SSH: Successfully started the SSH server on port %s", port);
-        } catch (IOException e) {
-            StorageUtils.LOG.WARN("Layer 3/SSH: Failed to start the SSH server: %s", e.getMessage());
+        } catch (IOException exception) {
+            StorageUtils.LOG.WARN("Layer 3/SSH: Failed to start the SSH server: %s", exception.getMessage());
         }
     }
 
@@ -212,8 +212,8 @@ public class SSHServer implements Startable, Stoppable, Killable, AdditionalRole
         if (server != null && server.isStarted()) {
             try {
                 server.stop();
-            } catch (IOException e) {
-                StorageUtils.LOG.WARN("Layer 3/SSH: Failed to stop the SSH server: %s", e.getMessage());
+            } catch (IOException exception) {
+                StorageUtils.LOG.WARN("Layer 3/SSH: Failed to stop the SSH server: %s", exception.getMessage());
             }
         }
     }
@@ -223,8 +223,8 @@ public class SSHServer implements Startable, Stoppable, Killable, AdditionalRole
         if (server != null && server.isStarted()) {
             try {
                 server.stop(true);
-            } catch (IOException e) {
-                StorageUtils.LOG.WARN("Layer 3/SSH: Failed to terminate the SSH server: %s", e.getMessage());
+            } catch (IOException exception) {
+                StorageUtils.LOG.WARN("Layer 3/SSH: Failed to terminate the SSH server: %s", exception.getMessage());
             }
         }
     }

@@ -81,9 +81,9 @@ public class SQLSequenceStrategy implements SequenceStrategy {
             result.setNextValue(2);
             oma.update(result);
             return 1L;
-        } catch (HandledException e) {
+        } catch (HandledException exception) {
             // This only happens if another thread / server inserted the entity already...
-            Exceptions.ignore(e);
+            Exceptions.ignore(exception);
             return null;
         }
     }

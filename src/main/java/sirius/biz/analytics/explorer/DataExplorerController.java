@@ -137,8 +137,8 @@ public class DataExplorerController extends BizController {
                                                  computeGranularity(range),
                                                  comparisonPeriod,
                                                  output);
-            } catch (Exception error) {
-                throw Exceptions.handle(Log.APPLICATION, error);
+            } catch (Exception exception) {
+                throw Exceptions.handle(Log.APPLICATION, exception);
             }
         });
     }
@@ -211,10 +211,10 @@ public class DataExplorerController extends BizController {
                                                                  timeSeries,
                                                                  comparisonPeriod)
                                     .stream();
-        } catch (Exception error) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(error)
+                      .error(exception)
                       .withSystemErrorMessage("DataExplorerController: Failed to compute time series for %s: %s (%s)",
                                               identifier)
                       .handle();

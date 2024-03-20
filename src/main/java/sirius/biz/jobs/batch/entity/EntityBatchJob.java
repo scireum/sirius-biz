@@ -53,8 +53,8 @@ public abstract class EntityBatchJob<E extends BaseEntity<?>, Q extends Query<Q,
         Watch w = Watch.start();
         try {
             processEntity(entity);
-        } catch (Exception e) {
-            process.handle(e);
+        } catch (Exception exception) {
+            process.handle(exception);
         } finally {
             process.addTiming(descriptor.getPluralLabel(), w.elapsedMillis());
         }

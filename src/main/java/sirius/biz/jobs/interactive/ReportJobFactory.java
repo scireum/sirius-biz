@@ -40,8 +40,8 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
             computeReport(context,
                           report,
                           (name, value) -> additionalMetrics.add(Tuple.create(NLS.smartGet(name), value)));
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
         }
 
         request.respondWith().template(getTemplate(), this, context, report, additionalMetrics);

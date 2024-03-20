@@ -89,8 +89,8 @@ public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
                                      .map(value -> databaseDisplayUtils.formatValueForDisplay(value))
                                      .toList());
                 process.incCounter("Row");
-            } catch (IOException e) {
-                throw process.handle(e);
+            } catch (IOException exception) {
+                throw process.handle(exception);
             }
         }
     }

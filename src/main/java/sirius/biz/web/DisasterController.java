@@ -78,8 +78,8 @@ public class DisasterController extends BizController {
                                             webContext.get("previewMessage").getString(),
                                             webContext.get("lockMessage").getString());
                 showSavedMessage();
-            } catch (Exception e) {
-                handle(e);
+            } catch (Exception exception) {
+                handle(exception);
             }
         }
 

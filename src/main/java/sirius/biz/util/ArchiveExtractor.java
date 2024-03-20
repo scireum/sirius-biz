@@ -219,9 +219,9 @@ public class ArchiveExtractor {
             } else {
                 extract7z(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("An error occurred while unzipping an archive (%s): %s (%s)",
                                                     filename)
                             .handle();

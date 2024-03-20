@@ -191,8 +191,8 @@ public class DelegateJournalData extends Composite {
             if (Strings.isFilled(message)) {
                 createJournalEntry(targetType.get(), targetId.get(), owner.getClass(), owner.getIdAsString(), message);
             }
-        } catch (Exception e) {
-            Exceptions.handle(e);
+        } catch (Exception exception) {
+            Exceptions.handle(exception);
         }
     }
 
