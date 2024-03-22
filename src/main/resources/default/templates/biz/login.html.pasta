@@ -104,7 +104,7 @@
             }
 
             try {
-                window.localStorage.setItem('samlPostLoginUri', '@originalUrl');
+                window.localStorage.setItem('samlPostLoginUri', '<i:raw>@originalUrl</i:raw>');
             } catch (e) {
                 console.log(e);
             }
