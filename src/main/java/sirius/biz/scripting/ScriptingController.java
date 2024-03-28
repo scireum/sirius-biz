@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.ide;
+package sirius.biz.scripting;
 
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;

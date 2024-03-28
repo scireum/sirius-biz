@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.ide;
+package sirius.biz.scripting;
 
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Register;
