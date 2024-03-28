@@ -177,6 +177,20 @@ public class Processes {
     }
 
     /**
+     * Fetches the currently active process.
+     *
+     * @return the process for which the current thread is executing or an empty optional if no process is active
+     */
+    public Optional<Supplier<Process>> fetchCurrentProcess() {
+        TaskContextAdapter adapter = TaskContext.get().getAdapter();
+        if (adapter instanceof ProcessEnvironment processEnvironment) {
+            return Optional.of(() -> fetchRequiredProcess(processEnvironment.getProcessId()));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Creates a new process for the currently active user.
      *
      * @param type              the type of the process (which can be used for filtering in the backend)
@@ -1086,7 +1100,7 @@ public class Processes {
      *
      * @param processLog the log entry to modify
      * @param newState   the new state to set
-     * @param webContext        the request to respond to
+     * @param webContext the request to respond to
      * @param returnUrl  the URL to redirect the request to once the modification has been performed and is visible
      */
     public void updateProcessLogStateAndReturn(ProcessLog processLog,
