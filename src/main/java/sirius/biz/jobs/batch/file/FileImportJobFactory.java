@@ -47,6 +47,8 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
         if (UserContext.getCurrentUser().hasPermission(FEATURE_BYPASS_PROCESS_LOG_LIMITS)) {
             parameterCollector.accept(LIMIT_LOG_MESSAGES_PARAMETER);
         }
+
+        super.collectParameters(parameterCollector);
     }
 
     /**
