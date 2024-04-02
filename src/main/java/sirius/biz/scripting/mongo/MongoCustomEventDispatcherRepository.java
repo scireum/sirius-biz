@@ -8,10 +8,10 @@
 
 package sirius.biz.scripting.mongo;
 
-import sirius.biz.scripting.CustomEventDispatcher;
-import sirius.biz.scripting.CustomEventDispatcherRepository;
-import sirius.biz.scripting.CustomEventRegistry;
-import sirius.biz.scripting.ScriptBasedCustomEventDispatcher;
+import sirius.biz.scripting.ScriptableEventDispatcher;
+import sirius.biz.scripting.ScriptableEventDispatcherRepository;
+import sirius.biz.scripting.ScriptableEventRegistry;
+import sirius.biz.scripting.SimpleScriptableEventDispatcher;
 import sirius.db.mongo.Mango;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Strings;
@@ -33,15 +33,18 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Stores and manages {@link CustomEventDispatcher custom event dispatchers} in a MongoDB.
+ * Stores and manages {@link ScriptableEventDispatcher custom event dispatchers} in a MongoDB.
  */
 @Register(framework = MongoCustomEventDispatcherRepository.FRAMEWORK_SCRIPTING_MONGO)
-public class MongoCustomEventDispatcherRepository implements CustomEventDispatcherRepository {
-
-    protected static final String FRAMEWORK_SCRIPTING_MONGO = "biz.scripting-mongo";
+public class MongoCustomEventDispatcherRepository implements ScriptableEventDispatcherRepository {
 
     /**
-     * Contains the name of the variable which holds the {@link CustomEventRegistry} in a script.
+     * Defines the framework which uses MongoDB to store and provide script based event dispatchers.
+     */
+    public static final String FRAMEWORK_SCRIPTING_MONGO = "biz.scripting-mongo";
+
+    /**
+     * Contains the name of the variable which holds the {@link ScriptableEventRegistry} in a script.
      */
     public static final String SCRIPT_PARAMETER_REGISTRY = "registry";
 
@@ -60,7 +63,7 @@ public class MongoCustomEventDispatcherRepository implements CustomEventDispatch
     }
 
     @Override
-    public Optional<CustomEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nullable String name) {
+    public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nullable String name) {
         if (Strings.isEmpty(name)) {
             List<MongoCustomScript> mongoCustomScripts =
                     mango.select(MongoCustomScript.class).eq(MongoCustomScript.TENANT, tenantId).limit(2).queryList();
@@ -78,7 +81,7 @@ public class MongoCustomEventDispatcherRepository implements CustomEventDispatch
         }
     }
 
-    private Optional<CustomEventDispatcher> compileAndLoad(MongoCustomScript script) {
+    private Optional<ScriptableEventDispatcher> compileAndLoad(MongoCustomScript script) {
         try {
             if (Strings.isEmpty(script.getScript())) {
                 return Optional.empty();
@@ -88,19 +91,23 @@ public class MongoCustomEventDispatcherRepository implements CustomEventDispatch
                     new CompilationContext(SourceCodeInfo.forInlineCode(script.getScript(), SandboxMode.WARN_ONLY));
 
             compilationContext.getVariableScoper()
-                              .defineVariable(Position.UNKNOWN, SCRIPT_PARAMETER_REGISTRY, CustomEventRegistry.class);
+                              .defineVariable(Position.UNKNOWN,
+                                              SCRIPT_PARAMETER_REGISTRY,
+                                              ScriptableEventRegistry.class);
             NoodleCompiler compiler = new NoodleCompiler(compilationContext);
             Callable compiledScript = compiler.compileScript();
 
-            ScriptBasedCustomEventDispatcher dispatcher = new ScriptBasedCustomEventDispatcher();
+            SimpleScriptableEventDispatcher dispatcher = new SimpleScriptableEventDispatcher();
             SimpleEnvironment environment = new SimpleEnvironment();
             environment.writeVariable(0, dispatcher);
             compiledScript.call(environment);
 
             return Optional.of(dispatcher);
-        } catch (ScriptingException | HandledException e) {
+        } catch (ScriptingException | HandledException exception) {
             TaskContext.get()
-                       .log("Failed compiling custom event dispatcher '%s': %s", script.getCode(), e.getMessage());
+                       .log("Failed compiling custom event dispatcher '%s': %s",
+                            script.getCode(),
+                            exception.getMessage());
             return Optional.empty();
         }
     }

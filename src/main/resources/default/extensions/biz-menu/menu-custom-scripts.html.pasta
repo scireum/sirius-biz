@@ -1,0 +1,12 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="130"/>
+
+<i:switch test="@point">
+    <i:block name="settings">
+        <w:menuSection framework="biz.scripting-mongo">
+            <w:menuItem titleKey="MongoCustomScript.plural"
+                        url="/scripting/scripts"
+                        permission="permission-system-scripting"/>
+        </w:menuSection>
+    </i:block>
+</i:switch>

@@ -13,12 +13,23 @@ import sirius.kernel.health.HandledException;
 import java.util.Optional;
 
 /**
- * Provides a base class for all custom events handled by a {@link CustomEventDispatcher}.
+ * Provides a base class for all custom events handled by a {@link ScriptableEventDispatcher}.
  */
-public abstract class CustomEvent {
+public abstract class ScriptableEvent {
 
+    /**
+     * Stores if all event handlers completed successfully.
+     */
     protected boolean success;
+
+    /**
+     * Stores if an error / exception occurred while invoking an event handler.
+     */
     protected boolean failed;
+
+    /**
+     * Stores the exception which occurred while invoking an event handler.
+     */
     protected HandledException error;
 
     /**

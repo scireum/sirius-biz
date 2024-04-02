@@ -1,0 +1,12 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="130"/>
+
+<i:switch test="@point">
+    <i:block name="settings">
+        <t:dropdownSection framework="biz.scripting-mongo">
+            <t:dropdownItem labelKey="MongoCustomScript.plural"
+                            url="/scripting/scripts"
+                            permission="permission-system-scripting"/>
+        </t:dropdownSection>
+    </i:block>
+</i:switch>

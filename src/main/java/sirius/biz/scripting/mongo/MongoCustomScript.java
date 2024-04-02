@@ -13,14 +13,17 @@ import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Unique;
+import sirius.db.mongo.Mango;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
 
 /**
  * Stores a custom scripting profile for a tenant.
  */
+@Index(name = "lookup", columns = {"tenant", "code"}, columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoCustomScript extends MongoTenantAware {
 
     /**

@@ -21,30 +21,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Provides a {@link CustomEventDispatcher} which also implements {@link CustomEventRegistry}.
+ * Provides a {@link ScriptableEventDispatcher} which also implements {@link ScriptableEventRegistry}.
  * <p>
  * An instance of this class can be first supplied to a custom script in order to pick up handlers and will then
  * be used to dispatch upcoming events to these handlers.
  */
-public class ScriptBasedCustomEventDispatcher implements CustomEventDispatcher, CustomEventRegistry {
+public class SimpleScriptableEventDispatcher implements ScriptableEventDispatcher, ScriptableEventRegistry {
 
     @Part
     private static Processes processes;
 
     private volatile boolean active = false;
 
-    private final Map<String, Callback<? extends CustomEvent>> handlers = new HashMap<>();
+    private final Map<String, Callback<? extends ScriptableEvent>> handlers = new HashMap<>();
 
     @Override
-    public <E extends CustomEvent> void registerHandler(Class<E> eventType, Callback<E> handler) {
+    public <E extends ScriptableEvent> void registerHandler(Class<E> eventType, Callback<E> handler) {
         handlers.put(eventType.getName(), handler);
         active = true;
     }
 
     @Override
-    public <T, E extends TypedCustomEvent<T>> void registerTypedHandler(Class<E> eventType,
-                                                                        Class<T> type,
-                                                                        Callback<E> handler) {
+    public <T, E extends TypedScriptableEvent<T>> void registerTypedHandler(Class<E> eventType,
+                                                                            Class<T> type,
+                                                                            Callback<E> handler) {
         handlers.put(buildTypedEventHandlerName(eventType, type), handler);
         active = true;
     }
@@ -60,8 +60,8 @@ public class ScriptBasedCustomEventDispatcher implements CustomEventDispatcher, 
 
     @SuppressWarnings("unchecked")
     @Override
-    public void handleEvent(CustomEvent event) {
-        Callback<CustomEvent> handler = (Callback<CustomEvent>) handlers.get(determineEventKey(event));
+    public void handleEvent(ScriptableEvent event) {
+        Callback<ScriptableEvent> handler = (Callback<ScriptableEvent>) handlers.get(determineEventKey(event));
         if (handler == null) {
             return;
         }
@@ -83,8 +83,8 @@ public class ScriptBasedCustomEventDispatcher implements CustomEventDispatcher, 
         TaskContext.get().addTiming(NLS.get("CustomEventHandler.customEvents"), watch.elapsedMillis());
     }
 
-    private String determineEventKey(CustomEvent event) {
-        if (event instanceof TypedCustomEvent<?> typedEvent) {
+    private String determineEventKey(ScriptableEvent event) {
+        if (event instanceof TypedScriptableEvent<?> typedEvent) {
             return buildTypedEventHandlerName(typedEvent.getClass(), typedEvent.getType());
         } else {
             return event.getClass().getName();
