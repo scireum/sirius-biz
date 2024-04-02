@@ -262,7 +262,7 @@ public interface ProcessContext extends TaskContextAdapter {
     TableOutput.ColumnBuilder addTable(String name, String label);
 
     /**
-     * Adds an additional log output to the process.
+     * Adds a log output to the process.
      * <p>
      * Use {@link ProcessLog#into(String)} to add log entries to this output.
      *
