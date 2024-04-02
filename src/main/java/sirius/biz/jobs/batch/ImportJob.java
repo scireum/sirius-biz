@@ -68,7 +68,7 @@ public abstract class ImportJob extends BatchJob {
      * @param owner  the entity which contains the reference
      * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
      * @param target the target the reference must point to
-     * @param <E>    the generic type the the parent being referenced
+     * @param <E>    the generic type the parent being referenced
      * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
      * @see BaseEntityRef#hasWriteOnceSemantics
