@@ -15,11 +15,11 @@ import sirius.db.mixing.Entity;
  *
  * @param <E> the generic type of the entity
  */
-public abstract class EntityCustomEvent<E extends Entity> extends TypedCustomEvent<E> {
+public abstract class EntityScriptableEvent<E extends Entity> extends TypedScriptableEvent<E> {
 
     private final E entity;
 
-    protected EntityCustomEvent(E entity) {
+    protected EntityScriptableEvent(E entity) {
         this.entity = entity;
     }
 

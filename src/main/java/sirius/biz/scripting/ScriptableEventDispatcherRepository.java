@@ -16,12 +16,12 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Provides a repository which stores and manages {@link CustomEventDispatcher custom event dispatchers}.
+ * Provides a repository which stores and manages {@link ScriptableEventDispatcher custom event dispatchers}.
  * <p>
- * Note that the repository isn't usually accessed directly. Instead, the {@link CustomEvents} class should be used.
+ * Note that the repository isn't usually accessed directly. Instead, the {@link ScriptableEvents} class should be used.
  */
 @AutoRegister
-public interface CustomEventDispatcherRepository {
+public interface ScriptableEventDispatcherRepository {
 
     /**
      * Fetches all available dispatchers for the given tenant.
@@ -40,5 +40,5 @@ public interface CustomEventDispatcherRepository {
      * no such dispatcher exists. <b>NOTE:</b> if an empty name is given, the first dispatcher for the given tenant
      * is used. This helps to simplify the usage of custom events.
      */
-    Optional<CustomEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nullable String name);
+    Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nullable String name);
 }

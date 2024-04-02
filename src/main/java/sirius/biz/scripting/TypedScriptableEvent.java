@@ -15,7 +15,7 @@ package sirius.biz.scripting;
  *
  * @param <T> the type of object for which this event occurred.
  */
-public abstract class TypedCustomEvent<T> extends CustomEvent {
+public abstract class TypedScriptableEvent<T> extends ScriptableEvent {
 
     /**
      * The of objects for which this event occurred.

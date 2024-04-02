@@ -13,9 +13,9 @@ import sirius.kernel.health.HandledException;
 import java.util.Optional;
 
 /**
- * Provides a base class for all custom events handled by a {@link CustomEventDispatcher}.
+ * Provides a base class for all custom events handled by a {@link ScriptableEventDispatcher}.
  */
-public abstract class CustomEvent {
+public abstract class ScriptableEvent {
 
     protected boolean success;
     protected boolean failed;

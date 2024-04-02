@@ -8,7 +8,7 @@
 
 package sirius.biz.scripting.mongo;
 
-import sirius.biz.scripting.CustomEventRegistry;
+import sirius.biz.scripting.ScriptableEventRegistry;
 import sirius.biz.scripting.ScriptingController;
 import sirius.biz.web.BizController;
 import sirius.biz.web.MongoPageHelper;
@@ -100,7 +100,7 @@ public class MongoCustomScriptController extends BizController {
             compilationContext.getVariableScoper()
                               .defineVariable(Position.UNKNOWN,
                                               MongoCustomEventDispatcherRepository.SCRIPT_PARAMETER_REGISTRY,
-                                              CustomEventRegistry.class);
+                                              ScriptableEventRegistry.class);
 
             NoodleCompiler compiler = new NoodleCompiler(compilationContext);
             compiler.compileScript();

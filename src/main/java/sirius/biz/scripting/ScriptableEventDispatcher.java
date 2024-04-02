@@ -11,11 +11,11 @@ package sirius.biz.scripting;
 /**
  * Describes a dispatcher which can handle custom events.
  * <p>
- * This is usually fetched via {@link CustomEvents} and will handle all events for a given tenant,
+ * This is usually fetched via {@link ScriptableEvents} and will handle all events for a given tenant,
  * based on a given script. If no custom handling script is present, a <tt>NOOP</tt> dispatcher is used
  * which will be marked as {@link #isActive() inactive} (so that some events might get optimized away).
  */
-public interface CustomEventDispatcher {
+public interface ScriptableEventDispatcher {
 
     /**
      * Determines if this dispatcher is active and will actually handle events.
@@ -29,5 +29,5 @@ public interface CustomEventDispatcher {
      *
      * @param event the event to handle
      */
-    void handleEvent(CustomEvent event);
+    void handleEvent(ScriptableEvent event);
 }

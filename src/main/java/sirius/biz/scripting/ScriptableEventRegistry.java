@@ -16,7 +16,7 @@ import sirius.kernel.commons.Callback;
  * The tenant specific script is provided with an instance of this registry and can then add handlers
  * as needed.
  */
-public interface CustomEventRegistry {
+public interface ScriptableEventRegistry {
 
     /**
      * Adds a handler for the given event type.
@@ -25,7 +25,7 @@ public interface CustomEventRegistry {
      * @param handler   the handler to handle the event
      * @param <E>       the generic type of the event
      */
-    <E extends CustomEvent> void registerHandler(Class<E> eventType, Callback<E> handler);
+    <E extends ScriptableEvent> void registerHandler(Class<E> eventType, Callback<E> handler);
 
     /**
      * Adds a typed handler for the given event type and inner type
@@ -36,7 +36,7 @@ public interface CustomEventRegistry {
      * @param <T>       the generic inner type of the event
      * @param <E>       the generic type of the event
      */
-    <T, E extends TypedCustomEvent<T>> void registerTypedHandler(Class<E> eventType,
-                                                                 Class<T> type,
-                                                                 Callback<E> handler);
+    <T, E extends TypedScriptableEvent<T>> void registerTypedHandler(Class<E> eventType,
+                                                                     Class<T> type,
+                                                                     Callback<E> handler);
 }

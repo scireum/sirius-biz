@@ -21,14 +21,14 @@ import java.util.List;
 /**
  * Provides access to tenant specific custom event dispatchers.
  * <p>
- * Event dispatchers are stored and managed by a {@link CustomEventDispatcherRepository}. Commonly these are
- * defined via scripts which modify a {@link CustomEventRegistry} and are then transformed into a
- * {@link CustomEventDispatcher} with the help of a {@link ScriptBasedCustomEventDispatcher}.
+ * Event dispatchers are stored and managed by a {@link ScriptableEventDispatcherRepository}. Commonly these are
+ * defined via scripts which modify a {@link ScriptableEventRegistry} and are then transformed into a
+ * {@link ScriptableEventDispatcher} with the help of a {@link SimpleScriptableEventDispatcher}.
  */
-@Register(classes = CustomEvents.class)
-public class CustomEvents {
+@Register(classes = ScriptableEvents.class)
+public class ScriptableEvents {
 
-    private static final CustomEventDispatcher NOOP_DISPATCHER = new CustomEventDispatcher() {
+    private static final ScriptableEventDispatcher NOOP_DISPATCHER = new ScriptableEventDispatcher() {
 
         @Override
         public boolean isActive() {
@@ -36,14 +36,14 @@ public class CustomEvents {
         }
 
         @Override
-        public void handleEvent(CustomEvent event) {
+        public void handleEvent(ScriptableEvent event) {
             // do nothing
         }
     };
 
     @Part
     @Nullable
-    private CustomEventDispatcherRepository dispatcherRepository;
+    private ScriptableEventDispatcherRepository dispatcherRepository;
 
     /**
      * Fetches the dispatcher for the current tenant.
@@ -53,7 +53,7 @@ public class CustomEvents {
      * exists. Note, if an empty <tt>name</tt> is given, the first available dispatcher for the current tenant is used.
      * This way, if exactly one dispatcher is present, it will be used in all import processes etc.
      */
-    public CustomEventDispatcher fetchDispatcherForCurrentTenant(@Nullable String name) {
+    public ScriptableEventDispatcher fetchDispatcherForCurrentTenant(@Nullable String name) {
         if (dispatcherRepository == null) {
             return NOOP_DISPATCHER;
         }
