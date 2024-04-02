@@ -9,7 +9,7 @@
 package sirius.biz.jobs.batch;
 
 import sirius.biz.process.ProcessContext;
-import sirius.biz.scripting.TypedCustomEvent;
+import sirius.biz.scripting.TypedScriptableEvent;
 
 /**
  * Signals that an {@link ImportJob} has been started.
@@ -18,7 +18,7 @@ import sirius.biz.scripting.TypedCustomEvent;
  *
  * @param <T> the import job type being started
  */
-public class ImportJobStartedEvent<T> extends TypedCustomEvent<T> {
+public class ImportJobStartedEvent<T> extends TypedScriptableEvent<T> {
 
     private final T job;
     private final ProcessContext process;

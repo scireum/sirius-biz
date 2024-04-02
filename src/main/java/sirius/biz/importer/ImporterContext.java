@@ -11,7 +11,7 @@ package sirius.biz.importer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import sirius.biz.jobs.batch.ImportJob;
-import sirius.biz.scripting.CustomEventDispatcher;
+import sirius.biz.scripting.ScriptableEventDispatcher;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
@@ -40,7 +40,7 @@ public class ImporterContext {
     private static List<ImportHandlerFactory> factories;
 
     private final Importer importer;
-    private CustomEventDispatcher eventDispatcher;
+    private ScriptableEventDispatcher eventDispatcher;
 
     private BatchContext batchContext;
 
@@ -245,11 +245,11 @@ public class ImporterContext {
         return batchContext;
     }
 
-    public CustomEventDispatcher getEventDispatcher() {
+    public ScriptableEventDispatcher getEventDispatcher() {
         return eventDispatcher;
     }
 
-    public void setEventDispatcher(CustomEventDispatcher eventDispatcher) {
+    public void setEventDispatcher(ScriptableEventDispatcher eventDispatcher) {
         this.eventDispatcher = eventDispatcher;
     }
 }

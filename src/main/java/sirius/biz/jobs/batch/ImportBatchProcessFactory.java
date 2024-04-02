@@ -13,7 +13,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.scripting.CustomEvents;
+import sirius.biz.scripting.ScriptableEvents;
 import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
 
@@ -38,7 +38,7 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
     }
 
     /**
-     * Permits selecting the {@link sirius.biz.scripting.CustomEventDispatcher} to use for this import.
+     * Permits selecting the {@link sirius.biz.scripting.ScriptableEventDispatcher} to use for this import.
      */
     public static final Parameter<String> DISPATCHER_PARAMETER;
 
@@ -48,9 +48,9 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
         dispatcherParameter.withDescription("$ImportBatchProcessFactory.eventDispatcher.helpImportBatchProcessFactory.eventDispatcher.help");
         dispatcherParameter.withEntriesProvider(() -> {
             Map<String, String> eventDispatchers = new HashMap<>();
-            CustomEvents customEvents = Injector.context().getPart(CustomEvents.class);
-            if (customEvents != null) {
-                customEvents.fetchDispatchersForCurrentTenant()
+            ScriptableEvents scriptableEvents = Injector.context().getPart(ScriptableEvents.class);
+            if (scriptableEvents != null) {
+                scriptableEvents.fetchDispatchersForCurrentTenant()
                             .forEach(dispatcher -> eventDispatchers.put(dispatcher, dispatcher));
             }
             return eventDispatchers;
@@ -60,14 +60,14 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
     }
 
     @Part
-    private CustomEvents customEvents;
+    private ScriptableEvents scriptableEvents;
 
     @Override
     protected abstract ImportJob createJob(ProcessContext process);
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
-        if (customEvents.fetchDispatchersForCurrentTenant().size() > 1) {
+        if (scriptableEvents.fetchDispatchersForCurrentTenant().size() > 1) {
             parameterCollector.accept(DISPATCHER_PARAMETER);
         }
     }

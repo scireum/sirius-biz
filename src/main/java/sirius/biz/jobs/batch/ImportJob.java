@@ -11,8 +11,8 @@ package sirius.biz.jobs.batch;
 import sirius.biz.importer.Importer;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.scripting.CustomEventDispatcher;
-import sirius.biz.scripting.CustomEvents;
+import sirius.biz.scripting.ScriptableEventDispatcher;
+import sirius.biz.scripting.ScriptableEvents;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.di.std.Part;
@@ -33,7 +33,7 @@ public abstract class ImportJob extends BatchJob {
     protected final Importer importer;
 
     @Part
-    private static CustomEvents customEvents;
+    private static ScriptableEvents scriptableEvents;
 
     /**
      * Creates a new job for the given process context.
@@ -44,15 +44,15 @@ public abstract class ImportJob extends BatchJob {
         super(process);
         this.importer = new Importer(process.getTitle());
 
-        CustomEventDispatcher dispatcher = obtainEventDispatcher(process);
+        ScriptableEventDispatcher dispatcher = obtainEventDispatcher(process);
         this.importer.getContext().setEventDispatcher(dispatcher);
 
         dispatcher.handleEvent(new ImportJobStartedEvent<>(this, process));
     }
 
-    private CustomEventDispatcher obtainEventDispatcher(ProcessContext process) {
+    private ScriptableEventDispatcher obtainEventDispatcher(ProcessContext process) {
         String dispatcher = process.getParameter(ImportBatchProcessFactory.DISPATCHER_PARAMETER).orElse(null);
-        return customEvents.fetchDispatcherForCurrentTenant(dispatcher);
+        return scriptableEvents.fetchDispatcherForCurrentTenant(dispatcher);
     }
 
     /**
