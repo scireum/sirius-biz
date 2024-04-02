@@ -71,8 +71,14 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         // via @Exportable
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public final Optional<E> tryFind(Context data) {
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher()
+                   .handleEvent(new BeforeFindEvent<E>((Class<E>) descriptor.getType(), data, context));
+        }
+
         return findByExample(data);
     }
 

@@ -153,8 +153,14 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         return load(data, entity, mappingsToLoad);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Optional<E> tryFind(Context data) {
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher()
+                   .handleEvent(new BeforeFindEvent<E>((Class<E>) descriptor.getType(), data, context));
+        }
+
         E example = loadForFind(data);
         return tryFindByExample(example);
     }

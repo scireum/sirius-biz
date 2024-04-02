@@ -122,6 +122,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected E load(Context data, E entity, Mapping... mappings) {
         Arrays.stream(mappings).forEach(mapping -> loadMapping(entity, mapping, data));
 
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher()
+                   .handleEvent(new OnLoadEvent<E>(entity, data, Arrays.stream(mappings).toList(), context));
+        }
+
         enforcePostLoadConstraints(entity);
 
         return entity;
