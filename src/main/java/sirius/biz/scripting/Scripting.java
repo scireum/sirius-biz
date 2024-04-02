@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.ide;
+package sirius.biz.scripting;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.Interconnect;
@@ -24,7 +24,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
-import sirius.pasta.Pasta;
 import sirius.pasta.noodle.Callable;
 import sirius.pasta.noodle.ScriptingException;
 import sirius.pasta.noodle.SimpleEnvironment;
@@ -53,6 +52,11 @@ import java.util.List;
  */
 @Register(classes = {Scripting.class, InterconnectHandler.class})
 public class Scripting implements InterconnectHandler {
+
+    /**
+     * Contains a global logger to use for errors or messages related to custom scripts.
+     */
+    public static final Log LOG = Log.get("scripting");
 
     private static final int MAX_MESSAGES = 256;
 
@@ -237,7 +241,7 @@ public class Scripting implements InterconnectHandler {
         } catch (CompileException | ScriptingException | HandledException exception) {
             logInTranscript(jobNumber, exception.getMessage());
         } catch (Exception exception) {
-            logInTranscript(jobNumber, Exceptions.handle(Pasta.LOG, exception).getMessage());
+            logInTranscript(jobNumber, Exceptions.handle(LOG, exception).getMessage());
         }
 
         logInTranscript(jobNumber, Strings.apply("Execution completed (%s)", watch.duration()));

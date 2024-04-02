@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.ide;
+package sirius.biz.scripting;
 
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
@@ -77,7 +77,7 @@ public class ScriptingController extends BizController {
         nodes.addFirst(Tuple.create("Current Machine", Scripting.LOCAL_NODE));
         nodes.add(Tuple.create("All Machines", Scripting.ALL_NODES));
 
-        webContext.respondWith().template("/templates/biz/ide/scripting.html.pasta", nodes);
+        webContext.respondWith().template("/templates/biz/scripting/scripting.html.pasta", nodes);
     }
 
     /**
