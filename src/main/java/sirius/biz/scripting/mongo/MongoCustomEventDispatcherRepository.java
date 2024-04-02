@@ -38,7 +38,10 @@ import java.util.Optional;
 @Register(framework = MongoCustomEventDispatcherRepository.FRAMEWORK_SCRIPTING_MONGO)
 public class MongoCustomEventDispatcherRepository implements ScriptableEventDispatcherRepository {
 
-    protected static final String FRAMEWORK_SCRIPTING_MONGO = "biz.scripting-mongo";
+    /**
+     * Defines the framework which uses MongoDB to store and provide script based event dispatchers.
+     */
+    public static final String FRAMEWORK_SCRIPTING_MONGO = "biz.scripting-mongo";
 
     /**
      * Contains the name of the variable which holds the {@link ScriptableEventRegistry} in a script.
@@ -88,7 +91,9 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
                     new CompilationContext(SourceCodeInfo.forInlineCode(script.getScript(), SandboxMode.WARN_ONLY));
 
             compilationContext.getVariableScoper()
-                              .defineVariable(Position.UNKNOWN, SCRIPT_PARAMETER_REGISTRY, ScriptableEventRegistry.class);
+                              .defineVariable(Position.UNKNOWN,
+                                              SCRIPT_PARAMETER_REGISTRY,
+                                              ScriptableEventRegistry.class);
             NoodleCompiler compiler = new NoodleCompiler(compilationContext);
             Callable compiledScript = compiler.compileScript();
 
@@ -98,9 +103,11 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
             compiledScript.call(environment);
 
             return Optional.of(dispatcher);
-        } catch (ScriptingException | HandledException e) {
+        } catch (ScriptingException | HandledException exception) {
             TaskContext.get()
-                       .log("Failed compiling custom event dispatcher '%s': %s", script.getCode(), e.getMessage());
+                       .log("Failed compiling custom event dispatcher '%s': %s",
+                            script.getCode(),
+                            exception.getMessage());
             return Optional.empty();
         }
     }

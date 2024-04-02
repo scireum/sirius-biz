@@ -33,6 +33,8 @@
                                 url="/academy" />
             </w:menuSection>
         </i:if>
-
+        <w:menuSection framework="biz.scripting-mongo">
+            <w:menuItem titleKey="MongoCustomScript.plural" url="/scripting/scripts" permission="permission-system-scripting"/>
+        </w:menuSection>
     </i:block>
 </i:switch>
