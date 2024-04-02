@@ -215,13 +215,8 @@ public class Scripting implements InterconnectHandler {
                 tenants.runAsAdmin(() -> handleTaskForNode(event, jobNumber));
             } catch (Exception exception) {
                 Exceptions.handle()
-<<<<<<< Updated upstream:src/main/java/sirius/biz/ide/Scripting.java
                           .to(Log.SYSTEM)
                           .error(exception)
-=======
-                          .to(LOG)
-                          .error(e)
->>>>>>> Stashed changes:src/main/java/sirius/biz/scripting/Scripting.java
                           .withSystemErrorMessage("A fatal error occurred in task %s: %s (%s)", jobNumber)
                           .handle();
             }
@@ -243,17 +238,10 @@ public class Scripting implements InterconnectHandler {
 
             TaskContext.get().setAdapter(new JobTaskContextAdapter(this, jobNumber));
             callable.call(new SimpleEnvironment());
-<<<<<<< Updated upstream:src/main/java/sirius/biz/ide/Scripting.java
         } catch (CompileException | ScriptingException | HandledException exception) {
             logInTranscript(jobNumber, exception.getMessage());
         } catch (Exception exception) {
-            logInTranscript(jobNumber, Exceptions.handle(Pasta.LOG, exception).getMessage());
-=======
-        } catch (CompileException | ScriptingException | HandledException e) {
-            logInTranscript(jobNumber, e.getMessage());
-        } catch (Exception e) {
-            logInTranscript(jobNumber, Exceptions.handle(LOG, e).getMessage());
->>>>>>> Stashed changes:src/main/java/sirius/biz/scripting/Scripting.java
+            logInTranscript(jobNumber, Exceptions.handle(LOG, exception).getMessage());
         }
 
         logInTranscript(jobNumber, Strings.apply("Execution completed (%s)", watch.duration()));
