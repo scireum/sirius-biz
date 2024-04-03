@@ -129,6 +129,11 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     @Override
     public E createOrUpdateNow(E entity) {
         try {
+            if (context.getEventDispatcher().isActive()) {
+                context.getEventDispatcher()
+                       .handleEvent(new BeforeCreateOrUpdateEntityEvent<E>(entity, context));
+            }
+
             enforcePreSaveConstraints(entity);
 
             // Invoke the beforeSave checks so that the change-detection below works for

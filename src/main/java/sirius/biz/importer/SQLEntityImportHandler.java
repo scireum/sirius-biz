@@ -242,6 +242,11 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      */
     protected E createOrUpdate(E entity, boolean batch) {
         try {
+            if (context.getEventDispatcher().isActive()) {
+                context.getEventDispatcher()
+                       .handleEvent(new BeforeCreateOrUpdateEntityEvent<E>(entity, context));
+            }
+
             enforcePreSaveConstraints(entity);
 
             // Invoke the beforeSave checks so that the change-detection below works for
