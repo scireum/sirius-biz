@@ -17,7 +17,7 @@ import sirius.biz.scripting.ScriptableEvents;
 import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -47,7 +47,7 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
         dispatcherParameter.markRequired();
         dispatcherParameter.withDescription("$ImportBatchProcessFactory.eventDispatcher.helpImportBatchProcessFactory.eventDispatcher.help");
         dispatcherParameter.withEntriesProvider(() -> {
-            Map<String, String> eventDispatchers = new HashMap<>();
+            Map<String, String> eventDispatchers = new LinkedHashMap<>();
             ScriptableEvents scriptableEvents = Injector.context().getPart(ScriptableEvents.class);
             if (scriptableEvents != null) {
                 scriptableEvents.fetchDispatchersForCurrentTenant()

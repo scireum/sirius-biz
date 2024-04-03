@@ -53,6 +53,8 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      * Sets a provider that generates the collection of selectable entries.
      * <p>
      * Use this to lazily initialize the entries. A {@link CachingSupplier} can be used to cache the entries.
+     * <p>
+     * Note that most probably a <tt>LinkedHashMap</tt> should be returned to maintain the order of the entries.
      *
      * @param entriesProvider the provider that returns list of entries
      * @return the parameter itself for fluent method calls
