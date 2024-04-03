@@ -10,6 +10,7 @@ package sirius.biz.importer;
 
 import sirius.biz.scripting.TypedScriptableEvent;
 import sirius.kernel.commons.Context;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 /**
  * Provides a base implementation for all events which are scriptable and have a context / import context
@@ -46,10 +47,12 @@ public abstract class ContextScriptableEvent<E> extends TypedScriptableEvent<E> 
      * @return the context containing the actual data being imported
      */
     @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public Context getContext() {
         return context;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public ImporterContext getImporterContext() {
         return importerContext;
     }
