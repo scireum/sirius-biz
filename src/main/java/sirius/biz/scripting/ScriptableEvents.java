@@ -28,7 +28,10 @@ import java.util.List;
 @Register(classes = ScriptableEvents.class)
 public class ScriptableEvents {
 
-    private static final ScriptableEventDispatcher NOOP_DISPATCHER = new ScriptableEventDispatcher() {
+    /**
+     * Provides a NOOP (do nothing) dispatcher which can be used if no dispatcher is available.
+     */
+    public static final ScriptableEventDispatcher NOOP_DISPATCHER = new ScriptableEventDispatcher() {
 
         @Override
         public boolean isActive() {

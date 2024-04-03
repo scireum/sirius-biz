@@ -45,7 +45,7 @@ public abstract class ImportJob extends BatchJob {
         this.importer = new Importer(process.getTitle());
 
         ScriptableEventDispatcher dispatcher = obtainEventDispatcher(process);
-        this.importer.getContext().setEventDispatcher(dispatcher);
+        this.importer.getContext().withEventDispatcher(dispatcher);
 
         dispatcher.handleEvent(new ImportJobStartedEvent<>(this, process));
     }
