@@ -47,7 +47,14 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E load(Context data, E entity) {
-        return load(data, entity, mappingsToLoad);
+        E result = load(data, entity, mappingsToLoad);
+
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher()
+                   .handleEvent(new OnLoadEvent<E>(result, data, context));
+        }
+
+        return result;
     }
 
     @Override

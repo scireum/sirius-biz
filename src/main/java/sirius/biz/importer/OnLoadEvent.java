@@ -10,11 +10,7 @@ package sirius.biz.importer;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Entity;
-import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Triggered within {@link sirius.biz.importer.ImportHandler#load(Context, BaseEntity)} in order to update an entity
@@ -24,7 +20,6 @@ import java.util.List;
  */
 public class OnLoadEvent<E extends Entity> extends ContextScriptableEvent<E> {
     private final E entity;
-    private final List<Mapping> mappingsToLoad;
 
     /**
      * Creates a new event for the given entity
@@ -32,21 +27,27 @@ public class OnLoadEvent<E extends Entity> extends ContextScriptableEvent<E> {
      * @param entity          the entity to update
      * @param context         the context to read data from. Note that this can and should be modified by the handler,
      *                        as this is the whole purpose of this event anyway.
-     * @param mappingsToLoad  the mappings to load from the given context
      * @param importerContext the import context which can be used to access other handlers / the importer itself
      */
     @SuppressWarnings("unchecked")
-    public OnLoadEvent(E entity, Context context, List<Mapping> mappingsToLoad, ImporterContext importerContext) {
+    public OnLoadEvent(E entity, Context context, ImporterContext importerContext) {
         super((Class<E>) entity.getClass(), context, importerContext);
         this.entity = entity;
-        this.mappingsToLoad = Collections.unmodifiableList(mappingsToLoad);
     }
 
     public E getEntity() {
         return entity;
     }
 
-    public List<Mapping> getMappingsToLoad() {
-        return mappingsToLoad;
+    @Override
+    public String toString() {
+        return "OnLoadEvent: "
+               + getType().getName()
+               + " into "
+               + entity
+               + "(ID: "
+               + entity.getIdAsString()
+               + ") with context: "
+               + getContext();
     }
 }
