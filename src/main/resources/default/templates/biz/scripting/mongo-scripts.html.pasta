@@ -1,0 +1,46 @@
+<i:arg type="Page" name="scripts"/>
+
+<t:page titleKey="MongoCustomScript.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/scripting/scripts">@i18n("MongoCustomScript.plural")</a>
+        </li>
+    </i:block>
+
+    <i:block name="page-header">
+        <t:pageHeader titleKey="MongoCustomScript.plural"/>
+    </i:block>
+
+    <t:searchHeader page="scripts" baseUrl="/scripting/scripts">
+        <t:createButton url="/scripting/scripts/new"/>
+    </t:searchHeader>
+    <div class="card">
+        <div class="card-body">
+            <t:emptyCheck data="scripts">
+                <table class="table mb-4">
+                    <thead>
+                    <tr>
+                        <th>@i18n("MongoCustomScript.code")</th>
+                        <th scope="col" class="delete-btn-column"/>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <i:for type="sirius.biz.scripting.mongo.MongoCustomScript" var="script" items="scripts.getItems()">
+                        <tr>
+                            <td>
+                                <a href="@apply('/scripting/scripts/%s', script.getIdAsString())">@script.getCode()</a>
+                            </td>
+                            <td class="delete-btn-column">
+                                <t:deleteButton
+                                        url="@apply('/scripting/scripts/%s/delete', script.getIdAsString())"
+                                        page="scripts"/>
+                            </td>
+                        </tr>
+                    </i:for>
+                    </tbody>
+                </table>
+                <t:pagination page="scripts" baseUrl="/scripting/scripts"/>
+            </t:emptyCheck>
+        </div>
+    </div>
+</t:page>

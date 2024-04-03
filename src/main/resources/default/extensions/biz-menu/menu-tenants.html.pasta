@@ -15,7 +15,6 @@
                 </i:else>
             </i:if>
         </w:menuSection>
-
     </i:block>
     <i:block name="user">
         <w:menuSection framework="biz.tenants">
@@ -33,6 +32,5 @@
                                 url="/academy" />
             </w:menuSection>
         </i:if>
-
     </i:block>
 </i:switch>

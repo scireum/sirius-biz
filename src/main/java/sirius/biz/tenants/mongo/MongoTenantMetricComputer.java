@@ -9,11 +9,15 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
+import sirius.biz.analytics.metrics.MetricComputerContext;
 import sirius.biz.model.LoginData;
+import sirius.biz.scripting.mongo.MongoCustomEventDispatcherRepository;
+import sirius.biz.scripting.mongo.MongoCustomScript;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tenants.metrics.computers.TenantMetricComputer;
 import sirius.db.mongo.Mango;
+import sirius.kernel.Sirius;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
@@ -32,13 +36,32 @@ public class MongoTenantMetricComputer extends TenantMetricComputer<MongoTenant>
             PerformanceFlag.register(MongoTenant.class, "active-users", 0).makeVisible().markAsFilter();
 
     /**
-     * Marks tenants which hase users that use the video academy.
+     * Marks tenants which have users that use the video academy.
      */
     public static final PerformanceFlag ACADEMY_USERS =
             PerformanceFlag.register(MongoTenant.class, "academy-users", 1).makeVisible().markAsFilter();
 
+    /**
+     * Marks tenants which have at least one {@link MongoCustomScript custom script}.
+     */
+    public static final PerformanceFlag CUSTOM_SCRIPTS =
+            PerformanceFlag.register(MongoTenant.class, "custom-scripts", 2).makeVisible().markAsFilter();
+
     @Part
     private Mango mango;
+
+    @Override
+    public void compute(MetricComputerContext context, MongoTenant tenant) throws Exception {
+        super.compute(context, tenant);
+
+        if (Sirius.isFrameworkEnabled(MongoCustomEventDispatcherRepository.FRAMEWORK_SCRIPTING_MONGO)) {
+            tenant.getPerformanceData()
+                  .modify()
+                  .set(CUSTOM_SCRIPTS,
+                       mango.select(MongoCustomScript.class).eq(MongoCustomScript.TENANT, tenant.getId()).exists())
+                  .commit();
+        }
+    }
 
     @Override
     protected PerformanceFlag getAcademyUsersFlag() {
