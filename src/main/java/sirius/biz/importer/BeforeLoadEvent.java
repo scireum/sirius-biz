@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Entity;
 import sirius.kernel.commons.Context;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 /**
  * Triggered within {@link ImportHandler#load(Context, BaseEntity)} in order to update an entity
@@ -38,6 +39,7 @@ public class BeforeLoadEvent<E extends Entity> extends ContextScriptableEvent<E>
         this.entity = entity;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public E getEntity() {
         return entity;
     }
