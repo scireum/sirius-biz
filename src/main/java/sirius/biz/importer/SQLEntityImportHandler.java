@@ -150,10 +150,14 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
     @Override
     public E load(Context data, E entity) {
-        E result = load(data, entity, mappingsToLoad);
         if (context.getEventDispatcher().isActive()) {
-            context.getEventDispatcher()
-                   .handleEvent(new OnLoadEvent<E>(result, data, context));
+            context.getEventDispatcher().handleEvent(new BeforeLoadEvent<E>(entity, data, context));
+        }
+
+        E result = load(data, entity, mappingsToLoad);
+
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher().handleEvent(new AfterLoadEvent<E>(result, data, context));
         }
 
         return result;
@@ -243,8 +247,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected E createOrUpdate(E entity, boolean batch) {
         try {
             if (context.getEventDispatcher().isActive()) {
-                context.getEventDispatcher()
-                       .handleEvent(new BeforeCreateOrUpdateEntityEvent<E>(entity, context));
+                context.getEventDispatcher().handleEvent(new BeforeCreateOrUpdateEvent<E>(entity, context));
             }
 
             enforcePreSaveConstraints(entity);

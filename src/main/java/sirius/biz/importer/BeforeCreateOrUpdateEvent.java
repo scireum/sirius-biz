@@ -8,30 +8,28 @@
 
 package sirius.biz.importer;
 
+import sirius.biz.scripting.TypedScriptableEvent;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Entity;
-import sirius.kernel.commons.Context;
 
 /**
- * Triggered within {@link sirius.biz.importer.ImportHandler#load(Context, BaseEntity)} in order to update an entity
- * using the given context.
+ * Triggered within {@link ImportHandler#createOrUpdateNow(BaseEntity)} (or the batch equivalent) in order to update an
+ * entity using the given context.
  *
  * @param <E> the type of entity being updated
  */
-public class OnLoadEvent<E extends Entity> extends ContextScriptableEvent<E> {
+public class BeforeCreateOrUpdateEvent<E extends Entity> extends TypedScriptableEvent<E> {
     private final E entity;
+    private final ImporterContext importerContext;
 
     /**
      * Creates a new event for the given entity
      *
      * @param entity          the entity to update
-     * @param context         the context to read data from. Note that this can and should be modified by the handler,
-     *                        as this is the whole purpose of this event anyway.
      * @param importerContext the import context which can be used to access other handlers / the importer itself
      */
-    @SuppressWarnings("unchecked")
-    public OnLoadEvent(E entity, Context context, ImporterContext importerContext) {
-        super((Class<E>) entity.getClass(), context, importerContext);
+    public BeforeCreateOrUpdateEvent(E entity, ImporterContext importerContext) {
+        this.importerContext = importerContext;
         this.entity = entity;
     }
 
@@ -41,13 +39,22 @@ public class OnLoadEvent<E extends Entity> extends ContextScriptableEvent<E> {
 
     @Override
     public String toString() {
-        return "OnLoadEvent: "
+        return "BeforeCreateOrUpdateEvent: "
                + getType().getName()
-               + " into "
+               + " with entity "
                + entity
                + "(ID: "
                + entity.getIdAsString()
-               + ") with context: "
-               + getContext();
+               + ")";
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Class<E> getType() {
+        return (Class<E>) entity.getClass();
+    }
+
+    public ImporterContext getImporterContext() {
+        return importerContext;
     }
 }

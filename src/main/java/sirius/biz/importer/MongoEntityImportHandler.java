@@ -47,11 +47,14 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E load(Context data, E entity) {
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher().handleEvent(new BeforeLoadEvent<E>(entity, data, context));
+        }
+
         E result = load(data, entity, mappingsToLoad);
 
         if (context.getEventDispatcher().isActive()) {
-            context.getEventDispatcher()
-                   .handleEvent(new OnLoadEvent<E>(result, data, context));
+            context.getEventDispatcher().handleEvent(new AfterLoadEvent<E>(result, data, context));
         }
 
         return result;
@@ -130,8 +133,7 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     public E createOrUpdateNow(E entity) {
         try {
             if (context.getEventDispatcher().isActive()) {
-                context.getEventDispatcher()
-                       .handleEvent(new BeforeCreateOrUpdateEntityEvent<E>(entity, context));
+                context.getEventDispatcher().handleEvent(new BeforeCreateOrUpdateEvent<E>(entity, context));
             }
 
             enforcePreSaveConstraints(entity);
