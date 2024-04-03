@@ -30,4 +30,9 @@ public class BeforeFindEvent<E extends Entity> extends ContextScriptableEvent<E>
     public BeforeFindEvent(Class<E> entityType, Context context, ImporterContext importerContext) {
         super(entityType, context, importerContext);
     }
+
+    @Override
+    public String toString() {
+        return "BeforeFindEvent: " + getType().getName() + " with context: " + getContext();
+    }
 }
