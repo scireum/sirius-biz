@@ -16,7 +16,7 @@
 
     <k:section heading="Common" anchor="common">
         <p>
-            <b>Tagliatelle</b> is template engine which renders a statically typed and compiled templates. This is
+            <b>Tagliatelle</b> is a template engine which renders statically typed and compiled templates. This is
             mainly used to render the HTML output of the web-server but can be used to generate any form of text output.
         </p>
         <p>
