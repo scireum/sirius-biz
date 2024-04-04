@@ -150,11 +150,27 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
     @Override
     public E load(Context data, E entity) {
-        return load(data, entity, mappingsToLoad);
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher().handleEvent(new BeforeLoadEvent<E>(entity, data, context));
+        }
+
+        E result = load(data, entity, mappingsToLoad);
+
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher().handleEvent(new AfterLoadEvent<E>(result, data, context));
+        }
+
+        return result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Optional<E> tryFind(Context data) {
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher()
+                   .handleEvent(new BeforeFindEvent<E>((Class<E>) descriptor.getType(), data, context));
+        }
+
         E example = loadForFind(data);
         return tryFindByExample(example);
     }
@@ -230,6 +246,10 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      */
     protected E createOrUpdate(E entity, boolean batch) {
         try {
+            if (context.getEventDispatcher().isActive()) {
+                context.getEventDispatcher().handleEvent(new BeforeCreateOrUpdateEvent<E>(entity, context));
+            }
+
             enforcePreSaveConstraints(entity);
 
             // Invoke the beforeSave checks so that the change-detection below works for

@@ -9,6 +9,7 @@
 package sirius.biz.scripting;
 
 import sirius.kernel.commons.Callback;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 /**
  * Provides the interface as seen by the scripting engine to register custom event handlers.
@@ -25,6 +26,7 @@ public interface ScriptableEventRegistry {
      * @param handler   the handler to handle the event
      * @param <E>       the generic type of the event
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     <E extends ScriptableEvent> void registerHandler(Class<E> eventType, Callback<E> handler);
 
     /**
@@ -36,6 +38,7 @@ public interface ScriptableEventRegistry {
      * @param <T>       the generic inner type of the event
      * @param <E>       the generic type of the event
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     <T, E extends TypedScriptableEvent<T>> void registerTypedHandler(Class<E> eventType,
                                                                      Class<T> type,
                                                                      Callback<E> handler);

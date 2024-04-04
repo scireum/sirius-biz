@@ -43,7 +43,7 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     ImportDictionary getImportDictionary();
 
     /**
-     * Fills the given entity it using the supplied <tt>data</tt>.
+     * Fills the given entity using the supplied <tt>data</tt>.
      *
      * @param data   used to fill the newly created entity
      * @param entity the entity to be filled

@@ -18,11 +18,13 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Unique;
 import sirius.db.mongo.Mango;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.nls.NLS;
 
 /**
  * Stores a custom scripting profile for a tenant.
  */
+@Framework(MongoCustomEventDispatcherRepository.FRAMEWORK_SCRIPTING_MONGO)
 @Index(name = "lookup", columns = {"tenant", "code"}, columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoCustomScript extends MongoTenantAware {
 

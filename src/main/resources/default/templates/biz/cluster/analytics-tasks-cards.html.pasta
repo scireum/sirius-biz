@@ -19,7 +19,7 @@
                            items="tasks.get(taskType)"
                            type="sirius.biz.analytics.scheduler.AnalyticalTask">
                         <tr>
-                            <i:local name="taskName" value="task.as(Object.class).getClass().getSimpleName()"/>
+                            <i:local name="taskName" value="task.getClass().getSimpleName()"/>
                             <i:if test="task.getAvgDurationMillis().getSampleCount() > 0 || task.getMaxDurationMillis() > 0">
                                 <td>@taskName</td>
                                 <td class="col-3 text-end">

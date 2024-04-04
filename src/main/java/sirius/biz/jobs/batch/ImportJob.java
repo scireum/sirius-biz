@@ -11,8 +11,11 @@ package sirius.biz.jobs.batch;
 import sirius.biz.importer.Importer;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.scripting.ScriptableEventDispatcher;
+import sirius.biz.scripting.ScriptableEvents;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
@@ -29,6 +32,9 @@ public abstract class ImportJob extends BatchJob {
      */
     protected final Importer importer;
 
+    @Part
+    private static ScriptableEvents scriptableEvents;
+
     /**
      * Creates a new job for the given process context.
      *
@@ -37,6 +43,16 @@ public abstract class ImportJob extends BatchJob {
     protected ImportJob(ProcessContext process) {
         super(process);
         this.importer = new Importer(process.getTitle());
+
+        ScriptableEventDispatcher dispatcher = obtainEventDispatcher(process);
+        this.importer.getContext().withEventDispatcher(dispatcher);
+
+        dispatcher.handleEvent(new ImportJobStartedEvent<>(this, process));
+    }
+
+    private ScriptableEventDispatcher obtainEventDispatcher(ProcessContext process) {
+        String dispatcher = process.getParameter(ImportBatchProcessFactory.DISPATCHER_PARAMETER).orElse(null);
+        return scriptableEvents.fetchDispatcherForCurrentTenant(dispatcher);
     }
 
     /**
@@ -52,7 +68,7 @@ public abstract class ImportJob extends BatchJob {
      * @param owner  the entity which contains the reference
      * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
      * @param target the target the reference must point to
-     * @param <E>    the generic type the the parent being referenced
+     * @param <E>    the generic type the parent being referenced
      * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
      * @see BaseEntityRef#hasWriteOnceSemantics
