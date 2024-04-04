@@ -45,7 +45,7 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
     static {
         SelectStringParameter dispatcherParameter = new SelectStringParameter("eventDispatcher", "$ImportBatchProcessFactory.eventDispatcher");
         dispatcherParameter.markRequired();
-        dispatcherParameter.withDescription("$ImportBatchProcessFactory.eventDispatcher.helpImportBatchProcessFactory.eventDispatcher.help");
+        dispatcherParameter.withDescription("$ImportBatchProcessFactory.eventDispatcher.help");
         dispatcherParameter.withEntriesProvider(() -> {
             Map<String, String> eventDispatchers = new LinkedHashMap<>();
             ScriptableEvents scriptableEvents = Injector.context().getPart(ScriptableEvents.class);
