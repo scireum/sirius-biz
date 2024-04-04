@@ -1,4 +1,9 @@
-<k:article code="T2IQI" lang="de" parent="AHJEC" title="Tagliatelle Template Engine" permissions="" crossReferences="HP9RC">
+<k:article code="T2IQI"
+           lang="de"
+           parent="AHJEC"
+           title="Tagliatelle Template Engine"
+           permissions=""
+           crossReferences="HP9RC">
     <i:block name="description">Defines the syntax of the Tagliatelle Template Engine.</i:block>
 
     <i:block name="sidebar">
@@ -11,13 +16,15 @@
 
     <k:section heading="Common" anchor="common">
         <p>
-            <b>Tagliatelle</b> is template engine which renders a statically typed and compiled templates. This is mainly
+            <b>Tagliatelle</b> is template engine which renders a statically typed and compiled templates. This is
+            mainly
             used to render the HTML output of the web-server but can be used to generate any form of text output.
         </p>
         <p>
-            Tagliatelle uses Noodle (<k:ref code="HP9RC" />) as expression language. An expression can be placed anywhere
+            Tagliatelle uses Noodle (<k:ref code="HP9RC"/>) as expression language. An expression can be placed anywhere
             in the template by prefixing it with an <b>@@</b>, i.e. <k:inlineCode>@@myVariable</k:inlineCode>. If the
-            boundaries of the expression are unclear, it can be put into parentheses like <k:inlineCode>@@(3+4)</k:inlineCode>.
+            boundaries of the expression are unclear, it can be put into parentheses like
+            <k:inlineCode>@@(3+4)</k:inlineCode>.
             If a tag expects an expression anyway, the "@@" can be omitted. (Note that the "@@" can be escaped by
             putting two in a row: <k:inlineCode>@@@@</k:inlineCode>.
         </p>
@@ -29,8 +36,10 @@
     </k:section>
     <k:section heading="Anatomy of a tag" anchor="anatomy-of-a-tag">
         <p>
-            Tags are organized in <b>tag libraries</b>. Each library has a prefix assigned, e.g. <b>k</b>. All templates for
-            this tag library are then placed in <k:inlineCode>tags/k/tagName.html.pasta</k:inlineCode> and can be referenced
+            Tags are organized in <b>tag libraries</b>. Each library has a prefix assigned, e.g. <b>k</b>. All templates
+            for
+            this tag library are then placed in <k:inlineCode>tags/k/tagName.html.pasta</k:inlineCode> and can be
+            referenced
             using <k:inlineCode>&lt;k:tagName&gt;</k:inlineCode>.
         </p>
         <p>
@@ -42,6 +51,8 @@
         </p>
     </k:section>
     <k:section heading="Available tags and macros" anchor="available-tags-and-macros">
-        A list of all available tags and macros can be found here: <a href="/system/tags">Tagliatelle Tag Overview</a>.
+        A list of all available tags and macros can be found here: <k:link link="/system/tags"
+                                                                           name="Tagliatelle Tag Overview"
+                                                                           target="_blank"/>.
     </k:section>
 </k:article>
