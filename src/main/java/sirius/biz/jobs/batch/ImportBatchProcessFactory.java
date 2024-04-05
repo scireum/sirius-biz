@@ -40,10 +40,19 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
     /**
      * Permits selecting the {@link sirius.biz.scripting.ScriptableEventDispatcher} to use for this import.
      */
-    public static final Parameter<String> DISPATCHER_PARAMETER;
+    public static final Parameter<String> DISPATCHER_PARAMETER = createDispatcherParameter();
 
-    static {
-        SelectStringParameter dispatcherParameter = new SelectStringParameter("eventDispatcher", "$ImportBatchProcessFactory.eventDispatcher");
+    @Part
+    private ScriptableEvents scriptableEvents;
+
+    /**
+     * Creates a new instance of the dispatcher parameter.
+     *
+     * @return a new instance of the dispatcher parameter
+     */
+    public static Parameter<String> createDispatcherParameter() {
+        SelectStringParameter dispatcherParameter =
+                new SelectStringParameter("eventDispatcher", "$ImportBatchProcessFactory.eventDispatcher");
         dispatcherParameter.markRequired();
         dispatcherParameter.withDescription("$ImportBatchProcessFactory.eventDispatcher.help");
         dispatcherParameter.withEntriesProvider(() -> {
@@ -51,16 +60,13 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
             ScriptableEvents scriptableEvents = Injector.context().getPart(ScriptableEvents.class);
             if (scriptableEvents != null) {
                 scriptableEvents.fetchDispatchersForCurrentTenant()
-                            .forEach(dispatcher -> eventDispatchers.put(dispatcher, dispatcher));
+                                .forEach(dispatcher -> eventDispatchers.put(dispatcher, dispatcher));
             }
             return eventDispatchers;
         });
 
-        DISPATCHER_PARAMETER = dispatcherParameter.build();
+        return dispatcherParameter.build();
     }
-
-    @Part
-    private ScriptableEvents scriptableEvents;
 
     @Override
     protected abstract ImportJob createJob(ProcessContext process);
@@ -68,7 +74,7 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         if (scriptableEvents.fetchDispatchersForCurrentTenant().size() > 1) {
-            parameterCollector.accept(DISPATCHER_PARAMETER);
+            parameterCollector.accept(createDispatcherParameter());
         }
     }
 
