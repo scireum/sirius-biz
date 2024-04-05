@@ -55,7 +55,7 @@ public class MongoCustomScriptController extends BizController {
      * Modifies / manages the given script.
      *
      * @param webContext the request to handle
-     * @param id         the id of the script to manage
+     * @param id         the ID of the script to manage
      */
     @Routed("/scripting/scripts/:1")
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
@@ -71,7 +71,7 @@ public class MongoCustomScriptController extends BizController {
      * Deletes the given script.
      *
      * @param webContext the request to handle
-     * @param id         the id of the script to delete
+     * @param id         the ID of the script to delete
      */
     @Routed("/scripting/scripts/:1/delete")
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
