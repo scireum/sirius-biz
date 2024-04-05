@@ -55,6 +55,7 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     public List<String> fetchAvailableDispatchers(@Nonnull String tenantId) {
         return mango.select(MongoCustomScript.class)
                     .eq(MongoCustomScript.TENANT, tenantId)
+                    .ne(MongoCustomScript.DISABLED, true)
                     .orderAsc(MongoCustomScript.CODE)
                     .queryList()
                     .stream()
@@ -65,8 +66,11 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     @Override
     public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nullable String name) {
         if (Strings.isEmpty(name)) {
-            List<MongoCustomScript> mongoCustomScripts =
-                    mango.select(MongoCustomScript.class).eq(MongoCustomScript.TENANT, tenantId).limit(2).queryList();
+            List<MongoCustomScript> mongoCustomScripts = mango.select(MongoCustomScript.class)
+                                                              .eq(MongoCustomScript.TENANT, tenantId)
+                                                              .ne(MongoCustomScript.DISABLED, true)
+                                                              .limit(2)
+                                                              .queryList();
             if (mongoCustomScripts.size() == 1) {
                 return compileAndLoad(mongoCustomScripts.getFirst());
             } else {
@@ -76,6 +80,7 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
             return mango.select(MongoCustomScript.class)
                         .eq(MongoCustomScript.TENANT, tenantId)
                         .eq(MongoCustomScript.CODE, name)
+                        .ne(MongoCustomScript.DISABLED, true)
                         .first()
                         .flatMap(this::compileAndLoad);
         }

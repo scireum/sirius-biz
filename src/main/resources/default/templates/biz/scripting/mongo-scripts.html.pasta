@@ -21,6 +21,7 @@
                     <thead>
                     <tr>
                         <th>@i18n("MongoCustomScript.code")</th>
+                        <th>@i18n("MongoCustomScript.disabled")</th>
                         <th scope="col" class="delete-btn-column"/>
                     </tr>
                     </thead>
@@ -29,6 +30,9 @@
                         <tr>
                             <td>
                                 <a href="@apply('/scripting/scripts/%s', script.getIdAsString())">@script.getCode()</a>
+                            </td>
+                            <td>
+                                @toUserString(script.isDisabled())
                             </td>
                             <td class="delete-btn-column">
                                 <t:deleteButton

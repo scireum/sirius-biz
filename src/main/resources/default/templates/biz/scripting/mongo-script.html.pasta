@@ -21,10 +21,15 @@
 
     <t:editForm url="@apply('/scripting/scripts/%s', script.getIdAsString())">
         <input id="scriptField" name="script" value="@script.getScript()" type="hidden"/>
-        <t:textfield class="col-12 required"
-                     name="code"
-                     value="@script.getCode()"
-                     labelKey="MongoCustomScript.code"/>
+        <div class="row">
+            <t:textfield class="col-12 col-md-6 required"
+                         name="code"
+                         value="@script.getCode()"
+                         labelKey="MongoCustomScript.code"/>
+            <t:booleanSelect class="col-12 col-md-6"
+                             name="disabled" value="script.isDisabled()"
+                             labelKey="MongoCustomScript.disabled"/>
+        </div>
 
         <t:heading labelKey="MongoCustomScript.script"/>
         <div class="d-flex flex-col">

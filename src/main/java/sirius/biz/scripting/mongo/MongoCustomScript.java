@@ -38,6 +38,11 @@ public class MongoCustomScript extends MongoTenantAware {
     @AutoImport
     private String code;
 
+    public static final Mapping DISABLED = Mapping.named("disabled");
+    @Autoloaded
+    @AutoImport
+    private boolean disabled;
+
     /**
      * Contains the actual scripting code.
      */
@@ -70,5 +75,13 @@ public class MongoCustomScript extends MongoTenantAware {
 
     public void setScript(String script) {
         this.script = script;
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean inactive) {
+        this.disabled = inactive;
     }
 }
