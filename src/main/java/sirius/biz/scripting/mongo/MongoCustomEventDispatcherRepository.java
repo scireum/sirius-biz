@@ -54,7 +54,7 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     public List<String> fetchAvailableDispatchers(@Nonnull String tenantId) {
         return mango.select(MongoCustomScript.class)
                     .eq(MongoCustomScript.TENANT, tenantId)
-                    .ne(MongoCustomScript.DISABLED, true)
+                    .eq(MongoCustomScript.DISABLED, false)
                     .orderAsc(MongoCustomScript.CODE)
                     .queryList()
                     .stream()
@@ -67,7 +67,7 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
         return mango.select(MongoCustomScript.class)
                     .eq(MongoCustomScript.TENANT, tenantId)
                     .eq(MongoCustomScript.CODE, name)
-                    .ne(MongoCustomScript.DISABLED, true)
+                    .eq(MongoCustomScript.DISABLED, false)
                     .first()
                     .flatMap(this::compileAndLoad);
     }

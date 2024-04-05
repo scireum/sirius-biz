@@ -25,7 +25,9 @@ import sirius.kernel.nls.NLS;
  * Stores a custom scripting profile for a tenant.
  */
 @Framework(MongoCustomEventDispatcherRepository.FRAMEWORK_SCRIPTING_MONGO)
-@Index(name = "lookup", columns = {"tenant", "code"}, columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "script_lookup",
+        columns = {"tenant", "disabled", "code"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoCustomScript extends MongoTenantAware {
 
     /**
