@@ -14,26 +14,22 @@
     <t:searchHeader page="scripts" baseUrl="/scripting/scripts">
         <t:createButton url="/scripting/scripts/new"/>
     </t:searchHeader>
-    <div class="card">
-        <div class="card-body">
-            <t:emptyCheck data="scripts">
-                <t:datacards>
-                    <i:for type="sirius.biz.scripting.mongo.MongoCustomScript" var="script" items="scripts.getItems()">
-                        <t:datacard title="@script.getCode()"
-                                    link="@apply('/scripting/scripts/%s', script.getIdAsString())">
-                            <i:block name="footer">
-                                <i:if test="script.isDisabled()">
-                                    <t:tag color="red">@i18n("MongoCustomScript.state.inactive")</t:tag>
-                                    <i:else>
-                                        <t:tag color="green">@i18n("MongoCustomScript.state.active")</t:tag>
-                                    </i:else>
-                                </i:if>
-                            </i:block>
-                        </t:datacard>
-                    </i:for>
-                </t:datacards>
-                <t:pagination page="scripts" baseUrl="/scripting/scripts"/>
-            </t:emptyCheck>
-        </div>
-    </div>
+    <t:emptyCheck data="scripts">
+        <t:datacards>
+            <i:for type="sirius.biz.scripting.mongo.MongoCustomScript" var="script" items="scripts.getItems()">
+                <t:datacard title="@script.getCode()"
+                            link="@apply('/scripting/scripts/%s', script.getIdAsString())">
+                    <i:block name="footer">
+                        <i:if test="script.isDisabled()">
+                            <t:tag color="red">@i18n("MongoCustomScript.state.inactive")</t:tag>
+                            <i:else>
+                                <t:tag color="green">@i18n("MongoCustomScript.state.active")</t:tag>
+                            </i:else>
+                        </i:if>
+                    </i:block>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
+        <t:pagination page="scripts" baseUrl="/scripting/scripts"/>
+    </t:emptyCheck>
 </t:page>
