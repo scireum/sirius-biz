@@ -28,7 +28,6 @@ import sirius.pasta.noodle.compiler.SourceCodeInfo;
 import sirius.pasta.noodle.sandbox.SandboxMode;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,26 +63,13 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     }
 
     @Override
-    public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nullable String name) {
-        if (Strings.isEmpty(name)) {
-            List<MongoCustomScript> mongoCustomScripts = mango.select(MongoCustomScript.class)
-                                                              .eq(MongoCustomScript.TENANT, tenantId)
-                                                              .ne(MongoCustomScript.DISABLED, true)
-                                                              .limit(2)
-                                                              .queryList();
-            if (mongoCustomScripts.size() == 1) {
-                return compileAndLoad(mongoCustomScripts.getFirst());
-            } else {
-                return Optional.empty();
-            }
-        } else {
-            return mango.select(MongoCustomScript.class)
-                        .eq(MongoCustomScript.TENANT, tenantId)
-                        .eq(MongoCustomScript.CODE, name)
-                        .ne(MongoCustomScript.DISABLED, true)
-                        .first()
-                        .flatMap(this::compileAndLoad);
-        }
+    public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nonnull String name) {
+        return mango.select(MongoCustomScript.class)
+                    .eq(MongoCustomScript.TENANT, tenantId)
+                    .eq(MongoCustomScript.CODE, name)
+                    .ne(MongoCustomScript.DISABLED, true)
+                    .first()
+                    .flatMap(this::compileAndLoad);
     }
 
     private Optional<ScriptableEventDispatcher> compileAndLoad(MongoCustomScript script) {

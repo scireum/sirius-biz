@@ -11,7 +11,6 @@ package sirius.biz.scripting;
 import sirius.kernel.di.std.AutoRegister;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,8 +36,7 @@ public interface ScriptableEventDispatcherRepository {
      * @param tenantId the tenant for which to fetch the dispatcher
      * @param name     the name of the dispatcher to fetch
      * @return the dispatcher with the given name for the given tenant wrapped as optional or an empty optional if
-     * no such dispatcher exists. <b>NOTE:</b> if an empty name is given, the first dispatcher for the given tenant
-     * is used. This helps to simplify the usage of custom events.
+     * no such dispatcher exists.
      */
-    Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nullable String name);
+    Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nonnull String name);
 }

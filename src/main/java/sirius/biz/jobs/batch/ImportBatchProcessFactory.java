@@ -64,8 +64,22 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
             }
             return eventDispatchers;
         });
+        dispatcherParameter.hideWhen((parameter, context) -> {
+            return parameter.getValues().size() == 1;
+        });
 
         return dispatcherParameter.build();
+    }
+
+    /**
+     * Determines if scriptable events are enabled for this factory.
+     * <p>
+     * Disabled by default. Override this method to enable scriptable events where needed.
+     *
+     * @return <tt>true</tt> if scriptable events should be enabled, <tt>false</tt> otherwise
+     */
+    protected boolean enableScriptableEvents() {
+        return false;
     }
 
     @Override
@@ -73,7 +87,7 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
-        if (scriptableEvents.fetchDispatchersForCurrentTenant().size() > 1) {
+        if (enableScriptableEvents()) {
             parameterCollector.accept(createDispatcherParameter());
         }
     }
