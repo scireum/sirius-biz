@@ -21,7 +21,7 @@
                     <thead>
                     <tr>
                         <th>@i18n("MongoCustomScript.code")</th>
-                        <th>@i18n("MongoCustomScript.disabled")</th>
+                        <th>@i18n("MongoCustomScript.state")</th>
                         <th scope="col" class="delete-btn-column"/>
                     </tr>
                     </thead>
@@ -32,7 +32,12 @@
                                 <a href="@apply('/scripting/scripts/%s', script.getIdAsString())">@script.getCode()</a>
                             </td>
                             <td>
-                                @toUserString(script.isDisabled())
+                                <i:if test="script.isDisabled()">
+                                    <t:tag color="red">@i18n("MongoCustomScript.state.inactive")</t:tag>
+                                    <i:else>
+                                        <t:tag color="green">@i18n("MongoCustomScript.state.active")</t:tag>
+                                    </i:else>
+                                </i:if>
                             </td>
                             <td class="delete-btn-column">
                                 <t:deleteButton
