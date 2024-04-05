@@ -36,9 +36,6 @@ public class MongoCustomScriptController extends BizController {
 
     private static final String PARAM_SCRIPT = "script";
 
-    @Part
-    private Mango mango;
-
     /**
      * Lists all scripts available for the current tenant.
      *
