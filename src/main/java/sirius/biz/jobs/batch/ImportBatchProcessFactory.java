@@ -65,7 +65,7 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
             return eventDispatchers;
         });
         dispatcherParameter.hideWhen((parameter, context) -> {
-            return parameter.getValues().size() == 1;
+            return parameter.getValues().size() < 2;
         });
 
         return dispatcherParameter.build();
