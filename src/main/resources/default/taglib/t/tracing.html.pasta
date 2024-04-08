@@ -1,6 +1,7 @@
 <i:arg name="trace" type="sirius.biz.protocol.TraceData"/>
 <i:arg name="journal" type="sirius.biz.protocol.JournalData" default=""/>
 <i:arg name="transactionData" type="sirius.biz.importer.txn.ImportTransactionData" default=""/>
+<i:arg name="entityId" type="String" default=""/>
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
