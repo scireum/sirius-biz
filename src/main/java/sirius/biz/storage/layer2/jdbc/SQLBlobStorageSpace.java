@@ -804,8 +804,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
         SQLPageHelper<SQLBlob> pageHelper = SQLPageHelper.withQuery(blobsQuery)
                                                          .withContext(webContext)
-                                                         .withSearchFields(QueryField.startsWith(SQLBlob.NORMALIZED_FILENAME),
-                                                                           QueryField.startsWith(SQLBlob.FILE_EXTENSION));
+                                                         .withSearchFields(QueryField.contains(SQLBlob.NORMALIZED_FILENAME),
+                                                                           QueryField.contains(SQLBlob.FILE_EXTENSION));
 
         pageHelper.addQueryFacet(SQLBlob.FILE_EXTENSION.getName(),
                                  NLS.get("Blob.fileExtension"),

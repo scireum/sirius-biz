@@ -712,8 +712,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
         MongoPageHelper<MongoBlob> pageHelper = MongoPageHelper.withQuery(blobsQuery)
                                                                .withContext(webContext)
-                                                               .withSearchFields(QueryField.startsWith(MongoBlob.NORMALIZED_FILENAME),
-                                                                                 QueryField.startsWith(MongoBlob.FILE_EXTENSION));
+                                                               .withSearchFields(QueryField.contains(MongoBlob.NORMALIZED_FILENAME),
+                                                                                 QueryField.contains(MongoBlob.FILE_EXTENSION));
 
         pageHelper.addTermAggregation(MongoBlob.FILE_EXTENSION);
         pageHelper.addTimeAggregation(MongoBlob.LAST_MODIFIED,
