@@ -34,6 +34,21 @@
                         <div class="text-muted">@trace.getChangedIn()</div>
                     </t:infoLine>
                 </div>
+
+                <i:if test="isFilled(entityId)">
+                    <div class="col-lg">
+                        <t:infoLine class="tracing-info" labelKey="TraceData.entity">
+                            <t:textfield name="copyEntityId"
+                                         id="copyEntityId"
+                                         value="@entityId"
+                                         readonly="true">
+                                <i:block name="addon">
+                                    <t:copyToClipboardAddon fieldName="copyEntityId"/>
+                                </i:block>
+                            </t:textfield>
+                        </t:infoLine>
+                    </div>
+                </i:if>
             </div>
 
             <i:if test="transactionData != null">
