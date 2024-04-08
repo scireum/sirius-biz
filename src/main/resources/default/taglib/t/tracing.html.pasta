@@ -1,6 +1,7 @@
 <i:arg name="trace" type="sirius.biz.protocol.TraceData"/>
 <i:arg name="journal" type="sirius.biz.protocol.JournalData" default=""/>
 <i:arg name="transactionData" type="sirius.biz.importer.txn.ImportTransactionData" default=""/>
+<i:arg name="entityId" type="String" default=""/>
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
@@ -33,6 +34,23 @@
                         <div class="text-muted">@trace.getChangedIn()</div>
                     </t:infoLine>
                 </div>
+
+                <i:if test="isFilled(entityId)">
+                    <div class="col-md-12">
+                        <p>
+                            @i18n('TraceData.entity')
+                        </p>
+                        <t:textfield name="copyEntityId"
+                                     class="col-md-4"
+                                     id="copyEntityId"
+                                     value="@entityId"
+                                     readonly="true">
+                            <i:block name="addon">
+                                <t:copyToClipboardAddon fieldName="copyEntityId"/>
+                            </i:block>
+                        </t:textfield>
+                    </div>
+                </i:if>
             </div>
 
             <i:if test="transactionData != null">
