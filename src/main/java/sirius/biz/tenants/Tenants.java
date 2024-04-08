@@ -35,7 +35,9 @@ import sirius.web.security.UserInfo;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -566,5 +568,30 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
         } finally {
             userContext.setCurrentUser(currentUser);
         }
+    }
+
+    /**
+     * Fetches all parent tenant IDs for the given tenant.
+     *
+     * @param tenantId the initial tenant ID
+     * @return a list of all parent tenant IDs, starting with the given tenant ID
+     */
+    public List<String> fetchAllParentIds(String tenantId) {
+        List<String> tenantIds = new ArrayList<>();
+        String currentTenantId = tenantId;
+
+        while (Strings.isFilled(currentTenantId)) {
+            tenantIds.add(currentTenantId);
+            currentTenantId = fetchParentTenantId(currentTenantId);
+        }
+
+        return tenantIds;
+    }
+
+    private String fetchParentTenantId(String currentTenantId) {
+        return fetchCachedTenant(currentTenantId).map(T::getParent)
+                                                 .map(BaseEntityRef::getIdAsString)
+                                                 .filter(parentId -> !currentTenantId.equals(parentId))
+                                                 .orElse(null);
     }
 }
