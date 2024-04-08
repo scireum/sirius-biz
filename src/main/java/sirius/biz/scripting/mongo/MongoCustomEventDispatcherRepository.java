@@ -12,7 +12,9 @@ import sirius.biz.scripting.ScriptableEventDispatcher;
 import sirius.biz.scripting.ScriptableEventDispatcherRepository;
 import sirius.biz.scripting.ScriptableEventRegistry;
 import sirius.biz.scripting.SimpleScriptableEventDispatcher;
+import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.db.mongo.Mango;
+import sirius.db.mongo.QueryBuilder;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -50,10 +52,14 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     @Part
     private Mango mango;
 
+    @Part
+    private MongoTenants tenants;
+
     @Override
     public List<String> fetchAvailableDispatchers(@Nonnull String tenantId) {
         return mango.select(MongoCustomScript.class)
-                    .eq(MongoCustomScript.TENANT, tenantId)
+                    .where(QueryBuilder.FILTERS.oneInField(MongoCustomScript.TENANT,
+                                                           tenants.fetchAllParentIds(tenantId)).build())
                     .eq(MongoCustomScript.DISABLED, false)
                     .orderAsc(MongoCustomScript.CODE)
                     .queryList()
@@ -65,7 +71,8 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     @Override
     public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nonnull String name) {
         return mango.select(MongoCustomScript.class)
-                    .eq(MongoCustomScript.TENANT, tenantId)
+                    .where(QueryBuilder.FILTERS.oneInField(MongoCustomScript.TENANT,
+                                                           tenants.fetchAllParentIds(tenantId)).build())
                     .eq(MongoCustomScript.CODE, name)
                     .eq(MongoCustomScript.DISABLED, false)
                     .first()

@@ -24,6 +24,8 @@ public interface ScriptableEventDispatcherRepository {
 
     /**
      * Fetches all available dispatchers for the given tenant.
+     * <p>
+     * Note that this will include dispatchers defined in any parent tenant.
      *
      * @param tenantId the tenant for which to fetch the dispatchers
      * @return a list of all available dispatchers for the given tenant
@@ -32,6 +34,8 @@ public interface ScriptableEventDispatcherRepository {
 
     /**
      * Fetches the dispatcher with the given name for the given tenant.
+     * <p>
+     * Note that this will include dispatchers defined in any parent tenant.
      *
      * @param tenantId the tenant for which to fetch the dispatcher
      * @param name     the name of the dispatcher to fetch
