@@ -23,9 +23,8 @@
             Tagliatelle uses Noodle (<k:ref code="HP9RC"/>) as expression language. An expression can be placed anywhere
             in the template by prefixing it with an <b>@@</b>, i.e. <k:inlineCode>@@myVariable</k:inlineCode>. If the
             boundaries of the expression are unclear, it can be put into parentheses like
-            <k:inlineCode>@@(3+4)</k:inlineCode>.
-            If a tag expects an expression anyway, the "@@" can be omitted. (Note that the "@@" can be escaped by
-            putting two in a row: <k:inlineCode>@@@@</k:inlineCode>.
+            <k:inlineCode>@@(3+4)</k:inlineCode>. If a tag expects an expression anyway, the "@@" can be omitted. (Note
+            that the "@@" can be escaped by putting two in a row: <k:inlineCode>@@@@</k:inlineCode>.
         </p>
         <p>
             The main part of the templates are made up of special <b>tags</b> (hence the name Tag-liatelle). These tags
