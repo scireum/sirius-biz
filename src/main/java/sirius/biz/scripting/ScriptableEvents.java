@@ -8,6 +8,7 @@
 
 package sirius.biz.scripting;
 
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.ScopeInfo;
@@ -53,11 +54,10 @@ public class ScriptableEvents {
      *
      * @param name the name of the dispatcher to fetch
      * @return the dispatcher for the current tenant with the given name or a NOOP dispatcher if no such dispatcher
-     * exists. Note, if an empty <tt>name</tt> is given, the first available dispatcher for the current tenant is used.
-     * This way, if exactly one dispatcher is present, it will be used in all import processes etc.
+     * exists.
      */
-    public ScriptableEventDispatcher fetchDispatcherForCurrentTenant(@Nullable String name) {
-        if (dispatcherRepository == null) {
+    public ScriptableEventDispatcher fetchDispatcherForCurrentTenant(String name) {
+        if (dispatcherRepository == null || Strings.isEmpty(name)) {
             return NOOP_DISPATCHER;
         }
 

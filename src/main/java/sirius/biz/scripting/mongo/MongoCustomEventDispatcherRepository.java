@@ -28,7 +28,6 @@ import sirius.pasta.noodle.compiler.SourceCodeInfo;
 import sirius.pasta.noodle.sandbox.SandboxMode;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +54,7 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     public List<String> fetchAvailableDispatchers(@Nonnull String tenantId) {
         return mango.select(MongoCustomScript.class)
                     .eq(MongoCustomScript.TENANT, tenantId)
+                    .eq(MongoCustomScript.DISABLED, false)
                     .orderAsc(MongoCustomScript.CODE)
                     .queryList()
                     .stream()
@@ -63,22 +63,13 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     }
 
     @Override
-    public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nullable String name) {
-        if (Strings.isEmpty(name)) {
-            List<MongoCustomScript> mongoCustomScripts =
-                    mango.select(MongoCustomScript.class).eq(MongoCustomScript.TENANT, tenantId).limit(2).queryList();
-            if (mongoCustomScripts.size() == 1) {
-                return compileAndLoad(mongoCustomScripts.getFirst());
-            } else {
-                return Optional.empty();
-            }
-        } else {
-            return mango.select(MongoCustomScript.class)
-                        .eq(MongoCustomScript.TENANT, tenantId)
-                        .eq(MongoCustomScript.CODE, name)
-                        .first()
-                        .flatMap(this::compileAndLoad);
-        }
+    public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nonnull String name) {
+        return mango.select(MongoCustomScript.class)
+                    .eq(MongoCustomScript.TENANT, tenantId)
+                    .eq(MongoCustomScript.CODE, name)
+                    .eq(MongoCustomScript.DISABLED, false)
+                    .first()
+                    .flatMap(this::compileAndLoad);
     }
 
     private Optional<ScriptableEventDispatcher> compileAndLoad(MongoCustomScript script) {

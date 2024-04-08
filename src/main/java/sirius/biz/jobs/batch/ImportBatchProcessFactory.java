@@ -40,10 +40,19 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
     /**
      * Permits selecting the {@link sirius.biz.scripting.ScriptableEventDispatcher} to use for this import.
      */
-    public static final Parameter<String> DISPATCHER_PARAMETER;
+    public static final Parameter<String> DISPATCHER_PARAMETER = createDispatcherParameter();
 
-    static {
-        SelectStringParameter dispatcherParameter = new SelectStringParameter("eventDispatcher", "$ImportBatchProcessFactory.eventDispatcher");
+    @Part
+    private ScriptableEvents scriptableEvents;
+
+    /**
+     * Creates a new instance of the dispatcher parameter.
+     *
+     * @return a new instance of the dispatcher parameter
+     */
+    public static Parameter<String> createDispatcherParameter() {
+        SelectStringParameter dispatcherParameter =
+                new SelectStringParameter("eventDispatcher", "$ImportBatchProcessFactory.eventDispatcher");
         dispatcherParameter.markRequired();
         dispatcherParameter.withDescription("$ImportBatchProcessFactory.eventDispatcher.help");
         dispatcherParameter.withEntriesProvider(() -> {
@@ -51,24 +60,35 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
             ScriptableEvents scriptableEvents = Injector.context().getPart(ScriptableEvents.class);
             if (scriptableEvents != null) {
                 scriptableEvents.fetchDispatchersForCurrentTenant()
-                            .forEach(dispatcher -> eventDispatchers.put(dispatcher, dispatcher));
+                                .forEach(dispatcher -> eventDispatchers.put(dispatcher, dispatcher));
             }
             return eventDispatchers;
         });
+        dispatcherParameter.hideWhen((parameter, context) -> {
+            return parameter.getValues().size() < 2;
+        });
 
-        DISPATCHER_PARAMETER = dispatcherParameter.build();
+        return dispatcherParameter.build();
     }
 
-    @Part
-    private ScriptableEvents scriptableEvents;
+    /**
+     * Determines if scriptable events are enabled for this factory.
+     * <p>
+     * Disabled by default. Override this method to enable scriptable events where needed.
+     *
+     * @return <tt>true</tt> if scriptable events should be enabled, <tt>false</tt> otherwise
+     */
+    protected boolean enableScriptableEvents() {
+        return false;
+    }
 
     @Override
     protected abstract ImportJob createJob(ProcessContext process);
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
-        if (scriptableEvents.fetchDispatchersForCurrentTenant().size() > 1) {
-            parameterCollector.accept(DISPATCHER_PARAMETER);
+        if (enableScriptableEvents()) {
+            parameterCollector.accept(createDispatcherParameter());
         }
     }
 

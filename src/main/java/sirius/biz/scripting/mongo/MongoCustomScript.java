@@ -25,7 +25,9 @@ import sirius.kernel.nls.NLS;
  * Stores a custom scripting profile for a tenant.
  */
 @Framework(MongoCustomEventDispatcherRepository.FRAMEWORK_SCRIPTING_MONGO)
-@Index(name = "lookup", columns = {"tenant", "code"}, columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "script_lookup",
+        columns = {"tenant", "disabled", "code"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoCustomScript extends MongoTenantAware {
 
     /**
@@ -37,6 +39,11 @@ public class MongoCustomScript extends MongoTenantAware {
     @Autoloaded
     @AutoImport
     private String code;
+
+    public static final Mapping DISABLED = Mapping.named("disabled");
+    @Autoloaded
+    @AutoImport
+    private boolean disabled;
 
     /**
      * Contains the actual scripting code.
@@ -70,5 +77,13 @@ public class MongoCustomScript extends MongoTenantAware {
 
     public void setScript(String script) {
         this.script = script;
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean inactive) {
+        this.disabled = inactive;
     }
 }
