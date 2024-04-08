@@ -36,17 +36,19 @@
                 </div>
 
                 <i:if test="isFilled(entityId)">
-                    <div class="col-lg">
-                        <t:infoLine class="tracing-info" labelKey="TraceData.entity">
-                            <t:textfield name="copyEntityId"
-                                         id="copyEntityId"
-                                         value="@entityId"
-                                         readonly="true">
-                                <i:block name="addon">
-                                    <t:copyToClipboardAddon fieldName="copyEntityId"/>
-                                </i:block>
-                            </t:textfield>
-                        </t:infoLine>
+                    <div class="col-md-12">
+                        <p>
+                            @i18n('TraceData.entity')
+                        </p>
+                        <t:textfield name="copyEntityId"
+                                     class="col-md-4"
+                                     id="copyEntityId"
+                                     value="@entityId"
+                                     readonly="true">
+                            <i:block name="addon">
+                                <t:copyToClipboardAddon fieldName="copyEntityId"/>
+                            </i:block>
+                        </t:textfield>
                     </div>
                 </i:if>
             </div>
