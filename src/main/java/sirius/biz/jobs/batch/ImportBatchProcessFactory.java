@@ -87,7 +87,7 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
-        if (enableScriptableEvents()) {
+        if (enableScriptableEvents() && !scriptableEvents.fetchDispatchersForCurrentTenant().isEmpty()) {
             parameterCollector.accept(createDispatcherParameter());
         }
     }
