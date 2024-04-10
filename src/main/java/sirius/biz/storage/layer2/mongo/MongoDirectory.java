@@ -17,6 +17,7 @@ import sirius.biz.web.BasePageHelper;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.LowerCase;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
@@ -78,6 +79,7 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
      */
     public static final Mapping NORMALIZED_DIRECTORY_NAME = Mapping.named("normalizedDirectoryName");
     @NullAllowed
+    @LowerCase
     private String normalizedDirectoryName;
 
     /**
@@ -131,7 +133,7 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
         if (Strings.isFilled(directoryName)) {
             this.directoryName = storageUtils.sanitizePath(directoryName);
             if (Strings.isFilled(directoryName)) {
-                this.normalizedDirectoryName = directoryName.toLowerCase();
+                this.normalizedDirectoryName = directoryName;
             } else {
                 this.directoryName = null;
                 this.normalizedDirectoryName = null;

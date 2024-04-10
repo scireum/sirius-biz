@@ -20,6 +20,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.LowerCase;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
@@ -76,6 +77,7 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
      */
     public static final Mapping NORMALIZED_DIRECTORY_NAME = Mapping.named("normalizedDirectoryName");
     @Length(255)
+    @LowerCase
     @NullAllowed
     private String normalizedDirectoryName;
 
@@ -131,7 +133,7 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
         if (Strings.isFilled(directoryName)) {
             this.directoryName = storageUtils.sanitizePath(directoryName);
             if (Strings.isFilled(directoryName)) {
-                this.normalizedDirectoryName = directoryName.toLowerCase();
+                this.normalizedDirectoryName = directoryName;
             } else {
                 this.directoryName = null;
                 this.normalizedDirectoryName = null;
