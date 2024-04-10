@@ -31,6 +31,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -661,7 +662,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
            .eq(SQLDirectory.COMMITTED, true)
            .eq(SQLDirectory.DELETED, false)
            .where(OMA.FILTERS.like(SQLDirectory.NORMALIZED_DIRECTORY_NAME)
-                             .startsWith(prefixFilter)
+                             .startsWith(Value.of(prefixFilter).toLowerCase())
                              .ignoreEmpty()
                              .build())
            .limit(maxResults)
