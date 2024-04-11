@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Strings;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
 import java.util.regex.Pattern;
@@ -89,6 +90,7 @@ public class BlobSoftRef extends BlobHardRef {
      *
      * @return <tt>true</tt> if a URL was stored, <tt>false</tt> if an object key or nothing yet is stored
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean isURL() {
         return supportsURL && Strings.isFilled(key) && URL_PATTERN.matcher(key).find();
     }
