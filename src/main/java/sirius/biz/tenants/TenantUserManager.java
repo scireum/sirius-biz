@@ -169,6 +169,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     protected final String systemTenant;
     protected final boolean acceptApiTokens;
+    protected final boolean acceptHashedApiTokens;
     protected final List<String> availableLanguages;
 
     @Part
@@ -209,6 +210,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(false);
+        this.acceptHashedApiTokens = config.get("accept-hashed-api-tokens").asBoolean(false);
         this.availableLanguages = scope.getDisplayLanguages().stream().toList();
     }
 
@@ -662,7 +664,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return result;
         }
 
-        if (acceptApiTokens && checkApiToken(loginData, password)) {
+        if (checkApiToken(loginData, password)) {
             completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
             recordLogin(result, false);
             return result;
@@ -682,17 +684,19 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return false;
         }
 
-        if (Strings.areEqual(givenApiToken, loginData.getApiToken())) {
+        if (acceptApiTokens && Strings.areEqual(givenApiToken, loginData.getApiToken())) {
             return true;
         }
 
-        long currentTimestampInDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis());
-        // Timestamps of tomorrow and yesterday should be valid too, to be more graceful with nightly scripts utilizing
-        // the apiToken. If midnight passes while execution, the hashed apiToken would be suddenly invalid.
-        for (int i = -1; i <= 1; i++) {
-            long timestampToCheck = currentTimestampInDays + i;
-            if (Strings.areEqual(getHashedApiToken(loginData.getApiToken(), timestampToCheck), givenApiToken)) {
-                return true;
+        if (acceptHashedApiTokens) {
+            long currentTimestampInDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis());
+            // Timestamps of tomorrow and yesterday should be valid too, to be more graceful with nightly scripts utilizing
+            // the apiToken. If midnight passes while execution, the hashed apiToken would be suddenly invalid.
+            for (int i = -1; i <= 1; i++) {
+                long timestampToCheck = currentTimestampInDays + i;
+                if (Strings.areEqual(getHashedApiToken(loginData.getApiToken(), timestampToCheck), givenApiToken)) {
+                    return true;
+                }
             }
         }
 
