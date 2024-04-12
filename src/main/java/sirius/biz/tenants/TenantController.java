@@ -417,6 +417,13 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
             return;
         }
 
+        if (Strings.areEqual(getUser().getTenantId(), tenantId)) {
+            // The tenant of the current user we are spying is the same as the one we want to switch to,
+            // so we simply navigate to the target URL.
+            webContext.respondWith().redirectTemporarily(redirectTarget);
+            return;
+        }
+
         assertPermission(TenantUserManager.PERMISSION_SELECT_TENANT);
 
         Optional<T> tenant = resolveAccessibleTenant(tenantId, determineCurrentTenant(webContext));
