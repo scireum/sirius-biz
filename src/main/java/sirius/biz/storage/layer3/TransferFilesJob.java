@@ -89,7 +89,7 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
 
     private final Parameter<Boolean> continueOnErrorParameter =
             new BooleanParameter(CONTINUE_ON_ERROR_PARAMETER_NAME, "$TransferFilesJob.continueOnError").withDescription(
-                    "$TransferFilesJob.continueOnError.help").build();
+                    "$TransferFilesJob.continueOnError.help").hideWhen(this::isContentUnawareTransferMode).build();
 
     @Part
     private VirtualFileSystem virtualFileSystem;
@@ -169,5 +169,11 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     @Override
     public String getCategory() {
         return StandardCategories.MISC;
+    }
+
+    private boolean isContentUnawareTransferMode(Map<String, String> params) {
+        return modeParameter.get(params)
+                            .map(mode -> mode != TransferMode.COPY_CONTENTS && mode != TransferMode.MOVE_CONTENTS)
+                            .orElse(true);
     }
 }
