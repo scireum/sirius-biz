@@ -70,10 +70,9 @@ public abstract class TenantSearchProvider<I extends Serializable, T extends Bas
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_TENANT)) {
                 openSearchResult.withTemplateFromCode("""
                                                               <i:arg name="tenant" type="sirius.biz.tenants.Tenant"/>
-
                                                               @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
                                                               <br>
-                                                              <a href=/tenants/select/@tenant.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              <a href="/tenants/select/@tenant.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
                                                               """, tenant);
             }
             resultCollector.accept(openSearchResult);
