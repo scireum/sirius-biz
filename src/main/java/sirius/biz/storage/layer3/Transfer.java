@@ -105,7 +105,7 @@ public class Transfer {
     /**
      * Notifies the transfer that a batch/process context is available.
      * <p>
-     * As soon as a process context is available no limits are enforced anymore (e.g. {@link #canMoveInteractive()}.
+     * As soon as a process context is available no limits are enforced anymore (e.g. {@link #canMoveInteractive()}).
      * Also, we provide some metrics and debug messages.
      *
      * @param processContext the process context to execute the transfer within
