@@ -89,7 +89,7 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
 
     private final Parameter<Boolean> continueOnErrorParameter =
             new BooleanParameter(CONTINUE_ON_ERROR_PARAMETER_NAME, "$TransferFilesJob.continueOnError").withDescription(
-                    "$TransferFilesJob.continueOnError.help").markNullable().build();
+                    "$TransferFilesJob.continueOnError.help").build();
 
     @Part
     private VirtualFileSystem virtualFileSystem;
