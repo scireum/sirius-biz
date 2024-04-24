@@ -84,13 +84,13 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     @Override
     public void executeWork(ObjectNode context) throws Exception {
-        String processId = context.path(CONTEXT_PROCESS).asText(null);
+        String processId = context.path(CONTEXT_PROCESS).asText();
         processes.purgeProcessFromFirstLevelCache(processId);
         processes.execute(processId, process -> executeInProcess(context, process));
     }
 
     private void executeInProcess(ObjectNode context, ProcessContext processContext) {
-        String outputName = context.path(CONTEXT_OUTPUT).asText(null);
+        String outputName = context.path(CONTEXT_OUTPUT).asText();
         ProcessOutput processOutput = Strings.isFilled(outputName) ?
                                       processContext.fetchOutput(outputName)
                                                     .orElseThrow(() -> new IllegalArgumentException(Strings.apply(

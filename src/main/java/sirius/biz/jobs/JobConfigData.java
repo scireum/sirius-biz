@@ -162,7 +162,7 @@ public class JobConfigData extends Composite {
                                           .filter(Strings::isFilled)
                                           .toList());
                     } else {
-                        configMap.put(entry.getKey(), Stream.ofNullable(entry.getValue().asText(null)).toList());
+                        configMap.put(entry.getKey(), Stream.ofNullable(entry.getValue().asText()).toList());
                     }
                 });
             }

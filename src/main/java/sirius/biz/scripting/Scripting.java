@@ -181,10 +181,10 @@ public class Scripting implements InterconnectHandler {
 
     private void handleMessageTask(ObjectNode event) {
         synchronized (messages) {
-            messages.add(new TranscriptMessage(event.path(TASK_NODE).asText(null),
-                                               event.path(TASK_JOB).asText(null),
+            messages.add(new TranscriptMessage(event.path(TASK_NODE).asText(),
+                                               event.path(TASK_JOB).asText(),
                                                event.path(TASK_TIMESTAMP).asLong(),
-                                               event.path(TASK_MESSAGE).asText(null)));
+                                               event.path(TASK_MESSAGE).asText()));
             if (messages.size() > MAX_MESSAGES) {
                 messages.removeFirst();
             }
@@ -203,8 +203,8 @@ public class Scripting implements InterconnectHandler {
     }
 
     private void handleExecTask(ObjectNode event) {
-        String nodeName = event.path(TASK_NODE).asText(null);
-        String jobNumber = event.path(TASK_JOB).asText(null);
+        String nodeName = event.path(TASK_NODE).asText();
+        String jobNumber = event.path(TASK_JOB).asText();
         if (!ALL_NODES.equals(nodeName) && !Strings.areEqual(CallContext.getNodeName(), nodeName)) {
             return;
         }
@@ -249,7 +249,7 @@ public class Scripting implements InterconnectHandler {
 
     private Callable compileScript(ObjectNode event) throws CompileException {
         CompilationContext compilationContext =
-                new CompilationContext(SourceCodeInfo.forInlineCode(event.path(TASK_SCRIPT).asText(null),
+                new CompilationContext(SourceCodeInfo.forInlineCode(event.path(TASK_SCRIPT).asText(),
                                                                     SandboxMode.DISABLED));
         NoodleCompiler compiler = new NoodleCompiler(compilationContext);
         Callable callable = compiler.compileScript();

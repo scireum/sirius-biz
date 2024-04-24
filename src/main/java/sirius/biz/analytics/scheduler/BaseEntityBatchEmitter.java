@@ -119,9 +119,9 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
     public <E extends B> void evaluateBatch(ObjectNode batchDescription,
                                             @Nullable Consumer<Q> queryExtender,
                                             Consumer<E> entityConsumer) {
-        String startId = batchDescription.path(START_ID).asText(null);
-        String endId = batchDescription.path(END_ID).asText(null);
-        String typeName = batchDescription.path(TYPE).asText(null);
+        String startId = batchDescription.path(START_ID).asText();
+        String endId = batchDescription.path(END_ID).asText();
+        String typeName = batchDescription.path(TYPE).asText();
 
         Class<E> type = (Class<E>) mixing.getDescriptor(typeName).getType();
         Q query = (Q) getMapper().select(type);

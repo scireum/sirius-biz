@@ -664,7 +664,7 @@ public abstract class LookupTable {
         if (jsonNode.isArray()) {
             return transformArrayToStringList((ArrayNode) jsonNode);
         } else if (jsonNode.isTextual() && Strings.isFilled(jsonNode.asText())) {
-            return Collections.singletonList(jsonNode.asText(null));
+            return Collections.singletonList(jsonNode.asText());
         } else {
             return Collections.emptyList();
         }

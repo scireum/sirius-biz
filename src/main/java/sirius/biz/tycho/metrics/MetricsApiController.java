@@ -67,9 +67,9 @@ public class MetricsApiController extends BizController {
 
     private void fetchKeyMetric(ObjectNode obj, JSONStructuredOutput output) {
         try {
-            KeyMetric metric = keyMetrics.resolveKeyMetric(obj.path("provider").asText(null),
-                                                           obj.path("target").asText(null),
-                                                           obj.path("metric").asText(null));
+            KeyMetric metric = keyMetrics.resolveKeyMetric(obj.path("provider").asText(),
+                                                           obj.path("target").asText(),
+                                                           obj.path("metric").asText());
             metric.writeJson(output);
         } catch (Exception exception) {
             Exceptions.handle()
