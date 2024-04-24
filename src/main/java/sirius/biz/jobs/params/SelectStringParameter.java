@@ -82,10 +82,11 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      */
     @Override
     public List<Tuple<String, String>> getValues() {
-        return fetchEntriesMap().keySet()
-                                .stream()
-                                .map(entry -> Tuple.create(entry, NLS.smartGet(fetchEntriesMap().get(entry))))
-                                .toList();
+        Map<String, String> entriesMap = fetchEntriesMap();
+        return entriesMap.keySet()
+                         .stream()
+                         .map(entry -> Tuple.create(entry, NLS.smartGet(entriesMap.get(entry))))
+                         .toList();
     }
 
     @Override
