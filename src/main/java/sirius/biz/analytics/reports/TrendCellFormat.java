@@ -80,7 +80,7 @@ public class TrendCellFormat implements CellFormat {
 
     @Override
     public String rawValue(ObjectNode data) {
-        return data.path(KEY_VALUE).asText();
+        return data.path(KEY_VALUE).asText(null);
     }
 
     @Nonnull

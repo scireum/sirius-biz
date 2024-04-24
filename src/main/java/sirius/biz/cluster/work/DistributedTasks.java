@@ -179,7 +179,7 @@ public class DistributedTasks implements MetricProvider {
                                   Json.write(task))
                           .handle();
             } finally {
-                releasePenaltyToken(queue.getName(), task.path(KEY_PENALTY_TOKEN).asText());
+                releasePenaltyToken(queue.getName(), task.path(KEY_PENALTY_TOKEN).asText(null));
                 releaseConcurrencyToken(queue.getConcurrencyToken());
             }
         }

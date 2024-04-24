@@ -30,7 +30,7 @@ class AutoloadControllerTests {
                 .withParameter("intField", 42)
                 .withParameter("listField", listOf("listItem1", "listItem2"))
                 .execute()
-        val id = response.contentAsJson.path("id").asText()
+        val id = response.contentAsJson.path("id").asText(null)
         assertNotNull(id)
         mango.find(AutoLoadEntity::class.java, id).get().apply {
             assertEquals("string1", stringField)
@@ -53,7 +53,7 @@ class AutoloadControllerTests {
                 .withParameter("intField", 1)
                 .withParameter("listField", listOf("listItem3", "listItem4"))
                 .execute()
-        val id = response.contentAsJson.path("id").asText()
+        val id = response.contentAsJson.path("id").asText(null)
         assertNotNull(id)
         mango.find(AutoLoadEntity::class.java, id).get().apply {
             assertEquals("string-autoloaded", stringField)

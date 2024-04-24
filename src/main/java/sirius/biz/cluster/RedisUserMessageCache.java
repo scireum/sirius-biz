@@ -70,9 +70,9 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
         return Json.streamEntries(Json.parseArray(json))
                    .filter(JsonNode::isObject)
                    .map(ObjectNode.class::cast)
-                   .map(object -> new Message(Value.of(object.path(FIELD_TYPE).asText())
+                   .map(object -> new Message(Value.of(object.path(FIELD_TYPE).asText(null))
                                                    .getEnum(MessageLevel.class)
-                                                   .orElse(MessageLevel.INFO), object.path(FIELD_HTML).asText()))
+                                                   .orElse(MessageLevel.INFO), object.path(FIELD_HTML).asText(null)))
                    .toList();
     }
 
