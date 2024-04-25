@@ -1,5 +1,8 @@
 <i:arg name="url" type="String" default=""/>
 <i:arg name="class" type="String" default=""/>
+<i:arg name="icon" type="String" default="fa-solid fa-plus"/>
+<i:arg name="labelKey" type="String" default="Model.create"/>
+<i:arg name="label" type="String" default="@i18n(labelKey)"/>
 
 <i:pragma name="description">
     Provides a primary button which links to the given url, with a generic label to create a new entity.
@@ -10,13 +13,17 @@
 
 <i:if test="isFilled(url)">
     <a class="btn btn-primary @class" href="@url">
-        <span><i class="fa-solid fa-plus"></i></span>
-        <span class="d-none d-xl-inline-block">@i18n("Model.create")</span>
+        <span><i class="@icon"></i></span>
+        <span class="d-none d-xl-inline-block">@label</span>
     </a>
 </i:if>
 
 <i:if test="isFilled(contents)">
-    <t:dropdown class="@class" btnClass="btn btn-primary" icon="fa-solid fa-plus" labelKey="Model.create" labelClass="d-none d-xl-inline-block">
+    <t:dropdown class="@class"
+                btnClass="btn btn-primary"
+                icon="@icon"
+                label="@label"
+                labelClass="d-none d-xl-inline-block">
         <i:raw>@contents</i:raw>
     </t:dropdown>
 </i:if>
