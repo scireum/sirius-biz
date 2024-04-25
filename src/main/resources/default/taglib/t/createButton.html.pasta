@@ -1,5 +1,5 @@
-<i:arg type="String" name="url" default=""/>
-<i:arg type="String" name="class" default=""/>
+<i:arg name="url" type="String" default=""/>
+<i:arg name="class" type="String" default=""/>
 
 <i:pragma name="description">Provides a primary button which links to the given url, with a generic label to create a new entity.
                              If a body is given instead of a url, the body is rendered inside of a dropdown.</i:pragma>
