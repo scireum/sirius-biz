@@ -114,8 +114,8 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
             ImportDictionary dictionary = importer.getExportDictionary(getExportType());
             enhanceDictionary(dictionary);
             return dictionary;
-        } catch (Exception e) {
-            throw Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 
@@ -127,8 +127,8 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     protected List<String> getDefaultMapping() {
         try (Importer importer = new Importer("getDefaultMapping")) {
             return importer.findHandler(getExportType()).getDefaultExportMapping();
-        } catch (Exception e) {
-            throw Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 

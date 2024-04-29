@@ -15,7 +15,6 @@ import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
@@ -49,24 +48,5 @@ public class MongoCodeListController extends CodeListController<String, MongoCod
     @Override
     protected void applyCodeListEntrySearchFields(@Nonnull BasePageHelper<MongoCodeListEntry, ?, ?, ?> pageHelper) {
         pageHelper.withSearchFields(QueryField.startsWith(PrefixSearchableEntity.SEARCH_PREFIXES));
-    }
-
-    @Override
-    protected MongoCodeListEntry findOrCreateEntry(MongoCodeList codeList, String code) {
-        if (Strings.isEmpty(code)) {
-            return new MongoCodeListEntry();
-        }
-
-        MongoCodeListEntry cle = mango.select(MongoCodeListEntry.class)
-                                      .eq(MongoCodeListEntry.CODE_LIST, codeList)
-                                      .eq(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE), code)
-                                      .queryFirst();
-        if (cle == null) {
-            cle = new MongoCodeListEntry();
-            cle.getCodeList().setValue(codeList);
-            cle.getCodeListEntryData().setCode(code);
-        }
-
-        return cle;
     }
 }

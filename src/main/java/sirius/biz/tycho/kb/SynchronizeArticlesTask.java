@@ -94,6 +94,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     }
 
     private void synchronizeArticles() {
+        LocalDate syncStart = LocalDate.now();
         String syncId = keyGenerator.generateId();
         Sirius.getClasspath()
               .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
@@ -107,7 +108,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         if (!Sirius.isDev()) {
             // We only remove empty chapters from production instances as in development systems it might
             // be helpful to see these chapters to know their ID.
-            cleanupEmptyChapters();
+            cleanupEmptyChapters(syncStart);
         }
         checkCrossReferences();
         knowledgeBase.resetLanguages();
@@ -183,12 +184,8 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                   .forEach(crossReference -> entry.getRelatesTo().modify().add(crossReference));
 
             elastic.update(entry);
-        } catch (Exception e) {
-            Exceptions.handle()
-                      .to(KnowledgeBase.LOG)
-                      .error(e)
-                      .withSystemErrorMessage("Failed to load article %s: %s (%s)", templatePath)
-                      .handle();
+        } catch (Exception exception) {
+            KnowledgeBase.LOG.SEVERE("Failed to load article %s, reason: %s", templatePath, exception.getMessage());
         }
     }
 
@@ -254,31 +251,44 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         });
     }
 
-    private void cleanupEmptyChapters() {
+    private void cleanupEmptyChapters(LocalDate syncStart) {
         AtomicBoolean performCheck = new AtomicBoolean(true);
         while (performCheck.get()) {
             performCheck.set(false);
             blockwiseIterate(entry -> {
-                if (entry.isChapter()) {
-                    boolean hasChildren = elastic.select(KnowledgeBaseEntry.class)
-                                                 .eq(KnowledgeBaseEntry.PARENT_ID, entry.getArticleId())
-                                                 .eq(KnowledgeBaseEntry.LANGUAGE, entry.getLanguage())
-                                                 .exists();
-                    if (!hasChildren) {
-                        KnowledgeBase.LOG.INFO("Deleting empty chapter %s (%s) in language %s",
-                                               entry.getArticleId(),
-                                               entry.getTitle(),
-                                               entry.getLanguage());
-                        elastic.delete(entry);
-                        performCheck.set(true);
-                    }
-                }
+                cleanupEmptyChapter(entry, performCheck, syncStart);
             });
 
             if (performCheck.get()) {
                 elastic.getLowLevelClient().refresh(mixing.getDescriptor(KnowledgeBaseEntry.class).getRelationName());
             }
         }
+    }
+
+    private void cleanupEmptyChapter(KnowledgeBaseEntry entry, AtomicBoolean performCheck, LocalDate syncStart) {
+        if (!entry.isChapter()) {
+            // The checked entry is not a chapter
+            return;
+        }
+
+        boolean hasChildren = elastic.select(KnowledgeBaseEntry.class)
+                                     .eq(KnowledgeBaseEntry.PARENT_ID, entry.getArticleId())
+                                     .eq(KnowledgeBaseEntry.LANGUAGE, entry.getLanguage())
+                                     .exists();
+        if (hasChildren) {
+            // The checked chapter actually has children
+            return;
+        }
+
+        if (entry.getCreated().isBefore(syncStart)) {
+            // Only log when a previously filled existing chapter is deleted
+            KnowledgeBase.LOG.INFO("Deleting empty chapter %s (%s) in language %s",
+                                   entry.getArticleId(),
+                                   entry.getTitle(),
+                                   entry.getLanguage());
+        }
+        elastic.delete(entry);
+        performCheck.set(true);
     }
 
     private void checkCrossReferences() {

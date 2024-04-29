@@ -143,8 +143,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     private boolean isBackgroundJobGloballyEnabled(String name) {
         try {
             return globallyEnabledState.computeIfAbsent(name, this::readGlobalState);
-        } catch (Exception e) {
-            Exceptions.handle(Cluster.LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Cluster.LOG, exception);
             return true;
         }
     }
@@ -159,8 +159,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                                        db -> db.get(name + EXECUTION_ENABLED_SUFFIX));
 
             return !STATE_DISABLED.equals(value);
-        } catch (Exception e) {
-            Exceptions.handle(Cluster.LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Cluster.LOG, exception);
             return true;
         }
     }
@@ -275,8 +275,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             }
 
             executionInfos.put(syncName, executionInfo);
-        } catch (Exception e) {
-            Exceptions.handle(Cluster.LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Cluster.LOG, exception);
         }
     }
 
@@ -336,8 +336,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                     return false;
                 }
             });
-        } catch (Exception e) {
-            Exceptions.handle(Cluster.LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Cluster.LOG, exception);
             return false;
         }
     }
@@ -413,7 +413,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         Value setting = Sirius.getSettings().get("orchestration." + key);
         try {
             targetMap.put(key, SynchronizeType.valueOf(setting.toUpperCase()));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
             Cluster.LOG.WARN("Invalid configuration found for orchestration." + key + ": " + setting);
             targetMap.put(key, SynchronizeType.LOCAL);
         }

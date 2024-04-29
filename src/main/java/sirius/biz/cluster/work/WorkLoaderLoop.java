@@ -90,7 +90,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
                     schedulerLock.unlock();
                 }
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
         }
     }

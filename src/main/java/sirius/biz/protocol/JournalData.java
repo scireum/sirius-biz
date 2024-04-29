@@ -72,8 +72,8 @@ public class JournalData extends Composite {
             if (changes.length() > 0) {
                 addJournalEntry(owner, changes, batchLog);
             }
-        } catch (Exception e) {
-            Exceptions.handle(e);
+        } catch (Exception exception) {
+            Exceptions.handle(exception);
         }
     }
 
@@ -177,8 +177,8 @@ public class JournalData extends Composite {
             }
 
             elastic.update(entry);
-        } catch (Exception e) {
-            Exceptions.handle(Elastic.LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Elastic.LOG, exception);
         }
     }
 
@@ -187,8 +187,8 @@ public class JournalData extends Composite {
         if (!silent) {
             try {
                 addJournalEntry(owner, Strings.apply("Entity '%s' has been deleted.", owner.toString()), batchLog);
-            } catch (Exception e) {
-                Exceptions.handle(e);
+            } catch (Exception exception) {
+                Exceptions.handle(exception);
             }
         }
     }

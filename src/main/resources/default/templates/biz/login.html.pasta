@@ -23,7 +23,7 @@
                                 <img alt="product logo" class="w-100" src="/assets/images/login_logo.png"/>
                             </div>
                             <h3 class="mb-3">@i18n("Model.login")</h3>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <input id="user"
                                        tabindex="1"
                                        placeholder="@i18n('Model.login.user')"
@@ -33,7 +33,7 @@
                                        value="@WebContext.getCurrent().get('user').asString()"
                                        class="form-control input-block-level"/>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <input id="password"
                                        tabindex="2"
                                        placeholder="@i18n('Model.login.password')"
@@ -70,7 +70,7 @@
     <i:if test="technologies.size() > 0">
         <div class="card mt-5 mb-4">
             <div class="card-body">
-                <h5 class="card-title text-small font-weight-light">This service is based on Open Source Software:</h5>
+                <h5 class="card-title text-small fw-light">This service is based on Open Source Software:</h5>
                 <div class="d-flex flex-row flex-wrap overflow-hidden align-items-center">
                     <i:for type="Tuple" var="technology" items="technologies">
                         <div class="p-4">
@@ -104,7 +104,7 @@
             }
 
             try {
-                window.localStorage.setItem('samlPostLoginUri', '@originalUrl');
+                window.localStorage.setItem('samlPostLoginUri', '<i:raw>@originalUrl</i:raw>');
             } catch (e) {
                 console.log(e);
             }
@@ -116,15 +116,20 @@
 
             _emailField.value = _userField.value;
 
-            // This bootstrap call still needs jQuery :(...
-            $('#forgotPassword').modal('show');
+            const _forgotPassword = document.getElementById('forgotPassword');
+            if (!_forgotPassword.modal) {
+                _forgotPassword.modal = new bootstrap.Modal(_forgotPassword);
+            }
+            _forgotPassword.modal.show();
         }
 
         function submitForgotPassword() {
             const _emailField = document.getElementById('mailField');
 
-            // This bootstrap call still needs jQuery :(...
-            $('#forgotPassword').modal('hide');
+            const _forgotPassword = document.getElementById('forgotPassword');
+            if (_forgotPassword.modal) {
+                _forgotPassword.modal.hide();
+            }
 
             if (sirius.isEmpty(_emailField.value)) {
                 clearMessages();

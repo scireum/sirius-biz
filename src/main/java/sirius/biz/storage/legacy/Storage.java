@@ -346,12 +346,12 @@ public class Storage {
         if (Strings.isEmpty(reference)) {
             return;
         }
-        SmartQuery<VirtualObject> qry = oma.select(VirtualObject.class).eq(VirtualObject.REFERENCE, reference);
+        SmartQuery<VirtualObject> query = oma.select(VirtualObject.class).eq(VirtualObject.REFERENCE, reference);
         if (Strings.isFilled(excludedObjectKey)) {
-            qry.ne(VirtualObject.OBJECT_KEY, excludedObjectKey);
+            query.ne(VirtualObject.OBJECT_KEY, excludedObjectKey);
         }
 
-        qry.delete();
+        query.delete();
     }
 
     /**
@@ -374,10 +374,10 @@ public class Storage {
                .set("reference", reference)
                .set("objectKey", objectKey)
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("An error occurred, when marking the object '%s' as used: %s (%s)",
                                               objectKey)
                       .handle();
@@ -408,10 +408,10 @@ public class Storage {
                 String md5 = calculateMd5(data);
                 updateFile(file, in, filename, md5, data.length());
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot upload the file: %s (%s) - %s (%s)", file, filename)
                             .handle();
         }
@@ -455,8 +455,8 @@ public class Storage {
 
             // Delete old file
             engine.deletePhysicalObject(object.getBucket(), oldPhysicalKey);
-        } catch (IOException e) {
-            throw Exceptions.handle().to(LOG).error(e).withNLSKey("Storage.uploadFailed").handle();
+        } catch (IOException exception) {
+            throw Exceptions.handle().to(LOG).error(exception).withNLSKey("Storage.uploadFailed").handle();
         }
     }
 
@@ -539,17 +539,18 @@ public class Storage {
     /**
      * Delivers a pyhsical file or object.
      *
-     * @param ctx           the request to respond to
+     * @param webContext    the request to respond to
      * @param bucket        the bucket to deliver from
      * @param physicalKey   the physical file to deliver
      * @param fileExtension the file extension of the file (to determine the <tt>Content-Type</tt>)
      */
-    protected void deliverPhysicalFile(WebContext ctx, String bucket, String physicalKey, String fileExtension) {
+    protected void deliverPhysicalFile(WebContext webContext, String bucket, String physicalKey, String fileExtension) {
         if (shouldLogDeprecated(bucket)) {
-            DEPRECATION_LOG.WARN("A file from the deprecated storage was requested: %s", ctx.getRequest().toString());
+            DEPRECATION_LOG.WARN("A file from the deprecated storage was requested: %s",
+                                 webContext.getRequest().toString());
         }
 
-        getStorageEngine(bucket).deliver(ctx, bucket, physicalKey, fileExtension);
+        getStorageEngine(bucket).deliver(webContext, bucket, physicalKey, fileExtension);
     }
 
     /**

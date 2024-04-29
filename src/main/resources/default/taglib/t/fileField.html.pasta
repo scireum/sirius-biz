@@ -25,9 +25,9 @@
 <i:pragma name="description"
           value="Renders a text input field along with a select file button within a Tycho template"/>
 
-<div class="form-group @UserContext.get().signalFieldError(name) @class">
+<div class="form-group mb-3 @UserContext.get().signalFieldError(name) @class">
     <i:if test="isFilled(label)">
-        <label>
+        <label class="form-label">
         <span>
             @label
         </span>
@@ -42,16 +42,14 @@
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
                @if (readonly) { readonly } @if (autofocus) { autofocus }
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
-        <div class="input-group-append select-btn">
-            <span class="input-group-text">
-                <span class="fa @if (allowFiles) {fa-cloud-upload-alt} else {fa-folder-open} cursor-pointer"></span>
-            </span>
-        </div>
+        <span class="input-group-text select-btn-js">
+            <span class="fa-solid @if (allowFiles) {fa-cloud-upload-alt} else {fa-folder-open} cursor-pointer"></span>
+        </span>
     </div>
     <i:if test="allowFiles && isFilled(basePath)">
         <div id="sirius-upload-progress-@localId" class="mt-3 d-none mb-3 dropzone-items">
             <div class="sirius-upload-hover d-flex h-100 flex-column align-items-center justify-content-center">
-                <i class="fa fa-2x fa-cloud-upload-alt"></i>
+                <i class="fa-solid fa-2x fa-cloud-upload-alt"></i>
                 <span>@i18n("template.html.uploadArea")</span>
             </div>
         </div>
@@ -63,7 +61,7 @@
             if (___allowFiles && ___isFilled(basePath)) {
                 createInplaceDropzone('___basePath', '___localId', _input, '___allowedExtensions', '___i18n("VirtualFile.onlyOneFile")');
             }
-            document.querySelector('#___localId .select-btn').addEventListener('click', function () {
+            document.querySelector('#___localId .select-btn-js').addEventListener('click', function () {
                 let value = _input.value;
 
                 if (value == null || value === '') {

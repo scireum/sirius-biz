@@ -82,7 +82,7 @@ public class Cells {
 
         return new Cell(Json.createObject()
                             .put(KEY_TYPE, CSSCellFormat.TYPE)
-                            .put(CSSCellFormat.KEY_CLASSES, "text-right")
+                            .put(CSSCellFormat.KEY_CLASSES, "text-end")
                             .put(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }
 
@@ -170,7 +170,7 @@ public class Cells {
 
         return new Cell(Json.createObject()
                             .put(KEY_TYPE, CSSCellFormat.TYPE)
-                            .put(CSSCellFormat.KEY_CLASSES, "text-right " + color)
+                            .put(CSSCellFormat.KEY_CLASSES, "text-end " + color)
                             .put(CSSCellFormat.KEY_VALUE, safeFormat(value, formatter)));
     }
 
@@ -251,11 +251,11 @@ public class Cells {
             return of(safeFormat(value, formatter));
         }
 
-        String icon = "fa fa-arrow-right";
+        String icon = "fa-solid fa-arrow-right";
         if (delta.isPositive()) {
-            icon = "fa fa-arrow-up";
+            icon = "fa-solid fa-arrow-up";
         } else if (delta.isNegative()) {
-            icon = "fa fa-arrow-down";
+            icon = "fa-solid fa-arrow-down";
         }
 
         String color = computeCellColor(delta);
@@ -269,19 +269,21 @@ public class Cells {
     }
 
     /**
-     * Creates a link with the given label and url.
+     * Creates a link with the given label and url and allows to specify if the link should be opened in a new tab.
      *
-     * @param value the value / label to show
-     * @param url   the url of the link
+     * @param value       the value / label to show
+     * @param url         the url of the link
+     * @param targetBlank determines if the link should be opened in a new tab
      * @return a cell rendered as link
      */
-    public Cell link(Object value, String url) {
+    public Cell link(Object value, String url, boolean targetBlank) {
         if (Strings.isEmpty(value) || Strings.isEmpty(url)) {
             return of(value);
         }
 
         return new Cell(Json.createObject()
                             .put(KEY_TYPE, LinkCellFormat.TYPE)
+                            .put(LinkCellFormat.KEY_TARGET_BLANK, targetBlank)
                             .put(LinkCellFormat.KEY_URL, url)
                             .put(LinkCellFormat.KEY_VALUE, NLS.toUserString(value)));
     }

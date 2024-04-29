@@ -177,6 +177,20 @@ public class Processes {
     }
 
     /**
+     * Fetches the currently active process.
+     *
+     * @return the process for which the current thread is executing or an empty optional if no process is active
+     */
+    public Optional<Supplier<Process>> fetchCurrentProcess() {
+        TaskContextAdapter adapter = TaskContext.get().getAdapter();
+        if (adapter instanceof ProcessEnvironment processEnvironment) {
+            return Optional.of(() -> fetchRequiredProcess(processEnvironment.getProcessId()));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Creates a new process for the currently active user.
      *
      * @param type              the type of the process (which can be used for filtering in the backend)
@@ -287,7 +301,7 @@ public class Processes {
         if (process != null) {
             modify(process.getId(), p -> p.getState() == ProcessState.STANDBY, p -> p.setStarted(LocalDateTime.now()));
         } else {
-            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier.get());
+            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier);
         }
 
         partiallyExecute(process.getId(), task);
@@ -326,13 +340,16 @@ public class Processes {
     /**
      * Tries to fetch the appropriate standby process while holding a lock and also after waiting an appropriate amount of time.
      *
-     * @param type       the type of the standby process to find or create
-     * @param title      the title of the process
-     * @param tenantId   the id of the tenant used to find the appropriate process
-     * @param tenantName the name of the tenant
+     * @param type               the type of the standby process to find or create
+     * @param title              the title of the process
+     * @param tenantId           the id of the tenant used to find the appropriate process
+     * @param tenantNameSupplier a supplier which yields the name of the tenant if the process has to be created
      * @return the process which was either resolved after waiting an appropriate amount of time or created
      */
-    private Process fetchStandbyProcessInLock(String type, String title, String tenantId, String tenantName) {
+    private Process fetchStandbyProcessInLock(String type,
+                                              String title,
+                                              String tenantId,
+                                              Supplier<String> tenantNameSupplier) {
         String lockName = LOCK_CREATE_STANDBY_PROCESS + "-" + type + "-" + tenantId;
         if (!locks.tryLock(lockName, Duration.ofSeconds(30))) {
             throw Exceptions.handle()
@@ -340,7 +357,7 @@ public class Processes {
                                     "Cannot acquire a lock (%s} to create or fetch a standby process of type %s for %s (%s)",
                                     lockName,
                                     type,
-                                    tenantName,
+                                    tenantNameSupplier.get(),
                                     tenantId)
                             .handle();
         }
@@ -358,7 +375,7 @@ public class Processes {
                 Wait.millis(300);
             }
 
-            return createStandbyProcessInLock(type, title, tenantId, tenantName);
+            return createStandbyProcessInLock(type, title, tenantId, tenantNameSupplier.get());
         } finally {
             locks.unlock(lockName);
         }
@@ -1083,17 +1100,17 @@ public class Processes {
      *
      * @param processLog the log entry to modify
      * @param newState   the new state to set
-     * @param ctx        the request to respond to
+     * @param webContext the request to respond to
      * @param returnUrl  the URL to redirect the request to once the modification has been performed and is visible
      */
     public void updateProcessLogStateAndReturn(ProcessLog processLog,
                                                ProcessLogState newState,
-                                               WebContext ctx,
+                                               WebContext webContext,
                                                String returnUrl) {
         processLog.withState(newState);
         elastic.update(processLog);
         JournalData.addJournalEntry(processLog, NLS.get("ProcessLog.state") + ": " + newState.toString());
-        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet(returnUrl));
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> webContext.respondWith().redirectToGet(returnUrl));
     }
 
     protected Optional<ProcessOutput> fetchOutput(String processId, String outputName) {

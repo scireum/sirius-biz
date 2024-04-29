@@ -39,10 +39,10 @@ public class SecretKeyCipherProvider implements CipherProvider {
             Cipher cipher = Cipher.getInstance(algorithm);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             return cipher;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 1: Failed to create an encryption cipher: %s (%s)")
                             .handle();
         }
@@ -54,10 +54,10 @@ public class SecretKeyCipherProvider implements CipherProvider {
             Cipher cipher = Cipher.getInstance(algorithm);
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             return cipher;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 1: Failed to create an encryption cipher: %s (%s)")
                             .handle();
         }

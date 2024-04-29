@@ -70,10 +70,10 @@ public class SQLPerformanceFlagModifier implements PerformanceFlagModifier {
                .set(PerformanceFlagged.PERFORMANCE_DATA.inner(SQLPerformanceData.FLAGS), target.flags)
                .where(SQLEntity.ID, target.getOwner().getId())
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to update performance flags of %s (%s): %s (%s)",
                                               target.getOwner().getIdAsString(),
                                               target.getOwner().getClass().getName())

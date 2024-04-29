@@ -73,8 +73,8 @@ public class MongoOnboardingEngine extends OnboardingEngine {
                      video.getAcademyVideoData().setLastUpdated(LocalDateTime.now());
                      video.getAcademyVideoData().setDeleted(true);
                      mango.update(video);
-                 } catch (Exception e) {
-                     Exceptions.handle(Log.BACKGROUND, e);
+                 } catch (Exception exception) {
+                     Exceptions.handle(Log.BACKGROUND, exception);
                  }
              });
     }
@@ -139,8 +139,8 @@ public class MongoOnboardingEngine extends OnboardingEngine {
                      video.getOnboardingVideoData().setLastUpdated(LocalDateTime.now());
                      video.getOnboardingVideoData().setDeleted(true);
                      mango.update(video);
-                 } catch (Exception e) {
-                     Exceptions.handle(Log.BACKGROUND, e);
+                 } catch (Exception exception) {
+                     Exceptions.handle(Log.BACKGROUND, exception);
                  }
              });
     }

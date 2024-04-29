@@ -50,8 +50,8 @@ public abstract class BatchJob implements Closeable {
     protected void attachFile(VirtualFile file) {
         try (InputStream in = file.createInputStream(); OutputStream out = process.addFile(file.name())) {
             Streams.transfer(in, out);
-        } catch (IOException e) {
-            process.handle(e);
+        } catch (IOException exception) {
+            process.handle(exception);
         }
     }
 
@@ -66,8 +66,8 @@ public abstract class BatchJob implements Closeable {
     protected void attachFile(String filename, FileHandle file) {
         try (InputStream in = file.getInputStream(); OutputStream out = process.addFile(filename)) {
             Streams.transfer(in, out);
-        } catch (IOException e) {
-            process.handle(e);
+        } catch (IOException exception) {
+            process.handle(exception);
         }
     }
 

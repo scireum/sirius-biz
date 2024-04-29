@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.ide;
+package sirius.biz.scripting;
 
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Register;
@@ -15,6 +15,7 @@ import sirius.pasta.noodle.Environment;
 import sirius.pasta.noodle.compiler.CompilationContext;
 import sirius.pasta.noodle.compiler.ir.Node;
 import sirius.pasta.noodle.macros.BasicMacro;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.List;
  * Provides a shortcut to invoke {@link TaskContext#log(String, Object...)}.
  */
 @Register
+@NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
 public class LogMacro extends BasicMacro {
     @Override
     protected Class<?> getType() {

@@ -96,9 +96,9 @@ public class ObjectStorage {
                                            ObjectStoraceSpaceFactory.class);
 
             return factory.create(extension.getId(), extension);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
-                      .error(e)
+                      .error(exception)
                       .to(StorageUtils.LOG)
                       .withSystemErrorMessage(
                               "Layer 1: Failed to create the object storage space '%s' of type '%s': %s (%s)",

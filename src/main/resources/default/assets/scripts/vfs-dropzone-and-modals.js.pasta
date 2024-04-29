@@ -12,9 +12,9 @@ function selectVFSFile(config) {
 
         const _fileTableRow = document.createElement("tr");
         _fileTableRow.innerHTML = Mustache.render(
-            '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa {{icon}}"></i>&nbsp;{{name}}</a></td>' +
-            '<td class="text-right">{{sizeString}}</td>' +
-            '<td class="text-right" title="{{lastModifiedString}}">{{lastModifiedSpokenString}}</td>', child);
+            '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa-solid {{icon}}"></i>&nbsp;{{name}}</a></td>' +
+            '<td class="text-end">{{sizeString}}</td>' +
+            '<td class="text-end" title="{{lastModifiedString}}">{{lastModifiedSpokenString}}</td>', child);
 
         _fileTableRow.querySelector(".file-link").addEventListener("click", function () {
             if (this.dataset.dir === "true") {
@@ -100,7 +100,7 @@ function selectVFSFile(config) {
                     const _folderBreadcrumb = document.createElement("li");
                     _folderBreadcrumb.innerHTML = Mustache.render('<a class="file-link" href="#" data-path={{path}}>{{{name}}}</a>', {
                         path: element.path,
-                        name: element.name === "/" ? "<i class='fa fa-folder-open'></i>" : element.name
+                        name: element.name === "/" ? "<i class='fa-solid fa-folder-open'></i>" : element.name
                     });
                     _folderBreadcrumb.querySelector('.file-link').addEventListener("click", function () {
                         config.path = this.dataset.path;
@@ -189,7 +189,7 @@ function createDropzone(dropzoneId, config, modal, resolve) {
             '                         aria-valuenow="0" data-dz-uploadprogress>' +
             '           </div>\n' +
             '       </div>\n' +
-            '       <span class="dropzone-delete ml-4" data-dz-remove><i class="fa fa-times"></i></span>\n' +
+            '       <span class="dropzone-delete ms-4" data-dz-remove><i class="fa-solid fa-times"></i></span>\n' +
             '   </div>\n' +
             '</div>',
         url: function (files) {

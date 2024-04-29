@@ -36,8 +36,8 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 deletePhysicalObject(blob);
                 oma.delete(blob);
                 counter.run();
-            } catch (Exception e) {
-                handleBlobDeletionException(blob, e);
+            } catch (Exception exception) {
+                handleBlobDeletionException(blob, exception);
             }
         });
     }
@@ -50,8 +50,8 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                     propagateDelete(dir);
                     oma.delete(dir);
                     counter.run();
-                } catch (Exception e) {
-                    handleDirectoryDeletionException(dir, e);
+                } catch (Exception exception) {
+                    handleDirectoryDeletionException(dir, exception);
                 }
             });
         });
@@ -91,15 +91,19 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             oma.updateStatement(SQLDirectory.class)
                .set(SQLDirectory.DELETED, true)
                .set(SQLDirectory.PARENT, null)
+               .where(SQLDirectory.SPACE_NAME, dir.getSpaceName())
+               .where(SQLDirectory.DELETED, false)
                .where(SQLDirectory.PARENT, directoryId)
                .executeUpdate();
             oma.updateStatement(SQLBlob.class)
                .set(SQLBlob.DELETED, true)
                .set(SQLBlob.PARENT, null)
+               .where(SQLBlob.SPACE_NAME, dir.getSpaceName())
+               .where(SQLBlob.DELETED, false)
                .where(SQLBlob.PARENT, directoryId)
                .executeUpdate();
-        } catch (SQLException e) {
-            buildStorageException(e).withSystemErrorMessage(
+        } catch (SQLException exception) {
+            buildStorageException(exception).withSystemErrorMessage(
                     "Layer 2: Failed to propagate deletion for directory %s (%s) in %s: (%s)",
                     directoryId,
                     dir.getName(),
@@ -118,8 +122,8 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                        .where(SQLDirectory.ID, dir.getId())
                        .executeUpdate();
                     counter.run();
-                } catch (Exception e) {
-                    handleDirectoryDeletionException(dir, e);
+                } catch (Exception exception) {
+                    handleDirectoryDeletionException(dir, exception);
                 }
             });
         });
@@ -137,8 +141,8 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                .set(SQLBlob.PARENT_CHANGED, true)
                .where(SQLBlob.PARENT, directoryId)
                .executeUpdate();
-        } catch (SQLException e) {
-            buildStorageException(e).withSystemErrorMessage(
+        } catch (SQLException exception) {
+            buildStorageException(exception).withSystemErrorMessage(
                     "Layer 2: Failed to propagate rename for directory %s (%s) in %s: (%s)",
                     directoryId,
                     dir.getName(),
@@ -170,8 +174,8 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 update.where(SQLBlob.ID, blob.getId()).executeUpdate();
 
                 counter.run();
-            } catch (SQLException e) {
-                buildStorageException(e).withSystemErrorMessage(
+            } catch (SQLException exception) {
+                buildStorageException(exception).withSystemErrorMessage(
                         "Layer 2: Failed to reset blob %s (%s) in %s as %s: (%s)",
                         blob.getBlobKey(),
                         blob.getFilename(),

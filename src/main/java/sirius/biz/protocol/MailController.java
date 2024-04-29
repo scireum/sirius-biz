@@ -56,13 +56,13 @@ public class MailController extends BizController {
     /**
      * Shows the details of a selected mail.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @param id  the id of the mail to show
      */
     @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @Routed("/system/mail/:1")
-    public void mail(final WebContext ctx, String id) {
+    public void mail(final WebContext webContext, String id) {
         MailProtocol mailLogEntry = find(MailProtocol.class, id);
-        ctx.respondWith().template("/templates/biz/protocol/mail.html.pasta", mailLogEntry);
+        webContext.respondWith().template("/templates/biz/protocol/mail.html.pasta", mailLogEntry);
     }
 }

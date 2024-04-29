@@ -121,7 +121,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      */
     protected E load(Context data, E entity, Mapping... mappings) {
         Arrays.stream(mappings).forEach(mapping -> loadMapping(entity, mapping, data));
-
         enforcePostLoadConstraints(entity);
 
         return entity;
@@ -368,19 +367,15 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return tryFindInCache(data).orElseGet(() -> createOrUpdateNow(load(data, newEntity())));
     }
 
-    /**
-     * Creates a new entity of the handled entity type.
-     *
-     * @return new entity instance
-     */
+    @Override
     @SuppressWarnings("unchecked")
-    protected E newEntity() {
+    public E newEntity() {
         try {
             return (E) descriptor.getType().getConstructor().newInstance();
         } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
+                 IllegalAccessException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot create an instance of: %s", descriptor.getType().getName())
                             .handle();
         }

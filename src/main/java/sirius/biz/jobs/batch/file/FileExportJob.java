@@ -95,8 +95,8 @@ public abstract class FileExportJob extends BatchJob {
             }
 
             return process.addFile(determineEffectiveFilename("", false));
-        } catch (IOException e) {
-            throw process.handle(e);
+        } catch (IOException exception) {
+            throw process.handle(exception);
         }
     }
 
@@ -204,8 +204,8 @@ public abstract class FileExportJob extends BatchJob {
                                     @Nonnull Consumer<InputStream> digester) {
         try (InputStream inputStream = inputStreamSupplier.get()) {
             digester.accept(inputStream);
-        } catch (IOException e) {
-            process.handle(e);
+        } catch (IOException exception) {
+            process.handle(exception);
         }
     }
 }

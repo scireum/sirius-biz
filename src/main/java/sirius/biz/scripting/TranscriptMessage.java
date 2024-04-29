@@ -6,12 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.ide;
+package sirius.biz.scripting;
 
 /**
  * Wraps a transcript message which can be created by a running script and is available on all nodes.
  */
-class TranscriptMessage {
+public class TranscriptMessage {
 
     private final String node;
     private final String jobNumber;

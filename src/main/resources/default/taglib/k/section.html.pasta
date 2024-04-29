@@ -23,7 +23,7 @@
             </i:if>
             <i:if test="isFilled(anchor)">
                 <i:local name="copyAnchorId" value="generateId('copy-anchor-%s')"/>
-                <a id="@copyAnchorId" class="text-sirius-gray cursor-pointer"><i class="fa fa-link"></i></a>
+                <a id="@copyAnchorId" class="text-sirius-gray cursor-pointer"><i class="fa-solid fa-link"></i></a>
                 <script type="text/javascript">
                     sirius.ready(function () {
                         document.getElementById('@copyAnchorId').addEventListener('click', function () {

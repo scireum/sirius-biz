@@ -331,13 +331,13 @@ public abstract class FileImportJob extends ImportJob {
             }
 
             return true;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             process.handle(Exceptions.handle()
-                                     .error(e)
+                                     .error(exception)
                                      .to(Log.BACKGROUND)
                                      .withNLSKey("FileImportJob.copyAuxiliaryFileFailed")
                                      .set("file", extractedFile.getFilePath())
-                                     .set("message", e.getMessage())
+                                     .set("message", exception.getMessage())
                                      .handle());
             return false;
         }

@@ -139,8 +139,8 @@ public class AutoBatchLoop extends BackgroundLoop {
                 }
                 entity = entities.poll();
             }
-        } catch (Exception e) {
-            Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.BACKGROUND, exception);
             frozenUntil = LocalDateTime.now().plusSeconds(10);
         }
 

@@ -1,0 +1,45 @@
+<i:arg name="heading" type="String"/>
+<i:arg name="tasks" type="sirius.kernel.commons.MultiMap"/>
+
+<t:heading label="@heading"/>
+
+<t:emptyCheck data="tasks">
+    <t:datacards>
+        <i:for var="taskType" items="tasks.keySet()" type="java.lang.Class">
+            <t:datacard title="@taskType.getSimpleName()">
+                <table class="table table-hover table-sm">
+                    <tr>
+                        <th>Computer</th>
+                        <th class="col-3 text-end">
+                            <div><strong>Average Duration</strong></div>
+                            Maximum Duration
+                        </th>
+                    </tr>
+                    <i:for var="task"
+                           items="tasks.get(taskType)"
+                           type="sirius.biz.analytics.scheduler.AnalyticalTask">
+                        <tr>
+                            <i:local name="taskName" value="task.getClass().getSimpleName()"/>
+                            <i:if test="task.getAvgDurationMillis().getSampleCount() > 0 || task.getMaxDurationMillis() > 0">
+                                <td>@taskName</td>
+                                <td class="col-3 text-end">
+                                    <div>
+                                        <strong>
+                                            @toUserString(task.getAvgDurationMillis().getAvg()) ms
+                                            (@task.getAvgDurationMillis().getSampleCount())
+                                        </strong>
+                                    </div>
+                                    @toUserString(task.getMaxDurationMillis()) ms
+                                </td>
+                                <i:else>
+                                    <td class="text-muted">@taskName</td>
+                                    <td></td>
+                                </i:else>
+                            </i:if>
+                        </tr>
+                    </i:for>
+                </table>
+            </t:datacard>
+        </i:for>
+    </t:datacards>
+</t:emptyCheck>

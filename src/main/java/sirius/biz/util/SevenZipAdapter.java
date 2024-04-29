@@ -103,8 +103,8 @@ class SevenZipAdapter implements IArchiveExtractCallback {
             try {
                 currentBuffer.write(data);
                 return data.length;
-            } catch (IOException e) {
-                throw new SevenZipException(e);
+            } catch (IOException exception) {
+                throw new SevenZipException(exception);
             }
         };
     }
@@ -154,10 +154,10 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                                                                       lastModified,
                                                                       progress);
                 stop = !extractCallback.apply(extracted7ZFile);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 throw Exceptions.handle()
                                 .to(Log.SYSTEM)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage(
                                         "An error occurred while handling an extracted file: %s - %s (%s)",
                                         currentFilePath)

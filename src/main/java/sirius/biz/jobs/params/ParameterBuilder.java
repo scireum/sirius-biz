@@ -359,11 +359,11 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     protected String checkAndTransform(Value input) {
         try {
             return checkAndTransformValue(input);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
             throw Exceptions.createHandled()
                             .withNLSKey("Parameter.invalidValue")
                             .set("name", getLabel())
-                            .set("message", e.getMessage())
+                            .set("message", exception.getMessage())
                             .handle();
         }
     }

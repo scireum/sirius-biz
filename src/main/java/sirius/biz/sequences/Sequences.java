@@ -80,10 +80,10 @@ public class Sequences {
             }
 
             return generateInLock(sequence);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to generate an unique number for %s: %s (%s)", sequence)
                             .handle();
         }
@@ -132,10 +132,10 @@ public class Sequences {
     public void setNextValue(String sequence, long nextValue, boolean force) {
         try {
             sequenceStrategy.setNextValue(sequence, nextValue, force);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Failed to specify the next value for sequence %s due to an error: %s (%s)",
                                     sequence)
@@ -156,10 +156,10 @@ public class Sequences {
     public long peekNextValue(String sequence) {
         try {
             return sequenceStrategy.peekNextValue(sequence);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Failed to peek the next value for sequence %s due to an error: %s (%s)",
                                     sequence)
@@ -179,10 +179,10 @@ public class Sequences {
             List<String> result = new ArrayList<>();
             sequenceStrategy.collectKnownSequences(result::add);
             return result;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Failed to determine the list of known sequences due to an error: %s (%s)")
                             .handle();

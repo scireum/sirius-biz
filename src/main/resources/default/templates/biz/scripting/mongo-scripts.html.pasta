@@ -1,0 +1,35 @@
+<i:arg type="Page" name="scripts"/>
+
+<t:page titleKey="MongoCustomScript.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/scripting/scripts">@i18n("MongoCustomScript.plural")</a>
+        </li>
+    </i:block>
+
+    <i:block name="page-header">
+        <t:pageHeader titleKey="MongoCustomScript.plural"/>
+    </i:block>
+
+    <t:searchHeader page="scripts" baseUrl="/scripting/scripts">
+        <t:createButton url="/scripting/scripts/new"/>
+    </t:searchHeader>
+    <t:emptyCheck data="scripts">
+        <t:datacards>
+            <i:for type="sirius.biz.scripting.mongo.MongoCustomScript" var="script" items="scripts.getItems()">
+                <t:datacard title="@script.getCode()"
+                            link="@apply('/scripting/scripts/%s', script.getIdAsString())">
+                    <i:block name="footer">
+                        <i:if test="script.isDisabled()">
+                            <t:tag color="red">@i18n("MongoCustomScript.state.inactive")</t:tag>
+                            <i:else>
+                                <t:tag color="green">@i18n("MongoCustomScript.state.active")</t:tag>
+                            </i:else>
+                        </i:if>
+                    </i:block>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
+        <t:pagination page="scripts" baseUrl="/scripting/scripts"/>
+    </t:emptyCheck>
+</t:page>

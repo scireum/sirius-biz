@@ -48,7 +48,7 @@ public class ChartProcessOutputType implements ProcessOutputType {
 
     @Override
     public String getIcon() {
-        return "fas fa-chart-line";
+        return "fa-solid fa-chart-line";
     }
 
     /**
@@ -62,8 +62,8 @@ public class ChartProcessOutputType implements ProcessOutputType {
             // We decode and re-encode here to ensure that only proper data is output into the HTML page
             ObjectNode obj = Json.parseObject(chart.getMessage());
             return Json.write(obj);
-        } catch (Exception e) {
-            Exceptions.ignore(e);
+        } catch (Exception exception) {
+            Exceptions.ignore(exception);
             return "{}";
         }
     }

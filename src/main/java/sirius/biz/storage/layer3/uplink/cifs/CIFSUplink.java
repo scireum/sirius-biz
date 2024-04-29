@@ -68,15 +68,15 @@ public class CIFSUplink extends ConfigBasedUplink {
                     CIFSContext context = new BaseContext(new BaseConfiguration(true));
                     return new CIFSUplink(id, config, context, new SmbFile(url, context));
                 }
-            } catch (CIFSException e) {
+            } catch (CIFSException exception) {
                 throw new IllegalArgumentException(Strings.apply(
                         "An error occurred when talking to the CIFS file system: %s - %s",
                         url,
-                        e.getMessage()));
-            } catch (MalformedURLException e) {
+                        exception.getMessage()));
+            } catch (MalformedURLException exception) {
                 throw new IllegalArgumentException(Strings.apply("An invalid url (%s) was given: %s",
                                                                  url,
-                                                                 e.getMessage()));
+                                                                 exception.getMessage()));
             }
         }
 
@@ -90,10 +90,10 @@ public class CIFSUplink extends ConfigBasedUplink {
     private static final Comparator<SmbFile> SORT_BY_DIRECTORY = Comparator.comparing(file -> {
         try {
             return file.isDirectory() ? 0 : 1;
-        } catch (SmbException e) {
+        } catch (SmbException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 3/CIFS: Cannot determine if the file: %s is a directory: %s (%s)",
                                               file.getName())
                       .handle();
@@ -124,10 +124,10 @@ public class CIFSUplink extends ConfigBasedUplink {
                 return wrapSmbFile(parent, new SmbFile(parentFile, name + "/"));
             }
             return wrapSmbFile(parent, child);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot resolve file: %s in parent: %s - %s (%s)",
                                                     name,
                                                     parent)
@@ -166,10 +166,10 @@ public class CIFSUplink extends ConfigBasedUplink {
         try {
             file.as(SmbFile.class).renameTo(new SmbFile(newParent.as(SmbFile.class), file.name()));
             return true;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot move %s to %s: %s (%s)", file, name)
                             .handle();
         }
@@ -184,10 +184,10 @@ public class CIFSUplink extends ConfigBasedUplink {
         try {
             file.as(SmbFile.class).renameTo(new SmbFile(file.parent().as(SmbFile.class), name));
             return true;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot rename %s to %s: %s (%s)", file, name)
                             .handle();
         }
@@ -197,10 +197,10 @@ public class CIFSUplink extends ConfigBasedUplink {
         try {
             file.as(SmbFile.class).mkdirs();
             return true;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot create %s as directory: %s (%s)", file)
                             .handle();
         }
@@ -209,10 +209,10 @@ public class CIFSUplink extends ConfigBasedUplink {
     private boolean existsFlagSupplier(VirtualFile file) {
         try {
             return file.as(SmbFile.class).exists();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot determine if %s exists: %s (%s)", file)
                             .handle();
         }
@@ -221,10 +221,10 @@ public class CIFSUplink extends ConfigBasedUplink {
     private InputStream inputStreamSupplier(VirtualFile file) {
         try {
             return file.as(SmbFile.class).getInputStream();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot open InputStream for %s: %s (%s)", file)
                             .handle();
         }
@@ -233,10 +233,10 @@ public class CIFSUplink extends ConfigBasedUplink {
     private OutputStream outputStreamSupplier(VirtualFile file) {
         try {
             return file.as(SmbFile.class).getOutputStream();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot open OutputStream for %s: %s (%s)", file)
                             .handle();
         }
@@ -246,10 +246,10 @@ public class CIFSUplink extends ConfigBasedUplink {
         try {
             file.as(SmbFile.class).delete();
             return true;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot delete %s: %s (%s)", file)
                             .handle();
         }
@@ -263,10 +263,10 @@ public class CIFSUplink extends ConfigBasedUplink {
                 file.as(SmbFile.class).setReadWrite();
             }
             return true;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot change read-only state on %s to %s: %s (%s)",
                                                     file,
                                                     readOnly)
@@ -282,10 +282,10 @@ public class CIFSUplink extends ConfigBasedUplink {
             }
             SmbFile parentFile = new SmbFile(smbFile.getParent(), smbFile.getContext());
             return !parentFile.exists() || !parentFile.isDirectory() || !parentFile.canWrite();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot determine if %s is read-only: %s (%s)", file)
                             .handle();
         }
@@ -294,10 +294,10 @@ public class CIFSUplink extends ConfigBasedUplink {
     private boolean isDirectoryFlagSupplier(VirtualFile file) {
         try {
             return file.as(SmbFile.class).isDirectory();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot determine if %s is a directory: %s (%s)",
                                                     file)
                             .handle();
@@ -312,10 +312,10 @@ public class CIFSUplink extends ConfigBasedUplink {
             }
 
             return smbFile.length();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot determine the size of %s - %s (%s)", file)
                             .handle();
         }
@@ -324,10 +324,10 @@ public class CIFSUplink extends ConfigBasedUplink {
     private long lastModifiedSupplier(VirtualFile file) {
         try {
             return file.as(SmbFile.class).getLastModified();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot determine last modified of %s - %s (%s)",
                                                     file)
                             .handle();
@@ -348,10 +348,10 @@ public class CIFSUplink extends ConfigBasedUplink {
                     return;
                 }
             }
-        } catch (SmbException e) {
+        } catch (SmbException exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/CIFS: Cannot iterate over children of %s - %s (%s)",
                                                     parent)
                             .handle();

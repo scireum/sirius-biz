@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 
 /**
  * Handles fields of the type {@link StoredObjectRef} within an {@link SQLEntity}.
+ *
  * @deprecated use the new storage APIs
  */
 @Deprecated
@@ -75,10 +76,10 @@ public class StoredObjectRefProperty extends Property implements SQLPropertyInfo
     protected StoredObjectRef getStoredObjectRef(Object entity) {
         try {
             return (StoredObjectRef) super.getValueFromField(this.accessPath.apply(entity));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(OMA.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Unable to obtain StoredObjectRef object from entity ref field ('%s' in '%s'): %s (%s)",
                                     getName(),

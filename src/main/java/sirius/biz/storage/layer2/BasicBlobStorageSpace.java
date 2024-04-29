@@ -414,8 +414,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw errorHandler.apply(new IllegalStateException(Strings.apply(
                     "Failed to execute an optimistic locked update after %s retries",
                     NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS)));
-        } catch (Exception e) {
-            throw errorHandler.apply(e);
+        } catch (Exception exception) {
+            throw errorHandler.apply(exception);
         }
     }
 
@@ -1081,8 +1081,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
 
             return getPhysicalSpace().download(physicalKey.getFirst());
-        } catch (Exception e) {
-            handleFailedConversion(blobKey, variant, e);
+        } catch (Exception exception) {
+            handleFailedConversion(blobKey, variant, exception);
 
             return Optional.empty();
         }
@@ -1128,18 +1128,18 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             } else {
                 throw connectException;
             }
-        } catch (IOException ex) {
+        } catch (IOException exception) {
             Files.delete(temporaryFile);
-            throw ex;
+            throw exception;
         }
 
         return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
     }
 
-    private void handleFailedConversion(String blobKey, String variant, Exception e) {
-        failedVariantHandlers.forEach(handler -> handler.handle(e, blobKey, variant));
+    private void handleFailedConversion(String blobKey, String variant, Exception exception) {
+        failedVariantHandlers.forEach(handler -> handler.handle(exception, blobKey, variant));
         Exceptions.handle()
-                  .error(e)
+                  .error(exception)
                   .to(StorageUtils.LOG)
                   .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
                                           blobKey,
@@ -1188,16 +1188,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
 
             blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
-        } catch (Exception e) {
+        } catch (Exception exception) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
-            } catch (Exception ex) {
-                Exceptions.ignore(ex);
+            } catch (Exception innnerException) {
+                Exceptions.ignore(innnerException);
             }
 
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 2: Cannot update the contents of %s in %s: %s (%s)",
                                                     blob.getBlobKey(),
                                                     spaceName)
@@ -1244,15 +1244,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
 
             blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
-        } catch (Exception e) {
+        } catch (Exception exception) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
-            } catch (Exception ex) {
-                Exceptions.ignore(ex);
+            } catch (Exception innerException) {
+                Exceptions.ignore(innerException);
             }
-            if (e instanceof InterruptedIOException || e.getCause() instanceof InterruptedIOException) {
+            if (exception instanceof InterruptedIOException || exception.getCause() instanceof InterruptedIOException) {
                 throw Exceptions.createHandled()
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage("Layer 2: Interrupted updating contents of %s in %s: %s (%s)",
                                                         blob.getBlobKey(),
                                                         spaceName)
@@ -1261,7 +1261,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 2: Cannot update the contents of %s in %s: %s (%s)",
                                                     blob.getBlobKey(),
                                                     spaceName)
@@ -1301,10 +1301,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                     Files.delete(file);
                 }
             });
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 2: Cannot create a local buffer to provide an output stream for %s (%s) in %s: %s (%s)",
                                     blob.getBlobKey(),
@@ -1338,10 +1338,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
                 deliverAsync(blobKey, variant, response);
             }
-        } catch (IllegalArgumentException e) {
-            response.notCached().error(HttpResponseStatus.BAD_REQUEST, e.getMessage());
-        } catch (Exception e) {
-            handleFailedConversion(blobKey, variant, e);
+        } catch (IllegalArgumentException exception) {
+            response.notCached().error(HttpResponseStatus.BAD_REQUEST, exception.getMessage());
+        } catch (Exception exception) {
+            handleFailedConversion(blobKey, variant, exception);
             response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -1438,8 +1438,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             } else {
                 return Optional.ofNullable(keyAndCacheFlag.getFirst());
             }
-        } catch (Exception e) {
-            handleFailedConversion(blobKey, variantName, e);
+        } catch (Exception exception) {
+            handleFailedConversion(blobKey, variantName, exception);
             return Optional.empty();
         }
     }
@@ -1498,10 +1498,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                 variantName,
                                                 nonblocking,
                                                 NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS - 1);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 2: Failed to find or create the variant %s of %s in %s: %s (%s)",
                                     variantName,
@@ -1911,8 +1911,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                             Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
                          getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
                      }
-                 } catch (Exception e) {
-                     handleFailedConversion(blobKey, variant, e);
+                 } catch (Exception exception) {
+                     handleFailedConversion(blobKey, variant, exception);
                      response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                  }
              });
@@ -1993,8 +1993,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         try {
             return Optional.of(URI.create(conversionUrl).toURL());
-        } catch (MalformedURLException e) {
-            throw Exceptions.handle(e);
+        } catch (MalformedURLException exception) {
+            throw Exceptions.handle(exception);
         }
     }
 

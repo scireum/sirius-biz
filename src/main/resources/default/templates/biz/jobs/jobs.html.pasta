@@ -14,9 +14,10 @@
                 <i:if test="isFrameworkEnabled('biz.scheduler-jdbc') || isFrameworkEnabled('biz.scheduler-mongo')">
                     <t:permission permission="permission-manage-scheduler">
                         <div>
-                            <a class="btn btn-link" href="/jobs/scheduler">
-                                <i class="far fa-clock"></i>
-                                <span class="pl-1 d-none d-md-inline-block">@i18n("SchedulerEntry.plural")</span>
+                            <a class="btn btn-link text-decoration-none"
+                               href="/jobs/scheduler">
+                                <i class="fa-regular fa-clock"></i>
+                                <span class="ps-1 d-none d-md-inline-block">@i18n("SchedulerEntry.plural")</span>
                             </a>
                         </div>
                     </t:permission>
@@ -27,11 +28,11 @@
                         framework="biz.processes"
                         permission="permission-view-processes"
                         url="/ps"
-                        icon="fas fa-external-link-alt"
+                        icon="fa-solid fa-external-link-alt"
                         labelKey="Process.plural"/>
                 <t:dropdownItem
                         url="/data-explorer"
-                        icon="fas fa-external-link-alt"
+                        icon="fa-solid fa-external-link-alt"
                         labelKey="DataExplorerController.title"/>
             </i:block>
         </t:pageHeader>

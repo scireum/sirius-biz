@@ -23,7 +23,7 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
         '{{/previewImage}}' +
         '{{^previewImage}}' +
         '    {{#icon}}' +
-        '        <i class="fa fa-3x {{icon}}" aria-hidden="true"></i>' +
+        '        <i class="fa-solid fa-3x {{icon}}" aria-hidden="true"></i>' +
         '    {{/icon}}' +
         '{{/previewImage}}' +
         '{{#url}}' +

@@ -112,9 +112,9 @@ public class UpdateManager {
             }
             this.globalUpdates = nextUpdates;
             this.lastFetch = LocalDateTime.now();
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException | URISyntaxException exception) {
             Exceptions.handle()
-                      .error(e)
+                      .error(exception)
                       .to(Log.BACKGROUND)
                       .withSystemErrorMessage("Failed to fetch updates feed: %s (%s)")
                       .handle();

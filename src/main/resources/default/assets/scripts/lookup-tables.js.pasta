@@ -5,8 +5,8 @@ function LookupTableInfo(options) {
     this.labelFormat = options.labelFormat;
     this.query = options.query || "";
 
-
     this._modal = document.getElementById('lookup-modal');
+    this._modal.modal = new bootstrap.Modal(this._modal);
 
     // Get rid of all previously registered event listeners etc. by re-creating the inner DOM...
     this._modal.innerHTML = this._modal.innerHTML;
@@ -19,22 +19,20 @@ function LookupTableInfo(options) {
     this._description = this._modal.querySelector('.lookuptable-description-js');
     this._output = this._modal.querySelector('.entries');
 
-    const me = this;
-
     this.entriesToSkip = 0;
     this._paginationLeft = this._modal.querySelector('.pagination-left-js');
-    this._paginationLeft.addEventListener('click', function (event) {
-        if (this.dataset.skip != null) {
-            me.entriesToSkip = this.dataset.skip;
-            me.reload();
+    this._paginationLeft.addEventListener('click', event => {
+        if (event.target.dataset.skip != null) {
+            this.entriesToSkip = event.target.dataset.skip;
+            this.reload();
         }
         event.preventDefault();
     });
     this._paginationRight = this._modal.querySelector('.pagination-right-js');
-    this._paginationRight.addEventListener('click', function (event) {
-        if (this.dataset.skip != null) {
-            me.entriesToSkip = this.dataset.skip;
-            me.reload();
+    this._paginationRight.addEventListener('click', event => {
+        if (event.target.dataset.skip != null) {
+            this.entriesToSkip = event.target.dataset.skip;
+            this.reload();
         }
         event.preventDefault();
     });
@@ -43,39 +41,39 @@ function LookupTableInfo(options) {
 
     // Add a key-listener with some easing...
     let timeout = -1;
-    this._queryField.addEventListener('keyup', function () {
-        me.entriesToSkip = 0;
+    this._queryField.addEventListener('keyup', () => {
+        this.entriesToSkip = 0;
         clearTimeout(timeout);
-        timeout = setTimeout(function () {
-            me.reload();
+        timeout = setTimeout(() => {
+            this.reload();
         }, 100);
     });
 
     // Load data and show modal...
-    this.reload().then(function () {
-        $(me._modal).modal('show');
-        $(me._modal).on('shown.bs.modal', function () {
-            me._queryField.focus();
+    this.reload().then(() => {
+        this._modal.modal.show(null);
+        this._modal.addEventListener('shown.bs.modal', () => {
+            this._queryField.focus();
         });
     });
 }
 
-LookupTableInfo.prototype.ENTRY_TEMPLATE = '<td>' +
+LookupTableInfo.prototype.ENTRY_TEMPLATE = '<td class="border-top">' +
     '<div class="d-flex flex-row">' +
-    '   <div class="mr-auto">' +
-    '       <a class="font-weight-bold code-link-js" data-label="{{label}}" data-code="{{code}}">{{name}}</a>' +
+    '   <div class="me-auto">' +
+    '       <a class="fw-bold code-link-js" data-label="{{label}}" data-code="{{code}}">{{name}}</a>' +
     '       {{#showCode}} ({{code}}){{/showCode}}' +
     '   </div>' +
     '   {{#source}}' +
-    '   <div class="text-small cursor-pointer toggle-source-link-js d-none"><span class="icon-js"><i class="fa fa-plus"></i></span> <a class="toggle-source-js" href="#"> Source</a></div>' +
+    '   <div class="text-small cursor-pointer toggle-source-link-js d-none"><span class="icon-js"><i class="fa-solid fa-plus"></i></span> <a class="toggle-source-js" href="#"> Source</a></div>' +
     '   {{/source}}' +
     '</div>' +
     '{{#description}}<div class="text-small text-muted mt-2">{{description}}</div>{{/description}}' +
     '{{#source}}' +
-    '   <div class="whitespace-pre-wrap text-monospace text-small sci-left-border-blue-dark pl-2 pr-2 mt-1 source-js d-none">{{source}}</div>' +
+    '   <div class="whitespace-pre-wrap font-monospace text-small sci-left-border-blue-dark ps-2 pe-2 mt-1 source-js d-none">{{source}}</div>' +
     '{{/source}}' +
     '{{#deprecated}}' +
-    '   <div class="text-small sci-left-border-yellow border-sirius-yellow pl-2 pr-2 mt-2">@i18n("LookupTableController.deprecated")</div>' +
+    '   <div class="text-small sci-left-border-yellow border-sirius-yellow ps-2 pe-2 mt-2">@i18n("LookupTableController.deprecated")</div>' +
     '{{/deprecated}}' +
     '</td>';
 
@@ -116,7 +114,7 @@ LookupTableInfo.prototype.reload = function () {
                 _codeLink.setAttribute("href", "#");
                 _codeLink.addEventListener('click', function (e) {
                     e.preventDefault();
-                    $(me._modal).modal('hide');
+                    me._modal.modal.hide();
                     me.codeCallback(this.dataset.code, this.dataset.label);
                 });
             }
@@ -130,10 +128,10 @@ LookupTableInfo.prototype.reload = function () {
                     const _icon = _entry.querySelector('.icon-js');
                     if (_source.classList.contains('d-none')) {
                         _source.classList.remove('d-none');
-                        _icon.innerHTML = '<i class="fa fa-minus"></i>';
+                        _icon.innerHTML = '<i class="fa-solid fa-minus"></i>';
                     } else {
                         _source.classList.add('d-none');
-                        _icon.innerHTML = '<i class="fa fa-plus"></i>';
+                        _icon.innerHTML = '<i class="fa-solid fa-plus"></i>';
                     }
                 });
             }

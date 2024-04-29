@@ -28,7 +28,7 @@ public class SparklineCellFormat implements CellFormat {
         String value = data.path(KEY_VALUE).asText();
         String values = data.path(KEY_VALUES).asText();
 
-        StringBuilder sb = new StringBuilder("<div class=\"text-right\">");
+        StringBuilder sb = new StringBuilder("<div class=\"text-end\">");
         sb.append(value);
         sb.append(" ");
         sb.append("<canvas width=\"40\" height=\"20\" class=\"sparkline-js\" data-sparkline=\"");

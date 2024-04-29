@@ -163,8 +163,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
             codeList.getCodeListData().setCode(codeListName);
             codeList.getCodeListData().setName(codeListName);
             return codeList;
-        } catch (Exception e) {
-            throw Exceptions.handle(LOG, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(LOG, exception);
         }
     }
 
@@ -373,8 +373,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
             entry.getCodeListEntryData().setCode(code);
             entry.getCodeListEntryData().getValue().setFallback(code);
             return entry;
-        } catch (Exception e) {
-            throw Exceptions.handle(LOG, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(LOG, exception);
         }
     }
 

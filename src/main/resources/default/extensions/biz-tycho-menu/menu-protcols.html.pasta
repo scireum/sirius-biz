@@ -10,15 +10,15 @@
     <i:block name="system">
         <t:dropdownSection>
             <t:permission permission="permission-system-protocols">
-                <t:dropdownItem labelKey="LoggedMessage.plural" icon="fa fa-list-ul" url="/system/logs"
+                <t:dropdownItem labelKey="LoggedMessage.plural" icon="fa-solid fa-list-ul" url="/system/logs"
                                 framework="biz.protocols"/>
-                <t:dropdownItem labelKey="StoredIncident.plural" icon="fa fa-fire-extinguisher"
+                <t:dropdownItem labelKey="StoredIncident.plural" icon="fa-solid fa-fire-extinguisher"
                                 url="/system/errors" framework="biz.protocols"/>
-                <t:dropdownItem labelKey="MailProtocol.plural" icon="fa fa-envelope" url="/system/mails"
+                <t:dropdownItem labelKey="MailProtocol.plural" icon="fa-solid fa-envelope" url="/system/mails"
                                 framework="biz.protocols"/>
             </t:permission>
             <t:permission permission="permission-system-journal">
-                <t:dropdownItem labelKey="JournalEntry.plural" icon="fa fa-history" url="/system/protocol"
+                <t:dropdownItem labelKey="JournalEntry.plural" icon="fa-solid fa-history" url="/system/protocol"
                                 framework="biz.journal"/>
             </t:permission>
         </t:dropdownSection>

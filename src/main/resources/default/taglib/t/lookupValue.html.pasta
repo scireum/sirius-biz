@@ -21,7 +21,7 @@
                 suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s', table, value.getDisplay(), value.getExtendedDisplay())">
     <i:block name="addon">
         <i:if test="showSelectionButton">
-            <a class="btn btn-outline-secondary" id="@id-addon" tabindex="0"><i class="fa fa-bolt"></i></a>
+            <a class="btn btn-outline-secondary" id="@id-addon" tabindex="0"><i class="fa-solid fa-bolt"></i></a>
         </i:if>
     </i:block>
     <i:block name="script">

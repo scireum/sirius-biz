@@ -50,7 +50,7 @@ public class OpenKbaLogHandler implements ProcessLogHandler {
     public List<ProcessLogAction> getActions(ProcessLog log) {
         return resolveArticleId(log).map(article -> {
             ProcessLogAction action = new ProcessLogAction(log, ACTION_OPEN_ARTICLE).withLabel(article.getTitle())
-                                                                                    .withIcon("fa fa-lightbulb");
+                                                                                    .withIcon("fa-solid fa-lightbulb");
             return Collections.singletonList(action);
         }).orElse(Collections.emptyList());
     }

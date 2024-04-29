@@ -21,8 +21,8 @@
     <t:sidebar>
         <i:block name="sidebar">
             <t:navbox labelKey="Model.links">
-                <t:navboxLink icon="fa fa-server" label="Nodes" url="/system/cluster" active="page == 'nodes'"/>
-                <t:navboxLink icon="fa fa-hammer"
+                <t:navboxLink icon="fa-solid fa-server" label="Nodes" url="/system/cluster" active="page == 'nodes'"/>
+                <t:navboxLink icon="fa-solid fa-hammer"
                               label="Background Jobs"
                               url="/system/cluster/background-jobs"
                               active="page == 'background-jobs'"/>
@@ -30,8 +30,15 @@
                               label="End of Day Tasks"
                               url="/system/cluster/eod-tasks"
                               active="page == 'eod-tasks'"/>
+                <t:navboxLink icon="fa-regular fa-chart-simple"
+                              label="Analytics"
+                              url="/system/cluster/analytics"
+                              active="page == 'analytics'"/>
                 <i:if test="locks != null">
-                    <t:navboxLink icon="fa fa-lock" label="Locks" url="/system/cluster/locks" active="page == 'locks'"/>
+                    <t:navboxLink icon="fa-solid fa-lock"
+                                  label="Locks"
+                                  url="/system/cluster/locks"
+                                  active="page == 'locks'"/>
                 </i:if>
             </t:navbox>
         </i:block>

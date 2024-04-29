@@ -43,7 +43,7 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     ImportDictionary getImportDictionary();
 
     /**
-     * Fills the given entity it using the supplied <tt>data</tt>.
+     * Fills the given entity using the supplied <tt>data</tt>.
      *
      * @param data   used to fill the newly created entity
      * @param entity the entity to be filled
@@ -132,6 +132,13 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      * @return the matching entity or a newly created and not yet persisted one if no match was found
      */
     E findAndLoad(Context data);
+
+    /**
+     * Creates a new entity of the handled entity type.
+     *
+     * @return new entity instance
+     */
+    E newEntity();
 
     /**
      * Tries to find an entity using the supplied <tt>data</tt> - creates, loads and persists a new entity if no match

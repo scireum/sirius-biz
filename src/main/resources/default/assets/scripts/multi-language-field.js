@@ -49,42 +49,42 @@ MultiLanguageField.prototype.buildSingleline = function () {
     this._addLanguageButton = this._modal.querySelector('.mls-add-language-button');
     this._addLanguageOptions = this._addLanguageButton.querySelector('.dropdown-menu');
 
+    const modal = new bootstrap.Modal(this._modal);
+
     // Open modal when input field is focused
-    const me = this;
-    this._input.addEventListener('focusin', function () {
-        $(me._modal).modal('show');
+    this._input.addEventListener('focusin', () => {
+        modal.show(null);
     });
 
     if (this.mobileOrSmallScreen) {
-        this._addLanguageOptions.classList.add('dropdown-menu-right');
+        this._addLanguageOptions.classList.add('dropdown-menu-end');
     }
 
     this._modalBody = this._modal.querySelector('.modal-body');
     this._modalContent = this._modal.querySelector('.modal-content');
 
-    this._addLanguageButton.addEventListener('click', function () {
-        const langOptionCount = me._addLanguageOptions.querySelectorAll('li:not(.d-none)').length;
+    this._addLanguageButton.addEventListener('click', () => {
+        const langOptionCount = this._addLanguageOptions.querySelectorAll('li:not(.d-none)').length;
         const optionsHeight = 48;
         const menuPadding = 8;
         const menuBorder = 1;
         const totalRowsHeight = (langOptionCount * optionsHeight) + (menuPadding * 2) + (menuBorder * 2);
 
-        if (totalRowsHeight > me._modalBody.clientHeight) {
-            me._addLanguageOptions.style.maxHeight = me._modalBody.clientHeight + 'px';
+        if (totalRowsHeight > this._modalBody.clientHeight) {
+            this._addLanguageOptions.style.maxHeight = this._modalBody.clientHeight + 'px';
         } else {
-            me._addLanguageOptions.style.maxHeight = totalRowsHeight + 'px';
+            this._addLanguageOptions.style.maxHeight = totalRowsHeight + 'px';
         }
     });
 
-    // have to use jquery here as bootstrap modals only trigger jquery events
-    $(me._modal).on('hidden.bs.modal', function () {
-        me.updateHiddenFields();
-        me.updateOuterInputField();
+    this._modal.addEventListener('hidden.bs.modal', () => {
+        this.updateHiddenFields();
+        this.updateOuterInputField();
     });
 
-    $(me._modal).on('shown.bs.modal', function () {
+    this._modal.addEventListener('shown.bs.modal', () => {
         // focus the first input field in the modal
-        const _firstInput = me._modalInputs.querySelector('input');
+        const _firstInput = this._modalInputs.querySelector('input');
         if (_firstInput) {
             _firstInput.focus();
         }
@@ -106,8 +106,8 @@ MultiLanguageField.prototype.buildMultiline = function () {
     this.MAX_TABS_VISIBLE = 3;
 
     if (this.mobileOrSmallScreen) {
-        this._addLanguageOptions.classList.add('dropdown-menu-right');
-        this._toggleLanguageOptions.classList.add('dropdown-menu-right');
+        this._addLanguageOptions.classList.add('dropdown-menu-end');
+        this._toggleLanguageOptions.classList.add('dropdown-menu-end');
     }
 
     this.renderMultilineHeaderAndContent();
@@ -127,6 +127,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode) {
     const _row = document.createElement('div');
     _row.classList.add('row');
     _row.classList.add('form-group');
+    _row.classList.add('mb-3');
 
     const _labelColumn = document.createElement('div');
     _labelColumn.classList.add('col-md-3');
@@ -163,6 +164,12 @@ MultiLanguageField.prototype.renderLanguageTab = function (langCode, active) {
 
     const _anchor = this.renderLanguageLink(langCode, active);
     _li.appendChild(_anchor);
+
+    _anchor.addEventListener('click', () => {
+        setTimeout(() => {
+            this._multilineContent.querySelector('div.tab-pane > textarea[data-lang=' + langCode + ']').focus();
+        }, 0);
+    });
 
     return _li;
 };
@@ -227,6 +234,10 @@ MultiLanguageField.prototype.renderModalBody = function () {
                 me._modalInputs.appendChild(_row);
                 me.hideModalLanguagePlaceholder();
                 me.updateLanguageManagementOptions();
+
+                setTimeout(() => {
+                    _row.querySelector('input[type=text]').focus();
+                }, 0);
             });
             _language.appendChild(_link);
             me._addLanguageOptions.appendChild(_language);
@@ -279,15 +290,15 @@ MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
 
 MultiLanguageField.prototype.renderLanguageLink = function (langCode, active) {
     const _anchor = document.createElement('a');
-    if (this.multiline) {
-        _anchor.classList.add('nav-link');
-    }
-    _anchor.classList.add('mls-language-label');
+    _anchor.classList.add('mls-language-label', 'text-decoration-none');
     if (active) {
         _anchor.classList.add('active');
     }
     _anchor.href = '#' + this.fieldName + '-' + langCode;
-    _anchor.dataset.toggle = 'tab';
+    if (this.multiline) {
+        _anchor.classList.add('nav-link');
+        _anchor.dataset.bsToggle = 'tab';
+    }
 
     const _flag = this.renderFlag(langCode);
     _anchor.appendChild(_flag);
@@ -333,6 +344,20 @@ MultiLanguageField.prototype.addLanguage = function (langCode, active) {
 MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     const me = this;
 
+    // this method simulates a link on the selected language to propagate the correct state to the tab bar, followed by
+    // a simulated click on the dropdown toggle to close the dropdown
+    function simulateClickOnSelectedLanguage() {
+        me.__autonomousClick = true;
+
+        const _selectedLanguageEntry = me._wrapper.querySelector("li.language-selected a");
+        if (_selectedLanguageEntry) {
+            _selectedLanguageEntry.click();
+        }
+        me._wrapper.querySelector('.dropdown-toggle').click();
+
+        delete me.__autonomousClick;
+    }
+
     this.forEachValidLanguage(function (langCode) {
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
             me.addLanguage(langCode, false)
@@ -343,6 +368,10 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     if (me.shouldRenderDropdownInsteadOfTabs()) {
         me.removeAllLanguageTabs();
         me.showLanguageToggleButton();
+
+        // artificially click on the fallback language to propagate the correct state to the tab bar
+        me.markLanguageItemAsSelected(me.FALLBACK_CODE);
+        simulateClickOnSelectedLanguage();
     } else {
         // Set the current tab active
         this._multilineHeader.querySelector('li.mls-language-tab .nav-link').classList.add('active');
@@ -369,12 +398,20 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 me._multilineContent.querySelectorAll('div.tab-pane>textarea').forEach(function (_textarea) {
                     if (_textarea.dataset.lang !== langCode) {
                         _textarea.parentElement.classList.remove('active');
+                    } else {
+                        setTimeout(() => {
+                            _textarea.focus();
+                        }, 0);
                     }
                 });
 
                 if (me.shouldRenderDropdownInsteadOfTabs()) {
                     me.removeAllLanguageTabs();
                     me.showLanguageToggleButton();
+
+                    // artificially click on the new language to propagate the correct state to the tab bar
+                    me.markLanguageItemAsSelected(langCode);
+                    simulateClickOnSelectedLanguage();
                 }
 
                 me.updateLanguageSwitcherLabel(langCode);
@@ -388,32 +425,37 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
 
 MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
     const _link = document.createElement('a');
-    _link.classList.add('dropdown-item');
+    _link.classList.add('text-decoration-none', 'dropdown-item');
     _link.href = '#' + this.fieldName + '-' + langCode;
-    _link.dataset.toggle = 'tab';
-
-    const _languageLi = document.createElement('li');
+    _link.dataset.bsToggle = 'tab';
 
     const _flag = this.renderFlag(langCode);
-    _languageLi.appendChild(_flag);
+    _link.appendChild(_flag);
     const _text = document.createTextNode(this.getLanguageName(langCode));
-    _languageLi.appendChild(_text);
+    _link.appendChild(_text);
 
+    const _languageLi = document.createElement('li');
     _languageLi.dataset.lang = langCode;
-    _link.appendChild(_languageLi);
+    _languageLi.appendChild(_link);
 
-    const me = this;
-    _link.addEventListener('click', function () {
-        me.updateLanguageSwitcherLabel(langCode);
+    _link.addEventListener('click', () => {
+        this.updateLanguageSwitcherLabel(langCode);
         // Mark the element as selected in the list of language entries
-        me.markLanguageItemAsSelected(langCode);
+        this.markLanguageItemAsSelected(langCode);
+
+        if (!this.__autonomousClick) {
+            setTimeout(() => {
+                this._multilineContent.querySelector('div.tab-pane > textarea[data-lang=' + langCode + ']').focus();
+            }, 0);
+        }
     });
 
-    return _link;
+    return _languageLi;
 }
 
 MultiLanguageField.prototype.buildAddLanguageEntry = function (langCode) {
     const _link = document.createElement('a');
+    _link.classList.add('text-decoration-none');
 
     const _flag = this.renderFlag(langCode);
     _link.appendChild(_flag);
@@ -442,7 +484,7 @@ MultiLanguageField.prototype.updateLanguageSwitcherLabel = function (langCode) {
 
 MultiLanguageField.prototype.markLanguageItemAsSelected = function (langCode) {
     // add custom selection class 'language-selected' as Bootstrap does not allow multiple active elements in the same nav
-    this._toggleLanguageOptions.querySelectorAll('ul>li.cursor-pointer').forEach(function (_li) {
+    this._toggleLanguageOptions.querySelectorAll('ul>li').forEach(function (_li) {
         if (_li.dataset.lang === langCode) {
             _li.classList.add('language-selected');
         } else {

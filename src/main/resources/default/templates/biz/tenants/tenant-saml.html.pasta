@@ -19,8 +19,11 @@
                          name="tenantData_samlIssuerName" value="@tenant.getTenantData().getSamlIssuerName()"
                          labelKey="TenantData.samlIssuerName" helpKey="TenantData.samlIssuerName.help"/>
             <t:textfield class="col-12"
-                         name="tenantData_samlFingerprint" value="@tenant.getTenantData().getSamlFingerprint()"
-                         labelKey="TenantData.samlFingerprint" helpKey="TenantData.samlFingerprint.help"/>
+                         name="tenantData_samlFingerprint"
+                         value="@tenant.getTenantData().getSamlFingerprint()"
+                         pattern="^[a-zA-Z0-9,]*$"
+                         labelKey="TenantData.samlFingerprint"
+                         helpKey="TenantData.samlFingerprint.help"/>
         </div>
         <t:formBar backButton="false"/>
     </t:editForm>

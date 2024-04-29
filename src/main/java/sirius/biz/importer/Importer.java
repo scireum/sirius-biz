@@ -81,9 +81,10 @@ public class Importer implements Closeable {
         try {
             E entity = type.getConstructor().newInstance();
             return load(type, data, entity);
-        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot create an instance of: %s", type.getName())
                             .handle();
         }

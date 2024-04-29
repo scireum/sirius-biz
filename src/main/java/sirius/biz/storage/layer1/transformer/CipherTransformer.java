@@ -66,8 +66,8 @@ public class CipherTransformer implements ByteBlockTransformer {
             } else {
                 return Optional.empty();
             }
-        } catch (IllegalBlockSizeException | BadPaddingException e) {
-            throw new IOException("Invalid cipher data", e);
+        } catch (IllegalBlockSizeException | BadPaddingException exception) {
+            throw new IOException("Invalid cipher data", exception);
         }
     }
 }

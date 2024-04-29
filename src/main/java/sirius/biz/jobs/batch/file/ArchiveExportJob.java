@@ -101,9 +101,8 @@ public abstract class ArchiveExportJob extends FileExportJob {
                 digester.accept(entry.getName(), CloseShieldInputStream.wrap(zipInputStream));
                 entry = zipInputStream.getNextEntry();
             }
-        } catch (IOException e) {
-            process.handle(e);
+        } catch (IOException exception) {
+            process.handle(exception);
         }
     }
 }
-

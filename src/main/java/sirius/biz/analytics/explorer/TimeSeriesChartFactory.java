@@ -30,7 +30,7 @@ import java.util.function.Consumer;
  */
 public abstract class TimeSeriesChartFactory<O> extends ChartFactory<O> {
 
-    private static final String[] ICONS = {"fas fa-chart-line", "fas fa-chart-area", "fas fa-chart-bar"};
+    private static final String[] ICONS = {"fa-solid fa-chart-line", "fa-solid fa-chart-area", "fa-solid fa-chart-bar"};
     private static final String OUTPUT_TYPE = "type";
     private static final String OUTPUT_LABELS = "labels";
     private static final String OUTPUT_RANGE = "range";

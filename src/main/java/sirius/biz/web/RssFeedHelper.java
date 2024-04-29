@@ -33,8 +33,8 @@ public class RssFeedHelper {
         try {
             Outcall outcall = new Outcall(new URI(feedUrl));
             return new SyndFeedInput().build(new StringReader(outcall.getData()));
-        } catch (Exception e) {
-            Exceptions.handle(Log.APPLICATION, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.APPLICATION, exception);
             return new SyndFeedImpl();
         }
     }

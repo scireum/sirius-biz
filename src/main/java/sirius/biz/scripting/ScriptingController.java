@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.ide;
+package sirius.biz.scripting;
 
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
@@ -77,7 +77,7 @@ public class ScriptingController extends BizController {
         nodes.addFirst(Tuple.create("Current Machine", Scripting.LOCAL_NODE));
         nodes.add(Tuple.create("All Machines", Scripting.ALL_NODES));
 
-        webContext.respondWith().template("/templates/biz/ide/scripting.html.pasta", nodes);
+        webContext.respondWith().template("/templates/biz/scripting/scripting.html.pasta", nodes);
     }
 
     /**
@@ -132,8 +132,8 @@ public class ScriptingController extends BizController {
                 output.property(RESPONSE_JOB_MESSAGE,
                                 NLS.fmtr("ScriptingController.jobMessage").set(RESPONSE_JOB, jobNumber).format());
             }
-        } catch (CompileException e) {
-            throw Exceptions.createHandled().withDirectMessage(e.getMessage()).handle();
+        } catch (CompileException exception) {
+            throw Exceptions.createHandled().withDirectMessage(exception.getMessage()).handle();
         }
     }
 

@@ -11,7 +11,7 @@
         <t:pageHeader titleKey="DatabaseController.sql">
             <i:block name="actions">
                 <a id="exportBtn" class="btn btn-link d-none cursor-pointer" onclick="exportData()">
-                    <i class="fa fa-save"></i>
+                    <i class="fa-solid fa-save"></i>
                     <span class="d-none d-lg-inline">@i18n("DatabaseController.export")</span>
                 </a>
             </i:block>
@@ -28,8 +28,8 @@
                                 fieldClass="primary-autofocus-js"
                                 rows="1"
                                 placeholder="@i18n('NLS.searchkey')"/>
-                    <a class="btn btn-outline-secondary ml-1" onclick="execute()">
-                        <i class="fa fa-search"></i>
+                    <a class="btn btn-outline-secondary ms-1" onclick="execute()">
+                        <i class="fa-solid fa-search"></i>
                     </a>
                 </div>
                 <t:singleSelect name="database" id="db" class="col-12 col-md-2">
@@ -75,7 +75,7 @@
             _exportBtn.classList.add("d-none");
             _exportBtn.classList.remove("d-inline");
             _info.innerHTML = ('');
-            _rows.innerHTML = '<tr><td class="align-center"><i class="fa fa-spin fa-spinner"></i></td></tr>';
+            _rows.innerHTML = '<tr><td class="align-center"><i class="fa-solid fa-spin fa-spinner"></i></td></tr>';
             sirius.postJSON('/system/sql/api/execute',
                 {
                     query: document.getElementById("query").value,

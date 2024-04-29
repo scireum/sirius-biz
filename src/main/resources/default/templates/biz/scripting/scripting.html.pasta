@@ -22,10 +22,10 @@
     <div class="bt-gray mt-4 pt-3 mb-4">
         <div class="row">
             <div class="col-12 d-lg-none mb-2">
-                <a class="btn btn-primary btn-block" onclick="executeScript()"><i class="fa fa-play"></i> Execute</a>
+                <a class="btn btn-primary btn-block" onclick="executeScript()"><i class="fa-solid fa-play"></i> Execute</a>
             </div>
             <div class="col-lg-8 d-none d-lg-inline">
-                <a class="btn btn-primary" onclick="executeScript()"><i class="fa fa-play"></i> Execute</a>
+                <a class="btn btn-primary" onclick="executeScript()"><i class="fa-solid fa-play"></i> Execute</a>
             </div>
             <t:singleSelect class="col-12 col-lg-4"
                             id="node"
@@ -39,7 +39,7 @@
     </div>
 
     <t:heading label="Transcript"/>
-    <div id="transcript" style="height: 400px" class="mb-4 p-2 text-white bg-dark text-monospace whitespace-pre-wrap overflow-auto"></div>
+    <div id="transcript" style="height: 400px" class="mb-4 p-2 text-white bg-dark font-monospace whitespace-pre-wrap overflow-auto"></div>
 
     <script type="text/javascript">
         let lastCheckedScript = '';

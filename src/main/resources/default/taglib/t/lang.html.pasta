@@ -4,8 +4,8 @@
 
 <i:local name="body" value="@renderToString('body')" />
 <span class="d-inline-flex flex-row overflow-hidden align-items-center @class"
-    @if (short || isFilled(body)) { data-toggle="tooltip" title="@part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)" }>
-    <t:langFlag lang="@lang" class="pr-1" />
+    @if (short || isFilled(body)) { data-bs-toggle="tooltip" title="@part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)" }>
+    <t:langFlag lang="@lang" class="pe-1" />
     <span>
         <i:if test="isFilled(body)">
             <i:raw>@body</i:raw>

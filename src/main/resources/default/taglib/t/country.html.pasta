@@ -3,8 +3,8 @@
 
 <i:local name="body" value="@renderToString('body')" />
 <span class="d-inline-flex flex-row overflow-hidden align-items-center"
-      @if (short || isFilled(body)) { data-toggle="tooltip" title="@part(sirius.biz.util.Countries.class).all().resolveName(country).orElse(country)" }>
-    <t:countryFlag country="@country" class="pr-1" />
+      @if (short || isFilled(body)) { data-bs-toggle="tooltip" title="@part(sirius.biz.util.Countries.class).all().resolveName(country).orElse(country)" }>
+    <t:countryFlag country="@country" class="pe-1" />
     <span>
         <i:if test="isFilled(body)">
             <i:raw>@body</i:raw>

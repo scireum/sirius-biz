@@ -1,8 +1,6 @@
 /**
  * Inits the url upload popover.
  *
- * Uses jQuery to init bootstraps popover.
- *
  * @param _triggerElement The element (e.g. Button) that triggers the popover to enter an URL
  * @param _uploadContainer The container the _triggerElement and other components belongs to
  * @param _resetButton The button that resets the upload field
@@ -12,16 +10,19 @@
 function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _fileNameContainer, i18n, updateCallback) {
     const body = buildBody(_triggerElement, _uploadContainer, _resetButton);
     const container = buildContainer(_triggerElement.parentElement);
-    $(_triggerElement).popover({
-        html: true,
-        trigger: 'manual',
-        content: body._container,
-        container: container,
-        placement: 'top'
-    });
 
-    _triggerElement.addEventListener('click', function() {
-        $(_triggerElement).popover('toggle');
+    if (!_triggerElement.popoverElement) {
+        _triggerElement.popoverElement = new bootstrap.Popover(_triggerElement, {
+            html: true,
+            trigger: 'manual',
+            content: body._container,
+            container: container,
+            placement: 'top'
+        });
+    }
+
+    _triggerElement.addEventListener('click', () => {
+        _triggerElement.popoverElement.toggle();
     });
 
     _resetButton.addEventListener('click', function() {
@@ -47,6 +48,7 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
 
     function buildInputFormGroupCol(body) {
         body._inputLabel = document.createElement('label');
+        body._inputLabel.classList.add('form-label');
         body._inputLabel.innerHTML = i18n.label;
 
         body._inputField = document.createElement('input');
@@ -56,6 +58,7 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
 
         body._formGroup = document.createElement('div');
         body._formGroup.classList.add('form-group');
+        body._formGroup.classList.add('mb-3');
         body._formGroup.append(body._inputLabel, body._inputField);
 
         body._inputCol = document.createElement('div');
@@ -65,7 +68,7 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
 
     function buildOkButtonCol(body) {
         body._buttonOk = document.createElement('button');
-        body._buttonOk.classList.add('btn', 'btn-block', 'btn-primary', 'btn-apply');
+        body._buttonOk.classList.add('btn', 'btn-primary', 'w-100',);
         body._buttonOk.innerHTML = i18n.ok + ' <i class="fa-solid fa-check"></i>';
         body._buttonOk.addEventListener('click', function (event) {
             event.preventDefault();
@@ -79,10 +82,10 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
 
     function buildCancelButtonCol(body) {
         body._buttonCancel = document.createElement('div');
-        body._buttonCancel.classList.add('btn', 'btn-block', 'btn-close', 'btn-outline-secondary');
+        body._buttonCancel.classList.add('btn', 'btn-outline-secondary', 'w-100');
         body._buttonCancel.innerHTML = i18n.cancel + ' <i class="fa-solid fa-close"></i>';
         body._buttonCancel.addEventListener('click', function () {
-            $(_triggerElement).popover('toggle');
+            _triggerElement.popoverElement.toggle();
         });
         body._rightCol = document.createElement('div');
         body._rightCol.classList.add('col', 'col-12', 'col-md-6');
@@ -111,7 +114,7 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
             _resetButton.classList.remove('d-none');
             body._errorCol.innerHTML = '';
             _fileNameContainer.innerHTML = '<a href="' + url + '">' + fetchFileName(url) + ' <i class="fa-regular fa-arrow-up-right-from-square"></i></a>';
-            $(_triggerElement).popover('hide');
+            _triggerElement.popoverElement.hide();
             if (typeof updateCallback === 'function') {
                 updateCallback(url);
             }
@@ -150,7 +153,6 @@ function initUrlUploadPopover(_triggerElement, _uploadContainer, _resetButton, _
         _msg.querySelector('.msgContent').textContent = message;
         body._errorCol.innerHTML = '';
         body._errorCol.appendChild(_msg);
-        $(_triggerElement).popover('update');
+        _triggerElement.popoverElement.update();
     }
 }
-

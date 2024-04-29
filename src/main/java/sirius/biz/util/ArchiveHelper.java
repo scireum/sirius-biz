@@ -79,8 +79,10 @@ public class ArchiveHelper {
                                Predicate<ExtractionProgress> progressAndStopProvider) throws IOException {
         try {
             initSevenZipLib();
-        } catch (SevenZipNativeInitializationException e) {
-            throw new IOException(NLS.fmtr("XMLImporter.sevenZipInitFailed").set("details", e.getMessage()).format());
+        } catch (SevenZipNativeInitializationException exception) {
+            throw new IOException(NLS.fmtr("XMLImporter.sevenZipInitFailed")
+                                     .set("details", exception.getMessage())
+                                     .format());
         }
 
         try (RandomAccessFile randomAccessFile = new RandomAccessFile(archiveFile, "r")) {

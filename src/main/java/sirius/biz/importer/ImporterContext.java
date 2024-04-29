@@ -11,6 +11,8 @@ package sirius.biz.importer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import sirius.biz.jobs.batch.ImportJob;
+import sirius.biz.scripting.ScriptableEventDispatcher;
+import sirius.biz.scripting.ScriptableEvents;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
@@ -18,6 +20,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -39,6 +42,8 @@ public class ImporterContext {
     private static List<ImportHandlerFactory> factories;
 
     private final Importer importer;
+    private ScriptableEventDispatcher eventDispatcher = ScriptableEvents.NOOP_DISPATCHER;
+
     private BatchContext batchContext;
 
     private final Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
@@ -130,7 +135,7 @@ public class ImporterContext {
     private ImportHelper instantiateHelper(Class<?> aClass) {
         try {
             return (ImportHelper) aClass.getConstructor(ImporterContext.class).newInstance(this);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .withSystemErrorMessage("Cannot find or create the import helper of type: %s", aClass)
                             .handle();
@@ -164,10 +169,10 @@ public class ImporterContext {
     protected void close() throws IOException {
         try {
             commit();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Importer.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("An error occurred while commiting an ImporterContext: %s (%s)")
                       .handle();
         }
@@ -240,5 +245,21 @@ public class ImporterContext {
         }
 
         return batchContext;
+    }
+
+    @Nonnull
+    public ScriptableEventDispatcher getEventDispatcher() {
+        return eventDispatcher;
+    }
+
+    /**
+     * Specifies which event dispatcher to use for this import.
+     *
+     * @param eventDispatcher the event dispatcher to use
+     * @return the context itself for fluent method calls
+     */
+    public ImporterContext withEventDispatcher(@Nonnull ScriptableEventDispatcher eventDispatcher) {
+        this.eventDispatcher = eventDispatcher;
+        return this;
     }
 }

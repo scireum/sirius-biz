@@ -89,7 +89,7 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getIcon() {
-        return "far fa-copy";
+        return "fa-regular fa-copy";
     }
 
     @Override

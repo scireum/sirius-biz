@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -550,28 +551,31 @@ public abstract class ObjectStorageSpace {
         return largeFileExpected && !response.getWebContext().getHeaderValue(HttpHeaderNames.RANGE).isFilled();
     }
 
-    private void handleDeliveryError(Response response, String objectId, Exception exception) {
-        if (exception instanceof ClosedChannelException
-            || exception.getCause() instanceof ClosedChannelException
-            || exception instanceof ConnectionClosedException
-            || exception.getCause() instanceof ConnectionClosedException) {
+    private void handleDeliveryError(Response response, String objectId, Exception error) {
+        if (isExceptionOf(error, ClosedChannelException.class)
+            || isExceptionOf(error, ConnectionClosedException.class)
+            || isExceptionOf(error, SocketException.class)) {
             // If the user unexpectedly closes the connection, we do not need to log an error...
-            Exceptions.ignore(exception);
+            Exceptions.ignore(error);
             return;
         }
         try {
             response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception ex) {
-            Exceptions.ignore(ex);
+        } catch (Exception exception) {
+            Exceptions.ignore(exception);
         }
         throw Exceptions.handle()
-                        .error(exception)
+                        .error(error)
                         .to(StorageUtils.LOG)
                         .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
                                                 objectId,
                                                 name,
                                                 response.getWebContext().getRequestedURI())
                         .handle();
+    }
+
+    private boolean isExceptionOf(Exception exception, Class<? extends Exception> clazz) {
+        return clazz.isInstance(exception) || clazz.isInstance(exception.getCause());
     }
 
     private void deliverLarge(Response response, String objectId) {

@@ -51,10 +51,10 @@ public class UplinkConnectorPool {
         try {
             return (UplinkConnector<C>) fetchPools().computeIfAbsent(config, this::createPool)
                                                     .borrowObject(config.maxWaitMillis);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/Uplinks: Failed to obtain a connection for '%s' - %s (%s)",
                                                     config)
                             .handle();

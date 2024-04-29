@@ -11,17 +11,19 @@
 </i:pragma>
 
 
-<i:local name="engine" value="Injector.context().getPart(sirius.biz.tycho.academy.OnboardingEngine.class)" />
+<i:local name="engine"
+         value="Injector.context().getPart(sirius.biz.tycho.academy.OnboardingEngine.class)" />
 <i:if test="engine != null">
-    <i:local name="track" value="@engine.fetchTrack(user().getUserId(), trackId).orElse(null)"/>
+    <i:local name="track"
+             value="@engine.fetchTrack(user().getUserId(), trackId).orElse(null)"/>
     <i:if test="track != null">
         <a href="@apply('/academy/%s/%s/track/%s', user().getUserId(), engine.computeAccessToken(user().getUserId()), trackId)"
            target="_blank"
-           class="ml-2 btn @if (track.getNumberOfRecommendedVideos() > 0) { btn-info } else { btn-outline-secondary } @class"
-           data-toggle="tooltip"
-           data-placement="top"
+           class="ms-2 btn @if (track.getNumberOfRecommendedVideos() > 0) { btn-info } else { btn-outline-secondary } @class"
+           data-bs-toggle="tooltip"
+           data-bs-placement="top"
            title="@track.getTrackName()">
-            <i class="far fa-play-circle"></i><span class="d-none d-xl-inline pl-2">@label</span>
+            <i class="fa-regular fa-play-circle"></i><span class="d-none d-xl-inline ps-2">@label</span>
         </a>
     </i:if>
 </i:if>

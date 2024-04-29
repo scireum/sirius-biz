@@ -1,0 +1,79 @@
+<i:arg type="sirius.biz.scripting.mongo.MongoCustomScript" name="script"/>
+
+<t:page title="@script.toString()">
+    <i:block name="head">
+        <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
+    </i:block>
+
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/scripting/scripts">@i18n("MongoCustomScript.plural")</a>
+        </li>
+        <li>
+            <a href="/scripting/scripts/@script.getIdAsString()">@script</a>
+        </li>
+    </i:block>
+
+    <i:block name="page-header">
+        <t:pageHeader title="@script.toString()"/>
+    </i:block>
+
+
+    <t:editForm url="@apply('/scripting/scripts/%s', script.getIdAsString())">
+        <input id="scriptField" name="script" value="@script.getScript()" type="hidden"/>
+        <div class="row">
+            <t:textfield class="col-12 col-md-6 required"
+                         name="code"
+                         value="@script.getCode()"
+                         labelKey="MongoCustomScript.code"/>
+            <t:booleanSelect class="col-12 col-md-6"
+                             name="disabled" value="script.isDisabled()"
+                             labelKey="MongoCustomScript.disabled"/>
+        </div>
+
+        <t:heading labelKey="MongoCustomScript.script"/>
+        <div class="d-flex flex-col">
+            <t:codeEditor id="editor" mode="text">@script.getScript()</t:codeEditor>
+        </div>
+
+        <t:formBar/>
+    </t:editForm>
+
+    <script type="text/javascript">
+        let lastCheckedScript = '';
+        let _editor = document.getElementById('editor');
+        let _scriptField = document.getElementById('scriptField');
+
+        sirius.ready(function () {
+            setTimeout(updateState, 1000);
+
+            _editor.aceEditor.getSession().on('change', function () {
+                _scriptField.value = _editor.aceEditor.getSession().getDocument().getValue().trim();
+            });
+        });
+
+        function updateState() {
+            let script = _editor.aceEditor.getSession().getDocument().getValue();
+            if (script !== lastCheckedScript) {
+                lastCheckedScript = script;
+
+                sirius.postJSON('/scripting/api/compile',
+                    {
+                        script: _editor.aceEditor.getSession().getDocument().getValue(),
+                        CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+                    }).then(
+                    function (data) {
+                        if (data.problems != null && data.problems.length > 0) {
+                            _editor.aceEditor.getSession().setAnnotations(data.problems);
+                        } else {
+                            _editor.aceEditor.getSession().setAnnotations([]);
+                        }
+
+                        setTimeout(updateState, 1000);
+                    });
+            } else {
+                setTimeout(updateState, 1000);
+            }
+        }
+    </script>
+</t:page>

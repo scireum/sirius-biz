@@ -20,11 +20,11 @@ public interface ProcessOutputType extends Named {
     /**
      * Renders the given output for the given process.
      *
-     * @param ctx     the request to respond to
+     * @param webContext     the request to respond to
      * @param process the process which contains the output
      * @param output  the output to render
      */
-    void render(WebContext ctx, Process process, ProcessOutput output);
+    void render(WebContext webContext, Process process, ProcessOutput output);
 
     /**
      * Defines the icon to be used in menus and lists when enumerating outputs of this type.

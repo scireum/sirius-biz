@@ -79,7 +79,7 @@
         <t:heading labelKey="UserAccount.roles"/>
         <i:for type="String" var="role" items="controller.getRoles()">
             <div class="form-check">
-                <label>
+                <label class="form-label">
                     <input class="form-check-input"
                            type="checkbox"
                            name="roles"
@@ -88,7 +88,7 @@
                     <span class="form-check-label">
                         @controller.getRoleName(role)
                     </span>
-                    <small class="form-text text-muted">@controller.getRoleDescription(role)</small>
+                    <small class="d-block form-text text-muted">@controller.getRoleDescription(role)</small>
                 </label>
             </div>
         </i:for>

@@ -16,17 +16,17 @@
 
         <script type="text/javascript">
             @raw {
-                $(document).ready(function () {
+                sirius.ready(() => {
                     var chartData = @chartOutput.parseChartData(chart);
                     if (chartData.type === 'line') {
                         lineChart('#chart-@id', chartData.labels, chartData.lines);
                     } else if (chartData.type === 'bar') {
                         barChart('#chart-@id', chartData.labels, chartData.bars);
                     } else if (chartData.type === 'polarArea') {
-                        $('#chart-@id').attr('height', 200);
+                        document.querySelector('#chart-@id').height = 200;
                         polarAreaChart('#chart-@id', chartData.labels, chartData.data);
                     } else if (chartData.type === 'dougnut') {
-                        $('#chart-@id').attr('height', 180);
+                        document.querySelector('#chart-@id').height = 180;
                         doughnutChart('#chart-@id', chartData.labels, chartData.data, {
                             maintainAspectRatio: false
                         });

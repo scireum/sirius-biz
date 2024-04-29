@@ -27,23 +27,23 @@ public class IsenguardFirewall implements Firewall {
     private Isenguard isenguard;
 
     @Override
-    public boolean isIPBlacklisted(WebContext ctx) {
-        return isenguard.isIPBlacklisted(ctx.getRemoteIP().getHostAddress());
+    public boolean isIPBlacklisted(WebContext webContext) {
+        return isenguard.isIPBlacklisted(webContext.getRemoteIP().getHostAddress());
     }
 
     @Override
-    public boolean handleRateLimiting(WebContext ctx, String realm) {
-        String ip = ctx.getRemoteIP().getHostAddress();
+    public boolean handleRateLimiting(WebContext webContext, String realm) {
+        String ip = webContext.getRemoteIP().getHostAddress();
         boolean rateLimitReached = isenguard.isRateLimitReached(ip,
                                                                 realm,
                                                                 Isenguard.USE_LIMIT_FROM_CONFIG,
-                                                                () -> RateLimitingInfo.fromWebContext(ctx, null));
+                                                                () -> RateLimitingInfo.fromWebContext(webContext,
+                                                                                                      null));
         if (rateLimitReached) {
-            ctx.respondWith().error(HttpResponseStatus.TOO_MANY_REQUESTS);
+            webContext.respondWith().error(HttpResponseStatus.TOO_MANY_REQUESTS);
             return true;
         }
 
         return false;
     }
 }
-

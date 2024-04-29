@@ -34,6 +34,7 @@ public class FieldDefinition {
 
     protected String name;
     protected String type;
+    protected String typeUrl;
     protected Supplier<String> label;
     protected boolean hidden;
     protected Set<String> aliases = new HashSet<>();
@@ -213,6 +214,24 @@ public class FieldDefinition {
     }
 
     /**
+     * Helper to create a type description for a field with a value from a LookupTable.
+     *
+     * @return a description to be shown to the user
+     */
+    public static String typeLookupValueProperty() {
+        return NLS.get("FieldDefinition.typeLookupValueProperty");
+    }
+
+    /**
+     * Helper to create a type description for a field with values from a LookupTable.
+     *
+     * @return a description to be shown to the user
+     */
+    public static String typeLookupValuesProperty() {
+        return NLS.get("FieldDefinition.typeLookupValuesProperty");
+    }
+
+    /**
      * Helper to create a type description for a field with an unknown type.
      *
      * @return a description to be shown to the user
@@ -240,6 +259,17 @@ public class FieldDefinition {
      */
     public FieldDefinition withLabel(Supplier<String> labelFunction) {
         this.label = labelFunction;
+        return this;
+    }
+
+    /**
+     * Specifies the url to use for this field.
+     *
+     * @param typeUrl the url to link for this type
+     * @return the field itself for fluent method calls
+     */
+    public FieldDefinition withTypeUrl(String typeUrl) {
+        this.typeUrl = typeUrl;
         return this;
     }
 
@@ -407,6 +437,15 @@ public class FieldDefinition {
      */
     public String getType() {
         return type;
+    }
+
+    /**
+     * Returns the url to link for this type.
+     *
+     * @return the url to link for this type
+     */
+    public String getTypeUrl() {
+        return typeUrl;
     }
 
     /**

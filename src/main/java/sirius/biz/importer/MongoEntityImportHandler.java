@@ -47,7 +47,17 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E load(Context data, E entity) {
-        return load(data, entity, mappingsToLoad);
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher().handleEvent(new BeforeLoadEvent<E>(entity, data, context));
+        }
+
+        E result = load(data, entity, mappingsToLoad);
+
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher().handleEvent(new AfterLoadEvent<E>(result, data, context));
+        }
+
+        return result;
     }
 
     @Override
@@ -71,8 +81,14 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         // via @Exportable
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public final Optional<E> tryFind(Context data) {
+        if (context.getEventDispatcher().isActive()) {
+            context.getEventDispatcher()
+                   .handleEvent(new BeforeFindEvent<E>((Class<E>) descriptor.getType(), data, context));
+        }
+
         return findByExample(data);
     }
 
@@ -116,6 +132,10 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     @Override
     public E createOrUpdateNow(E entity) {
         try {
+            if (context.getEventDispatcher().isActive()) {
+                context.getEventDispatcher().handleEvent(new BeforeCreateOrUpdateEvent<E>(entity, context));
+            }
+
             enforcePreSaveConstraints(entity);
 
             // Invoke the beforeSave checks so that the change-detection below works for

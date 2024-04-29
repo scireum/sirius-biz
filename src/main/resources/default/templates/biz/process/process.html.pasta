@@ -16,7 +16,7 @@
             <i:block name="title">
                 <span class="d-flex flex-row align-items-center">
                     <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
-                        <span class="pr-2 text-black-75 text-small"><i class="fa fa-sync fa-spin"></i></span>
+                        <span class="pe-2 text-black-75 text-small"><i class="fa-solid fa-sync fa-spin"></i></span>
                     </i:if>
                     <span class="text-truncate">@process.getTitle()</span>
                 </span>
@@ -27,22 +27,22 @@
                        class="btn btn-outline-primary d-none"
                        href="#">
                         <span class="d-none d-lg-inline-block text-nowrap">
-                            <i class="far fa-check-square"></i>
+                            <i class="fa-regular fa-check-square"></i>
                             @i18n("Process.autoRefresh")
                         </span>
                         <span class="d-lg-none">
-                            <i class="fas fa-retweet"></i>
+                            <i class="fa-solid fa-retweet"></i>
                         </span>
                     </a>
                     <a id="enableAutoRefresh"
                        class="btn btn-outline-secondary d-none"
                        href="#">
                         <span class="d-none d-lg-inline-block text-nowrap">
-                            <i class="far fa-square"></i>
+                            <i class="fa-regular fa-square"></i>
                             @i18n("Process.autoRefresh")
                         </span>
                         <span class="d-lg-none">
-                            <i class="fas fa-retweet"></i>
+                            <i class="fa-solid fa-retweet"></i>
                         </span>
                     </a>
                 </i:if>
@@ -78,7 +78,7 @@
             <i:if test="process.isErrorneous()">
                 <t:tag color="red">@i18n("Process.errorneous")</t:tag>
             </i:if>
-            <t:iconInlineInfo icon="fa fa-user">
+            <t:iconInlineInfo icon="fa-solid fa-user">
                 <t:smartValue type="user-account" payload="@process.getUserId()" label="@process.getUserName()"/>
                 <i:if test="isFilled(process.getTenantId()) && user().getTenantId() != process.getTenantId()">
                     (
@@ -87,11 +87,11 @@
                 </i:if>
             </t:iconInlineInfo>
             <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
-                <t:iconInlineInfo icon="fa fa-wave-square">
+                <t:iconInlineInfo icon="fa-solid fa-wave-square">
                     <t:smartFormatTemporal date="process.getStarted()"/>
                 </t:iconInlineInfo>
                 <i:else>
-                    <t:iconInlineInfo icon="fa fa-clock">
+                    <t:iconInlineInfo icon="fa-solid fa-clock">
                         <div class="cycle-js link"
                              data-cycle="@process.getStartedAsString() - @process.getCompletedAsString()">
                             @toSpokenDate(process.getStarted())
@@ -99,7 +99,7 @@
                     </t:iconInlineInfo>
                 </i:else>
             </i:if>
-            <t:iconInlineInfo icon="fas fa-stopwatch">@process.getRuntimeAsString()</t:iconInlineInfo>
+            <t:iconInlineInfo icon="fa-solid fa-stopwatch">@process.getRuntimeAsString()</t:iconInlineInfo>
         </t:pageHeader>
     </i:block>
 
@@ -119,7 +119,7 @@
 
             <i:if test="@process.hasVisibleOutputs()">
                 <t:navbox labelKey="Process.outputs">
-                    <t:navboxLink icon="fa fa-bars" labelKey="ProcessLog.plural"
+                    <t:navboxLink icon="fa-solid fa-bars" labelKey="ProcessLog.plural"
                                   url="@apply('/ps/%s', process.getId())"
                                   active="page == 'logs'"/>
 
@@ -140,7 +140,7 @@
 
             <t:navbox labelKey="Process.externalLinks">
                 <i:for type="sirius.biz.process.ProcessLink" var="link" items="process.getLinks()">
-                    <t:navboxLink icon="fa fa-external-link-alt" url="@link.getUri()" label="@link.getLabel()"/>
+                    <t:navboxLink icon="fa-solid fa-external-link-alt" url="@link.getUri()" label="@link.getLabel()"/>
                 </i:for>
             </t:navbox>
 
@@ -148,7 +148,7 @@
                 <i:for type="sirius.biz.storage.layer2.Blob" var="file" items="process.getFiles().findAttachedBlobs()">
                     <i:local name="url" value="file.url().enableLargeFileDetection().asDownload().buildURL()"/>
                     <i:if test="url.isPresent()">
-                        <t:navboxLink icon="fa fa-file" url="@url.get()">
+                        <t:navboxLink icon="fa-solid fa-file" url="@url.get()">
                             @file.getFilename()
                             <span class="text-small text-muted">(@formatSize(file.getSize()))</span>
                         </t:navboxLink>
@@ -164,7 +164,7 @@
 
         <i:if test="isFilled(process.getStateMessage())">
             <t:helpbox>
-                <i class="fa fa-info-circle"></i> <b>@i18n("Process.stateMessage"):</b>
+                <i class="fa-solid fa-info-circle"></i> <b>@i18n("Process.stateMessage"):</b>
                 @process.getStateMessage()
             </t:helpbox>
         </i:if>

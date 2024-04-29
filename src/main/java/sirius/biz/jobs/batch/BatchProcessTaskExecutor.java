@@ -64,8 +64,8 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
         process.log(ProcessLog.info().withNLSKey("BatchProcessTaskExecutor.started"));
         try {
             jobs.findFactory(factoryId, BatchProcessJobFactory.class).executeTask(process);
-        } catch (Exception e) {
-            process.handle(e);
+        } catch (Exception exception) {
+            process.handle(exception);
         } finally {
             if (process.isErroneous()) {
                 process.log(ProcessLog.warn().withNLSKey("BatchProcessTaskExecutor.completedButFailed"));
@@ -80,8 +80,8 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
         Watch watch = Watch.start();
         try {
             jobs.findFactory(factoryId, BatchProcessJobFactory.class).executeTask(process);
-        } catch (Exception e) {
-            process.handle(e);
+        } catch (Exception exception) {
+            process.handle(exception);
             process.log(ProcessLog.warn().withNLSKey("BatchProcessTaskExecutor.completedButFailed"));
             process.markCompleted((int) watch.elapsed(TimeUnit.SECONDS, false));
         }

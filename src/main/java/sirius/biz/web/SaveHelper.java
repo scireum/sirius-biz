@@ -28,7 +28,7 @@ import java.util.function.UnaryOperator;
 public class SaveHelper {
 
     private final BizController bizController;
-    private final WebContext ctx;
+    private final WebContext webContext;
     private Consumer<Boolean> preSaveHandler;
     private Consumer<Boolean> postSaveHandler;
     private UnaryOperator<Boolean> skipCreatePredicate;
@@ -40,9 +40,9 @@ public class SaveHelper {
     private boolean acceptUnsafePOST = false;
     private boolean saveMessage = true;
 
-    SaveHelper(BizController bizController, WebContext ctx) {
+    SaveHelper(BizController bizController, WebContext webContext) {
         this.bizController = bizController;
-        this.ctx = ctx;
+        this.webContext = webContext;
     }
 
     /**
@@ -188,18 +188,18 @@ public class SaveHelper {
     @Explain("The method is understandable and readable.")
     public boolean saveEntity(BaseEntity<?> entity) {
         try {
-            if (!((acceptUnsafePOST && ctx.isUnsafePOST()) || ctx.ensureSafePOST())) {
+            if (!((acceptUnsafePOST && webContext.isUnsafePOST()) || webContext.ensureSafePOST())) {
                 return false;
             }
 
             boolean wasNew = entity.isNew();
 
             if (autoload) {
-                bizController.load(ctx, entity);
+                bizController.load(webContext, entity);
             }
 
             if (mappings != null && !mappings.isEmpty()) {
-                bizController.load(ctx, entity, mappings);
+                bizController.load(webContext, entity, mappings);
             }
 
             if (preSaveHandler != null) {
@@ -216,8 +216,8 @@ public class SaveHelper {
             }
 
             if (wasNew && Strings.isFilled(createdURI)) {
-                ctx.respondWith()
-                   .redirectToGet(Formatter.create(createdURI).set("id", entity.getIdAsString()).format());
+                webContext.respondWith()
+                          .redirectToGet(Formatter.create(createdURI).set("id", entity.getIdAsString()).format());
                 return true;
             }
 
@@ -226,8 +226,8 @@ public class SaveHelper {
             }
 
             if (!entity.getMapper().hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI)) {
-                ctx.respondWith()
-                   .redirectToGet(Formatter.create(afterSaveURI).set("id", entity.getIdAsString()).format());
+                webContext.respondWith()
+                          .redirectToGet(Formatter.create(afterSaveURI).set("id", entity.getIdAsString()).format());
                 return true;
             }
         } catch (Exception exception) {

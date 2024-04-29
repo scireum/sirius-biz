@@ -26,7 +26,7 @@
                 <tr>
                     <td>
                         @i18n(apply("Permission.%s", permission))
-                        <small class="form-text text-muted">@i18n(apply("Permission.%s.description", permission))</small>
+                        <small class="d-block form-text text-muted">@i18n(apply("Permission.%s.description", permission))</small>
                     </td>
                     <i:local name="isEnabled" value="packageData.getAdditionalPermissions().contains(permission)"/>
                     <i:local name="isDenied" value="packageData.getRevokedPermissions().contains(permission)"/>

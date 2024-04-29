@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Provides the propery used to handle {@link LookupValues lookup values} in database entities.
+ * Provides the property used to handle {@link LookupValues lookup values} in database entities.
  */
 public class LookupValuesProperty extends StringListProperty {
 
@@ -85,10 +85,10 @@ public class LookupValuesProperty extends StringListProperty {
         Object target = accessPath.apply(entity);
         try {
             return (LookupValues) field.get(target);
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException exception) {
             throw Exceptions.handle()
                             .to(Mixing.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot read property '%s' (from '%s'): %s (%s)",
                                                     getName(),
                                                     getDefinition())

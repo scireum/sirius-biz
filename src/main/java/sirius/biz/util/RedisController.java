@@ -53,12 +53,12 @@ public class RedisController extends BizController {
      * Executes the given Redis query.
      *
      * @param webContext the current request
-     * @param out the JSON response
+     * @param output     the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed( "/system/redis/api/execute")
+    @Routed("/system/redis/api/execute")
     @InternalService
-    public void executeQuery(WebContext webContext, JSONStructuredOutput out) {
+    public void executeQuery(WebContext webContext, JSONStructuredOutput output) {
         Watch watch = Watch.start();
 
         String database = webContext.get("pool").asString(Redis.POOL_SYSTEM);
@@ -71,16 +71,16 @@ public class RedisController extends BizController {
                 db.getClient().sendCommand(() -> SafeEncoder.encode(parser.parseCommand()), parser.getArgArray());
 
                 return db.getClient().getOne();
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 // In case of an invalid query, we do not want to log this into the syslog but
                 // rather just directly output the message to the user....
-                throw Exceptions.createHandled().error(e).withDirectMessage(e.getMessage()).handle();
+                throw Exceptions.createHandled().error(exception).withDirectMessage(exception.getMessage()).handle();
             }
         });
         StringBuilder resultBuilder = new StringBuilder();
         renderResult(result, "", resultBuilder);
-        out.property("result", resultBuilder.toString());
-        out.property("duration", watch.duration());
+        output.property("result", resultBuilder.toString());
+        output.property("duration", watch.duration());
     }
 
     private void renderResult(Object result, String offset, StringBuilder resultBuilder) {

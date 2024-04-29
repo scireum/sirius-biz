@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.ide;
+package sirius.biz.scripting;
 
 import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.commons.RateLimit;

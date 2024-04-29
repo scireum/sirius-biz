@@ -32,7 +32,7 @@
                                  value="@node.getJobs().get(job)"/>
                         <i:if test="jobInfo != null">
                             <div class="mb-4 d-flex flex-row">
-                                <div class="mr-auto">
+                                <div class="me-auto">
                                     <div class="d-flex flex-row">
                                         <t:dot color="@jobInfo.isLocalOverwrite() ? 'red' : 'green'"><b>@node.getNodeName()</b>
                                         </t:dot>
@@ -54,13 +54,13 @@
                                     <i:if test="jobInfo.isLocalOverwrite()">
                                         <a href="/system/cluster/local/enable/@node.getNodeName()/@job"
                                            class="btn btn-outline-primary btn-sm">
-                                            <i class="fa fa-check"></i><span
+                                            <i class="fa-solid fa-check"></i><span
                                                 class="d-none d-xl-inline"> Enable</span>
                                         </a>
                                         <i:else>
                                             <a href="/system/cluster/local/disable/@node.getNodeName()/@job"
                                                class="btn btn-outline-secondary btn-sm">
-                                                <i class="fa fa-power-off"></i><span
+                                                <i class="fa-solid fa-power-off"></i><span
                                                     class="d-none d-xl-inline"> Disable</span>
                                             </a>
                                         </i:else>

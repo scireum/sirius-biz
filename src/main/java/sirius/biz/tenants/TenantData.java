@@ -348,10 +348,10 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Checks if the ip of the request matches the ip range of the tenant.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @return <tt>true</tt> if the ip address matches the range or if non was configured, <tt>false</tt> otherwise
      */
-    public boolean matchesIPRange(WebContext ctx) {
+    public boolean matchesIPRange(WebContext webContext) {
         if (Strings.isEmpty(ipRange)) {
             return true;
         }
@@ -359,14 +359,14 @@ public class TenantData extends Composite implements Journaled {
         if (rangeSet == null) {
             try {
                 rangeSet = IPRange.parseRangeSet(ipRange);
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException exception) {
                 // if an invalid range was configured we can not remove any permission
-                Exceptions.ignore(e);
+                Exceptions.ignore(exception);
                 return true;
             }
         }
 
-        return rangeSet.accepts(ctx.getRemoteIP());
+        return rangeSet.accepts(webContext.getRemoteIP());
     }
 
     /**
@@ -416,10 +416,10 @@ public class TenantData extends Composite implements Journaled {
             if (Strings.isFilled(configString)) {
                 try {
                     config = ConfigFactory.parseString(configString);
-                } catch (Exception e) {
+                } catch (Exception exception) {
                     throw Exceptions.handle()
                                     .to(BizController.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage("Cannot load config of %s (%s): %s (%s)",
                                                             tenantObject,
                                                             tenantObject.getId())

@@ -16,7 +16,6 @@ import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.mixing.query.QueryField;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
@@ -55,24 +54,5 @@ public class SQLCodeListController extends CodeListController<Long, SQLCodeList,
                                     QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE)),
                                     QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE)),
                                     QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION)));
-    }
-
-    @Override
-    protected SQLCodeListEntry findOrCreateEntry(SQLCodeList codeList, String code) {
-        if (Strings.isEmpty(code)) {
-            return new SQLCodeListEntry();
-        }
-
-        SQLCodeListEntry cle = oma.select(SQLCodeListEntry.class)
-                                  .eq(SQLCodeListEntry.CODE_LIST, codeList)
-                                  .eq(SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE), code)
-                                  .queryFirst();
-        if (cle == null) {
-            cle = new SQLCodeListEntry();
-            cle.getCodeList().setValue(codeList);
-            cle.getCodeListEntryData().setCode(code);
-        }
-
-        return cle;
     }
 }
