@@ -35,7 +35,7 @@
                                 icon="fa-solid fa-list"
                                 labelKey="SchedulerEntry.performedExecutions"/>
                         <t:dropdownItem
-                                url="@apply('/jobs/scheduler/execute-entry/%s', entry.getIdAsString())"
+                                url="@apply('/jobs/scheduler/%s/execute', entry.getIdAsString())"
                                 icon="fa-solid fa-play"
                                 labelKey="SchedulerEntry.executeNow"/>
                         <t:dropdownDeleteItem

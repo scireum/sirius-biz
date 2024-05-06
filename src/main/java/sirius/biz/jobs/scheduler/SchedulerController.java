@@ -127,8 +127,8 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
      * @param webContext the current request
      * @param entryId    the id of the entry to display or <tt>new</tt> to create a new one
      */
-    @Permission(PERMISSION_MANAGE_SCHEDULER)
-    @Routed("/jobs/scheduler/execute-entry/:1")
+    @Permission(Jobs.PERMISSION_EXECUTE_JOBS)
+    @Routed("/jobs/scheduler/:1/execute")
     public void executeSchedulerEntry(WebContext webContext, String entryId) {
         J entry = findForTenant(getEntryType(), entryId);
 
