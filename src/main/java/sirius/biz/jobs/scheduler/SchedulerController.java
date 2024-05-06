@@ -93,8 +93,8 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     /**
      * Renders a details page for the given scheduler entry.
      *
-     * @param webContext     the current request
-     * @param entryId the id of the entry to display or <tt>new</tt> to create a new one
+     * @param webContext the current request
+     * @param entryId    the id of the entry to display or <tt>new</tt> to create a new one
      */
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler/entry/:1")
@@ -109,10 +109,11 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
             return;
         }
 
-        boolean requestHandled = prepareSave(webContext).withAfterSaveURI("/jobs/scheduler").withPreSaveHandler(isNew -> {
-            loadUser(webContext, entry);
-            entry.getJobConfigData().loadFromContext(webContext);
-        }).saveEntity(entry);
+        boolean requestHandled =
+                prepareSave(webContext).withAfterSaveURI("/jobs/scheduler").withPreSaveHandler(isNew -> {
+                    loadUser(webContext, entry);
+                    entry.getJobConfigData().loadFromContext(webContext);
+                }).saveEntity(entry);
 
         if (!requestHandled) {
             validate(entry);
@@ -171,7 +172,8 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         UserInfo user = UserContext.get()
                                    .getUserManager()
                                    .findUserByUserId(webContext.get(SchedulerEntry.SCHEDULER_DATA.inner(SchedulerData.USER_ID)
-                                                                                          .toString()).asString());
+                                                                                                 .toString())
+                                                               .asString());
 
         // Ensure that an active and accessible user was selected...
         if (user == null || !Strings.areEqual(UserContext.getCurrentUser().getTenantId(), user.getTenantId())) {
@@ -214,8 +216,8 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     /**
      * Deletes the given scheduler entry.
      *
-     * @param webContext     the curren request
-     * @param entryId the id of the entry to delete
+     * @param webContext the curren request
+     * @param entryId    the id of the entry to delete
      */
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler/entry/:1/delete")
