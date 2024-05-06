@@ -11,19 +11,16 @@ package sirius.biz.jobs.scheduler;
 import sirius.biz.jobs.JobConfigData;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.Jobs;
-import sirius.biz.process.Process;
 import sirius.biz.process.Processes;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
-import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Routed;
@@ -138,18 +135,10 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         }
 
         executeInBelongingProvider(entry);
-
-        webContext.respondWith().redirectToGet("/ps/" + fetchLatestProcess(entry).getIdAsString());
-    }
-
-    private Process fetchLatestProcess(J entry) {
-        ElasticQuery<Process> query = processes.queryProcessesForCurrentUser();
-        query.eqIgnoreNull(Process.REFERENCES, entry.getUniqueName());
-        query.orderDesc(Process.STARTED);
-        return query.first()
-                    .orElseThrow(() -> Exceptions.createHandled()
-                                                 .withNLSKey("SchedulerController.noProcessFound")
-                                                 .handle());
+        String entryProcessesUrl = Strings.apply("/ps?reference=%s&reference-label=%s",
+                                                 entry.getUniqueName(),
+                                                 Strings.urlEncode(entry.toString()));
+        webContext.respondWith().redirectToGet(entryProcessesUrl);
     }
 
     private void executeInBelongingProvider(J entry) {
