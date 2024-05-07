@@ -108,32 +108,32 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
         try {
             LocalDate yesterday = LocalDate.now().minusDays(1);
-            StoredIncident si = null;
+            StoredIncident storedIncident = null;
             if (incident.getLocation() != null) {
-                si = elastic.select(StoredIncident.class)
-                            .eq(StoredIncident.LOCATION, incident.getLocation())
-                            .where(Elastic.FILTERS.gt(StoredIncident.LAST_OCCURRENCE, yesterday))
-                            .queryFirst();
+                storedIncident = elastic.select(StoredIncident.class)
+                                        .eq(StoredIncident.LOCATION, incident.getLocation())
+                                        .where(Elastic.FILTERS.gt(StoredIncident.LAST_OCCURRENCE, yesterday))
+                                        .queryFirst();
             }
 
-            if (si == null) {
-                si = new StoredIncident();
-                si.setLocation(incident.getLocation());
-                si.setFirstOccurrence(LocalDateTime.now());
+            if (storedIncident == null) {
+                storedIncident = new StoredIncident();
+                storedIncident.setLocation(incident.getLocation());
+                storedIncident.setFirstOccurrence(LocalDateTime.now());
             }
 
-            si.setNumberOfOccurrences(si.getNumberOfOccurrences() + 1);
-            si.setNode(CallContext.getNodeName());
-            for (Tuple<String, String> t : incident.getMDC()) {
-                si.getMdc().put(t.getFirst(), t.getSecond());
+            storedIncident.setNumberOfOccurrences(storedIncident.getNumberOfOccurrences() + 1);
+            storedIncident.setNode(CallContext.getNodeName());
+            for (Tuple<String, String> tuple : incident.getMDC()) {
+                storedIncident.getMdc().put(tuple.getFirst(), tuple.getSecond());
             }
-            si.setUser(UserContext.getCurrentUser().getProtocolUsername());
-            si.setMessage(Strings.limit(incident.getException().getMessage(), maxMessageLength, true));
-            si.setStack(NLS.toUserString(incident.getException()));
-            si.setCategory(incident.getCategory());
-            si.setLastOccurrence(LocalDateTime.now());
+            storedIncident.setUser(UserContext.getCurrentUser().getProtocolUsername());
+            storedIncident.setMessage(Strings.limit(incident.getException().getMessage(), maxMessageLength, true));
+            storedIncident.setStack(NLS.toUserString(incident.getException()));
+            storedIncident.setCategory(incident.getCategory());
+            storedIncident.setLastOccurrence(LocalDateTime.now());
 
-            elastic.update(si);
+            elastic.update(storedIncident);
         } catch (Exception exception) {
             Elastic.LOG.SEVERE(exception);
             disableForOneMinute();
