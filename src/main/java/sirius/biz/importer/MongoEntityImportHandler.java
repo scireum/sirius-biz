@@ -58,7 +58,11 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         E result = load(data, entity, mappingsToLoad);
 
         if (context.getEventDispatcher().isActive()) {
-            context.getEventDispatcher().handleEvent(new AfterLoadEvent<E>(result, data, context));
+            AfterLoadEvent<E> afterLoadEvent = new AfterLoadEvent<>(result, data, context);
+            context.getEventDispatcher().handleEvent(afterLoadEvent);
+            if (afterLoadEvent.isAborted()) {
+                return null;
+            }
         }
 
         return result;

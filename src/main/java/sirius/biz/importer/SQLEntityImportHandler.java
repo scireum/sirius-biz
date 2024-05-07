@@ -161,7 +161,11 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         E result = load(data, entity, mappingsToLoad);
 
         if (context.getEventDispatcher().isActive()) {
-            context.getEventDispatcher().handleEvent(new AfterLoadEvent<E>(result, data, context));
+            AfterLoadEvent<E> afterLoadEvent = new AfterLoadEvent<>(result, data, context);
+            context.getEventDispatcher().handleEvent(afterLoadEvent);
+            if (afterLoadEvent.isAborted()) {
+                return null;
+            }
         }
 
         return result;
