@@ -167,8 +167,11 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     @Override
     public Optional<E> tryFind(Context data) {
         if (context.getEventDispatcher().isActive()) {
-            context.getEventDispatcher()
-                   .handleEvent(new BeforeFindEvent<E>((Class<E>) descriptor.getType(), data, context));
+            BeforeFindEvent<E> beforeFindEvent = new BeforeFindEvent<>((Class<E>) descriptor.getType(), data, context);
+            context.getEventDispatcher().handleEvent(beforeFindEvent);
+            if (beforeFindEvent.isAborted()) {
+                return Optional.empty();
+            }
         }
 
         E example = loadForFind(data);
