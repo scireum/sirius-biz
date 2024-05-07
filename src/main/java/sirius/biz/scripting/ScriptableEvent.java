@@ -28,6 +28,13 @@ public abstract class ScriptableEvent {
     protected boolean failed;
 
     /**
+     * Stores if an event handler marked the event as aborted.
+     * <p>
+     * This can be parsed by event callers to evaluate if an operation should be stopped.
+     */
+    private boolean aborted;
+
+    /**
      * Stores the exception which occurred while invoking an event handler.
      */
     protected HandledException error;
@@ -50,6 +57,24 @@ public abstract class ScriptableEvent {
      */
     public boolean isFailed() {
         return failed;
+    }
+
+    /**
+     * Determines if the event was marked as aborted.
+     * <p>
+     * This can be parsed by event callers to evaluate if an operation should be stopped.
+     *
+     * @return <tt>true</tt> if the event is marked as aborted, <tt>false</tt> otherwise
+     */
+    public boolean isAborted() {
+        return aborted;
+    }
+
+    /**
+     * Marks the event as aborted.
+     */
+    public void abort() {
+        this.aborted = true;
     }
 
     /**
