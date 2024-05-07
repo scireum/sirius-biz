@@ -144,7 +144,12 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     public E createOrUpdateNow(E entity) {
         try {
             if (context.getEventDispatcher().isActive()) {
-                context.getEventDispatcher().handleEvent(new BeforeCreateOrUpdateEvent<E>(entity, context));
+                BeforeCreateOrUpdateEvent<E> beforeCreateOrUpdateEvent =
+                        new BeforeCreateOrUpdateEvent<>(entity, context);
+                context.getEventDispatcher().handleEvent(beforeCreateOrUpdateEvent);
+                if (beforeCreateOrUpdateEvent.isAborted()) {
+                    return null;
+                }
             }
 
             enforcePreSaveConstraints(entity);
