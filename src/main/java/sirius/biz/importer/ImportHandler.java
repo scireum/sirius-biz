@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  * available to the dependency injection framework using {@link sirius.kernel.di.std.Register}.
  * <p>
  * Which import handle is actually used for a type is determined by {@link ImporterContext#findHandler(Class)}. As the
- * factories are priorized, an existing handler can be overwritten by providing a customization which supplies a
+ * factories are prioritized, an existing handler can be overwritten by providing a customization which supplies a
  * factory with a lower {@link ImportHandlerFactory#getPriority() priority} for the same entity type.
  * <p>
  * An example which provides basic support for all sql based entities can be found in {@link SQLEntityImportHandler}.
@@ -161,7 +161,7 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     /**
      * Permits to enforce some constraints before persisting an entity.
      * <p>
-     * This is autoamtically invoked by {@link #createOrUpdateNow(BaseEntity)} and all other save methods. It is however
+     * This is automatically invoked by {@link #createOrUpdateNow(BaseEntity)} and other save methods. It is however
      * made public as some jobs only verify the consistency of data without persisting anything.
      * <p>
      * This method should only rarely be overwritten as most checks should be either be performed during a load
@@ -191,7 +191,7 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     /**
      * Either persists or updates the given entity - using a batch update if possible.
      * <p>
-     * If the entity doesn't exist yet, it will be immediatelly created. If it doesn exist,
+     * If the entity doesn't exist yet, it will be immediately created. If it doesn't exist,
      * it will be updated in the next batch execution. This can be used to ensure that entities
      * referenced by others are available but also that updates of non-critical fields are efficiently
      * executed as a JDBC batch.
