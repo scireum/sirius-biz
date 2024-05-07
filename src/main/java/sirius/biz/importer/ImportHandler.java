@@ -47,7 +47,8 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      *
      * @param data   used to fill the newly created entity
      * @param entity the entity to be filled
-     * @return a new and not yet persisted entity filled with value from <tt>data</tt>
+     * @return a new and not yet persisted entity filled with value from <tt>data</tt> or <tt>null</tt> if the
+     * operation was aborted by an {@linkplain sirius.biz.scripting.ScriptableEvent event}
      */
     E load(Context data, E entity);
 
@@ -177,7 +178,7 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      * Either persists or updates the given entity.
      *
      * @param entity the entity to update or persist.
-     * @return the updated or persisted entity
+     * @return the updated or persisted entity or <tt>null</tt> if the operation was aborted by an {@linkplain sirius.biz.scripting.ScriptableEvent event}
      */
     E createOrUpdateNow(E entity);
 
