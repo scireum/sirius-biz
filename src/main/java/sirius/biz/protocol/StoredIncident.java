@@ -13,9 +13,7 @@ import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.types.StringMap;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
@@ -25,11 +23,6 @@ import java.time.LocalDateTime;
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
 public class StoredIncident extends SearchableEntity {
-
-    /**
-     * Defines the maximum length of the message.
-     */
-    private static final int MAX_MESSAGE_LENGTH = 16384;
 
     /**
      * Contains the error message.
@@ -100,17 +93,6 @@ public class StoredIncident extends SearchableEntity {
     public static final Mapping USER = Mapping.named("user");
     @SearchContent
     private String user;
-
-    /**
-     * Truncates the message if it exceeds the maximum length.
-     */
-    @BeforeSave
-    protected void truncateMessage() {
-        if (message.length() > MAX_MESSAGE_LENGTH) {
-            message = Strings.limit(message, MAX_MESSAGE_LENGTH, true);
-            message += "\nThe error message was too long and has been truncated.";
-        }
-    }
 
     public String getMessage() {
         return message;
