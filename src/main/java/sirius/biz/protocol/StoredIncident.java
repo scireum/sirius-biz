@@ -29,7 +29,7 @@ public class StoredIncident extends SearchableEntity {
     /**
      * Defines the maximum length of the message.
      */
-    private static final int MAX_MESSAGE_LENGTH = 16384;
+    private static final int MAX_MESSAGE_LENGTH = 16_000;
 
     /**
      * Contains the error message.
