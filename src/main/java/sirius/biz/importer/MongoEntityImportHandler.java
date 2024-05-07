@@ -142,6 +142,10 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E createOrUpdateNow(E entity) {
+        if (entity == null) {
+            return null;
+        }
+
         try {
             if (context.getEventDispatcher().isActive()) {
                 BeforeCreateOrUpdateEvent<E> beforeCreateOrUpdateEvent =

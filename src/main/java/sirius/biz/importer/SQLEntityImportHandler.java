@@ -256,6 +256,10 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return the updated or created entity or, if batch updates are active, the given entity
      */
     protected E createOrUpdate(E entity, boolean batch) {
+        if (entity == null) {
+            return null;
+        }
+
         try {
             if (context.getEventDispatcher().isActive()) {
                 BeforeCreateOrUpdateEvent<E> beforeCreateOrUpdateEvent =
