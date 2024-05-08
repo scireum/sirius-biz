@@ -150,10 +150,15 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
     @Override
     public E load(Context data, E entity) {
+        if (data.containsKey(SCRIPT_ABORTED)) {
+            return null;
+        }
+
         if (context.getEventDispatcher().isActive()) {
             BeforeLoadEvent<E> beforeLoadEvent = new BeforeLoadEvent<>(entity, data, context);
             context.getEventDispatcher().handleEvent(beforeLoadEvent);
             if (beforeLoadEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
                 return null;
             }
         }
@@ -164,6 +169,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
             AfterLoadEvent<E> afterLoadEvent = new AfterLoadEvent<>(result, data, context);
             context.getEventDispatcher().handleEvent(afterLoadEvent);
             if (afterLoadEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
                 return null;
             }
         }
@@ -178,6 +184,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
             BeforeFindEvent<E> beforeFindEvent = new BeforeFindEvent<>((Class<E>) descriptor.getType(), data, context);
             context.getEventDispatcher().handleEvent(beforeFindEvent);
             if (beforeFindEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
                 return Optional.empty();
             }
         }

@@ -83,6 +83,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     private final Extension aliases;
 
     /**
+     * Defines a context key used to skip loading entities aborted via {@linkplain sirius.biz.scripting.ScriptableEvent script}
+     */
+    protected static final String SCRIPT_ABORTED = "_SCRIPT_ABORTED_";
+
+    /**
      * Creates a new instance for the given type of entities and import context.
      *
      * @param clazz   the type of entities being handled
