@@ -9,6 +9,7 @@
 package sirius.biz.scripting;
 
 import sirius.kernel.health.HandledException;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import java.util.Optional;
 
@@ -73,6 +74,7 @@ public abstract class ScriptableEvent {
     /**
      * Marks the event as aborted.
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public void abort() {
         this.aborted = true;
     }
