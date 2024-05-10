@@ -21,7 +21,7 @@ import sirius.pasta.noodle.sandbox.NoodleSandbox;
 public abstract class TypedScriptableEvent<T> extends ScriptableEvent {
 
     /**
-     * The of objects for which this event occurred.
+     * The type of object for which this event occurred.
      *
      * @return the type of object for which this event occurred
      */
