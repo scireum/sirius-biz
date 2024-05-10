@@ -255,10 +255,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
         if (mode == SyncMode.NEW_ONLY && !entity.isNew()) {
             return true;
         }
-        if (mode == SyncMode.UPDATE_ONLY && entity.isNew()) {
-            return true;
-        }
-        return mode != SyncMode.DELETE_EXISTING;
+        return mode == SyncMode.UPDATE_ONLY && entity.isNew();
     }
 
     /**
