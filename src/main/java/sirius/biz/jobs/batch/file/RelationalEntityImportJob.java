@@ -199,11 +199,9 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
             return;
         }
 
-        if (mode == SyncMode.DELETE_EXISTING) {
-            if (!entity.isNew()) {
-                importer.deleteNow(entity);
-                process.addTiming(NLS.get("EntityImportJob.entityDeleted"), watch.elapsedMillis());
-            }
+        if (mode == SyncMode.DELETE_EXISTING && !entity.isNew()) {
+            importer.deleteNow(entity);
+            process.addTiming(NLS.get("EntityImportJob.entityDeleted"), watch.elapsedMillis());
         } else {
             createOrUpdateEntity(entity, context, watch);
         }
