@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.biz.scripting.TypedScriptableEvent;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Entity;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 /**
  * Triggered within {@link ImportHandler#createOrUpdateNow(BaseEntity)} (or the batch equivalent) in order to update an
@@ -33,6 +34,7 @@ public class BeforeCreateOrUpdateEvent<E extends Entity> extends TypedScriptable
         this.entity = entity;
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public E getEntity() {
         return entity;
     }
@@ -54,6 +56,7 @@ public class BeforeCreateOrUpdateEvent<E extends Entity> extends TypedScriptable
         return (Class<E>) entity.getClass();
     }
 
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public ImporterContext getImporterContext() {
         return importerContext;
     }
