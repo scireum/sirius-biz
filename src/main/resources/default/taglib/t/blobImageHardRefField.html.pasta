@@ -9,6 +9,8 @@
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the dropzone."/>
 <i:arg name="btnClass" type="String" default=""
        description="Lists additional CSS classes to apply to the upload button."/>
+<i:arg type="String" name="iconClass" default="fa-5x fa-solid"
+       description="Lists additional CSS classes to apply to the preview icon, most likely the icon style and size."/>
 <i:arg name="defaultPreview" type="String" default="/assets/images/blob_image_fallback.png"/>
 <i:arg name="previewVariant" type="String" default="raw"/>
 <i:arg name="acceptedFiles" type="String" default="image/*,application/pdf,svg"/>
@@ -61,15 +63,28 @@
     let outerDiv = document.querySelector('#___id');
 
     let _img = outerDiv.querySelector('.img-preview img');
+
+    let _previewContainer = outerDiv.querySelector('.img-preview');
+    let fileExtension = sirius.extractFileExtension(_img.src).toLowerCase();
+
     const initialImage = _img.src;
     sirius.ready(function () {
-        if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
-            return;
+        if (isDisplayableImage(fileExtension)) {
+            if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
+                return;
+            }
+            // if we have a variant preview, set up lazyloading...
+            _img.dataset.src = _img.src;
+            _img.src = '___defaultPreview';
+            loadImageLazily(_img);
+        } else {
+            let _previewIconSpan = document.createElement('span');
+            let _previewIcon = document.createElement('i');
+            _previewIconSpan.appendChild(_previewIcon);
+            _previewIcon.className = '___iconClass' + ' ' + determineFileIcon(fileExtension);
+            _img.classList.add('d-none');
+            _previewContainer.appendChild(_previewIconSpan);
         }
-        // if we have a variant preview, set up lazyloading...
-        _img.dataset.src = _img.src;
-        _img.src = '___defaultPreview';
-        loadImageLazily(_img);
     });
 
     Dropzone.options[sirius.camelize('@id')].url = function (files) {
@@ -142,12 +157,24 @@
                 addErrorMessage(message);
             } else if (sirius.isFilled(response.imageUrl)) {
                 _img = outerDiv.querySelector('.img-preview img');
-                if ('___previewVariant' === 'raw') {
-                    _img.src = response.imageUrl;
+
+                fileExtension = sirius.extractFileExtension(response.imageUrl).toLowerCase();
+                if (isDisplayableImage(fileExtension)) {
+                    if ('___previewVariant' === 'raw') {
+                        _img.src = response.imageUrl;
+                    } else {
+                        _img.src = '___defaultPreview';
+                        _img.dataset.src = response.imageUrl;
+                        loadImageLazily(_img);
+                    }
+                    _img.classList.remove('d-none');
                 } else {
-                    _img.src = '___defaultPreview';
-                    _img.dataset.src = response.imageUrl;
-                    loadImageLazily(_img);
+                    let _previewIconSpan = document.createElement('span');
+                    let _previewIcon = document.createElement('i');
+                    _previewIconSpan.appendChild(_previewIcon);
+                    _previewIcon.className = '___iconClass' + ' ' + determineFileIcon(fileExtension);
+                    _previewContainer.appendChild(_previewIconSpan);
+                    _img.classList.add('d-none');
                 }
                 if (sirius.isFilled(response.fileId)) {
                     outerDiv.querySelector('[name=___name]').value = response.fileId;
@@ -162,7 +189,9 @@
     }
     outerDiv.querySelector('.btn-reset-js').onclick = function () {
         outerDiv.querySelector('[name=___name]').value = '';
-        outerDiv.querySelector('.img-preview img').src = '___defaultPreview';
+        _img.src = '___defaultPreview';
+        _img.classList.remove('d-none');
+        _previewContainer.querySelector('span').remove();
         outerDiv.querySelector('.btn-reset-js').classList.add('d-none');
 
         if (_img.src === initialImage) {
@@ -171,4 +200,36 @@
             outerDiv.querySelector('#saveHint').classList.remove('d-none');
         }
     }
+
+    function isDisplayableImage(extension) {
+        return extension === '.jpg' || extension === '.jpeg' || extension === '.png';
+    }
+
+    function determineFileIcon(extension) {
+        if (extension === '.pdf') {
+            return 'fa-file-pdf';
+        }
+
+        if (extension === '.tif' || extension === '.tiff' || extension === '.bmp' || extension === '.svg') {
+            return 'fa-image';
+        }
+
+        if (extension === '.doc' || extension === '.docx') {
+            return 'fa-file-word';
+        }
+
+        if (extension === '.xls' || extension === '.xlsx') {
+            return 'fa-file-excel';
+        }
+
+        if (extension === '.ppt' || extension === '.pps' || extension === '.pptx' || extension === '.ppsx') {
+            return 'fa-file-powerpoint';
+        }
+
+        if (extension === '.zip' || extension === '.rar') {
+            return 'fa-file-zipper';
+        }
+
+        return 'fa-file';
+    };
 </script>
