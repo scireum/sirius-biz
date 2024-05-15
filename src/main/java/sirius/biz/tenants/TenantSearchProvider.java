@@ -83,6 +83,6 @@ public abstract class TenantSearchProvider<I extends Serializable, T extends Bas
 
     @Override
     public int getPriority() {
-        return 110;
+        return 100;
     }
 }

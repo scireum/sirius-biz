@@ -111,6 +111,6 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
 
     @Override
     public int getPriority() {
-        return 100;
+        return 110;
     }
 }
