@@ -14,6 +14,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.pasta.noodle.compiler.CompileException;
+import sirius.pasta.noodle.sandbox.SandboxMode;
 import sirius.pasta.tagliatelle.Tagliatelle;
 import sirius.pasta.tagliatelle.Template;
 import sirius.pasta.tagliatelle.compiler.TemplateCompilationContext;
@@ -79,8 +80,10 @@ public class OpenSearchResult {
      */
     public OpenSearchResult withTemplateFromCode(String template, Object... args) {
         try {
-            TemplateCompilationContext context =
-                    tagliatelle.createInlineCompilationContext("OpenSearchResult", template, null);
+            TemplateCompilationContext context = tagliatelle.createInlineCompilationContext("OpenSearchResult",
+                                                                                            template,
+                                                                                            SandboxMode.DISABLED,
+                                                                                            null);
             TemplateCompiler templateCompiler = new TemplateCompiler(context);
             templateCompiler.compile();
             this.htmlDescription = context.getTemplate().renderToString(args);
