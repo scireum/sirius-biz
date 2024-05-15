@@ -12,7 +12,7 @@
     Symbol <a class="btn btn-info"><i class="fa-solid fa-lightbulb"></i></a> im rechten oberen Bereich.
 
     <i:if test="isFrameworkEnabled('tycho.open-search')">
-        <t:permission permission="tycho.open-search">
+        <t:permission permission="permission-open-search">
             Bitte beachten Sie, dass Sie auch die
             <k:link link="/open-search" icon="fa-solid fa-search" name="Systemweite Suche"/>
             verwenden können, um entsprechende Hilfeseiten zu finden.
