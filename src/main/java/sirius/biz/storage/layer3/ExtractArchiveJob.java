@@ -184,7 +184,15 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
             return;
         }
 
-        String targetPath = getTargetPath(extractedFile, flattenDirectory);
+        String targetPath = computeTargetPath(extractedFile, flattenDirectory);
+        if (Strings.isEmpty(targetPath)) {
+            process.log(ProcessLog.warn()
+                                  .withNLSKey("ExtractArchiveJob.emptyFile")
+                                  .withContext("filename", extractedFile.getFilePath()));
+            process.addTiming(FILE_EMPTY_COUNTER, watch.elapsedMillis());
+            return;
+        }
+
         VirtualFile targetFile = targetDirectory.resolve(targetPath);
         ArchiveExtractor.UpdateResult result = extractor.updateFile(extractedFile, targetFile, overrideMode);
         switch (result) {
@@ -195,6 +203,15 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         }
 
         log(process, extractedFile, targetFile, result.name());
+    }
+
+    private String computeTargetPath(ExtractedFile extractedFile, boolean flattenDirectory) {
+        try {
+            return getTargetPath(extractedFile, flattenDirectory);
+        } catch (IllegalArgumentException _) {
+            // The file path cannot be converted to a sanitized target path.
+            return null;
+        }
     }
 
     private String getTargetPath(ExtractedFile extractedFile, boolean flattenDirectory) {
