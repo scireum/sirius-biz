@@ -184,7 +184,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
             return;
         }
 
-        String targetPath = getTargetPath(extractedFile, flattenDirectory);
+        String targetPath = computeTargetPath(extractedFile, flattenDirectory);
         VirtualFile targetFile = targetDirectory.resolve(targetPath);
         ArchiveExtractor.UpdateResult result = extractor.updateFile(extractedFile, targetFile, overrideMode);
         switch (result) {
@@ -197,7 +197,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         log(process, extractedFile, targetFile, result.name());
     }
 
-    private String getTargetPath(ExtractedFile extractedFile, boolean flattenDirectory) {
+    private String computeTargetPath(ExtractedFile extractedFile, boolean flattenDirectory) {
         String targetPath = extractedFile.getFilePath();
         if (flattenDirectory) {
             return Files.getFilenameAndExtension(targetPath);
