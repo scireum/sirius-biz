@@ -1,5 +1,6 @@
 <div class="pb-4">
-    <img src="/assets/images/login_logo.png" alt="@sirius.kernel.info.Product.getProduct().getName()"
+    <img src="/assets/images/login_logo.png"
+         alt="@sirius.kernel.info.Product.getProduct().getName()"
          style="max-height: 100px"/>
 </div>
 
