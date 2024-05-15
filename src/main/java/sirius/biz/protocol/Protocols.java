@@ -40,6 +40,11 @@ import java.util.logging.Level;
         framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
+    /**
+     * Defines the maximum number of characters to preserve at the end of an exception message if it is truncated.
+     */
+    private static final int NUMBER_OF_CHARACTERS_TO_PRESERVE_AT_THE_END = 1000;
+
     private static final int DISABLE_ON_ERROR_PERIOD_MILLIS = 1000 * 60;
 
     /**
@@ -128,8 +133,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
                 storedIncident.getMdc().put(tuple.getFirst(), tuple.getSecond());
             }
             storedIncident.setUser(UserContext.getCurrentUser().getProtocolUsername());
-            storedIncident.setMessage(Strings.limit(incident.getException().getMessage(), maxMessageLength, true));
-            storedIncident.setStack(NLS.toUserString(incident.getException()));
+            storedIncident.setMessage(truncateErrorMessageAndPreserveEnd(incident.getException().getMessage()));
+            storedIncident.setStack(truncateStacktrace(incident));
             storedIncident.setCategory(incident.getCategory());
             storedIncident.setLastOccurrence(LocalDateTime.now());
 
@@ -137,6 +142,47 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
         } catch (Exception exception) {
             Elastic.LOG.SEVERE(exception);
             disableForOneMinute();
+        }
+    }
+
+    private String truncateStacktrace(Incident incident) {
+        boolean foundStackTrace = false;
+        StringBuilder result = new StringBuilder();
+        StringBuilder stack = new StringBuilder();
+        StringBuilder errorMesssage = new StringBuilder();
+
+        for(String line: NLS.toUserString(incident.getException()).split("\\r?\\n")) {
+            if (!foundStackTrace) {
+                if (line.contains("at") && line.contains(".java")) {
+                    foundStackTrace = true;
+                    stack.append(line).append("\n");
+                } else {
+                    errorMesssage.append(line).append("\n");
+                }
+            } else {
+                if (line.contains("Caused by:")) {
+                    result.append(truncateErrorMessageAndPreserveEnd(errorMesssage.toString())).append(stack);
+                    stack = new StringBuilder();
+                    errorMesssage = new StringBuilder();
+                    errorMesssage.append(line).append("\n");
+                    foundStackTrace = false;
+                } else {
+                    stack.append(line).append("\n");
+                }
+            }
+        }
+
+        result.append(truncateErrorMessageAndPreserveEnd(errorMesssage.toString())).append(stack);
+        return result.toString();
+    }
+
+    private String truncateErrorMessageAndPreserveEnd(String errorMessage) {
+        int messageLength = errorMessage.length();
+        if (messageLength > maxMessageLength && messageLength > NUMBER_OF_CHARACTERS_TO_PRESERVE_AT_THE_END) {
+            String end = errorMessage.substring(messageLength - NUMBER_OF_CHARACTERS_TO_PRESERVE_AT_THE_END, messageLength);
+            return Strings.limit(errorMessage, maxMessageLength, true) + end;
+        } else {
+            return errorMessage;
         }
     }
 
