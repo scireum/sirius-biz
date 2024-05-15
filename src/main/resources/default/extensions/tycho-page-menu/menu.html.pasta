@@ -10,22 +10,24 @@
     <i:block name="right">
         <t:permission permission="flag-logged-in">
             <i:if test="isFrameworkEnabled('tycho.open-search')">
-                <li class="nav-item dropdown right-menu-icon d-none d-xxl-inline">
-                    <form class="d-flex menu-search-form align-items-baseline" method="POST" action="/open-search">
-                        <span><i class="fa-solid fa-search"></i></span>
-                        <input name="query"
-                               class="form-control autofocus-js"
-                               type="search"
-                               placeholder="@i18n('OpenSearchController.label')"
-                               aria-label="Search">
-                    </form>
-                </li>
-                <li class="nav-item dropdown right-menu-icon d-xxl-none">
-                    <a class="nav-link" href="/open-search">
-                        <i class="fa-solid fa-search fa-w-20"></i>
-                        <span class="d-lg-none">@i18n('OpenSearchController.label')</span>
-                    </a>
-                </li>
+                <t:permission permission="permission-open-search">
+                    <li class="nav-item dropdown right-menu-icon d-none d-xxl-inline">
+                        <form class="d-flex menu-search-form align-items-baseline" method="POST" action="/open-search">
+                            <span><i class="fa-solid fa-search"></i></span>
+                            <input name="query"
+                                   class="form-control autofocus-js"
+                                   type="search"
+                                   placeholder="@i18n('OpenSearchController.label')"
+                                   aria-label="Search">
+                        </form>
+                    </li>
+                    <li class="nav-item dropdown right-menu-icon d-xxl-none">
+                        <a class="nav-link" href="/open-search">
+                            <i class="fa-solid fa-search fa-w-20"></i>
+                            <span class="d-lg-none">@i18n('OpenSearchController.label')</span>
+                        </a>
+                    </li>
+                </t:permission>
             </i:if>
             <t:menuImageItem framework="biz.processes"
                              class="d-none d-xxl-inline"

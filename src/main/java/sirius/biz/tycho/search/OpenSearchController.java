@@ -27,6 +27,7 @@ import sirius.kernel.health.Log;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.io.IOException;
@@ -119,6 +120,7 @@ public class OpenSearchController extends BizController {
      */
     @Routed("/open-search")
     @LoginRequired
+    @Permission("permission-open-search")
     public void search(WebContext webContext) {
         webContext.respondWith()
                   .template("/templates/biz/tycho/search/search.html.pasta", webContext.get(PARAM_QUERY).asString());
@@ -132,6 +134,7 @@ public class OpenSearchController extends BizController {
      */
     @Routed("/open-search/api")
     @LoginRequired
+    @Permission("permission-open-search")
     public Future searchAPI(WebContext webContext) {
         webContext.markAsLongCall();
 
