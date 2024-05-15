@@ -10,16 +10,18 @@
     <i:block name="right">
         <t:permission permission="flag-logged-in">
             <i:if test="isFrameworkEnabled('tycho.open-search')">
-                <li class="nav-item dropdown right-menu-icon d-none d-xl-inline">
-                    <form class="form-inline menu-search-form" method="POST" action="/open-search">
-                        <span><i class="fa fa-search"></i></span>
-                        <input name="query"
-                               class="form-control autofocus"
-                               type="search"
-                               placeholder="@i18n('OpenSearchController.label')"
-                               aria-label="Search">
-                    </form>
-                </li>
+                <t:permission permission="permission-open-search">
+                    <li class="nav-item dropdown right-menu-icon d-none d-xl-inline">
+                        <form class="form-inline menu-search-form" method="POST" action="/open-search">
+                            <span><i class="fa fa-search"></i></span>
+                            <input name="query"
+                                   class="form-control autofocus"
+                                   type="search"
+                                   placeholder="@i18n('OpenSearchController.label')"
+                                   aria-label="Search">
+                        </form>
+                    </li>
+                </t:permission>
             </i:if>
             <t:menuImageItem framework="biz.processes"
                              icon="/images/icons/ps.png"
