@@ -57,7 +57,7 @@ import java.util.List;
 public class OpenSearchController extends BizController {
 
     /**
-     * Contains the framework which controls of the system wide search / open search is pvoided or not.
+     * Contains the framework which controls of the system wide search / open search is provided or not.
      */
     public static final String FRAMEWORK_TYCHO_OPEN_SEARCH = "tycho.open-search";
 
