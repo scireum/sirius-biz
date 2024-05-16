@@ -8,6 +8,7 @@
 
 package sirius.biz.protocol;
 
+import com.google.common.base.Throwables;
 import sirius.biz.elastic.AutoBatchLoop;
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
@@ -128,8 +129,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
                 storedIncident.getMdc().put(tuple.getFirst(), tuple.getSecond());
             }
             storedIncident.setUser(UserContext.getCurrentUser().getProtocolUsername());
-            storedIncident.setMessage(Strings.limit(incident.getException().getMessage(), maxMessageLength, true));
-            storedIncident.setStack(NLS.toUserString(incident.getException()));
+            storedIncident.setMessage(NLS.toUserString(buildErrorMessages(incident.getException())));
+            storedIncident.setStack(NLS.toUserString(Exceptions.buildStackTraceWithoutErrorMessage(incident.getException())));
             storedIncident.setCategory(incident.getCategory());
             storedIncident.setLastOccurrence(LocalDateTime.now());
 
@@ -137,6 +138,43 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
         } catch (Exception exception) {
             Elastic.LOG.SEVERE(exception);
             disableForOneMinute();
+        }
+    }
+
+    private String buildErrorMessages(Throwable throwable) {
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        int numberOfCharactersPerMessage = calcCharactersPerMessage(throwable);
+
+        stringBuilder.append(throwable.getClass().getName()).append(":").append("\n");
+        stringBuilder.append(truncateErrorMessage(throwable.getMessage(), numberOfCharactersPerMessage)).append("\n");
+
+        try {
+            // The first element of the causal chain is always the throwable followed by its cause hierarchy.
+            // Therefore, the first element is skipped.
+            Throwables.getCausalChain(throwable).stream().skip(1).forEach(cause -> {
+                stringBuilder.append("Caused by: ").append(cause.getClass().getName()).append(":").append("\n");
+                stringBuilder.append(truncateErrorMessage(cause.getMessage(), numberOfCharactersPerMessage)).append("\n");
+            });
+        } catch (IllegalArgumentException exception) {
+            // This happens if the causal chain has a circular reference.
+            stringBuilder.append("Warning: Circular reference detected in causal chain. Skipping causes: ")
+                         .append(exception.getMessage());
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private String truncateErrorMessage(String errorMessage, int length) {
+        return Strings.limit(errorMessage, length, true, true, 1000);
+    }
+
+    private int calcCharactersPerMessage(Throwable throwable) {
+        try {
+            return maxMessageLength / Throwables.getCausalChain(throwable).size();
+        } catch (IllegalArgumentException _) {
+            return maxMessageLength;
         }
     }
 
