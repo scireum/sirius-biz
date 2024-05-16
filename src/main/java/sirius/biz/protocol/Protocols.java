@@ -129,8 +129,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
                 storedIncident.getMdc().put(tuple.getFirst(), tuple.getSecond());
             }
             storedIncident.setUser(UserContext.getCurrentUser().getProtocolUsername());
-            storedIncident.setMessage(NLS.toUserString(buildErrorMessages(incident.getException())));
-            storedIncident.setStack(NLS.toUserString(Exceptions.buildStackTraceWithoutErrorMessage(incident.getException())));
+            storedIncident.setMessage(buildErrorMessages(incident.getException()));
+            storedIncident.setStack(Exceptions.buildStackTraceWithoutErrorMessage(incident.getException()));
             storedIncident.setCategory(incident.getCategory());
             storedIncident.setLastOccurrence(LocalDateTime.now());
 
