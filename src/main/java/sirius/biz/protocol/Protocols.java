@@ -154,8 +154,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             // The first element of the causal chain is always the throwable followed by its cause hierarchy.
             // Therefore, the first element is skipped.
             Throwables.getCausalChain(throwable).stream().skip(1).forEach(cause -> {
-                stringBuilder.append("Caused by: ").append(cause.getClass().getName()).append(":").append("\n");
-                stringBuilder.append(truncateErrorMessage(cause.getMessage(), numberOfCharactersPerMessage)).append("\n");
+                stringBuilder.append("\n")append("Caused by: ").append(cause.getClass().getName()).append(":").append("\n");
+                stringBuilder.append(truncateErrorMessage(cause.getMessage(), numberOfCharactersPerMessage)).append("\n\n");
             });
         } catch (IllegalArgumentException exception) {
             // This happens if the causal chain has a circular reference.
