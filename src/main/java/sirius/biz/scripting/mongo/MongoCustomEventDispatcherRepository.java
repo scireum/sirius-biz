@@ -86,7 +86,7 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
             }
 
             CompilationContext compilationContext =
-                    new CompilationContext(SourceCodeInfo.forInlineCode(script.getScript(), SandboxMode.WARN_ONLY));
+                    new CompilationContext(SourceCodeInfo.forInlineCode(script.getScript(), SandboxMode.DISABLED));
 
             compilationContext.getVariableScoper()
                               .defineVariable(Position.UNKNOWN,
