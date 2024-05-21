@@ -86,7 +86,7 @@
 
                 const fileExtension = sirius.extractFileExtension(src).toLowerCase();
 
-                if (isDisplayableImage(fileExtension)) {
+                if (sirius.isDisplayableImage(fileExtension)) {
                     let _previewImage = document.createElement('img');
                     _previewImage.className = 'mh-100 mw-100';
 
@@ -102,7 +102,7 @@
                     }
                 } else {
                     let _previewIcon = document.createElement('i');
-                    _previewIcon.className = '___iconClass' + ' ' + determineFileIcon(fileExtension);
+                    _previewIcon.className = '___iconClass' + ' ' + sirius.determineFileIcon(fileExtension);
                     _previewContainer.appendChild(_previewIcon);
                 }
             }
@@ -170,37 +170,5 @@
             }
             return '/' + path.substring(0, path.lastIndexOf('/') + 1);
         }
-
-        function isDisplayableImage(extension) {
-            return extension === '.jpg' || extension === '.jpeg' || extension === '.png';
-        }
-
-        function determineFileIcon(extension) {
-            if (extension === '.pdf') {
-                return 'fa-file-pdf';
-            }
-
-            if (extension === '.tif' || extension === '.tiff' || extension === '.bmp' || extension === '.svg') {
-                return 'fa-image';
-            }
-
-            if (extension === '.doc' || extension === '.docx') {
-                return 'fa-file-word';
-            }
-
-            if (extension === '.xls' || extension === '.xlsx') {
-                return 'fa-file-excel';
-            }
-
-            if (extension === '.ppt' || extension === '.pps' || extension === '.pptx' || extension === '.ppsx') {
-                return 'fa-file-powerpoint';
-            }
-
-            if (extension === '.zip' || extension === '.rar') {
-                return 'fa-file-zipper';
-            }
-
-            return 'fa-file';
-        };
     }());
 </script>
