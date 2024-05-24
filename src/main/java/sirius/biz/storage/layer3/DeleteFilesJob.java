@@ -341,7 +341,9 @@ public class DeleteFilesJob extends BatchJob {
 
         @Override
         protected boolean hasPresetFor(@Nonnull QueryString queryString, @Nullable Object targetObject) {
-            return (targetObject instanceof VirtualFile virtualFile && virtualFile.isDirectory());
+            return (targetObject instanceof VirtualFile virtualFile
+                    && virtualFile.isDirectory()
+                    && virtualFile.canDelete());
         }
 
         @Nonnull
