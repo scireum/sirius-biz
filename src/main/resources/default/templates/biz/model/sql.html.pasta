@@ -46,7 +46,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="overflow-auto">
-                <table class="table table-bordered mb-4">
+                <table class="table table-bordered table-hover mb-4">
                     <thead id="columns">
                     </thead>
                     <tbody id="rows">
