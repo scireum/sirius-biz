@@ -82,7 +82,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     private AtomicLong disabledUntil;
 
     /**
-     * In case the ES cluster is unreachable or we can for some reason not log errors or log messages,
+     * In case the ES cluster is unreachable, or we can for some reason not log errors or log messages,
      * we disable the facility for one minute so that the local syslogs aren't jammed with errors.
      */
     private void disableForOneMinute() {
