@@ -175,7 +175,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     private int calcCharactersPerMessage(Throwable throwable) {
         try {
             return maxMessageLength / Throwables.getCausalChain(throwable).size();
-        } catch (IllegalArgumentException _) {
+        } catch (IllegalArgumentException ignored) {
             return maxMessageLength;
         }
     }
