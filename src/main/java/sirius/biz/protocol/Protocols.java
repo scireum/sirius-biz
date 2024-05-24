@@ -24,7 +24,6 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Incident;
 import sirius.kernel.health.LogMessage;
 import sirius.kernel.health.LogTap;
-import sirius.kernel.nls.NLS;
 import sirius.web.mails.MailLog;
 import sirius.web.security.UserContext;
 
@@ -42,6 +41,8 @@ import java.util.logging.Level;
 public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
     private static final int DISABLE_ON_ERROR_PERIOD_MILLIS = 1000 * 60;
+
+    private static final int NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE = 1000;
 
     /**
      * Names the framework which must be enabled to activate all protocol features.
@@ -167,7 +168,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     }
 
     private String truncateErrorMessage(String errorMessage, int length) {
-        return Strings.limit(errorMessage, length, true, true, 1000);
+        int charsToPreserveFromStart = Math.max(0, length - NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE);
+        return Strings.truncateMiddle(errorMessage, charsToPreserveFromStart, NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE);
     }
 
     private int calcCharactersPerMessage(Throwable throwable) {
