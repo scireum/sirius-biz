@@ -69,17 +69,17 @@ public class DatabaseController extends BasicController {
     @Part
     private Databases databases;
 
-    @ConfigValue("mixing.jdbc.mixing.database")
-    private String defaultDatabase;
-
-    @ConfigValue("jdbc.selectableDatabases")
-    private List<String> selectableDatabases;
-
     @Part
     private Jobs jobs;
 
     @Part
     private DatabaseDisplayUtils databaseDisplayUtils;
+
+    @ConfigValue("mixing.jdbc.mixing.database")
+    private String defaultDatabase;
+
+    @ConfigValue("jdbc.selectableDatabases")
+    private List<String> selectableDatabases;
 
     /**
      * Renders the UI to execute SQL queries.
@@ -97,7 +97,7 @@ public class DatabaseController extends BasicController {
     }
 
     /**
-     * Executes the given sql query.
+     * Executes the given SQL query.
      *
      * @param webContext the current request
      * @param output     the JSON response
@@ -107,7 +107,7 @@ public class DatabaseController extends BasicController {
     @Routed("/system/sql/api/execute")
     @InternalService
     public void executeQuery(WebContext webContext, JSONStructuredOutput output) throws SQLException {
-        Watch w = Watch.start();
+        Watch watch = Watch.start();
 
         try {
             String database = webContext.get(PARAM_DATABASE).asString(defaultDatabase);
@@ -136,13 +136,13 @@ public class DatabaseController extends BasicController {
             } else {
                 int effectiveLimit = webContext.get("limit").asInt(DEFAULT_LIMIT);
                 output.property("effectiveLimit", effectiveLimit);
-                Monoflop monoflop = Monoflop.create();
-                query.iterateAll(r -> outputRow(output, monoflop, r), new Limit(0, effectiveLimit));
-                if (monoflop.successiveCall()) {
+                Monoflop rowPrinted = Monoflop.create();
+                query.iterateAll(row -> outputRow(output, rowPrinted, row), new Limit(0, effectiveLimit));
+                if (rowPrinted.successiveCall()) {
                     output.endArray();
                 }
             }
-            output.property("duration", w.duration());
+            output.property("duration", watch.duration());
         } catch (SQLException exception) {
             // In case of an invalid query, we do not want to log this into the syslog but
             // rather just directly output the message to the user....
@@ -151,7 +151,7 @@ public class DatabaseController extends BasicController {
     }
 
     /**
-     * Exports the given SQL query
+     * Exports the given SQL query.
      *
      * @param webContext the current request
      */
@@ -215,18 +215,18 @@ public class DatabaseController extends BasicController {
                || lowerCaseQuery.startsWith(KEYWORD_CREATE);
     }
 
-    private void outputRow(JSONStructuredOutput output, Monoflop monoflop, Row row) {
-        if (monoflop.firstCall()) {
+    private void outputRow(JSONStructuredOutput output, Monoflop rowPrinted, Row row) {
+        if (rowPrinted.firstCall()) {
             output.beginArray("columns");
-            for (Tuple<String, Object> col : row.getFieldsList()) {
-                output.property("column", col.getFirst());
+            for (Tuple<String, Object> field : row.getFieldsList()) {
+                output.property("column", field.getFirst());
             }
             output.endArray();
             output.beginArray("rows");
         }
         output.beginArray("row");
-        for (Tuple<String, Object> col : row.getFieldsList()) {
-            output.property("column", databaseDisplayUtils.formatValueForDisplay(col.getSecond()));
+        for (Tuple<String, Object> field : row.getFieldsList()) {
+            output.property("column", databaseDisplayUtils.formatValueForDisplay(field.getSecond()));
         }
         output.endArray();
     }
