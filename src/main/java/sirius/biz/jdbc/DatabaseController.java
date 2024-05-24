@@ -134,9 +134,10 @@ public class DatabaseController extends BasicController {
             } else if (isModifyStatement(sqlStatement)) {
                 output.property("rowModified", query.executeUpdate());
             } else {
+                int effectiveLimit = webContext.get("limit").asInt(DEFAULT_LIMIT);
+                output.property("effectiveLimit", effectiveLimit);
                 Monoflop monoflop = Monoflop.create();
-                query.iterateAll(r -> outputRow(output, monoflop, r),
-                                 new Limit(0, webContext.get("limit").asInt(DEFAULT_LIMIT)));
+                query.iterateAll(r -> outputRow(output, monoflop, r), new Limit(0, effectiveLimit));
                 if (monoflop.successiveCall()) {
                     output.endArray();
                 }
