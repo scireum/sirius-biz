@@ -35,7 +35,7 @@ class ElasticPageHelperTest {
         val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
-            set(webContext, setOf<QueryString>())
+            set(webContext, QueryString("?"))
         }
         pageHelper.withContext(webContext)
         pageHelper.addBooleanAggregation(ElasticPageHelperEntity.BOOLEAN_FIELD)
