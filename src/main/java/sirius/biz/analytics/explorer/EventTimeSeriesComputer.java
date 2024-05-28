@@ -106,6 +106,7 @@ public class EventTimeSeriesComputer<O, E extends Event<E>> implements TimeSerie
      * @see #AGGREGATION_EXPRESSION_COUNT
      */
     public EventTimeSeriesComputer<O, E> addAggregation(String expression, @Nullable String label) {
+        // On first sight using a countIf would be way slower than a GROUPBY, but Clickhouse optimizes this so well that the query is way faster with a countIf
         this.aggregations.add(Tuple.create(expression, label));
         return this;
     }
