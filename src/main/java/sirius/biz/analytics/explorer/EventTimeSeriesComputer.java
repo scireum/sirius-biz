@@ -99,6 +99,11 @@ public class EventTimeSeriesComputer<O, E extends Event<E>> implements TimeSerie
 
     /**
      * Adds an aggregation expression to collect.
+     * <p>
+     * It is likely that in most cases, that the aggregations used with this method are conditional
+     * count functions such as {@code countIf(<CLAUSE>)}. Performance measurements in Clickhouse
+     * showed faster performance using such functions instead of regular {@code GROUP BY}
+     * operators.
      *
      * @param expression the SQL expression to add to the <tt>SELECT</tt> clause
      * @param label      the label to use or <tt>null</tt> to use the default label
@@ -106,7 +111,6 @@ public class EventTimeSeriesComputer<O, E extends Event<E>> implements TimeSerie
      * @see #AGGREGATION_EXPRESSION_COUNT
      */
     public EventTimeSeriesComputer<O, E> addAggregation(String expression, @Nullable String label) {
-        // On first sight using a countIf would be way slower than a GROUPBY, but Clickhouse optimizes this so well that the query is way faster with a countIf
         this.aggregations.add(Tuple.create(expression, label));
         return this;
     }
