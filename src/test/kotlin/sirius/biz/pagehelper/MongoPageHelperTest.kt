@@ -17,6 +17,7 @@ import sirius.db.mongo.Mango
 import sirius.kernel.SiriusExtension
 import sirius.kernel.async.CallContext
 import sirius.kernel.di.std.Part
+import sirius.web.http.QueryString
 import sirius.web.http.WebContext
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -35,7 +36,7 @@ class MongoPageHelperTest {
         val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
-            set(webContext, mapOf<String, List<String>>())
+            set(webContext, QueryString("?"))
         }
         pageHelper.withContext(webContext)
         pageHelper.addBooleanAggregation(MongoPageHelperEntity.BOOLEAN_FIELD)
@@ -65,7 +66,7 @@ class MongoPageHelperTest {
         val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
-            set(webContext, mapOf("booleanField" to listOf("true")))
+            set(webContext, QueryString("?booleanField=true"))
         }
         pageHelper.withContext(webContext)
         pageHelper.addBooleanAggregation(MongoPageHelperEntity.BOOLEAN_FIELD)
@@ -90,7 +91,7 @@ class MongoPageHelperTest {
         val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
-            set(webContext, mapOf<String, List<String>>())
+            set(webContext, QueryString("?"))
         }
         pageHelper.withContext(webContext)
         pageHelper.addTermAggregation(MongoPageHelperEntity.STRING_FIELD)
@@ -118,7 +119,7 @@ class MongoPageHelperTest {
         val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
-            set(webContext, mapOf("stringField" to listOf("field-value-a")))
+            set(webContext, QueryString("?stringField=field-value-a"))
         }
         pageHelper.withContext(webContext)
         pageHelper.addTermAggregation(MongoPageHelperEntity.STRING_FIELD)
