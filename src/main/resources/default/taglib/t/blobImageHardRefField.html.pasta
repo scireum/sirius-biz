@@ -69,7 +69,7 @@
 
     const initialImage = _img.src;
     sirius.ready(function () {
-        if (isDisplayableImage(fileExtension)) {
+        if (sirius.isDisplayableImage(fileExtension)) {
             if (_img.src === '___defaultPreview' || '___previewVariant' === 'raw') {
                 return;
             }
@@ -81,7 +81,7 @@
             let _previewIconSpan = document.createElement('span');
             let _previewIcon = document.createElement('i');
             _previewIconSpan.appendChild(_previewIcon);
-            _previewIcon.className = '___iconClass' + ' ' + determineFileIcon(fileExtension);
+            _previewIcon.className = '___iconClass' + ' ' + sirius.determineFileIcon(fileExtension);
             _img.classList.add('d-none');
             _previewContainer.appendChild(_previewIconSpan);
         }
@@ -159,7 +159,7 @@
                 _img = outerDiv.querySelector('.img-preview img');
 
                 fileExtension = sirius.extractFileExtension(response.imageUrl).toLowerCase();
-                if (isDisplayableImage(fileExtension)) {
+                if (sirius.isDisplayableImage(fileExtension)) {
                     if ('___previewVariant' === 'raw') {
                         _img.src = response.imageUrl;
                     } else {
@@ -172,7 +172,7 @@
                     let _previewIconSpan = document.createElement('span');
                     let _previewIcon = document.createElement('i');
                     _previewIconSpan.appendChild(_previewIcon);
-                    _previewIcon.className = '___iconClass' + ' ' + determineFileIcon(fileExtension);
+                    _previewIcon.className = '___iconClass' + ' ' + sirius.determineFileIcon(fileExtension);
                     _previewContainer.appendChild(_previewIconSpan);
                     _img.classList.add('d-none');
                 }
@@ -200,36 +200,4 @@
             outerDiv.querySelector('#saveHint').classList.remove('d-none');
         }
     }
-
-    function isDisplayableImage(extension) {
-        return extension === '.jpg' || extension === '.jpeg' || extension === '.png';
-    }
-
-    function determineFileIcon(extension) {
-        if (extension === '.pdf') {
-            return 'fa-file-pdf';
-        }
-
-        if (extension === '.tif' || extension === '.tiff' || extension === '.bmp' || extension === '.svg') {
-            return 'fa-image';
-        }
-
-        if (extension === '.doc' || extension === '.docx') {
-            return 'fa-file-word';
-        }
-
-        if (extension === '.xls' || extension === '.xlsx') {
-            return 'fa-file-excel';
-        }
-
-        if (extension === '.ppt' || extension === '.pps' || extension === '.pptx' || extension === '.ppsx') {
-            return 'fa-file-powerpoint';
-        }
-
-        if (extension === '.zip' || extension === '.rar') {
-            return 'fa-file-zipper';
-        }
-
-        return 'fa-file';
-    };
 </script>
