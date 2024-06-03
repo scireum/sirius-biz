@@ -56,6 +56,11 @@
             <artifactId>clickhouse-jdbc</artifactId>
             <version>0.6.0-patch5</version>
         </dependency>
+        <dependency>
+            <groupId>org.lz4</groupId>
+            <artifactId>lz4-java</artifactId>
+            <version>1.8.0</version>
+        </dependency>
         <!-- Included as the version provided by clickhouse has security issues -->
         <dependency>
             <groupId>commons-codec</groupId>
