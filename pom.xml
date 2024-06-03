@@ -54,7 +54,7 @@
         <dependency>
             <groupId>com.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
-            <version>0.4.6</version>
+            <version>0.6.0-patch5</version>
         </dependency>
         <!-- Included as the version provided by clickhouse has security issues -->
         <dependency>
