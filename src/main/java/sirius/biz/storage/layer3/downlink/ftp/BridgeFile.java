@@ -88,12 +88,18 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean isRemovable() {
-        return true;
+        return isWritable();
     }
 
     @Override
     public boolean isWritable() {
-        return true;
+        if (file != null) {
+            return !file.readOnly();
+        }
+        if (parent != null) {
+            return !parent.readOnly();
+        }
+        throw new IllegalArgumentException("BridgeFile not initialized properly");
     }
 
     @Override
@@ -143,7 +149,7 @@ class BridgeFile implements FtpFile {
     @Override
     public boolean delete() {
         if (doesExist()) {
-            return file.tryDelete();
+            return file.tryDelete(false);
         }
 
         return true;
@@ -178,10 +184,10 @@ class BridgeFile implements FtpFile {
                 }
             }
             return this.delete();
-        } catch (IOException e) {
+        } catch (IOException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer3/FTP: Cannot move file %s to %s - %s (%s)",
                                               getAbsolutePath(),
                                               destination.getAbsolutePath());

@@ -42,8 +42,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 deletePhysicalObject(blob);
                 mango.delete(blob);
                 counter.run();
-            } catch (Exception e) {
-                handleBlobDeletionException(blob, e);
+            } catch (Exception exception) {
+                handleBlobDeletionException(blob, exception);
             }
         });
     }
@@ -55,8 +55,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 propagateDelete(dir);
                 mango.delete(dir);
                 counter.run();
-            } catch (Exception e) {
-                handleDirectoryDeletionException(dir, e);
+            } catch (Exception exception) {
+                handleDirectoryDeletionException(dir, exception);
             }
         });
     }
@@ -71,7 +71,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processRenamedBlobs(Runnable counter) {
-        fetchAndProcessBlobs(query -> query.eq(MongoBlob.RENAMED, true).eq(MongoBlob.CREATED, false),
+        // The created field may not exist in blobs created before this field was introduced.
+        fetchAndProcessBlobs(query -> query.eq(MongoBlob.RENAMED, true).ne(MongoBlob.CREATED, true),
                              this::invokeRenamedHandlers,
                              updater -> updater.set(MongoBlob.RENAMED, false),
                              counter);
@@ -79,7 +80,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processContentUpdatedBlobs(Runnable counter) {
-        fetchAndProcessBlobs(query -> query.eq(MongoBlob.CONTENT_UPDATED, true).eq(MongoBlob.CREATED, false),
+        // The created field may not exist in blobs created before this field was introduced.
+        fetchAndProcessBlobs(query -> query.eq(MongoBlob.CONTENT_UPDATED, true).ne(MongoBlob.CREATED, true),
                              this::invokeContentUpdatedHandlers,
                              updater -> updater.set(MongoBlob.CONTENT_UPDATED, false),
                              counter);
@@ -90,10 +92,14 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
         String directoryId = dir.getIdAsString();
         mongo.update()
              .set(MongoDirectory.DELETED, true)
+             .where(MongoDirectory.SPACE_NAME, dir.getSpaceName())
+             .where(MongoDirectory.DELETED, false)
              .where(MongoDirectory.PARENT, directoryId)
              .executeForMany(MongoDirectory.class);
         mongo.update()
              .set(MongoBlob.DELETED, true)
+             .where(MongoBlob.SPACE_NAME, dir.getSpaceName())
+             .where(MongoBlob.DELETED, false)
              .where(MongoBlob.PARENT, directoryId)
              .executeForMany(MongoBlob.class);
     }
@@ -108,8 +114,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                      .where(MongoDirectory.ID, dir.getId())
                      .executeForOne(MongoDirectory.class);
                 counter.run();
-            } catch (Exception e) {
-                handleDirectoryRenameException(dir, e);
+            } catch (Exception exception) {
+                handleDirectoryRenameException(dir, exception);
             }
         });
     }
@@ -129,7 +135,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processParentChangedBlobs(Runnable counter) {
-        fetchAndProcessBlobs(query -> query.eq(MongoBlob.PARENT_CHANGED, true).eq(MongoBlob.CREATED, false),
+        // The created field may not exist in blobs created before this field was introduced.
+        fetchAndProcessBlobs(query -> query.eq(MongoBlob.PARENT_CHANGED, true).ne(MongoBlob.CREATED, true),
                              this::invokeParentChangedHandlers,
                              updater -> updater.set(MongoBlob.PARENT_CHANGED, false),
                              counter);

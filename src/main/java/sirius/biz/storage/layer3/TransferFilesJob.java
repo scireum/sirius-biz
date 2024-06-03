@@ -57,6 +57,8 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
      */
     public static final String SMART_TRANSFER_PARAMETER_NAME = "smartTransfer";
 
+    public static final String CONTINUE_ON_ERROR_PARAMETER_NAME = "continueOnError";
+
     /**
      * Determines the mode to use when transferring files.
      */
@@ -80,16 +82,21 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     private final Parameter<TransferMode> modeParameter =
             new EnumParameter<>(MODE_PARAMETER_NAME, "$TransferFilesJob.mode", TransferMode.class).withDefault(
                     TransferMode.COPY).markRequired().build();
+
     private final Parameter<Boolean> smartTransferParameter =
             new BooleanParameter(SMART_TRANSFER_PARAMETER_NAME, "$TransferFilesJob.smartTransfer").withDefaultTrue()
                                                                                                   .build();
+
+    private final Parameter<Boolean> continueOnErrorParameter =
+            new BooleanParameter(CONTINUE_ON_ERROR_PARAMETER_NAME, "$TransferFilesJob.continueOnError").withDescription(
+                    "$TransferFilesJob.continueOnError.help").hideWhen(this::isContentUnawareTransferMode).build();
 
     @Part
     private VirtualFileSystem virtualFileSystem;
 
     @Override
     public String getIcon() {
-        return "far fa-copy";
+        return "fa-regular fa-copy";
     }
 
     @Override
@@ -124,6 +131,10 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
             transfer.smartTransfer();
         }
 
+        if (Boolean.TRUE.equals(process.require(continueOnErrorParameter))) {
+            transfer.continueOnError();
+        }
+
         switch (mode) {
             case COPY -> transfer.copy();
             case MOVE -> transfer.move();
@@ -146,6 +157,7 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
         parameterCollector.accept(destinationParameter);
         parameterCollector.accept(modeParameter);
         parameterCollector.accept(smartTransferParameter);
+        parameterCollector.accept(continueOnErrorParameter);
     }
 
     @Nonnull
@@ -157,5 +169,11 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     @Override
     public String getCategory() {
         return StandardCategories.MISC;
+    }
+
+    private boolean isContentUnawareTransferMode(Map<String, String> params) {
+        return modeParameter.get(params)
+                            .map(mode -> mode != TransferMode.COPY_CONTENTS && mode != TransferMode.MOVE_CONTENTS)
+                            .orElse(true);
     }
 }

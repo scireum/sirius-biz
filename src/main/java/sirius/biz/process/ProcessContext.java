@@ -15,7 +15,6 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
 import sirius.kernel.async.Future;
 import sirius.kernel.async.Promise;
-import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Tuple;
@@ -120,10 +119,10 @@ public interface ProcessContext extends TaskContextAdapter {
      * <p>
      * This will invoke {@link Exceptions#handle()} and log the result.
      *
-     * @param e the exception to handle
+     * @param exception the exception to handle
      * @return the handled exception for further processing
      */
-    HandledException handle(Exception e);
+    HandledException handle(Exception exception);
 
     /**
      * Logs the given log entry.
@@ -204,7 +203,7 @@ public interface ProcessContext extends TaskContextAdapter {
     /**
      * Uses the given parameter to read and convert a value from the context of the process.
      * <p>
-     * Thows an exception of no data is available or an conversion error occurs.
+     * Throws an exception if no data is available or a conversion error occurs.
      *
      * @param parameter the parameter used to read and convert
      * @param <V>       the type of the returned value
@@ -221,7 +220,7 @@ public interface ProcessContext extends TaskContextAdapter {
     void addLink(ProcessLink link);
 
     /**
-     * Adds the given reference to the the process.
+     * Adds the given reference to the process.
      *
      * @param reference the reference to attach
      */
@@ -263,7 +262,7 @@ public interface ProcessContext extends TaskContextAdapter {
     TableOutput.ColumnBuilder addTable(String name, String label);
 
     /**
-     * Adds an additional log output to the process.
+     * Adds a log output to the process.
      * <p>
      * Use {@link ProcessLog#into(String)} to add log entries to this output.
      *
@@ -308,7 +307,7 @@ public interface ProcessContext extends TaskContextAdapter {
      * If no "work stealing" threads are available the main thread is blocked and the task is executed there.
      * <p>
      * Note that the process will await the completion of all of its forked side tasks. However, once this state has
-     * been reached no further tasks may be started. Therefore when processing the results of this task, a
+     * been reached no further tasks may be started. Therefore, when processing the results of this task, a
      * {@link sirius.kernel.async.CombinedFuture} has to be used in the main thread, rather than a simple completion
      * handler attached to the promise.
      *
@@ -375,4 +374,11 @@ public interface ProcessContext extends TaskContextAdapter {
     void fetchOutputEntries(@Nullable String outputName,
                             BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
                             BiPredicate<List<String>, List<String>> columnsAndValues);
+
+    /**
+     * Get the {@link ProgressTracker} initialized by the process.
+     *
+     * @return the progress tracker
+     */
+    ProgressTracker getProgressTracker();
 }

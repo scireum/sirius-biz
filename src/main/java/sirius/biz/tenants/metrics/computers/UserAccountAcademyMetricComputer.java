@@ -9,6 +9,7 @@
 package sirius.biz.tenants.metrics.computers;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
+import sirius.biz.analytics.metrics.MetricComputerContext;
 import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tycho.academy.OnboardingVideo;
@@ -19,7 +20,6 @@ import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
 import sirius.kernel.di.std.ConfigValue;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -57,11 +57,10 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
     protected int minEducationLevel;
 
     @Override
-    public void compute(LocalDate date,
-                        LocalDateTime startOfPeriod,
-                        LocalDateTime endOfPeriod,
-                        boolean periodOutsideOfCurrentInterest,
-                        E userAccount) throws Exception {
+    public void compute(MetricComputerContext context, E userAccount) throws Exception {
+        if (!context.periodOutsideOfCurrentInterest()) {
+            return;
+        }
         long totalVideos = queryEligibleOnboardingVideos(userAccount).count();
 
         if (totalVideos == 0) {
@@ -79,14 +78,12 @@ public abstract class UserAccountAcademyMetricComputer<E extends BaseEntity<?> &
         long watchedVideos = watchedVideosQuery.count();
 
         int educationLevel = (int) (watchedVideos * 100 / totalVideos);
-        metrics.updateMonthlyMetric(userAccount, METRIC_USER_EDUCATION_LEVEL, date, educationLevel);
+        metrics.updateMonthlyMetric(userAccount, METRIC_USER_EDUCATION_LEVEL, context.date(), educationLevel);
 
-        if (!periodOutsideOfCurrentInterest) {
-            userAccount.getPerformanceData()
-                       .modify()
-                       .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
-                       .commit();
-        }
+        userAccount.getPerformanceData()
+                   .modify()
+                   .set(getAcademyUserFlag(), educationLevel >= minEducationLevel)
+                   .commit();
     }
 
     /**

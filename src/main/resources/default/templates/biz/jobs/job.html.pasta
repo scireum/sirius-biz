@@ -19,13 +19,13 @@
                 <i:if test="!job.getJobInfos().isEmpty()">
                     <a class="btn btn-outline-link"
                        href="/jobs/infos/@job.getName()">
-                        <span><i class="fa fa-book"></i></span>
+                        <span><i class="fa-solid fa-book"></i></span>
                         @i18n("JobsController.showInfos")
                     </a>
                 </i:if>
             </i:block>
 
-            <t:iconInlineInfo icon="fa fa-info-circle">
+            <t:iconInlineInfo icon="fa-solid fa-info-circle">
                 <i:if test="isFilled(job.getHTMLDescription())">
                     <i:raw>@job.getHTMLDescription()</i:raw>
                     <i:else>
@@ -50,7 +50,7 @@
                     <div class="d-flex flex-column card card-border">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <i class="fas fa-save"></i>
+                                <i class="fa-solid fa-save"></i>
                                 @i18n("JobsController.presets")
                             </h5>
                         </div>
@@ -62,14 +62,14 @@
                                     <div class="btn-group" role="group">
                                         <a class="btn btn-outline-link text-nowrap"
                                            href="javascript:loadPreset('@preset.getIdAsString()')">
-                                            <i class="fa fa-check"></i>
+                                            <i class="fa-solid fa-check"></i>
                                             <span class="d-sm-inline-block d-md-none d-xl-inline-block">
                                                 @i18n("JobsController.usePreset")
                                             </span>
                                         </a>
                                         <a class="btn btn-outline-danger pull-right text-nowrap"
                                            href="javascript:deletePreset('@preset.getIdAsString()')">
-                                            <i class="fa fa-trash"></i>
+                                            <i class="fa-solid fa-trash"></i>
                                             <span class="d-sm-inline-block d-md-none d-xl-inline-block">
                                                 @i18n("NLS.delete")
                                             </span>
@@ -80,7 +80,7 @@
                         </ul>
                         <div class="d-flex flex-row justify-content-between card-body">
                             <a class="btn btn-outline-primary" href="javascript:showCreatePresetModal()">
-                                <i class="fa fa-plus"></i>
+                                <i class="fa-solid fa-plus"></i>
                                 @i18n("JobsController.createPreset")</a>
                         </div>
                     </div>
@@ -109,7 +109,7 @@
             </fieldset>
             <i:block name="footer">
                 <a onclick="createPreset()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">@i18n("NLS.cancel")</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@i18n("NLS.cancel")</button>
             </i:block>
         </t:modal>
         <t:formBar btnLabelKey="JobFactory.execute"/>
@@ -119,15 +119,26 @@
 
     <script type="text/javascript">
         function showCreatePresetModal() {
-            $('#createPreset').on('shown.bs.modal', function () {
-                $('*[name="presetName"]').focus();
-            }).modal('show');
+            const _createPresetElement = document.querySelector('#createPreset');
+            if (!_createPresetElement.modal) {
+                _createPresetElement.modal = new bootstrap.Modal(_createPresetElement);
+            }
+
+            _createPresetElement.addEventListener('shown.bs.modal', () => {
+                document.querySelector('*[name="presetName"]').focus();
+            });
+            _createPresetElement.modal.show();
         }
 
         function createPreset() {
-            sirius.postJSON('/jobs/preset/create', getFormData(sirius.querySelector(".edit-form"))).then(function (response) {
-                if (!response.success) {
-                    addErrorMessage(response.message);
+            fetch("/jobs/preset/create", {
+                method: "post",
+                body: new FormData(sirius.querySelector(".edit-form"))
+            }).then(function (response) {
+                return response.json();
+            }).then(function (json) {
+                if (!json.success) {
+                    addErrorMessage(json.message);
                 } else {
                     sirius.querySelector('#updateOnly').value = true;
                     sirius.querySelector('.edit-form').submit();
@@ -139,13 +150,27 @@
             sirius.getJSON('/jobs/preset/load', {preset: id}).then(function (response) {
                 // Fill a temporary form and submit all parameters to the server
                 // so that these are validated and rendered properly....
-                var _form = sirius.querySelector('#loadForm');
+                const _form = sirius.querySelector('#loadForm');
                 for (var i = 0; i < response.params.length; i++) {
-                    const _field = document.createElement("input");
-                    _field.type = "hidden";
-                    _field.name = response.params[i].name;
-                    _field.value = response.params[i].value;
-                    _form.appendChild(_field);
+                    const param = response.params[i];
+
+                    if (Array.isArray(param.value)) {
+                        for (var j = 0; j < param.value.length; j++) {
+                            const value = param.value[j];
+
+                            const _field = document.createElement("input");
+                            _field.name = param.name;
+                            _field.type = "hidden";
+                            _field.value = value;
+                            _form.appendChild(_field);
+                        }
+                    } else {
+                        const _field = document.createElement("input");
+                        _field.type = "hidden";
+                        _field.name = param.name;
+                        _field.value = param.value;
+                        _form.appendChild(_field);
+                    }
                 }
             }).then(function () {
                 sirius.querySelector('#loadForm').submit();

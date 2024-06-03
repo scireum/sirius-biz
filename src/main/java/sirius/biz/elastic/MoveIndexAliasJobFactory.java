@@ -73,10 +73,10 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
             return Strings.apply("Moving active Elasticsearch alias from index '%s' to '%s'",
                                  elastic.determineEffectiveIndex(entityDescriptorParameter.require(context)),
                                  destinationParameter.require(context));
-        } catch (HandledException e) {
+        } catch (HandledException exception) {
             // In some rare cases, this might fail (if the system is inconsistent anyway). In this case
             // we prefer that the job fails rather than the setup / start crashes...
-            Exceptions.ignore(e);
+            Exceptions.ignore(exception);
             return Strings.apply("Moving active Elasticsearch alias to '%s'", destinationParameter.require(context));
         }
     }

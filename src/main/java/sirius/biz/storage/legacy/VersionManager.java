@@ -77,7 +77,7 @@ public class VersionManager {
 
     private Boolean commandPresent;
 
-    private Cache<String, Tuple<VirtualObject, Map<String, String>>> logicalToPhysicalCache =
+    private final Cache<String, Tuple<VirtualObject, Map<String, String>>> logicalToPhysicalCache =
             CacheManager.createCoherentCache("storage-object-metadata");
 
     private static final String PNG_IMAGE = "png";
@@ -200,10 +200,10 @@ public class VersionManager {
                             extendedSize.getFirst(),
                             extendedSize.getSecond(),
                             imageFormat);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Storage.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to convert %s (%s): %s (%s)",
                                               object.getObjectKey(),
                                               object.getPath())
@@ -332,10 +332,10 @@ public class VersionManager {
 
             try {
                 Exec.exec(command);
-            } catch (Exec.ExecException e) {
+            } catch (Exec.ExecException exception) {
                 Exceptions.handle()
                           .to(Storage.LOG)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage("Failed to invoke: %s to resize %s (%s) to %sx%s in %s imageFormat",
                                                   command,
                                                   object.getObjectKey(),

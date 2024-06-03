@@ -47,9 +47,9 @@ public class ExtractedZipFile implements ExtractedFile {
             return CloseShieldInputStream.wrap(inputStreamSupplier.create());
         } catch (IOException ioException) {
             throw ioException;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to unzip file from an archive: %s (%s)")
                             .handle();
         }

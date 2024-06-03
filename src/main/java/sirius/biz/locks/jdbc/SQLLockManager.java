@@ -80,12 +80,12 @@ public class SQLLockManager extends BasicLockManager {
                                  .set(ManagedLock.THREAD.getName(), Thread.currentThread().getName())
                                  .set(ManagedLock.ACQUIRED.getName(), Instant.now().toEpochMilli()));
             return true;
-        } catch (SQLIntegrityConstraintViolationException e) {
+        } catch (SQLIntegrityConstraintViolationException exception) {
             // Lock is locked - retry if possible :-(
-            Exceptions.ignore(e);
+            Exceptions.ignore(exception);
             return false;
-        } catch (SQLException e) {
-            throw Exceptions.handle(Locks.LOG, e);
+        } catch (SQLException exception) {
+            throw Exceptions.handle(Locks.LOG, exception);
         }
     }
 
@@ -106,7 +106,7 @@ public class SQLLockManager extends BasicLockManager {
             }
 
             deleteStatement.executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             throw Exceptions.handle()
                             .to(OMA.LOG)
                             .withSystemErrorMessage("An error occurred while unlocking %s: %s - %s", lock)

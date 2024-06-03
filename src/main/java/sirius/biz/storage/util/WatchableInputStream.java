@@ -82,15 +82,15 @@ public class WatchableInputStream extends InputStream {
     public void close() throws IOException {
         try {
             delegate.close();
-        } catch (IOException e) {
+        } catch (IOException exception) {
             // Close might be invoked several times (e.g. by some ZIP implementations).
             // Therefore, we filter this to only execute the handler once.
             if (failureHandler != null && !closeHandled) {
                 closeHandled = true;
-                failureHandler.accept(e);
+                failureHandler.accept(exception);
             }
 
-            throw e;
+            throw exception;
         }
 
         // Filter duplicate executions (s.a.)...

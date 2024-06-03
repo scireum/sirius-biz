@@ -27,42 +27,42 @@ public class MailController extends BizController {
     /**
      * Lists all recorded mail entries.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/mails")
-    public void mails(final WebContext ctx) {
-        ElasticPageHelper<MailProtocol> ph =
+    public void mails(final WebContext webContext) {
+        ElasticPageHelper<MailProtocol> pageHelper =
                 ElasticPageHelper.withQuery(elastic.select(MailProtocol.class).orderDesc(MailProtocol.TOD));
-        ph.withContext(ctx);
-        ph.addBooleanAggregation(MailProtocol.SUCCESS);
-        ph.addTermAggregation(MailProtocol.NODE);
-        ph.addTermAggregation(MailProtocol.TYPE);
-        ph.addTimeAggregation(MailProtocol.TOD,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS,
-                              DateRange.TODAY,
-                              DateRange.YESTERDAY,
-                              DateRange.THIS_WEEK,
-                              DateRange.LAST_WEEK);
-        ph.withSearchFields(QueryField.contains(MailProtocol.SEARCH_FIELD));
-
-        ctx.respondWith().template("/templates/biz/protocol/mails.html.pasta", ph.asPage());
+        pageHelper.withContext(webContext);
+        pageHelper.addBooleanAggregation(MailProtocol.SUCCESS);
+        pageHelper.addTermAggregation(MailProtocol.NODE);
+        pageHelper.addTermAggregation(MailProtocol.TYPE);
+        pageHelper.addTimeAggregation(MailProtocol.TOD,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK);
+        pageHelper.withSearchFields(QueryField.contains(MailProtocol.SEARCH_FIELD));
+        pageHelper.withTotalCount();
+        webContext.respondWith().template("/templates/biz/protocol/mails.html.pasta", pageHelper.asPage());
     }
 
     /**
      * Shows the details of a selected mail.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @param id  the id of the mail to show
      */
     @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @Routed("/system/mail/:1")
-    public void mail(final WebContext ctx, String id) {
+    public void mail(final WebContext webContext, String id) {
         MailProtocol mailLogEntry = find(MailProtocol.class, id);
-        ctx.respondWith().template("/templates/biz/protocol/mail.html.pasta", mailLogEntry);
+        webContext.respondWith().template("/templates/biz/protocol/mail.html.pasta", mailLogEntry);
     }
 }

@@ -15,6 +15,7 @@ import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -30,13 +31,13 @@ import java.io.Serializable;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-@Register(framework = Tenants.FRAMEWORK_TENANTS)
+@Register(classes = {Controller.class, ProfileController.class}, framework = Tenants.FRAMEWORK_TENANTS)
 public class ProfileController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     private static final String PARAM_OLD_PASSWORD = "oldPassword";
-    private static final String PARAM_NEW_PASSWORD = "newPassword";
-    private static final String PARAM_CONFIRMATION = "confirmation";
+    protected static final String PARAM_NEW_PASSWORD = "newPassword";
+    protected static final String PARAM_CONFIRMATION = "confirmation";
 
     @Part
     private AuditLog auditLog;
@@ -50,19 +51,20 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
     /**
      * Shows a page where an account can change the user information, e.g. mail, name, ...
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @LoginRequired
     @Routed("/profile")
-    public void profile(WebContext ctx) {
+    public void profile(WebContext webContext) {
         U userAccount = getUser().getUserObject(getUserClass());
         userAccount = userAccount.getMapper().refreshOrFail(userAccount);
         assertNotNew(userAccount);
 
-        boolean requestHandled = prepareSave(ctx).saveEntity(userAccount);
+        boolean requestHandled = prepareSave(webContext).saveEntity(userAccount);
 
         if (!requestHandled) {
-            ctx.respondWith().template("/templates/biz/tenants/profile.html.pasta", userAccount, userAccountController);
+            webContext.respondWith()
+                      .template("/templates/biz/tenants/profile.html.pasta", userAccount, userAccountController);
         }
     }
 
@@ -74,20 +76,25 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
     /**
      * Shows a page where an account can change the password.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @LoginRequired
     @Routed("/profile/password")
-    public void profileChangePassword(WebContext ctx) {
+    public void profileChangePassword(WebContext webContext) {
         U userAccount = getUser().getUserObject(getUserClass());
         userAccount = userAccount.getMapper().refreshOrFail(userAccount);
         assertNotNew(userAccount);
 
-        if (ctx.ensureSafePOST()) {
+        String mode = "profile";
+        if (webContext.getRequestedURI().startsWith("/user-account/")) {
+            mode = "user";
+        }
+
+        if (webContext.ensureSafePOST()) {
             try {
-                String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
-                String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
-                String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
+                String oldPassword = webContext.get(PARAM_OLD_PASSWORD).asString();
+                String newPassword = webContext.get(PARAM_NEW_PASSWORD).asString();
+                String confirmation = webContext.get(PARAM_CONFIRMATION).asString();
 
                 validateOldPassword(oldPassword, userAccount);
                 validateNewPassword(userAccount, newPassword, confirmation);
@@ -98,28 +105,34 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
 
                 showSavedMessage();
 
-                updateFingerprintInCurrentSession(ctx, userAccount);
+                updateFingerprintInCurrentSession(webContext, userAccount);
 
-                ctx.respondWith().redirectToGet("/profile");
+                if ("user".equals(mode)) {
+                    webContext.respondWith().redirectToGet("/user-account/" + userAccount.getIdAsString());
+                    return;
+                }
+
+                webContext.respondWith().redirectToGet("/profile");
                 return;
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 auditLog.neutral("AuditLog.passwordChangeFailed").causedByCurrentUser().forCurrentUser().log();
 
-                UserContext.handle(e);
+                UserContext.handle(exception);
             }
         }
 
-        ctx.respondWith().template("/templates/biz/tenants/profile-change-password.html.pasta", userAccount);
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/profile-change-password.html.pasta", userAccount, mode);
     }
 
     /**
      * Invalidates all client sessions of the current user by changing the fingerprint.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @LoginRequired
     @Routed("/profile/changeFingerprint")
-    public void profileChangeFingerprint(WebContext ctx) {
+    public void profileChangeFingerprint(WebContext webContext) {
         U userAccount = getUser().getUserObject(getUserClass());
         userAccount = userAccount.getMapper().refreshOrFail(userAccount);
         assertNotNew(userAccount);
@@ -127,18 +140,19 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
         userAccount.getUserAccountData().getLogin().resetFingerprint();
         userAccount.getMapper().update(userAccount);
 
-        ctx.respondWith().redirectToGet(wondergemRoot);
+        webContext.respondWith().redirectToGet(wondergemRoot);
     }
 
     /**
      * Directly updates the fingerprint in the current session so that the user isn't logged out when updating the password.
      *
-     * @param ctx         the current request
+     * @param webContext  the current request
      * @param userAccount the account with the new fingerprint of the user
      */
-    private void updateFingerprintInCurrentSession(WebContext ctx, U userAccount) {
+    private void updateFingerprintInCurrentSession(WebContext webContext, U userAccount) {
         TenantUserManager<?, ?, ?> userManager = (TenantUserManager<?, ?, ?>) UserContext.get().getUserManager();
-        userManager.installFingerprintInSession(ctx, userAccount.getUserAccountData().getLogin().getFingerprint());
+        userManager.installFingerprintInSession(webContext,
+                                                userAccount.getUserAccountData().getLogin().getFingerprint());
     }
 
     /**
@@ -148,7 +162,7 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
      * @param newPassword  the new password to set
      * @param confirmation the confirmation given by the user
      */
-    private void validateNewPassword(U userAccount, String newPassword, String confirmation) {
+    protected void validateNewPassword(U userAccount, String newPassword, String confirmation) {
         userAccount.getUserAccountData()
                    .getLogin()
                    .verifyPassword(newPassword, confirmation, userAccount.getUserAccountData().getMinPasswordLength());

@@ -21,6 +21,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.LowerCase;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
@@ -130,6 +131,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
      */
     public static final Mapping NORMALIZED_FILENAME = Mapping.named("normalizedFilename");
     @NullAllowed
+    @LowerCase
     private String normalizedFilename;
 
     /**
@@ -139,6 +141,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
      */
     public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
     @NullAllowed
+    @LowerCase
     private String fileExtension;
 
     /**
@@ -176,6 +179,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
      */
     public static final Mapping TEMPORARY = Mapping.named("temporary");
     private boolean temporary;
+
+    /**
+     * Stores if the blob is marked as read-only.
+     */
+    public static final Mapping READ_ONLY = Mapping.named("readOnly");
+    private boolean readOnly;
 
     /**
      * Contains the size (in bytes) of the blob data.
@@ -228,12 +237,6 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
      */
     public static final Mapping CONTENT_UPDATED = Mapping.named("contentUpdated");
     private boolean contentUpdated;
-
-    /**
-     * Stores if the blob was marked as hidden.
-     */
-    public static final Mapping HIDDEN = Mapping.named("hidden");
-    private boolean hidden;
 
     @Part
     @Nullable
@@ -522,14 +525,6 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         return parentChanged;
     }
 
-    public boolean isHidden() {
-        return hidden;
-    }
-
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
-    }
-
     @Override
     public LocalDateTime getLastTouched() {
         return lastTouched;
@@ -537,5 +532,15 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     public void setLastTouched(LocalDateTime lastTouched) {
         this.lastTouched = lastTouched;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    @Override
+    public void setReadOnly(boolean readOnly) {
+        getStorageSpace().updateBlobReadOnlyFlag(this, readOnly);
     }
 }

@@ -101,8 +101,8 @@ class BridgeUserManager implements UserManager {
 
             StorageUtils.LOG.FINE("Layer 3/FTP: User is authorized...");
             return new BridgeUser(authUser, UserContext.getCurrentScope().getScopeId());
-        } catch (Exception e) {
-            throw new AuthenticationFailedException(e.getMessage());
+        } catch (Exception exception) {
+            throw new AuthenticationFailedException(exception.getMessage());
         }
     }
 

@@ -116,7 +116,7 @@
                         } else {
                             pagination._previousBtn.classList.remove("disabled");
                         }
-                        const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}&extensions={{extensions}}", {
+                        const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skipReadOnlyFiles=true&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}&extensions={{extensions}}", {
                             path: encodeURIComponent(config.path),
                             onlyDirectories: config.onlyDirectories,
                             skip: page * pageSize,

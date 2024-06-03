@@ -11,15 +11,18 @@
     <i:block name="page-header">
         <t:pageHeader titleKey="DataExplorerController.title">
             <i:block name="actions">
-                <button type="button" id="addBtn" class="btn btn-primary mr-2" style="display: none"
+                <button type="button" id="addBtn" class="btn btn-primary me-2" style="display: none"
                         onclick="openTypeSelector()">
-                    <span><i class="fa fa-plus"></i></span>
-                    <span class="d-none ml-2 d-xl-inline-block">@i18n("DataExplorerController.addChart")</span>
+                    <span><i class="fa-solid fa-plus"></i></span>
+                    <span class="d-none ms-2 d-xl-inline-block">@i18n("DataExplorerController.addChart")</span>
                 </button>
-                <button type="button" id="exportBtn" class="btn btn-link mr-2" style="display: none"
+                <button type="button"
+                        id="exportBtn"
+                        class="btn btn-link me-2 text-decoration-none"
+                        style="display: none"
                         onclick="exportCharts()">
                     <span><i class="fa-solid fa-download"></i></span>
-                    <span class="d-none ml-2 d-xl-inline-block">@i18n("DataExplorerController.export")</span>
+                    <span class="d-none ms-2 d-xl-inline-block">@i18n("DataExplorerController.export")</span>
                 </button>
             </i:block>
             <i:block name="additionalActions">
@@ -27,7 +30,7 @@
                         framework="biz.jobs"
                         permission="permission-execute-jobs"
                         url="/jobs"
-                        icon="fas fa-external-link-alt"
+                        icon="fa-solid fa-external-link-alt"
                         labelKey="JobFactory.plural"/>
             </i:block>
         </t:pageHeader>
@@ -36,19 +39,19 @@
     <!--@ This is the UI to select a chart (either because none is present or a new one is to be added) -->
     <div id="typeSelector">
         <t:actions actions="actions">
-            <button type="button" id="cancelBtn" class="btn btn-link mr-2" onclick="hideTypeSelector()">
-                <i class="fa fa-times"></i>
+            <button type="button" id="cancelBtn" class="btn btn-link me-2" onclick="hideTypeSelector()">
+                <i class="fa-solid fa-times"></i>
             </button>
         </t:actions>
         <div class="bt-gray mt-4 pt-3 mb-4" id="backBtn">
             <a href="javascript:hideTypeSelector()" class="btn btn-outline-secondary back-button">
-                <i class="fa fa-times"></i>
+                <i class="fa-solid fa-times"></i>
                 @i18n("NLS.cancel")
             </a>
         </div>
     </div>
 
-    <!--@ This is the UI which renders the chart(s) -->
+    <!--@ This is the UI that renders the chart(s) -->
     <div id="chartsView">
         <div class="card mb-4">
             <div class="card-body">
@@ -133,8 +136,11 @@
         }
 
         // Adds or updates the chart for the given identifier.
-        function addChart(identifier) {
-            $('#select-entity-modal').modal('hide');
+        function addChart(identifier, silent) {
+            const modal = document.getElementById('select-entity-modal').modal;
+            if (modal) {
+                modal.hide();
+            }
 
             const _existingChart = findChart(identifier);
             if (_existingChart) {
@@ -151,14 +157,16 @@
             _chart.innerHTML =
                 '<button type="button" data-chart="' + identifier + '" ' +
                 '        style="position: absolute; right: 0.5rem; top: 0.5rem;"' +
-                '        class="btn btn-link" onclick="closeChart(event.target)">' +
-                '   <i class="fa fa-times"></i>' +
+                '        class="btn btn-link" onclick="closeChartViaButton(event.target)">' +
+                '   <i class="fa-solid fa-times"></i>' +
                 '</button>' +
                 '<div class="card-body d-flex flex-column"></div>';
             _charts.appendChild(_chart);
 
             hideTypeSelector();
-            updateUrl();
+            if (!silent) {
+                updateUrl();
+            }
 
             return recompute(_chart);
         }
@@ -168,7 +176,7 @@
             _chart.querySelector('.card-body').innerHTML =
                 '<div class="d-flex flex-column flex-grow-1 justify-content-around align-items-center text-muted" ' +
                 '     style="font-size: 32px">' +
-                '   <i class="fa fa-spinner fa-spin"></i>' +
+                '   <i class="fa-solid fa-spinner fa-spin"></i>' +
                 '</div>';
             return sirius.getJSON('/data-explorer/api/load-chart', {
                 identifier: _chart.dataset.identifier,
@@ -223,16 +231,16 @@
                 '{{/description}}' +
                 '{{#hints}}' +
                 '   <div class="mt-1 text-small text-muted">' +
-                '       <i class="fas fa-info-circle"></i>' +
+                '       <i class="fa-solid fa-info-circle"></i>' +
                 '       <span class="text-sirius-yellow-dark">{{.}}</span>' +
                 '   </div>' +
                 '{{/hints}}' +
                 '<div class="mt-3 references-js">' +
                 '   <div class="text-small mb-1">@i18n("DataExplorerController.references"):</div>' +
                 '   {{#references}}' +
-                '       <a class="btn btn-primary btn-sm mr-2 reference-js reference-visible-js" ' +
+                '       <a class="btn btn-primary btn-sm me-2 reference-js reference-visible-js" ' +
                 '          data-chart="{{identifier}}" href="javascript:addChart(\'{{identifier}}\')">' +
-                '           <i class="fa fa-plus"></i> {{label}}' +
+                '           <i class="fa-solid fa-plus"></i> {{label}}' +
                 '       </a>' +
                 '   {{/references}}' +
                 '</div>', json);
@@ -262,25 +270,39 @@
             document.querySelectorAll('.chart-js').forEach(updateReferences);
         }
 
-        function closeChart(_closeBtn) {
+        function closeChartViaButton(_closeBtn) {
             let _chart = _closeBtn;
             while (!_chart.classList.contains('chart-js') && _chart !== null) {
                 _chart = _chart.parentNode;
             }
 
-            if (_chart !== null) {
-                _chart.parentNode.removeChild(_chart);
+            closeChart(_chart);
+            updateUrl();
+        }
 
-                if (document.querySelectorAll('.chart-js').length === 0) {
-                    openTypeSelector();
+        function closeChart(_chart) {
+            if (_chart === null) {
+                return;
+            }
+            _chart.parentNode.removeChild(_chart);
+            if (document.querySelectorAll('.chart-js').length === 0) {
+                openTypeSelector();
+            }
+        }
+
+        function closeAllCharts(silent, filterPredicate) {
+            document.querySelectorAll('.chart-js').forEach(function (_chart) {
+                if (!filterPredicate || filterPredicate(_chart)) {
+                    closeChart(_chart);
                 }
-
+            });
+            if (!silent) {
                 updateUrl();
             }
         }
 
         // Used to call the callback for each element in a list, but while awaiting the completion of each returned
-        // promise. This is mainly done so that whe don't overload a server by recomputing all charts at once.
+        // promise. This is mainly done so that we don't overload a server by recomputing all charts at once.
         function performForEach(index, list, asyncCallback) {
             if (index < list.length) {
                 asyncCallback(list[index]).then(function () {
@@ -289,12 +311,12 @@
             }
         }
 
-        function refresh() {
-            updateUrl();
+        function refresh(silent) {
+            updateUrl(silent);
             performForEach(0, document.querySelectorAll('.chart-js'), recompute);
         }
 
-        function changeRange(newRange) {
+        function changeRange(newRange, silent) {
             if (range !== newRange && sirius.isFilled(newRange)) {
                 range = newRange;
 
@@ -308,11 +330,11 @@
                     }
                 });
 
-                refresh();
+                refresh(silent);
             }
         }
 
-        function changePeriod(newPeriod) {
+        function changePeriod(newPeriod, silent) {
             if (comparisonPeriod !== newPeriod && sirius.isFilled(newPeriod)) {
                 comparisonPeriod = newPeriod;
 
@@ -326,12 +348,12 @@
                     }
                 });
 
-                refresh();
+                refresh(silent);
             }
         }
 
         // Updates the query string based on the currently visible charts, so that a link can be bookmarked.
-        function updateUrl() {
+        function updateUrl(silent) {
             const searchParams = new URLSearchParams();
             if (range !== "last12Months") {
                 searchParams.set("range", range);
@@ -353,7 +375,10 @@
             }
 
             const newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
-            history.replaceState(null, '', newRelativePathQuery);
+            if (!silent) {
+                console.log('PUSHING STATE: ', newRelativePathQuery);
+                history.pushState({dataExplorer: true}, '', newRelativePathQuery);
+            }
 
             updateAllReferences();
         }
@@ -400,9 +425,35 @@
             openTypeSelector();
 
             const params = new URLSearchParams(window.location.search);
-            changeRange(params.get('range'));
-            changePeriod(params.get('period'));
-            performForEach(0, params.getAll('chart'), addChart);
+            changeRange(params.get('range') || 'last12Months', true);
+            changePeriod(params.get('period') || 'lastYear', true);
+            performForEach(0, params.getAll('chart'), function (identifier) {
+                return addChart(identifier, true)
+            });
+
+            window.addEventListener('popstate', function (event) {
+                let state = history.state;
+
+                if ((state === null) || (state === undefined)) state = event.state;
+                if ((state === null) || (state === undefined)) state = window.event.state;
+
+                if (state !== null && state.dataExplorer !== null) {
+                    const params = new URLSearchParams(window.location.search);
+                    changeRange(params.get('range') || 'last12Months', true);
+                    changePeriod(params.get('period') || 'lastYear', true);
+                    const chartsInUrl = params.getAll('chart');
+                    if (chartsInUrl.length === 0) {
+                        closeAllCharts(true);
+                    } else {
+                        closeAllCharts(true, function (_chart) {
+                            return chartsInUrl.indexOf(_chart.dataset.identifier) === -1;
+                        });
+                        performForEach(0, chartsInUrl, function (identifier) {
+                            return addChart(identifier, true);
+                        });
+                    }
+                }
+            });
         });
     </script>
 
@@ -412,13 +463,11 @@
 
         <div class="input-group">
             <input type="text" id="entityQueryField"
-                   class="form-control"
-                   placeholder="@i18n('NLS.searchkey')" autofocus/>
-            <div class="input-group-append">
-                <a class="btn btn-outline-secondary">
-                    <i class="fa fa-search"></i>
-                </a>
-            </div>
+                   class="form-control primary-autofocus-js"
+                   placeholder="@i18n('NLS.searchkey')"/>
+            <a class="btn btn-outline-secondary">
+                <i class="fa-solid fa-search"></i>
+            </a>
         </div>
 
         <div id="entityResults" class="mt-4 mb-2">
@@ -426,14 +475,14 @@
         </div>
 
         <i:block name="footer">
-            <button class="btn btn-secondary" data-dismiss="modal">@i18n("NLS.cancel")</button>
+            <button class="btn btn-secondary" data-bs-dismiss="modal">@i18n("NLS.cancel")</button>
         </i:block>
     </t:modal>
 
     <!-- This whole block controls the entity selection process -->
     <script type="text/javascript">
         function selectEntity(chartType, uri) {
-            sirius.getJSON(uri, {}).then(function (json) {
+            sirius.getJSON(uri, {}).then(json => {
                 if (json.completions.length === 1) {
                     addChart(chartType + ':' + json.completions[0].value);
                     return;
@@ -443,8 +492,8 @@
                 _entityQueryField.dataset.chartType = chartType;
                 _entityQueryField.dataset.uri = uri;
                 _entityQueryField.value = '';
-                fetchEntitySuggestions().then(function () {
-                    $('#select-entity-modal').modal('show');
+                fetchEntitySuggestions().then(() => {
+                    document.getElementById('select-entity-modal').modal.show();
                 });
             });
         }
@@ -457,10 +506,10 @@
                 }
                 timer = window.setTimeout(function () {
                     const actions = document.querySelectorAll('.action-js');
-                    if (event.keyCode === 13 && document.getElementById('entityResults').querySelector('.entity-js').length === 1) {
+                    if (event.key === sirius.key.ENTER && document.getElementById('entityResults').querySelector('.entity-js').length === 1) {
                         document.getElementById('entityResults').querySelector('.entity-js a').click();
                         return;
-                    } else if (event.keyCode === 27) {
+                    } else if (event.key === sirius.key.ESCAPE) {
                         event.target.value = '';
                     }
 
@@ -468,7 +517,9 @@
                 }, 150);
             });
 
-            $('#select-entity-modal').on('shown.bs.modal', function (e) {
+            const _selectEntityModal = document.getElementById('select-entity-modal');
+            _selectEntityModal.modal = new bootstrap.Modal(_selectEntityModal);
+            _selectEntityModal.addEventListener('shown.bs.modal', () => {
                 document.getElementById('entityQueryField').focus();
             })
         });

@@ -163,8 +163,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
             codeList.getCodeListData().setCode(codeListName);
             codeList.getCodeListData().setName(codeListName);
             return codeList;
-        } catch (Exception e) {
-            throw Exceptions.handle(LOG, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(LOG, exception);
         }
     }
 
@@ -174,7 +174,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * This also gracefully handles scopes other than the current tenant as long as there is an adapter to make it
      * match a {@link CodeListTenantProvider}.
      * <p>
-     * Note that "global" code lists are always stored in the system tenant and shared accross all tenants.
+     * Note that "global" code lists are always stored in the system tenant and shared across all tenants.
      *
      * @param codeListName the name of the code list to determine if the code list is global and doesn't require a
      *                     tenant at all
@@ -373,8 +373,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
             entry.getCodeListEntryData().setCode(code);
             entry.getCodeListEntryData().getValue().setFallback(code);
             return entry;
-        } catch (Exception e) {
-            throw Exceptions.handle(LOG, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(LOG, exception);
         }
     }
 
@@ -502,7 +502,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * Checks if the given code exists inside the given code list or throws an exception if no matching entry exists.
      * <p>
      * Note that if the code list cannot be resolved as no tenant is present, the check is skipped entirely. This is a
-     * safety net as these are rare circumstances (etc. during login) where a check and espically a failure does more
+     * safety net as these are rare circumstances (etc. during login) where a check and especially a failure does more
      * harm than help. Also note that empty codes are simply ignored without reporting an error.
      *
      * @param codeListName the code list to search in
@@ -520,7 +520,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * Returns all entries of a code list.
      *
      * @param codeListName the code list to fetch entries from
-     * @return a list of all avilable entries in the given code list, sorted by priority
+     * @return a list of all available entries in the given code list, sorted by priority
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public List<E> getEntries(@Nonnull String codeListName) {

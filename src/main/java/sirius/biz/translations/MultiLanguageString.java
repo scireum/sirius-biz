@@ -325,6 +325,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
             throw new IllegalStateException(
                     "Can not call fetchTextOrFallback on a MultiLanguageString without fallback enabled.");
         }
+
         return data().getOrDefault(language, data().get(FALLBACK_KEY));
     }
 

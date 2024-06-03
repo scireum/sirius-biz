@@ -33,7 +33,7 @@ public class LookupTableMessageExpander implements MessageExpander {
             LookupTable table = lookupTables.fetchTable(tableName);
             return Strings.apply("""
                                          <span class="d-inline-flex flex-row align-items-baseline">
-                                             <i class="fa fa-bolt"></i><a class="pl-1" href="javascript:openLookupTable('%s')">%s</a>
+                                             <i class="fa-solid fa-bolt"></i><a class="ps-1" href="javascript:openLookupTable('%s')">%s</a>
                                          </span>
                                          """, tableName, table.getTitle());
         });

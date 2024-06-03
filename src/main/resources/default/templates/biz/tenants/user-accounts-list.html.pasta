@@ -1,0 +1,138 @@
+<i:arg type="Page" name="accounts"/>
+<i:arg type="String" name="paginationBaseUrl"/>
+<i:arg type="String" name="cardBaseUrl"/>
+<i:arg type="String" name="cardActionsType"/>
+
+<t:emptyCheck data="@accounts">
+    <t:datacards>
+        <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
+            <t:datacard
+                    subTitle="@account.getUserAccountData().getLogin().getUsername()"
+                    headerLeft="true"
+                    headerLeftAlignmentClass="align-items-stretch text-break break-word"
+                    link="@apply('%s/%s', cardBaseUrl , account.getIdAsString())">
+                <i:block name="header">
+                    <div class="ps-3 pe-1 align-self-center">
+                        <div class="d-flex flex-column align-items-center justify-content-center"
+                             style="width: 80px">
+                            <img style="border-radius: 50%; object-fit: cover; object-position: center;"
+                                 class="mw-100"
+                                 src="@account.getUserAccountData().fetchSmallUrl().buildImageURL()"
+                                 alt=""/>
+                        </div>
+                    </div>
+                </i:block>
+                <i:block name="title">
+                    <div class="overflow-hidden text-ellipsis text-nowrap">
+                        <t:langFlag lang="@account.getUserAccountData().getLanguage().getValue()"/>
+                        <span>@account.getUserAccountData()</span>
+                    </div>
+                </i:block>
+                <i:block name="actions">
+                    <i:if test="cardActionsType == 'edit'">
+                        <t:dropdownSection>
+                            <t:dropdownItem labelKey="TenantController.edit"
+                                            icon="fa-solid fa-pencil"
+                                            permission="permission-manage-user-accounts"
+                                            url="@apply('/user-account/%s', account.getIdAsString())"/>
+                        </t:dropdownSection>
+
+                        <!--@ actions for other users -->
+                        <i:if test="!account.getUserAccountData().isOwnUser()">
+                            <i:if test="account.getUserAccountData().canSelect()">
+                                <t:dropdownSection
+                                        permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
+                                    <t:dropdownItem labelKey="TenantController.select"
+                                                    icon="fa-solid fa-user-secret"
+                                                    url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                                </t:dropdownSection>
+                            </i:if>
+                            <t:dropdownSection>
+                                <t:dropdownItem
+                                        labelKey="Model.password.set"
+                                        icon="fa-solid fa-key"
+                                        url="@accounts.linkToCurrentPage(apply('/user-account/%s/password', account.getIdAsString()))"/>
+                                <t:dropdownItem
+                                        labelKey="LoginData.password.generate"
+                                        icon="fa-regular fa-envelope"
+                                        url="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-password', account.getIdAsString()))"/>
+                                <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
+                                    <t:dropdownItem
+                                            labelKey="LoginData.password.generateAndSend"
+                                            icon="fa-solid fa-envelope"
+                                            url="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-and-send-password', account.getIdAsString()))"/>
+                                </i:if>
+                            </t:dropdownSection>
+                            <t:dropdownSection>
+                                <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                                    <t:dropdownItem
+                                            labelKey="LoginData.unlock"
+                                            icon="fa-solid fa-unlock"
+                                            url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
+                                    <i:else>
+                                        <t:dropdownItem
+                                                labelKey="LoginData.lock"
+                                                icon="fa-solid fa-lock"
+                                                url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
+                                    </i:else>
+                                </i:if>
+                            </t:dropdownSection>
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.UserAccountController.PERMISSION_DELETE_USER_ACCOUNTS">
+                                <t:dropdownDeleteItem
+                                        url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                            </t:dropdownSection>
+
+                            <!--@ actions for own user -->
+                            <i:else>
+                                <t:dropdownSection>
+                                    <t:dropdownItem
+                                            labelKey="Model.password.set"
+                                            icon="fa-solid fa-key"
+                                            url="@accounts.linkToCurrentPage(apply('/user-account/%s/password', account.getIdAsString()))"/>
+                                </t:dropdownSection>
+                            </i:else>
+                        </i:if>
+                    </i:if>
+
+                    <i:if test="cardActionsType == 'select'">
+                        <i:if test="account.getUserAccountData().canSelect()">
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
+                                <t:dropdownItem labelKey="TenantController.select"
+                                                icon="fa-solid fa-user-secret"
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
+                        <i:if test="account.getUserAccountData().isOwnTenant()">
+                            <t:dropdownSection>
+                                <t:dropdownItem labelKey="TenantController.edit"
+                                                icon="fa-solid fa-pencil"
+                                                permission="permission-manage-user-accounts"
+                                                url="@apply('/user-account/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
+                    </i:if>
+                </i:block>
+
+                <div class="mb-2">
+                    <t:iconInlineInfo icon="fa-solid fa-eye">
+                        @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
+                    </t:iconInlineInfo>
+
+                    <t:iconInlineInfo icon="fa-regular fa-envelope">
+                        @account.getUserAccountData().getEmail()
+                    </t:iconInlineInfo>
+                </div>
+
+                <i:block name="footer">
+                    <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                        <t:dot color="red">@i18n("LoginData.accountLocked")</t:dot>
+                    </i:if>
+                </i:block>
+            </t:datacard>
+        </i:for>
+    </t:datacards>
+
+    <t:pagination page="accounts" baseUrl="@paginationBaseUrl"/>
+</t:emptyCheck>

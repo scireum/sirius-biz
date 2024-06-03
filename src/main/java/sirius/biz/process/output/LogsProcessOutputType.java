@@ -51,11 +51,11 @@ public class LogsProcessOutputType implements ProcessOutputType {
 
     @Override
     public String getIcon() {
-        return "fa fa-bars";
+        return "fa-solid fa-bars";
     }
 
     @Override
-    public void render(WebContext ctx, Process process, ProcessOutput output) {
+    public void render(WebContext webContext, Process process, ProcessOutput output) {
         ElasticQuery<ProcessLog> query = elastic.select(ProcessLog.class)
                                                 .eq(ProcessLog.OUTPUT, output.getName())
                                                 .eq(ProcessLog.PROCESS, process)
@@ -66,23 +66,26 @@ public class LogsProcessOutputType implements ProcessOutputType {
             query.eq(ProcessLog.SYSTEM_MESSAGE, false);
         }
 
-        ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
-        ph.withContext(ctx);
-        ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
-        ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
-        ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
+        ElasticPageHelper<ProcessLog> pageHelper = ElasticPageHelper.withQuery(query);
+        pageHelper.withContext(webContext)
+                  .addTermAggregation(ProcessLog.TYPE, ProcessLogType.class)
+                  .addTermAggregation(ProcessLog.STATE, ProcessLogState.class)
+                  .addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         if (user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
-            ph.addBooleanAggregation(ProcessLog.SYSTEM_MESSAGE);
+            pageHelper.addBooleanAggregation(ProcessLog.SYSTEM_MESSAGE);
         }
-        ph.addTimeAggregation(ProcessLog.TIMESTAMP,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS);
-        ph.addTermAggregation(ProcessLog.NODE);
-        ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
+        pageHelper.addTimeAggregation(ProcessLog.TIMESTAMP,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS)
+                  .addTermAggregation(ProcessLog.NODE)
+                  .withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith()
-           .template("/templates/biz/process/process-output-logs.html.pasta", process, ph.asPage(), output.getName());
+        webContext.respondWith()
+                  .template("/templates/biz/process/process-output-logs.html.pasta",
+                            process,
+                            pageHelper.asPage(),
+                            output.getName());
     }
 }

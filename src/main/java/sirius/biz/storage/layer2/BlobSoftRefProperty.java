@@ -95,16 +95,16 @@ public class BlobSoftRefProperty extends BlobRefProperty {
         }
     }
 
-    private BlobSoftRef getBlobSoftRef() {
+    private BlobSoftRef getReferenceBlobSoftRef() {
         if (blobSoftRef == null) {
             try {
                 blobSoftRef = (BlobSoftRef) field.get(accessPath.apply(descriptor.getReferenceInstance()));
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 throw Exceptions.handle()
                                 .to(Mixing.LOG)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage(
-                                        "Unable to obtain a BlobSoftRef object from entity ref field ('%s' in '%s'): %s (%s)",
+                                        "Unable to obtain a reference object from blob ref field ('%s' in '%s'): %s (%s)",
                                         getName(),
                                         descriptor.getType().getName())
                                 .handle();
@@ -119,7 +119,7 @@ public class BlobSoftRefProperty extends BlobRefProperty {
         super.link();
 
         try {
-            BaseEntityRef.OnDelete deleteHandler = getBlobSoftRef().getDeleteHandler();
+            BaseEntityRef.OnDelete deleteHandler = getReferenceBlobSoftRef().getDeleteHandler();
 
             if (deleteHandler == BaseEntityRef.OnDelete.CASCADE) {
                 forEachBlobType(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteCascade));
@@ -131,12 +131,12 @@ public class BlobSoftRefProperty extends BlobRefProperty {
 
                 forEachBlobType(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteSetNull));
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Mixing.LOG.WARN("Error when linking property %s of %s: %s (%s)",
                             this,
                             getDescriptor(),
-                            e.getMessage(),
-                            e.getClass().getSimpleName());
+                            exception.getMessage(),
+                            exception.getClass().getSimpleName());
         }
     }
 
@@ -194,9 +194,9 @@ public class BlobSoftRefProperty extends BlobRefProperty {
 
     @Override
     protected void determineLengths() {
-        BlobSoftRef templateReference = (BlobSoftRef) getRef(descriptor.getReferenceInstance());
-        this.length =
-                templateReference.isSupportsURL() ? URL_COMPATIBLE_LENGTH : BlobHardRefProperty.DEFAULT_KEY_LENGTH;
+        this.length = getReferenceBlobSoftRef().isSupportsURL() ?
+                      URL_COMPATIBLE_LENGTH :
+                      BlobHardRefProperty.DEFAULT_KEY_LENGTH;
     }
 
     @Override
@@ -205,7 +205,7 @@ public class BlobSoftRefProperty extends BlobRefProperty {
             return;
         }
 
-        BlobSoftRef ref = (BlobSoftRef) getRef(entity);
+        BlobSoftRef ref = (BlobSoftRef) getRef(this.accessPath.apply(entity));
         if (ref.isEmpty() || ref.isURL()) {
             return;
         }

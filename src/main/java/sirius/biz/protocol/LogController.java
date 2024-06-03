@@ -27,30 +27,31 @@ public class LogController extends BizController {
     /**
      * Lists all recorded log entries.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/logs")
-    public void logs(WebContext ctx) {
-        ElasticPageHelper<LoggedMessage> ph =
+    public void logs(WebContext webContext) {
+        ElasticPageHelper<LoggedMessage> pageHelper =
                 ElasticPageHelper.withQuery(elastic.select(LoggedMessage.class).orderDesc(LoggedMessage.TOD));
-        ph.withContext(ctx);
-        ph.withPageSize(100);
-        ph.addTermAggregation(LoggedMessage.CATEGORY, 100);
-        ph.addTermAggregation(LoggedMessage.LEVEL);
-        ph.addTermAggregation(LoggedMessage.NODE);
-        ph.addTimeAggregation(LoggedMessage.TOD,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS,
-                              DateRange.TODAY,
-                              DateRange.YESTERDAY,
-                              DateRange.THIS_WEEK,
-                              DateRange.LAST_WEEK);
-        ph.withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD));
+        pageHelper.withContext(webContext)
+                  .withPageSize(100)
+                  .addTermAggregation(LoggedMessage.CATEGORY, 100)
+                  .addTermAggregation(LoggedMessage.LEVEL)
+                  .addTermAggregation(LoggedMessage.NODE)
+                  .addTimeAggregation(LoggedMessage.TOD,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK)
+                  .withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD))
+                  .withTotalCount();
 
-        ctx.respondWith().template("/templates/biz/protocol/logs.html.pasta", ph.asPage());
+        webContext.respondWith().template("/templates/biz/protocol/logs.html.pasta", pageHelper.asPage());
     }
 }

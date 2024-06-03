@@ -45,45 +45,45 @@ public class NLSController extends BasicController {
      * Reports all unused NLS keys.
      *
      * @param webContext the request to handle
-     * @param out        the output to write the JSON to
+     * @param output     the output to write the JSON to
      * @param token      the cluster authentication token
      */
     @Routed("/system/nls/unused/:1")
     @InternalService
-    public void unused(WebContext webContext, JSONStructuredOutput out, String token) {
+    public void unused(WebContext webContext, JSONStructuredOutput output, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
-        out.beginArray(RESPONSE_UNUSED);
+        output.beginArray(RESPONSE_UNUSED);
         NLS.getTranslationEngine()
            .getUnusedTranslations()
            .map(Translation::getKey)
-           .forEach(key -> out.property(RESPONSE_KEY, key));
-        out.endArray();
+           .forEach(key -> output.property(RESPONSE_KEY, key));
+        output.endArray();
     }
 
     /**
      * Reports all autocreated NLS keys.
      *
      * @param webContext the request to handle
-     * @param out        the output to write the JSON to
+     * @param output     the output to write the JSON to
      * @param token      the cluster authentication token
      */
     @Routed("/system/nls/autocreated/:1")
     @InternalService
-    public void autocreated(WebContext webContext, JSONStructuredOutput out, String token) {
+    public void autocreated(WebContext webContext, JSONStructuredOutput output, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
-        out.beginArray(RESPONSE_AUTOCREATED);
+        output.beginArray(RESPONSE_AUTOCREATED);
         NLS.getTranslationEngine()
            .getAutocreatedTranslations()
            .map(Translation::getKey)
-           .forEach(key -> out.property(RESPONSE_KEY, key));
-        out.endArray();
+           .forEach(key -> output.property(RESPONSE_KEY, key));
+        output.endArray();
     }
 }

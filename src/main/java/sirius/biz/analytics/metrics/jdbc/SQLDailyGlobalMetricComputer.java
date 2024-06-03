@@ -9,11 +9,9 @@
 package sirius.biz.analytics.metrics.jdbc;
 
 import sirius.biz.analytics.metrics.DailyMetricComputer;
+import sirius.biz.analytics.metrics.MetricComputerContext;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.jdbc.SQLEntity;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * Provides a base class for all metric computers which are invoked on a monthly basis to compute a global metric.
@@ -37,16 +35,9 @@ public abstract class SQLDailyGlobalMetricComputer extends DailyMetricComputer<S
     }
 
     @Override
-    public final void compute(LocalDate date,
-                              LocalDateTime startOfPeriod,
-                              LocalDateTime endOfPeriod,
-                              boolean periodOutsideOfCurrentInterest,
-                              SQLEntity entity) throws Exception {
-        compute(date, startOfPeriod, endOfPeriod, periodOutsideOfCurrentInterest);
+    public final void compute(MetricComputerContext context, SQLEntity entity) throws Exception {
+        compute(context);
     }
 
-    protected abstract void compute(LocalDate date,
-                                    LocalDateTime startOfPeriod,
-                                    LocalDateTime endOfPeriod,
-                                    boolean periodOutsideOfCurrentInterest) throws Exception;
+    protected abstract void compute(MetricComputerContext context) throws Exception;
 }

@@ -1,0 +1,63 @@
+<k:article code="JDKOE"
+           lang="en"
+           parent="DJELK"
+           title="Customization Flags"
+           permissions="flag-system-tenant">
+    <i:block name="description">Permits to enable or disable certain functionalities for certain user groups.</i:block>
+
+    <i:block name="sidebar">
+        <k:toc>
+            <k:tocLink link="#theory-of-operation">Theory of Operation</k:tocLink>
+            <k:tocLink link="#current-state">Current State</k:tocLink>
+        </k:toc>
+    </i:block>
+
+    <k:section heading="Theory of Operation" anchor="theory-of-operation">
+        Permits to disable or enable specific functions based on the current user, scope, browser setting etc.
+        <p>
+            This is mainly intended for migration projects where functionality needs either to be enabled for specific
+            users or scopes or needs to be "set back" to the old behavior. Therefore, a flag can be toggled in many
+            places:
+        </p>
+        <ol>
+            <li>
+                By either having the string <k:inlineCode>flag-FLAGNAME-disabled</k:inlineCode> or
+                <k:inlineCode>flag-FLAGNAME</k:inlineCode> in the user agent.
+            </li>
+            <li>
+                By setting it in the custom config in the current user or its tenant (in the block
+                <k:inlineCode>flags</k:inlineCode>).
+            </li>
+            <li>By setting it in the scope config (in the block
+                <k:inlineCode>flags</k:inlineCode>).</li>
+            <li>By setting it in the tenant config which owns the current scope (in the block
+                <k:inlineCode>flags</k:inlineCode>).</li>
+            <li>By setting it in the config of the system tenant (in the block
+                <k:inlineCode>flags.global</k:inlineCode>).</li>
+        </ol>
+        <p>
+            These places are checked in order and the first given value is used. Therefore, especially via the system
+            tenant, a whole system can be set to either "all on" or "all off" - with specific exceptions on multiple
+            levels.
+        </p>
+    </k:section>
+    <k:section heading="Current State" anchor="current-state">
+        The following flags are available:
+
+        <i:local name="flags" value="part(sirius.biz.tenants.flags.CustomizationFlags.class)"/>
+        <table class="table mt-4">
+            <i:for type="sirius.biz.tenants.flags.CustomizationFlag" var="flag" items="flags.getKnownFlags()">
+                <i:local name="enabledAndSource" value="flag.check()"/>
+                <tr>
+                    <td class="fw-bold">@flag.getName()</td>
+                    <td class="text-end">
+                        <b class="@if (enabledAndSource.getFirst()) { sci-text-green-dark } else { sci-text-gray-darker} ">
+                            @toUserString(enabledAndSource.getFirst())
+                        </b>
+                        <span class="ms-1 text-small text-muted">@enabledAndSource.getSecond()</span>
+                    </td>
+                </tr>
+            </i:for>
+        </table>
+    </k:section>
+</k:article>

@@ -10,6 +10,6 @@
            anchor="@anchor"
            class="full-border border-sirius-yellow-dark"
            headingClass="text-sirius-yellow-dark"
-           headingIcon="fas fa-exclamation-triangle">
+           headingIcon="fa-solid fa-exclamation-triangle">
     <i:render name="body"/>
 </k:section>

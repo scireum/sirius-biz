@@ -1,0 +1,131 @@
+<i:arg type="List" name="nodes"/>
+<t:page title="Scripting Console">
+    <i:block name="head">
+        <script src="/assets/tycho/libs/ace/ace.js" type="text/javascript"></script>
+    </i:block>
+
+    <i:block name="breadcrumbs">
+        <li><a href="/system/scripting">Scripting Console</a></li>
+    </i:block>
+
+    <i:block name="page-header">
+        <t:pageHeader title="Scripting Console">
+            <i:block name="actions">
+                <t:kbBtn code="P399F" />
+            </i:block>
+        </t:pageHeader>
+    </i:block>
+    <div style="height:350px">
+        <t:codeEditor id="editor" mode="text">log('Good Morning Dave');</t:codeEditor>
+    </div>
+
+    <div class="bt-gray mt-4 pt-3 mb-4">
+        <div class="row">
+            <div class="col-12 d-lg-none mb-2">
+                <a class="btn btn-primary btn-block" onclick="executeScript()"><i class="fa-solid fa-play"></i> Execute</a>
+            </div>
+            <div class="col-lg-8 d-none d-lg-inline">
+                <a class="btn btn-primary" onclick="executeScript()"><i class="fa-solid fa-play"></i> Execute</a>
+            </div>
+            <t:singleSelect class="col-12 col-lg-4"
+                            id="node"
+                            name="node"
+                            label="">
+                <i:for var="node" type="Tuple" items="@nodes">
+                    <option value="@node.getSecond()">@node.getFirst()</option>
+                </i:for>
+            </t:singleSelect>
+        </div>
+    </div>
+
+    <t:heading label="Transcript"/>
+    <div id="transcript" style="height: 400px" class="mb-4 p-2 text-white bg-dark font-monospace whitespace-pre-wrap overflow-auto"></div>
+
+    <script type="text/javascript">
+        let lastCheckedScript = '';
+        let _transcript = document.getElementById('transcript');
+        let _editor = document.getElementById('editor');
+        let lastLog = 0;
+
+        sirius.ready(function () {
+            setTimeout(updateState, 1000);
+        });
+
+        function updateState() {
+            let script = _editor.aceEditor.getSession().getDocument().getValue();
+            if (script !== lastCheckedScript) {
+                lastCheckedScript = script;
+
+                sirius.postJSON('/system/scripting/api/compile',
+                    {
+                        script: _editor.aceEditor.getSession().getDocument().getValue(),
+                        CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+                    }).then(
+                    function (data) {
+                        if (data.problems != null && data.problems.length > 0) {
+                            _editor.aceEditor.getSession().setAnnotations(data.problems);
+                        } else {
+                            _editor.aceEditor.getSession().setAnnotations([]);
+                        }
+                    });
+            }
+
+            sirius.getJSON('/system/scripting/api/transcript',
+                {minTimestamp: lastLog}).then(
+                function (data) {
+                    if (data.messages != null) {
+                        for (i = 0; i < data.messages.length; i++) {
+                            const msg = data.messages[i];
+                            const _messageDiv = document.createElement('DIV');
+                            _messageDiv.textContent = "[" + msg.timestampString + "] " + msg.job + "/" + msg.node + ": " + msg.message;
+                            lastLog = Math.max(lastLog, msg.timestamp);
+                            _transcript.appendChild(_messageDiv);
+                        }
+                        if (data.messages.length > 0) {
+                            limitNumberOfLogs();
+                            _transcript.scrollTo({
+                                top: _transcript.querySelector('div:last-child').offsetTop,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+
+                    setTimeout(updateState, 1000);
+                }
+            );
+        }
+
+        function limitNumberOfLogs() {
+            let numberOfRows = _transcript.querySelectorAll('div').length;
+            let rowsToRemove = numberOfRows - 256;
+            while (rowsToRemove > 0) {
+                _transcript.querySelector('div:first-child').remove();
+                rowsToRemove--;
+            }
+        }
+
+        let clearMessagesTimeout = null;
+
+        function executeScript() {
+            sirius.postJSON('/system/scripting/api/submit',
+                {
+                    script: editor.aceEditor.getSession().getDocument().getValue(),
+                    node: document.getElementById("node").tokenAutocomplete.val()[0],
+                    CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+                }).then(
+                function (data) {
+                    clearTimeout(clearMessagesTimeout);
+                    clearMessages();
+
+                    if (data.error) {
+                        addErrorMessage(data.message);
+                    } else {
+                        addInfoMessage(data.jobMessage)
+                        clearMessagesTimeout = setTimeout(function() {
+                            clearMessages();
+                        }, 3000);
+                    }
+                });
+        }
+    </script>
+</t:page>

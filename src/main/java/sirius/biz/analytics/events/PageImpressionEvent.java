@@ -11,7 +11,6 @@ package sirius.biz.analytics.events;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Strings;
 import sirius.web.controller.ControllerDispatcher;
 import sirius.web.http.WebContext;
@@ -36,7 +35,7 @@ import sirius.web.http.WebContext;
  * @see EventRecorder
  * @see #withAggregationUrl(String)
  */
-public class PageImpressionEvent extends Event {
+public class PageImpressionEvent extends Event<PageImpressionEvent> {
 
     /**
      * Contains a generic or shortened URI which can be used to aggregate on.
@@ -95,7 +94,7 @@ public class PageImpressionEvent extends Event {
     @BeforeSave
     protected void fillAndCheck() {
         if (Strings.isEmpty(uri) || Strings.isEmpty(aggregationUri)) {
-            WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+            WebContext webContext = WebContext.getCurrent();
             if (webContext.isValid()) {
                 if (Strings.isEmpty(uri)) {
                     uri = webContext.getRequestedURI();

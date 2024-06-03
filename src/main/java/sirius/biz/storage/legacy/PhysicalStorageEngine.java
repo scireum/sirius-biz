@@ -46,12 +46,12 @@ public interface PhysicalStorageEngine {
     /**
      * Delivers the requested object to the given request as response.
      *
-     * @param ctx           the request to provide a response for
+     * @param webContext           the request to provide a response for
      * @param bucket        the bucket of the object to deliver
      * @param physicalKey   the id of the object to deliver
      * @param fileExtension the file extension e.g. to setup a matching <tt>Content-Type</tt>
      */
-    void deliver(WebContext ctx, String bucket, String physicalKey, String fileExtension);
+    void deliver(WebContext webContext, String bucket, String physicalKey, String fileExtension);
 
     /**
      * Can provide a custom download URL for a given builder.

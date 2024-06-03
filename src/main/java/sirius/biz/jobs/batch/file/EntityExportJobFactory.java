@@ -52,6 +52,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
                                          getDefaultMapping(),
                                          process,
                                          getName()).withQueryExtender(query -> extendSelectQuery(query, process))
+                                                   .withEntityFilter(this::includeEntityDuringExport)
                                                    .withContextExtender(context -> context.putAll(parameterContext))
                                                    .withFileName(getCustomFileName());
     }
@@ -90,6 +91,20 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     }
 
     /**
+     * Checks whether the given entity should be exported. This can be overridden to filter entities using more complex
+     * logic than can be expressed by the query.
+     * <p>
+     * This method should be used with care.
+     *
+     * @param entity         the entity to check
+     * @param processContext the current process which can be used to extract parameters
+     * @return <tt>true</tt> if the entity should be exported, <tt>false</tt> otherwise
+     */
+    protected boolean includeEntityDuringExport(E entity, ProcessContext processContext) {
+        return true;
+    }
+
+    /**
      * Creates the dictionary used by the export.
      *
      * @return the dictionary being used
@@ -99,8 +114,8 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
             ImportDictionary dictionary = importer.getExportDictionary(getExportType());
             enhanceDictionary(dictionary);
             return dictionary;
-        } catch (Exception e) {
-            throw Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 
@@ -112,8 +127,8 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     protected List<String> getDefaultMapping() {
         try (Importer importer = new Importer("getDefaultMapping")) {
             return importer.findHandler(getExportType()).getDefaultExportMapping();
-        } catch (Exception e) {
-            throw Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            throw Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 

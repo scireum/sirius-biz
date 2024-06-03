@@ -12,11 +12,10 @@ import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Average;
 
 import javax.annotation.Nullable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Period;
 
 /**
  * Provides a base class for all metric computers which are invoked on a monthly basis to compute a metric for each of
@@ -37,9 +36,44 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
     @Nullable
     protected Metrics metrics;
 
+    /**
+     * Contains the maximum duration of a computation in milliseconds.
+     */
+    private long maxDurationMillis = 0;
+
+    /**
+     * Contains the average duration of computations in milliseconds.
+     * <p>
+     * This keeps track of the average duration via a sliding window.
+     */
+    private final Average avgDurationMillis = new Average();
+
     @Override
     public int getLevel() {
         return AnalyticalTask.DEFAULT_LEVEL;
+    }
+
+    @Override
+    public void trackDuration(long durationMillis) {
+        this.avgDurationMillis.addValue(durationMillis);
+        this.maxDurationMillis = Math.max(this.maxDurationMillis, durationMillis);
+    }
+
+    @Override
+    public void resetDurations() {
+        this.avgDurationMillis.getAndClear();
+        this.maxDurationMillis = 0;
+
+    }
+
+    @Override
+    public long getMaxDurationMillis() {
+        return maxDurationMillis;
+    }
+
+    @Override
+    public Average getAvgDurationMillis() {
+        return avgDurationMillis;
     }
 
     @Override
@@ -65,37 +99,32 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
         boolean sameMonth = LocalDate.now().withDayOfMonth(1).equals(date.withDayOfMonth(1));
 
         // if the reference date passed to this method is in the current month, we consider the computation to be of
-        // particular interest – unless it is only a best-effort computation that produces preliminary values only
-        boolean periodOutsideOfCurrentInterest = bestEffort || !sameMonth;
+        // particular interest
+        boolean periodOutsideOfCurrentInterest = !sameMonth;
 
         // usually, given the reference date, we compute the values for the respective previous month; for best-effort
         // scheduling and the current month, however, we leave the date as it is in order to obtain a preliminary value
         // for this month
-        if (!bestEffort || !sameMonth) {
+        if (!bestEffort) {
             date = date.minusMonths(1);
         }
 
-        compute(date,
-                date.withDayOfMonth(1).atStartOfDay(),
-                date.withDayOfMonth(date.lengthOfMonth()).plusDays(1).atStartOfDay().minusSeconds(1),
-                periodOutsideOfCurrentInterest,
-                entity);
+        compute(new MetricComputerContext(date,
+                                          date.withDayOfMonth(1).atStartOfDay(),
+                                          date.withDayOfMonth(date.lengthOfMonth())
+                                              .plusDays(1)
+                                              .atStartOfDay()
+                                              .minusSeconds(1),
+                                          periodOutsideOfCurrentInterest,
+                                          bestEffort), entity);
     }
 
     /**
-     * Performs the computation for the given date.
+     * Performs the computation for the given parameters.
      *
-     * @param date                           the date for which the computation should be performed
-     * @param startOfPeriod                  the start of the month as <tt>LocalDateTime</tt>
-     * @param endOfPeriod                    the end of the month as <tt>LocalDateTime</tt>
-     * @param periodOutsideOfCurrentInterest <tt>true</tt> if the computation is performed for a past or future month (via the analytics command) or
-     *                                       <tt>false</tt> if the computation is performed for the current month
-     * @param entity                         the entity to perform the computation for
+     * @param context the parameters for the computation
+     * @param entity  the entity to perform the computation for
      * @throws Exception in case of any problem while performing the computation
      */
-    public abstract void compute(LocalDate date,
-                                 LocalDateTime startOfPeriod,
-                                 LocalDateTime endOfPeriod,
-                                 boolean periodOutsideOfCurrentInterest,
-                                 E entity) throws Exception;
+    public abstract void compute(MetricComputerContext context, E entity) throws Exception;
 }

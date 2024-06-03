@@ -54,30 +54,30 @@ public class StorageController extends BizController {
     /**
      * Lists all buckets visible to the current user.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      */
     @DefaultRoute
     @Routed("/storage")
     @LoginRequired
-    public void listBuckets(WebContext ctx) {
+    public void listBuckets(WebContext webContext) {
         UserInfo currentUser = UserContext.getCurrentUser();
-        ctx.respondWith()
-           .template("/templates/biz/storage/buckets.html.pasta",
-                     storage.getBuckets()
-                            .stream()
-                            .filter(bucket -> currentUser.hasPermission(bucket.getPermission()))
-                            .collect(Collectors.toList()));
+        webContext.respondWith()
+                  .template("/templates/biz/storage/buckets.html.pasta",
+                            storage.getBuckets()
+                                   .stream()
+                                   .filter(bucket -> currentUser.hasPermission(bucket.getPermission()))
+                                   .collect(Collectors.toList()));
     }
 
     /**
      * Lists all objects of the given bucket.
      *
-     * @param ctx        the request to handle
+     * @param webContext the request to handle
      * @param bucketName the bucket to list
      */
     @Routed("/storage/bucket/:1")
     @LoginRequired
-    public void listObjects(WebContext ctx, String bucketName) {
+    public void listObjects(WebContext webContext, String bucketName) {
         BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
         if (isBucketUnaccessible(bucket)) {
             throw cannotAccessBucketException(bucketName);
@@ -89,12 +89,12 @@ public class StorageController extends BizController {
                                                  .ne(VirtualObject.PATH, null)
                                                  .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT));
 
-        applyQuery(ctx.get("query").asString(), baseQuery, bucket.isAlwaysUseLikeSearch(), false);
+        applyQuery(webContext.get("query").asString(), baseQuery, bucket.isAlwaysUseLikeSearch(), false);
 
         SQLPageHelper<VirtualObject> pageHelper =
-                SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(ctx);
+                SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(webContext);
 
-        ctx.respondWith().template("/templates/biz/storage/objects.html.pasta", bucket, pageHelper.asPage());
+        webContext.respondWith().template("/templates/biz/storage/objects.html.pasta", bucket, pageHelper.asPage());
     }
 
     private boolean isBucketUnaccessible(BucketInfo bucket) {
@@ -111,13 +111,13 @@ public class StorageController extends BizController {
     /**
      * Provides an autocomplete for objects within a bucket.
      *
-     * @param ctx        the request to handle
+     * @param webContext the request to handle
      * @param bucketName the name of the bucket to search in
      */
     @Routed("/storage/autocomplete/:1")
     @LoginRequired
-    public void autocompleteObjects(WebContext ctx, String bucketName) {
-        AutocompleteHelper.handle(ctx, (query, result) -> findObjectsForQuery(bucketName, query, result));
+    public void autocompleteObjects(WebContext webContext, String bucketName) {
+        AutocompleteHelper.handle(webContext, (query, result) -> findObjectsForQuery(bucketName, query, result));
     }
 
     private void findObjectsForQuery(String bucketName, String query, Consumer<AutocompleteHelper.Completion> result) {
@@ -190,44 +190,44 @@ public class StorageController extends BizController {
     /**
      * Provides a detail view for an object within a bucket.
      *
-     * @param ctx        the request to handle
+     * @param webContext the request to handle
      * @param bucketName the name of the bucket in which the object resides
      * @param objectKey  the key of the object
      */
     @Routed("/storage/object/:1/:2")
     @LoginRequired
-    public void editObject(WebContext ctx, String bucketName, String objectKey) {
+    public void editObject(WebContext webContext, String bucketName, String objectKey) {
         StoredObject object = findObjectByKey(bucketName, objectKey);
         VirtualObject virtualObject = (VirtualObject) object;
         assertTenant(virtualObject);
 
         BucketInfo bucket = storage.getBucket(virtualObject.getBucket()).orElse(null);
-        if (isBucketUnaccessible(bucket) || (ctx.isUnsafePOST() && !bucket.isCanEdit())) {
+        if (isBucketUnaccessible(bucket) || (webContext.isUnsafePOST() && !bucket.isCanEdit())) {
             throw cannotAccessBucketException(virtualObject.getBucket());
         }
 
-        ctx.respondWith()
-           .template("/templates/biz/storage/object.html.pasta",
-                     bucket,
-                     object,
-                     oma.select(VirtualObjectVersion.class)
-                        .eq(VirtualObjectVersion.VIRTUAL_OBJECT, virtualObject)
-                        .orderDesc(VirtualObjectVersion.CREATED_DATE)
-                        .queryList());
+        webContext.respondWith()
+                  .template("/templates/biz/storage/object.html.pasta",
+                            bucket,
+                            object,
+                            oma.select(VirtualObjectVersion.class)
+                               .eq(VirtualObjectVersion.VIRTUAL_OBJECT, virtualObject)
+                               .orderDesc(VirtualObjectVersion.CREATED_DATE)
+                               .queryList());
     }
 
     /**
      * Uploads a new file / object to a bucket
      *
-     * @param ctx        the request to handle
-     * @param out        the response to the AJAX call
+     * @param webContext the request to handle
+     * @param output     the response to the AJAX call
      * @param bucketName the name of the bucket to upload to
      * @param upload     the data being uploaded
      */
     @Routed(value = "/storage/upload/:1", preDispatchable = true, jsonCall = true)
     @LoginRequired
-    public void uploadObject(final WebContext ctx,
-                             JSONStructuredOutput out,
+    public void uploadObject(final WebContext webContext,
+                             JSONStructuredOutput output,
                              String bucketName,
                              InputStreamHandler upload) {
         StoredObject file = null;
@@ -237,7 +237,7 @@ public class StorageController extends BizController {
                 throw cannotAccessBucketException(bucketName);
             }
 
-            String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
+            String name = webContext.get("filename").asString(webContext.get("qqfile").asString());
             if (bucket.isCanCreate()) {
                 file = storage.findOrCreateObjectByPath((SQLTenant) tenants.getRequiredTenant(), bucketName, name);
             } else {
@@ -248,38 +248,36 @@ public class StorageController extends BizController {
                                                            .handle());
             }
 
-            try {
-                ctx.markAsLongCall();
+            try (upload) {
+                webContext.markAsLongCall();
                 storage.updateFile(file,
                                    upload,
                                    null,
                                    null,
-                                   Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
-            } finally {
-                upload.close();
+                                   Long.parseLong(webContext.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
             }
 
-            out.property(RESPONSE_FILE_ID, file.getObjectKey());
-            out.property(RESPONSE_REFRESH, true);
-        } catch (Exception e) {
+            output.property(RESPONSE_FILE_ID, file.getObjectKey());
+            output.property(RESPONSE_REFRESH, true);
+        } catch (Exception exception) {
             storage.delete(file);
-            throw Exceptions.createHandled().error(e).handle();
+            throw Exceptions.createHandled().error(exception).handle();
         }
     }
 
     /**
      * Uploads new contents for the given file.
      *
-     * @param ctx        the request to handle
-     * @param out        the response to the AJAX call
+     * @param webContext the request to handle
+     * @param output     the response to the AJAX call
      * @param bucketName the name of the bucket to upload to
      * @param objectId   the id of the object for replace
      * @param upload     the upload to handle
      */
     @Routed(value = "/storage/replace/:1/:2", preDispatchable = true, jsonCall = true)
     @LoginRequired
-    public void uploadObject(final WebContext ctx,
-                             JSONStructuredOutput out,
+    public void uploadObject(final WebContext webContext,
+                             JSONStructuredOutput output,
                              String bucketName,
                              String objectId,
                              InputStreamHandler upload) {
@@ -292,21 +290,19 @@ public class StorageController extends BizController {
             StoredObject file = storage.findByKey((SQLTenant) tenants.getRequiredTenant(), bucketName, objectId)
                                        .orElseThrow(() -> cannotAccessBucketException(bucketName));
 
-            try {
-                ctx.markAsLongCall();
+            try (upload) {
+                webContext.markAsLongCall();
                 storage.updateFile(file,
                                    upload,
                                    null,
                                    null,
-                                   Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
-            } finally {
-                upload.close();
+                                   Long.parseLong(webContext.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
             }
 
-            out.property(RESPONSE_FILE_ID, file.getObjectKey());
-            out.property(RESPONSE_REFRESH, true);
-        } catch (Exception e) {
-            throw Exceptions.createHandled().error(e).handle();
+            output.property(RESPONSE_FILE_ID, file.getObjectKey());
+            output.property(RESPONSE_REFRESH, true);
+        } catch (Exception exception) {
+            throw Exceptions.createHandled().error(exception).handle();
         }
     }
 
@@ -316,16 +312,16 @@ public class StorageController extends BizController {
      * If an object for this reference already exists, it is updated, otherwise a new one is created.
      * xx
      *
-     * @param ctx        the request to handle
-     * @param out        the response to the AJAX call
+     * @param webContext the request to handle
+     * @param output     the response to the AJAX call
      * @param bucketName the bucket name to put the object into
      * @param reference  the reference for which an object is uploaded
      * @param upload     the content of the upload
      */
     @Routed(value = "/storage/upload-reference/:1/:2", preDispatchable = true, jsonCall = true)
     @LoginRequired
-    public void uploadObjectForReference(final WebContext ctx,
-                                         JSONStructuredOutput out,
+    public void uploadObjectForReference(final WebContext webContext,
+                                         JSONStructuredOutput output,
                                          String bucketName,
                                          String reference,
                                          InputStreamHandler upload) {
@@ -335,39 +331,37 @@ public class StorageController extends BizController {
             if (bucket == null) {
                 throw cannotAccessBucketException(bucketName);
             }
-            String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
+            String name = webContext.get("filename").asString(webContext.get("qqfile").asString());
             file = storage.createTemporaryObject((SQLTenant) tenants.getRequiredTenant(),
                                                  bucketName,
                                                  NO_REFERENCE.equals(reference) ? null : reference,
                                                  name);
-            try {
-                ctx.markAsLongCall();
+            try (upload) {
+                webContext.markAsLongCall();
                 storage.updateFile(file,
                                    upload,
                                    null,
                                    null,
-                                   Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
-            } finally {
-                upload.close();
+                                   Long.parseLong(webContext.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
             }
 
-            out.property(RESPONSE_FILE_ID, file.getObjectKey());
-            out.property("previewUrl", file.prepareURL().buildURL().orElse(""));
-        } catch (Exception e) {
+            output.property(RESPONSE_FILE_ID, file.getObjectKey());
+            output.property("previewUrl", file.prepareURL().buildURL().orElse(""));
+        } catch (Exception exception) {
             storage.delete(file);
-            throw Exceptions.createHandled().error(e).handle();
+            throw Exceptions.createHandled().error(exception).handle();
         }
     }
 
     /**
      * Deletes the object in the given bucket with the given id.
      *
-     * @param ctx        the request to handle
+     * @param webContext the request to handle
      * @param bucketName the bucket in which the object resides
      * @param objectKey  the unique object key
      */
     @Routed("/storage/delete/:1/:2")
-    public void deleteObject(WebContext ctx, String bucketName, String objectKey) {
+    public void deleteObject(WebContext webContext, String bucketName, String objectKey) {
         StoredObject object = findObjectByKey(bucketName, objectKey);
         VirtualObject virtualObject = (VirtualObject) object;
         assertTenant(virtualObject);
@@ -378,18 +372,18 @@ public class StorageController extends BizController {
 
         storage.delete(object);
         showDeletedMessage();
-        listObjects(ctx, virtualObject.getBucket());
+        listObjects(webContext, virtualObject.getBucket());
     }
 
     /**
      * Removes the reference binding for the given object.
      *
-     * @param ctx        the request to handle
+     * @param webContext the request to handle
      * @param bucketName the bucket in which the object resides
      * @param objectKey  the unique object key
      */
     @Routed("/storage/unreference/:1/:2")
-    public void unreferenceObject(WebContext ctx, String bucketName, String objectKey) {
+    public void unreferenceObject(WebContext webContext, String bucketName, String objectKey) {
         BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
         if (isBucketUnaccessible(bucket) || !bucket.isCanDelete()) {
             throw cannotAccessBucketException(bucketName);
@@ -402,7 +396,7 @@ public class StorageController extends BizController {
         virtualObject.setReference(null);
         oma.update(virtualObject);
 
-        ctx.respondWith().redirectToGet(Strings.apply("/storage/object/%s/%s", bucketName, objectKey));
+        webContext.respondWith().redirectToGet(Strings.apply("/storage/object/%s/%s", bucketName, objectKey));
     }
 
     private StoredObject findObjectByKey(String bucket, String objectKey) {
@@ -420,22 +414,22 @@ public class StorageController extends BizController {
      * This is the handler of the download URLS which are generated by default. The content is actually delivered by the
      * {@link PhysicalStorageEngine}.
      *
-     * @param ctx             the request to handle
+     * @param webContext      the request to handle
      * @param bucket          the bucket containing the object
      * @param authHash        the authentication hash which ensures access
      * @param physicalFileKey the physical object to download
      */
     @Routed("/storage/physical/:1/:2/:3")
-    public void downloadPhysicalObject(WebContext ctx, String bucket, String authHash, String physicalFileKey) {
+    public void downloadPhysicalObject(WebContext webContext, String bucket, String authHash, String physicalFileKey) {
         Tuple<String, String> keyAndExtension = determineKeyAndExtension(physicalFileKey);
         String key = keyAndExtension.getFirst();
 
         if (!storage.verifyHash(key, authHash)) {
-            ctx.respondWith().error(HttpResponseStatus.FORBIDDEN);
+            webContext.respondWith().error(HttpResponseStatus.FORBIDDEN);
             return;
         }
 
-        storage.deliverPhysicalFile(ctx, bucket, key, keyAndExtension.getSecond());
+        storage.deliverPhysicalFile(webContext, bucket, key, keyAndExtension.getSecond());
     }
 
     private Tuple<String, String> determineKeyAndExtension(String physicalFileKey) {

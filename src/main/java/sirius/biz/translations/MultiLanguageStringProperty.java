@@ -187,10 +187,10 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     public MultiLanguageString getMultiLanguageString(Object target) {
         try {
             return (MultiLanguageString) field.get(accessPath.apply(target));
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException exception) {
             throw Exceptions.handle()
                             .to(Mixing.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot read property '%s' (from '%s'): %s (%s)",
                                                     getName(),
                                                     getDefinition())
@@ -343,9 +343,6 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @Override
     public boolean loadFromWebContext(WebContext webContext, BaseEntity<?> entity) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
-        if (multiLanguageString.isWithFallback() && webContext.hasParameter(getPropertyName())) {
-            multiLanguageString.setFallback(webContext.getParameter(getPropertyName()));
-        }
 
         if (i18nEnabled && multiLanguageString.isEnabledForCurrentUser()) {
             webContext.getParameterNames()
@@ -357,6 +354,12 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                               multiLanguageString.addText(code, webContext.getParameter(parameter));
                           }
                       });
+        } else {
+            multiLanguageString.clear();
+        }
+
+        if (multiLanguageString.isWithFallback() && webContext.hasParameter(getPropertyName())) {
+            multiLanguageString.setFallback(webContext.getParameter(getPropertyName()));
         }
 
         return true;

@@ -2,21 +2,30 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="saml">
-    <w:editForm url="@apply('/tenant/%s/saml', tenant.getIdAsString())">
-        <w:subHeading labelKey="Tenant.saml"/>
+    <t:editForm url="@apply('/tenant/%s/saml', tenant.getIdAsString())">
+        <t:heading labelKey="Tenant.saml"/>
         <div class="row">
-            <w:textfield name="tenantData_samlRequestIssuerName" value="@tenant.getTenantData().getSamlRequestIssuerName()"
+            <t:textfield class="col-12 col-md-6"
+                         name="tenantData_samlRequestIssuerName"
+                         value="@tenant.getTenantData().getSamlRequestIssuerName()"
                          labelKey="TenantData.samlRequestIssuerName" helpKey="TenantData.samlRequestIssuerName.help"/>
-            <w:textfield name="tenantData_samlIssuerIndex" value="@tenant.getTenantData().getSamlIssuerIndex()"
+            <t:textfield class="col-12 col-md-6"
+                         name="tenantData_samlIssuerIndex" value="@tenant.getTenantData().getSamlIssuerIndex()"
                          labelKey="TenantData.samlIssuerIndex" helpKey="TenantData.samlIssuerIndex.help"/>
-            <w:textfield name="tenantData_samlIssuerUrl" value="@tenant.getTenantData().getSamlIssuerUrl()"
-                         labelKey="TenantData.samlIssuerUrl" span="12" helpKey="TenantData.samlIssuerUrl.help"/>
-            <w:textfield name="tenantData_samlIssuerName" value="@tenant.getTenantData().getSamlIssuerName()"
-                         labelKey="TenantData.samlIssuerName" span="12" helpKey="TenantData.samlIssuerName.help"/>
-            <w:textfield name="tenantData_samlFingerprint" value="@tenant.getTenantData().getSamlFingerprint()"
-                         labelKey="TenantData.samlFingerprint" span="12" helpKey="TenantData.samlFingerprint.help"/>
+            <t:textfield class="col-12"
+                         name="tenantData_samlIssuerUrl" value="@tenant.getTenantData().getSamlIssuerUrl()"
+                         labelKey="TenantData.samlIssuerUrl" helpKey="TenantData.samlIssuerUrl.help"/>
+            <t:textfield class="col-12"
+                         name="tenantData_samlIssuerName" value="@tenant.getTenantData().getSamlIssuerName()"
+                         labelKey="TenantData.samlIssuerName" helpKey="TenantData.samlIssuerName.help"/>
+            <t:textfield class="col-12"
+                         name="tenantData_samlFingerprint"
+                         value="@tenant.getTenantData().getSamlFingerprint()"
+                         pattern="^[a-zA-Z0-9,]*$"
+                         labelKey="TenantData.samlFingerprint"
+                         helpKey="TenantData.samlFingerprint.help"/>
         </div>
-    </w:editForm>
+        <t:formBar backButton="false"/>
+    </t:editForm>
 
-    <w:formBar />
 </i:invoke>

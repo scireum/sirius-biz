@@ -12,15 +12,14 @@
     <t:emptyCheck data="tenants">
         <t:datacards size="small">
             <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
-                <t:datacard>
+                <t:datacard title="@tenant.getTenantData().getName()" titleClass="m-0">
                     <i:local name="id" value="@generateId()"/>
                     <form class="samlForm" id="@id" method="post"
                           action="@tenant.getTenantData().getSamlIssuerUrl()">
                         <input type="hidden" name="SAMLRequest"
                                value="@part(sirius.web.security.SAMLHelper.class).generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
                     </form>
-                    <a class="link"
-                       href="javascript:document.getElementById('@id').submit()">@tenant.getTenantData().getName()</a>
+                    <a class="stretched-link" href="javascript:document.getElementById('@id').submit()"></a>
                 </t:datacard>
             </i:for>
         </t:datacards>

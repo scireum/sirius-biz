@@ -7,7 +7,7 @@ If enabled (using the framework **tycho.knowledge-base**), all articles placed i
 kb** or **/kba/LANG/CODE**. Note that the code is a random five-letter code which is assigned to each article. This
 permits to rename and re-arrange the physical location of articles without breaking cross-reference consistency. The
 language code is a two-letter ISO code to determine which language version to pick. If the article isn't available in
-the requested langauge, the default language (specified in the system config as **knowledgebase.fallbackLang**) will be
+the requested language, the default language (specified in the system config as **knowledgebase.fallbackLanguages**) will be
 used.
 
 Note that the articles can be placed in chapters to provide a hierarchical navigation. **Sirius**

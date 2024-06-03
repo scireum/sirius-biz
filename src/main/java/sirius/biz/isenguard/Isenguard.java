@@ -97,12 +97,12 @@ public class Isenguard {
     public boolean isIPBlacklisted(String ipAddress) {
         try {
             return limiter != null && limiter.isIPBLacklisted(ipAddress);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             // In case of an error e.g. Redis might not be available,
             // we resort to ignoring any checks and let the application run.
             // The other option would be to block everything and essentially
             // shut down the application, which isn't feasible either...
-            Exceptions.handle(LOG, e);
+            Exceptions.handle(LOG, exception);
             return false;
         }
     }
@@ -116,9 +116,7 @@ public class Isenguard {
         LOG.WARN("The IP %s was added to the list of blocked IP addresses.", ipAddress);
         limiter.block(ipAddress);
 
-        IPBlockedEvent event = new IPBlockedEvent();
-        event.setIp(ipAddress);
-        events.record(event);
+        events.record(new IPBlockedEvent().withIp(ipAddress));
     }
 
     /**
@@ -220,12 +218,12 @@ public class Isenguard {
                     limitReachedOnce.run();
                 }
             });
-        } catch (Exception e) {
+        } catch (Exception exception) {
             // In case of an error e.g. Redis might not be available,
             // we resort to ignoring any limits and let the application run.
             // The other option would be to block everything and essentially
             // shut down the application, which isn't feasible either...
-            Exceptions.handle(LOG, e);
+            Exceptions.handle(LOG, exception);
             return false;
         }
     }
@@ -253,15 +251,13 @@ public class Isenguard {
 
         auditLog.negative("Isenguard.limitReached").causedByCurrentUser().log();
 
-        RateLimitingTriggeredEvent limitEvent = new RateLimitingTriggeredEvent();
-        limitEvent.setRealm(realm);
-        limitEvent.setScope(scope);
-        limitEvent.setLimit(limit.getFirst());
-        limitEvent.setInterval(limit.getSecond());
-        limitEvent.setIp(info.getIp());
-        limitEvent.setTenant(info.getTenantId());
-        limitEvent.setLocation(Strings.limit(info.getLocation(), 255));
-        events.record(limitEvent);
+        events.record(new RateLimitingTriggeredEvent().withRealm(realm)
+                                                      .withScope(scope)
+                                                      .withLimit(limit.getFirst())
+                                                      .withInterval(limit.getSecond())
+                                                      .withIp(info.getIp())
+                                                      .withTenant(info.getTenantId())
+                                                      .withLocation(Strings.limit(info.getLocation(), 255)));
     }
 
     private boolean isRateLimitReached(String scope,
@@ -333,7 +329,7 @@ public class Isenguard {
      * <p>
      * For efficiency reasons, this list might be limited to the latest matches (e.g. the top 50).
      *
-     * @return a list of currently blocked IPs
+     * @return a set of currently blocked IPs
      */
     public Set<String> getBlockedIPs() {
         return limiter.getBlockedIPs();

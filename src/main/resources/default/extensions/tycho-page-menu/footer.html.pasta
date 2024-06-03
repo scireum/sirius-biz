@@ -12,7 +12,7 @@
             </i:invoke>
         </t:permission>
         <t:permission permission="flag-logged-in">
-            <span class="d-none d-xl-inline-block text-muted small ml-2 pl-2 bl-gray">
+            <span class="d-none d-xl-inline-block text-muted small ms-2 ps-2 bl-gray">
                <b>@currentUserName()</b>
                <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
             </span>
@@ -21,13 +21,13 @@
     <i:block name="footer-right-end">
         <t:permission permission="flag-logged-in">
             <i:if test="user().is(sirius.biz.tenants.Tenant.class)">
-                <span class="d-none d-md-inline-block text-muted small ml-2 pl-4 pr-0 bl-gray">
-                    <a id="supportLink" class="text-sirius-gray-dark cursor-pointer"><i class="fa fa-link"></i></a>
+                <span class="d-none d-md-inline-block text-muted small ms-2 ps-4 pe-0 bl-gray">
+                    <a id="supportLink" class="text-sirius-gray-dark cursor-pointer"><i class="fa-solid fa-link"></i></a>
                 </span>
                 <script type="text/javascript">
                     sirius.ready(function () {
                         document.querySelector('#supportLink').addEventListener('click', function () {
-                            copyToClipboard(window.location.protocol + '//' + window.location.host + '/tenants/select/@user().getTenantId()?goto=' + encodeURIComponent(window.location.href));
+                            sirius.copyToClipboard(window.location.protocol + '//' + window.location.host + '/tenants/select/@user().getTenantId()?goto=' + encodeURIComponent(window.location.href));
 
                             clearMessages();
                             addSuccessMessage('@i18n("footer.html.supportLinkCopiedSuccessfully")');

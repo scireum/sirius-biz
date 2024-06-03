@@ -34,7 +34,7 @@ public abstract class XMLExportJobFactory extends FileExportJobFactory {
 
     @Override
     protected void collectAcceptedFileExtensions(Consumer<String> fileExtensionConsumer) {
-        fileExtensionConsumer.accept("xml");
+        fileExtensionConsumer.accept("zip");
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract class XMLExportJobFactory extends FileExportJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa fa-code";
+        return "fa-solid fa-code";
     }
 
     /**

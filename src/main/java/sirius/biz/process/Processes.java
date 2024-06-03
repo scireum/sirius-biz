@@ -177,6 +177,20 @@ public class Processes {
     }
 
     /**
+     * Fetches the currently active process.
+     *
+     * @return the process for which the current thread is executing or an empty optional if no process is active
+     */
+    public Optional<Supplier<Process>> fetchCurrentProcess() {
+        TaskContextAdapter adapter = TaskContext.get().getAdapter();
+        if (adapter instanceof ProcessEnvironment processEnvironment) {
+            return Optional.of(() -> fetchRequiredProcess(processEnvironment.getProcessId()));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Creates a new process for the currently active user.
      *
      * @param type              the type of the process (which can be used for filtering in the backend)
@@ -200,6 +214,11 @@ public class Processes {
      * This is used for downstream processing (e.g. writing outputs into a file) after a process has
      * {@link ProcessState#TERMINATED}. Essentially, all this does is verifying the preconditions and setting the
      * state back to {@link ProcessState#RUNNING}.
+     * <p>
+     * When restarting a currently terminated process, the node which executes the process must purge it from its local
+     * cache via {@link #purgeProcessFromFirstLevelCache(String)}. An example for this is the
+     * {@linkplain ProcessController#exportOutput(WebContext, String, String, String) export} of process log messages
+     * performed in {@link ExportLogsAsFileTaskExecutor}.
      *
      * @param processId the id of the process to restart
      * @param reason    the reason to log
@@ -213,6 +232,20 @@ public class Processes {
 
         // we need to wait for elastic to propagate process state changes if running on a different machine
         Wait.seconds(2);
+    }
+
+    /**
+     * Clears the given process from the local cache.
+     * <p>
+     * There is rarely a need to call this method. Manually purging the process is generally necessary when
+     * {@linkplain #restartProcess(String, String) restarting} a currently terminated process. An example for this
+     * is the {@linkplain ProcessController#exportOutput(WebContext, String, String, String) export} of process log
+     * messages performed in {@link ExportLogsAsFileTaskExecutor}.
+     *
+     * @param processId the process to purge from the cache
+     */
+    public void purgeProcessFromFirstLevelCache(String processId) {
+        process1stLevelCache.remove(processId);
     }
 
     /**
@@ -268,7 +301,7 @@ public class Processes {
         if (process != null) {
             modify(process.getId(), p -> p.getState() == ProcessState.STANDBY, p -> p.setStarted(LocalDateTime.now()));
         } else {
-            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier.get());
+            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier);
         }
 
         partiallyExecute(process.getId(), task);
@@ -307,13 +340,16 @@ public class Processes {
     /**
      * Tries to fetch the appropriate standby process while holding a lock and also after waiting an appropriate amount of time.
      *
-     * @param type       the type of the standby process to find or create
-     * @param title      the title of the process
-     * @param tenantId   the id of the tenant used to find the appropriate process
-     * @param tenantName the name of the tenant
+     * @param type               the type of the standby process to find or create
+     * @param title              the title of the process
+     * @param tenantId           the id of the tenant used to find the appropriate process
+     * @param tenantNameSupplier a supplier which yields the name of the tenant if the process has to be created
      * @return the process which was either resolved after waiting an appropriate amount of time or created
      */
-    private Process fetchStandbyProcessInLock(String type, String title, String tenantId, String tenantName) {
+    private Process fetchStandbyProcessInLock(String type,
+                                              String title,
+                                              String tenantId,
+                                              Supplier<String> tenantNameSupplier) {
         String lockName = LOCK_CREATE_STANDBY_PROCESS + "-" + type + "-" + tenantId;
         if (!locks.tryLock(lockName, Duration.ofSeconds(30))) {
             throw Exceptions.handle()
@@ -321,7 +357,7 @@ public class Processes {
                                     "Cannot acquire a lock (%s} to create or fetch a standby process of type %s for %s (%s)",
                                     lockName,
                                     type,
-                                    tenantName,
+                                    tenantNameSupplier.get(),
                                     tenantId)
                             .handle();
         }
@@ -339,7 +375,7 @@ public class Processes {
                 Wait.millis(300);
             }
 
-            return createStandbyProcessInLock(type, title, tenantId, tenantName);
+            return createStandbyProcessInLock(type, title, tenantId, tenantNameSupplier.get());
         } finally {
             locks.unlock(lockName);
         }
@@ -443,11 +479,11 @@ public class Processes {
 
                 process2ndLevelCache.put(processId, process);
                 return true;
-            } catch (OptimisticLockException e) {
+            } catch (OptimisticLockException exception) {
                 Wait.randomMillis(250, 500);
                 process = elastic.find(Process.class, processId).orElse(null);
-            } catch (IntegrityConstraintFailedException e) {
-                Exceptions.handle(Log.BACKGROUND, e);
+            } catch (IntegrityConstraintFailedException exception) {
+                Exceptions.handle(Log.BACKGROUND, exception);
                 return false;
             }
         }
@@ -533,10 +569,18 @@ public class Processes {
      * @param persistencePeriod specifies the new persistence period
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean updatePersistence(String processId, PersistencePeriod persistencePeriod) {
-        return modify(processId,
-                      process -> process.getPersistencePeriod() != persistencePeriod,
-                      process -> process.setPersistencePeriod(persistencePeriod));
+    public boolean updatePersistence(String processId, PersistencePeriod persistencePeriod) {
+        return modify(processId, process -> process.getPersistencePeriod() != persistencePeriod, process -> {
+            PersistencePeriod currentPersistence = process.getPersistencePeriod();
+            process.setPersistencePeriod(persistencePeriod);
+
+            LocalDate expires = process.getExpires();
+            if (expires != null) {
+                expires = currentPersistence.minus(expires);
+                expires = persistencePeriod.plus(expires);
+                process.setExpires(expires);
+            }
+        });
     }
 
     /**
@@ -751,10 +795,10 @@ public class Processes {
                 // recover in parallel...
                 elastic.override(logEntry);
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .withSystemErrorMessage("Failed to record a ProcessLog: %s - %s (%s)", logEntry)
-                      .error(e)
+                      .error(exception)
                       .to(Log.BACKGROUND)
                       .handle();
         }
@@ -844,32 +888,32 @@ public class Processes {
         UserInfo userInfoBackup = userContext.getUser();
 
         Watch watch = Watch.start();
-        ProcessEnvironment env = new ProcessEnvironment(processId);
+        ProcessEnvironment environment = new ProcessEnvironment(processId);
         taskContext.setJob(processId);
-        taskContext.setAdapter(env);
+        taskContext.setAdapter(environment);
         try {
-            if (env.isActive()) {
+            if (environment.isActive()) {
                 CallContext.getCurrent().resetLanguage();
-                installUserOfProcess(userContext, env);
+                installUserOfProcess(userContext, environment);
 
-                task.accept(env);
+                task.accept(environment);
             }
-        } catch (Exception e) {
-            throw env.handle(e);
+        } catch (Exception exception) {
+            throw environment.handle(exception);
         } finally {
-            env.awaitSideTaskCompletion();
+            environment.awaitSideTaskCompletion();
             CallContext.getCurrent().resetLanguage();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
 
             int computationTimeInSeconds = (int) watch.elapsed(TimeUnit.SECONDS, false);
             if (complete) {
-                env.markCompleted(computationTimeInSeconds);
+                environment.markCompleted(computationTimeInSeconds);
             } else {
                 modify(processId,
                        process -> process.getState() != ProcessState.STANDBY || computationTimeInSeconds >= 10,
                        process -> process.setComputationTime(process.getComputationTime() + computationTimeInSeconds));
-                env.flushTimings();
+                environment.flushTimings();
             }
         }
     }
@@ -904,15 +948,26 @@ public class Processes {
      * If no user is attached to the process, no modification will be performed.
      *
      * @param userContext the context to update
-     * @param env         the process environment to read the user infos from
+     * @param environment the process environment to read the user infos from
      */
-    private void installUserOfProcess(UserContext userContext, ProcessEnvironment env) {
-        if (env.getUserId() != null) {
-            UserInfo user = userContext.getUserManager().findUserByUserId(env.getUserId());
-            if (user != null) {
-                user = userContext.getUserManager().createUserWithTenant(user, env.getTenantId());
-                userContext.setCurrentUser(user);
-            }
+    private void installUserOfProcess(UserContext userContext, ProcessEnvironment environment) {
+        String userId = environment.fetchUserId();
+        String tenantId = environment.fetchTenantId();
+        String tenantName = environment.fetchTenantName();
+
+        if (Strings.isEmpty(userId)) {
+            return;
+        }
+
+        if (Strings.areEqual(userId, UserInfo.SYNTHETIC_ADMIN_USER_ID) && Strings.isFilled(tenantId)) {
+            userContext.setCurrentUser(UserInfo.Builder.createSyntheticAdminUser(tenantId, tenantName).build());
+            return;
+        }
+
+        UserInfo user = userContext.getUserManager().findUserByUserId(userId);
+        if (user != null) {
+            user = userContext.getUserManager().createUserWithTenant(user, tenantId);
+            userContext.setCurrentUser(user);
         }
     }
 
@@ -946,8 +1001,8 @@ public class Processes {
     public boolean hasActiveProcesses() {
         try {
             return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
-        } catch (Exception e) {
-            Exceptions.handle(Log.SYSTEM, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.SYSTEM, exception);
             return false;
         }
     }
@@ -1045,17 +1100,17 @@ public class Processes {
      *
      * @param processLog the log entry to modify
      * @param newState   the new state to set
-     * @param ctx        the request to respond to
+     * @param webContext the request to respond to
      * @param returnUrl  the URL to redirect the request to once the modification has been performed and is visible
      */
     public void updateProcessLogStateAndReturn(ProcessLog processLog,
                                                ProcessLogState newState,
-                                               WebContext ctx,
+                                               WebContext webContext,
                                                String returnUrl) {
         processLog.withState(newState);
         elastic.update(processLog);
         JournalData.addJournalEntry(processLog, NLS.get("ProcessLog.state") + ": " + newState.toString());
-        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet(returnUrl));
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> webContext.respondWith().redirectToGet(returnUrl));
     }
 
     protected Optional<ProcessOutput> fetchOutput(String processId, String outputName) {

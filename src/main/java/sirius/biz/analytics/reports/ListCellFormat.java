@@ -10,8 +10,9 @@ package sirius.biz.analytics.reports;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Json;
+import sirius.kernel.commons.StringCleanup;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
-import sirius.web.templates.ContentHelper;
 
 import javax.annotation.Nonnull;
 
@@ -29,7 +30,7 @@ public class ListCellFormat implements CellFormat {
         StringBuilder sb = new StringBuilder("<ul>");
         for (String value : Json.convertToList(Json.getArray(data, KEY_VALUES), String.class)) {
             sb.append("<li>");
-            sb.append(ContentHelper.escapeXML(value));
+            sb.append(Strings.cleanup(value, StringCleanup::escapeXml));
             sb.append("</li>");
         }
         sb.append("</ul>");

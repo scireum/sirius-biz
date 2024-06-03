@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.events;
 
-public class TestEvent2 extends Event {
+public class TestEvent2 extends Event<TestEvent2> {
 
     private final UserData user = new UserData();
 

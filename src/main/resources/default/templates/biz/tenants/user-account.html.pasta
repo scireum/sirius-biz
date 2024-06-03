@@ -1,9 +1,9 @@
-<i:arg type="sirius.biz.tenants.UserAccount" name="account" />
-<i:arg type="String" name="page" />
+<i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
+<i:arg type="String" name="page"/>
 
-<w:page title="@toUserString(account)">
+<t:page title="@toUserString(account)">
     <i:block name="head">
-        <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
+        <script src="/assets/tycho/libs/ace/ace.js" type="text/javascript"></script>
     </i:block>
 
     <i:block name="breadcrumbs">
@@ -14,82 +14,152 @@
             <a href="/user-account/@account.getIdAsString()">@account</a>
         </li>
 
-        <i:render name="breadcrumbs" />
+        <i:render name="breadcrumbs"/>
     </i:block>
 
-    <w:pageHeader>
-        @i18n("Model.userAccount")
+    <i:block name="page-header">
+        <t:pageHeader title="@account.isNew() ? account.toString() : account.getUserAccountData().toString()">
+            <i:block name="actions">
+                <i:extensions target="user-account" account="account" point="actions"/>
+            </i:block>
 
-        <span class="pull-right">
-            <i:extensions target="user-account" point="header" account="account" page="page"/>
-        </span>
-    </w:pageHeader>
-    <div class="row">
-        <i:if test="!account.isNew()">
-            <div class="col-md-3">
-                <w:infobox titleKey="Model.details">
-                    <w:infoboxElement labelKey="LoginData.username" value="@account.getUserAccountData().getLogin().getUsername()"/>
-                    <i:if test="account.getUserAccountData().hasName()">
-                        <w:infoboxElement labelKey="Model.name" value="@account.getUserAccountData().getPerson()"/>
-                    </i:if>
-                    <w:infoboxElement labelKey="Model.email" value="@account.getUserAccountData().getEmail()"/>
-
-                    <i:if test="@account.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
-                        <w:infoboxElement labelKey="LoginData.generatedPassword" value="@account.getUserAccountData().getLogin().getGeneratedPassword()"/>
-
-                        <i:else>
-                            <i:if test="isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())">
-                                <w:infoboxElement labelKey="LoginData.generatedPassword" value="@i18n('LoginData.password.hiddenGeneratedShort')"/>
+            <i:block name="additionalActions">
+                <i:if test="!account.isNew()">
+                    <!--@ actions for other users -->
+                    <i:if test="!account.getUserAccountData().isOwnUser()">
+                        <i:if test="account.getUserAccountData().canSelect()">
+                            <t:dropdownSection
+                                    permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
+                                <t:dropdownItem labelKey="TenantController.select"
+                                                icon="fa-solid fa-building"
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
+                        <t:dropdownSection>
+                            <t:dropdownItem
+                                    labelKey="Model.password.set"
+                                    icon="fa-solid fa-key"
+                                    url="@apply('/user-account/%s/password', account.getIdAsString())"/>
+                            <t:dropdownItem
+                                    labelKey="LoginData.password.generate"
+                                    icon="fa-regular fa-envelope"
+                                    url="@apply('/user-account/%s/generate-password', account.getIdAsString())"/>
+                            <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
+                                <t:dropdownItem
+                                        labelKey="LoginData.password.generateAndSend"
+                                        icon="fa-solid fa-envelope"
+                                        url="@apply('/user-account/%s/generate-and-send-password', account.getIdAsString())"/>
                             </i:if>
+                        </t:dropdownSection>
+                        <t:dropdownSection>
+                            <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                                <t:dropdownItem
+                                        labelKey="LoginData.unlock"
+                                        icon="fa-solid fa-unlock"
+                                        url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
+                                <i:else>
+                                    <t:dropdownItem
+                                            labelKey="LoginData.lock"
+                                            icon="fa-solid fa-lock"
+                                            url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
+                                </i:else>
+                            </i:if>
+                        </t:dropdownSection>
+
+                        <!--@ actions for own user -->
+                        <i:else>
+                            <t:dropdownSection>
+                                <t:dropdownItem
+                                        labelKey="Model.password.set"
+                                        icon="fa-solid fa-key"
+                                        url="@apply('/user-account/%s/password', account.getIdAsString())"/>
+                            </t:dropdownSection>
                         </i:else>
                     </i:if>
-
-                    <w:infoboxElement labelKey="LoginData.apiToken" value="@account.getUserAccountData().getLogin().getApiToken()"/>
-
-                    <i:extensions target="user-account" point="sidebar-infos" account="account" page="page"/>
-
-                    <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
-                        <w:infoboxElement>
-                            <a href="@apply('/user-account/%s/generate-password', account.getIdAsString())"
-                               class="link">
-                                <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
-                            </a>
-                            <br>
-                            <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
-                                <a href="@apply('/user-account/%s/generate-and-send-password', account.getIdAsString())"
-                                   class="link">
-                                    <i class="fa fa-angle-double-right"></i>
-                                    @i18n("LoginData.password.generateAndSend")
-                                </a>
-                                <br>
-                            </i:if>
-                        </w:infoboxElement>
+                    <t:dropdownSection>
+                        <i:extensions target="user-account" account="account" point="additionalActions"/>
+                    </t:dropdownSection>
+                    <i:if test="!account.getUserAccountData().isOwnUser()">
+                        <t:dropdownSection
+                                permission="@sirius.biz.tenants.UserAccountController.PERMISSION_DELETE_USER_ACCOUNTS">
+                            <t:dropdownDeleteItem url="@apply('/user-account/%s/delete', account.getIdAsString())"/>
+                        </t:dropdownSection>
                     </i:if>
-                </w:infobox>
+                </i:if>
+            </i:block>
 
-                <i:extensions target="user-account" point="sidebar-additional" account="account" page="page"/>
+            <div class="d-flex flex-row">
+                <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                    <t:dot color="red">@i18n("LoginData.accountLocked")</t:dot>
+                </i:if>
 
-                <w:navbox labelKey="Model.links">
-                    <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getIdAsString())" active="page == 'details'"/>
-                    <w:permission permission="feature-user-account-config">
-                        <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getIdAsString())" active="page == 'config'"/>
-                    </w:permission>
+                <t:inlineLang lang="@account.getUserAccountData().getLanguage().getValue()"/>
+
+                <i:if test="account.getUserAccountData().getLogin().getLastSeen() != null">
+                    <t:inlineInfo labelKey="LoginData.lastSeen">
+                        @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
+                    </t:inlineInfo>
+                </i:if>
+
+                <i:if test="isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())">
+                    <t:inlineInfo labelKey="LoginData.generatedPassword">
+                        <i:if test="@account.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
+                            @account.getUserAccountData().getLogin().getGeneratedPassword()
+                            <i:else>@i18n("LoginData.password.hiddenGeneratedShort")</i:else>
+                        </i:if>
+                    </t:inlineInfo>
+                </i:if>
+            </div>
+            <span class="pull-right">
+                <i:extensions target="user-account" point="header" account="account" page="page"/>
+            </span>
+        </t:pageHeader>
+    </i:block>
+
+    <t:sidebar>
+        <i:block name="sidebar">
+            <i:if test="page == 'details'">
+                <t:infobox labelKey="UserAccountData.image">
+                    <t:blobImageHardRefField name="userAccountData_image"
+                                             objectRef="@account.getUserAccountData().getImage()"
+                                             previewVariant="@sirius.biz.tenants.UserAccountData.IMAGE_VARIANT_LARGE"
+                                             defaultPreview="@sirius.biz.tenants.UserAccountData.IMAGE_FALLBACK_URI"/>
+                </t:infobox>
+
+                <i:else>
+                    <div class="mb-2 d-none d-lg-block">
+                        <t:blobImage skipEmpty="true" urlBuilder="account.getUserAccountData().fetchLargeUrl()"
+                                     style="height: 180px"/>
+                    </div>
+                </i:else>
+            </i:if>
+
+            <t:sidebarKeyMetrics target="@account"/>
+
+            <i:if test="@!account.isNew()">
+                <t:navbox labelKey="Model.links">
+                    <t:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getIdAsString())"
+                                  active="page == 'details'"/>
+                    <t:permission permission="feature-user-account-config">
+                        <t:navboxLink labelKey="Model.config"
+                                      url="@apply('/user-account/%s/config', account.getIdAsString())"
+                                      active="page == 'config'"/>
+                    </t:permission>
 
                     <i:extensions target="user-account" point="sidebar-menu" account="account" page="page"/>
-                </w:navbox>
+                </t:navbox>
 
-                <w:jobs target="account" />
+                <t:jobs target="@account"/>
+                <t:charts target="@account"/>
 
-                <w:rateLimitBox>
-                    <w:rateLimitsPerType type="user" scope="account.getIdAsString()" />
-                </w:rateLimitBox>
+                <i:extensions target="user-account" point="sidebar" account="account" page="page"/>
+            </i:if>
+        </i:block>
 
-                <a href="/user-accounts" class="btn btn-block">@i18n("NLS.back")</a>
-            </div>
-        </i:if>
 
-        <div class="@if (account.isNew()) { col-md-12 } else { col-md-9 }">
-            <i:render name="body" />
-        </div>
-    </div>
-</w:page>
+        <i:render name="body"/>
+
+
+    </t:sidebar>
+
+</t:page>

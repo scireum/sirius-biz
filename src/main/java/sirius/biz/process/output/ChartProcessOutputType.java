@@ -48,7 +48,7 @@ public class ChartProcessOutputType implements ProcessOutputType {
 
     @Override
     public String getIcon() {
-        return "fas fa-chart-line";
+        return "fa-solid fa-chart-line";
     }
 
     /**
@@ -62,26 +62,26 @@ public class ChartProcessOutputType implements ProcessOutputType {
             // We decode and re-encode here to ensure that only proper data is output into the HTML page
             ObjectNode obj = Json.parseObject(chart.getMessage());
             return Json.write(obj);
-        } catch (Exception e) {
-            Exceptions.ignore(e);
+        } catch (Exception exception) {
+            Exceptions.ignore(exception);
             return "{}";
         }
     }
 
     @Override
-    public void render(WebContext ctx, Process process, ProcessOutput output) {
+    public void render(WebContext webContext, Process process, ProcessOutput output) {
         ElasticQuery<ProcessLog> query = elastic.select(ProcessLog.class)
                                                 .eq(ProcessLog.OUTPUT, output.getName())
                                                 .eq(ProcessLog.PROCESS, process)
                                                 .orderAsc(ProcessLog.SORT_KEY);
 
-        ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
-        ph.withContext(ctx);
-        ctx.respondWith()
-           .template("/templates/biz/process/process-output-chart.html.pasta",
-                     this,
-                     process,
-                     ph.asPage(),
-                     output.getName());
+        ElasticPageHelper<ProcessLog> pageHelper = ElasticPageHelper.withQuery(query);
+        pageHelper.withContext(webContext);
+        webContext.respondWith()
+                  .template("/templates/biz/process/process-output-chart.html.pasta",
+                            this,
+                            process,
+                            pageHelper.asPage(),
+                            output.getName());
     }
 }

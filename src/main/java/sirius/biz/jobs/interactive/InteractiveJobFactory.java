@@ -83,9 +83,9 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
         tasks.executor(INTERACTIVE_JOBS_EXECUTOR).fork(() -> {
             try {
                 generateResponse(request, context);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 request.respondWith()
-                       .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, Exceptions.handle(Log.BACKGROUND, e));
+                       .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, Exceptions.handle(Log.BACKGROUND, exception));
             }
         });
     }

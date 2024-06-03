@@ -59,8 +59,8 @@ public abstract class XMLExportJob extends ArchiveExportJob {
         if (requireValidFile) {
             try {
                 digestExportedFile((fileName, inputStream) -> validate(inputStream));
-            } catch (Exception e) {
-                process.handle(e);
+            } catch (Exception exception) {
+                process.handle(exception);
             }
         }
     }
@@ -69,8 +69,8 @@ public abstract class XMLExportJob extends ArchiveExportJob {
         if (xmlOutputStream != null) {
             try {
                 xmlOutputStream.close();
-            } catch (IOException e) {
-                process.handle(e);
+            } catch (IOException exception) {
+                process.handle(exception);
             }
         }
     }
@@ -87,8 +87,8 @@ public abstract class XMLExportJob extends ArchiveExportJob {
 
             XMLValidator xmlValidator = new XMLValidator(process);
             xmlValidator.validate(xmlSource, xsdSource);
-        } catch (Exception e) {
-            process.handle(e);
+        } catch (Exception exception) {
+            process.handle(exception);
         }
     }
 

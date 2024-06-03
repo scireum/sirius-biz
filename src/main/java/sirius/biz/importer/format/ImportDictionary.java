@@ -8,9 +8,12 @@
 
 package sirius.biz.importer.format;
 
+import sirius.biz.analytics.reports.Cell;
+import sirius.biz.analytics.reports.Cells;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Monoflop;
+import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
@@ -60,6 +63,7 @@ public class ImportDictionary {
 
     private final Map<String, FieldDefinition> fields = new LinkedHashMap<>();
     private final Map<String, String> aliases = new LinkedHashMap<>();
+    private final Set<String> fieldLabels = new HashSet<>();
     private List<String> mappingFunction;
     private final List<Function<String, FieldDefinition>> computedFieldLookups = new ArrayList<>();
     private boolean hasIdentityMapping;
@@ -82,6 +86,8 @@ public class ImportDictionary {
                                                              field.getName()));
         }
 
+        ensureFieldLabelsUnique(field);
+
         this.fields.put(field.getName(), field);
 
         Set<String> aliasDuplicatesToRemove = new HashSet<>();
@@ -92,6 +98,14 @@ public class ImportDictionary {
         aliasDuplicatesToRemove.forEach(field::removeAlias);
 
         return this;
+    }
+
+    private void ensureFieldLabelsUnique(FieldDefinition field) {
+        // if the label is already present and would no longer be unique, qualify the label including the field name
+        if (fieldLabels.contains(field.getLabel())) {
+            field.withLabel(field.getLabel() + "_" + field.getName());
+        }
+        fieldLabels.add(field.getLabel());
     }
 
     private void addCheckedAlias(FieldDefinition field, String alias, Consumer<String> duplicateConsumer) {
@@ -126,7 +140,7 @@ public class ImportDictionary {
     /**
      * Returns a list of all fields in this record.
      * <p>
-     * Note that this is not neccessarily in the expected order. Use the <tt>mapping function</tt> to specify the order.
+     * Note that this is not necessarily in the expected order. Use the <tt>mapping function</tt> to specify the order.
      *
      * @return the fields in this dictionary
      */
@@ -525,21 +539,21 @@ public class ImportDictionary {
             String fieldName = field.getName();
             try {
                 field.verify(record.apply(fieldName));
-            } catch (IllegalArgumentException | HandledException e) {
+            } catch (IllegalArgumentException | HandledException exception) {
                 problemDetected.toggle();
                 problemConsumer.accept(fieldName,
                                        NLS.fmtr("ImportDictionary.fieldError")
                                           .set(PARAM_FIELD, fieldName)
                                           .set(PARAM_LABEL, field.getLabel())
-                                          .set(PARAM_MESSAGE, e.getMessage())
+                                          .set(PARAM_MESSAGE, exception.getMessage())
                                           .format());
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 problemDetected.toggle();
                 problemConsumer.accept(fieldName,
                                        NLS.fmtr("ImportDictionary.severeFieldError")
                                           .set(PARAM_FIELD, fieldName)
                                           .set(PARAM_LABEL, field.getLabel())
-                                          .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, e).getMessage())
+                                          .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, exception).getMessage())
                                           .format());
             }
         }
@@ -607,8 +621,10 @@ public class ImportDictionary {
      * @return the normalized version of the field
      */
     protected static String normalize(String field) {
-        return Strings.reduceCharacters(field.toLowerCase())
-                    .replaceAll("[^\\p{L}\\d_]", "");
+        return Strings.cleanup(field,
+                               StringCleanup::lowercase,
+                               StringCleanup::reduceCharacters,
+                               text -> text.replaceAll("[^\\p{L}\\d_]", ""));
     }
 
     /**
@@ -644,8 +660,15 @@ public class ImportDictionary {
             report.addColumn("remarks", NLS.get("FieldDefinition.remarks"));
 
             getFields().stream().filter(field -> !field.isHidden()).forEach(field -> {
-                report.addCells(cells.of(field.getLabel()), cells.of(field.getType()), cells.list(field.getRemarks()));
+                report.addCells(cells.of(field.getLabel()), getTypeCell(cells, field), cells.list(field.getRemarks()));
             });
         });
+    }
+
+    private Cell getTypeCell(Cells cells, FieldDefinition field) {
+        if (Strings.isFilled(field.getTypeUrl())) {
+            return cells.link(field.getType(), field.getTypeUrl(), false);
+        }
+        return cells.of(field.getType());
     }
 }

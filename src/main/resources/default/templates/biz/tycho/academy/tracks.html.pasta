@@ -49,24 +49,28 @@
 
         </div>
         <i:else>
-            <t:datacards>
-                <i:for type="sirius.biz.tycho.academy.AcademyTrackInfo" var="track" items="tracks">
-                    <t:datacard title="@track.getTrackName()"
-                                link="@apply('/academy/%s/%s/track/%s',  owner, accessToken, track.getTrackId())">
-                        <i:block name="subtitle">
-                            @track.getNumberOfVideos() @i18n('OnboardingController.videos') (@track.generateDurationString() @i18n('OnboardingController.duration'))
-                        </i:block>
+            <t:emptyCheck data="tracks">
+                <t:datacards>
+                    <i:for type="sirius.biz.tycho.academy.AcademyTrackInfo" var="track" items="tracks">
+                        <t:datacard title="@track.getTrackName()"
+                                    link="@apply('/academy/%s/%s/track/%s',  owner, accessToken, track.getTrackId())">
+                            <i:block name="subtitle">
+                                @track.getNumberOfVideos() @i18n('OnboardingController.videos') (@track.generateDurationString() @i18n('OnboardingController.duration'))
+                            </i:block>
 
-                        @track.getTrackDescription()
+                            @track.getTrackDescription()
 
-                        <i:block name="footer">
-                            <i:if test="track.getNumberOfRecommendedVideos() > 0">
-                                <t:dot color="green">@i18n('OnboardingController.recommendedVideos', track.getNumberOfRecommendedVideos())</t:dot>
-                            </i:if>
-                        </i:block>
-                    </t:datacard>
-                </i:for>
-            </t:datacards>
+                            <i:block name="footer">
+                                <i:if test="track.getNumberOfRecommendedVideos() > 0">
+                                    <t:dot color="green">
+                                        @i18n('OnboardingController.recommendedVideos', track.getNumberOfRecommendedVideos())
+                                    </t:dot>
+                                </i:if>
+                            </i:block>
+                        </t:datacard>
+                    </i:for>
+                </t:datacards>
+            </t:emptyCheck>
         </i:else>
     </i:if>
 

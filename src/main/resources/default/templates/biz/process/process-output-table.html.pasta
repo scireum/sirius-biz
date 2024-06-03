@@ -11,8 +11,8 @@
     <i:block name="header-actions">
         <i:if test="process.getState() == sirius.biz.process.ProcessState.TERMINATED">
             <t:dropdown labelKey="ProcessController.export"
-                        icon="fa fa-file-export"
-                        class="mr-2"
+                        icon="fa-solid fa-file-export"
+                        class="me-2"
                         labelClass="d-none d-xl-inline">
                 <i:for type="sirius.biz.jobs.batch.file.ExportFileType"
                        var="type"
@@ -31,7 +31,7 @@
 
     <t:emptyCheck data="rows">
         <div class="card mb-4">
-            <div class="card-body">
+            <div class="card-body overflow-auto">
                 <table class="table">
                     <thead>
                     <tr>

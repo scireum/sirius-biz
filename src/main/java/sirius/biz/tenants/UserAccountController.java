@@ -15,6 +15,7 @@ import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
@@ -83,6 +84,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     private static final String PARAM_EMAIL = "email";
     private static final String PARAM_REASON = "reason";
     private static final String LIST_ROUTE = "/user-accounts";
+    private static final String DETAIL_ROUTE_PREFIX = "/user-account/";
 
     @Part
     protected Mails mails;
@@ -111,6 +113,9 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @Part
     private Tenants<I, T, U> matchingTenants;
 
+    @Part
+    private ProfileController<I, T, U> profileController;
+
     /**
      * Shows a list of all available users of the current tenant.
      *
@@ -125,7 +130,9 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                 getUsersAsPage(webContext).addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                         .inner(LoginData.ACCOUNT_LOCKED)
                                                                                         .toString(),
-                                                           NLS.get("LoginData.accountLocked")).asPage();
+                                                           NLS.get("LoginData.accountLocked"))
+                                          .withTotalCount()
+                                          .asPage();
 
         webContext.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", accounts, getUserClass());
     }
@@ -189,26 +196,20 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         U userAccount = findForTenant(getUserClass(), accountId);
 
-        boolean requestHandled = prepareSave(webContext).withAfterCreateURI("/user-account/${id}")
-                                                        .withAfterSaveURI(LIST_ROUTE)
-                                                        .withPreSaveHandler(isNew -> {
-                                                            if (isUserLockingHimself(userAccount)) {
-                                                                throw Exceptions.createHandled()
-                                                                                .withNLSKey(
-                                                                                        "UserAccountController.cannotLockSelf")
-                                                                                .handle();
-                                                            }
+        boolean requestHandled =
+                prepareSave(webContext).withAfterCreateURI("/user-account/${id}").withPreSaveHandler(isNew -> {
+                    if (isUserLockingHimself(userAccount)) {
+                        throw Exceptions.createHandled().withNLSKey("UserAccountController.cannotLockSelf").handle();
+                    }
 
-                                                            List<String> accessiblePermissions = getRoles();
-                                                            packages.loadAccessiblePermissions(webContext.getParameters(
-                                                                    "roles"),
-                                                                                               accessiblePermissions::contains,
-                                                                                               userAccount.getUserAccountData()
-                                                                                                          .getPermissions()
-                                                                                                          .getPermissions()
-                                                                                                          .modify());
-                                                        })
-                                                        .saveEntity(userAccount);
+                    List<String> accessiblePermissions = getRoles();
+                    packages.loadAccessiblePermissions(webContext.getParameters("roles"),
+                                                       accessiblePermissions::contains,
+                                                       userAccount.getUserAccountData()
+                                                                  .getPermissions()
+                                                                  .getPermissions()
+                                                                  .modify());
+                }).saveEntity(userAccount);
 
         if (!requestHandled) {
             validate(userAccount);
@@ -330,6 +331,67 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     }
 
     /**
+     * Sets a new password for the given account.
+     *
+     * @param webContext the current request
+     * @param accountId  the account for which a password is to be set
+     */
+    @Routed("/user-account/:1/password")
+    @LoginRequired
+    public void setPassword(final WebContext webContext, String accountId) {
+        U userAccount = findForTenant(getUserClass(), accountId);
+
+        // the own user must not change the password without giving the old one; we just forward to the regular profile
+        // password change site
+        if (userAccount.getUserAccountData().isOwnUser()) {
+            profileController.profileChangePassword(webContext);
+            return;
+        }
+
+        assertProperUserManagementPermission();
+
+        if (webContext.ensureSafePOST()) {
+            try {
+                String newPassword = webContext.get(ProfileController.PARAM_NEW_PASSWORD).asString();
+                String confirmation = webContext.get(ProfileController.PARAM_CONFIRMATION).asString();
+
+                profileController.validateNewPassword(userAccount, newPassword, confirmation);
+                userAccount.getUserAccountData().getLogin().setCleartextPassword(newPassword);
+                userAccount.getMapper().update(userAccount);
+
+                auditLog.neutral("AuditLog.passwordChangeOther")
+                        .causedByCurrentUser()
+                        .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
+                        .forTenant(String.valueOf(userAccount.getTenant().getId()),
+                                   matchingTenants.fetchCachedRequiredTenant(userAccount.getTenant())
+                                                  .getTenantData()
+                                                  .getName())
+                        .log();
+
+                showSavedMessage();
+
+                webContext.respondWith().redirectToGet(DETAIL_ROUTE_PREFIX + accountId);
+                return;
+            } catch (Exception exception) {
+                auditLog.neutral("AuditLog.passwordChangeOtherFailed")
+                        .causedByCurrentUser()
+                        .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
+                        .forTenant(String.valueOf(userAccount.getTenant().getId()),
+                                   matchingTenants.fetchCachedRequiredTenant(userAccount.getTenant())
+                                                  .getTenantData()
+                                                  .getName())
+                        .log();
+
+                UserContext.handle(exception);
+            }
+        }
+
+        // load the password dialog in "user" mode without requiring the old password
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/profile-change-password.html.pasta", userAccount, "user", false);
+    }
+
+    /**
      * Generates a new password for the given account.
      *
      * @param webContext the current request
@@ -345,7 +407,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         generateNewPassword(userAccount);
         UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
 
-        webContext.respondWith().redirectToGet(LIST_ROUTE);
+        webContext.respondWith().redirectToGet(DETAIL_ROUTE_PREFIX + accountId);
     }
 
     /**
@@ -396,7 +458,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
-        webContext.respondWith().redirectToGet(LIST_ROUTE);
+        webContext.respondWith().redirectToGet(DETAIL_ROUTE_PREFIX + accountId);
     }
 
     private void generateNewPassword(U userAccount) {
@@ -437,7 +499,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             throw Exceptions.createHandled().withNLSKey("UserAccountController.tooManyUsersFoundForEmail").handle();
         }
 
-        U account = accounts.get(0);
+        U account = accounts.getFirst();
         if (account.getUserAccountData().getLogin().isAccountLocked()) {
             auditLog.negative("AuditLog.resetPasswordRejected")
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
@@ -600,20 +662,19 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
     public void selectUserAccounts(WebContext webContext) {
-        Page<U> selectableUsers = getSelectableUsersAsPage().withContext(webContext).asPage();
-        fillTenantsFromCache(selectableUsers);
+        Page<U> selectableUsers = getSelectableUsersAsPage().withContext(webContext)
+                                                            .addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(
+                                                                                                UserAccountData.LOGIN)
+                                                                                                          .inner(LoginData.ACCOUNT_LOCKED)
+                                                                                                          .toString(),
+                                                                             NLS.get("LoginData.accountLocked"))
+                                                            .withTotalCount()
+                                                            .asPage();
 
         webContext.respondWith()
                   .template("/templates/biz/tenants/select-user-account.html.pasta",
                             selectableUsers,
                             isCurrentlySpying(webContext));
-    }
-
-    private void fillTenantsFromCache(Page<U> selectableUsers) {
-        selectableUsers.getItems()
-                       .forEach(user -> user.getTenant()
-                                            .setValue(matchingTenants.fetchCachedTenant(user.getTenant())
-                                                                     .orElse(null)));
     }
 
     private boolean isCurrentlySpying(WebContext webContext) {
@@ -677,6 +738,13 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             return;
         }
 
+        if (!user.getUserAccountData().canSelect()) {
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
+            selectUserAccounts(webContext);
+            return;
+        }
+
         // If the target user belongs to the system tenant, our current user has to have highest user management
         // permission as otherwise we would perform an unwanted roles delegation (giving the current user higher
         // access rights - right up to the system management level...)
@@ -704,5 +772,17 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                    user.getUniqueName());
         webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
+    }
+
+    /**
+     * Fetches the raw identifier of the current user's database entity, by removing the prefix indicating the entity's
+     * type.
+     *
+     * @return the raw identifier of the current user's database entity
+     */
+    protected String fetchRawCurrentUserId() {
+        String userId = getUser().getUserId();
+        String prefix = Mixing.getNameForType(getUserClass()) + '-';
+        return userId.startsWith(prefix) ? userId.substring(prefix.length()) : userId;
     }
 }

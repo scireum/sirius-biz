@@ -42,8 +42,8 @@ public abstract class BatchIndicatorCheck<E extends BaseEntity<?> & IndicatedEnt
                       try {
                           entity.getIndicators()
                                 .updateIndication(indicator.getName(), ((Indicator<E>) indicator).executeFor(entity));
-                      } catch (Exception e) {
-                          Exceptions.handle(Log.BACKGROUND, e);
+                      } catch (Exception exception) {
+                          Exceptions.handle(Log.BACKGROUND, exception);
                           entity.getIndicators().updateIndication(indicator.getName(), false);
                       }
                   });

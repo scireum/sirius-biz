@@ -70,7 +70,11 @@ public class BridgePath implements Path {
 
     @Override
     public Path getRoot() {
-        return this;
+        VirtualFile parent = virtualFile;
+        while (parent.parent() != null) {
+            parent = parent.parent();
+        }
+        return new BridgePath(parent, fileSystem);
     }
 
     @Override
@@ -100,7 +104,16 @@ public class BridgePath implements Path {
 
     @Override
     public Path getName(int index) {
-        return this;
+        int nameCount = getNameCount();
+        // use '-1' as we want to get the first name, e.g. for index=0 at /foo/bar/baz we want 'foo'
+        int steps = nameCount - index - 1;
+
+        VirtualFile parentFile = virtualFile;
+        for (int i = 0; i < steps; i++) {
+            parentFile = parentFile.parent();
+        }
+
+        return new StringPath(parentFile.name());
     }
 
     @Override
@@ -135,7 +148,7 @@ public class BridgePath implements Path {
 
     @Override
     public Path resolve(Path other) {
-        throw new UnsupportedOperationException("resolve");
+        return resolve(other.toString());
     }
 
     @Override

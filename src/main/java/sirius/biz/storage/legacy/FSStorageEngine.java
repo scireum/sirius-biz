@@ -45,8 +45,8 @@ public class FSStorageEngine implements PhysicalStorageEngine {
             if (!root.exists()) {
                 try {
                     root.mkdirs();
-                } catch (Exception e) {
-                    Exceptions.handle(Storage.LOG, e);
+                } catch (Exception exception) {
+                    Exceptions.handle(Storage.LOG, exception);
                 }
             } else {
                 if (!root.isDirectory()) {
@@ -102,17 +102,17 @@ public class FSStorageEngine implements PhysicalStorageEngine {
 
         try {
             return new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            Exceptions.ignore(e);
+        } catch (FileNotFoundException exception) {
+            Exceptions.ignore(exception);
             return null;
         }
     }
 
     @Override
-    public void deliver(WebContext ctx, String bucket, String physicalKey, String fileExtension) {
+    public void deliver(WebContext webContext, String bucket, String physicalKey, String fileExtension) {
         File file = getFile(bucket, physicalKey);
-        Response response = ctx.respondWith().infinitelyCached();
-        String name = ctx.get("name").asString();
+        Response response = webContext.respondWith().infinitelyCached();
+        String name = webContext.get("name").asString();
         if (Strings.isFilled(name)) {
             response.download(name);
         } else {

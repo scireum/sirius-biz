@@ -10,7 +10,6 @@ package sirius.biz.storage.layer3;
 
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.tycho.QuickAction;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.WebContext;
@@ -55,9 +54,9 @@ public class JobFileQuickActionProvider implements FileQuickActionProvider {
 
     @Override
     public void computeQuickAction(VirtualFile virtualFile, Consumer<QuickAction> consumer) {
-        String uri = CallContext.getCurrent().get(WebContext.class).getRequest().uri();
+        String uri = WebContext.getCurrent().getRequest().uri();
         getAvailableJobs().filter(jobFactory -> jobFactory.generatePresetUrl(uri, virtualFile) != null)
-                          .forEach(jobFactory -> consumer.accept(new QuickAction().withIcon("fa fa-cogs")
+                          .forEach(jobFactory -> consumer.accept(new QuickAction().withIcon("fa-solid fa-cogs")
                                                                                   .withLabel(jobFactory.getLabel())
                                                                                   .withUrl(jobFactory.generatePresetUrl(
                                                                                           uri,

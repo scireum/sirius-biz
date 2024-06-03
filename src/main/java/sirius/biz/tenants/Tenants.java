@@ -35,14 +35,16 @@ import sirius.web.security.UserInfo;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Helps for extract the current {@link UserAccount} and {@link Tenant}.
  * <p>
- * Also some boilerplate methods are provided to perform some assertions.
+ * Also, some boilerplate methods are provided to perform some assertions.
  *
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <T> specifies the effective entity type used to represent Tenants
@@ -97,7 +99,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     /**
      * Returns the current user or throws an exception if no user is currently available.
      *
-     * @return the currently logged in user
+     * @return the currently logged-in user
      */
     @Nonnull
     public U getRequiredUser() {
@@ -127,13 +129,13 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
      */
     @Nonnull
     public Optional<T> getCurrentTenant() {
-        return getCurrentUser().flatMap(u -> Optional.ofNullable(u.getTenant().fetchValue()));
+        return fetchCachedTenant(UserContext.getCurrentUser().getTenantId());
     }
 
     /**
-     * Returns the tenant of the currently logged in user or throws an exception if no user is present.
+     * Returns the tenant of the currently logged-in user or throws an exception if no user is present.
      *
-     * @return the tenant of the currently logged in user
+     * @return the tenant of the currently logged-in user
      */
     @Nonnull
     public T getRequiredTenant() {
@@ -237,14 +239,14 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     /**
      * Applies an appropriate filter to the given query to only return entities which belong to the current tenant.
      *
-     * @param qry the query to extent
-     * @param <E> the type of entities processed by the query
-     * @param <Q> the type of the query which is being extended
+     * @param query the query to extend
+     * @param <E>   the type of entities processed by the query
+     * @param <Q>   the type of the query which is being extended
      * @return the query with an additional constraint filtering on the current tenant
      * @throws sirius.kernel.health.HandledException if there is currently no user / tenant available
      */
-    public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q qry) {
-        return qry.eq(TenantAware.TENANT, getRequiredTenant());
+    public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q query) {
+        return query.eq(TenantAware.TENANT, getRequiredTenant());
     }
 
     /**
@@ -503,13 +505,13 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
                 processes.execute(processId, processContext -> {
                     try {
                         task.invoke(processContext);
-                    } catch (Exception ex) {
-                        processContext.handle(ex);
+                    } catch (Exception exception) {
+                        processContext.handle(exception);
                     }
                 });
             });
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(exception);
         }
     }
 
@@ -561,15 +563,35 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
         UserContext userContext = UserContext.get();
         UserInfo currentUser = userContext.getUser();
         try {
-            userContext.setCurrentUser(UserInfo.Builder.createUser("ADMIN")
-                                                       .withUsername("Administrator")
-                                                       .withTenantId(tenantId)
-                                                       .withTenantName(tenantName)
-                                                       .withEveryPermission(true)
-                                                       .build());
+            userContext.setCurrentUser(UserInfo.Builder.createSyntheticAdminUser(tenantId, tenantName).build());
             return task.create();
         } finally {
             userContext.setCurrentUser(currentUser);
         }
+    }
+
+    /**
+     * Fetches all parent tenant IDs for the given tenant.
+     *
+     * @param tenantId the initial tenant ID
+     * @return a list of all parent tenant IDs, starting with the given tenant ID
+     */
+    public List<String> fetchAllParentIds(String tenantId) {
+        List<String> tenantIds = new ArrayList<>();
+        String currentTenantId = tenantId;
+
+        while (Strings.isFilled(currentTenantId)) {
+            tenantIds.add(currentTenantId);
+            currentTenantId = fetchParentTenantId(currentTenantId);
+        }
+
+        return tenantIds;
+    }
+
+    private String fetchParentTenantId(String currentTenantId) {
+        return fetchCachedTenant(currentTenantId).map(T::getParent)
+                                                 .map(BaseEntityRef::getIdAsString)
+                                                 .filter(parentId -> !currentTenantId.equals(parentId))
+                                                 .orElse(null);
     }
 }

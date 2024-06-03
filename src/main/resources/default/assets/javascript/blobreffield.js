@@ -23,7 +23,7 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
         '{{/previewImage}}' +
         '{{^previewImage}}' +
         '    {{#icon}}' +
-        '        <i class="fa fa-3x {{icon}}" aria-hidden="true"></i>' +
+        '        <i class="fa-solid fa-3x {{icon}}" aria-hidden="true"></i>' +
         '    {{/icon}}' +
         '{{/previewImage}}' +
         '{{#url}}' +
@@ -67,7 +67,7 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
         });
 
         input.addEventListener('keyup', function (event) {
-            if (event.key === 'Enter') {
+            if (event.key === sirius.key.ENTER) {
                 updateURL(input.value);
             }
         });

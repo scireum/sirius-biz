@@ -194,6 +194,11 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
         }
 
         E entity = findAndLoad(context);
+        if (shouldSkip(entity)) {
+            process.incCounter(NLS.get("EntityImportJob.rowIgnored"));
+            return;
+        }
+
         if (mode == SyncMode.DELETE_EXISTING) {
             if (!entity.isNew()) {
                 importer.deleteNow(entity);
@@ -206,11 +211,6 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
 
     protected void createOrUpdateEntity(E entity, Context context, Watch watch) {
         try {
-            if (shouldSkip(entity)) {
-                process.incCounter(NLS.get("EntityImportJob.rowIgnored"));
-                return;
-            }
-
             fillAndVerify(entity, context);
             boolean isNew = entity.isNew();
 
@@ -221,11 +221,11 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
             } else {
                 process.addTiming(NLS.get("EntityImportJob.entityUpdated"), watch.elapsedMillis());
             }
-        } catch (HandledException e) {
+        } catch (HandledException exception) {
             throw Exceptions.createHandled()
                             .withNLSKey("EntityImportJob.cannotHandleEntity")
                             .set("entity", entity.toString())
-                            .set("message", e.getMessage())
+                            .set("message", exception.getMessage())
                             .handle();
         }
     }
@@ -249,7 +249,13 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
      * @return <tt>true</tt> if further processing should be skipped, <tt>false</tt> if the entity should be persisted
      */
     protected boolean shouldSkip(E entity) {
-        return mode == SyncMode.NEW_ONLY && !entity.isNew() || (mode == SyncMode.UPDATE_ONLY && entity.isNew());
+        if (entity == null) {
+            return true;
+        }
+        if (mode == SyncMode.NEW_ONLY && !entity.isNew()) {
+            return true;
+        }
+        return mode == SyncMode.UPDATE_ONLY && entity.isNew();
     }
 
     /**

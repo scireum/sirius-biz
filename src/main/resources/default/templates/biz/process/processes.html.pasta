@@ -14,7 +14,7 @@
                         framework="biz.jobs"
                         permission="permission-execute-jobs"
                         url="/jobs"
-                        icon="fas fa-external-link-alt"
+                        icon="fa-solid fa-external-link-alt"
                         labelKey="JobFactory.plural"/>
             </i:block>
         </t:pageHeader>
@@ -32,29 +32,56 @@
                     <t:datacard link="@apply('/ps/%s', process.getId())">
                         <i:block name="title">
                             <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
-                                <span class="pr-1"><i class="fa fa-spin fa-sync"></i></span>
+                                <span class="pe-1"><i class="fa-solid fa-spin fa-sync"></i></span>
                             </i:if>
                             @limit(process.getTitle(), 65)
                         </i:block>
+
+                        <i:block name="actions">
+                            <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING || process.getState() == sirius.biz.process.ProcessState.STANDBY">
+                                <i:local name="debugToggleUrl"
+                                         value="apply('/ps/%s/toggleDebugging', process.getId())"/>
+                                <i:if test="process.isDebugging()">
+                                    <t:dropdownItem labelKey="ProcessController.disableDebugging"
+                                                    icon="fa-solid fa-bug-slash fa-fw"
+                                                    permission="permission-manage-processes"
+                                                    url="@debugToggleUrl"/>
+                                    <i:else>
+                                        <t:dropdownItem labelKey="ProcessController.enableDebugging"
+                                                        icon="fa-solid fa-bug fa-fw"
+                                                        permission="permission-manage-processes"
+                                                        url="@debugToggleUrl"/>
+                                    </i:else>
+                                </i:if>
+                            </i:if>
+                            <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+                                <t:dropdownItem labelKey="NLS.cancel"
+                                                icon="fa-solid fa-ban fa-fw"
+                                                url="@apply('/ps/%s/cancel', process.getId())"
+                                                class="text-sirius-red danger confirm-link-js"/>
+                            </i:if>
+                        </i:block>
+
+
                         <div class="mb-3 mt-1 text-small text-muted">
                             @process.getMessage()
                         </div>
                         <div class="mt-2">
                             <i:if test="process.getTenantId() != user().getTenantId()">
-                                <t:iconInlineInfo icon="fa fa-industry">
+                                <t:iconInlineInfo icon="fa-solid fa-industry">
                                     <t:smartValue type="tenant" payload="@process.getTenantId()" label="@process.getTenantName()" />
                                 </t:iconInlineInfo>
                             </i:if>
-                            <t:iconInlineInfo icon="fa fa-user">
+                            <t:iconInlineInfo icon="fa-solid fa-user">
                                 <t:smartValue type="user-account" payload="@process.getUserId()" label="@process.getUserName()" />
                             </t:iconInlineInfo>
                             <i:if test="process.getStarted() != null">
                                 <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
-                                    <t:iconInlineInfo icon="fa fa-wave-square">
+                                    <t:iconInlineInfo icon="fa-solid fa-wave-square">
                                         <t:smartFormatTemporal date="process.getStarted()"/>
                                     </t:iconInlineInfo>
                                     <i:else>
-                                        <t:iconInlineInfo icon="fa fa-clock">
+                                        <t:iconInlineInfo icon="fa-solid fa-clock">
                                             <t:smartFormatTemporal date="process.getStarted()"/>
                                         </t:iconInlineInfo>
                                     </i:else>

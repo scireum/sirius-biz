@@ -24,7 +24,7 @@ import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -93,7 +93,8 @@ public class UpdatesReport extends ReportJobFactory {
                         ORDER BY count(*) desc
                         """).set("start", start).set("end", LocalDate.now()).iterateAll(row -> {
             String guid = row.getValue("updateGuid").asString();
-            report.addRow(List.of(Tuple.create(COLUMN_GUID, isURL(guid) ? cells.link(guid, guid) : cells.of(guid)),
+            report.addRow(List.of(Tuple.create(COLUMN_GUID,
+                                               isURL(guid) ? cells.link(guid, guid, true) : cells.of(guid)),
                                   Tuple.create(COLUMN_TOTAL, cells.of(row.getValue("all").asInt(0))),
                                   Tuple.create(COLUMN_LOGGED_IN, cells.of(row.getValue(COLUMN_LOGGED_IN).asInt(0))),
                                   Tuple.create(COLUMN_ANONYMOUS, cells.of(row.getValue(COLUMN_ANONYMOUS).asInt(0)))));
@@ -105,9 +106,9 @@ public class UpdatesReport extends ReportJobFactory {
 
     private boolean isURL(String guid) {
         try {
-            new URL(guid);
+            URI.create(guid).toURL();
             return true;
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException exception) {
             return false;
         }
     }

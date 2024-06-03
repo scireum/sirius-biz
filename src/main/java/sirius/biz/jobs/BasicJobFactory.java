@@ -16,6 +16,7 @@ import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.presets.JobPresets;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Monoflop;
@@ -166,6 +167,22 @@ public abstract class BasicJobFactory implements JobFactory {
      */
     protected abstract void collectParameters(Consumer<Parameter<?>> parameterCollector);
 
+    /**
+     * Collects all {@link VirtualFile files} that should be marked read-only at job submission.
+     *
+     * @param context       the parameters wrapped as context
+     * @param fileCollector the collector to be supplied with the list of files
+     */
+    protected void collectFilesToLock(Map<String, String> context, Consumer<VirtualFile> fileCollector) {
+        // Nothing to do by default
+    }
+
+    protected void lockFiles(Map<String, String> context) {
+        List<VirtualFile> filesToLock = new ArrayList<>();
+        collectFilesToLock(context, filesToLock::add);
+        filesToLock.forEach(virtualFile -> virtualFile.updateReadOnlyFlag(true));
+    }
+
     @Nullable
     @Override
     public String generatePresetUrl(String uri, Object targetObject) {
@@ -315,8 +332,8 @@ public abstract class BasicJobFactory implements JobFactory {
 
                     context.put(parameter.getName(), value);
                 }
-            } catch (HandledException e) {
-                errorConsumer.accept(parameter, e);
+            } catch (HandledException exception) {
+                errorConsumer.accept(parameter, exception);
             }
         }
 

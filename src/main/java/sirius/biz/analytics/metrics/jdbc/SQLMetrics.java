@@ -74,10 +74,10 @@ public class SQLMetrics extends BasicMetrics<SQLEntity> {
                .whereIgnoreNull(MonthlyMetric.MONTH, month)
                .whereIgnoreNull(DailyMetric.DAY, day)
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             throw Exceptions.handle()
                             .to(Mixing.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to delete a metric in %s: %s (%s)", table)
                             .handle();
         }
@@ -104,10 +104,10 @@ public class SQLMetrics extends BasicMetrics<SQLEntity> {
                                  .executeUpdate();
 
             return numModified > 0;
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             throw Exceptions.handle()
                             .to(Mixing.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to update a metric in %s: %s (%s)", table)
                             .handle();
         }
@@ -190,8 +190,8 @@ public class SQLMetrics extends BasicMetrics<SQLEntity> {
                       .asSQLQuery()
                       .first()
                       .map(row -> row.getValue(Fact.VALUE).asInt(0));
-        } catch (SQLException ex) {
-            throw Exceptions.handle(OMA.LOG, ex);
+        } catch (SQLException exception) {
+            throw Exceptions.handle(OMA.LOG, exception);
         }
     }
 }

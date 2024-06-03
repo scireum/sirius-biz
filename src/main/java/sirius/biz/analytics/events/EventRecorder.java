@@ -35,6 +35,8 @@ import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -57,7 +59,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     /**
      * Determines the max number of events to keep in the queue.
      */
-    private static final int MAX_BUFFER_SIZE = 16 * 1024;
+    public static final int MAX_BUFFER_SIZE = 16 * 1024;
 
     /**
      * Determines the min number of events before an insertion run is performed.
@@ -80,11 +82,12 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     private static final int MAX_EVENTS_PER_PROCESS = 16 * 1024;
 
     private static final String AGGREGATION_COUNTER = "counter";
+    private static final String AGGREGATION_SUM = "summation";
     private static final String AGGREGATION_DISTINCT_COUNT = "distinctCount";
 
     private LocalDateTime lastProcessed;
     private final AtomicInteger bufferedEvents = new AtomicInteger();
-    private final Queue<Event> buffer = new ConcurrentLinkedQueue<>();
+    private final Queue<Event<?>> buffer = new ConcurrentLinkedQueue<>();
 
     @Part
     private Schema schema;
@@ -184,7 +187,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @throws SQLException in case of a database error
      * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
      */
-    public <E extends Event> int countEvents(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner)
+    public <E extends Event<E>> int countEvents(Class<E> eventType, @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
         SmartQuery<E> query = oma.select(eventType).aggregationField("count(*) AS " + AGGREGATION_COUNTER);
         if (queryTuner != null) {
@@ -213,11 +216,164 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @throws SQLException in case of a database error
      * @see #countEvents(Class, Consumer)
      */
-    public <E extends Event> int countEventsInRange(Class<E> eventType,
-                                                    LocalDateTime startDate,
-                                                    LocalDateTime endDate,
-                                                    @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+    public <E extends Event<E>> int countEventsInRange(Class<E> eventType,
+                                                       LocalDateTime startDate,
+                                                       LocalDateTime endDate,
+                                                       @Nullable Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
         return countEvents(eventType, query -> {
+            query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
+            query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
+            if (queryTuner != null) {
+                queryTuner.accept(query);
+            }
+        });
+    }
+
+    /**
+     * Counts the number of events which have occurred in the given calendar month based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This method counts the number of events which have occurred in the given calendar month. Therefore, the start
+     * date is the first day of the given month and the end date is the last day of the given month.
+     *
+     * @param eventType     the type of events to query
+     * @param calendarMonth the calendar month to query
+     * @param queryTuner    the actual filter to apply
+     * @param <E>           the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event<E>> int countEventsInCalendarMonth(Class<E> eventType,
+                                                               YearMonth calendarMonth,
+                                                               @Nullable Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
+        LocalDateTime startDate = calendarMonth.atDay(1).atStartOfDay();
+        LocalDateTime endDate = calendarMonth.atEndOfMonth().atTime(LocalTime.MAX);
+        return countEventsInRange(eventType, startDate, endDate, queryTuner);
+    }
+
+    /**
+     * Counts the number of events which have occurred in the last month based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This method counts the number of events which have occurred in the last calendar month. Therefore, the
+     * start date is the first day of the last month and the end date is the last day of the last month.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType  the type of events to query
+     * @param queryTuner the actual filter to apply
+     * @param <E>        the generic types of the entities to query
+     * @return the number of events matching the given filter in the last month. Note that we return an <tt>int</tt>
+     * here to better match the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event<E>> int countEventsInLastMonth(Class<E> eventType,
+                                                           @Nullable Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
+        return countEventsInCalendarMonth(eventType, YearMonth.now().minusMonths(1), queryTuner);
+    }
+
+    /**
+     * Counts the number of events which have occurred in the last year based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This method counts the number of events which have occurred in the last calendar year. Therefore, the
+     * start date is the first day of the last year and the end date is the last day of the last year. In order to get
+     * the past twelve months, use {@link #countEventsInLast12Months(Class, Consumer)}.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType  the type of events to query
+     * @param queryTuner the actual filter to apply
+     * @param <E>        the generic types of the entities to query
+     * @return the number of events matching the given filter in the last year. Note that we return an <tt>int</tt>
+     * here to better match the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event<E>> int countEventsInLastYear(Class<E> eventType,
+                                                          @Nullable Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
+        YearMonth lastYearMonth = YearMonth.now().minusYears(1);
+        LocalDateTime startDate = lastYearMonth.withMonth(1).atDay(1).atStartOfDay();
+        LocalDateTime endDate = lastYearMonth.withMonth(12).atEndOfMonth().atTime(LocalTime.MAX);
+        return countEventsInRange(eventType, startDate, endDate, queryTuner);
+    }
+
+    /**
+     * Counts the number of events which have occurred in the last 12 months based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType  the type of events to query
+     * @param queryTuner the actual filter to apply
+     * @param <E>        the generic types of the entities to query
+     * @return the number of events matching the given filter in the last 12 months. Note that we return an <tt>int</tt>
+     * here to better match the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     */
+    public <E extends Event<E>> int countEventsInLast12Months(Class<E> eventType,
+                                                              @Nullable Consumer<SmartQuery<E>> queryTuner)
+            throws SQLException {
+        LocalDateTime startDate = LocalDateTime.now().minusYears(1).plusMonths(1);
+        LocalDateTime endDate = LocalDateTime.now();
+        return countEventsInRange(eventType, startDate, endDate, queryTuner);
+    }
+
+    /**
+     * Sums the values for the provided column of events which have occurred based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType    the type of events to query
+     * @param mappingToSum the mapping to sum values for
+     * @param queryTuner   the actual filter to apply. Note that {@link Event#EVENT_DATE} should be filtered, as otherwise
+     *                     the performance will be catastrophic.
+     * @param <E>          the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     * @see #countEventsInRange(Class, LocalDateTime, LocalDateTime, Consumer)
+     */
+    public <E extends Event<E>> int sumEvents(Class<E> eventType,
+                                              Mapping mappingToSum,
+                                              @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+        SmartQuery<E> query = oma.select(eventType)
+                                 .aggregationField(Strings.apply("sum(%s) AS %s",
+                                                                 mappingToSum.getName(),
+                                                                 AGGREGATION_SUM));
+        if (queryTuner != null) {
+            queryTuner.accept(query);
+        }
+
+        return query.asSQLQuery()
+                    .markAsLongRunning()
+                    .first()
+                    .flatMap(row -> row.getValue(AGGREGATION_SUM).asOptionalInt())
+                    .orElse(0);
+    }
+
+    /**
+     * Sums the values for the provided column of events which have occurred based on the given <tt>queryTuner</tt>.
+     * <p>
+     * This automatically marks the query as long-running.
+     *
+     * @param eventType    the type of events to query
+     * @param mappingToSum the mapping to sum values for
+     * @param startDate    the start date of the range
+     * @param endDate      the end date of the range
+     * @param queryTuner   the actual filter to apply
+     * @param <E>          the generic types of the entities to query
+     * @return the number of events matching the given filter. Note that we return an <tt>int</tt> here to better match
+     * the API of {@link sirius.kernel.health.metrics.Metrics}.
+     * @throws SQLException in case of a database error
+     * @see #countEvents(Class, Consumer)
+     */
+    public <E extends Event<E>> int sumEventsInRange(Class<E> eventType,
+                                                     Mapping mappingToSum,
+                                                     LocalDateTime startDate,
+                                                     LocalDateTime endDate,
+                                                     @Nullable Consumer<SmartQuery<E>> queryTuner) throws SQLException {
+        return sumEvents(eventType, mappingToSum, query -> {
             query.where(OMA.FILTERS.gte(Event.EVENT_DATE, startDate.toLocalDate()));
             query.where(OMA.FILTERS.lte(Event.EVENT_DATE, endDate.toLocalDate()));
             if (queryTuner != null) {
@@ -240,9 +396,9 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * the API of {@link sirius.kernel.health.metrics.Metrics}.
      * @throws SQLException in case of a database error
      */
-    public <E extends Event> int countDistinctValuesInEvents(Class<E> eventType,
-                                                             Mapping mapping,
-                                                             @Nullable Consumer<SmartQuery<E>> queryTuner)
+    public <E extends Event<E>> int countDistinctValuesInEvents(Class<E> eventType,
+                                                                Mapping mapping,
+                                                                @Nullable Consumer<SmartQuery<E>> queryTuner)
             throws SQLException {
         SmartQuery<E> query = oma.select(eventType)
                                  .aggregationField(Strings.apply("COUNT(DISTINCT %s) as %s",
@@ -269,7 +425,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      *
      * @param event the event to record
      */
-    public void record(@Nonnull Event event) {
+    public void record(@Nonnull Event<?> event) {
         if (!configured) {
             return;
         }
@@ -282,13 +438,13 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
             event.getDescriptor().beforeSave(event);
             buffer.offer(event);
             bufferedEvents.incrementAndGet();
-        } catch (HandledException e) {
+        } catch (HandledException exception) {
             Log.BACKGROUND.WARN("An event was not recorded due to a before-save warning. Event: %s (%s): %s",
                                 event.toString(),
                                 event.getClass().getSimpleName(),
-                                e.getMessage());
-        } catch (Exception e) {
-            Exceptions.handle(Log.BACKGROUND, e);
+                                exception.getMessage());
+        } catch (Exception exception) {
+            Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 
@@ -324,8 +480,8 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         lastProcessed = LocalDateTime.now();
         int processedEvents = 0;
         try (BatchContext ctx = new BatchContext(() -> "Process recorded events.", Duration.ofMinutes(1))) {
-            Map<Class<? extends Event>, InsertQuery<Event>> queries = new HashMap<>();
-            Event nextEvent = fetchBufferedEvent();
+            Map<Class<? extends Event<?>>, InsertQuery<Event<?>>> queries = new HashMap<>();
+            Event<?> nextEvent = fetchBufferedEvent();
             while (nextEvent != null) {
                 processEvent(ctx, queries, nextEvent);
                 if (++processedEvents >= MAX_EVENTS_PER_PROCESS) {
@@ -334,10 +490,10 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
 
                 nextEvent = fetchBufferedEvent();
             }
-        } catch (HandledException e) {
-            Exceptions.ignore(e);
-        } catch (Exception e) {
-            Exceptions.handle(Log.BACKGROUND, e);
+        } catch (HandledException exception) {
+            Exceptions.ignore(exception);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.BACKGROUND, exception);
         }
 
         return processedEvents;
@@ -352,17 +508,20 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @param event   the event to insert
      */
     @SuppressWarnings("unchecked")
-    private void processEvent(BatchContext ctx, Map<Class<? extends Event>, InsertQuery<Event>> queries, Event event) {
+    private void processEvent(BatchContext ctx,
+                              Map<Class<? extends Event<?>>, InsertQuery<Event<?>>> queries,
+                              Event<?> event) {
         try {
-            InsertQuery<Event> qry = queries.computeIfAbsent(event.getClass(),
-                                                             type -> (InsertQuery<Event>) ctx.insertQuery(type, false));
-            qry.insert(event, false, true);
-        } catch (Exception e) {
+            InsertQuery<Event<?>> query = queries.computeIfAbsent((Class<Event<?>>) event.getClass(),
+                                                                  type -> (InsertQuery<Event<?>>) ctx.insertQuery(type,
+                                                                                                                  false));
+            query.insert(event, false, true);
+        } catch (Exception exception) {
             if (!event.retried) {
                 event.retried = true;
                 record(event);
             }
-            throw e;
+            throw exception;
         }
     }
 
@@ -372,8 +531,8 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * @return the next event to process or <tt>null</tt> to indicate that the buffer queue is empty.
      */
     @Nullable
-    protected Event fetchBufferedEvent() {
-        Event result = buffer.poll();
+    protected Event<?> fetchBufferedEvent() {
+        Event<?> result = buffer.poll();
         if (result != null) {
             bufferedEvents.decrementAndGet();
         }

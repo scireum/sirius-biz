@@ -123,9 +123,19 @@ public interface Blob {
     LocalDateTime getLastTouched();
 
     /**
-     * Provides an on-disk copy of the data associated with this blob
+     * Provides an on-disk copy of the data associated with this blob.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * blob.download().ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * </pre>
      *
-     * @return a handle to the data of this blob
+     * @return a {@linkplain java.io.Closeable closeable} file handle to the data of this blob, or an empty optional if no data was present
      */
     Optional<FileHandle> download();
 
@@ -152,6 +162,20 @@ public interface Blob {
      * @return <tt>true</tt> if the blob is temporary, <tt>false</tt> otherwise
      */
     boolean isTemporary();
+
+    /**
+     * Determines if this blob is marked as read-only.
+     *
+     * @return <tt>true</tt> if the blob is read-only, <tt>false</tt> otherwise
+     */
+    boolean isReadOnly();
+
+    /**
+     * Sets the blob read-only flag.
+     *
+     * @param readOnly the new value for the read-only flag
+     */
+    void setReadOnly(boolean readOnly);
 
     /**
      * Marks the blob as "read accessed".
@@ -276,4 +300,13 @@ public interface Blob {
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     URLBuilder url();
+
+    /**
+     * Creates a new {@link BlobDuplicator} for this blob.
+     *
+     * @return a new duplicator for this blob
+     */
+    default BlobDuplicator duplicate() {
+        return new BlobDuplicator(this);
+    }
 }

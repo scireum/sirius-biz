@@ -11,6 +11,7 @@ package sirius.biz.analytics.checks;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.AutoRegister;
+import sirius.kernel.health.Average;
 
 import java.time.LocalDate;
 
@@ -27,6 +28,18 @@ import java.time.LocalDate;
  */
 @AutoRegister
 public abstract class DailyCheck<E extends BaseEntity<?>> implements AnalyticalTask<E> {
+
+    /**
+     * Contains the maximum duration of a computation in milliseconds.
+     */
+    private long maxDurationMillis = 0;
+
+    /**
+     * Contains the average duration of computations in milliseconds.
+     * <p>
+     * This keeps track of the average duration via a sliding window.
+     */
+    private final Average avgDurationMillis = new Average();
 
     @Override
     public void compute(LocalDate date, E entity, boolean bestEffort) {
@@ -48,5 +61,28 @@ public abstract class DailyCheck<E extends BaseEntity<?>> implements AnalyticalT
     @Override
     public int getLevel() {
         return AnalyticalTask.DEFAULT_LEVEL;
+    }
+
+    @Override
+    public void trackDuration(long durationMillis) {
+        this.avgDurationMillis.addValue(durationMillis);
+        this.maxDurationMillis = Math.max(this.maxDurationMillis, durationMillis);
+    }
+
+    @Override
+    public void resetDurations() {
+        this.avgDurationMillis.getAndClear();
+        this.maxDurationMillis = 0;
+
+    }
+
+    @Override
+    public long getMaxDurationMillis() {
+        return maxDurationMillis;
+    }
+
+    @Override
+    public Average getAvgDurationMillis() {
+        return avgDurationMillis;
     }
 }

@@ -47,7 +47,31 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E load(Context data, E entity) {
-        return load(data, entity, mappingsToLoad);
+        if (data.containsKey(SCRIPT_ABORTED)) {
+            return null;
+        }
+
+        if (context.getEventDispatcher().isActive()) {
+            BeforeLoadEvent<E> beforeLoadEvent = new BeforeLoadEvent<>(entity, data, context);
+            context.getEventDispatcher().handleEvent(beforeLoadEvent);
+            if (beforeLoadEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
+                return null;
+            }
+        }
+
+        E result = load(data, entity, mappingsToLoad);
+
+        if (context.getEventDispatcher().isActive()) {
+            AfterLoadEvent<E> afterLoadEvent = new AfterLoadEvent<>(result, data, context);
+            context.getEventDispatcher().handleEvent(afterLoadEvent);
+            if (afterLoadEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
+                return null;
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -71,8 +95,18 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         // via @Exportable
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public final Optional<E> tryFind(Context data) {
+        if (context.getEventDispatcher().isActive()) {
+            BeforeFindEvent<E> beforeFindEvent = new BeforeFindEvent<>((Class<E>) descriptor.getType(), data, context);
+            context.getEventDispatcher().handleEvent(beforeFindEvent);
+            if (beforeFindEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
+                return Optional.empty();
+            }
+        }
+
         return findByExample(data);
     }
 
@@ -115,7 +149,20 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E createOrUpdateNow(E entity) {
+        if (entity == null) {
+            return null;
+        }
+
         try {
+            if (context.getEventDispatcher().isActive()) {
+                BeforeCreateOrUpdateEvent<E> beforeCreateOrUpdateEvent =
+                        new BeforeCreateOrUpdateEvent<>(entity, context);
+                context.getEventDispatcher().handleEvent(beforeCreateOrUpdateEvent);
+                if (beforeCreateOrUpdateEvent.isAborted()) {
+                    return null;
+                }
+            }
+
             enforcePreSaveConstraints(entity);
 
             // Invoke the beforeSave checks so that the change-detection below works for

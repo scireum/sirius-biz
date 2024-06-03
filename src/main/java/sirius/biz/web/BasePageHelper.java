@@ -50,7 +50,7 @@ import java.util.function.Function;
  */
 public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constraint, Q extends Query<Q, E, C>, B extends BasePageHelper<E, C, Q, B>> {
 
-    protected static final int DEFAULT_PAGE_SIZE = 25;
+    protected static final int DEFAULT_PAGE_SIZE = 24;
     protected static final String SORT_FACET = "sort";
     protected WebContext webContext;
     protected Function<String, Value> parameterProvider;
@@ -396,8 +396,8 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
                                                    baseQuery.count(),
                                                    w.elapsedMillis())));
             }
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
         }
 
         return result;
@@ -441,7 +441,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     protected void enforcePaging(Page<E> result, List<E> items) {
         if (items.size() > pageSize) {
             result.withHasMore(true);
-            items.remove(items.size() - 1);
+            items.removeLast();
             if (withTotalCount) {
                 result.withTotalItems((int) baseQuery.count());
             }

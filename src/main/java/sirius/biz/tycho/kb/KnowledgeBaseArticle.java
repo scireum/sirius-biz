@@ -124,7 +124,7 @@ public class KnowledgeBaseArticle {
 
         KnowledgeBaseArticle parent = queryParent().orElse(null);
         while (parent != null) {
-            parents.add(0, parent);
+            parents.addFirst(parent);
             parent = parent.queryParent().orElse(null);
         }
 

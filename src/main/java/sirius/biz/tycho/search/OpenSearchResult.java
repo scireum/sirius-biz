@@ -8,16 +8,18 @@
 
 package sirius.biz.tycho.search;
 
+import sirius.kernel.commons.StringCleanup;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.pasta.noodle.compiler.CompileException;
+import sirius.pasta.noodle.sandbox.SandboxMode;
 import sirius.pasta.tagliatelle.Tagliatelle;
 import sirius.pasta.tagliatelle.Template;
 import sirius.pasta.tagliatelle.compiler.TemplateCompilationContext;
 import sirius.pasta.tagliatelle.compiler.TemplateCompiler;
 import sirius.pasta.tagliatelle.rendering.RenderException;
-import sirius.web.templates.ContentHelper;
 
 import java.io.FileNotFoundException;
 import java.util.Optional;
@@ -65,7 +67,7 @@ public class OpenSearchResult {
      * @return the result itself for fluent method calls.
      */
     public OpenSearchResult withDescription(String description) {
-        this.htmlDescription = ContentHelper.escapeXML(description);
+        this.htmlDescription = Strings.cleanup(description, StringCleanup::escapeXml);
         return this;
     }
 
@@ -78,13 +80,15 @@ public class OpenSearchResult {
      */
     public OpenSearchResult withTemplateFromCode(String template, Object... args) {
         try {
-            TemplateCompilationContext context =
-                    tagliatelle.createInlineCompilationContext("OpenSearchResult", template, null);
+            TemplateCompilationContext context = tagliatelle.createInlineCompilationContext("OpenSearchResult",
+                                                                                            template,
+                                                                                            SandboxMode.DISABLED,
+                                                                                            null);
             TemplateCompiler templateCompiler = new TemplateCompiler(context);
             templateCompiler.compile();
             this.htmlDescription = context.getTemplate().renderToString(args);
-        } catch (RenderException | CompileException e) {
-            Exceptions.handle(Log.APPLICATION, e);
+        } catch (RenderException | CompileException exception) {
+            Exceptions.handle(Log.APPLICATION, exception);
         }
         return this;
     }
@@ -104,8 +108,8 @@ public class OpenSearchResult {
                 return this;
             }
             this.htmlDescription = template.get().renderToString(args);
-        } catch (RenderException | CompileException e) {
-            Exceptions.handle(Log.APPLICATION, e);
+        } catch (RenderException | CompileException exception) {
+            Exceptions.handle(Log.APPLICATION, exception);
         }
         return this;
     }

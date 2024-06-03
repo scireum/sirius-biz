@@ -21,12 +21,12 @@ public interface ValueCheck {
      * Performs the check for the given value.
      *
      * @param value the value to check
-     * @throws IllegalArgumentException if the value doesn't fullfill the check
+     * @throws IllegalArgumentException if the value doesn't fulfill the check
      */
     void perform(Value value);
 
     /**
-     * Generats a remark to be shown to the user.
+     * Generates a remark to be shown to the user.
      *
      * @return the remark to show or <tt>null</tt> to indicate that there is no remark.
      */

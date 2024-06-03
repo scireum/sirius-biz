@@ -139,7 +139,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
                 }
             }
             return localNodeAddress;
-        } catch (UnknownHostException e) {
+        } catch (UnknownHostException exception) {
             return "";
         }
     }
@@ -183,11 +183,11 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
             }
 
             return result;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return Json.createObject()
                        .put(RESPONSE_NODE_NAME, nodeName)
                        .put(RESPONSE_ERROR, true)
-                       .put(RESPONSE_ERROR_MESAGE, e.getMessage());
+                       .put(RESPONSE_ERROR_MESAGE, exception.getMessage());
         }
     }
 

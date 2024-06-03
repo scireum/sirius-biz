@@ -5,8 +5,8 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <t:editForm url="/system/query" class="row">
-            <div class="form-group col-xl-8 col-12">
-                <label>
+            <div class="form-group mb-3 col-xl-8 col-12">
+                <label class="form-label">
                     Query
                 </label>
                 <div class="input-group">
@@ -14,15 +14,12 @@
                            name="query"
                            id="query"
                            placeholder="Enter query here"
-                           class="form-control"
-                           value="@query"
-                           autofocus/>
-                    <div class="input-group-append"
-                         onclick="sirius.requestSubmitForm(document.querySelector('form.edit-form'))">
-                    <span class="btn btn-outline-secondary">
-                    <i class="fa fa-search"></i>
+                           class="form-control primary-autofocus-js"
+                           value="@query"/>
+                    <span class="btn btn-outline-secondary"
+                          onclick="sirius.requestSubmitForm(document.querySelector('form.edit-form'))">
+                        <i class="fa-solid fa-search"></i>
                     </span>
-                    </div>
                 </div>
             </div>
             <t:singleSelect class="col-xl-3 col-9"
@@ -51,7 +48,7 @@
             _editForm.action += '?query=' + queryString + '&class=' + clazz + `&limit=` + limit;
         });
         _editForm.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter') {
+            if (event.key === sirius.key.ENTER) {
                 sirius.requestSubmitForm(_editForm);
                 return false;
             }

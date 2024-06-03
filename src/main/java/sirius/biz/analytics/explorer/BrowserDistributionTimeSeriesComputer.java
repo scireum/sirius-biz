@@ -21,7 +21,7 @@ import java.util.function.BiConsumer;
  * @param <E> the type of events being queried
  * @see sirius.biz.tycho.DashboardBrowserDistributionChart
  */
-public class BrowserDistributionTimeSeriesComputer<O, E extends Event> extends EventTimeSeriesComputer<O, E> {
+public class BrowserDistributionTimeSeriesComputer<O, E extends Event<E>> extends EventTimeSeriesComputer<O, E> {
 
     /**
      * Retrieves the number of occurrences of the Firefox browser within the user agent data.

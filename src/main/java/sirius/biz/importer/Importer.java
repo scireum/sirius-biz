@@ -81,9 +81,10 @@ public class Importer implements Closeable {
         try {
             E entity = type.getConstructor().newInstance();
             return load(type, data, entity);
-        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Cannot create an instance of: %s", type.getName())
                             .handle();
         }
@@ -222,6 +223,9 @@ public class Importer implements Closeable {
      */
     @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> E createOrUpdateNow(E entity) {
+        if (entity == null) {
+            return null;
+        }
         return context.findHandler((Class<E>) entity.getClass()).createOrUpdateNow(entity);
     }
 
@@ -243,6 +247,9 @@ public class Importer implements Closeable {
      */
     @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> void createOrUpdateInBatch(E entity) {
+        if (entity == null) {
+            return;
+        }
         context.findHandler((Class<E>) entity.getClass()).createOrUpdateInBatch(entity);
     }
 

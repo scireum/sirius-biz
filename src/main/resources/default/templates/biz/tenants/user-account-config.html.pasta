@@ -1,24 +1,30 @@
 <i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
 
 <i:invoke template="/templates/biz/tenants/user-account.html.pasta" account="account" page="config">
-    <div id="editor" style="height: 450px">@account.getUserAccountData().getPermissions().getConfigString()</div>
-
-    <div class="form-actions">
-        <a id="save" class="btn btn-primary">
-            <i class="fa fa-check"></i> @i18n("NLS.save")
-        </a>
-    </div>
+    <t:codeEditor id="editor" mode="json">@account.getUserAccountData().getPermissions().getConfigString()</t:codeEditor>
+    <t:formBar backButton="false"/>
 
     <script type="text/javascript">
+        sirius.ready(function () {
+            let editor = ace.edit("editor");
 
-        var editor = ace.edit("editor");
-        editor.setTheme("ace/theme/idle_fingers");
-
-        $('#save').click(function() {
-            updateField('/user-account/@account.getIdAsString()/config/update',
-                'userAccountData_permissions_configString',
-                editor.getSession().getDocument().getValue());
+            document.querySelector('.submit-link-js').addEventListener('click', function () {
+                sirius.postJSON('/user-account/@account.getIdAsString()/config/update',
+                    {
+                        csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()',
+                        userAccountData_permissions_configString: editor.getSession().getDocument().getValue()
+                    })
+                    .then(function (response) {
+                        clearMessages();
+                        if (response.error) {
+                            addErrorMessage(response.message);
+                        } else {
+                            addInfoMessage('@i18n("BasicController.changesSaved")');
+                        }
+                        window.scrollTo(0,0);
+                        editor.resize();
+                    });
+            });
         });
-
     </script>
 </i:invoke>

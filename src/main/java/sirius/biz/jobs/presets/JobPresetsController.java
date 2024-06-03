@@ -13,6 +13,7 @@ import sirius.biz.process.PersistencePeriod;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.commons.Json;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.InternalService;
@@ -52,40 +53,40 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * <p>
      * This will create or update the job preset with the given name (and job factory) for the current tenant.
      *
-     * @param ctx the request to handle
-     * @param out the JSON response to populate (in this case no actual output is expected)
+     * @param webContext the request to handle
+     * @param output     the JSON response to populate (in this case no actual output is expected)
      * @throws Exception in case of an error when populating the entity
      */
     @SuppressWarnings("unchecked")
     @Routed("/jobs/preset/create")
     @InternalService
-    public void create(WebContext ctx, JSONStructuredOutput out) throws Exception {
+    public void create(WebContext webContext, JSONStructuredOutput output) throws Exception {
         P preset = (P) mixing.getDescriptor(getPresetType())
                              .getMapper()
                              .select(getPresetType())
                              .eq(TenantAware.TENANT, tenants.getRequiredTenant())
                              .eq(JobPreset.JOB_CONFIG_DATA.inner(JobConfigData.JOB),
-                                 ctx.get(PARAM_JOB_FACTORY).asString())
+                                 webContext.get(PARAM_JOB_FACTORY).asString())
                              .eq(JobPreset.JOB_CONFIG_DATA.inner(JobConfigData.LABEL),
-                                 ctx.get(PARAM_PRESET_NAME).asString())
+                                 webContext.get(PARAM_PRESET_NAME).asString())
                              .queryFirst();
         if (preset == null) {
             preset = getPresetType().getDeclaredConstructor().newInstance();
-            preset.getJobConfigData().setJob(ctx.get(PARAM_JOB_FACTORY).asString());
-            preset.getJobConfigData().setLabel(ctx.get(PARAM_PRESET_NAME).asString());
+            preset.getJobConfigData().setJob(webContext.get(PARAM_JOB_FACTORY).asString());
+            preset.getJobConfigData().setLabel(webContext.get(PARAM_PRESET_NAME).asString());
             preset.fillWithCurrentTenant();
         } else {
             preset.getJobConfigData().getConfigMap().clear();
         }
 
         preset.getJobConfigData()
-              .setCustomPersistencePeriod(ctx.get(PARAM_CUSTOM_PERSISTENCE_PERIOD)
-                                             .getEnum(PersistencePeriod.class)
-                                             .orElse(null));
+              .setCustomPersistencePeriod(webContext.get(PARAM_CUSTOM_PERSISTENCE_PERIOD)
+                                                    .getEnum(PersistencePeriod.class)
+                                                    .orElse(null));
 
-        for (String parameter : ctx.getParameterNames()) {
+        for (String parameter : webContext.getParameterNames()) {
             if (!IGNORED_PARAMETERS.contains(parameter)) {
-                preset.getJobConfigData().getConfigMap().put(parameter, ctx.get(parameter).asString());
+                preset.getJobConfigData().getConfigMap().put(parameter, webContext.getParameters(parameter));
             }
         }
 
@@ -95,42 +96,50 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     /**
      * Outputs the stored configuration (parameters) for the requested job preset.
      *
-     * @param ctx the request to handle
-     * @param out the JSON response to populate
+     * @param webContext the request to handle
+     * @param output     the JSON response to populate
      */
     @Routed("/jobs/preset/load")
     @InternalService
-    public void load(WebContext ctx, JSONStructuredOutput out) {
-        out.beginArray(RESPONSE_PARAMS);
+    public void load(WebContext webContext, JSONStructuredOutput output) {
+        output.beginArray(RESPONSE_PARAMS);
         P preset = mixing.getDescriptor(getPresetType())
                          .getMapper()
-                         .find(getPresetType(), ctx.get(PARAM_PRESET).asString())
+                         .find(getPresetType(), webContext.get(PARAM_PRESET).asString())
                          .orElse(null);
         if (preset != null) {
             assertTenant(preset);
-            preset.getJobConfigData().getConfigMap().forEach((name, value) -> {
-                out.beginObject(RESPONSE_PARAM);
-                out.property(RESPONSE_NAME, name);
-                out.property(RESPONSE_VALUE, value);
-                out.endObject();
+            preset.getJobConfigData().getConfigMap().forEach((name, values) -> {
+                output.beginObject(RESPONSE_PARAM);
+                output.property(RESPONSE_NAME, name);
+
+                if (values.isEmpty()) {
+                    output.property(RESPONSE_VALUE, null);
+                } else if (values.size() == 1) {
+                    output.property(RESPONSE_VALUE, values.get(0));
+                } else {
+                    output.property(RESPONSE_VALUE, Json.createArray(values));
+                }
+
+                output.endObject();
             });
         }
-        out.endArray();
+        output.endArray();
     }
 
     /**
      * Deletes the requested job preset.
      *
-     * @param ctx the request to handle
-     * @param out the JSON response to populate (in this case no actual output is expected)
+     * @param webContext the request to handle
+     * @param output     the JSON response to populate (in this case no actual output is expected)
      */
     @Routed("/jobs/preset/delete")
     @InternalService
-    public void delete(WebContext ctx, JSONStructuredOutput out) {
-        if (ctx.isSafePOST()) {
+    public void delete(WebContext webContext, JSONStructuredOutput output) {
+        if (webContext.isSafePOST()) {
             P preset = mixing.getDescriptor(getPresetType())
                              .getMapper()
-                             .find(getPresetType(), ctx.get(PARAM_PRESET).asString())
+                             .find(getPresetType(), webContext.get(PARAM_PRESET).asString())
                              .orElse(null);
             if (preset != null) {
                 assertTenant(preset);

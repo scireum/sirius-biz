@@ -1,0 +1,56 @@
+<i:arg type="List" name="nodes"/>
+
+<i:invoke template="/templates/biz/cluster/cluster.html.pasta" page="nodes" title="Nodes">
+    <i:block name="breadcrumbs">
+        <li><a href="/system/cluster">Nodes</a></li>
+    </i:block>
+
+    <t:datacards>
+        <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
+            <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())"
+                        link="@node.buildNodeUrl()">
+                <i:block name="actions">
+                    <t:dropdownSection>
+                        <t:dropdownItem label="Go To Node" url="@node.buildNodeUrl()"/>
+                    </t:dropdownSection>
+                    <t:dropdownSection>
+                        <i:if test="node.isBleeding()">
+                            <t:dropdownItem label="Stop Bleeding"
+                                            url="@apply('/system/cluster/bleed/disable/%s', node.getNodeName())"/>
+                            <i:else>
+                                <t:dropdownItem label="Start Bleeding"
+                                                url="@apply('/system/cluster/bleed/enable/%s', node.getNodeName())"/>
+                            </i:else>
+                        </i:if>
+                    </t:dropdownSection>
+                    <t:dropdownSection>
+                        <t:dropdownItem class="text-sirius-red" label="Remove From Cluster"
+                                        url="@apply('/system/cluster/kill/%s', node.getNodeName())"/>
+                    </t:dropdownSection>
+                </i:block>
+
+                <i:if test="node.getActiveBackgroundTasks() > 0">
+                    <t:inlineInfo label="Active Tasks" value="@toUserString(node.getActiveBackgroundTasks())"/>
+                </i:if>
+                <t:inlineInfo label="Version" class="mb-4">
+                        <span class="cycle-js cursor-pointer"
+                              data-cycle="@node.getDetailedVersion()">@node.getVersion()</span>
+                </t:inlineInfo>
+
+                <i:block name="footer">
+                    <i:if test="node.isBleeding()">
+                        <t:dot color="red">Bleeding</t:dot>
+                        <i:else>
+                            <i:if test="node.hasUptime()">
+                                <t:dot color="green">Normal</t:dot>
+                                <i:else>
+                                    <t:dot color="red">Offline</t:dot>
+                                </i:else>
+                            </i:if>
+                        </i:else>
+                    </i:if>
+                </i:block>
+            </t:datacard>
+        </i:for>
+    </t:datacards>
+</i:invoke>

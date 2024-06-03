@@ -13,34 +13,44 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import sirius.biz.analytics.scheduler.AnalyticalEngine;
+import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.locks.Locks;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Counter;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.Metrics;
 import sirius.kernel.info.Product;
 import sirius.kernel.nls.NLS;
+import sirius.kernel.timer.EndOfDayTaskExecutor;
+import sirius.kernel.timer.EndOfDayTaskInfo;
 import sirius.web.controller.BasicController;
+import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
+import sirius.web.security.UserContext;
 import sirius.web.services.Format;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.services.PublicService;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -81,6 +91,11 @@ public class ClusterController extends BasicController {
     public static final String RESPONSE_EXECUTION_INFO = "executionInfo";
     public static final String FLAG_ENABLE = "enable";
     public static final String FLAG_DISABLE = "disable";
+    private static final String CLUSTER_URI = "/system/cluster";
+    private static final String BACKGROUND_JOBS_URI = "/system/cluster/background-jobs";
+    private static final String EOD_TASKS_URI = "/system/cluster/eod-tasks";
+    private static final String ANALYTICS_URI = "/system/cluster/analytics";
+    private static final String LOCKS_URI = "/system/cluster/locks";
 
     @Part
     private Cluster cluster;
@@ -103,6 +118,12 @@ public class ClusterController extends BasicController {
 
     @Part
     private DistributedTasks distributedTasks;
+
+    @Part
+    private EndOfDayTaskExecutor endOfDayTaskExecutor;
+
+    @Part
+    private AnalyticalEngine analyticalEngine;
 
     @Override
     public void onError(WebContext webContext, HandledException error) {
@@ -181,15 +202,25 @@ public class ClusterController extends BasicController {
     }
 
     /**
-     * Provides an overview of the cluster, its members and their background activities.
+     * Lists the nodes of the cluster.
      *
      * @param webContext the request to handle
      */
-    @Routed("/system/cluster")
+    @Routed(CLUSTER_URI)
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void cluster(WebContext webContext) {
-        List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
-        clusterInfo.sort(Comparator.comparing(BackgroundInfo::getNodeName));
+        webContext.respondWith().template("/templates/biz/cluster/nodes.html.pasta", fetchSortedClusterInfo());
+    }
+
+    /**
+     * Lists the background jobs and their orchestration state.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed(BACKGROUND_JOBS_URI)
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void backgroundJobs(WebContext webContext) {
+        List<BackgroundInfo> clusterInfo = fetchSortedClusterInfo();
 
         List<String> jobKeys = clusterInfo.stream()
                                           .flatMap(node -> node.getJobs().keySet().stream())
@@ -203,12 +234,63 @@ public class ClusterController extends BasicController {
                                                                                 e -> e.getValue().getDescription(),
                                                                                 (a, b) -> a));
         webContext.respondWith()
-                  .template("/templates/biz/cluster/cluster.html.pasta",
-                            jobKeys,
-                            descriptions,
-                            clusterInfo,
-                            webContext.get("groupByNode").asBoolean(),
-                            locks);
+                  .template("/templates/biz/cluster/background-jobs.html.pasta", clusterInfo, descriptions, jobKeys);
+    }
+
+    /**
+     * Lists the end of day tasks registered in the cluster.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed(EOD_TASKS_URI)
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void eodTasks(WebContext webContext) {
+        webContext.respondWith().template("/templates/biz/cluster/eod-tasks.html.pasta");
+    }
+
+    /**
+     * Lists the analytics schedulers and computers registered in the cluster.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed(ANALYTICS_URI)
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void analytics(WebContext webContext) {
+        webContext.respondWith().template("/templates/biz/cluster/analytics.html.pasta");
+    }
+
+    /**
+     * Lists the analytics schedulers and computers registered in the cluster.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/system/cluster/analytics/reset-durations")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void resetAnalyticsDurations(WebContext webContext) {
+        analyticalEngine.getDailyChecks().values().forEach(AnalyticalTask::resetDurations);
+        analyticalEngine.getDailyMetricComputers().values().forEach(AnalyticalTask::resetDurations);
+        analyticalEngine.getMonthlyMetricComputers().values().forEach(AnalyticalTask::resetDurations);
+        analyticalEngine.getMonthlyLargeMetricComputers().values().forEach(AnalyticalTask::resetDurations);
+
+        webContext.respondWith().redirectToGet(ANALYTICS_URI);
+    }
+
+    /**
+     * Lists the locks currently held by the cluster.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed(LOCKS_URI)
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void locks(WebContext webContext) {
+        webContext.respondWith().template("/templates/biz/cluster/locks.html.pasta");
+    }
+
+    @Nonnull
+    private List<BackgroundInfo> fetchSortedClusterInfo() {
+        List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
+        clusterInfo.sort(Comparator.comparing(BackgroundInfo::getNodeName));
+        return clusterInfo;
     }
 
     /**
@@ -224,12 +306,12 @@ public class ClusterController extends BasicController {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void kill(WebContext webContext, String node) {
         clusterManager.killNode(node);
-        waitAndRedirectToClusterUI(webContext);
+        waitAndRedirectToClusterUI(webContext, CLUSTER_URI);
     }
 
-    protected void waitAndRedirectToClusterUI(WebContext webContext) {
+    protected void waitAndRedirectToClusterUI(WebContext webContext, String uri) {
         webContext.markAsLongCall();
-        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> webContext.respondWith().redirectToGet("/system/cluster"));
+        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> webContext.respondWith().redirectToGet(uri));
     }
 
     /**
@@ -244,7 +326,7 @@ public class ClusterController extends BasicController {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void bleed(WebContext webContext, String setting, String node) {
         neighborhoodWatch.changeBleeding(node, FLAG_ENABLE.equals(setting));
-        waitAndRedirectToClusterUI(webContext);
+        waitAndRedirectToClusterUI(webContext, CLUSTER_URI);
     }
 
     /**
@@ -355,7 +437,7 @@ public class ClusterController extends BasicController {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void globalSwitch(WebContext webContext, String setting, String jobKey) {
         neighborhoodWatch.changeGlobalEnabledFlag(jobKey, FLAG_ENABLE.equals(setting));
-        waitAndRedirectToClusterUI(webContext);
+        waitAndRedirectToClusterUI(webContext, BACKGROUND_JOBS_URI);
     }
 
     /**
@@ -370,6 +452,60 @@ public class ClusterController extends BasicController {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void localSwitch(WebContext webContext, String setting, String node, String jobKey) {
         neighborhoodWatch.changeLocalOverwrite(node, jobKey, FLAG_DISABLE.equals(setting));
-        waitAndRedirectToClusterUI(webContext);
+        waitAndRedirectToClusterUI(webContext, BACKGROUND_JOBS_URI);
+    }
+
+    /**
+     * Releases a single currently held lock.
+     *
+     * @param webContext the request to handle
+     * @param name       the name of the lock to release
+     */
+    @Routed("/system/cluster/locks/release/:1")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void releaseSingleLock(WebContext webContext, String name) {
+        locks.unlock(name, true);
+
+        UserContext.message(Message.success().withTextMessage(Strings.apply("Released '%s' lock.", name)));
+        webContext.respondWith().redirectToGet(LOCKS_URI);
+    }
+
+    /**
+     * Releases all currently held locks.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/system/cluster/locks/release-all")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void releaseAllLocks(WebContext webContext) {
+        Counter counter = new Counter();
+
+        locks.getLocks().forEach(lock -> {
+            locks.unlock(lock.getName(), true);
+            counter.inc();
+        });
+
+        UserContext.message(Message.success().withTextMessage(Strings.apply("Released %d locks.", counter.getCount())));
+        webContext.respondWith().redirectToGet(LOCKS_URI);
+    }
+
+    /**
+     * Runs a single {@link sirius.kernel.timer.EndOfDayTask}.
+     *
+     * @param webContext the request to handle
+     * @param name       the name of the task to run
+     */
+    @Routed("/system/cluster/eod-tasks/run/:1")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void runSingleEodTask(WebContext webContext, String name) {
+        Optional<EndOfDayTaskInfo> taskInfo = endOfDayTaskExecutor.executeNow(name);
+
+        if (taskInfo.isPresent()) {
+            UserContext.message(Message.success().withTextMessage(Strings.apply("Executed EOD task '%s'.", name)));
+        } else {
+            UserContext.message(Message.warn().withTextMessage(Strings.apply("Unknown EOD task '%s'.", name)));
+        }
+
+        webContext.respondWith().redirectToGet(EOD_TASKS_URI);
     }
 }

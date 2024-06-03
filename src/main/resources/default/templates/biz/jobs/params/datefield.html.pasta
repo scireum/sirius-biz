@@ -6,7 +6,7 @@
              name="@param.getName()"
              label="@param.getLabel()"
              help="@param.getDescription()"
-             value="@toUserString(param.get(context).orElse(null))"/>
+             value="@toMachineString(param.get(context).orElse(null))"/>
 
 <script>
     sirius.ready(function () {

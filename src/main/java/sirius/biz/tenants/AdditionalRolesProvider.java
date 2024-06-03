@@ -8,10 +8,14 @@
 
 package sirius.biz.tenants;
 
+import sirius.kernel.di.std.Register;
+
 import java.util.function.Consumer;
 
 /**
  * Provides additional roles, which are given to the {@link sirius.web.security.UserInfo UserInfo} in the {@link TenantUserManager}.
+ * <p>
+ * Classes implementing this interface must be {@linkplain Register registered} in order to function.
  */
 public interface AdditionalRolesProvider {
 

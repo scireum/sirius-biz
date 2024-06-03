@@ -12,12 +12,10 @@
                 <div class="input-group">
                     <input type="text" id="actionsQueryField"
                            class="form-control primary-autofocus-js"
-                           placeholder="@i18n('NLS.searchkey')" autofocus/>
-                    <div class="input-group-append">
-                        <a class="btn btn-outline-secondary">
-                            <i class="fa fa-search"></i>
-                        </a>
-                    </div>
+                           placeholder="@i18n('NLS.searchkey')"/>
+                    <a class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-search"></i>
+                    </a>
                 </div>
             </div>
             <div class="col-4 col-xl-3 d-flex flex-row justify-content-end">
@@ -36,7 +34,8 @@
                     <i:for type="sirius.biz.web.Action" var="action" items="actionsPerCategory.get(category)">
                         <div class="action-js">
                             <div class="mt-3 mb-3 d-flex align-items-center">
-                                <div class="flex-grow-0 flex-shrink-0 pr-3 d-flex flex-column align-items-center" style="width:48px;">
+                                <div class="flex-grow-0 flex-shrink-0 pe-3 d-flex flex-column align-items-center"
+                                     style="width:48px;">
                                     <a href="@action.getUrl()">
                                         <i style="font-size: 32px;"
                                            class="@action.getColorClass() @action.getIcon()"></i>
@@ -44,7 +43,7 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <div>
-                                        <a href="@action.getUrl()" class="font-weight-bold label-js">
+                                        <a href="@action.getUrl()" class="fw-bold label-js">
                                             @action.getLabel()
                                         </a>
                                     </div>
@@ -100,11 +99,11 @@
 
         _queryField.addEventListener('keyup', function (event) {
             const actions = document.querySelectorAll('.action-js');
-            if (event.key === "Enter" && document.querySelectorAll('.action-visible-js').length === 1) {
+            if (event.key === sirius.key.ENTER && document.querySelectorAll('.action-visible-js').length === 1) {
                 // Executes the action if only one is left and ENTER is pressed in the search field...
                 document.querySelector('.action-visible-js a').click();
                 return;
-            } else if (event.key === "Escape") {
+            } else if (event.key === sirius.key.ESCAPE) {
                 // Clears the query field if ESC is pressed...
                 event.target.value = '';
             }

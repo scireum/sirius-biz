@@ -2,7 +2,7 @@ version: "2"
 
 services:
   redis:
-    image: redis:7.0.11-alpine
+    image: redis:7.0.12-alpine
     ports:
       - "6379"
     hostname: redis
@@ -14,26 +14,26 @@ services:
     hostname: redis-jupiter
 
   mongo:
-    image: mongo:5.0.9
+    image: mongo:6.0.13
     ports:
       - "27017"
     hostname: mongo
 
   mariadb:
-    image: mariadb:10.11.2-jammy
+    image: mariadb:10.11.7-jammy
     ports:
       - "3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
     hostname: mariadb
   clickhouse:
-    image: clickhouse/clickhouse-server:22.5-alpine
+    image: clickhouse/clickhouse-server:23.4.2.11-alpine
     ports:
       - "8123"
       - "9000"
     hostname: clickhouse
   elasticsearch:
-    image: elasticsearch:8.4.1
+    image: elasticsearch:8.9.2
     ports:
       - "9200"
     environment:
@@ -43,7 +43,7 @@ services:
       - ingest.geoip.downloader.enabled=false
     hostname: es
   s3-system:
-    image: scireum/s3-ninja:8.0.0
+    image: scireum/s3-ninja:8.3.2
     ports:
-      - 9000
+      - "9000"
     hostname: s3ninja

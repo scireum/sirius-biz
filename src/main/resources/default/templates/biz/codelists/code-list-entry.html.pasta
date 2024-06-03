@@ -10,11 +10,12 @@
             <a href="/code-list/@codeList.getIdAsString()">@codeList.getCodeListData().toString()</a>
         </li>
         <li>
-            <a href="/code-list/@codeList.getIdAsString()/entry">@entry.getCodeListEntryData()</a>
+            <a href="/code-list/@codeList.getIdAsString()/entry/@entry.getIdAsString()">@entry.getCodeListEntryData()</a>
         </li>
     </i:block>
 
-    <t:pageHeader title="@codeList.getCodeListData().getName() + ' - ' + entry.getCodeListEntryData().toString()">
+    <t:pageHeader
+            title="@codeList.getCodeListData().getName() + ' - ' + (entry.isNew() ? i18n('CodeListEntry.new') : entry.getCodeListEntryData().toString())">
         <i:block name="additionalActions">
             <i:if test="!entry.isNew()">
                 <t:dropdownDeleteItem
@@ -23,7 +24,7 @@
         </i:block>
     </t:pageHeader>
 
-    <t:editForm url="@apply('/code-list/%s/entry', codeList.getIdAsString())">
+    <t:editForm url="@apply('/code-list/%s/entry/%s', codeList.getIdAsString(), entry.getIdAsString())">
         <div class="row">
             <t:textfield name="codeListEntryData_code"
                          value="@entry.getCodeListEntryData().getCode()"

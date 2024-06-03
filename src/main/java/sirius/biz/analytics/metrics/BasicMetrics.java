@@ -16,6 +16,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.nls.NLS;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -340,6 +341,13 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
     @Override
     public MetricQuery query() {
         return new MetricQuery(this);
+    }
+
+    @Override
+    public List<Integer> fetchMetricValuesForLast12Months(BaseEntity<?> entity, String metric) {
+        LocalDate startDate = LocalDate.now().minusYears(1).plusMonths(1);
+        LocalDate endDate = LocalDate.now();
+        return query().of(entity).monthly(metric).values(startDate, endDate);
     }
 
     @Override

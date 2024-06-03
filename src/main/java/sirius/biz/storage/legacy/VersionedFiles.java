@@ -124,8 +124,8 @@ public class VersionedFiles {
         }
         try (InputStream data = storage.getData(file.getStoredFile().getObject())) {
             return new BufferedReader(new InputStreamReader(data)).lines().collect(Collectors.toList());
-        } catch (IOException e) {
-            throw Exceptions.handle(Storage.LOG, e);
+        } catch (IOException exception) {
+            throw Exceptions.handle(Storage.LOG, exception);
         }
     }
 
@@ -184,8 +184,8 @@ public class VersionedFiles {
 
         try (OutputStream out = storage.updateFile(object)) {
             out.write(code.getBytes());
-        } catch (IOException e) {
-            throw Exceptions.handle(Storage.LOG, e);
+        } catch (IOException exception) {
+            throw Exceptions.handle(Storage.LOG, exception);
         }
 
         return object;
@@ -197,7 +197,7 @@ public class VersionedFiles {
      * @param tenant           the owning tenant
      * @param uniqueIdentifier the unique identifier of a versioned file
      */
-    public void deleteOldVersions(Tenant tenant, String uniqueIdentifier) {
+    public void deleteOldVersions(Tenant<?> tenant, String uniqueIdentifier) {
         if (maxNumberOfVersions == 0) {
             return;
         }

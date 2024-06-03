@@ -28,7 +28,7 @@ import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 
 /**
- * Represents the mutable version of a {@link VirtualFile} which can be used to provide all necessarry callbacks.
+ * Represents the mutable version of a {@link VirtualFile} which can be used to provide all necessary callbacks.
  */
 public class MutableVirtualFile extends VirtualFile {
 
@@ -108,12 +108,22 @@ public class MutableVirtualFile extends VirtualFile {
     /**
      * Provides an additional description which can be shown in the web based UI.
      *
-     * @param description the description to show
-     *                    (this will be {@link sirius.kernel.nls.NLS#smartGet(String) smart translated}).
+     * @param description the description to show (this will be {@linkplain sirius.kernel.nls.NLS#smartGet(String) smartly translated}).
      * @return the file itself for fluent method calls
      */
     public MutableVirtualFile withDescription(String description) {
         this.description = description;
+        return this;
+    }
+
+    /**
+     * Provides an additional description, containing html tags, which can be shown in the web-based UI.
+     *
+     * @param htmlDescription the description to show, containing html tags
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withHtmlDescription(String htmlDescription) {
+        this.htmlDescription = htmlDescription;
         return this;
     }
 
@@ -181,6 +191,28 @@ public class MutableVirtualFile extends VirtualFile {
      */
     public MutableVirtualFile withExistsFlagSupplier(Predicate<VirtualFile> existsFlagSupplier) {
         this.existsFlagSupplier = existsFlagSupplier;
+        return this;
+    }
+
+    /**
+     * Determines if the file is read-only.
+     *
+     * @param readOnlyFlagSupplier the supplier which determines if the given file is read-only
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withReadOnlyFlagSupplier(Predicate<VirtualFile> readOnlyFlagSupplier) {
+        this.readOnlyFlagSupplier = readOnlyFlagSupplier;
+        return this;
+    }
+
+    /**
+     * Sets the read-only flag of a file.
+     *
+     * @param readOnlyHandler the handler which renames the given file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withReadOnlyHandler(BiPredicate<VirtualFile, Boolean> readOnlyHandler) {
+        this.readOnlyHandler = readOnlyHandler;
         return this;
     }
 

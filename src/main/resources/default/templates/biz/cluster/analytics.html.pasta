@@ -1,0 +1,78 @@
+<i:invoke template="/templates/biz/cluster/cluster.html.pasta" page="analytics" title="Analytics">
+    <i:block name="breadcrumbs">
+        <li><a href="/system/cluster/analytics">Analytics</a></li>
+    </i:block>
+
+    <i:block name="actions">
+        <a href="/system/cluster/analytics/reset-durations"
+           class="btn btn-outline-danger confirm-link-js">
+            <i class="fa-solid fa-trash"></i><span class="d-none d-xl-inline"> Reset</span>
+        </a>
+    </i:block>
+
+    <i:local name="analyticalEngine" value="part(sirius.biz.analytics.scheduler.AnalyticalEngine.class)"/>
+    <i:local name="distributedTasks" value="part(sirius.biz.cluster.work.DistributedTasks.class)"/>
+    <i:local name="schedulers" value="analyticalEngine.getActiveSchedulers()"/>
+
+    <t:emptyCheck data="schedulers">
+        <t:datacard>
+            <table class="table table-hover">
+                <tr>
+                    <th>
+                        <b>Name</b><br>
+                        Interval
+                    </th>
+                    <th>
+                        <b>Scheduler Queue</b><br>
+                        Task Queue
+                    </th>
+                    <th>Last Execution</th>
+                </tr>
+                <i:for type="sirius.biz.analytics.scheduler.AnalyticsScheduler" var="scheduler" items="schedulers">
+                    <tr>
+                        <td>
+                            <b>@scheduler.getName()</b><br>
+                            @scheduler.getInterval()
+                        </td>
+                        <td>
+                            <i:local name="schedulerQueue"
+                                     value="distributedTasks.getQueueName(scheduler.getExecutorForScheduling())"/>
+                            <b>@schedulerQueue (@distributedTasks.getQueueLength(schedulerQueue))</b><br>
+                            <i:local name="taskQueue"
+                                     value="distributedTasks.getQueueName(scheduler.getExecutorForTasks())"/>
+                            @taskQueue (@distributedTasks.getQueueLength(taskQueue))
+                        </td>
+                        <td>
+                            @toUserString(analyticalEngine.getLastExecution(scheduler).orElse(null))<br>
+                        </td>
+                        <td>
+
+                        </td>
+                    </tr>
+                </i:for>
+            </table>
+        </t:datacard>
+    </t:emptyCheck>
+
+    <t:helpbox>
+        Note: The average and maximum durations shown below are only representing the metrics calculated on the current
+        node.
+        It may be a good idea to switch to a specific node via the <a href="/system/cluster">Nodes</a> screen.
+    </t:helpbox>
+
+    <i:invoke template="/templates/biz/cluster/analytics-tasks-cards.html.pasta"
+              heading="Daily Checks"
+              tasks="@analyticalEngine.getDailyChecks()"/>
+
+    <i:invoke template="/templates/biz/cluster/analytics-tasks-cards.html.pasta"
+              heading="Daily Metrics"
+              tasks="@analyticalEngine.getDailyMetricComputers()"/>
+
+    <i:invoke template="/templates/biz/cluster/analytics-tasks-cards.html.pasta"
+              heading="Monthly Metrics"
+              tasks="@analyticalEngine.getMonthlyMetricComputers()"/>
+
+    <i:invoke template="/templates/biz/cluster/analytics-tasks-cards.html.pasta"
+              heading="Monthly Large Metrics"
+              tasks="@analyticalEngine.getMonthlyLargeMetricComputers()"/>
+</i:invoke>

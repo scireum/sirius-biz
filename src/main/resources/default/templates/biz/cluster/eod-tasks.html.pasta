@@ -1,0 +1,42 @@
+<i:invoke template="/templates/biz/cluster/cluster.html.pasta" page="eod-tasks" title="End of Day Tasks">
+    <i:block name="breadcrumbs">
+        <li><a href="/system/cluster/eod-tasks">End of Day Tasks</a></li>
+    </i:block>
+
+    <i:local name="eodTasks" value="part(sirius.kernel.timer.EndOfDayTaskExecutor.class).getTaskInfos()"/>
+
+    <t:emptyCheck data="eodTasks">
+        <t:datacard>
+            <table class="table table-hover">
+                <tr>
+                    <th>
+                        <b>Name</b><br>
+                        Last Error Message
+                    </th>
+                    <th>Executed</th>
+                    <th>Duration</th>
+                    <th class="col-2"></th>
+                </tr>
+                <i:for type="sirius.kernel.timer.EndOfDayTaskInfo" var="task" items="eodTasks">
+                    <tr>
+                        <td>
+                            <t:dot color="@task.getLastExecution() != null ? (task.isLastExecutionWasSuccessful() ? 'green' : 'red') : 'grey'">
+                                <b>@task.getTask().getName()</b>
+                            </t:dot>
+                            <br>
+                            @task.getLastErrorMessage()
+                        </td>
+                        <td>@toUserString(task.getLastExecution())</td>
+                        <td>@task.getFormattedLastDuration()</td>
+                        <td class="col-2 text-end">
+                            <a href="@apply('/system/cluster/eod-tasks/run/%s', task.getTask().getName())"
+                               class="btn btn-outline-secondary btn-sm confirm-link-js">
+                                <i class="fa-solid fa-play"></i><span class="d-none d-xl-inline"> Run</span>
+                            </a>
+                        </td>
+                    </tr>
+                </i:for>
+            </table>
+        </t:datacard>
+    </t:emptyCheck>
+</i:invoke>

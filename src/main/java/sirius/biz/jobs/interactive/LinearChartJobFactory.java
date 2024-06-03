@@ -39,7 +39,7 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
 
     @Override
     public String getIcon() {
-        return "fas fa-chart-area";
+        return "fa-solid fa-chart-area";
     }
 
     @Override
@@ -53,8 +53,8 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
                              labels::set,
                              datasets::add,
                              (name, value) -> additionalMetrics.add(Tuple.create(name, value)));
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
         }
 
         request.respondWith()

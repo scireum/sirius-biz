@@ -141,11 +141,11 @@ public class SchedulerData extends Composite {
         try {
             expression = ensureFilled(expression, defaultHandler);
             matches(0, expression);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
             throw Exceptions.createHandled()
                             .withNLSKey("SchedulerEntry.invalidPatternInField")
                             .set("field", NLS.get(fieldKey))
-                            .set("msg", e.getMessage())
+                            .set("msg", exception.getMessage())
                             .handle();
         }
     }

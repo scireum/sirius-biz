@@ -39,15 +39,14 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
     @Override
     public void executeWork(ObjectNode context) throws Exception {
         String factoryId = context.path(BatchProcessJobFactory.CONTEXT_JOB_FACTORY).asText(null);
+        String processId = context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null);
 
         setupTaskContext(factoryId);
 
         if (shouldExecutePartially()) {
-            processes.partiallyExecute(context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null),
-                                       process -> partiallyExecuteInProcess(factoryId, process));
+            processes.partiallyExecute(processId, process -> partiallyExecuteInProcess(factoryId, process));
         } else {
-            processes.execute(context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null),
-                              process -> executeInProcess(factoryId, process));
+            processes.execute(processId, process -> executeInProcess(factoryId, process));
         }
     }
 
@@ -65,8 +64,8 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
         process.log(ProcessLog.info().withNLSKey("BatchProcessTaskExecutor.started"));
         try {
             jobs.findFactory(factoryId, BatchProcessJobFactory.class).executeTask(process);
-        } catch (Exception e) {
-            process.handle(e);
+        } catch (Exception exception) {
+            process.handle(exception);
         } finally {
             if (process.isErroneous()) {
                 process.log(ProcessLog.warn().withNLSKey("BatchProcessTaskExecutor.completedButFailed"));
@@ -81,8 +80,8 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
         Watch watch = Watch.start();
         try {
             jobs.findFactory(factoryId, BatchProcessJobFactory.class).executeTask(process);
-        } catch (Exception e) {
-            process.handle(e);
+        } catch (Exception exception) {
+            process.handle(exception);
             process.log(ProcessLog.warn().withNLSKey("BatchProcessTaskExecutor.completedButFailed"));
             process.markCompleted((int) watch.elapsed(TimeUnit.SECONDS, false));
         }

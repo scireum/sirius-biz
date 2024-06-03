@@ -10,7 +10,6 @@ package sirius.biz.web;
 
 import sirius.biz.tenants.SAMLController;
 import sirius.db.redis.Redis;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.cache.InlineCache;
 import sirius.kernel.commons.Explain;
@@ -142,10 +141,10 @@ public class DisasterModeInfo implements MaintenanceInfo {
                     lockStartTime = NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_LOCK_START));
                     maintenanceLockMessage = db.get(REDIS_DISASTER_LOCK_MESSAGE);
                 }
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(Log.SYSTEM)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage("Failed to parse disaster mode settings from redis: %s (%s)")
                           .handle();
             }
@@ -201,7 +200,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
 
     @Override
     public boolean isLocked() {
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (webContext.getRequest() != null && isWhitelistedURI(webContext.getRequestedURI())) {
             return false;
         }
@@ -290,10 +289,10 @@ public class DisasterModeInfo implements MaintenanceInfo {
                 db.set(REDIS_DISASTER_LOCKED, NLS.toMachineString(lock));
                 db.set(REDIS_DISASTER_LOCK_START, NLS.toMachineString(lockStartTime));
                 db.set(REDIS_DISASTER_LOCK_MESSAGE, lockMessage);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 throw Exceptions.handle()
                                 .to(Log.SYSTEM)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage("Failed to write the diaster mode settings to redis: %s (%s)")
                                 .handle();
             }

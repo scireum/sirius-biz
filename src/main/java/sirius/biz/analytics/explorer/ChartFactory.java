@@ -151,7 +151,13 @@ public abstract class ChartFactory<O> implements Named, Priorized {
                 return null;
             }
         } else if (resolver().getTargetType().isAssignableFrom(targetObject.getClass())) {
-            return getName() + ":" + resolver().fetchIdentifier((O) targetObject);
+            String identifier = resolver().fetchIdentifier((O) targetObject);
+            try {
+                return resolver().resolve(identifier).map(ignored -> getName() + ":" + identifier).orElse(null);
+            } catch (Exception ignored) {
+                // missing access to the target object may also be signaled by throwing an exception
+                return null;
+            }
         } else {
             return null;
         }
@@ -315,6 +321,5 @@ public abstract class ChartFactory<O> implements Named, Priorized {
      */
     protected abstract List<Dataset> computeExportableTimeSeries(O object,
                                                                  TimeSeries timeSeries,
-                                                                 ComparisonPeriod comparisonPeriod)
-            throws Exception;
+                                                                 ComparisonPeriod comparisonPeriod) throws Exception;
 }

@@ -14,6 +14,8 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.timer.EndOfDayTask;
 
 import java.time.LocalDate;
@@ -48,11 +50,24 @@ public class DeleteExpiredProcessesTask implements EndOfDayTask {
         elastic.select(Process.class)
                .eq(Process.STATE, ProcessState.TERMINATED)
                .where(Elastic.FILTERS.lte(Process.EXPIRES, LocalDate.now()))
-               .delete();
+               .streamBlockwise()
+               .forEach(this::deleteProcess);
 
         elastic.select(Process.class)
                .eq(Process.STATE, ProcessState.STANDBY)
-               .iterateAll(this::deleteExpiredStandbyLogs);
+               .streamBlockwise()
+               .forEach(this::deleteExpiredStandbyLogs);
+    }
+
+    private void deleteProcess(Process process) {
+        try {
+            elastic.delete(process);
+        } catch (HandledException exception) {
+            // The delete-by-query might fail if too many logs exist. The deletion in ElasticSearch might still
+            // be running, it could also have stopped. We ignore this error here, the process will remain in the
+            // database and the deletion will be retried in the next run.
+            Exceptions.ignore(exception);
+        }
     }
 
     private void deleteExpiredStandbyLogs(Process process) {

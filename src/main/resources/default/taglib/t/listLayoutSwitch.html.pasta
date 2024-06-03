@@ -1,0 +1,14 @@
+<i:arg name="displayMode" type="sirius.biz.tycho.ContentListLayout$DisplayMode" description="Sets the initial state of the layout"/>
+<i:arg name="class" type="String" default=""/>
+
+<div class="btn-group @class"
+     role="group">
+    <a class="btn d-inline-flex flex-row align-items-center @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.CARDS) { btn-primary } else { btn-outline-secondary } list-link-cards-js"
+       href="#">
+        <i class="fa-solid fa-grip fa-fw"></i>
+    </a>
+    <a class="btn d-inline-flex flex-row align-items-center @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.LIST) { btn-primary } else { btn-outline-secondary } list-link-list-js"
+       href="#">
+        <i class="fa-solid fa-list fa-fw"></i>
+    </a>
+</div>

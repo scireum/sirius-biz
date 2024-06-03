@@ -124,8 +124,8 @@ public class DictionaryBasedImport {
             try {
                 dictionary.determineMappingFromHeadings(row, false);
                 process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
-            } catch (HandledException e) {
-                process.log(ProcessLog.error().withMessage(errorContext.enhanceMessage(e.getMessage())));
+            } catch (HandledException exception) {
+                process.log(ProcessLog.error().withMessage(errorContext.enhanceMessage(exception.getMessage())));
                 TaskContext.get().cancel();
             }
         }

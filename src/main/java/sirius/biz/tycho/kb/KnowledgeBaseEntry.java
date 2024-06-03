@@ -94,6 +94,7 @@ public class KnowledgeBaseEntry extends SearchableEntity {
      * Contains a short and concise description of this article.
      */
     public static final Mapping DESCRIPTION = Mapping.named("description");
+    @NullAllowed
     @SearchContent
     private String description;
 

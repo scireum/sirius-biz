@@ -17,6 +17,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Monoflop;
+import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
 
@@ -54,7 +55,7 @@ public class SortField extends Composite {
     }
 
     /**
-     * Normalizes the given text using {@link Strings#reduceCharacters(String)}, lower-casing it after.
+     * Normalizes the given text using {@link StringCleanup#reduceCharacters(String)}, lower-casing it after.
      *
      * @param text the text to normalize
      * @return the normalized text in lower-case
@@ -64,7 +65,7 @@ public class SortField extends Composite {
             return text;
         }
 
-        return Strings.reduceCharacters(text).toLowerCase();
+        return Strings.cleanup(text, StringCleanup::reduceCharacters, StringCleanup::lowercase);
     }
 
     @BeforeSave
@@ -88,7 +89,7 @@ public class SortField extends Composite {
                                         .map(NLS::toUserString)
                                         .collect(Collectors.joining(" "));
 
-        this.sortField = Strings.reduceCharacters(sortFieldContents).toLowerCase();
+        this.sortField = Strings.cleanup(sortFieldContents, StringCleanup::reduceCharacters, StringCleanup::lowercase);
     }
 
     private void fillUsingCustomSortValues() {
@@ -105,5 +106,9 @@ public class SortField extends Composite {
         });
 
         this.sortField = normalizeText(sortFieldContents.toString());
+    }
+
+    public String getSortField() {
+        return sortField;
     }
 }

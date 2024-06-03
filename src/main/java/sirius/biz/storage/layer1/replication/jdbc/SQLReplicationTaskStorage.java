@@ -91,10 +91,10 @@ public class SQLReplicationTaskStorage
                .where(SQLReplicationTask.EARLIEST_EXECUTION, Operator.LT, LocalDateTime.now())
                .where(SQLReplicationTask.ID, task.getId())
                .executeUpdate();
-        } catch (SQLException e) {
+        } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 1/replication: Failed to mark SQL replication task %s as scheduled: %s (%s)",
                               task.getId())
@@ -109,7 +109,7 @@ public class SQLReplicationTaskStorage
             SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
             query.eq(SQLReplicationTask.FAILED, false);
             query.eq(SQLReplicationTask.TRANSACTION_ID, txnId);
-            query.iterateAll(this::executeTask);
+            query.streamBlockwise().forEach(this::executeTask);
         }
     }
 
@@ -141,7 +141,7 @@ public class SQLReplicationTaskStorage
                                                       task.getContentLength(),
                                                       task.isPerformDelete());
             oma.delete(task);
-        } catch (Exception ex) {
+        } catch (Exception exception) {
             try {
                 task = oma.refreshOrFail(task);
                 task.setLastExecution(LocalDateTime.now());
@@ -153,7 +153,7 @@ public class SQLReplicationTaskStorage
                     task.setFailed(true);
                     Exceptions.handle()
                               .to(StorageUtils.LOG)
-                              .error(ex)
+                              .error(exception)
                               .withSystemErrorMessage(
                                       "Layer 1/replication: A storage replication task (%s) ultimately failed: Primary space: %s, object: %s - %s (%s)",
                                       task.getIdAsString(),
@@ -163,11 +163,11 @@ public class SQLReplicationTaskStorage
                 }
 
                 oma.update(task);
-            } catch (Exception e) {
+            } catch (Exception innerException) {
                 // If a task cannot be refreshed or update it was most probably deleted
                 // or updated by an administrative task -> simply ignore this error as we're either done
                 // or we'll eventually re-process this task...
-                Exceptions.ignore(e);
+                Exceptions.ignore(innerException);
             }
         }
     }

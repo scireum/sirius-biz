@@ -8,9 +8,9 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.layer3.uplink.UplinkFactory;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
-import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -25,7 +25,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.Optional;
 
 /**
  * Provides the main entrypoint into the <b>Virtual File System</b>.
@@ -39,6 +38,11 @@ import java.util.Optional;
  */
 @Register(classes = VirtualFileSystem.class)
 public class VirtualFileSystem {
+
+    /**
+     * Contains the permission required to unlock files.
+     */
+    public static final String PERMISSION_UNLOCK_FILES = "permission-unlock-files";
 
     /**
      * Defines the name of the sub scope used by the {@link sirius.biz.storage.layer3.downlink.ftp.FTPServer} and
@@ -62,6 +66,9 @@ public class VirtualFileSystem {
 
     @PriorityParts(VFSRoot.class)
     private List<VFSRoot> rootProviders;
+
+    @PriorityParts(DeletionCheckHandler.class)
+    private List<DeletionCheckHandler> deletionCheckHandlers;
 
     /**
      * Inline implementation which delegates all calls to the collected <tt>rootProviders</tt>.
@@ -144,12 +151,12 @@ public class VirtualFileSystem {
             return globalContext.findPart(generatedId, UplinkFactory.class)
                                 .make(Strings.generateCode(32), provideShortIdleTimeout(config))
                                 .getFile(root());
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
                                     "Layer 3: An error occurred while initializing a temporary uplink: %s")
-                            .error(e)
+                            .error(exception)
                             .handle();
         }
     }
@@ -199,12 +206,18 @@ public class VirtualFileSystem {
      * @return <tt>true</tt> when the owner space specifies retention days greater than zero, <tt>false</tt> otherwise
      */
     public boolean isAutoCleanupBlob(VirtualFile virtualFile) {
-        Optional<BlobStorageSpace> blobStorageSpace = virtualFile.tryAs(BlobStorageSpace.class);
+        return virtualFile.tryAs(BlobStorageSpace.class)
+                          .filter(storageSpace -> storageSpace.getRetentionDays() > 0)
+                          .isPresent();
+    }
 
-        if (blobStorageSpace.isEmpty()) {
-            return false;
-        }
-
-        return blobStorageSpace.get().getRetentionDays() > 0;
+    /**
+     * Checks if the given file is considered "in use".
+     *
+     * @param virtualFile the {@link VirtualFile} to check
+     * @return <tt>true</tt> if the file is considered "in use"
+     */
+    public boolean isInUse(VirtualFile virtualFile) {
+        return deletionCheckHandlers.stream().anyMatch(handler -> handler.isInUse(virtualFile));
     }
 }

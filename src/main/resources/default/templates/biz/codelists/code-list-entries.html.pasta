@@ -3,7 +3,7 @@
 
 <i:invoke template="/templates/biz/codelists/code-list.html.pasta" codeList="codeList" page="entries">
     <t:searchHeader page="entries" baseUrl="@apply('/code-list/%s', codeList.getIdAsString())">
-        <t:createButton url="@apply('/code-list/%s/entry', codeList.getIdAsString())"/>
+        <t:createButton url="@apply('/code-list/%s/entry/new', codeList.getIdAsString())"/>
     </t:searchHeader>
 
     <t:emptyCheck data="entries">
@@ -30,7 +30,7 @@
                     <i:for type="sirius.biz.codelists.CodeListEntry" var="entry" items="entries.getItems()">
                         <tr>
                             <td>
-                                <a href="/code-list/@codeList.getIdAsString()/entry?codeListEntryData_code=@urlEncode(entry.getCodeListEntryData().getCode())">
+                                <a href="/code-list/@codeList.getIdAsString()/entry/@entry.getIdAsString()">
                                     @entry.getCodeListEntryData().getCode()
                                 </a><br>
                                 <small class="text-muted">@entry.getCodeListEntryData().getPriority()</small>

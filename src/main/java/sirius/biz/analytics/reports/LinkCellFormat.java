@@ -10,8 +10,9 @@ package sirius.biz.analytics.reports;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.StringCleanup;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
-import sirius.web.templates.ContentHelper;
 
 import javax.annotation.Nonnull;
 
@@ -24,14 +25,19 @@ public class LinkCellFormat implements CellFormat {
     protected static final String TYPE = "link";
     protected static final String KEY_URL = "url";
     protected static final String KEY_VALUE = "value";
+    protected static final String KEY_TARGET_BLANK = "targetBlank";
 
     @Override
     public String format(ObjectNode data) {
-        return "<a href=\""
-               + ContentHelper.escapeXML(data.path(KEY_URL).asText())
-               + "\" classes=\"link\" target=\"_blank\">"
-               + ContentHelper.escapeXML(data.path(KEY_VALUE).asText())
-               + "</a>";
+        boolean newTab = data.get(KEY_TARGET_BLANK).asBoolean();
+        String keyUrl = Strings.cleanup(data.path(KEY_URL).asText(), StringCleanup::escapeXml);
+        String keyValue = Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml);
+        String newTabLink = " <i class=\"fa-regular fa-arrow-up-right-from-square\"></i>";
+        String html = """
+                <a href="%s" class="link" target="%s">%s%s</a>
+                """;
+
+        return Strings.apply(html, keyUrl, newTab ? "_blank" : "_self", keyValue, newTab ? newTabLink : "");
     }
 
     @Override

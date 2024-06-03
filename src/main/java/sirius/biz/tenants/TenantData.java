@@ -18,6 +18,8 @@ import sirius.biz.mongo.SortValue;
 import sirius.biz.packages.PackageData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
+import sirius.biz.storage.layer2.BlobHardRef;
+import sirius.biz.storage.layer2.URLBuilder;
 import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.biz.web.BizController;
@@ -54,6 +56,31 @@ import java.util.function.Consumer;
  */
 public class TenantData extends Composite implements Journaled {
 
+    /**
+     * Defines the storage space used by tenants.
+     */
+    public static final String STORAGE_SPACE = "tenants";
+
+    /**
+     * Contains the fallback URI used by {@link #fetchSmallUrl()}, {@link #fetchMediumUrl()}, and {@link #fetchLargeUrl()}.
+     */
+    public static final String IMAGE_FALLBACK_URI = "/assets/images/tenant_image_fallback.png";
+
+    /**
+     * Contains the name of the variant used to fetch the small image.
+     */
+    public static final String IMAGE_VARIANT_SMALL = "tenant-small";
+
+    /**
+     * Contains the name of the variant used to fetch the medium image.
+     */
+    public static final String IMAGE_VARIANT_MEDIUM = "tenant-medium";
+
+    /**
+     * Contains the name of the variant used to fetch the large image.
+     */
+    public static final String IMAGE_VARIANT_LARGE = "tenant-large";
+
     @Transient
     private final BaseEntity<?> tenantObject;
 
@@ -74,7 +101,7 @@ public class TenantData extends Composite implements Journaled {
     private boolean canAccessParent = false;
 
     /**
-     * Determines the interval in days, after which a user needs to login again.
+     * Determines the interval in days, after which a user needs to log-in again.
      */
     public static final Mapping LOGIN_INTERVAL_DAYS = Mapping.named("loginIntervalDays");
     @Autoloaded
@@ -83,7 +110,7 @@ public class TenantData extends Composite implements Journaled {
     private Integer loginIntervalDays;
 
     /**
-     * Determines the interval in days, after which a user needs to login again, via an external system.
+     * Determines the interval in days, after which a user needs to log-in again, via an external system.
      * <p>
      * Note that this is only enforced if {@link UserAccountData#isExternalLoginRequired()} is <tt>true</tt>.
      */
@@ -130,6 +157,14 @@ public class TenantData extends Composite implements Journaled {
     @NullAllowed
     @Length(50)
     private String accountNumber;
+
+    /**
+     * Contains the reference to the image file.
+     */
+    public static final Mapping IMAGE = Mapping.named("image");
+    @Autoloaded
+    @NullAllowed
+    private final BlobHardRef image = new BlobHardRef(STORAGE_SPACE);
 
     /**
      * Contains the name of the system which is used as the SAML provider.
@@ -313,10 +348,10 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Checks if the ip of the request matches the ip range of the tenant.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @return <tt>true</tt> if the ip address matches the range or if non was configured, <tt>false</tt> otherwise
      */
-    public boolean matchesIPRange(WebContext ctx) {
+    public boolean matchesIPRange(WebContext webContext) {
         if (Strings.isEmpty(ipRange)) {
             return true;
         }
@@ -324,14 +359,14 @@ public class TenantData extends Composite implements Journaled {
         if (rangeSet == null) {
             try {
                 rangeSet = IPRange.parseRangeSet(ipRange);
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException exception) {
                 // if an invalid range was configured we can not remove any permission
-                Exceptions.ignore(e);
+                Exceptions.ignore(exception);
                 return true;
             }
         }
 
-        return rangeSet.accepts(ctx.getRemoteIP());
+        return rangeSet.accepts(webContext.getRemoteIP());
     }
 
     /**
@@ -381,10 +416,10 @@ public class TenantData extends Composite implements Journaled {
             if (Strings.isFilled(configString)) {
                 try {
                     config = ConfigFactory.parseString(configString);
-                } catch (Exception e) {
+                } catch (Exception exception) {
                     throw Exceptions.handle()
                                     .to(BizController.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage("Cannot load config of %s (%s): %s (%s)",
                                                             tenantObject,
                                                             tenantObject.getId())
@@ -461,6 +496,10 @@ public class TenantData extends Composite implements Journaled {
 
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
+    }
+
+    public BlobHardRef getImage() {
+        return image;
     }
 
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
@@ -572,5 +611,32 @@ public class TenantData extends Composite implements Journaled {
 
     public PackageData getPackageData() {
         return packageData;
+    }
+
+    /**
+     * Builds a URL to the small image.
+     *
+     * @return a URLBuilder which is used to fetch the small image of this tenant
+     */
+    public URLBuilder fetchSmallUrl() {
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_SMALL);
+    }
+
+    /**
+     * Builds a URL to the medium image.
+     *
+     * @return a URLBuilder which is used to fetch the medium image of this tenant
+     */
+    public URLBuilder fetchMediumUrl() {
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_MEDIUM);
+    }
+
+    /**
+     * Builds a URL to the large image.
+     *
+     * @return a URLBuilder which is used to fetch the large image of this tenant
+     */
+    public URLBuilder fetchLargeUrl() {
+        return image.url().eternallyValid().withFallbackUri(IMAGE_FALLBACK_URI).withVariant(IMAGE_VARIANT_LARGE);
     }
 }

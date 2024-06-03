@@ -28,6 +28,9 @@
         <i:render name="description"/>
     </i:block>
 
+    <i:block name="sidebar">
+        <i:render name="sidebar"/>
+    </i:block>
+
     <i:render name="body"/>
 </k:base>
-

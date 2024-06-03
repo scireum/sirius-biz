@@ -58,7 +58,7 @@ public class XMLValidator {
         String language = UserContext.getCurrentUser().getLanguage();
         // Apply a workaround for using the english translations as those are not stored in an extra "en" resource
         // bundle but in the root one instead.
-        Locale locale = Strings.areEqual(language, "en") ? Locale.ROOT : new Locale(language);
+        Locale locale = Strings.areEqual(language, "en") ? Locale.ROOT : Locale.forLanguageTag(language);
         validator.setProperty("http://apache.org/xml/properties/locale", locale);
 
         XMLValidatorErrorHandler errorHandler = new XMLValidatorErrorHandler(process);

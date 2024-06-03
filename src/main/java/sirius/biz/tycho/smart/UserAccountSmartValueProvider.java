@@ -35,14 +35,14 @@ public class UserAccountSmartValueProvider implements SmartValueProvider {
             if (tenants != null
                 && UserContext.getCurrentUser().hasPermission("permission-select-tenant")
                 && !Strings.areEqual(user.getTenantAsString(), UserContext.getCurrentUser().getTenantId())) {
-                valueCollector.accept(new SmartValue("fa fa-exchange-alt",
+                valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                      tenants.fetchCachedTenantName(user.getTenantAsString()),
                                                      "/tenants/select/" + user.getTenantAsString(),
                                                      null));
             }
             if (UserContext.getCurrentUser().hasPermission("permission-select-user-account")
                 && !Strings.areEqual(user.getUniqueName(), UserContext.getCurrentUser().getUserId())) {
-                valueCollector.accept(new SmartValue("fa fa-exchange-alt",
+                valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                      user.getUserAccountData().getShortName(),
                                                      "/user-accounts/select/" + user.getIdAsString(),
                                                      null));

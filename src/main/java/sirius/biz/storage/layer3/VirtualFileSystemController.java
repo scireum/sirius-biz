@@ -50,7 +50,7 @@ public class VirtualFileSystemController extends BizController {
     /**
      * Permissions required to view files.
      */
-    private static final String PERMISSION_VIEW_FILES = "permission-view-files";
+    public static final String PERMISSION_VIEW_FILES = "permission-view-files";
 
     @Part
     private VirtualFileSystem vfs;
@@ -147,7 +147,7 @@ public class VirtualFileSystemController extends BizController {
      * Uploads a new file or replaces the contents of an existing one.
      *
      * @param webContext  the request to handle
-     * @param out         the JSON response
+     * @param output      the JSON response
      * @param inputStream the contents to process
      * @throws Exception in case of an error
      */
@@ -155,7 +155,7 @@ public class VirtualFileSystemController extends BizController {
     @Routed(value = "/fs/upload", preDispatchable = true)
     @InternalService
     @Permission(PERMISSION_VIEW_FILES)
-    public void upload(WebContext webContext, JSONStructuredOutput out, InputStreamHandler inputStream)
+    public void upload(WebContext webContext, JSONStructuredOutput output, InputStreamHandler inputStream)
             throws Exception {
         VirtualFile parent = vfs.resolve(webContext.get("path").asString());
         parent.assertExistingDirectory();
@@ -180,18 +180,18 @@ public class VirtualFileSystemController extends BizController {
                 }
             }
 
-            out.property("file", file.path());
-            out.property("refresh", true);
-        } catch (Exception e) {
+            output.property("file", file.path());
+            output.property("refresh", true);
+        } catch (Exception exception) {
             if (!exists) {
                 try {
                     file.delete();
-                } catch (Exception ex) {
-                    Exceptions.ignore(ex);
+                } catch (Exception innerException) {
+                    Exceptions.ignore(innerException);
                 }
             }
 
-            throw Exceptions.createHandled().error(e).handle();
+            throw Exceptions.createHandled().error(exception).handle();
         }
     }
 
@@ -211,8 +211,8 @@ public class VirtualFileSystemController extends BizController {
                     file.delete();
                     showDeletedMessage();
                 }
-            } catch (Exception e) {
-                UserContext.handle(e);
+            } catch (Exception exception) {
+                UserContext.handle(exception);
             }
             webContext.respondWith()
                       .redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
@@ -238,8 +238,8 @@ public class VirtualFileSystemController extends BizController {
                     file.rename(name);
                     UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.renamed")));
                 }
-            } catch (Exception e) {
-                UserContext.handle(e);
+            } catch (Exception exception) {
+                UserContext.handle(exception);
             }
             webContext.respondWith()
                       .redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
@@ -272,8 +272,8 @@ public class VirtualFileSystemController extends BizController {
                 UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
                 webContext.respondWith()
                           .redirectToGet(new LinkBuilder("/fs").append("path", newDirectory.path()).toString());
-            } catch (Exception e) {
-                UserContext.handle(e);
+            } catch (Exception exception) {
+                UserContext.handle(exception);
                 webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", parent.path()).toString());
             }
         } else {
@@ -309,8 +309,32 @@ public class VirtualFileSystemController extends BizController {
                     UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.moved")));
                 }
             }
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
+        }
+
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+    }
+
+    /**
+     * Sets the read-only flag of the given file to false.
+     *
+     * @param webContext the request to handle
+     */
+    @LoginRequired
+    @Routed("/fs/unlock")
+    @Permission(VirtualFileSystem.PERMISSION_UNLOCK_FILES)
+    public void unlock(WebContext webContext) {
+        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        if (!file.exists()) {
+            webContext.respondWith().redirectToGet("/fs");
+            return;
+        }
+
+        try {
+            file.updateReadOnlyFlag(false);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
         }
 
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
@@ -322,31 +346,34 @@ public class VirtualFileSystemController extends BizController {
      * This is used by the selectVFSFile or selectVFSDirectory JavaScript calls/modals.
      *
      * @param webContext the request to handle
-     * @param out        the JSON response to populate
+     * @param output     the JSON response to populate
      */
     @LoginRequired
     @Routed("/fs/list")
     @InternalService
     @Permission(PERMISSION_VIEW_FILES)
-    public void listAPI(WebContext webContext, JSONStructuredOutput out) {
+    public void listAPI(WebContext webContext, JSONStructuredOutput output) {
         VirtualFile parent = vfs.resolve(webContext.get("path").asString("/"));
         if (parent.exists() && !parent.isDirectory()) {
             parent = parent.parent();
         }
         parent.assertExistingDirectory();
 
-        outputPath(out, parent);
-        outputChildren(webContext, out, parent);
+        outputPath(output, parent);
+        outputChildren(webContext, output, parent);
 
-        out.property("canCreateChildren", parent.canCreateChildren());
+        output.property("canCreateChildren", parent.canCreateChildren());
     }
 
-    private void outputChildren(WebContext webContext, JSONStructuredOutput out, VirtualFile parent) {
-        out.beginArray("children");
+    private void outputChildren(WebContext webContext, JSONStructuredOutput output, VirtualFile parent) {
+        output.beginArray("children");
 
-        FileSearch search = FileSearch.iterateAll(child -> outputFile(out, child.name(), child));
+        FileSearch search = FileSearch.iterateAll(child -> outputFile(output, child.name(), child));
         if (webContext.get("onlyDirectories").asBoolean()) {
             search.withOnlyDirectories();
+        }
+        if (webContext.get("skipReadOnlyFiles").asBoolean()) {
+            search.skipReadOnlyFiles();
         }
         search.withPrefixFilter(webContext.get("filter").asString());
         webContext.get("extensions").ifFilled(extensionString -> {
@@ -365,7 +392,7 @@ public class VirtualFileSystemController extends BizController {
             if (skip > 0) {
                 skip--;
             } else {
-                outputFile(out, PARENT_DIR, parent.parent());
+                outputFile(output, PARENT_DIR, parent.parent());
                 if (limit != null) {
                     limit--;
                 }
@@ -374,34 +401,35 @@ public class VirtualFileSystemController extends BizController {
         search.withLimit(new Limit(skip, limit));
 
         parent.children(search);
-        out.endArray();
+        output.endArray();
     }
 
-    private void outputPath(JSONStructuredOutput out, VirtualFile parent) {
-        out.beginArray("path");
+    private void outputPath(JSONStructuredOutput output, VirtualFile parent) {
+        output.beginArray("path");
         for (VirtualFile element : parent.pathList()) {
-            out.beginObject("element");
-            out.property("name", element.name());
-            out.property("path", element.path());
-            out.endObject();
+            output.beginObject("element");
+            output.property("name", element.name());
+            output.property("path", element.path());
+            output.endObject();
         }
-        out.endArray();
+        output.endArray();
     }
 
-    private void outputFile(JSONStructuredOutput out, String name, VirtualFile child) {
-        out.beginObject("child");
+    private void outputFile(JSONStructuredOutput output, String name, VirtualFile child) {
+        output.beginObject("child");
         try {
-            out.property("name", name);
-            out.property("path", child.path());
-            out.property("directory", child.isDirectory());
-            out.property("size", child.isDirectory() ? 0 : child.size());
-            out.property("sizeString", child.isDirectory() ? "" : NLS.formatSize(child.size()));
-            out.property("lastModified", child.isDirectory() ? null : NLS.toMachineString(child.lastModifiedDate()));
-            out.property("lastModifiedString", child.isDirectory() ? "" : NLS.toUserString(child.lastModifiedDate()));
-            out.property("lastModifiedSpokenString",
-                         child.isDirectory() ? "" : NLS.toSpokenDate(child.lastModifiedDate()));
+            output.property("name", name);
+            output.property("path", child.path());
+            output.property("directory", child.isDirectory());
+            output.property("size", child.isDirectory() ? 0 : child.size());
+            output.property("sizeString", child.isDirectory() ? "" : NLS.formatSize(child.size()));
+            output.property("lastModified", child.isDirectory() ? null : NLS.toMachineString(child.lastModifiedDate()));
+            output.property("lastModifiedString",
+                            child.isDirectory() ? "" : NLS.toUserString(child.lastModifiedDate()));
+            output.property("lastModifiedSpokenString",
+                            child.isDirectory() ? "" : NLS.toSpokenDate(child.lastModifiedDate()));
         } finally {
-            out.endObject();
+            output.endObject();
         }
     }
 }

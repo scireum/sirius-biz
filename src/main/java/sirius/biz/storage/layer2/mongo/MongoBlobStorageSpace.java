@@ -405,6 +405,14 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    public void updateBlobReadOnlyFlag(MongoBlob blob, boolean readOnly) {
+        mongo.update()
+             .set(MongoBlob.READ_ONLY, readOnly)
+             .where(MongoBlob.ID, blob.getId())
+             .executeForOne(MongoBlob.class);
+    }
+
+    @Override
     protected void updateBlobParent(MongoBlob blob, MongoDirectory newParent) {
         blob.getParentRef().setValue(newParent);
         // Trigger a conventional update to ensure that last modified get updated and a changelog is triggered
@@ -788,6 +796,24 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    protected MongoVariant createVariant(MongoBlob blob, String variantName, String physicalObjectKey, long size) {
+        MongoVariant variant = new MongoVariant();
+        variant.getBlob().setValue(blob);
+        variant.setVariantName(variantName);
+        variant.setQueuedForConversion(false);
+        variant.setNumAttempts(0);
+        variant.setConversionDuration(0);
+        variant.setTransferDuration(0);
+        variant.setPhysicalObjectKey(physicalObjectKey);
+        variant.setSize(size);
+        variant.setNode(CallContext.getNodeName());
+        variant.setLastConversionAttempt(LocalDateTime.now());
+        variant.setNumAttempts(1);
+        mango.update(variant);
+        return variant;
+    }
+
+    @Override
     protected boolean detectAndRemoveDuplicateVariant(MongoVariant variant, MongoBlob blob, String variantName) {
         if (mango.select(MongoVariant.class)
                  .ne(MongoVariant.ID, variant.getId())
@@ -859,12 +885,12 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                  .where(QueryBuilder.FILTERS.lt(MongoBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
                  .where(QueryBuilder.FILTERS.ltOrEmpty(MongoBlob.LAST_TOUCHED,
                                                        LocalDateTime.now().minusDays(retentionDays)))
-                 .limit(256)
-                 .iterateAll(this::markBlobAsDeleted);
-        } catch (Exception e) {
+                 .streamBlockwise()
+                 .forEach(this::markBlobAsDeleted);
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 2/Mongo: Failed to delete old blobs in %s: %s (%s)", spaceName)
                       .handle();
         }
@@ -877,12 +903,12 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                  .eq(MongoBlob.DELETED, false)
                  .eq(MongoBlob.TEMPORARY, true)
                  .where(QueryBuilder.FILTERS.lt(MongoBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
-                 .limit(256)
-                 .iterateAll(this::markBlobAsDeleted);
-        } catch (Exception e) {
+                 .streamBlockwise()
+                 .forEach(this::markBlobAsDeleted);
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 2/Mongo: Failed to delete temporary blobs in %s: %s (%s)",
                                               spaceName)
                       .handle();

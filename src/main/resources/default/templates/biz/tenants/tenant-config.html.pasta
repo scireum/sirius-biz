@@ -2,24 +2,30 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="config">
-    <div id="editor" style="height: 450px">@tenant.getTenantData().getConfigString()</div>
-
-    <div class="form-actions">
-        <a id="save" class="btn btn-primary">
-            <i class="fa fa-check"></i> @i18n("NLS.save")
-        </a>
-    </div>
+    <t:codeEditor id="editor" mode="json">@tenant.getTenantData().getConfigString()</t:codeEditor>
+    <t:formBar backButton="false"/>
 
     <script type="text/javascript">
+        sirius.ready(function () {
+            let editor = ace.edit("editor");
 
-        var editor = ace.edit("editor");
-        editor.setTheme("ace/theme/idle_fingers");
-
-        $('#save').click(function() {
-            updateField('/tenant/@tenant.getIdAsString()/config/update',
-                'tenantData_configString',
-                editor.getSession().getDocument().getValue());
+            document.querySelector('.submit-link-js').addEventListener('click', function () {
+                sirius.postJSON('/tenant/@tenant.getIdAsString()/config/update',
+                    {
+                        csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()',
+                        tenantData_configString: editor.getSession().getDocument().getValue()
+                    })
+                    .then(function (response) {
+                        clearMessages();
+                        if (response.error) {
+                            addErrorMessage(response.message);
+                        } else {
+                            addInfoMessage('@i18n("BasicController.changesSaved")');
+                        }
+                        window.scrollTo(0, 0);
+                        editor.resize();
+                    });
+            });
         });
-
     </script>
 </i:invoke>

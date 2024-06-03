@@ -52,10 +52,10 @@ class BridgeSftpSubsystem extends SftpSubsystem {
             }
 
             UserContext.get().runAs(user, super::run);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 3/SFTP: An error occurred: %s (%s)")
                       .handle();
         }

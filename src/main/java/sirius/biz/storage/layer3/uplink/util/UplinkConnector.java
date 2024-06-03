@@ -62,12 +62,12 @@ public class UplinkConnector<C> implements Closeable {
         try {
             StorageUtils.LOG.FINE("Layer 3/Uplinks: Force-closing: %s", this);
             forceCloseCallback.accept(connector);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             StorageUtils.LOG.FINE("Layer 3/Uplinks: Force-closing of %s failed: %s",
                                   this,
-                                  e.getMessage(),
-                                  e.getClass().getName());
-            Exceptions.ignore(e);
+                                  exception.getMessage(),
+                                  exception.getClass().getName());
+            Exceptions.ignore(exception);
         }
     }
 
@@ -77,10 +77,10 @@ public class UplinkConnector<C> implements Closeable {
     public void safeClose() {
         try {
             closeCallback.accept(this);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Layer 3/Uplinks: An error occurred while closing a connector: %s (%s)")
                       .handle();
         }

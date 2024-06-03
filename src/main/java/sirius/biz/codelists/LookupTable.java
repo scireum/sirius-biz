@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +61,7 @@ public abstract class LookupTable {
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
     private final String mappingsField;
 
-    enum CodeCase {
+    protected enum CodeCase {
         LOWER, UPPER, VERBATIM
     }
 
@@ -97,6 +98,31 @@ public abstract class LookupTable {
             case UPPER -> code.toUpperCase();
             default -> code;
         };
+    }
+
+    /**
+     * Attempts to resolve the name for the given code or returns the input itself.
+     *
+     * @param code the code to resolve the name for
+     * @return the name for the given code in the currently active language if present or the code itself. Note that
+     * this will only resolve the main code. When in doubt, the code must be normalized via {@link #normalize(String)}
+     * before invoking this method.
+     */
+    public String forceResolveName(String code) {
+        return resolveName(code).orElse(code);
+    }
+
+    /**
+     * Attempts to resolve the name for the given code or returns the input itself.
+     *
+     * @param code     the code to resolve the name for
+     * @param language the language of the name to resolve
+     * @return the name for the given code in the given language if present or the code itself. Note that this will only
+     * resolve the main code. When in doubt, the code must be normalized via {@link #normalize(String)} before invoking
+     * this method.
+     */
+    public String forceResolveName(String code, String language) {
+        return resolveName(code, language).orElse(code);
     }
 
     /**
@@ -404,6 +430,19 @@ public abstract class LookupTable {
     }
 
     /**
+     * Provides a comparator which sorts codes by the occurrence order within the list.
+     *
+     * @param field the field to sort by. This can be any numeric field. Note that the YAML loader for Jupiter can
+     *              generate such fields when specifying a <tt>rowNumber</tt>.
+     *              See: <a href="https://docs.rs/jupiter/latest/jupiter/idb/idb_yaml_loader/index.html">YAML Loader</a>
+     * @return a comparator to sort codes by their occurrence order
+     */
+    public Comparator<String> comparator(String field) {
+        return Comparator.<String, Integer>comparing(code -> fetchFieldValue(code, field).asInt(100))
+                         .thenComparing(this::normalizeCodeValue);
+    }
+
+    /**
      * Normalizes the given code by using the given mapping.
      * <p>
      * This first attempts to resolve the code by searching for the given mapping. If this doesn't yield a match,
@@ -577,10 +616,9 @@ public abstract class LookupTable {
     public static Map<String, String> parseTranslationTable(ObjectNode root, JsonPointer path) {
         return Json.tryGetAt(root, path).map(translations -> {
             if (translations.isObject()) {
-                return ((ObjectNode) translations).properties()
-                                                  .stream()
-                                                  .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                            entry -> entry.getValue().asText()));
+                return translations.properties()
+                                   .stream()
+                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
             } else {
                 return Collections.singletonMap("xx", translations.asText());
             }
@@ -652,11 +690,10 @@ public abstract class LookupTable {
         }
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isObject()) {
-            return ((ObjectNode) jsonNode).properties()
-                                          .stream()
-                                          .filter(entry -> Strings.isFilled(entry.getValue().asText()))
-                                          .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                    entry -> entry.getValue().asText()));
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> Strings.isFilled(entry.getValue().asText()))
+                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
         } else {
             return Collections.emptyMap();
         }
@@ -678,11 +715,11 @@ public abstract class LookupTable {
         }
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isObject()) {
-            return ((ObjectNode) jsonNode).properties()
-                                          .stream()
-                                          .filter(entry -> entry.getValue().isArray())
-                                          .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                    entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> entry.getValue().isArray())
+                           .collect(Collectors.toMap(Map.Entry::getKey,
+                                                     entry -> transformArrayToStringList((ArrayNode) entry.getValue())));
         } else {
             return Collections.emptyMap();
         }
@@ -704,11 +741,10 @@ public abstract class LookupTable {
         }
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isObject()) {
-            return ((ObjectNode) jsonNode).properties()
-                                          .stream()
-                                          .filter(entry -> entry.getValue().isObject())
-                                          .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                    entry -> (ObjectNode) entry.getValue()));
+            return jsonNode.properties()
+                           .stream()
+                           .filter(entry -> entry.getValue().isObject())
+                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> (ObjectNode) entry.getValue()));
         } else {
             return Collections.emptyMap();
         }

@@ -1,60 +1,30 @@
 <i:arg type="Page" name="users"/>
 <i:arg type="boolean" name="isSpy"/>
 
-<w:page titleKey="UserAccount.select">
+<t:page titleKey="UserAccount.select">
     <i:block name="breadcrumbs">
         <li>
             <a href="/user-accounts/select">@i18n("UserAccount.select")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="UserAccount.select"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="UserAccount.select"/>
+    </i:block>
+    <t:sidebar>
+        <i:block name="sidebar">
+            <t:filterbox page="users" baseUrl="/user-accounts/select"/>
+        </i:block>
+        <t:searchHeader page="users" baseUrl="/user-accounts/select">
+            <i:if test="isSpy">
+                <a class="btn btn-primary" href="/user-accounts/select/main">@i18n("UserAccount.selectMain")</a>
+            </i:if>
+        </t:searchHeader>
 
-    <w:tableSearchHeader page="users" baseUrl="/user-accounts/select">
-        <i:if test="isSpy">
-            <a class="btn btn-primary" href="/user-accounts/select/main">@i18n("UserAccount.selectMain")</a>
-        </i:if>
-    </w:tableSearchHeader>
-
-    <w:table data="users">
-        <thead>
-        <tr>
-            <i:extensions target="select-user-account" page="users" point="first-column-head"/>
-            <th>
-                @i18n("Model.name")<br>
-                <small class="muted">@i18n("LoginData.username")</small>
-            </th>
-            <th>
-                @i18n("Model.tenant")<br>
-                @i18n("TenantData.accountNumber")
-            </th>
-            <i:extensions target="select-user-account" page="users" point="last-column-head"/>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.tenants.UserAccount" var="selectableUser" items="users.getItems()">
-            <tr @if (selectableUser.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
-                <i:extensions target="select-user-account" page="users" account="selectableUser"
-                              point="first-column"/>
-                <td>
-                    <i:if test="selectableUser.getUserAccountData().hasName()">
-                        <a class="link" href="/user-accounts/select/@selectableUser.getIdAsString()">@selectableUser.getUserAccountData().getPerson()</a><br>
-                        <small class="muted">@selectableUser.getUserAccountData().getLogin().getUsername()</small>
-                        <i:else>
-                            <a class="link" href="/user-accounts/select/@selectableUser.getIdAsString()">@selectableUser.getUserAccountData().getLogin().getUsername()</a>
-                        </i:else>
-                    </i:if>
-                </td>
-                <td>
-                    @selectableUser.getTenant().fetchValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getName()<br>
-                    @selectableUser.getTenant().fetchValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getAccountNumber()
-                </td>
-                <i:extensions target="select-user-account" page="users" account="selectableUser"
-                              point="last-column"/>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
-
-    <w:pagination page="users" baseUrl="/user-accounts/select"/>
-</w:page>
+        <i:invoke template="/templates/biz/tenants/user-accounts-list.html.pasta"
+                  accounts="users"
+                  paginationBaseUrl="@('/user-accounts/select')"
+                  cardBaseUrl="@('/user-accounts/select')"
+                  cardActionsType="select"/>
+    </t:sidebar>
+</t:page>

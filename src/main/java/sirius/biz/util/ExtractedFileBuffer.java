@@ -46,7 +46,9 @@ class ExtractedFileBuffer {
      * @param tempFilePrefix    the prefix of the temporary file which will be created if the memory threshold is reached
      */
     ExtractedFileBuffer(int memoryThreshold, int initialBufferSize, String tempFilePrefix) {
-        buffer = new DeferredFileOutputStream(memoryThreshold, initialBufferSize, tempFilePrefix, null, null);
+        DeferredFileOutputStream.Builder builder = new DeferredFileOutputStream.Builder();
+        builder.setThreshold(memoryThreshold).setBufferSize(initialBufferSize).setPrefix(tempFilePrefix);
+        buffer = builder.get();
     }
 
     /**
@@ -72,7 +74,7 @@ class ExtractedFileBuffer {
         }
         try {
             return new FileInputStream(buffer.getFile());
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException exception) {
             throw Exceptions.createHandled().withSystemErrorMessage("No file found inside buffer").handle();
         }
     }
@@ -99,10 +101,10 @@ class ExtractedFileBuffer {
             if (!buffer.isInMemory()) {
                 Files.delete(buffer.getFile());
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.SYSTEM)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Failed to close a temporary buffer created when extracting an archive: %s (%s)");
         }

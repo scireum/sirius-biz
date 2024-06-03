@@ -51,10 +51,10 @@ public class UplinkConnectorPool {
         try {
             return (UplinkConnector<C>) fetchPools().computeIfAbsent(config, this::createPool)
                                                     .borrowObject(config.maxWaitMillis);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Layer 3/Uplinks: Failed to obtain a connection for '%s' - %s (%s)",
                                                     config)
                             .handle();
@@ -93,7 +93,7 @@ public class UplinkConnectorPool {
         uplinkConnectorFactory.linkToPool(pool);
         pool.setMaxIdle(uplinkConnectorConfig.maxIdle);
         pool.setMaxTotal(uplinkConnectorConfig.maxActive);
-        pool.setTimeBetweenEvictionRuns(TIME_BETWEEN_EVICTION_RUNS);
+        pool.setDurationBetweenEvictionRuns(TIME_BETWEEN_EVICTION_RUNS);
         pool.setNumTestsPerEvictionRun(NUM_TESTS_PER_EVICTION_RUN);
         pool.setTestOnBorrow(true);
         pool.setTestWhileIdle(true);

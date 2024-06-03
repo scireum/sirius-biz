@@ -48,15 +48,15 @@ import java.util.stream.Collectors;
  * (via {@link DistributedTaskExecutorLoadAction}). When and where those tasks are executed is controlled
  * via the system configuration in <tt>async.distributed</tt>. See <tt>component-biz.conf</tt> for examples.
  * <p>
- * Also a queue can be globally or locally disabled via {@link NeighborhoodWatch} and its configuration.
+ * Also, a queue can be globally or locally disabled via {@link NeighborhoodWatch} and its configuration.
  * <p>
  * This framework supports two type of queues. Simple FIFOs which execute tasks in the order they are
- * scheduled. Additionally prioritized queues are supported. For these queues a <tt>penalty token</tt>
+ * scheduled. Additionally, prioritized queues are supported. For these queues a <tt>penalty token</tt>
  * per task is supplied (e.g. a user or tenant id). The system then counts the number of already queued
  * tasks for this token and computes a penalty time. Now if now other tasks are queued, a task with a
  * penalty time applied will still be immediatelly executed. However, as soon as other tasks are scheduled
- * a task might be delayed up until its penalty time is over. Currently the penalty time is a static
- * value set in the system configuration and multiplied by the number of already queued tasks. Therefore this
+ * a task might be delayed up until its penalty time is over. Currently, the penalty time is a static
+ * value set in the system configuration and multiplied by the number of already queued tasks. Therefore, this
  * should be roughly equal to the estimated execution time.
  * <p>
  * Use this helper via an {@link Part} annotation.
@@ -140,7 +140,7 @@ public class DistributedTasks implements MetricProvider {
     /**
      * Represents an executable task.
      * <p>
-     * This is basically the call to the appropriate {@link DistributedTaskExecutor} along with some book keeping.
+     * This is basically the call to the appropriate {@link DistributedTaskExecutor} along with some bookkeeping.
      */
     protected class DistributedTask {
 
@@ -169,10 +169,10 @@ public class DistributedTasks implements MetricProvider {
         private void tryExecute(DistributedTaskExecutor exec) {
             try {
                 exec.executeWork(task);
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
-                          .error(e)
+                          .error(exception)
                           .withSystemErrorMessage(
                                   "The DistributedTaskExecutor '%s' failed with: %s (%s) for the task '%s'",
                                   exec.getClass().getName(),
@@ -195,8 +195,8 @@ public class DistributedTasks implements MetricProvider {
                 if (Strings.isFilled(penaltyToken) && penaltyTokens != null) {
                     penaltyTokens.decrementAndGet(queue + "-" + penaltyToken);
                 }
-            } catch (Exception e) {
-                Exceptions.handle(Log.BACKGROUND, e);
+            } catch (Exception exception) {
+                Exceptions.handle(Log.BACKGROUND, exception);
             }
         }
     }
@@ -416,7 +416,6 @@ public class DistributedTasks implements MetricProvider {
      * @param queueName the queue to create
      * @return a <tt>Redis</tt> based implementation or a local one if no configuration for redis is present
      */
-
     private PrioritizedQueue createPrioritizedQueue(String queueName) {
         if (redis.isConfigured()) {
             return new RedisPrioritizedQueue(redis, queueName);
@@ -431,7 +430,7 @@ public class DistributedTasks implements MetricProvider {
      * Iterates over {@link #getQueues()} using a round-robin approach via {@link #fetchAndMoveNextQueueIndex()}
      * and tries to poll each queue up until an executable work item is found.
      * <p>
-     * Queues which require a <tt>concurrencyToken</tt> which is already exhaused are skipped.
+     * Queues which require a <tt>concurrencyToken</tt> which is already exhausted are skipped.
      *
      * @return a work item wrapped as optional or an empty optional to indicate that currently no executable work was
      * found.
@@ -471,7 +470,7 @@ public class DistributedTasks implements MetricProvider {
     /**
      * Reads and increments the index for pulling work.
      * <p>
-     * This will also wrap the inex back to 0 if it reached the number of queues.
+     * This will also wrap the index back to 0 if it reached the number of queues.
      *
      * @return the current index to poll work from
      */
@@ -503,8 +502,8 @@ public class DistributedTasks implements MetricProvider {
             if (task != null) {
                 return new DistributedTask(queue, task);
             }
-        } catch (Exception e) {
-            Exceptions.handle(LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(LOG, exception);
         }
 
         // Release the concurrency token acquired above, as we didn't yield any task...

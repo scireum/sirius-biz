@@ -1,13 +1,17 @@
 <i:arg name="trace" type="sirius.biz.protocol.TraceData"/>
 <i:arg name="journal" type="sirius.biz.protocol.JournalData" default=""/>
 <i:arg name="transactionData" type="sirius.biz.importer.txn.ImportTransactionData" default=""/>
+<i:arg name="entityId" type="String" default=""/>
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
 <i:if test="trace.getCreatedAt() != null && (journal == null || isFilled(journal.getProtocolUri()))">
-    <btn data-toggle="collapse" data-target=".tracing" class="btn btn-outline-info float-right">
-        <i class="fa fa-info"></i>
-    </btn>
+    <button type="button"
+            data-bs-toggle="collapse"
+            data-bs-target=".tracing"
+            class="btn btn-outline-info float-end">
+        <i class="fa-solid fa-info"></i>
+    </button>
 
     <div class="row tracing collapse">
         <t:datacard class="mt-2" title="@i18n('TraceData.infos')">
@@ -30,6 +34,23 @@
                         <div class="text-muted">@trace.getChangedIn()</div>
                     </t:infoLine>
                 </div>
+
+                <i:if test="isFilled(entityId)">
+                    <div class="col-md-12">
+                        <p>
+                            @i18n('TraceData.entity')
+                        </p>
+                        <t:textfield name="copyEntityId"
+                                     class="col-md-4"
+                                     id="copyEntityId"
+                                     value="@entityId"
+                                     readonly="true">
+                            <i:block name="addon">
+                                <t:copyToClipboardAddon fieldName="copyEntityId"/>
+                            </i:block>
+                        </t:textfield>
+                    </div>
+                </i:if>
             </div>
 
             <i:if test="transactionData != null">
@@ -48,13 +69,13 @@
                 </div>
             </i:if>
 
-            <i block="actions">
+            <i:block name="actions">
                 <i:if test="journal != null">
-                    <a href="@journal.getProtocolUri()" role="button" class="btn btn-link">
-                        <i class="fa fa-external-link-alt"></i> @i18n("JournalEntry.plural")
-                    </a>
+                    <t:dropdownItem labelKey="JournalEntry.plural"
+                                    icon="fa-solid fa-external-link-alt"
+                                    url="@journal.getProtocolUri()"/>
                 </i:if>
-            </i>
+            </i:block>
         </t:datacard>
 
     </div>

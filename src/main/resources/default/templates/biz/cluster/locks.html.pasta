@@ -1,0 +1,49 @@
+<i:invoke template="/templates/biz/cluster/cluster.html.pasta" page="locks" title="Locks">
+    <i:local name="locks" value="Injector.context().getPart(sirius.biz.locks.Locks.class)"/>
+    <i:local name="currentLocks"
+             value="locks != null ? locks.getLocks() : java.util.ArrayList.new().stream().toList()"/>
+
+    <i:block name="breadcrumbs">
+        <li><a href="/system/cluster/locks">Locks</a></li>
+    </i:block>
+
+    <i:block name="actions">
+        <i:local name="locks" value="Injector.context().getPart(sirius.biz.locks.Locks.class)"/>
+        <i:local name="currentLocks"
+                 value="locks != null ? locks.getLocks() : java.util.ArrayList.new().stream().toList()"/>
+        <i:if test="currentLocks != null && !currentLocks.isEmpty()">
+            <a href="@apply('/system/cluster/locks/release-all')"
+               class="btn btn-outline-danger confirm-link-js">
+                <i class="fa-solid fa-unlock"></i><span class="d-none d-xl-inline"> Release all</span>
+            </a>
+        </i:if>
+    </i:block>
+
+    <t:emptyCheck data="currentLocks">
+        <t:datacard>
+            <table class="table table-hover">
+                <tr>
+                    <th><b>Name</b></th>
+                    <th>Owner</th>
+                    <th>Thread</th>
+                    <th>Acquired</th>
+                    <th class="col-2"></th>
+                </tr>
+                <i:for type="sirius.biz.locks.LockInfo" var="lock" items="currentLocks">
+                    <tr>
+                        <td><b>@lock.getName()</b></td>
+                        <td>@lock.getOwner()</td>
+                        <td>@lock.getThread()</td>
+                        <td>@toUserString(lock.getAcquired())</td>
+                        <td class="col-2 text-end">
+                            <a href="@apply('/system/cluster/locks/release/%s', lock.getName())"
+                               class="btn btn-outline-danger btn-sm confirm-link-js">
+                                <i class="fa-solid fa-unlock"></i><span class="d-none d-xl-inline"> Release</span>
+                            </a>
+                        </td>
+                    </tr>
+                </i:for>
+            </table>
+        </t:datacard>
+    </t:emptyCheck>
+</i:invoke>

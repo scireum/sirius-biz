@@ -164,11 +164,32 @@ public class FTPUplink extends ConfigBasedUplink {
             }
         } else {
             if (ftpFileFilter != null) {
-                return client.listFiles(relativeParent.getPath(), ftpFileFilter);
+                return fixNonMlsdPermissions(client.listFiles(relativeParent.getPath(), ftpFileFilter));
             } else {
-                return client.listFiles(relativeParent.getPath());
+                return fixNonMlsdPermissions(client.listFiles(relativeParent.getPath()));
             }
         }
+    }
+
+    /**
+     * Without MLSD support, we have to fix the permissions manually as depending on the used FTP server, the
+     * permission information might not be provided which gets interpreted as "no permissions".
+     *
+     * @param files the input files
+     * @return the files with fixed permissions
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc3659">MLSD spec</a> for details
+     */
+    private FTPFile[] fixNonMlsdPermissions(FTPFile[] files) {
+        for (FTPFile file : files) {
+            if (!file.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
+                && !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
+                && !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)) {
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION, true);
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION, true);
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION, true);
+            }
+        }
+        return files;
     }
 
     private boolean isUsable(FTPFile entry) {
@@ -202,7 +223,9 @@ public class FTPUplink extends ConfigBasedUplink {
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
               .withCanFastMoveHandler(this::canFastMoveHandler)
-              .withFastMoveHandler(this::fastMoveHandler);
+              .withFastMoveHandler(this::fastMoveHandler)
+              .withReadOnlyFlagSupplier(this::isReadOnlySupplier)
+              .withReadOnlyHandler(this::readOnlyHandler);
 
         result.attach(parent.as(RemotePath.class).child(filename));
         result.attach(this);
@@ -223,8 +246,14 @@ public class FTPUplink extends ConfigBasedUplink {
         for (Attempt attempt : Attempt.values()) {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
+                Optional<RemotePath> remotePath = file.parent().tryAs(RemotePath.class);
+                // If we cannot resolve the remote path, we cannot resolve the file either. This is most likely the
+                // case for the root directory of the uplink that has no parent.
+                if (remotePath.isEmpty()) {
+                    return Optional.empty();
+                }
                 FTPFile[] ftpFiles = list(connector.connector(),
-                                          file.parent().as(RemotePath.class),
+                                          remotePath.get(),
                                           ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
                 if (ftpFiles.length > 0) {
                     file.attach(ftpFiles[0]);
@@ -394,6 +423,68 @@ public class FTPUplink extends ConfigBasedUplink {
             }
         }
 
+        return false;
+    }
+
+    private boolean isReadOnlySupplier(VirtualFile virtualFile) {
+        for (Attempt attempt : Attempt.values()) {
+            String relativePath = virtualFile.as(RemotePath.class).getPath();
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                Optional<FTPFile> ftpFile = fetchFTPFile(virtualFile);
+                if (ftpFile.isPresent()) {
+                    return !ftpFile.get().hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
+                }
+                // Check for parent directory in case of access to a "to be created" file
+                Optional<FTPFile> parentDirectory = fetchFTPFile(virtualFile.parent());
+                if (parentDirectory.isPresent()) {
+                    return !parentDirectory.get().hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
+                }
+            } catch (Exception exception) {
+                connector.forceClose();
+                if (attempt.shouldThrow(exception)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(exception)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Failed to determine if '%s' in uplink '%s' is read-only: %s (%s)",
+                                            relativePath,
+                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
+            }
+        }
+
+        return false;
+    }
+
+    private boolean readOnlyHandler(VirtualFile virtualFile, boolean readOnly) {
+        for (Attempt attempt : Attempt.values()) {
+            String relativePath = virtualFile.as(RemotePath.class).getPath();
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                FTPFile remoteFile = connector.connector().mlistFile(relativePath);
+                remoteFile.setPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION, !readOnly);
+                return true;
+            } catch (Exception exception) {
+                connector.forceClose();
+                if (attempt.shouldThrow(exception)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(exception)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Cannot change read-only state on '%s' to '%s' in uplink '%s': %s (%s)",
+                                            relativePath,
+                                            readOnly,
+                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
+            }
+        }
         return false;
     }
 

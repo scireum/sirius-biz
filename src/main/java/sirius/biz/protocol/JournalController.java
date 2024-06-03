@@ -27,59 +27,62 @@ public class JournalController extends BizController {
     /**
      * Displays all changes on entries recorded by the protocol.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(Protocols.PERMISSION_SYSTEM_JOURNAL)
     @DefaultRoute
     @Routed("/system/protocol")
-    public void protocol(WebContext ctx) {
-        ElasticPageHelper<JournalEntry> ph =
+    public void protocol(WebContext webContext) {
+        ElasticPageHelper<JournalEntry> pageHelper =
                 ElasticPageHelper.withQuery(elastic.select(JournalEntry.class).orderDesc(JournalEntry.TOD));
-        ph.withContext(ctx);
-        ph.addTermAggregation(JournalEntry.TARGET_TYPE);
-        ph.addTimeAggregation(JournalEntry.TOD,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS,
-                              DateRange.TODAY,
-                              DateRange.YESTERDAY,
-                              DateRange.THIS_WEEK,
-                              DateRange.LAST_WEEK);
-        ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
-
-        ctx.respondWith().template("/templates/biz/protocol/protocol.html.pasta", ph.asPage());
+        pageHelper.withContext(webContext);
+        pageHelper.addTermAggregation(JournalEntry.TARGET_TYPE);
+        pageHelper.addTimeAggregation(JournalEntry.TOD,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK);
+        pageHelper.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
+        pageHelper.withTotalCount();
+        webContext.respondWith().template("/templates/biz/protocol/protocol.html.pasta", pageHelper.asPage());
     }
 
     /**
      * Displays all changes on entries recorded for a given entity by the protocol.
      *
-     * @param ctx  the current request
-     * @param type the type of the object to report the journal for
-     * @param id   the id of the object to report the journal for
+     * @param webContext the current request
+     * @param type       the type of the object to report the journal for
+     * @param id         the id of the object to report the journal for
      */
     @Routed("/system/protocol/:1/:2")
-    public void entityProtocol(WebContext ctx, String type, String id) {
-        if (!verifySignedLink(ctx)) {
+    public void entityProtocol(WebContext webContext, String type, String id) {
+        if (!verifySignedLink(webContext)) {
             return;
         }
 
-        ElasticPageHelper<JournalEntry> ph = ElasticPageHelper.withQuery(elastic.select(JournalEntry.class)
-                                                                                .eq(JournalEntry.TARGET_TYPE, type)
-                                                                                .eq(JournalEntry.TARGET_ID, id)
-                                                                                .orderDesc(JournalEntry.TOD));
-        ph.withContext(ctx);
-        ph.addTimeAggregation(JournalEntry.TOD,
-                              false,
-                              DateRange.LAST_FIVE_MINUTES,
-                              DateRange.LAST_FIFTEEN_MINUTES,
-                              DateRange.LAST_TWO_HOURS,
-                              DateRange.TODAY,
-                              DateRange.YESTERDAY,
-                              DateRange.THIS_WEEK,
-                              DateRange.LAST_WEEK);
-        ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
+        ElasticPageHelper<JournalEntry> pageHelper = ElasticPageHelper.withQuery(elastic.select(JournalEntry.class)
+                                                                                        .eq(JournalEntry.TARGET_TYPE,
+                                                                                            type)
+                                                                                        .eq(JournalEntry.TARGET_ID, id)
+                                                                                        .orderDesc(JournalEntry.TOD));
+        pageHelper.withContext(webContext)
+                  .addTimeAggregation(JournalEntry.TOD,
+                                      false,
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK)
+                  .withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD))
+                  .withTotalCount();
 
-        ctx.respondWith().template("/templates/biz/protocol/entity_protocol.html.pasta", type, id, ph.asPage());
+        webContext.respondWith()
+                  .template("/templates/biz/protocol/entity_protocol.html.pasta", type, id, pageHelper.asPage());
     }
 }

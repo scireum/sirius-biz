@@ -82,8 +82,8 @@ public abstract class LineBasedExportJob extends FileExportJob {
             if (export != null) {
                 export.close();
             }
-        } catch (Exception e) {
-            process.handle(e);
+        } catch (Exception exception) {
+            process.handle(exception);
         }
 
         super.close();

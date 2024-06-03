@@ -87,7 +87,7 @@ public class LookupTableController extends BizController {
                            .collect(Collectors.toList());
         boolean hasMore = entries.size() > PAGE_SIZE;
         if (hasMore) {
-            entries.remove(entries.size() - 1);
+            entries.removeLast();
         }
 
         if (itemsToSkip - PAGE_SIZE >= 0) {

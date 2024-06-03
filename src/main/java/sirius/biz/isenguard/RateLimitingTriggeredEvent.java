@@ -16,7 +16,7 @@ import sirius.db.mixing.annotations.NullAllowed;
 /**
  * Recorded once a rate limit was first hit for a realm, scope and interval.
  */
-public class RateLimitingTriggeredEvent extends Event {
+public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent> {
 
     /**
      * Contains the realm which defined the limit.
@@ -65,59 +65,108 @@ public class RateLimitingTriggeredEvent extends Event {
     public static final Mapping LOCATION = Mapping.named("location");
     private String location;
 
-    public String getRealm() {
-        return realm;
+    /**
+     * Sets the realm which defined the limit.
+     *
+     * @param realm the realm
+     * @return the event itself for fluent method calls
+     */
+    public RateLimitingTriggeredEvent withRealm(String realm) {
+        this.realm = realm;
+        return this;
     }
 
-    public void setRealm(String realm) {
-        this.realm = realm;
+    /**
+     * Sets the scope which triggered the limit
+     *
+     * @param scope the scope
+     * @return the event itself for fluent method calls
+     */
+    public RateLimitingTriggeredEvent withScope(String scope) {
+        this.scope = scope;
+        return this;
+    }
+
+    /**
+     * Sets the effective limit which was reached.
+     *
+     * @param limit the effective limit
+     * @return the event itself for fluent method calls
+     */
+    public RateLimitingTriggeredEvent withLimit(Integer limit) {
+        this.limit = limit;
+        return this;
+    }
+
+    /**
+     * Sets the interval (in seconds) in which the limit was reached.
+     *
+     * @param interval the interval
+     * @return the event itself for fluent method calls
+     */
+    public RateLimitingTriggeredEvent withInterval(Integer interval) {
+        this.interval = interval;
+        return this;
+    }
+
+    /**
+     * Sets the IP address which caused the event.
+     *
+     * @param ip the IP address
+     * @return the event itself for fluent method calls
+     */
+    public RateLimitingTriggeredEvent withIp(String ip) {
+        this.ip = ip;
+        return this;
+    }
+
+    /**
+     * Sets the tenant which caused the event.
+     *
+     * @param tenant the tenant identifier
+     * @return the event itself for fluent method calls
+     */
+    public RateLimitingTriggeredEvent withTenant(String tenant) {
+        this.tenant = tenant;
+        return this;
+    }
+
+    /**
+     * Sets the location which caused the event.
+     *
+     * @param location the location
+     * @return the event itself for fluent method calls
+     */
+    public RateLimitingTriggeredEvent withLocation(String location) {
+        this.location = location;
+        return this;
+    }
+
+    public String getRealm() {
+        return realm;
     }
 
     public String getScope() {
         return scope;
     }
 
-    public void setScope(String scope) {
-        this.scope = scope;
-    }
-
     public Integer getLimit() {
         return limit;
-    }
-
-    public void setLimit(Integer limit) {
-        this.limit = limit;
     }
 
     public Integer getInterval() {
         return interval;
     }
 
-    public void setInterval(Integer interval) {
-        this.interval = interval;
-    }
-
     public String getIp() {
         return ip;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
     }
 
     public String getTenant() {
         return tenant;
     }
 
-    public void setTenant(String tenant) {
-        this.tenant = tenant;
-    }
-
     public String getLocation() {
         return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
     }
 }

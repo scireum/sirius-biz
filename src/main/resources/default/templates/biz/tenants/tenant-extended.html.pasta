@@ -2,56 +2,62 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="extended">
-    <w:editForm url="@apply('/tenant/%s/extended', tenant.getIdAsString())">
+    <t:editForm url="@apply('/tenant/%s/extended', tenant.getIdAsString())">
 
-        <w:subHeading labelKey="Model.security"/>
+        <t:heading labelKey="Model.security"/>
         <div class="row">
-            <w:textfield name="tenantData_loginIntervalDays"
+            <t:textfield class="col-12 col-md-6"
+                         name="tenantData_loginIntervalDays"
                          value="@toUserString(tenant.getTenantData().getLoginIntervalDays())"
                          addonText="@i18n('Tenant.suffixDays')" labelKey="TenantData.loginIntervalDays"
                          helpKey="TenantData.loginIntervalDays.help"/>
-            <w:textfield name="tenantData_externalLoginIntervalDays"
+            <t:textfield class="col-12 col-md-6"
+                         name="tenantData_externalLoginIntervalDays"
                          value="@toUserString(tenant.getTenantData().getExternalLoginIntervalDays())"
                          addonText="@i18n('Tenant.suffixDays')" labelKey="TenantData.externalLoginIntervalDays"
                          helpKey="TenantData.externalLoginIntervalDays.help"/>
 
-            <w:textfield name="tenantData_ipRange" value="@tenant.getTenantData().getIpRange()"
+            <t:textfield class="col-12 col-md-6"
+                         name="tenantData_ipRange" value="@tenant.getTenantData().getIpRange()"
                          labelKey="TenantData.ipRange"
                          helpKey="TenantData.ipRange.help"/>
 
-            <w:textfield name="tenantData_rolesToKeep" value="@tenant.getTenantData().getRolesToKeep()"
+            <t:textfield class="col-12 col-md-6"
+                         name="tenantData_rolesToKeep" value="@tenant.getTenantData().getRolesToKeep()"
                          labelKey="TenantData.rolesToKeep"
                          helpKey="TenantData.rolesToKeep.help"/>
         </div>
 
         <i:extensions target="tenant-extended" point="below-security" tenant="tenant" controller="controller"/>
 
-        <w:subHeading labelKey="Tenant.administration"/>
+        <t:heading labelKey="Tenant.administration"/>
         <div class="row">
-            <w:autocompleteSingleSelect span="12"
-                                        name="parent"
-                                        labelKey="Tenant.parent"
-                                        helpKey="Tenant.parent.help"
-                                        required="false"
-                                        optional="true"
-                                        serviceUri="/tenants/autocomplete">
+            <t:singleSelect class="col-12"
+                            name="parent"
+                            labelKey="Tenant.parent"
+                            helpKey="Tenant.parent.help"
+                            optional="true"
+                            suggestionUri="/tenants/autocomplete">
                 <i:if test="tenant.getParent().isFilled()">
                     <option value="@tenant.getParent().getId()" selected="selected">
                         @tenant.getParent().fetchValue()
                     </option>
                 </i:if>
-            </w:autocompleteSingleSelect>
+            </t:singleSelect>
         </div>
         <div class="row">
-            <w:checkbox name="tenantData_parentCanAccess" value="tenant.getTenantData().isParentCanAccess()"
-                        labelKey="TenantData.parentCanAccess" helpKey="TenantData.parentCanAccess.help"/>
-            <w:checkbox name="tenantData_canAccessParent" value="tenant.getTenantData().isCanAccessParent()"
-                        labelKey="TenantData.canAccessParent" helpKey="TenantData.canAccessParent.help"/>
+            <t:booleanSelect class="col-12 col-md-6"
+                             name="tenantData_parentCanAccess" value="tenant.getTenantData().isParentCanAccess()"
+                             labelKey="TenantData.parentCanAccess" helpKey="TenantData.parentCanAccess.help"/>
+            <t:booleanSelect class="col-12 col-md-6"
+                             name="tenantData_canAccessParent" value="tenant.getTenantData().isCanAccessParent()"
+                             labelKey="TenantData.canAccessParent" helpKey="TenantData.canAccessParent.help"/>
         </div>
 
 
         <i:extensions target="tenant-extended" point="bottom" tenant="tenant" controller="controller"/>
-    </w:editForm>
 
-    <w:formBar />
+        <t:formBar backButton="false"/>
+    </t:editForm>
+
 </i:invoke>

@@ -97,10 +97,10 @@ public class MongoReplicationTaskStorage
                  .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                  .where(MongoReplicationTask.ID, task.getId())
                  .executeForOne(MongoReplicationTask.class);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage(
                               "Layer 1/replication: Failed to mark MongoDB replication task %s as scheduled: %s (%s)",
                               task.getId())
@@ -115,7 +115,7 @@ public class MongoReplicationTaskStorage
             MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
             query.eq(MongoReplicationTask.FAILED, false);
             query.eq(MongoReplicationTask.TRANSACTION_ID, txnId);
-            query.iterateAll(this::executeTask);
+            query.streamBlockwise().forEach(this::executeTask);
         }
     }
 
@@ -147,7 +147,7 @@ public class MongoReplicationTaskStorage
                                                       task.getContentLength(),
                                                       task.isPerformDelete());
             mango.delete(task);
-        } catch (Exception ex) {
+        } catch (Exception exception) {
             try {
                 Updater updater = mongo.update()
                                        .where(MongoReplicationTask.ID, task.getId())
@@ -157,11 +157,20 @@ public class MongoReplicationTaskStorage
                                        .set(MongoReplicationTask.EARLIEST_EXECUTION,
                                             LocalDateTime.now().plus(retryReplicationDelay))
                                        .inc(MongoReplicationTask.FAILURE_COUNTER, 1);
-                if (task.getFailureCounter() + 1 > maxReplicationAttempts) {
+                if (!task.isPerformDelete() && fetchIsEquivalentDeletionTaskQueued(task)) {
                     updater.set(MongoReplicationTask.FAILED, true);
+
+                    StorageUtils.LOG.WARN(
+                            "Layer 1/replication: A storage replication task (%s) was marked as failed as a deletion task for the same object is already queued: Primary space: %s, object: %s",
+                            task.getIdAsString(),
+                            task.getPrimarySpace(),
+                            task.getObjectKey());
+                } else if (task.getFailureCounter() + 1 > maxReplicationAttempts) {
+                    updater.set(MongoReplicationTask.FAILED, true);
+
                     Exceptions.handle()
                               .to(StorageUtils.LOG)
-                              .error(ex)
+                              .error(exception)
                               .withSystemErrorMessage(
                                       "Layer 1/replication: A storage replication task (%s) ultimately failed: Primary space: %s, object: %s - %s (%s)",
                                       task.getIdAsString(),
@@ -171,9 +180,17 @@ public class MongoReplicationTaskStorage
                 }
 
                 updater.executeForOne(MongoReplicationTask.class);
-            } catch (Exception e) {
-                Exceptions.handle(StorageUtils.LOG, e);
+            } catch (Exception innerException) {
+                Exceptions.handle(StorageUtils.LOG, innerException);
             }
         }
+    }
+
+    private boolean fetchIsEquivalentDeletionTaskQueued(MongoReplicationTask task) {
+        return mango.select(MongoReplicationTask.class)
+                    .eq(MongoReplicationTask.PRIMARY_SPACE, task.getPrimarySpace())
+                    .eq(MongoReplicationTask.OBJECT_KEY, task.getObjectKey())
+                    .eq(MongoReplicationTask.PERFORM_DELETE, true)
+                    .exists();
     }
 }

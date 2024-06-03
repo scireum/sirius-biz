@@ -11,13 +11,16 @@ package sirius.biz.jobs.scheduler;
 import sirius.biz.jobs.JobConfigData;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.Jobs;
+import sirius.biz.process.Processes;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Parts;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Routed;
@@ -25,6 +28,8 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+
+import java.time.LocalDateTime;
 
 /**
  * Provides a base class to create the management UI for the job scheduler.
@@ -41,6 +46,15 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     @Part
     private Jobs jobs;
 
+    @Part
+    private Processes processes;
+
+    @Parts(SchedulerEntryProvider.class)
+    private PartCollection<SchedulerEntryProvider<J>> providers;
+
+    @Part
+    private ScheduledEntryExecution entryExecution;
+
     /**
      * Returns the entity class being used by this controller.
      *
@@ -51,19 +65,19 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     /**
      * Lists all scheduler entries for the current tenant.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler")
-    public void schedulerEntries(WebContext ctx) {
+    public void schedulerEntries(WebContext webContext) {
         BasePageHelper<J, ?, ?, ?> pageHelper = getEntriesAsPage();
-        pageHelper.withContext(ctx);
+        pageHelper.withContext(webContext);
         pageHelper.addBooleanFacet(SchedulerEntry.SCHEDULER_DATA.inner(SchedulerData.ENABLED).getName(),
                                    NLS.get("SchedulerData.enabled"));
         pageHelper.withSearchFields(QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.JOB_NAME)),
                                     QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.LABEL)));
 
-        ctx.respondWith().template("/templates/biz/jobs/scheduler/entries.html.pasta", pageHelper.asPage());
+        webContext.respondWith().template("/templates/biz/jobs/scheduler/entries.html.pasta", pageHelper.asPage());
     }
 
     /**
@@ -76,38 +90,79 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     /**
      * Renders a details page for the given scheduler entry.
      *
-     * @param ctx     the current request
-     * @param entryId the id of the entry to display or <tt>new</tt> to create a new one
+     * @param webContext the current request
+     * @param entryId    the id of the entry to display or <tt>new</tt> to create a new one
      */
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler/entry/:1")
-    public void schedulerEntry(WebContext ctx, String entryId) {
+    public void schedulerEntry(WebContext webContext, String entryId) {
         J entry = findForTenant(getEntryType(), entryId);
 
-        if (handleJobSelection(entry, ctx)) {
+        if (handleJobSelection(entry, webContext)) {
             return;
         }
 
-        if (handleNewEntryWithoutJob(entry, ctx)) {
+        if (handleNewEntryWithoutJob(entry, webContext)) {
             return;
         }
 
-        boolean requestHandled = prepareSave(ctx).withAfterSaveURI("/jobs/scheduler").withPreSaveHandler(isNew -> {
-            loadUser(ctx, entry);
-            entry.getJobConfigData().loadFromContext(ctx);
-        }).saveEntity(entry);
+        boolean requestHandled =
+                prepareSave(webContext).withAfterSaveURI("/jobs/scheduler").withPreSaveHandler(isNew -> {
+                    loadUser(webContext, entry);
+                    entry.getJobConfigData().loadFromContext(webContext);
+                }).saveEntity(entry);
 
         if (!requestHandled) {
             validate(entry);
-            ctx.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
+            webContext.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
         }
     }
 
-    protected void loadUser(WebContext ctx, J entry) {
+    /**
+     * Executes the given scheduler entry immediately and redirects to the process detail view.
+     *
+     * @param webContext the current request
+     * @param entryId    the id of the entry to display or <tt>new</tt> to create a new one
+     */
+    @Permission(Jobs.PERMISSION_EXECUTE_JOBS)
+    @Routed("/jobs/scheduler/:1/execute")
+    public void executeSchedulerEntry(WebContext webContext, String entryId) {
+        J entry = findForTenant(getEntryType(), entryId);
+
+        if (entry.isNew()) {
+            schedulerEntries(webContext);
+            return;
+        }
+
+        executeInBelongingProvider(entry);
+        String entryProcessesUrl = Strings.apply("/ps?reference=%s&reference-label=%s",
+                                                 entry.getUniqueName(),
+                                                 Strings.urlEncode(entry.toString()));
+        webContext.respondWith().redirectToGet(entryProcessesUrl);
+    }
+
+    private void executeInBelongingProvider(J entry) {
+        for (SchedulerEntryProvider<J> provider : providers) {
+            J entryFromProvider = provider.fetchFullInformation(entry);
+            if (entryBelongsToProvider(entry, entryFromProvider)) {
+                entryExecution.executeJob(provider, entryFromProvider, LocalDateTime.now());
+                return;
+            }
+        }
+    }
+
+    private static <J extends BaseEntity<?> & SchedulerEntry & TenantAware> boolean entryBelongsToProvider(J entry,
+                                                                                                           J providersEntry) {
+        // The belonging provided must have refreshed data, so the object identity is different.
+        return System.identityHashCode(providersEntry) != System.identityHashCode(entry);
+    }
+
+    protected void loadUser(WebContext webContext, J entry) {
         UserInfo user = UserContext.get()
                                    .getUserManager()
-                                   .findUserByUserId(ctx.get(SchedulerEntry.SCHEDULER_DATA.inner(SchedulerData.USER_ID)
-                                                                                          .toString()).asString());
+                                   .findUserByUserId(webContext.get(SchedulerEntry.SCHEDULER_DATA.inner(SchedulerData.USER_ID)
+                                                                                                 .toString())
+                                                               .asString());
 
         // Ensure that an active and accessible user was selected...
         if (user == null || !Strings.areEqual(UserContext.getCurrentUser().getTenantId(), user.getTenantId())) {
@@ -124,23 +179,23 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         entry.getSchedulerData().setUserName(user.getUserName());
     }
 
-    private boolean handleJobSelection(J entry, WebContext ctx) {
-        if (entry.isNew() && ctx.isSafePOST()) {
-            if (ctx.hasParameter("selectedJob")) {
-                entry.getJobConfigData().setJob(ctx.get("selectedJob").asString());
-                ctx.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
+    private boolean handleJobSelection(J entry, WebContext webContext) {
+        if (entry.isNew() && webContext.isSafePOST()) {
+            if (webContext.hasParameter("selectedJob")) {
+                entry.getJobConfigData().setJob(webContext.get("selectedJob").asString());
+                webContext.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
                 return true;
-            } else if (ctx.hasParameter("job")) {
-                entry.getJobConfigData().setJob(ctx.get("job").asString());
+            } else if (webContext.hasParameter("job")) {
+                entry.getJobConfigData().setJob(webContext.get("job").asString());
             }
         }
 
         return false;
     }
 
-    private boolean handleNewEntryWithoutJob(J entry, WebContext ctx) {
+    private boolean handleNewEntryWithoutJob(J entry, WebContext webContext) {
         if (Strings.isEmpty(entry.getJobConfigData().getJob())) {
-            ctx.respondWith().template("/templates/biz/jobs/scheduler/create-entry.html.pasta", entry);
+            webContext.respondWith().template("/templates/biz/jobs/scheduler/create-entry.html.pasta", entry);
             return true;
         }
 
@@ -150,25 +205,25 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     /**
      * Deletes the given scheduler entry.
      *
-     * @param ctx     the curren request
-     * @param entryId the id of the entry to delete
+     * @param webContext the curren request
+     * @param entryId    the id of the entry to delete
      */
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler/entry/:1/delete")
-    public void deleteEntry(WebContext ctx, String entryId) {
-        deleteEntity(ctx, getEntryType(), entryId);
-        schedulerEntries(ctx);
+    public void deleteEntry(WebContext webContext, String entryId) {
+        deleteEntity(webContext, getEntryType(), entryId);
+        schedulerEntries(webContext);
     }
 
     /**
      * Autocompletion for schedulable background jobs.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler/autocomplete")
-    public void backgroundJobsAutocomplete(final WebContext ctx) {
-        AutocompleteHelper.handle(ctx, (query, result) -> {
+    public void backgroundJobsAutocomplete(final WebContext webContext) {
+        AutocompleteHelper.handle(webContext, (query, result) -> {
             jobs.getAvailableJobs(query)
                 .filter(JobFactory::canStartInBackground)
                 .limit(AutocompleteHelper.DEFAULT_LIMIT)

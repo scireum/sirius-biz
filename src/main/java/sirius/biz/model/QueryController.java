@@ -131,12 +131,12 @@ public class QueryController extends BizController {
             }
 
             return result;
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
             // The QueryCompiler generates an IllegalArgumentException for invalid fields and tokens.
             // In our case we don't want to write them into the syslog but just output the message...
-            UserContext.message(Message.error().withTextMessage(e.getMessage()));
-        } catch (Exception e) {
-            handle(e);
+            UserContext.message(Message.error().withTextMessage(exception.getMessage()));
+        } catch (Exception exception) {
+            handle(exception);
         }
 
         return Collections.emptyList();
@@ -237,18 +237,40 @@ public class QueryController extends BizController {
     public void entityTypeAutocomplete(WebContext webContext) {
         AutocompleteHelper.handle(webContext, ((query, result) -> {
             String effectiveQuery = query.toLowerCase();
-            fetchRelevantDescriptors().filter(descriptor -> filterMatch(effectiveQuery, descriptor))
+            fetchRelevantDescriptors().filter(descriptor -> fuzzyMatches(effectiveQuery, descriptor.getName())
+                                                            || fuzzyMatches(effectiveQuery,
+                                                                            descriptor.getType().getSimpleName()))
                                       .map(this::createCompletion)
                                       .limit(AutocompleteHelper.DEFAULT_LIMIT)
                                       .forEach(result);
         }));
     }
 
-    private boolean filterMatch(String effectiveQuery, EntityDescriptor descriptor) {
-        return descriptor.getName().toLowerCase().contains(effectiveQuery) || descriptor.getType()
-                                                                                        .getSimpleName()
-                                                                                        .toLowerCase()
-                                                                                        .contains(effectiveQuery);
+    /**
+     * Checks if the given query is contained in the searched value.
+     * <p>
+     * This checks if the characters of the query are contained in the searched value in the correct order.
+     * It also ignores casing.
+     *
+     * @param effectiveQuery the lower-cased query text to search for
+     * @param searchedValue  the value to search in
+     * @return <tt>true</tt> if the query is contained in the searched value
+     */
+    private boolean fuzzyMatches(String effectiveQuery, String searchedValue) {
+        String effectiveSearchedValue = searchedValue.toLowerCase();
+        int queryIndex = 0;
+        // Iterate over the characters of the searched value.
+        // Break if we reached the end of the query or searched value.
+        for (int targetIndex = 0;
+             targetIndex < effectiveSearchedValue.length() && queryIndex < effectiveQuery.length();
+             targetIndex++) {
+            if (effectiveQuery.charAt(queryIndex) == effectiveSearchedValue.charAt(targetIndex)) {
+                // If the current character matches, we move to the next character in the query
+                queryIndex++;
+            }
+        }
+        // If we reached the end of the query, we found a match
+        return queryIndex == effectiveQuery.length();
     }
 
     private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {

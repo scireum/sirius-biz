@@ -18,7 +18,7 @@
                 <i:if test="isFilled(video.fetchAcademyVideoData().getTrackId())">
                     <t:navboxLink labelKey="OnboardingController.showTrack"
                                   url="@apply('/academy/%s/%s/track/%s', user().getUserId(), engine.computeAccessToken(user().getUserId()), video.fetchAcademyVideoData().getTrackId())"
-                                  icon="far fa-play-circle"/>
+                                  icon="fa-regular fa-play-circle"/>
                 </i:if>
             </i:block>
         </i:invoke>

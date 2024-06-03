@@ -25,6 +25,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.http.WebContext;
+import sirius.web.security.Permissions;
 
 import java.util.Optional;
 
@@ -38,8 +39,8 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
     private Packages packages;
 
     @Override
-    protected BasePageHelper<MongoTenant, ?, ?, ?> getTenantsAsPage(WebContext ctx) {
-        MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(ctx,
+    protected BasePageHelper<MongoTenant, ?, ?, ?> getTenantsAsPage(WebContext webContext) {
+        MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(webContext,
                                                                          mango.select(MongoTenant.class)
                                                                               .orderAsc(MongoTenant.SORT_FIELD.inner(
                                                                                       SortField.SORT_FIELD)));
@@ -48,28 +49,30 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
     }
 
     @Override
-    protected BasePageHelper<MongoTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx,
+    protected BasePageHelper<MongoTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext webContext,
                                                                               MongoTenant currentTenant) {
-        MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(ctx,
+        MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(webContext,
                                                                          queryPossibleTenants(currentTenant).orderAsc(
                                                                                  Tenant.TENANT_DATA.inner(TenantData.NAME)));
         pageHelper.applyExtenders("/tenants/select");
         return pageHelper;
     }
 
-    private MongoPageHelper<MongoTenant> createTenantPageHelper(WebContext ctx, MongoQuery<MongoTenant> query) {
-        MongoPageHelper<MongoTenant> pageHelper = MongoPageHelper.withQuery(query).withContext(ctx);
+    private MongoPageHelper<MongoTenant> createTenantPageHelper(WebContext webContext, MongoQuery<MongoTenant> query) {
+        MongoPageHelper<MongoTenant> pageHelper = MongoPageHelper.withQuery(query).withContext(webContext);
 
         pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
 
         MongoPerformanceData.addFilterFacet(pageHelper);
 
+        pageHelper.applyExtenders("/tenants/*");
+
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.PACKAGE_STRING)),
                                       name -> packages.getPackageName(TenantController.PACKAGE_SCOPE_TENANT, name));
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.UPGRADES)),
                                       name -> packages.getUpgradeName(TenantController.PACKAGE_SCOPE_TENANT, name));
-
-        pageHelper.applyExtenders("/tenants/*");
+        pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.ADDITIONAL_PERMISSIONS)),
+                                      permission -> Permissions.tryGetTranslatedPermission(permission).orElse(null));
 
         return pageHelper;
     }

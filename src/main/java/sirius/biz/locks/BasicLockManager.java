@@ -34,8 +34,8 @@ public abstract class BasicLockManager implements LockManager {
                 waitInMillis = Math.min(getMaxWait(), waitInMillis + getWaitIncrement());
             } while (System.currentTimeMillis() < timeout);
             return false;
-        } catch (Exception e) {
-            Exceptions.handle(Locks.LOG, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Locks.LOG, exception);
             return false;
         }
     }

@@ -35,8 +35,8 @@ public abstract class SingleDatasetChartJobFactory extends InteractiveJobFactory
                 labels.add(label);
                 dataset.addValue(value);
             }, (name, value) -> additionalMetrics.add(Tuple.create(name, value)));
-        } catch (Exception e) {
-            UserContext.handle(e);
+        } catch (Exception exception) {
+            UserContext.handle(exception);
         }
 
         request.respondWith()

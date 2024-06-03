@@ -45,12 +45,12 @@ public class RateLimitingInfo {
     /**
      * Boilerplate method to fill the IP and location from the given web context.
      *
-     * @param ctx      the current request which caused the rate limiting event
+     * @param webContext      the current request which caused the rate limiting event
      * @param tenantId the tenant id as this is most probably unknown / not determined yet
      * @return a rate limit info containing the remote IP and URI as location.
      */
-    public static RateLimitingInfo fromWebContext(WebContext ctx, @Nullable String tenantId) {
-        return new RateLimitingInfo(ctx.getRemoteIP().getHostAddress(), tenantId, ctx.getRequestedURI());
+    public static RateLimitingInfo fromWebContext(WebContext webContext, @Nullable String tenantId) {
+        return new RateLimitingInfo(webContext.getRemoteIP().getHostAddress(), tenantId, webContext.getRequestedURI());
     }
 
     /**
@@ -69,7 +69,7 @@ public class RateLimitingInfo {
     public static RateLimitingInfo fromCurrentContext() {
         UserInfo currentUser = UserContext.getCurrentUser();
         String tenantId = currentUser.isLoggedIn() ? currentUser.getTenantId() : null;
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (webContext.isValid()) {
             return new RateLimitingInfo(webContext.getRemoteIP().getHostAddress(),
                                         tenantId,

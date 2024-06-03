@@ -121,6 +121,10 @@ public class JupiterSync implements Startable, EndOfDayTask {
     private Tenants<?, ?, ?> tenants;
 
     @Part
+    @Nullable
+    private JupiterSyncSystemTenantSupplier tenantSupplier;
+
+    @Part
     private Jupiter jupiter;
 
     @Part
@@ -166,8 +170,8 @@ public class JupiterSync implements Startable, EndOfDayTask {
         if (automaticUpdate) {
             processes.executeInStandbyProcess("jupiter-sync",
                                               () -> "Jupiter Synchronization",
-                                              tenants.getSystemTenantId(),
-                                              tenants::getSystemTenantName,
+                                              resolveSystemTenantId(),
+                                              this::resolveSystemTenantName,
                                               processContextConsumer);
         }
     }
@@ -198,8 +202,8 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
             processContext.log(ProcessLog.info().withMessage("Flushing local cache..."));
             jupiter.flushCaches();
-        } catch (Exception e) {
-            processContext.handle(e);
+        } catch (Exception exception) {
+            processContext.handle(exception);
         }
     }
 
@@ -218,8 +222,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
         processContext.log(ProcessLog.info().withFormattedMessage("Executing data provider: %s", provider.getName()));
 
         Blob blob = blobStorage.getSpace(localRepoSpaceName)
-                               .findOrCreateByPath(tenants.getTenantUserManager().getSystemTenantId(),
-                                                   provider.getFilename());
+                               .findOrCreateByPath(resolveSystemTenantId(), provider.getFilename());
 
         try (OutputStream out = blob.createOutputStream(Files.getFilenameAndExtension(provider.getFilename()))) {
             provider.execute(out);
@@ -227,11 +230,11 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                          .withFormattedMessage("Creating '%s' took %s...",
                                                                provider.getFilename(),
                                                                watch.duration()));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             processContext.log(ProcessLog.error()
                                          .withMessage(Exceptions.handle()
                                                                 .to(Jupiter.LOG)
-                                                                .error(e)
+                                                                .error(exception)
                                                                 .withSystemErrorMessage(
                                                                         "Failed to execute data provider %s: %s (%s)",
                                                                         provider.getName())
@@ -246,11 +249,11 @@ public class JupiterSync implements Startable, EndOfDayTask {
             if (connection.isConfigured()) {
                 try {
                     updateJupiterConfig(processContext, connection);
-                } catch (HandledException e) {
+                } catch (HandledException exception) {
                     processContext.log(ProcessLog.error()
                                                  .withFormattedMessage("Failed to update config of %s: %s",
                                                                        instance,
-                                                                       e.getMessage()));
+                                                                       exception.getMessage()));
                 }
             } else {
                 processContext.log(ProcessLog.info()
@@ -279,9 +282,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                            .withFormattedMessage("Updated config for %s:%n%s",
                                                                  connection.getName(),
                                                                  configString));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             processContext.handle(Exceptions.handle()
-                                            .error(e)
+                                            .error(exception)
                                             .withSystemErrorMessage("Failed to update Jupiter config of %s: %s (%s)",
                                                                     connection.getName())
                                             .handle());
@@ -303,12 +306,12 @@ public class JupiterSync implements Startable, EndOfDayTask {
                 try {
                     syncRepository(processContext, connection);
                     awaitNextEpoch(processContext, connection);
-                } catch (HandledException e) {
+                } catch (HandledException exception) {
                     processContext.log(ProcessLog.error()
                                                  .withFormattedMessage("Failed to sync repository contents of %s: %s",
                                                                        instance,
-                                                                       e.getMessage()));
-                    Jupiter.LOG.SEVERE(e);
+                                                                       exception.getMessage()));
+                    Jupiter.LOG.SEVERE(exception);
                 }
             } else {
                 processContext.log(ProcessLog.info()
@@ -349,9 +352,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                            .withFormattedMessage(
                                                    "Successfully synchronized the repository contents of %s.",
                                                    connection.getName()));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             processContext.handle(Exceptions.handle()
-                                            .error(e)
+                                            .error(exception)
                                             .withSystemErrorMessage(
                                                     "Failed to synchronize the repository contents of %s: %s (%s)",
                                                     connection.getName())
@@ -363,8 +366,8 @@ public class JupiterSync implements Startable, EndOfDayTask {
         for (Runnable runnable : updateTasks) {
             try {
                 runnable.run();
-            } catch (Exception ex) {
-                processContext.handle(ex);
+            } catch (Exception exception) {
+                processContext.handle(exception);
             }
         }
     }
@@ -491,7 +494,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                      List<RepositoryFile> repositoryFiles,
                                      Consumer<Runnable> updateTaskConsumer,
                                      Set<String> filesToDelete) {
-        if (blobStorage == null || tenants == null || Strings.isEmpty(localRepoSpaceName)) {
+        String systemTenantId = resolveSystemTenantId();
+
+        if (blobStorage == null || systemTenantId == null || Strings.isEmpty(localRepoSpaceName)) {
             processContext.debug(ProcessLog.info()
                                            .withFormattedMessage(
                                                    "Skipping local repository for %s as no storage space is configured.",
@@ -505,8 +510,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                                              connection.getName()));
 
         try {
-            Directory root = blobStorage.getSpace(localRepoSpaceName)
-                                        .getRoot(tenants.getTenantUserManager().getSystemTenantId());
+            Directory root = blobStorage.getSpace(localRepoSpaceName).getRoot(systemTenantId);
             visitLocalDirectory(processContext,
                                 null,
                                 root,
@@ -514,9 +518,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                 repositoryFiles,
                                 updateTaskConsumer,
                                 filesToDelete);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             processContext.handle(Exceptions.handle()
-                                            .error(e)
+                                            .error(exception)
                                             .withSystemErrorMessage(
                                                     "Failed to check the local repository %s for %s: %s (%s)",
                                                     localRepoSpaceName,
@@ -633,10 +637,33 @@ public class JupiterSync implements Startable, EndOfDayTask {
         if (Strings.isEmpty(localRepoSpaceName) || blobStorage == null) {
             throw new IllegalStateException("No local repository is configured.");
         }
-        Blob blob = blobStorage.getSpace(localRepoSpaceName)
-                               .findOrCreateByPath(tenants.getTenantUserManager().getSystemTenantId(), path);
+        Blob blob = blobStorage.getSpace(localRepoSpaceName).findOrCreateByPath(resolveSystemTenantId(), path);
         return blob.createOutputStream(() -> {
             runInStandbyProcess(processContext -> performSyncInProcess(processContext, false, false, true));
         }, Files.getFilenameAndExtension(path));
+    }
+
+    private String resolveSystemTenantId() {
+        if (tenants != null) {
+            return tenants.getSystemTenantId();
+        }
+
+        if (tenantSupplier != null) {
+            return tenantSupplier.getSystemTenantId();
+        }
+
+        throw Exceptions.createHandled().withSystemErrorMessage("Cannot resolve system tenant.").handle();
+    }
+
+    private String resolveSystemTenantName() {
+        if (tenants != null) {
+            return tenants.getSystemTenantName();
+        }
+
+        if (tenantSupplier != null) {
+            return tenantSupplier.getSystemTenantName();
+        }
+
+        throw Exceptions.createHandled().withSystemErrorMessage("Cannot resolve system tenant.").handle();
     }
 }

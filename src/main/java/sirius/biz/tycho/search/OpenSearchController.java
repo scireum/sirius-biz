@@ -27,6 +27,7 @@ import sirius.kernel.health.Log;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.io.IOException;
@@ -56,7 +57,7 @@ import java.util.List;
 public class OpenSearchController extends BizController {
 
     /**
-     * Contains the framework which controls of the system wide search / open search is pvoided or not.
+     * Contains the framework which controls of the system wide search / open search is provided or not.
      */
     public static final String FRAMEWORK_TYCHO_OPEN_SEARCH = "tycho.open-search";
 
@@ -119,6 +120,7 @@ public class OpenSearchController extends BizController {
      */
     @Routed("/open-search")
     @LoginRequired
+    @Permission("permission-open-search")
     public void search(WebContext webContext) {
         webContext.respondWith()
                   .template("/templates/biz/tycho/search/search.html.pasta", webContext.get(PARAM_QUERY).asString());
@@ -132,6 +134,7 @@ public class OpenSearchController extends BizController {
      */
     @Routed("/open-search/api")
     @LoginRequired
+    @Permission("permission-open-search")
     public Future searchAPI(WebContext webContext) {
         webContext.markAsLongCall();
 
@@ -169,13 +172,13 @@ public class OpenSearchController extends BizController {
 
             allTasksCompleted.asFuture().await(SEARCH_TIMEOUT);
             outputStream.write(RESPONSE_COMPLETED_MESSAGE);
-        } catch (IOException e) {
-            Exceptions.ignore(e);
+        } catch (IOException exception) {
+            Exceptions.ignore(exception);
         } finally {
             try {
                 outputStream.close();
-            } catch (IOException e) {
-                Exceptions.ignore(e);
+            } catch (IOException exception) {
+                Exceptions.ignore(exception);
             }
         }
     }
@@ -206,12 +209,12 @@ public class OpenSearchController extends BizController {
                 }
                 outputStream.flush();
             }
-        } catch (IOException e) {
-            Exceptions.ignore(e);
-        } catch (Exception e) {
+        } catch (IOException exception) {
+            Exceptions.ignore(exception);
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.APPLICATION)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to execute an OpenSearchProvider (%s): %s (%s)",
                                               provider.getClass().getName())
                       .handle();

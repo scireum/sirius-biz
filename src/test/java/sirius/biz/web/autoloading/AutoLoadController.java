@@ -10,7 +10,6 @@ package sirius.biz.web.autoloading;
 
 import sirius.biz.web.BizController;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 
@@ -18,11 +17,11 @@ import sirius.web.http.WebContext;
 public class AutoLoadController extends BizController {
 
     @Routed("/auto-load-controller/:1")
-    public void route(WebContext ctx, String id) {
+    public void route(WebContext webContext, String id) {
         AutoLoadEntity entity = find(AutoLoadEntity.class, id);
 
-        boolean a = prepareSave(ctx).saveEntity(entity);
+        boolean a = prepareSave(webContext).saveEntity(entity);
 
-        ctx.respondWith().json().beginResult().property("id", entity.getId()).endResult();
+        webContext.respondWith().json().beginResult().property("id", entity.getId()).endResult();
     }
 }

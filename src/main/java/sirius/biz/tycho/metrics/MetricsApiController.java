@@ -17,6 +17,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.security.LoginRequired;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
@@ -42,6 +43,7 @@ public class MetricsApiController extends BizController {
      * @param output     the output to write the JSON data to
      */
     @InternalService
+    @LoginRequired
     @Routed("/tycho/metrics/api")
     public void fetchMetrics(WebContext webContext, JSONStructuredOutput output) {
         ObjectNode jsonContent = webContext.getJSONContent();
@@ -69,10 +71,10 @@ public class MetricsApiController extends BizController {
                                                            obj.path("target").asText(null),
                                                            obj.path("metric").asText(null));
             metric.writeJson(output);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.APPLICATION)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to fetch key metric for: %s - %s (%s)", Json.write(obj))
                       .handle();
         }

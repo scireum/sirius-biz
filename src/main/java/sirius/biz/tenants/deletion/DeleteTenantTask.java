@@ -10,7 +10,6 @@ package sirius.biz.tenants.deletion;
 
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenant;
-import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Priorized;
 
 /**

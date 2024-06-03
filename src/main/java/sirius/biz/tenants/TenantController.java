@@ -14,7 +14,6 @@ import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SaveHelper;
 import sirius.db.mixing.BaseEntity;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
@@ -34,7 +33,6 @@ import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
-import sirius.web.util.LinkBuilder;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -319,18 +317,6 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     }
 
     /**
-     * Returns the uri to the tenant delete job.
-     *
-     * @param tenantId the id of the tenant to delete
-     * @return the uri to the job config page
-     */
-    @SuppressWarnings("squid:S1192")
-    @Explain("This string has a completely different semantic than the constant defined above")
-    public String getDeleteLink(String tenantId) {
-        return new LinkBuilder("/job/delete-tenant").append("tenant", tenantId).toString();
-    }
-
-    /**
      * Lists all tenants which the current user can "become" (switch to).
      *
      * @param webContext the current request
@@ -427,6 +413,13 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                 webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
                                            + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
             }
+            webContext.respondWith().redirectTemporarily(redirectTarget);
+            return;
+        }
+
+        if (Strings.areEqual(getUser().getTenantId(), tenantId)) {
+            // The tenant of the current user we are spying is the same as the one we want to switch to,
+            // so we simply navigate to the target URL.
             webContext.respondWith().redirectTemporarily(redirectTarget);
             return;
         }

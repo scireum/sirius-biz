@@ -78,6 +78,7 @@ class ProcessEnvironment implements ProcessContext {
     private final Map<String, AtomicInteger> messageCountsPerType = new ConcurrentHashMap<>();
 
     private Boolean limitLogMessages = null;
+    private final ProgressTracker progressTracker = new ProgressTracker(this);
 
     @Part
     @Nullable
@@ -252,8 +253,8 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public HandledException handle(Exception e) {
-        HandledException handledException = Exceptions.handle(Log.BACKGROUND, e);
+    public HandledException handle(Exception exception) {
+        HandledException handledException = Exceptions.handle(Log.BACKGROUND, exception);
         log(ProcessLog.error().withHandledException(handledException));
         return handledException;
     }
@@ -328,14 +329,49 @@ class ProcessEnvironment implements ProcessContext {
                         .orElse(false) && tasks.isRunning();
     }
 
+    /**
+     * Fetches the identifier of the user who started the process.
+     *
+     * @return the identifier of the user who started the process
+     */
     @Nullable
-    public String getUserId() {
+    public String fetchUserId() {
         return processes.fetchProcess(processId).map(Process::getUserId).orElse(null);
     }
 
+    /**
+     * Fetches the name of the user who started the process.
+     *
+     * @return the name of the user who started the process
+     */
     @Nullable
-    public String getTenantId() {
+    public String fetchUserName() {
+        return processes.fetchProcess(processId).map(Process::getUserName).orElse(null);
+    }
+
+    /**
+     * Fetches the identifier of the tenant which started the process.
+     *
+     * @return the identifier of the tenant which started the process
+     */
+    @Nullable
+    public String fetchTenantId() {
         return processes.fetchProcess(processId).map(Process::getTenantId).orElse(null);
+    }
+
+    /**
+     * Fetches the name of the tenant which started the process.
+     *
+     * @return the name of the tenant which started the process
+     */
+    @Nullable
+    public String fetchTenantName() {
+        return processes.fetchProcess(processId).map(Process::getTenantName).orElse(null);
+    }
+
+    @Override
+    public ProgressTracker getProgressTracker() {
+        return progressTracker;
     }
 
     @Override
@@ -427,8 +463,8 @@ class ProcessEnvironment implements ProcessContext {
                 zipOutputStream.closeEntry();
                 zipOutputStream.close();
                 addFile(zipArchiveName, zipFile);
-            } catch (Exception e) {
-                throw Exceptions.handle(Log.BACKGROUND, e);
+            } catch (Exception exception) {
+                throw Exceptions.handle(Log.BACKGROUND, exception);
             } finally {
                 sirius.kernel.commons.Files.delete(zipFile);
             }
@@ -457,8 +493,8 @@ class ProcessEnvironment implements ProcessContext {
             try {
                 parallelTask.execute();
                 future.success();
-            } catch (Exception e) {
-                future.fail(e);
+            } catch (Exception exception) {
+                future.fail(exception);
             }
         }).onFailure(future::fail);
 

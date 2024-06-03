@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -78,11 +77,8 @@ public class DataExplorerController extends BizController {
     @Routed("/data-explorer")
     @LoginRequired
     public void explorer(WebContext webContext) {
-        List<Action> actions = factories.stream()
-                                        .filter(ChartFactory::isAccessibleToCurrentUser)
-                                        .sorted(Comparator.comparing(ChartFactory::getPriority))
-                                        .map(this::toAction)
-                                        .toList();
+        List<Action> actions =
+                factories.stream().filter(ChartFactory::isAccessibleToCurrentUser).map(this::toAction).toList();
 
         webContext.respondWith().template("/templates/biz/tycho/analytics/data-explorer.html.pasta", actions);
     }
@@ -141,8 +137,8 @@ public class DataExplorerController extends BizController {
                                                  computeGranularity(range),
                                                  comparisonPeriod,
                                                  output);
-            } catch (Exception error) {
-                throw Exceptions.handle(Log.APPLICATION, error);
+            } catch (Exception exception) {
+                throw Exceptions.handle(Log.APPLICATION, exception);
             }
         });
     }
@@ -215,10 +211,10 @@ public class DataExplorerController extends BizController {
                                                                  timeSeries,
                                                                  comparisonPeriod)
                                     .stream();
-        } catch (Exception error) {
+        } catch (Exception exception) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
-                      .error(error)
+                      .error(exception)
                       .withSystemErrorMessage("DataExplorerController: Failed to compute time series for %s: %s (%s)",
                                               identifier)
                       .handle();
@@ -273,9 +269,11 @@ public class DataExplorerController extends BizController {
     public List<Tuple<String, ChartFactory<?>>> fetchAvailableCharts(String uri, Object targetObject) {
         List<Tuple<String, ChartFactory<?>>> result = new ArrayList<>();
         for (ChartFactory<?> factory : factories) {
-            String identifier = factory.generateIdentifier(uri, targetObject);
-            if (Strings.isFilled(identifier)) {
-                result.add(Tuple.create(identifier, factory));
+            if (factory.isAccessibleToCurrentUser()) {
+                String identifier = factory.generateIdentifier(uri, targetObject);
+                if (Strings.isFilled(identifier)) {
+                    result.add(Tuple.create(identifier, factory));
+                }
             }
         }
 

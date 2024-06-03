@@ -13,6 +13,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -45,6 +46,7 @@ public class Transfer {
     private boolean forceWrite = true;
     private ProcessContext processContext;
     private boolean autobatch = false;
+    private boolean continueOnError = false;
 
     @Part
     private static Jobs jobs;
@@ -103,7 +105,7 @@ public class Transfer {
     /**
      * Notifies the transfer that a batch/process context is available.
      * <p>
-     * As soon as a process context is available no limits are enforced anymore (e.g. {@link #canMoveInteractive()}.
+     * As soon as a process context is available no limits are enforced anymore (e.g. {@link #canMoveInteractive()}).
      * Also, we provide some metrics and debug messages.
      *
      * @param processContext the process context to execute the transfer within
@@ -124,6 +126,21 @@ public class Transfer {
     @CheckReturnValue
     public Transfer autobatch() {
         this.autobatch = true;
+        return this;
+    }
+
+    /**
+     * Marks the transfer to continue on errors.
+     * <p>
+     * This setting only applies when the transfer is executed with an {@linkplain ProcessContext process context} set.
+     * Then, the failures can be collected and then displayed properly.
+     * For interactive calls, when a failure occurs, the exception will be propagated and this setting gets ignored.
+     *
+     * @return the transfer helper itself for fluent method calls
+     */
+    @CheckReturnValue
+    public Transfer continueOnError() {
+        this.continueOnError = true;
         return this;
     }
 
@@ -345,18 +362,32 @@ public class Transfer {
             destinationDirectory.createAsDirectory();
         }
 
+        Monoflop errorWasIgnored = Monoflop.create();
+
         sourceDirectory.allChildren().stream().forEach(child -> {
-            if (child.isFile()) {
-                transferFileTo(child, destinationDirectory.findChild(child.name()), deleteContent);
-            } else {
-                // Transfer and delete the child directory in case content should be deleted.
-                transferDirectory(child, destinationDirectory.findChild(child.name()), deleteContent, deleteContent);
-            }
-            if (deleteContent) {
-                child.delete();
+            try {
+                if (child.isFile()) {
+                    transferFileTo(child, destinationDirectory.findChild(child.name()), deleteContent);
+                } else {
+                    // Transfer and delete the child directory in case content should be deleted.
+                    transferDirectory(child,
+                                      destinationDirectory.findChild(child.name()),
+                                      deleteContent,
+                                      deleteContent);
+                }
+                if (deleteContent) {
+                    child.delete();
+                }
+            } catch (Exception exception) {
+                if (continueOnError && processContext != null) {
+                    processContext.handle(exception);
+                    errorWasIgnored.toggle();
+                } else {
+                    throw exception;
+                }
             }
         });
-        if (deleteSourceDirectory) {
+        if (deleteSourceDirectory && !errorWasIgnored.isToggled()) {
             sourceDirectory.delete();
         }
     }
@@ -365,16 +396,15 @@ public class Transfer {
         if (!forceTransfer && !shouldTransfer(sourceFile, destinationFile)) {
             return;
         }
-
         for (Attempt attempt : Attempt.values()) {
             try (InputStream input = sourceFile.createInputStream()) {
                 destinationFile.consumeStream(input, sourceFile.size());
                 return;
-            } catch (Exception e) {
-                if (attempt.shouldThrow(e)) {
+            } catch (Exception exception) {
+                if (attempt.shouldThrow(exception)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
-                                    .error(e)
+                                    .error(exception)
                                     .withSystemErrorMessage(
                                             "Layer 3/VFS: An error occurred when transferring '%s' to '%s': %s (%s)",
                                             sourceFile.path(),

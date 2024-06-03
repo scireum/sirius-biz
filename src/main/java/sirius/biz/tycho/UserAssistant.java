@@ -9,7 +9,6 @@
 package sirius.biz.tycho;
 
 import sirius.kernel.Sirius;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.WebContext;
 
@@ -59,7 +58,7 @@ public class UserAssistant {
      * @return the id of the track or <tt>null</tt> to skip linking to the academy
      */
     public String fetchAcademyTrack() {
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (!webContext.isValid()) {
             return null;
         }
@@ -89,7 +88,7 @@ public class UserAssistant {
      * @return the code of the video or <tt>null</tt> to skip linking to the academy
      */
     public String fetchAcademyVideo() {
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (!webContext.isValid()) {
             return null;
         }
@@ -106,7 +105,7 @@ public class UserAssistant {
      * @return the code of the KBA or <tt>null</tt> to skip linking
      */
     public String fetchKba() {
-        WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+        WebContext webContext = WebContext.getCurrent();
         if (!webContext.isValid()) {
             return null;
         }

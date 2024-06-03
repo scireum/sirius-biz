@@ -80,8 +80,8 @@ public abstract class OnboardingEngine {
                                                   ACADEMY_VIDEOS_FETCHED_FLAG,
                                                   LocalDateTime.now(),
                                                   Period.ofDays(2));
-            } catch (Exception e) {
-                throw Exceptions.handle(Log.BACKGROUND, e);
+            } catch (Exception exception) {
+                throw Exceptions.handle(Log.BACKGROUND, exception);
             }
         }
 
@@ -210,7 +210,7 @@ public abstract class OnboardingEngine {
             return Optional.empty();
         }
 
-        OnboardingVideo example = videos.get(0);
+        OnboardingVideo example = videos.getFirst();
         AcademyVideoData exampleAcademyVideoData = example.fetchAcademyVideoData();
         AcademyTrackInfo track = new AcademyTrackInfo(exampleAcademyVideoData.getTrackId(),
                                                       exampleAcademyVideoData.getTrackName(),

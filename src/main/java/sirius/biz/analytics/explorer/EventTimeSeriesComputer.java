@@ -36,7 +36,7 @@ import java.util.function.BiConsumer;
  * @param <O> the types of objects on which this computer operates
  * @param <E> the events being processed
  */
-public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesComputer<O> {
+public class EventTimeSeriesComputer<O, E extends Event<E>> implements TimeSeriesComputer<O> {
 
     /**
      * Provides a common aggregation which counts all events (<tt>count(*)</tt>).
@@ -99,6 +99,11 @@ public class EventTimeSeriesComputer<O, E extends Event> implements TimeSeriesCo
 
     /**
      * Adds an aggregation expression to collect.
+     * <p>
+     * It is likely that in most cases, that the aggregations used with this method are conditional
+     * count functions such as {@code countIf(<CLAUSE>)}. Performance measurements in Clickhouse
+     * showed faster performance using such functions instead of regular {@code GROUP BY}
+     * operators.
      *
      * @param expression the SQL expression to add to the <tt>SELECT</tt> clause
      * @param label      the label to use or <tt>null</tt> to use the default label

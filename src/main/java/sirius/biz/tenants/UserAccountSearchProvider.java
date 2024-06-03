@@ -98,10 +98,9 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)) {
                 openSearchResult.withTemplateFromCode("""
                                                               <i:arg name="user" type="sirius.biz.tenants.UserAccount"/>
-                                                                                                                            
                                                               @user (@user.getTenant().fetchValue().toString())
                                                               <br>
-                                                              <a href=/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              <a href="/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
                                                               """, userAccount);
             }
             resultCollector.accept(openSearchResult);
@@ -112,6 +111,6 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
 
     @Override
     public int getPriority() {
-        return 100;
+        return 110;
     }
 }

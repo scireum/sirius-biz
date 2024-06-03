@@ -7,11 +7,11 @@
     </i:block>
 
     <div class="row">
-        <div class="col-12 col-lg-9 pr-xl-4">
+        <div class="col-12 col-lg-9 pe-xl-4">
             <i:extensions target="tycho-dashboard" point="main-content"/>
         </div>
 
-        <div class="col-12 col-lg-3 pl-xl-4">
+        <div class="col-12 col-lg-3 ps-xl-4">
             <i:extensions target="tycho-dashboard" point="sidebar-upper-content"/>
 
             <i:invoke template="/templates/biz/tycho/dashboard-help.html.pasta">

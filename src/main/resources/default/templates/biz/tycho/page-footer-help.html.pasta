@@ -4,12 +4,13 @@
 <i:if test="isFilled(contents) || isFilled(navbox)">
      <span class="text-muted small dropup" id="tycho-page-help-dropdown">
         <a class="btn btn-primary"
-           data-toggle="dropdown"
+           data-bs-toggle="dropdown"
            style="padding: 0.20rem .5rem;font-size: 0.75rem;line-height: 1.25;border-radius: .2rem;"
            id="tycho-page-help-toggle">
-            <i class="fas fa-ambulance"></i> @i18n("DashboardController.help")
+            <i class="fa-solid fa-ambulance"></i> @i18n("DashboardController.help")
         </a>
-        <div class="dropdown-menu dropdown-menu-right p-4 shadow" style="min-width: 300px;line-height:1.5;">
+        <div class="dropdown-menu dropdown-menu-end p-4 shadow"
+             style="min-width: 300px;line-height:1.5;">
             <h5 class="card-title">
                 @i18n("DashboardController.help")
             </h5>
@@ -17,13 +18,15 @@
             <div id="tycho-page-footer-help">
             </div>
 
-            <ul id="tycho-page-footer-nav" class="nav flex-column nav-pills flex-grow-1">
+            <ul id="tycho-page-footer-nav"
+                class="nav flex-column nav-pills flex-grow-1">
             </ul>
         </div>
      </span>
     <script type="text/javascript">
-        sirius.ready(function () {
-            $('#tycho-page-help-dropdown').on('show.bs.dropdown', function () {
+        sirius.ready(() => {
+            const _footerToggle = document.getElementById('tycho-page-help-toggle');
+            _footerToggle.addEventListener('show.bs.dropdown', () => {
                 const _footerContents = document.getElementById('tycho-page-footer-help');
                 _footerContents.innerHTML = '@raw { @escapeJS(contents) }';
                 sirius.executeEmbeddedScripts(_footerContents);

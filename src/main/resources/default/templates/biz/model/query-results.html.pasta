@@ -18,17 +18,17 @@
             <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
                 <t:datacard subTitle="@entity.getClass().getName()">
                     <i:block name="title">
-                        <i:if test="@sirius.biz.tenants.Tenant.class.isAssignableFrom(entity.getClass())">
+                        <i:if test="sirius.biz.tenants.Tenant.class.isAssignableFrom(entity.getClass())">
                             <i:local name="tenantId" value="@String.valueOf(entity.getId())"/>
                             <t:smartValue type="tenant" payload="@tenantId"
-                                          label="@part(sirius.biz.tenants.Tenants.class).fetchCachedTenantName(tenantId)"/>
+                                          label="@sirius.kernel.di.Injector.context().getPart(sirius.biz.tenants.Tenants.class).fetchCachedTenantName(tenantId)"/>
                             -
                         </i:if>
                         <i:if test="sirius.biz.tenants.UserAccount.class.isAssignableFrom(entity.getClass())">
                             <i:local name="userId"
                                      value="@String.valueOf(entity.getId())"/>
                             <t:smartValue type="user-account" payload="@userId"
-                                          label="@part(sirius.biz.tenants.Tenants.class).fetchCachedUserName(userId)"/>
+                                          label="@sirius.kernel.di.Injector.context().getPart(sirius.biz.tenants.Tenants.class).fetchCachedUserName(userId)"/>
                             -
                         </i:if>
                         @entity.getIdAsString()
@@ -57,23 +57,25 @@
                                                 <i:local name="tenantId"
                                                          value="@String.valueOf(reference.getValue(entity))"/>
                                                 <t:smartValue type="tenant" payload="@tenantId"
-                                                              label="@part(sirius.biz.tenants.Tenants.class).fetchCachedTenantName(tenantId)"/>
+                                                              label="@sirius.kernel.di.Injector.context().getPart(sirius.biz.tenants.Tenants.class).fetchCachedTenantName(tenantId)"/>
                                                 -
                                             </i:if>
                                             <i:if test="sirius.biz.tenants.UserAccount.class.isAssignableFrom(reference.getReferencedType())">
                                                 <i:local name="userId"
                                                          value="@String.valueOf(reference.getValue(entity))"/>
                                                 <t:smartValue type="user-account" payload="@userId"
-                                                              label="@part(sirius.biz.tenants.Tenants.class).fetchCachedUserName(userId)"/>
+                                                              label="@sirius.kernel.di.Injector.context().getPart(sirius.biz.tenants.Tenants.class).fetchCachedUserName(userId)"/>
                                                 -
                                             </i:if>
                                             @reference.getValue(entity)
                                             <span class="text-muted">(@reference.getReferencedDescriptor().getType().getName())</span>
-                                            <span class="pl-2 pr-2">-</span>
+                                            <span class="ps-2 pe-2">-</span>
                                             <span class="text-small">
                                             <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
+                                               class="text-decoration-none"
                                                target="_blank">
-                                                <i class="fa fa-external-link-alt"></i> Query
+                                                <i class="fa-solid fa-external-link-alt"></i>
+                                                <span class="text-decoration-underline">Query</span>
                                             </a>
                                             </span>
                                         </i:if>
@@ -105,7 +107,7 @@
                                                                         <i:local name="enumValue"
                                                                                  value="@property.getValue(entity)"/>
 
-                                                                        <span class="pr-2">@toUserString(enumValue)</span>
+                                                                        <span class="pe-2">@toUserString(enumValue)</span>
                                                                         <t:tag color="@sirius.biz.model.QueryController.determineEnumTagColor(enumValue.as(java.lang.Enum.class))">
                                                                             @enumValue.as(java.lang.Enum.class).name()
                                                                         </t:tag>
@@ -120,6 +122,11 @@
                                                 </i:else>
                                             </i:if>
                                         </i:else>
+                                    </i:if>
+                                    <i:if test="property.getValue(entity) != null && !type.isFetched(entity, property)">
+                                        <t:tag color="red" class="ms-2">
+                                            Empty in DB
+                                        </t:tag>
                                     </i:if>
                                 </td>
                             </tr>

@@ -8,7 +8,11 @@
 
 package sirius.biz.storage.layer1;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.TransformingInputStream;
 import sirius.biz.storage.s3.BucketName;
@@ -19,6 +23,7 @@ import sirius.kernel.async.Promise;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
@@ -53,6 +58,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
     @Part
     private static ObjectStores objectStores;
+
+    @Part
+    private static ReplicationManager replicationManager;
 
     @Part
     private static Tasks tasks;
@@ -148,8 +156,8 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     protected FileHandle getData(String objectKey) throws IOException {
         try {
             return FileHandle.temporaryFileHandle(store.download(bucketName(), objectKey));
-        } catch (FileNotFoundException e) {
-            Exceptions.ignore(e);
+        } catch (FileNotFoundException exception) {
+            Exceptions.ignore(exception);
             return null;
         }
     }
@@ -158,8 +166,8 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     protected Promise<FileHandle> getDataAsync(String objectId) {
         try {
             return store.downloadAsync(bucketName(), objectId);
-        } catch (FileNotFoundException ex) {
-            Exceptions.ignore(ex);
+        } catch (FileNotFoundException exception) {
+            Exceptions.ignore(exception);
             return new Promise<>(null);
         }
     }
@@ -175,11 +183,11 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
                 Streams.transfer(in, out);
             }
             return FileHandle.temporaryFileHandle(dest);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             Files.delete(dest);
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage(
                                     "Layer 1/S3: An error occurred while trying to download: %s/%s - %s (%s)",
                                     name,
@@ -197,9 +205,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         tasks.executor(ObjectStore.EXECUTOR_S3).fork(() -> {
             try {
                 result.success(getData(objectId, transformer));
-            } catch (Exception ex) {
+            } catch (Exception exception) {
                 result.fail(Exceptions.handle()
-                                      .error(ex)
+                                      .error(exception)
                                       .to(StorageUtils.LOG)
                                       .withSystemErrorMessage(
                                               "Layer 1/S3: An error occurred when downloading %s (%s): %s (%s)",
@@ -215,14 +223,13 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey) throws IOException {
-        return store.getClient().getObject(bucketName().getName(), objectKey).getObjectContent();
+        return getS3Object(objectKey).getObjectContent();
     }
 
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey, ByteBlockTransformer transformer) throws IOException {
-        S3ObjectInputStream rawStream =
-                store.getClient().getObject(bucketName().getName(), objectKey).getObjectContent();
+        S3ObjectInputStream rawStream = getS3Object(objectKey).getObjectContent();
         return new TransformingInputStream(rawStream, transformer);
     }
 
@@ -236,5 +243,50 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
                                                                  .toLocalDateTime(),
                                                          s3Object.getSize()));
         });
+    }
+
+    @Override
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace) {
+        ObjectStorageSpace targetSpace = objectStorage.getSpace(targetStorageSpace);
+        if (targetSpace instanceof S3ObjectStorageSpace s3ObjectStorageSpace && canCopyObject(s3ObjectStorageSpace)) {
+            // We want to copy from S3 to S3 and the source and target buckets permits a server-side copy.
+            store.getClient()
+                 .copyObject(bucketName().getName(),
+                             sourceObjectKey,
+                             s3ObjectStorageSpace.bucketName().getName(),
+                             targetObjectKey);
+            long size = store.getClient().getObjectMetadata(bucketName().getName(), sourceObjectKey).getContentLength();
+            replicationManager.notifyAboutUpdate(s3ObjectStorageSpace, targetObjectKey, size);
+        } else {
+            super.duplicatePhysicalObject(sourceObjectKey, targetObjectKey, targetStorageSpace);
+        }
+    }
+
+    private boolean canCopyObject(S3ObjectStorageSpace s3ObjectStorageSpace) {
+        if (!store.equals(s3ObjectStorageSpace.store)) {
+            // Source and target are not in the same store
+            return false;
+        }
+
+        if (bucketName().equals(s3ObjectStorageSpace.bucketName())) {
+            // Source and target are in same store and bucket.
+            return true;
+        }
+
+        // If source or target uses a transformer, we can no longer perform a straight copy.
+        return !hasTransformer() && !s3ObjectStorageSpace.hasTransformer();
+    }
+
+    private S3Object getS3Object(String objectKey) throws IOException {
+        try {
+            return store.getClient().getObject(bucketName().getName(), objectKey);
+        } catch (AmazonS3Exception exception) {
+            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+                throw new FileNotFoundException(Strings.apply("Layer 1: No object found for key '%s' in bucket '%s'",
+                                                              objectKey,
+                                                              bucketName()));
+            }
+            throw new IOException(exception);
+        }
     }
 }

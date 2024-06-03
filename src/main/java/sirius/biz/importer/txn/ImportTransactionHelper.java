@@ -18,6 +18,7 @@ import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
@@ -178,6 +179,43 @@ public class ImportTransactionHelper extends ImportHelper {
                                                                                         Object value,
                                                                                         @Nullable
                                                                                         Consumer<E> entityCallback) {
-        deleteUnmarked(entityType, qry -> qry.eq(field, value), entityCallback);
+        deleteUnmarked(entityType, query -> query.eq(field, value), entityCallback);
+    }
+
+    /**
+     * Checks if the given entity can be deleted under the current transaction context.
+     *
+     * @param entity the entity to check
+     * @return <tt>true</tt> if the entity can be deleted, <tt>false</tt> otherwise
+     */
+    public <E extends ImportTransactionalEntity> boolean canDelete(E entity) {
+        if (entity.getImportTransactionData().getTxnId() == getCurrentTransaction()) {
+            return false;
+        }
+
+        String entitySource = entity.getImportTransactionData().getSource();
+
+        if (deleteMode == SyncSourceDeleteMode.SAME_SOURCE && Strings.areEqual(entitySource, source)) {
+            return true;
+        }
+
+        if (deleteMode == SyncSourceDeleteMode.SAME_SOURCE_OR_EMPTY && (Strings.areEqual(entitySource, source)
+                                                                        || Strings.isEmpty(entitySource))) {
+            return true;
+        }
+
+        return deleteMode == SyncSourceDeleteMode.ALL;
+    }
+
+    /**
+     * Sets a new value for the source.
+     * This is useful e.g. in migration scenarios where the source in one transaction could be different.
+     *
+     * @param source the new source
+     * @deprecated Only use this method if you are sure that you want to change the source in one and the same transaction.
+     */
+    @Deprecated
+    public void setSource(String source) {
+        this.source = source;
     }
 }

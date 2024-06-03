@@ -101,6 +101,7 @@ public class BlobHardRef {
      * @return the formatted (human-readable) file size of the referenced blob or an empty string, if the reference
      * is empty
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String fetchFormattedSize() {
         return fetchBlob().map(Blob::getSize).map(NLS::formatSize).orElse("");
     }

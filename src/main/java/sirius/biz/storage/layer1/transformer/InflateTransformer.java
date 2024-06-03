@@ -49,8 +49,8 @@ public class InflateTransformer implements ByteBlockTransformer {
             try {
                 int outputLength = inflater.inflate(inflateBuffer);
                 outputBuffer.writeBytes(inflateBuffer, 0, outputLength);
-            } catch (DataFormatException e) {
-                throw new IOException(e);
+            } catch (DataFormatException exception) {
+                throw new IOException(exception);
             }
         }
 
@@ -71,8 +71,8 @@ public class InflateTransformer implements ByteBlockTransformer {
             try {
                 int outputLength = inflater.inflate(inflateBuffer);
                 outputBuffer.writeBytes(inflateBuffer, 0, outputLength);
-            } catch (DataFormatException e) {
-                throw new IOException(e);
+            } catch (DataFormatException exception) {
+                throw new IOException(exception);
             }
         }
 

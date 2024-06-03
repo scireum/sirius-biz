@@ -10,6 +10,7 @@ package sirius.biz.storage.layer1;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.apache.http.ConnectionClosedException;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.CipherFactory;
@@ -35,8 +36,10 @@ import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -68,6 +71,9 @@ public abstract class ObjectStorageSpace {
 
     @Part
     private static Tasks tasks;
+
+    @Part
+    protected static ObjectStorage objectStorage;
 
     private static final Counter UPLOADS = new Counter();
     private static final Counter DOWNLOADS = new Counter();
@@ -214,9 +220,9 @@ public abstract class ObjectStorageSpace {
                 storePhysicalObject(objectId, file);
                 replicationManager.notifyAboutUpdate(this, objectId, file.length());
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when uploading %s to %s (%s): %s (%s)",
                                                     file.getAbsolutePath(),
@@ -247,6 +253,31 @@ public abstract class ObjectStorageSpace {
             throws IOException;
 
     /**
+     * Copies the given object to the given target object key in the current storage space.
+     *
+     * @param sourceObjectKey    the source object key to copy from
+     * @param targetObjectKey    the target object key to copy to
+     * @param targetStorageSpace the target storage space to copy to
+     */
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey, String targetStorageSpace) {
+        download(sourceObjectKey).ifPresent(fileHandle -> {
+            try (fileHandle) {
+                objectStorage.getSpace(targetStorageSpace).upload(targetObjectKey, fileHandle.getFile());
+            }
+        });
+    }
+
+    /**
+     * Copies the given object to the given target object key in the current storage space.
+     *
+     * @param sourceObjectKey the source object key to copy from
+     * @param targetObjectKey the target object key to copy to
+     */
+    public void duplicatePhysicalObject(String sourceObjectKey, String targetObjectKey) {
+        duplicatePhysicalObject(sourceObjectKey, targetObjectKey, getName());
+    }
+
+    /**
      * Stores the given data for the given object key.
      *
      * @param objectId      the physical storage key (a key is always only used once)
@@ -263,9 +294,9 @@ public abstract class ObjectStorageSpace {
                 storePhysicalObject(objectId, inputStream, contentLength);
                 replicationManager.notifyAboutUpdate(this, objectId, contentLength);
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when uploading data to %s (%s): %s (%s)",
                                                     objectId,
@@ -297,9 +328,19 @@ public abstract class ObjectStorageSpace {
 
     /**
      * Downloads and provides the contents of the requested object.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * space.download(objectId).ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * </pre>
      *
      * @param objectId the physical storage key
-     * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist
+     * @return a {@linkplain java.io.Closeable closeable} file handle to the given object wrapped as optional, or an empty one if the object doesn't exist
      */
     public Optional<FileHandle> download(String objectId) {
         try {
@@ -312,9 +353,12 @@ public abstract class ObjectStorageSpace {
             } else {
                 return Optional.ofNullable(getData(objectId));
             }
-        } catch (IOException e) {
+        } catch (FileNotFoundException exception) {
+            StorageUtils.LOG.WARN(exception.getMessage());
+            return Optional.empty();
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when downloading %s (%s): %s (%s)",
                                                     objectId,
@@ -422,9 +466,12 @@ public abstract class ObjectStorageSpace {
             } else {
                 return Optional.ofNullable(getAsStream(objectId));
             }
-        } catch (IOException e) {
+        } catch (FileNotFoundException exception) {
+            StorageUtils.LOG.WARN(exception.getMessage());
+            return Optional.empty();
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
                                     "Layer 1: An error occurred when obtaining an input stream for %s (%s): %s (%s)",
@@ -504,25 +551,31 @@ public abstract class ObjectStorageSpace {
         return largeFileExpected && !response.getWebContext().getHeaderValue(HttpHeaderNames.RANGE).isFilled();
     }
 
-    private void handleDeliveryError(Response response, String objectId, Exception exception) {
-        if (exception instanceof ClosedChannelException || exception.getCause() instanceof ClosedChannelException) {
+    private void handleDeliveryError(Response response, String objectId, Exception error) {
+        if (isExceptionOf(error, ClosedChannelException.class)
+            || isExceptionOf(error, ConnectionClosedException.class)
+            || isExceptionOf(error, SocketException.class)) {
             // If the user unexpectedly closes the connection, we do not need to log an error...
-            Exceptions.ignore(exception);
+            Exceptions.ignore(error);
             return;
         }
         try {
             response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception ex) {
-            Exceptions.ignore(ex);
+        } catch (Exception exception) {
+            Exceptions.ignore(exception);
         }
         throw Exceptions.handle()
-                        .error(exception)
+                        .error(error)
                         .to(StorageUtils.LOG)
                         .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
                                                 objectId,
                                                 name,
                                                 response.getWebContext().getRequestedURI())
                         .handle();
+    }
+
+    private boolean isExceptionOf(Exception exception, Class<? extends Exception> clazz) {
+        return clazz.isInstance(exception) || clazz.isInstance(exception.getCause());
     }
 
     private void deliverLarge(Response response, String objectId) {
@@ -598,9 +651,9 @@ public abstract class ObjectStorageSpace {
         try {
             deletePhysicalObject(objectId);
             replicationManager.notifyAboutDelete(this, objectId);
-        } catch (IOException e) {
+        } catch (IOException exception) {
             throw Exceptions.handle()
-                            .error(e)
+                            .error(exception)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer 1: An error occurred when deleting %s (%s): %s (%s)",
                                                     objectId,

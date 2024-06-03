@@ -73,7 +73,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa fa-cogs";
+        return "fa-solid fa-cogs";
     }
 
     @Override
@@ -125,6 +125,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
                                                    getCurrentOrRootUser(),
                                                    determinePersistencePeriod(context),
                                                    context);
+        lockFiles(context);
         logScheduledMessage(processId);
         addLinkToJob(processId);
         createAndScheduleDistributedTask(processId);
