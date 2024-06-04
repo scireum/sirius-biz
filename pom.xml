@@ -56,13 +56,6 @@
             <artifactId>clickhouse-jdbc</artifactId>
             <version>0.4.6</version>
         </dependency>
-        <!-- Suppress the Failed to load class org.slf4j.impl.StaticLoggerBinder warning -->
-        <!-- https://www.slf4j.org/codes.html#StaticLoggerBinder -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-nop</artifactId>
-            <version>1.7.36</version>
-        </dependency>
         <dependency>
             <groupId>org.lz4</groupId>
             <artifactId>lz4-java</artifactId>
