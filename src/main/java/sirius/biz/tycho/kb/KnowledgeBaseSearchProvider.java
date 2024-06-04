@@ -48,6 +48,10 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
     @Override
     public void query(String query, int maxResults, Consumer<OpenSearchResult> resultCollector) {
         knowledgeBase.query(UserContext.getCurrentUser().getLanguage(), query, maxResults).forEach(article -> {
+            KnowledgeBaseArticle manual = article.queryParent().orElse(null);
+            while (!KnowledgeBase.ROOT_CHAPTER_ID.equals(manual.queryParent().orElse(null).getArticleId())) {
+                manual = manual.queryParent().orElse(null);
+            }
             resultCollector.accept(new OpenSearchResult().withLabel(article.getTitle())
                                                          .withDescription(article.getDescription())
                                                          .withURL("/kba/" + article.getLanguage()+ "/" + article.getArticleId()));
