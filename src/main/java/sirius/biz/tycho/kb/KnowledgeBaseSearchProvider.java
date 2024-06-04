@@ -53,8 +53,18 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
                 manual = manual.queryParent().orElse(null);
             }
             resultCollector.accept(new OpenSearchResult().withLabel(article.getTitle())
-                                                         .withDescription(article.getDescription())
-                                                         .withURL("/kba/" + article.getLanguage()+ "/" + article.getArticleId()));
+                                                         .withTemplateFromCode("""
+                                                                                       <i:arg name="article" type="sirius.biz.tycho.kb.KnowledgeBaseArticle"/>
+                                                                                       <i:arg name="manual" type="sirius.biz.tycho.kb.KnowledgeBaseArticle"/>
+                                                                                       <div>@article.getDescription()</div>
+                                                                                       <t:tag">@manual.getTitle()</t:tag>
+                                                                                       """,
+                                                                               article,
+                                                                               manual)
+                                                         .withURL("/kba/"
+                                                                  + article.getLanguage()
+                                                                  + "/"
+                                                                  + article.getArticleId()));
         });
     }
 
