@@ -57,7 +57,7 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
                                                                                        <i:arg name="article" type="sirius.biz.tycho.kb.KnowledgeBaseArticle"/>
                                                                                        <i:arg name="manual" type="sirius.biz.tycho.kb.KnowledgeBaseArticle"/>
                                                                                        <div>@article.getDescription()</div>
-                                                                                       <t:tag">@manual.getTitle()</t:tag>
+                                                                                       <t:tag>@manual.getTitle()</t:tag>
                                                                                        """,
                                                                                article,
                                                                                manual)
