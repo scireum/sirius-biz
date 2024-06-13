@@ -27,10 +27,12 @@
                     tableName: '___table',
                     labelFormat: '___values.getDisplay()',
                     codeCallback: function (code, name) {
-                        if (!autocomplete.val().includes(code)) {
-                            autocomplete.addToken({value: code, text: name});
-                        } else {
-                            autocomplete.select.removeTokenWithText(name);
+                        @if (!readonly) {
+                            if (!autocomplete.val().includes(code)) {
+                                autocomplete.addToken({value: code, text: name});
+                            } else {
+                                autocomplete.select.removeTokenWithText(name);
+                            }
                         }
                     }
                 });

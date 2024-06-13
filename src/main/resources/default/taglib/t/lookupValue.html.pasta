@@ -38,7 +38,9 @@
                            tableName: '___table',
                            labelFormat: '___value.getDisplay()',
                            codeCallback: function (code, name) {
-                                autocomplete.val({value: code, text: name});
+                               @if (!readonly) {
+                                   autocomplete.val({value: code, text: name});
+                               }
                            }
                        });
             }
