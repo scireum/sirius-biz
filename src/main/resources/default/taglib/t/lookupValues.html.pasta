@@ -5,6 +5,7 @@
 <i:arg name="helpKey" type="String" default=""/>
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
 <i:arg name="readonly" type="boolean" default="false"/>
+<i:arg name="showSelectionButton" type="boolean" default="true"/>
 <i:arg name="table" type="String" default="@values.getTableName()"/>
 <i:arg name="id" type="String" default="@generateId('singleselect-%s')"/>
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
@@ -23,9 +24,12 @@
                class="@class"
                suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s', table, values.getDisplay(), values.getExtendedDisplay())">
     <i:block name="addon">
-        <a class="btn btn-outline-secondary" id="@id-addon"><i class="fa-solid fa-bolt"></i></a>
+        <i:if test="showSelectionButton">
+            <a class="btn btn-outline-secondary" id="@id-addon"><i class="fa-solid fa-bolt"></i></a>
+        </i:if>
     </i:block>
     <i:block name="script">
+        <i:if test="showSelectionButton">
             const helper = document.getElementById('___id-addon');
             helper.addEventListener('click', function () {
                 new LookupTableInfo({
@@ -42,6 +46,7 @@
                     }
                 });
             });
+        </i:if>
     </i:block>
     <i:for var="tuple"
            type="Tuple"
