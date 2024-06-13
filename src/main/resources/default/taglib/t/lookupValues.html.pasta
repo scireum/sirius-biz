@@ -14,8 +14,13 @@
 <i:pragma name="description" value="Renders a multiselect dropdown field for LookupValues field"/>
 
 
-<t:multiSelect name="@name" label="@label" help="@help" readonly="@readonly" id="@id"
-               allowCustomEntries="@values.acceptsCustomValues()" class="@class"
+<t:multiSelect name="@name"
+               label="@label"
+               help="@help"
+               readonly="@readonly"
+               id="@id"
+               allowCustomEntries="@values.acceptsCustomValues()"
+               class="@class"
                suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s', table, values.getDisplay(), values.getExtendedDisplay())">
     <i:block name="addon">
         <a class="btn btn-outline-secondary" id="@id-addon"><i class="fa-solid fa-bolt"></i></a>
