@@ -12,12 +12,19 @@
 <i:arg name="allowCustomEntries" type="boolean" default="@value.acceptsCustomValues()"/>
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
 
+
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a dropdown field for a LookupValue field"/>
 
 
-<t:singleSelect name="@name" label="@label" help="@help" optional="@optional" readonly="@readonly" id="@id"
-                allowCustomEntries="@allowCustomEntries" class="@class"
+<t:singleSelect name="@name"
+                label="@label"
+                help="@help"
+                optional="@optional"
+                readonly="@readonly"
+                id="@id"
+                allowCustomEntries="@allowCustomEntries"
+                class="@class"
                 suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s', table, value.getDisplay(), value.getExtendedDisplay())">
     <i:block name="addon">
         <i:if test="showSelectionButton">
@@ -38,7 +45,9 @@
                            tableName: '___table',
                            labelFormat: '___value.getDisplay()',
                            codeCallback: function (code, name) {
-                                autocomplete.val({value: code, text: name});
+                               @if (!readonly) {
+                                   autocomplete.val({value: code, text: name});
+                               }
                            }
                        });
             }
