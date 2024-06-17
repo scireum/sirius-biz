@@ -599,7 +599,12 @@ public class Processes {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             if (process.getState() != ProcessState.STANDBY) {
                 process.setErrorneous(process.isErrorneous() || !TaskContext.get().isActive());
-                process.setState(ProcessState.TERMINATED);
+                //Do not alter the job state if the job was previously cancelled by the user
+                if (process.getState() != ProcessState.CANCELED) {
+                    process.setState(ProcessState.TERMINATED);
+                } else {
+                    process.setState(ProcessState.CANCELED);
+                }
                 process.setCompleted(LocalDateTime.now());
                 process.setComputationTime(process.getComputationTime() + computationTimeInSeconds);
                 process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
