@@ -32,6 +32,8 @@ public class MongoTenantSearchProvider extends TenantSearchProvider<String, Mong
     protected Query<?, MongoTenant, ?> createBaseQuery(String query) {
         return mango.select(MongoTenant.class)
                     .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
-                    .queryString(query, QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
+                    .queryString(query,
+                                 QueryField.startsWith(MongoTenant.SEARCH_PREFIXES),
+                                 QueryField.eq(MongoTenant.ID));
     }
 }
