@@ -603,8 +603,6 @@ public class Processes {
                 if (process.getCanceled()==null) {
                     process.setState(ProcessState.TERMINATED);
                     process.setCompleted(LocalDateTime.now());
-                } else {
-                    process.setState(ProcessState.CANCELED);
                 }
                 process.setComputationTime(process.getComputationTime() + computationTimeInSeconds);
                 process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
