@@ -79,6 +79,8 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     private static final String FILE_SKIPPED_COUNTER = "ExtractArchiveJob.fileSkipped";
     private static final String FILE_EMPTY_COUNTER = "ExtractArchiveJob.fileEmpty";
+    private static final String ARCHIVE_JOB_EMPTY_FILE = "ExtractArchiveJob.emptyFile";
+    private static final String FILENAME = "filename";
 
     /**
      * Creates the job factory so that it can be invoked by the framework.
@@ -137,15 +139,15 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                               .withContext("size", NLS.formatSize(sourceFile.size())));
 
         try (FileHandle archive = sourceFile.download()) {
-            extractor.extractAll(sourceFile.name(),
-                                 archive.getFile(),
-                                 null,
-                                 file -> handleExtractedFile(file,
-                                                             process,
-                                                             overrideMode,
-                                                             targetDirectory,
-                                                             flattenDirs));
-            process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
+            extractor.extractAll(sourceFile.name(), archive.getFile(), null, file -> {
+                if (!process.isActive()) {
+                    return;
+                }
+                handleExtractedFile(file, process, overrideMode, targetDirectory, flattenDirs);
+            });
+            if(processes.fetchProcessForUser(process.getProcessId()).orElse(null).getCanceled() == null){
+                process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
+            }
         } catch (Exception exception) {
             process.log(ProcessLog.error().withMessage(exception.getMessage()));
         }
@@ -167,7 +169,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
         if (extractedFile == null) {
             // if this happens we don't know the file name of this entry, we just log with an empty name
-            process.log(ProcessLog.warn().withNLSKey("ExtractArchiveJob.emptyFile").withContext("filename", ""));
+            process.log(ProcessLog.warn().withNLSKey(ARCHIVE_JOB_EMPTY_FILE).withContext(FILENAME, ""));
             process.addTiming(FILE_EMPTY_COUNTER, watch.elapsedMillis());
             return;
         }
@@ -178,8 +180,8 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
         if (extractedFile.size() == 0) {
             process.log(ProcessLog.warn()
-                                  .withNLSKey("ExtractArchiveJob.emptyFile")
-                                  .withContext("filename", extractedFile.getFilePath()));
+                                  .withNLSKey(ARCHIVE_JOB_EMPTY_FILE)
+                                  .withContext(FILENAME, extractedFile.getFilePath()));
             process.addTiming(FILE_EMPTY_COUNTER, watch.elapsedMillis());
             return;
         }
@@ -188,8 +190,8 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         VirtualFile targetFile = fetchTargetFile(targetDirectory, targetPath);
         if (targetFile == null) {
             process.log(ProcessLog.warn()
-                                  .withNLSKey("ExtractArchiveJob.emptyFile")
-                                  .withContext("filename", extractedFile.getFilePath()));
+                                  .withNLSKey(ARCHIVE_JOB_EMPTY_FILE)
+                                  .withContext(FILENAME, extractedFile.getFilePath()));
             process.addTiming(FILE_SKIPPED_COUNTER, watch.elapsedMillis());
             return;
         }
