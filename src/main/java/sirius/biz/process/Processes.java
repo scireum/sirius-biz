@@ -600,7 +600,7 @@ public class Processes {
             if (process.getState() != ProcessState.STANDBY) {
                 process.setErrorneous(process.isErrorneous() || !TaskContext.get().isActive());
                 //Do not alter the job state if the job was previously cancelled by the user
-                if (process.getState() != ProcessState.CANCELED) {
+                if (process.getCanceled()==null) {
                     process.setState(ProcessState.TERMINATED);
                 } else {
                     process.setState(ProcessState.CANCELED);
