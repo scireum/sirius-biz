@@ -602,10 +602,10 @@ public class Processes {
                 //Do not alter the job state if the job was previously cancelled by the user
                 if (process.getCanceled()==null) {
                     process.setState(ProcessState.TERMINATED);
+                    process.setCompleted(LocalDateTime.now());
                 } else {
                     process.setState(ProcessState.CANCELED);
                 }
-                process.setCompleted(LocalDateTime.now());
                 process.setComputationTime(process.getComputationTime() + computationTimeInSeconds);
                 process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
             }
