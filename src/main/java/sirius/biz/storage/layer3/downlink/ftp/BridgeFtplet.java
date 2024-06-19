@@ -16,6 +16,7 @@ import org.apache.ftpserver.ftplet.Ftplet;
 import org.apache.ftpserver.ftplet.FtpletContext;
 import org.apache.ftpserver.ftplet.FtpletResult;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -91,6 +92,8 @@ class BridgeFtplet implements Ftplet {
         if (StorageUtils.LOG.isFINE()) {
             StorageUtils.LOG.FINE("Layer 3/FTP: AFTER FTP: " + request.getCommand());
         }
+
+        CallContext.detach();
 
         return FtpletResult.DEFAULT;
     }
