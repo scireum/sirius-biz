@@ -260,7 +260,7 @@ public class DeleteFilesJob extends BatchJob {
             }
 
             if (!simulation) {
-                file.delete();
+                filesToDelete.add(file);
             }
             String messageKey = isDirectory ? "DeleteFilesJob.directory.deleted" : "DeleteFilesJob.file.deleted";
             process.log(ProcessLog.info().withNLSKey(messageKey).withContext(PATH_KEY, file.path()));
