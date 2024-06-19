@@ -35,6 +35,8 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -83,6 +85,7 @@ public class DeleteFilesJob extends BatchJob {
     private LocalDateTime lastModifiedBefore;
     private PathMatcher pathMatcher;
     private boolean onlyUnused;
+    private List<VirtualFile> filesToDelete;
 
     @Part
     private static VirtualFileSystem vfs;
@@ -150,7 +153,7 @@ public class DeleteFilesJob extends BatchJob {
     private boolean handleDirectory(VirtualFile directory) {
         Monoflop childSkipped = Monoflop.create();
         boolean isRoot = "/".equals(directory.parent().path());
-
+        filesToDelete = new ArrayList<>();
         if (recursive) {
             // Only enters child directories in recursive mode
             directory.allChildren().excludeFiles().subTreeOnly().maxDepth(1).iterate(subDirectory -> {
