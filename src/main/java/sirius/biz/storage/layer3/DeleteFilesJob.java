@@ -120,6 +120,9 @@ public class DeleteFilesJob extends BatchJob {
         process.getParameter(LAST_MODIFIED_BEFORE_PARAMETER)
                .ifPresent(date -> lastModifiedBefore = date.atStartOfDay());
         handleDirectory(sourcePath);
+        for (VirtualFile file : filesToDelete) {
+            file.delete();
+        }
     }
 
     /**
