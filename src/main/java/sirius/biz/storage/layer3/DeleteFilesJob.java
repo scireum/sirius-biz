@@ -35,6 +35,8 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -161,11 +163,14 @@ public class DeleteFilesJob extends BatchJob {
             });
         }
 
-        directory.allChildren().excludeDirectories().subTreeOnly().maxDepth(1).iterate(file -> {
+        List<VirtualFile> files = new ArrayList<>();
+        // We must collect the files in a list otherwise the iterator will not process all files if they are deleted
+        // during the iteration.
+        directory.allChildren().excludeDirectories().subTreeOnly().maxDepth(1).iterate(files::add);
+        files.stream().takeWhile(ignored -> process.isActive()).forEach(file -> {
             if (!handleFile(file)) {
                 childSkipped.toggle();
             }
-            return process.isActive();
         });
 
         if (!recursive || isRoot) {
