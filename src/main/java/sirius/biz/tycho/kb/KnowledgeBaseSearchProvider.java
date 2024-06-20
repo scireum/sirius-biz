@@ -49,7 +49,9 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
     public void query(String query, int maxResults, Consumer<OpenSearchResult> resultCollector) {
         knowledgeBase.query(UserContext.getCurrentUser().getLanguage(), query, maxResults).forEach(article -> {
             KnowledgeBaseArticle manual = article.queryParent().orElse(null);
-            while (!KnowledgeBase.ROOT_CHAPTER_ID.equals(manual.queryParent().map(KnowledgeBaseArticle::getArticleId).orElse(null))) {
+            while (manual != null && !KnowledgeBase.ROOT_CHAPTER_ID.equals(manual.queryParent()
+                                                                                 .map(KnowledgeBaseArticle::getArticleId)
+                                                                                 .orElse(null))) {
                 manual = manual.queryParent().orElse(null);
             }
             resultCollector.accept(new OpenSearchResult().withLabel(article.getTitle())
@@ -57,7 +59,9 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
                                                                                        <i:arg name="article" type="sirius.biz.tycho.kb.KnowledgeBaseArticle"/>
                                                                                        <i:arg name="manual" type="sirius.biz.tycho.kb.KnowledgeBaseArticle"/>
                                                                                        <div>@article.getDescription()</div>
-                                                                                       <t:tag>@manual.getTitle()</t:tag>
+                                                                                       <i:if test="@manual != null">
+                                                                                           <t:tag>@manual.getTitle()</t:tag>
+                                                                                       </i:if>
                                                                                        """,
                                                                                article,
                                                                                manual)
