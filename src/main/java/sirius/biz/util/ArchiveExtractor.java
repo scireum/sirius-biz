@@ -32,6 +32,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -215,7 +217,11 @@ public class ArchiveExtractor {
                         Processor<ExtractedFile, Boolean> extractedFileConsumer) {
         try {
             if (isZipFile(Files.getFileExtension(filename)) || !isSevenZipEnabled()) {
-                extractZip(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
+                extractZip(archiveFile,
+                           enhanceFileFilter(filter),
+                           extractedFileConsumer,
+                           StandardCharsets.UTF_8,
+                           StandardCharsets.ISO_8859_1);
             } else {
                 extract7z(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             }
@@ -243,10 +249,24 @@ public class ArchiveExtractor {
 
     private void extractZip(File archiveFile,
                             Predicate<String> filter,
-                            Processor<ExtractedFile, Boolean> extractedFileConsumer) throws Exception {
-        try (ZipFile zipFile = new ZipFile(archiveFile)) {
+                            Processor<ExtractedFile, Boolean> extractedFileConsumer,
+                            Charset charset,
+                            Charset fallbackCharset) throws Exception {
+        try (ZipFile zipFile = new ZipFile(archiveFile, charset)) {
             extractZipEntriesFromZipFile(filter, extractedFileConsumer, zipFile);
         } catch (ZipException zipException) {
+            if (fallbackCharset != null) {
+                // Retry extraction using the fallback charset
+                TaskContext.get()
+                           .log("Cannot unzip the given archive: "
+                                + zipException.getMessage()
+                                + ".\nFalling back to charset: "
+                                + fallbackCharset.displayName());
+                Exceptions.ignore(zipException);
+                extractZip(archiveFile, filter, extractedFileConsumer, fallbackCharset, null);
+                return;
+            }
+
             if (!isSevenZipEnabled()) {
                 // This is most probably an error indicating an inconsistent ZIP archive. We therefore directly throw
                 // a handled exception to avoid jamming the syslog...
