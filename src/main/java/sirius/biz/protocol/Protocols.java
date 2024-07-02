@@ -156,7 +156,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             // Therefore, the first element is skipped.
             Throwables.getCausalChain(throwable).stream().skip(1).forEach(cause -> {
                 stringBuilder.append("\n").append("Caused by: ").append(cause.getClass().getName()).append(":").append("\n");
-                stringBuilder.append(truncateErrorMessage(cause.getMessage(), numberOfCharactersPerMessage)).append("\n\n");
+                stringBuilder.append(truncateErrorMessage(determineErrorMessage(cause), numberOfCharactersPerMessage)).append("\n\n");
             });
         } catch (IllegalArgumentException exception) {
             // This happens if the causal chain has a circular reference.
@@ -165,6 +165,16 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
         }
 
         return stringBuilder.toString();
+    }
+
+    private String determineErrorMessage(Throwable throwable) {
+        if (Strings.isFilled(throwable.getMessage())) {
+            return throwable.getMessage();
+        }
+        if (Strings.areEqual(throwable.getClass().getName(), throwable.toString())) {
+            return "";
+        }
+        return throwable.toString();
     }
 
     private String truncateErrorMessage(String errorMessage, int length) {
