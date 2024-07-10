@@ -94,7 +94,10 @@ class ConfigLookupTable extends LookupTable {
     @SuppressWarnings("unchecked")
     @Explain("The data is provided in the configuration as String keys with assigned value objects.")
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
+    protected Stream<LookupTableEntry> performSuggest(Limit limit,
+                                                      String searchTerm,
+                                                      String language,
+                                                      boolean considerDeprecatedValues) {
         Map<String, Object> data = extension.get(CONFIG_KEY_DATA).get(Map.class, Collections.emptyMap());
         return data.keySet()
                    .stream()
@@ -124,13 +127,13 @@ class ConfigLookupTable extends LookupTable {
     @Override
     protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
         // Deprecations or source data not supported yet, so we can re-use the same method..
-        return performSuggest(limit, searchTerm, language);
+        return performSuggest(limit, searchTerm, language, true);
     }
 
     @SuppressWarnings("unchecked")
     @Explain("The data is provided in the configuration as String keys with assigned value objects.")
     @Override
-    public Stream<LookupTableEntry> scan(String language, Limit limit) {
+    public Stream<LookupTableEntry> scan(String language, Limit limit, boolean considerDeprecatedValues) {
         Map<String, Object> data = extension.get(CONFIG_KEY_DATA).get(Map.class, Collections.emptyMap());
         return data.keySet()
                    .stream()
