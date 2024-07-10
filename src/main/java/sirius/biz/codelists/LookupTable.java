@@ -763,18 +763,6 @@ public abstract class LookupTable {
     }
 
     /**
-     * Suggests several entries for the given search term using the currently active language.
-     *
-     * @param searchTerm               the term used to filter the suggestions
-     * @param considerDeprecatedValues whether deprecated values should be suggested as well
-     * @return a stream of suggestions for the given term. Note that most probably {@link Stream#limit(long)} should
-     * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
-     */
-    public Stream<LookupTableEntry> suggest(@Nullable String searchTerm, boolean considerDeprecatedValues) {
-        return suggest(searchTerm, NLS.getCurrentLanguage(), considerDeprecatedValues);
-    }
-
-    /**
      * Suggests several entries for the given search term aside from deprecated entries using the given language.
      *
      * @param searchTerm the term used to filter the suggestions
@@ -829,17 +817,6 @@ public abstract class LookupTable {
      */
     public Stream<LookupTableEntry> scan(Limit limit) {
         return scan(NLS.getCurrentLanguage(), limit, true);
-    }
-
-    /**
-     * Enumerates all entries in the table using the current language.
-     *
-     * @param limit                    the limit to apply to fetch a sane number of entries
-     * @param considerDeprecatedValues whether deprecated values should be included in the scan
-     * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
-     */
-    public Stream<LookupTableEntry> scan(Limit limit, boolean considerDeprecatedValues) {
-        return scan(NLS.getCurrentLanguage(), limit, considerDeprecatedValues);
     }
 
     /**
