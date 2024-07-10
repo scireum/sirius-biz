@@ -48,7 +48,7 @@
             selector: '#@id',
             noMatchesText: '@i18n("template.html.selects.noMatches")',
             placeholderText: '@i18n("template.html.selects.selection")',
-            suggestionsUri: '/system/lookuptable/autocomplete/@value.getTableName()/@value.getDisplay()/@value.getExtendedDisplay()/@suggestDeprecatedValues',
+            suggestionsUri: '/system/lookuptable/autocomplete/@value.getTableName()/@value.getDisplay()/@value.getExtendedDisplay()?considerDeprecatedValues=@suggestDeprecatedValues',
         });
     });
 </script>

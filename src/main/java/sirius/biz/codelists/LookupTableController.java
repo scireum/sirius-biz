@@ -51,26 +51,8 @@ public class LookupTableController extends BizController {
                                        String tableName,
                                        String display,
                                        String extendedDisplay) {
-        suggestFromLookupTable(webContext, tableName, display, extendedDisplay, false);
-    }
+        boolean considerDeprecatedValues = webContext.get("considerDeprecatedValues").asBoolean();
 
-    /**
-     * Responds with possible suggestions from the given {@link LookupTable} using {@link AutocompleteHelper}.
-     *
-     * @param webContext               the web requests calling the autocomplete service
-     * @param tableName                the name of the table for which suggestions should be gathered
-     * @param display                  the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for
-     *                                 the field label
-     * @param extendedDisplay          the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for
-     *                                 the completion label
-     * @param considerDeprecatedValues whether deprecated values should be suggested
-     */
-    @Routed("/system/lookuptable/autocomplete/:1/:2/:3/:4")
-    public void suggestFromLookupTable(WebContext webContext,
-                                       String tableName,
-                                       String display,
-                                       String extendedDisplay,
-                                       boolean considerDeprecatedValues) {
         LookupTable lookupTable = lookupTables.fetchTable(tableName);
         LookupValue.Display fieldDisplayMode =
                 Value.of(display).getEnum(LookupValue.Display.class).orElse(LookupValue.Display.NAME);

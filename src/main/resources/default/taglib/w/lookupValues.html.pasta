@@ -49,7 +49,7 @@
             allowCustomEntries: @values.acceptsCustomValues(),
             noMatchesText: '@i18n("template.html.selects.noMatches")',
             placeholderText: '@i18n("template.html.selects.selection")',
-            suggestionsUri: '/system/lookuptable/autocomplete/@values.getTableName()/@values.getDisplay()/@values.getExtendedDisplay()/@suggestDeprecatedValues'
+            suggestionsUri: '/system/lookuptable/autocomplete/@values.getTableName()/@values.getDisplay()/@values.getExtendedDisplay()?considerDeprecatedValues=@suggestDeprecatedValues'
         });
     });
 </script>

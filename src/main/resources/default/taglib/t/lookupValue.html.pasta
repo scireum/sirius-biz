@@ -25,7 +25,7 @@
                 id="@id"
                 allowCustomEntries="@allowCustomEntries"
                 class="@class"
-                suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s/%s', table, value.getDisplay(), value.getExtendedDisplay(), suggestDeprecatedValues)">
+                suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s?considerDeprecatedValues=%s', table, value.getDisplay(), value.getExtendedDisplay(), suggestDeprecatedValues)">
     <i:block name="addon">
         <i:if test="showSelectionButton">
             <a class="btn btn-outline-secondary" id="@id-addon" tabindex="0"><i class="fa-solid fa-bolt"></i></a>
