@@ -98,11 +98,11 @@ class CodeListLookupTable extends LookupTable {
     }
 
     private String performReverseLookupScan(String name) {
-        return scan(NLS.getCurrentLanguage(), Limit.UNLIMITED).filter(pair -> Strings.equalIgnoreCase(name,
-                                                                                                      pair.getName()))
-                                                              .findFirst()
-                                                              .map(LookupTableEntry::getCode)
-                                                              .orElse(null);
+        return scan(NLS.getCurrentLanguage(), Limit.UNLIMITED, true).filter(pair -> Strings.equalIgnoreCase(name,
+                                                                                                            pair.getName()))
+                                                                    .findFirst()
+                                                                    .map(LookupTableEntry::getCode)
+                                                                    .orElse(null);
     }
 
     @Override
@@ -111,7 +111,10 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
+    protected Stream<LookupTableEntry> performSuggest(Limit limit,
+                                                      String searchTerm,
+                                                      String language,
+                                                      boolean considerDeprecatedValues) {
         return codeLists.getEntries(codeList)
                         .stream()
                         .filter(entry -> filter(entry, searchTerm, language))
@@ -124,7 +127,7 @@ class CodeListLookupTable extends LookupTable {
     protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
         // As plain code lists don't support deprecations or source data, we can re-use the same
         // method..
-        return performSuggest(limit, searchTerm, language);
+        return performSuggest(limit, searchTerm, language, true);
     }
 
     private LookupTableEntry extractEntryData(CodeListEntry<?, ?> entry, String language) {
@@ -144,7 +147,7 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    public Stream<LookupTableEntry> scan(String language, Limit limit) {
+    public Stream<LookupTableEntry> scan(String language, Limit limit, boolean considerDeprecatedValues) {
         return codeLists.getEntries(codeList)
                         .stream()
                         .skip(limit.getItemsToSkip())
