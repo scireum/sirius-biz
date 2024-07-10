@@ -125,8 +125,7 @@ class CodeListLookupTable extends LookupTable {
 
     @Override
     protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
-        // As plain code lists don't support deprecations or source data, we can re-use the same
-        // method..
+        // Plain code lists do not support deprecations or source data. Therefore, the suggest method can be reused.
         return performSuggest(limit, searchTerm, language, true);
     }
 

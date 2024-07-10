@@ -126,7 +126,7 @@ class ConfigLookupTable extends LookupTable {
 
     @Override
     protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
-        // Deprecations or source data not supported yet, so we can re-use the same method..
+        // Configs do not support deprecations or source data. Therefore, the suggest method can be reused.
         return performSuggest(limit, searchTerm, language, true);
     }
 
