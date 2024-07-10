@@ -277,6 +277,7 @@ class IDBLookupTable extends LookupTable {
                                                       String language,
                                                       boolean considerDeprecatedValues) {
         try {
+            // Caveat: IDBTable$QueryBuilder#manyRows can only be used when no filtering is applied afterwards.
             if (considerDeprecatedValues) {
                 return table.query()
                             .searchInAllFields()
@@ -315,6 +316,7 @@ class IDBLookupTable extends LookupTable {
     @Override
     public Stream<LookupTableEntry> scan(String language, Limit limit, boolean considerDeprecatedValues) {
         try {
+            // Caveat: IDBTable$QueryBuilder#manyRows can only be used when no filtering is applied afterwards.
             if (considerDeprecatedValues) {
                 return table.query()
                             .translate(language)
