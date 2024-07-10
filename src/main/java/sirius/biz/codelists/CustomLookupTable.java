@@ -89,10 +89,16 @@ class CustomLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
+    protected Stream<LookupTableEntry> performSuggest(Limit limit,
+                                                      String searchTerm,
+                                                      String language,
+                                                      boolean considerDeprecatedValues) {
         Set<String> codes = new HashSet<>();
-        return Stream.concat(customTable.performSuggest(Limit.UNLIMITED, searchTerm, language),
-                             baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language))
+        return Stream.concat(customTable.performSuggest(Limit.UNLIMITED,
+                                                        searchTerm,
+                                                        language,
+                                                        considerDeprecatedValues),
+                             baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language, considerDeprecatedValues))
                      .filter(entry -> codes.add(entry.getCode()))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
@@ -109,9 +115,10 @@ class CustomLookupTable extends LookupTable {
     }
 
     @Override
-    public Stream<LookupTableEntry> scan(String language, Limit limit) {
+    public Stream<LookupTableEntry> scan(String language, Limit limit, boolean considerDeprecatedValues) {
         Set<String> codes = new HashSet<>();
-        return Stream.concat(customTable.scan(language, Limit.UNLIMITED), baseTable.scan(language, Limit.UNLIMITED))
+        return Stream.concat(customTable.scan(language, Limit.UNLIMITED, considerDeprecatedValues),
+                             baseTable.scan(language, Limit.UNLIMITED, considerDeprecatedValues))
                      .filter(entry -> codes.add(entry.getCode()))
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
