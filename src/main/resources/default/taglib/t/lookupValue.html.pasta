@@ -11,7 +11,7 @@
 <i:arg name="id" type="String" default="@generateId('singleselect-%s')"/>
 <i:arg name="allowCustomEntries" type="boolean" default="@value.acceptsCustomValues()"/>
 <i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
-
+<i:arg name="suggestDeprecatedValues" type="boolean" default="false"/>
 
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a dropdown field for a LookupValue field"/>
@@ -25,7 +25,7 @@
                 id="@id"
                 allowCustomEntries="@allowCustomEntries"
                 class="@class"
-                suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s', table, value.getDisplay(), value.getExtendedDisplay())">
+                suggestionUri="@apply('/system/lookuptable/autocomplete/%s/%s/%s?considerDeprecatedValues=%s', table, value.getDisplay(), value.getExtendedDisplay(), suggestDeprecatedValues)">
     <i:block name="addon">
         <i:if test="showSelectionButton">
             <a class="btn btn-outline-secondary" id="@id-addon" tabindex="0"><i class="fa-solid fa-bolt"></i></a>

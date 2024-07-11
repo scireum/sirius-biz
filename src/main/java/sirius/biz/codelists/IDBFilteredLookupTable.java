@@ -108,16 +108,19 @@ class IDBFilteredLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
-        return baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language)
+    protected Stream<LookupTableEntry> performSuggest(Limit limit,
+                                                      String searchTerm,
+                                                      String language,
+                                                      boolean considerDeprecatedValues) {
+        return baseTable.performSuggest(Limit.UNLIMITED, searchTerm, language, considerDeprecatedValues)
                         .filter(pair -> performContains(pair.getCode()))
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
-    public Stream<LookupTableEntry> scan(String language, Limit limit) {
-        return baseTable.scan(language, Limit.UNLIMITED)
+    public Stream<LookupTableEntry> scan(String language, Limit limit, boolean considerDeprecatedValues) {
+        return baseTable.scan(language, Limit.UNLIMITED, considerDeprecatedValues)
                         .filter(pair -> performContains(pair.getCode()))
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
