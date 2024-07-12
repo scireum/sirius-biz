@@ -39,6 +39,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -245,11 +246,15 @@ public class L3Uplink implements VFSRoot {
             List<VirtualFile> children = new ArrayList<>();
 
             BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper = directory.queryChildBlobsAsPage(webContext);
-            blobPageHelper.withTotalCount();
-            if (!blobPageHelper.hasFacetFilters()) {
+
+            if (blobPageHelper.hasFacetFilters()) {
+                blobPageHelper.withTotalCount();
+            } else {
                 // We only query for directories if there are no filters (facets) are active,
                 // as we know that we cannot satisfy them anyway...
                 queryChildDirectories(parent, directory, result, limit, children);
+                // We need to calculate total count manually as the page's base query does not include directories.
+                result.withTotalItems(determineTotalChildElements(directory, result, blobPageHelper));
             }
 
             queryChildBlobs(parent, result, limit, children, blobPageHelper);
@@ -263,6 +268,21 @@ public class L3Uplink implements VFSRoot {
             result.withItems(children);
 
             return result;
+        }
+
+        private int determineTotalChildElements(Directory directory,
+                                                Page<VirtualFile> result,
+                                                BasePageHelper<? extends Blob, ?, ?, ?> blobPageHelper) {
+            AtomicInteger counter = new AtomicInteger();
+
+            directory.listChildDirectories(result.getQuery(), Integer.MAX_VALUE, _ -> {
+                counter.incrementAndGet();
+                return true;
+            });
+
+            counter.addAndGet((int) blobPageHelper.getBaseQuery().count());
+
+            return counter.get();
         }
 
         private void queryChildDirectories(VirtualFile parent,
