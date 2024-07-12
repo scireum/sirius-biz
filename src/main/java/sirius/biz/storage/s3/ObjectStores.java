@@ -44,7 +44,6 @@ public class ObjectStores {
     /*
      * Extended socket timeout when talkting to our S3 store
      */
-    private static final int LONG_SOCKET_TIMEOUT = 60 * 1000 * 5;
     private static final String STORES_EXTENSION_POINT = "s3.stores";
     private static final String KEY_BUCKET_SUFFIX = "bucketSuffix";
     private static final String KEY_ACCESS_KEY = "accessKey";
@@ -52,6 +51,7 @@ public class ObjectStores {
     private static final String KEY_SIGNER = "signer";
     private static final String KEY_PATH_STYLE_ACCESS = "pathStyleAccess";
     private static final String KEY_END_POINT = "endPoint";
+    private static final String KEY_SOCKET_TIMEOUT = "socketTimeout";
 
     /**
      * Contains the logger used for all concerns related to object stores
@@ -143,7 +143,8 @@ public class ObjectStores {
     }
 
     protected AmazonS3 createClient(String name, Settings extension) {
-        ClientConfiguration config = new ClientConfiguration().withSocketTimeout(LONG_SOCKET_TIMEOUT);
+        ClientConfiguration config =
+                new ClientConfiguration().withSocketTimeout((int) extension.getDuration(KEY_SOCKET_TIMEOUT).toMillis());
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
             config.withSignerOverride(extension.get(KEY_SIGNER).asString());
         }
