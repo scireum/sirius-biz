@@ -42,9 +42,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Register(classes = ObjectStores.class)
 public class ObjectStores {
 
-    /*
-     * Extended socket timeout when talkting to our S3 store
-     */
     private static final String STORES_EXTENSION_POINT = "s3.stores";
     private static final String KEY_BUCKET_SUFFIX = "bucketSuffix";
     private static final String KEY_ACCESS_KEY = "accessKey";
