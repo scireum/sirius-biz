@@ -82,7 +82,7 @@ public class ObjectStores {
     protected Counter tunnelledBytes = new Counter();
 
     /**
-     * Provides acccess to the default or <tt>system</tt> store.
+     * Provides access to the default or <tt>system</tt> store.
      *
      * @return the object store which uses the configuration of <tt>system</tt>
      */
