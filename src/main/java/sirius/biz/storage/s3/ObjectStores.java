@@ -52,6 +52,7 @@ public class ObjectStores {
     private static final String KEY_PATH_STYLE_ACCESS = "pathStyleAccess";
     private static final String KEY_END_POINT = "endPoint";
     private static final String KEY_SOCKET_TIMEOUT = "socketTimeout";
+    private static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
 
     /**
      * Contains the logger used for all concerns related to object stores
@@ -144,7 +145,9 @@ public class ObjectStores {
 
     protected AmazonS3 createClient(String name, Settings extension) {
         ClientConfiguration config =
-                new ClientConfiguration().withSocketTimeout((int) extension.getDuration(KEY_SOCKET_TIMEOUT).toMillis());
+                new ClientConfiguration().withSocketTimeout((int) extension.getDuration(KEY_SOCKET_TIMEOUT).toMillis())
+                                         .withConnectionTimeout((int) extension.getDuration(KEY_CONNECTION_TIMEOUT)
+                                                                               .toMillis());
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
             config.withSignerOverride(extension.get(KEY_SIGNER).asString());
         }
