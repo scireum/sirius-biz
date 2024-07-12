@@ -31,6 +31,7 @@ import sirius.kernel.settings.Settings;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -54,6 +55,7 @@ public class ObjectStores {
     private static final String KEY_SOCKET_TIMEOUT = "socketTimeout";
     private static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
     private static final String KEY_MAX_CONNECTIONS = "maxConnections";
+    private static final String KEY_CONNECTION_TTL = "connectionTTL";
 
     /**
      * Contains the logger used for all concerns related to object stores
@@ -150,6 +152,11 @@ public class ObjectStores {
                                          .withConnectionTimeout((int) extension.getDuration(KEY_CONNECTION_TIMEOUT)
                                                                                .toMillis())
                                          .withMaxConnections(extension.getInt(KEY_MAX_CONNECTIONS));
+        Duration connectionTTL = extension.getDuration(KEY_CONNECTION_TTL);
+        if (connectionTTL.isPositive()) {
+            config.setConnectionTTL((int) connectionTTL.toMillis());
+        }
+
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
             config.withSignerOverride(extension.get(KEY_SIGNER).asString());
         }
