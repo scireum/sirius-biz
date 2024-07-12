@@ -31,6 +31,7 @@ import sirius.kernel.settings.Settings;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -41,10 +42,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Register(classes = ObjectStores.class)
 public class ObjectStores {
 
-    /*
-     * Extended socket timeout when talkting to our S3 store
-     */
-    private static final int LONG_SOCKET_TIMEOUT = 60 * 1000 * 5;
     private static final String STORES_EXTENSION_POINT = "s3.stores";
     private static final String KEY_BUCKET_SUFFIX = "bucketSuffix";
     private static final String KEY_ACCESS_KEY = "accessKey";
@@ -52,6 +49,10 @@ public class ObjectStores {
     private static final String KEY_SIGNER = "signer";
     private static final String KEY_PATH_STYLE_ACCESS = "pathStyleAccess";
     private static final String KEY_END_POINT = "endPoint";
+    private static final String KEY_SOCKET_TIMEOUT = "socketTimeout";
+    private static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
+    private static final String KEY_MAX_CONNECTIONS = "maxConnections";
+    private static final String KEY_CONNECTION_TTL = "connectionTTL";
 
     /**
      * Contains the logger used for all concerns related to object stores
@@ -81,7 +82,7 @@ public class ObjectStores {
     protected Counter tunnelledBytes = new Counter();
 
     /**
-     * Provides acccess to the default or <tt>system</tt> store.
+     * Provides access to the default or <tt>system</tt> store.
      *
      * @return the object store which uses the configuration of <tt>system</tt>
      */
@@ -143,7 +144,16 @@ public class ObjectStores {
     }
 
     protected AmazonS3 createClient(String name, Settings extension) {
-        ClientConfiguration config = new ClientConfiguration().withSocketTimeout(LONG_SOCKET_TIMEOUT);
+        ClientConfiguration config =
+                new ClientConfiguration().withSocketTimeout((int) extension.getDuration(KEY_SOCKET_TIMEOUT).toMillis())
+                                         .withConnectionTimeout((int) extension.getDuration(KEY_CONNECTION_TIMEOUT)
+                                                                               .toMillis())
+                                         .withMaxConnections(extension.getInt(KEY_MAX_CONNECTIONS));
+        Duration connectionTTL = extension.getDuration(KEY_CONNECTION_TTL);
+        if (connectionTTL.isPositive()) {
+            config.setConnectionTTL(connectionTTL.toMillis());
+        }
+
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
             config.withSignerOverride(extension.get(KEY_SIGNER).asString());
         }
