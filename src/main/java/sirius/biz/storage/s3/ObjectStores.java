@@ -53,6 +53,7 @@ public class ObjectStores {
     private static final String KEY_END_POINT = "endPoint";
     private static final String KEY_SOCKET_TIMEOUT = "socketTimeout";
     private static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
+    private static final String KEY_MAX_CONNECTIONS = "maxConnections";
 
     /**
      * Contains the logger used for all concerns related to object stores
@@ -147,7 +148,8 @@ public class ObjectStores {
         ClientConfiguration config =
                 new ClientConfiguration().withSocketTimeout((int) extension.getDuration(KEY_SOCKET_TIMEOUT).toMillis())
                                          .withConnectionTimeout((int) extension.getDuration(KEY_CONNECTION_TIMEOUT)
-                                                                               .toMillis());
+                                                                               .toMillis())
+                                         .withMaxConnections(extension.getInt(KEY_MAX_CONNECTIONS));
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
             config.withSignerOverride(extension.get(KEY_SIGNER).asString());
         }
