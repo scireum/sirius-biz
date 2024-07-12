@@ -154,7 +154,7 @@ public class ObjectStores {
                                          .withMaxConnections(extension.getInt(KEY_MAX_CONNECTIONS));
         Duration connectionTTL = extension.getDuration(KEY_CONNECTION_TTL);
         if (connectionTTL.isPositive()) {
-            config.setConnectionTTL((int) connectionTTL.toMillis());
+            config.setConnectionTTL(connectionTTL.toMillis());
         }
 
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
