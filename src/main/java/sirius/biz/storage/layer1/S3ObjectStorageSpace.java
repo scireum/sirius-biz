@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer1;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
@@ -280,8 +281,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     private S3Object getS3Object(String objectKey) throws IOException {
         try {
             return store.getClient().getObject(bucketName().getName(), objectKey);
-        } catch (AmazonS3Exception exception) {
-            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+        } catch (AmazonClientException exception) {
+            if (exception instanceof AmazonS3Exception s3Exception
+                && s3Exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(Strings.apply("Layer 1: No object found for key '%s' in bucket '%s'",
                                                               objectKey,
                                                               bucketName()));
