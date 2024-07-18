@@ -119,7 +119,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @return the id of the newly created process
      */
     protected String startWithContext(Map<String, String> context) {
-        String processId = processes.createProcess(getClass().getSimpleName() + ".label",
+        String processId = processes.createProcess(getName(),
                                                    createProcessTitle(context),
                                                    getIcon(),
                                                    getCurrentOrRootUser(),
