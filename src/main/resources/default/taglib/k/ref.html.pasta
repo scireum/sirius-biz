@@ -1,4 +1,5 @@
 <i:arg name="code" type="String"/>
+<i:arg name="anchor" type="String" default=""/>
 <i:arg name="label"
        type="String"
        default="@renderToString('body')"
@@ -16,10 +17,11 @@
     <i:local name="effectiveIcon"
              value="isFilled(icon) ? icon : (referencedArticle.isChapter() ? 'fa-solid fa-book' : 'fa-solid fa-file-alt')"/>
     <i:local name="effectiveLabel" value="isFilled(label) ? label : referencedArticle.getTitle()"/>
+    <i:local name="effectiveAnchor" value="(isFilled(anchor) && !anchor.startsWith('#')) ? ('#' + anchor) : anchor"/>
 
     <a class="@class text-decoration-none"
        target="_blank"
-       href="/kba/@referencedArticle.getLanguage()/@code"
+       href="/kba/@referencedArticle.getLanguage()/@code@effectiveAnchor"
        data-bs-toggle="tooltip"
        data-bs-placement="top"
        title="@referencedArticle.getDescription()">
