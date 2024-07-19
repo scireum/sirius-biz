@@ -24,10 +24,10 @@
        data-bs-placement="top"
        title="@referencedArticle.getDescription()">
         <i class="@effectiveIcon"></i>
-        <span class="text-decoration-underline"><i:raw>@effectiveLabel</i:raw></span>
-    </a>
+        <span class="text-decoration-underline"><i:raw>@effectiveLabel</i:raw></span><!--@ (suppress whitespace)
+ --></a><!--@ (suppress whitespace)
 
-    <i:else>
+ --><i:else>
         <i:local name="effectiveLabel" value="isFilled(label) ? label : i18n('KnowledgeBase.missingArticleLabel')"/>
 
         <span class="text-danger"
@@ -35,7 +35,7 @@
               data-bs-placement="top"
               title="@i18n('KnowledgeBase.missingPermission')">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <i>@effectiveLabel</i>
-        </span>
-    </i:else>
+            <i>@effectiveLabel</i><!--@ (suppress whitespace)
+     --></span><!--@ (suppress whitespace)
+ --></i:else>
 </i:if>

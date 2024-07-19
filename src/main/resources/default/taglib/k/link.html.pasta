@@ -27,6 +27,6 @@
 <a @if (isFilled(id)) { id="@id" } href="@link" class="text-decoration-none" target="@target">
     <i:if test="isFilled(icon)"><i class="@icon"></i></i:if>
     <i:if test="isFilled(effectiveLabel)">
-        <span class="text-decoration-underline"><i:raw>@effectiveLabel</i:raw></span>
-    </i:if>
+        <span class="text-decoration-underline"><i:raw>@effectiveLabel</i:raw></span><!--@ (suppress whitespace)
+    --></i:if>
 </a>
