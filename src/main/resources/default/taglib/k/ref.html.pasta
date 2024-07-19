@@ -25,7 +25,16 @@
         </i:if>
         <span class="text-decoration-underline"><i:raw>@effectiveLabel</i:raw></span>
     </a>
+
     <i:else>
-        <i>Missing KnowledgeBase article.</i>
+        <i:local name="effectiveLabel" value="isFilled(label) ? label : i18n('KnowledgeBase.missingArticleLabel')"/>
+
+        <span class="text-danger"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="@i18n('KnowledgeBase.missingPermission')">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <i>@effectiveLabel</i>
+        </span>
     </i:else>
 </i:if>
