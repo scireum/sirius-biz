@@ -8,7 +8,7 @@
 <i:arg name="label"
        type="String"
        default="@renderToString('body')"
-       description="Defines a speaking label or description."/>
+       description="Defines a speaking label or description, defaults to the rendered child content of the element."/>
 <i:arg name="icon"
        type="String"
        default="fa-solid fa-external-link-alt"
@@ -19,7 +19,7 @@
        description="Defines the target where to display the linked url or link."/>
 
 <i:pragma name="description">
-    Renders a link uniformly with a speaking name or description.
+    Renders a link uniformly with a speaking label or description.
 </i:pragma>
 
 <i:local name="effectiveLabel" value="isFilled(label) ? label : name"/>

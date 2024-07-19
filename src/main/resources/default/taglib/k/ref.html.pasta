@@ -3,7 +3,7 @@
 <i:arg name="icon" type="String" default="" description="Defines the icon left to the label."/>
 <i:arg name="class" type="String" default=""/>
 
-<i:pragma name="description">Provides a link which points to the given knowledge base article.</i:pragma>
+<i:pragma name="description">Renders a link which points to the given knowledge base article.</i:pragma>
 
 <i:local name="currentArticle" value="@helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
 <i:local name="referencedArticle"
