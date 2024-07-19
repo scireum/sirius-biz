@@ -1,6 +1,6 @@
 <i:arg name="id" type="String" default="" description="Defines the id."/>
 <i:arg name="link" type="String" description="Defines a url or link."/>
-<i:arg name="name" type="String" default="" description="Defines a speaking name or description." deprecated="Use the `label` attribute instead, or nest the label as body."/>
+<i:arg name="name" type="String" default="@i18n('KnowledgeBase.defaultLinkLabel')" description="Defines a speaking name or description." deprecated="Use the `label` attribute instead, or nest the label as body."/>
 <i:arg name="label" type="String" default="@renderToString('body')" description="Defines a speaking label or description."/>
 <i:arg name="icon" type="String" default="fa-solid fa-external-link-alt" description="Defines the icon left to the label."/>
 <i:arg name="target" type="String" default="_self" description="Defines the target where to display the linked url or link."/>
