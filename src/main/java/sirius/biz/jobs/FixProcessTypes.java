@@ -18,6 +18,7 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
@@ -77,13 +78,26 @@ public class FixProcessTypes extends SimpleBatchProcessJobFactory {
                                       .withMessage(Strings.apply("No NLS key found for type %s (%s)", type, nlsKey)));
             }
 
-            elastic.select(Process.class).eq(Process.PROCESS_TYPE, nlsKey).iterateAll(executedProcess -> {
-                if (!simulation) {
-                    executedProcess.setProcessType(type);
-                    elastic.update(executedProcess);
-                }
-                counter.getAndIncrement();
-            });
+            elastic.select(Process.class)
+                   .eq(Process.PROCESS_TYPE, nlsKey)
+                   .streamBlockwise()
+                   .forEach(executedProcess -> {
+                       Watch watch = Watch.start();
+                       if (!simulation) {
+                           try {
+                               executedProcess.setProcessType(type);
+                               elastic.update(executedProcess);
+                           } catch (Exception e) {
+                               process.log(ProcessLog.error()
+                                                     .withMessage(Strings.apply(
+                                                             "Failed to update processType on Process with id %s: %s",
+                                                             executedProcess.getId(),
+                                                             e.getMessage())));
+                           }
+                       }
+                       process.addTiming("processes", watch.elapsedMillis());
+                       counter.getAndIncrement();
+                   });
 
             if (counter.get() > 0) {
                 if (simulation) {
