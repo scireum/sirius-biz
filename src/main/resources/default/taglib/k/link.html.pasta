@@ -1,8 +1,8 @@
-<i:arg type="String" name="id" default="" description="Defines the id."/>
-<i:arg type="String" name="link" description="Defines a url or link."/>
-<i:arg type="String" name="name" default="" description="Defines a speaking name or description."/>
-<i:arg type="String" name="icon" default="fa-solid fa-external-link-alt" description="Defines the icon left to the link name."/>
-<i:arg type="String" name="target" default="_self" description="Defines the target where to display the linked url or link."/>
+<i:arg name="id" type="String" default="" description="Defines the id."/>
+<i:arg name="link" type="String" description="Defines a url or link."/>
+<i:arg name="name" type="String" default="" description="Defines a speaking name or description."/>
+<i:arg name="icon" type="String" default="fa-solid fa-external-link-alt" description="Defines the icon left to the link name."/>
+<i:arg name="target" type="String" default="_self" description="Defines the target where to display the linked url or link."/>
 
 <i:pragma name="description">
     Renders a link uniformly with a speaking name or description.

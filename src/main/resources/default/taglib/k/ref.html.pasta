@@ -1,5 +1,5 @@
-<i:arg type="String" name="code"/>
-<i:arg type="String" name="class" default=""/>
+<i:arg name="code" type="String"/>
+<i:arg name="class" type="String" default=""/>
 
 <i:pragma name="description">Provides a link which points to the given knowledge base article.</i:pragma>
 
