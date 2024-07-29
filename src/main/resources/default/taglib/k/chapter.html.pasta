@@ -38,8 +38,7 @@
                 <div class="pb-2">
                     <div>
                         <k:link link="@apply('/kba/%s/%s', chapter.getLanguage(), chapter.getArticleId())"
-                                icon="fa-solid fa-book"
-                                name="@chapter.getTitle()"/>
+                                icon="fa-solid fa-book">@chapter.getTitle()</k:link>
                     </div>
                     <div class="text-muted">
                         @chapter.getDescription()
@@ -56,8 +55,7 @@
                 <div class="pb-2">
                     <div>
                         <k:link link="@apply('/kba/%s/%s', child.getLanguage(), child.getArticleId())"
-                                icon="fa-solid fa-file-alt"
-                                name="@child.getTitle()"/>
+                                icon="fa-solid fa-file-alt">@child.getTitle()</k:link>
                     </div>
                     <div class="text-muted">
                         @child.getDescription()
