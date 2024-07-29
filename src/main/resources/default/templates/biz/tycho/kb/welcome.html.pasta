@@ -15,7 +15,7 @@
     <i:if test="isFrameworkEnabled('tycho.open-search')">
         <t:permission permission="permission-open-search">
             Also note that you can use the
-            <k:link link="/open-search" icon="fa-solid fa-search" name="System-wide Search"/>
+            <k:link link="/open-search" icon="fa-solid fa-search">System-wide Search</k:link>
             to find articles for a given keyword.
         </t:permission>
     </i:if>

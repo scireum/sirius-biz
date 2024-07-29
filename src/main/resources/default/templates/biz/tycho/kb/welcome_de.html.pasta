@@ -15,7 +15,7 @@
     <i:if test="isFrameworkEnabled('tycho.open-search')">
         <t:permission permission="permission-open-search">
             Bitte beachten Sie, dass Sie auch die
-            <k:link link="/open-search" icon="fa-solid fa-search" name="Systemweite Suche"/>
+            <k:link link="/open-search" icon="fa-solid fa-search">Systemweite Suche</k:link>
             verwenden können, um entsprechende Hilfeseiten zu finden.
         </t:permission>
     </i:if>

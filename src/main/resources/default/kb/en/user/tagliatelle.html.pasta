@@ -48,6 +48,6 @@
     </k:section>
     <k:section heading="Available tags and macros" anchor="available-tags-and-macros">
         A list of all available tags and macros can be found here:
-        <k:link link="/system/tags" name="Tagliatelle Tag Overview" target="_blank"/>.
+        <k:link link="/system/tags" target="_blank">Tagliatelle Tag Overview</k:link>
     </k:section>
 </k:article>
