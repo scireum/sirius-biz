@@ -405,6 +405,20 @@ public class URLBuilder {
     }
 
     /**
+     * Builds the URL for {@linkplain sirius.web.templates.pdf.TagliatellePDFContentHandler embedding the blob into a
+     * PDF}. This is done via a special {@link sirius.biz.web.BlobPdfReplaceHandler blob://} URI.
+     *
+     * @return a <tt>blob://</tt> URI
+     */
+    public String buildUrlForEmbeddingInPdf() {
+        StringBuilder builder = new StringBuilder("blob://").append(space.getName()).append('/').append(blobKey);
+        if (Strings.isFilled(variant)) {
+            builder.append('/').append(variant);
+        }
+        return builder.toString();
+    }
+
+    /**
      * Determines if a conversion for the given variant is expected.
      *
      * @return <tt>true</tt> if a variant is selected, for which no physical key is present. <tt>false</tt> if there
