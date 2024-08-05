@@ -407,10 +407,17 @@ public class URLBuilder {
     /**
      * Builds the URL for {@linkplain sirius.web.templates.pdf.TagliatellePDFContentHandler embedding the blob into a
      * PDF}. This is done via a special {@link sirius.biz.web.BlobPdfReplaceHandler blob://} URI.
+     * <p>
+     * If the image is not available, a {@linkplain #IMAGE_FALLBACK_URI fallback} URI using the
+     * {@link sirius.web.templates.pdf.handlers.ResourcePdfReplaceHandler resource://} scheme is returned.
      *
-     * @return a <tt>blob://</tt> URI
+     * @return a <tt>blob://</tt> URI, or a <tt>resource://</tt> URI pointing to a fallback image in case of errors
      */
     public String buildUrlForEmbeddingInPdf() {
+        if (space == null || Strings.isEmpty(blobKey)) {
+            return "resource:/" + IMAGE_FALLBACK_URI;
+        }
+
         StringBuilder builder = new StringBuilder("blob://").append(space.getName()).append('/').append(blobKey);
         if (Strings.isFilled(variant)) {
             builder.append('/').append(variant);
