@@ -413,7 +413,7 @@ public class URLBuilder {
      *
      * @return a <tt>blob://</tt> URI, or a <tt>resource://</tt> URI pointing to a fallback image in case of errors
      */
-    public String buildUrlForEmbeddingInPdf() {
+    public String buildUrlForEmbeddingIntoPdf() {
         if (space == null || Strings.isEmpty(blobKey)) {
             return "resource:/" + IMAGE_FALLBACK_URI;
         }
