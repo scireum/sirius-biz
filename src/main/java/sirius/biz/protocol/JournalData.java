@@ -85,7 +85,10 @@ public class JournalData extends Composite {
      * @return a stream of all journaled properties
      */
     public Stream<Property> fetchJournaledProperties() {
-        return owner.getDescriptor().getProperties().stream().filter(p -> p.getAnnotation(NoJournal.class).isEmpty());
+        return owner.getDescriptor()
+                    .getProperties()
+                    .stream()
+                    .filter(property -> property.getAnnotation(NoJournal.class).isEmpty());
     }
 
     /**
@@ -94,7 +97,7 @@ public class JournalData extends Composite {
      * @return a stream of all journaled properties which are changed
      */
     public Stream<Property> fetchJournaledAndChangedProperties() {
-        return fetchJournaledProperties().filter(p -> p.getDescriptor().isChanged(owner, p));
+        return fetchJournaledProperties().filter(property -> property.getDescriptor().isChanged(owner, property));
     }
 
     /**
@@ -106,12 +109,12 @@ public class JournalData extends Composite {
      */
     public String buildChangeJournal() {
         StringBuilder changes = new StringBuilder();
-        fetchJournaledAndChangedProperties().forEach(p -> {
-            changes.append(p.getName());
+        fetchJournaledAndChangedProperties().forEach(property -> {
+            changes.append(property.getName());
             changes.append(": ");
-            changes.append(NLS.toUserString(owner.getPersistedValue(p), NLS.getDefaultLanguage()));
+            changes.append(NLS.toUserString(owner.getPersistedValue(property), NLS.getDefaultLanguage()));
             changes.append(" -> ");
-            changes.append(NLS.toUserString(p.getValue(owner), NLS.getDefaultLanguage()));
+            changes.append(NLS.toUserString(property.getValue(owner), NLS.getDefaultLanguage()));
             changes.append("\n");
         });
 
