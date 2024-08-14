@@ -85,10 +85,7 @@ public class JournalData extends Composite {
      * @return a stream of all journaled properties
      */
     public Stream<Property> fetchJournaledProperties() {
-        return owner.getDescriptor()
-                    .getProperties()
-                    .stream()
-                    .filter(p -> p.getAnnotation(NoJournal.class).isEmpty());
+        return owner.getDescriptor().getProperties().stream().filter(p -> p.getAnnotation(NoJournal.class).isEmpty());
     }
 
     /**
