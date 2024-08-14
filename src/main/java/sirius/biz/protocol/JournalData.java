@@ -118,6 +118,10 @@ public class JournalData extends Composite {
             changes.append("\n");
         });
 
+        if (owner instanceof CustomJournalProvider customJournalProvider) {
+            customJournalProvider.addCustomJournal(changes::append);
+        }
+
         return changes.toString();
     }
 
@@ -238,7 +242,7 @@ public class JournalData extends Composite {
             return false;
         }
 
-        return fetchJournaledAndChangedProperties().findAny().isPresent();
+        return Strings.isFilled(buildChangeJournal());
     }
 
     /**
