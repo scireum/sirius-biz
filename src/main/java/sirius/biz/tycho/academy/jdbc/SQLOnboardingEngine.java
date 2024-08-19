@@ -64,6 +64,7 @@ public class SQLOnboardingEngine extends OnboardingEngine {
     protected void markOutdatedAcademyVideosAsDeleted(String academy, String tokenToSkip) {
         oma.select(SQLAcademyVideo.class)
            .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.ACADEMY), academy)
+           .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.DELETED), false)
            .ne(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.SYNC_TOKEN), tokenToSkip)
            .iterateAll(video -> {
                try {

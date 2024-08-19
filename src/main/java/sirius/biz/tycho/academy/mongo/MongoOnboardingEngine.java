@@ -67,6 +67,7 @@ public class MongoOnboardingEngine extends OnboardingEngine {
     protected void markOutdatedAcademyVideosAsDeleted(String academy, String tokenToSkip) {
         mango.select(MongoAcademyVideo.class)
              .eq(MongoAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.ACADEMY), academy)
+             .eq(MongoAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.DELETED), false)
              .ne(MongoAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.SYNC_TOKEN), tokenToSkip)
              .iterateAll(video -> {
                  try {
