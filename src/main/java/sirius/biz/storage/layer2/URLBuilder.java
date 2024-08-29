@@ -526,7 +526,7 @@ public class URLBuilder {
         result.append("/");
         result.append(space.getName());
         result.append("/");
-        result.append(computeAccessTokenForVirtualURL(blobKey + "-" + variant));
+        result.append(computeAccessTokenForVirtualUrl(blobKey + "-" + variant));
         result.append("/");
         result.append(variant);
         if (forceDownload) {
@@ -604,7 +604,7 @@ public class URLBuilder {
         }
     }
 
-    private String computeAccessTokenForVirtualURL(String authToken) {
+    private String computeAccessTokenForVirtualUrl(String authToken) {
         if (space.getMaxValidityDaysForVirtualUrl() >= 0 && eternallyValid) {
             return utils.computeHash(authToken, space.getMaxValidityDaysForVirtualUrl());
         } else {

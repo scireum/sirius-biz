@@ -119,7 +119,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Contains the name of the config key used to determine the maximal number of days a virtual URL is cached.
      */
-    private static final String CONFIG_KEY_MAX_VALIDITY_DAYS_VIRTUAL_URL = "maxValidityDaysForVirtualURL";
+    private static final String CONFIG_KEY_MAX_VALIDITY_DAYS_VIRTUAL_URL = "maxValidityDaysForVirtualUrl";
 
     /**
      * Contains the name of the config key used to determine which permission is required to write blobs
@@ -290,7 +290,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected final String description;
     protected String spaceName;
     protected String readPermission;
-    protected int maxValidityDaysForVirtualURL;
+    protected int maxValidityDaysForVirtualUrl;
     protected String writePermission;
     protected String baseUrl;
     protected boolean useNormalizedNames;
@@ -310,7 +310,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.spaceName = spaceName;
         this.config = config;
         this.readPermission = config.get(CONFIG_KEY_PERMISSION_READ).asString();
-        this.maxValidityDaysForVirtualURL = config.get(CONFIG_KEY_MAX_VALIDITY_DAYS_VIRTUAL_URL).asInt(-1);
+        this.maxValidityDaysForVirtualUrl = config.get(CONFIG_KEY_MAX_VALIDITY_DAYS_VIRTUAL_URL).asInt(-1);
         this.writePermission = config.get(CONFIG_KEY_PERMISSION_WRITE).asString();
         this.baseUrl = config.get(CONFIG_KEY_BASE_URL).getString();
         this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
@@ -385,7 +385,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Override
     public int getMaxValidityDaysForVirtualUrl() {
-        return maxValidityDaysForVirtualURL;
+        return maxValidityDaysForVirtualUrl;
     }
 
     /**
