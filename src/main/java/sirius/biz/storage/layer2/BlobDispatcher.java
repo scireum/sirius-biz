@@ -198,7 +198,7 @@ public class BlobDispatcher implements WebDispatcher {
      */
     private Integer computeCacheDurationFromHash(Response response, String accessToken, String key, String space) {
         BlobStorageSpace storageSpace = blobStorage.getSpace(space);
-        Optional<Integer> optionalHashDays = utils.verifyHash(key, accessToken, storageSpace.getUrlValidityDays());
+        Optional<Integer> optionalHashDays = utils.verifyHash(key, accessToken, storageSpace);
         if (optionalHashDays.isEmpty()) {
             response.error(HttpResponseStatus.UNAUTHORIZED);
             return null;

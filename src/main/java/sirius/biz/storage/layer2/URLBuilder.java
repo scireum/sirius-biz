@@ -80,9 +80,6 @@ public class URLBuilder {
     @ConfigValue("storage.layer2.largeFileLimit")
     private static long largeFileLimit;
 
-    @ConfigValue("storage.layer2.maxCachedDaysForVirtualURL")
-    private static int maxCachedDaysForVirtualURL;
-
     /**
      * Contains the {@linkplain #buildUrlResult() generated URL} and an {@linkplain UrlType indicator} if it is a
      * virtual, physical, the fallback URL, or empty.
@@ -608,8 +605,8 @@ public class URLBuilder {
     }
 
     private String computeAccessTokenForVirtualURL(String authToken) {
-        if (maxCachedDaysForVirtualURL >= 0 && eternallyValid) {
-            return utils.computeHash(authToken, maxCachedDaysForVirtualURL);
+        if (space.getMaxValidityDaysForVirtualUrl() >= 0 && eternallyValid) {
+            return utils.computeHash(authToken, space.getMaxValidityDaysForVirtualUrl());
         } else {
             return computeAccessToken(authToken);
         }

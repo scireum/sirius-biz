@@ -380,4 +380,11 @@ public interface BlobStorageSpace {
      * @return the amount of days
      */
     int getUrlValidityDays();
+
+    /**
+     * Defines for up to how many days a generated {@linkplain URLBuilder url} for virtual files is valid max.
+     *
+     * @return the amount of days
+     */
+    int getMaxValidityDaysForVirtualUrl();
 }

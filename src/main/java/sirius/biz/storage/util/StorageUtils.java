@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.util;
 
+import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Hasher;
@@ -96,12 +97,12 @@ public class StorageUtils {
      * <p>
      * 0 means the hash is valid today. A negative number represents past days and a positive number days in the future.
      *
-     * @param key          the key to verify
-     * @param hash         the hash to verify
-     * @param validityDays the number of days the hash should be valid into the past
+     * @param key   the key to verify
+     * @param hash  the hash to verify
+     * @param space the space to use for the verification
      * @return the day count from today for which the hash is valid or an empty optional if the hash is invalid
      */
-    public Optional<Integer> verifyHash(String key, String hash, int validityDays) {
+    public Optional<Integer> verifyHash(String key, String hash, BlobStorageSpace space) {
         // Check for a hash for today...
         if (Strings.areEqual(hash, computeHash(key, 0))) {
             return Optional.of(0);
@@ -112,8 +113,13 @@ public class StorageUtils {
             return Optional.of(Integer.MAX_VALUE);
         }
 
+        // Check for max validity of virtual urls...
+        if (Strings.areEqual(hash, computeHash(key, space.getMaxValidityDaysForVirtualUrl()))) {
+            return Optional.of(space.getMaxValidityDaysForVirtualUrl());
+        }
+
         // Check for hashes up to X days into the past...
-        for (int i = 1; i <= validityDays; i++) {
+        for (int i = 1; i <= space.getUrlValidityDays(); i++) {
             if (Strings.areEqual(hash, computeHash(key, -i))) {
                 return Optional.of(-i);
             }
