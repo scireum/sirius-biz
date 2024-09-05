@@ -49,13 +49,15 @@ public class BlobPdfReplaceHandler extends PdfReplaceHandler {
                     "The URI is required to match the format 'blob://space/blobKey/variant' or 'blob://space/blobKey'");
         }
 
+        String spaceKey = blobInfo[0];
+        String blobKey = blobInfo[1];
         String variant = URLBuilder.VARIANT_RAW;
 
         if (blobInfo.length == 3) {
             variant = blobInfo[2];
         }
 
-        Optional<FileHandle> optionalFileHandle = storage.getSpace(blobInfo[0]).download(blobInfo[1], variant);
+        Optional<FileHandle> optionalFileHandle = storage.getSpace(spaceKey).download(blobKey, variant);
 
         if (optionalFileHandle.isPresent()) {
             try (FileHandle fileHandle = optionalFileHandle.get()) {
