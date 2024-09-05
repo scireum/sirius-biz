@@ -51,11 +51,7 @@ public class BlobPdfReplaceHandler extends PdfReplaceHandler {
 
         String spaceKey = blobInfo[0];
         String blobKey = blobInfo[1];
-        String variant = URLBuilder.VARIANT_RAW;
-
-        if (blobInfo.length == 3) {
-            variant = blobInfo[2];
-        }
+        String variant = blobInfo.length == 3 ? blobInfo[2] : URLBuilder.VARIANT_RAW;
 
         Optional<FileHandle> optionalFileHandle = storage.getSpace(spaceKey).download(blobKey, variant);
 
