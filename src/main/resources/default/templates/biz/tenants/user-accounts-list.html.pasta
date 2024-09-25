@@ -47,7 +47,7 @@
                                                     url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                                 </t:dropdownSection>
                             </i:if>
-                            <i:if test="UserContext.get().getUser().hasPermission('permission-select-tenant')">
+                            <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
                                 <t:dropdownSection>
                                     <t:dropdownItem labelKey="TenantController.jumpTo"
                                                     icon="fa-solid fa-building"
@@ -111,7 +111,7 @@
                                                 url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                             </t:dropdownSection>
                         </i:if>
-                        <i:if test="UserContext.get().getUser().hasPermission('permission-select-tenant')">
+                        <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
                             <t:dropdownSection>
                                 <t:dropdownItem labelKey="TenantController.jumpTo"
                                                 icon="fa-solid fa-building"

@@ -101,7 +101,7 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                                                               @user (@user.getTenant().fetchValue().toString())
                                                               <br>
                                                               <a href="/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
-                                                              <i:if test="UserContext.get().getUser().hasPermission('permission-select-tenant')">
+                                                              <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
                                                                 <t:smartValue type="tenant" payload="@user.getTenantAsString()" label="@i18n("TenantController.jumpTo")"/>
                                                               </i:if>
                                                               """, userAccount);
