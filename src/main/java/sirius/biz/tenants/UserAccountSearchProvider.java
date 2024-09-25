@@ -101,7 +101,7 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                                                               @user (@user.getTenant().fetchValue().toString())
                                                               <br>
                                                               <a href="/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
-                                                              <i:if test="UserContext.get().getUser().hasPermission('flag-system-support')">
+                                                              <i:if test="UserContext.get().getUser().hasPermission('permission-select-tenant')">
                                                                 <a href="/tenant/@user.getTenantAsString()" class="card-link">@i18n("TenantController.jumpTo")</a>
                                                               </i:if>
                                                               """, userAccount);
