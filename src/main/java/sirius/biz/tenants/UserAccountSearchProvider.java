@@ -102,7 +102,7 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                                                               <br>
                                                               <a href="/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
                                                               <i:if test="UserContext.get().getUser().hasPermission('permission-select-tenant')">
-                                                                <a href="/tenant/@user.getTenantAsString()" class="card-link">@i18n("TenantController.jumpTo")</a>
+                                                                <t:smartValue type="tenant" payload="@user.getTenantAsString()" label="@i18n("TenantController.jumpTo")"/>
                                                               </i:if>
                                                               """, userAccount);
             }
