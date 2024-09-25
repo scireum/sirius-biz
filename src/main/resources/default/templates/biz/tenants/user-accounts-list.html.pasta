@@ -47,6 +47,13 @@
                                                     url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
                                 </t:dropdownSection>
                             </i:if>
+                            <i:if test="UserContext.get().getUser().hasPermission('flag-system-support')">
+                                <t:dropdownSection>
+                                    <t:dropdownItem labelKey="TenantController.jumpTo"
+                                                    icon="fa-solid fa-building"
+                                                    url="@apply('/tenant/%s', account.getTenantAsString())"/>
+                                </t:dropdownSection>
+                            </i:if>
                             <t:dropdownSection>
                                 <t:dropdownItem
                                         labelKey="Model.password.set"
@@ -102,6 +109,13 @@
                                 <t:dropdownItem labelKey="TenantController.select"
                                                 icon="fa-solid fa-user-secret"
                                                 url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                            </t:dropdownSection>
+                        </i:if>
+                        <i:if test="UserContext.get().getUser().hasPermission('flag-system-support')">
+                            <t:dropdownSection>
+                                <t:dropdownItem labelKey="TenantController.jumpTo"
+                                                icon="fa-solid fa-building"
+                                                url="@apply('/tenant/%s', account.getTenantAsString())"/>
                             </t:dropdownSection>
                         </i:if>
                         <i:if test="account.getUserAccountData().isOwnTenant()">
