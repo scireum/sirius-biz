@@ -280,7 +280,7 @@ public class L3Uplink implements VFSRoot {
                 return true;
             });
 
-            counter.addAndGet((int) blobPageHelper.getBaseQuery().count());
+            counter.addAndGet((int) blobPageHelper.buildUnderlyingQuery().count());
 
             return counter.get();
         }
