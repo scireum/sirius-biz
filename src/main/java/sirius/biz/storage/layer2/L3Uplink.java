@@ -128,7 +128,7 @@ public class L3Uplink implements VFSRoot {
      * Responsible for resolving children of a {@link Directory} and transforming them into
      * {@link VirtualFile virtual files}.
      */
-    class DirectoryChildProvider implements ChildProvider {
+    protected class DirectoryChildProvider implements ChildProvider {
 
         /**
          * Creates a placeholder for the given parent and name.
@@ -233,7 +233,7 @@ public class L3Uplink implements VFSRoot {
         }
     }
 
-    class DirectoryChildPageProvider implements ChildPageProvider {
+    protected class DirectoryChildPageProvider implements ChildPageProvider {
 
         @Override
         public Page<VirtualFile> queryPage(VirtualFile parent, WebContext webContext) {
@@ -280,7 +280,7 @@ public class L3Uplink implements VFSRoot {
                 return true;
             });
 
-            counter.addAndGet((int) blobPageHelper.getBaseQuery().count());
+            counter.addAndGet((int) blobPageHelper.buildUnderlyingQuery().count());
 
             return counter.get();
         }
@@ -615,8 +615,7 @@ public class L3Uplink implements VFSRoot {
             .withFileName(file.name())
             .asDownload()
             .buildURL()
-            .ifPresentOrElse(blobDeliveryUrl -> response.redirectTemporarily(blobDeliveryUrl),
-                             () -> response.error(HttpResponseStatus.NOT_FOUND));
+            .ifPresentOrElse(response::redirectTemporarily, () -> response.error(HttpResponseStatus.NOT_FOUND));
     }
 
     private boolean isWriteable(VirtualFile file) {
