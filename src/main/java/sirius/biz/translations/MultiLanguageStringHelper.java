@@ -15,6 +15,7 @@ import sirius.kernel.nls.NLS;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Provides a central helper when importing data for {@link MultiLanguageString} fields.
@@ -65,6 +66,26 @@ public class MultiLanguageStringHelper extends ImportHelper {
             data.put(language, value);
 
             return this;
+        }
+
+        /**
+         * Fetches the text for the given language.
+         *
+         * @param language the language to fetch the text for
+         * @return the text for the given language or an empty optional if no text is present
+         */
+        public Optional<String> fetchText(String language) {
+            return Optional.ofNullable(data.get(language));
+        }
+
+        /**
+         * Fetches the text for the given language or falls back to the fallback value.
+         *
+         * @param language the language to fetch the text for
+         * @return the text for the given language or the fallback value if no text is present
+         */
+        public Optional<String> fetchTextOrFallback(String language) {
+            return fetchText(language).or(() -> fetchText(MultiLanguageString.FALLBACK_KEY));
         }
     }
 
@@ -129,8 +150,8 @@ public class MultiLanguageStringHelper extends ImportHelper {
      * Creates a new value builder just like {@link #createUpdate()} which is filled with the given text for the given
      * language.
      *
-     * @param language  the language to store the text for
-     * @param value the text value to store
+     * @param language the language to store the text for
+     * @param value    the text value to store
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
      * a multi-language string field.
      */
