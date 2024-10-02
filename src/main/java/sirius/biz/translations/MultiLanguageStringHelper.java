@@ -20,9 +20,9 @@ import java.util.Optional;
 /**
  * Provides a central helper when importing data for {@link MultiLanguageString} fields.
  * <p>
- * Basically we support two ways of importing data into a multi language string field. Either this helper is
+ * Basically we support two ways of importing data into a multi-language string field. Either this helper is
  * configured appropriately (using {@link #replaceOnImport()} , {@link #updateOnImport()} as well as
- * {@link #forceLanguage(String)} or {@link #withDefaultLanguage(String)}.
+ * {@link #forceLanguage(String)} or {@link #withDefaultLanguage(String)}).
  * <p>
  * Alternatively. either {@link #createReplacement()} or {@link #createUpdate()}
  * are used to build {@link MultiLanguageStringValue} objects which are picked up by the
@@ -31,7 +31,7 @@ import java.util.Optional;
 public class MultiLanguageStringHelper extends ImportHelper {
 
     /**
-     * Represents a builder pattern to setup a new value to be imported into a {@link MultiLanguageString} field.
+     * Represents a builder pattern to set up a new value to be imported into a {@link MultiLanguageString} field.
      */
     public static class MultiLanguageStringValue {
         protected boolean replace;
@@ -129,7 +129,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
      * Creates a new value builder which enhances the underlying multi-language string field.
      *
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
-     * a multi language string field.
+     * a multi-language string field.
      */
     public static MultiLanguageStringValue createUpdate() {
         return new MultiLanguageStringValue(false);
@@ -174,7 +174,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Overwrites all previously available translations when importing data into a multi language string.
+     * Overwrites all previously available translations when importing data into a multi-language string.
      *
      * @return the object itself for fluent calls
      */
@@ -194,8 +194,8 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Specifies the target language to use <b>for all fields</b> when importing or exporting strings from or to multi-
-     * language fields.
+     * Specifies the target language to use <b>for all fields</b> when importing or exporting strings from or to
+     * multi-language fields.
      * <p>
      * Note, if this is set, it will be used for all fields, even if these would have a <b>fallback</b> value to
      * update.
