@@ -15,13 +15,14 @@ import sirius.kernel.nls.NLS;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Provides a central helper when importing data for {@link MultiLanguageString} fields.
  * <p>
- * Basically we support two ways of importing data into a multi language string field. Either this helper is
+ * Basically we support two ways of importing data into a multi-language string field. Either this helper is
  * configured appropriately (using {@link #replaceOnImport()} , {@link #updateOnImport()} as well as
- * {@link #forceLanguage(String)} or {@link #withDefaultLanguage(String)}.
+ * {@link #forceLanguage(String)} or {@link #withDefaultLanguage(String)}).
  * <p>
  * Alternatively. either {@link #createReplacement()} or {@link #createUpdate()}
  * are used to build {@link MultiLanguageStringValue} objects which are picked up by the
@@ -30,7 +31,7 @@ import java.util.Map;
 public class MultiLanguageStringHelper extends ImportHelper {
 
     /**
-     * Represents a builder pattern to setup a new value to be imported into a {@link MultiLanguageString} field.
+     * Represents a builder pattern to set up a new value to be imported into a {@link MultiLanguageString} field.
      */
     public static class MultiLanguageStringValue {
         protected boolean replace;
@@ -65,6 +66,26 @@ public class MultiLanguageStringHelper extends ImportHelper {
             data.put(language, value);
 
             return this;
+        }
+
+        /**
+         * Fetches the text for the given language.
+         *
+         * @param language the language to fetch the text for
+         * @return the text for the given language or an empty optional if no text is present
+         */
+        public Optional<String> fetchText(String language) {
+            return Optional.ofNullable(data.get(language));
+        }
+
+        /**
+         * Fetches the text for the given language or falls back to the fallback value.
+         *
+         * @param language the language to fetch the text for
+         * @return the text for the given language or the fallback value if no text is present
+         */
+        public Optional<String> fetchTextOrFallback(String language) {
+            return fetchText(language).or(() -> fetchText(MultiLanguageString.FALLBACK_KEY));
         }
     }
 
@@ -108,7 +129,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
      * Creates a new value builder which enhances the underlying multi-language string field.
      *
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
-     * a multi language string field.
+     * a multi-language string field.
      */
     public static MultiLanguageStringValue createUpdate() {
         return new MultiLanguageStringValue(false);
@@ -129,8 +150,8 @@ public class MultiLanguageStringHelper extends ImportHelper {
      * Creates a new value builder just like {@link #createUpdate()} which is filled with the given text for the given
      * language.
      *
-     * @param language  the language to store the text for
-     * @param value the text value to store
+     * @param language the language to store the text for
+     * @param value    the text value to store
      * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
      * a multi-language string field.
      */
@@ -153,7 +174,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Overwrites all previously available translations when importing data into a multi language string.
+     * Overwrites all previously available translations when importing data into a multi-language string.
      *
      * @return the object itself for fluent calls
      */
@@ -173,8 +194,8 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Specifies the target language to use <b>for all fields</b> when importing or exporting strings from or to multi-
-     * language fields.
+     * Specifies the target language to use <b>for all fields</b> when importing or exporting strings from or to
+     * multi-language fields.
      * <p>
      * Note, if this is set, it will be used for all fields, even if these would have a <b>fallback</b> value to
      * update.
