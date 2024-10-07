@@ -100,10 +100,17 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                                                               <i:arg name="user" type="sirius.biz.tenants.UserAccount"/>
                                                               @user (
                                                               <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
-                                                                <t:smartValue type="tenant"
-                                                                    id="@generateId('smarty-useraccount-%s')"
-                                                                    payload="@user.getTenantAsString()"
-                                                                    label="@user.getTenant().fetchValue().toString()"/>
+                                                                <i:if test="UserContext.getCurrentUser().getTenantId().equals(user.getTenantAsString())">
+                                                                        <a href="/tenant/@user.getTenantAsString()" class="link-dark card-link">
+                                                                            @user.getTenant().fetchValue().toString()
+                                                                        </a>
+                                                                        <i:else>
+                                                                            <t:smartValue type="tenant"
+                                                                                id="@generateId('smarty-useraccount-%s')"
+                                                                                payload="@user.getTenantAsString()"
+                                                                                label="@user.getTenant().fetchValue().toString()"/>
+                                                                        </i:else>
+                                                                    </i:if>
                                                                 <i:else>
                                                                     @user.getTenant().fetchValue().toString()
                                                                 </i:else>
