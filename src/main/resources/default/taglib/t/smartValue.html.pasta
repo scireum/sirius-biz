@@ -13,6 +13,10 @@
        type="String"
        default="@generateId('smarty-%s')"
        description="Contains the id of the smartValue"/>
+<i:arg name="tenantId"
+       type="String"
+       default=""
+       description="Contains the optional tenant id of the payload"/>
 
 <i:pragma name="description">
     Permits to show a link in the UI when (on click) will load additional data and show this as tooltip. This can
