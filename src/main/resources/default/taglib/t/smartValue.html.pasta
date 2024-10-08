@@ -16,7 +16,7 @@
 <i:arg name="tenantId"
        type="String"
        default=""
-       description="Contains the optional tenant id of the payload"/>
+       description="Contains the optional tenant id for computing tenant links"/>
 
 <i:pragma name="description">
     Permits to show a link in the UI when (on click) will load additional data and show this as tooltip. This can
