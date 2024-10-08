@@ -30,14 +30,14 @@ function openSmartValues(elementId, type, payload, signature, tenantId, editorLa
         securityHash: signature
     }).then(json => {
         if (json.values.length === 0) {
-            if(tenantId === "") {
+            if (tenantId === "") {
                 _element.tooltip.hide();
                 _element.classList.add('text-decoration-none');
                 _element.classList.remove('link');
                 _element.href = '';
                 return;
-            }else{
-                json.values ={icon:'fa-solid fa-pen-to-square', label:editorLabel, action: '/tenant/' + tenantId};
+            } else {
+                json.values = {icon: 'fa-solid fa-pen-to-square', label: editorLabel, action: '/tenant/' + tenantId};
             }
         }
 
