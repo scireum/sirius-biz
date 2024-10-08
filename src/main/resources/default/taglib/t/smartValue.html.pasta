@@ -26,9 +26,16 @@
 <i:if test="isFilled(payload)">
     <i:local name="signature" value="@computeAuthSignature(apply('%s/%s', type, payload))"/>
     <i:local name="id" value="@id"/>
-    <a id="@id"
-       class="text-black link smart-values-link-js"
-       href="javascript:openSmartValues('@id', '@type','@payload', '@signature')">@label</a>
+    <i:if test="!UserContext.getCurrentUser().getTenantId().equals(tenantId)">
+        <a id="@id"
+           class="text-black link smart-values-link-js"
+           href="javascript:openSmartValues('@id', '@type','@payload', '@signature')">@label</a>
+        <i:else>
+            <a href="/tenant/@tenantId" class="link-dark card-link">
+                @label
+            </a>
+        </i:else>
+    </i:if>
     <i:else>
         <i:if test="isFilled(label)">@label</i:if>
     </i:else>
