@@ -100,11 +100,11 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                                                               <i:arg name="user" type="sirius.biz.tenants.UserAccount"/>
                                                               @user (
                                                               <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
-                                                                            <t:smartValue type="tenant"
-                                                                                id="@generateId('smarty-useraccount-%s')"
-                                                                                payload="@user.getTenantAsString()"
-                                                                                tenantId="@user.getTenantAsString()"
-                                                                                label="@user.getTenant().fetchValue().toString()"/>
+                                                                <t:smartValue type="tenant"
+                                                                    id="@generateId('smarty-useraccount-%s')"
+                                                                    payload="@user.getTenantAsString()"
+                                                                    tenantId="@user.getTenantAsString()"
+                                                                    label="@user.getTenant().fetchValue().toString()"/>
                                                                 <i:else>
                                                                     @user.getTenant().fetchValue().toString()
                                                                 </i:else>
