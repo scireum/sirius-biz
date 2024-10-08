@@ -26,7 +26,7 @@
 <i:if test="isFilled(payload)">
     <i:local name="signature" value="@computeAuthSignature(apply('%s/%s', type, payload))"/>
     <i:local name="id" value="@id"/>
-    <i:if test="!UserContext.getCurrentUser().getTenantId().equals(tenantId)">
+    <i:local name="editorLabel" value="@i18n('TenantController.edit')"/>
         <a id="@id"
            class="text-black link smart-values-link-js"
            href="javascript:openSmartValues('@id', '@type','@payload', '@signature')">@label</a>
