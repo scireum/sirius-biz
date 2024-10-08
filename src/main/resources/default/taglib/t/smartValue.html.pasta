@@ -29,13 +29,7 @@
     <i:local name="editorLabel" value="@i18n('TenantController.edit')"/>
         <a id="@id"
            class="text-black link smart-values-link-js"
-           href="javascript:openSmartValues('@id', '@type','@payload', '@signature')">@label</a>
-        <i:else>
-            <a href="/tenant/@tenantId" class="link-dark card-link">
-                @label
-            </a>
-        </i:else>
-    </i:if>
+           href="javascript:openSmartValues('@id', '@type','@payload', '@signature','@tenantId','@editorLabel')">@label</a>
     <i:else>
         <i:if test="isFilled(label)">@label</i:if>
     </i:else>
