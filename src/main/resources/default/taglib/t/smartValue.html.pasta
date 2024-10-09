@@ -13,10 +13,10 @@
        type="String"
        default="@generateId('smarty-%s')"
        description="Contains the id of the smartValue"/>
-<i:arg name="tenantId"
+<i:arg name="entityId"
        type="String"
        default=""
-       description="Contains the optional tenant id for computing tenant links"/>
+       description="Contains the optional entity id for computing entity links"/>
 
 <i:pragma name="description">
     Permits to show a link in the UI when (on click) will load additional data and show this as tooltip. This can
@@ -27,9 +27,9 @@
     <i:local name="signature" value="@computeAuthSignature(apply('%s/%s', type, payload))"/>
     <i:local name="id" value="@id"/>
     <i:local name="editorLabel" value="@i18n('TenantController.edit')"/>
-        <a id="@id"
-           class="text-black link smart-values-link-js"
-           href="javascript:openSmartValues('@id', '@type','@payload', '@signature','@tenantId','@editorLabel')">@label</a>
+    <a id="@id"
+       class="text-black link smart-values-link-js"
+       href="javascript:openSmartValues('@id', '@type', '@payload', '@signature', '@entityId', '@editorLabel')">@label</a>
     <i:else>
         <i:if test="isFilled(label)">@label</i:if>
     </i:else>

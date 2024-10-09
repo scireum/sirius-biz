@@ -103,7 +103,7 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                                                                 <t:smartValue type="tenant"
                                                                     id="@generateId('smarty-useraccount-%s')"
                                                                     payload="@user.getTenantAsString()"
-                                                                    tenantId="@user.getTenantAsString()"
+                                                                    entityId="@user.getTenantAsString()"
                                                                     label="@user.getTenant().fetchValue().toString()"/>
                                                                 <i:else>
                                                                     @user.getTenant().fetchValue().toString()
