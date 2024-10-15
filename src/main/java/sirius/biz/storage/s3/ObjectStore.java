@@ -20,6 +20,7 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
+import com.amazonaws.services.s3.model.ListBucketsPaginatedRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
@@ -291,7 +292,11 @@ public class ObjectStore {
      * @return a list of all buckets in the given store
      */
     public List<String> listBuckets() {
-        return getClient().listBuckets().stream().map(Bucket::getName).toList();
+        return getClient().listBuckets(new ListBucketsPaginatedRequest())
+                          .getBuckets()
+                          .stream()
+                          .map(Bucket::getName)
+                          .toList();
     }
 
     /**
