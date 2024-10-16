@@ -6,7 +6,7 @@ function hideAllSmartValues(_excludedElement) {
     });
 }
 
-function openSmartValues(elementId, type, payload, signature) {
+function openSmartValues(elementId, type, payload, signature, entityId, editorLabel) {
     const _element = document.querySelector('#' + elementId);
     hideAllSmartValues(_element);
 
@@ -30,11 +30,15 @@ function openSmartValues(elementId, type, payload, signature) {
         securityHash: signature
     }).then(json => {
         if (json.values.length === 0) {
-            _element.tooltip.hide();
-            _element.classList.add('text-decoration-none');
-            _element.classList.remove('link');
-            _element.href = '';
-            return;
+            if (entityId === "") {
+                _element.tooltip.hide();
+                _element.classList.add('text-decoration-none');
+                _element.classList.remove('link');
+                _element.href = '';
+                return;
+            } else {
+                json.values = {icon: 'fa-solid fa-pen-to-square', label: editorLabel, action: '/'+type+'/' + entityId};
+            }
         }
 
         const html = Mustache.render('{{#values}}' +
