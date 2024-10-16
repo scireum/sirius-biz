@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:7.2.5-alpine
+    image: redis:7.2.6-alpine
     ports:
       - "6379"
     hostname: redis
@@ -18,7 +18,7 @@ services:
     hostname: mongo
 
   mariadb:
-    image: mariadb:11.4.2-noble
+    image: mariadb:11.4.3-noble
     ports:
       - "3306"
     environment:
