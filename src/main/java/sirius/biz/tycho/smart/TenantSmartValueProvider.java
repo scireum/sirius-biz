@@ -9,6 +9,8 @@
 package sirius.biz.tycho.smart;
 
 import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantController;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -41,15 +43,15 @@ public class TenantSmartValueProvider implements SmartValueProvider {
         }
 
         UserInfo currentUser = UserContext.getCurrentUser();
-        if (currentUser.hasPermission("permission-select-tenant") && !Strings.areEqual(tenant.getIdAsString(),
-                                                                                       currentUser.getTenantId())) {
+        if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_TENANT)
+            && !Strings.areEqual(tenant.getIdAsString(), currentUser.getTenantId())) {
             valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                  NLS.get("TenantController.select"),
                                                  "/tenants/select/" + tenant.getIdAsString(),
                                                  null));
         }
 
-        if (currentUser.hasPermission("permission-manage-tenants")) {
+        if (currentUser.hasPermission(TenantController.PERMISSION_MANAGE_TENANTS)) {
             valueCollector.accept(new SmartValue("fa-solid fa-pen-to-square",
                                                  NLS.get("TenantController.edit"),
                                                  "/tenant/" + tenant.getIdAsString(),
