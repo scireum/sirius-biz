@@ -18,8 +18,8 @@
 
     <properties>
         <sirius.kernel>dev-43.1.0</sirius.kernel>
-        <sirius.web>dev-84.0.0</sirius.web>
-        <sirius.db>dev-58.0.0</sirius.db>
+        <sirius.web>dev-84.5.0</sirius.web>
+        <sirius.db>dev-58.3.0</sirius.db>
     </properties>
 
     <repositories>
