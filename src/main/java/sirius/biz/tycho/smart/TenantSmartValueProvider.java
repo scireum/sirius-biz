@@ -41,10 +41,8 @@ public class TenantSmartValueProvider implements SmartValueProvider {
         }
 
         UserInfo currentUser = UserContext.getCurrentUser();
-        if (Strings.areEqual(tenant.getIdAsString(), currentUser.getTenantId())) {
-            return;
-        }
-        if (currentUser.hasPermission("permission-select-tenant")) {
+        if (currentUser.hasPermission("permission-select-tenant") && !Strings.areEqual(tenant.getIdAsString(),
+                                                                                       currentUser.getTenantId())) {
             valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                  NLS.get("TenantController.select"),
                                                  "/tenants/select/" + tenant.getIdAsString(),
