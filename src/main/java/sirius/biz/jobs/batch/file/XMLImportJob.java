@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.importer.AfterNodeLoadEvent;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
@@ -125,7 +126,15 @@ public abstract class XMLImportJob extends FileImportJob {
     protected void executeProcessingStage(InputStream in, Consumer<BiConsumer<String, NodeHandler>> stage)
             throws Exception {
         XMLReader reader = new XMLReader();
-        stage.accept(reader::addHandler);
+        stage.accept((name, originalHandler) -> {
+            reader.addHandler(name, structuredNode -> {
+                if (importer.getContext().getEventDispatcher().isActive()) {
+                    AfterNodeLoadEvent event = new AfterNodeLoadEvent(structuredNode, importer.getContext());
+                    importer.getContext().getEventDispatcher().handleEvent(event);
+                }
+                originalHandler.process(structuredNode);
+            });
+        });
         reader.parse(in, this::resolveResource);
     }
 

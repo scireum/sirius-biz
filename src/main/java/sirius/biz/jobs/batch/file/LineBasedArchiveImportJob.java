@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.importer.AfterLineLoadEvent;
 import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
@@ -72,7 +73,7 @@ public abstract class LineBasedArchiveImportJob extends DictionaryBasedArchiveIm
     /**
      * Normalizes how columns are exposed in each row's context.
      * <p>
-     * By default this method returns the column name as read from the input file.
+     * By default, this method returns the column name as read from the input file.
      * Use this method to normalize headers, such as converting them to lower case,
      * replacing characters or translating aliases into expected names.
      *
@@ -122,6 +123,10 @@ public abstract class LineBasedArchiveImportJob extends DictionaryBasedArchiveIm
         }
 
         try {
+            if (importer.getContext().getEventDispatcher().isActive()) {
+                AfterLineLoadEvent event = new AfterLineLoadEvent(context, importer.getContext());
+                importer.getContext().getEventDispatcher().handleEvent(event);
+            }
             importFile.rowHandler.invoke(Tuple.create(line, context));
         } catch (Exception exception) {
             process.incCounter("LineBasedJob.erroneousRow");
