@@ -47,7 +47,7 @@ public class MongoPageHelper<E extends MongoEntity>
     }
 
     /**
-     * Adds a automatic facet for values in the given field.
+     * Adds an automatic facet for values in the given field.
      *
      * @param field the field to aggregate on
      * @return the helper itself for fluent method calls
@@ -57,7 +57,7 @@ public class MongoPageHelper<E extends MongoEntity>
     }
 
     /**
-     * Adds a automatic facet for values in the given field.
+     * Adds an automatic facet for values in the given field.
      *
      * @param field      the field to aggregate on
      * @param translator the translator used to convert field values into filter labels
@@ -70,7 +70,7 @@ public class MongoPageHelper<E extends MongoEntity>
     }
 
     /**
-     * Adds a automatic facet for values in the given field.
+     * Adds an automatic facet for values in the given field.
      *
      * @param field    the field to aggregate on
      * @param enumType the type of enums in this field used for proper translation
@@ -78,13 +78,13 @@ public class MongoPageHelper<E extends MongoEntity>
      *
      * @deprecated Use {@link #addEnumTermAggregation(Mapping, Class)} instead
      */
-    @Deprecated
+    @Deprecated(since = "2024/11/04", forRemoval = true)
     public MongoPageHelper<E> addTermAggregation(Mapping field, Class<? extends Enum<?>> enumType) {
         return addEnumTermAggregation(field, enumType);
     }
 
     /**
-     * Adds a automatic facet for values in the given field.
+     * Adds an automatic facet for values in the given field.
      *
      * @param field    the field to aggregate on
      * @param enumType the type of enums in this field used for proper translation
@@ -97,7 +97,7 @@ public class MongoPageHelper<E extends MongoEntity>
     }
 
     /**
-     * Adds a automatic facet for values in the given field.
+     * Adds an automatic facet for values in the given field.
      *
      * @param title    the title to use for the facet
      * @param field    the field to aggregate on
@@ -174,7 +174,7 @@ public class MongoPageHelper<E extends MongoEntity>
     }
 
     /**
-     * Adds a automatic facet for a boolean field.
+     * Adds an automatic facet for a boolean field.
      *
      * @param field the field to aggregate on
      * @return the helper itself for fluent method calls
@@ -214,7 +214,7 @@ public class MongoPageHelper<E extends MongoEntity>
     }
 
     /**
-     * Adds a automatic facet for values in the given field.
+     * Adds an automatic facet for values in the given field.
      *
      * @param title      the title to use for the facet
      * @param field      the field to aggregate on
