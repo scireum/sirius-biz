@@ -75,9 +75,37 @@ public class MongoPageHelper<E extends MongoEntity>
      * @param field    the field to aggregate on
      * @param enumType the type of enums in this field used for proper translation
      * @return the helper itself for fluent method calls
+     *
+     * @deprecated Use {@link #addEnumTermAggregation(Mapping, Class)} instead
      */
+    @Deprecated
     public MongoPageHelper<E> addTermAggregation(Mapping field, Class<? extends Enum<?>> enumType) {
-        return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+        return addEnumTermAggregation(field, enumType);
+    }
+
+    /**
+     * Adds a automatic facet for values in the given field.
+     *
+     * @param field    the field to aggregate on
+     * @param enumType the type of enums in this field used for proper translation
+     * @return the helper itself for fluent method calls
+     */
+    public MongoPageHelper<E> addEnumTermAggregation(Mapping field, Class<? extends Enum<?>> enumType) {
+        return addEnumTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                      field,
+                                      enumType);
+    }
+
+    /**
+     * Adds a automatic facet for values in the given field.
+     *
+     * @param title    the title to use for the facet
+     * @param field    the field to aggregate on
+     * @param enumType the type of enums in this field used for proper translation
+     * @return the helper itself for fluent method calls
+     */
+    public MongoPageHelper<E> addEnumTermAggregation(String title, Mapping field, Class<? extends Enum<?>> enumType) {
+        return addTermAggregation(title,
                                   field,
                                   value -> Arrays.stream(enumType.getEnumConstants())
                                                  .filter(enumConst -> Strings.areEqual(enumConst.name(), value))
@@ -152,8 +180,7 @@ public class MongoPageHelper<E extends MongoEntity>
      * @return the helper itself for fluent method calls
      */
     public MongoPageHelper<E> addBooleanAggregation(Mapping field) {
-        Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
-                                field.toString());
+        Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(), field.toString());
 
         return addFacet(facet, (f, q) -> {
             f.addItem("true", NLS.get("NLS.yes"), -1);
