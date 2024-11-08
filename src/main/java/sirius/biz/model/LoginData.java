@@ -43,7 +43,7 @@ import java.util.List;
 public class LoginData extends Composite {
 
     /**
-     * Describes the possible outcome of {@link #verifyPassword(String, String, int)}.
+     * Describes the possible outcome of {@link #checkPassword(String, String)}.
      */
     public enum PasswordVerificationResult {
 
@@ -254,29 +254,6 @@ public class LoginData extends Composite {
      */
     public void resetFingerprint() {
         this.fingerprint = null;
-    }
-
-    /**
-     * Verifies the given password if it meets the length requirement and is equal to its confirmation.
-     *
-     * @param password          the password to check for
-     * @param confirmation      the confirmation password to check for
-     * @param minPasswordLength the minimum password length
-     * @throws sirius.kernel.health.HandledException if password is too short or if passwords do mismatch
-     */
-    public void verifyPassword(String password, String confirmation, int minPasswordLength) {
-        if (Strings.isEmpty(password) || password.length() < minPasswordLength) {
-            UserContext.setFieldError("password", null);
-            throw Exceptions.createHandled()
-                            .withNLSKey("Model.password.minLengthError")
-                            .set("minChars", minPasswordLength)
-                            .handle();
-        }
-
-        if (!Strings.areEqual(password, confirmation)) {
-            UserContext.setFieldError("confirmation", null);
-            throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
-        }
     }
 
     /**

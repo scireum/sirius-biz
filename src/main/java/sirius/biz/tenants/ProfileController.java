@@ -11,6 +11,8 @@ package sirius.biz.tenants;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.Sirius;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -163,9 +165,19 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
      * @param confirmation the confirmation given by the user
      */
     protected void validateNewPassword(U userAccount, String newPassword, String confirmation) {
-        userAccount.getUserAccountData()
-                   .getLogin()
-                   .verifyPassword(newPassword, confirmation, userAccount.getUserAccountData().getMinPasswordLength());
+        int minPasswordLength =  userAccount.getUserAccountData().getMinPasswordLength();
+        if (Strings.isEmpty(newPassword) || newPassword.length() < minPasswordLength) {
+            UserContext.setFieldError("password", null);
+            throw Exceptions.createHandled()
+                            .withNLSKey("Model.password.minLengthError")
+                            .set("minChars", minPasswordLength)
+                            .handle();
+        }
+
+        if (!Strings.areEqual(newPassword, confirmation)) {
+            UserContext.setFieldError("confirmation", null);
+            throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
+        }
     }
 
     /**
