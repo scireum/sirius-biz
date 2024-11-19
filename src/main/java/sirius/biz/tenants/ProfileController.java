@@ -8,10 +8,10 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.password.PasswordValidator;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
-import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -43,6 +43,9 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
 
     @Part
     private AuditLog auditLog;
+
+    @Part
+    private PasswordValidator passwordValidator;
 
     @ConfigValue("product.wondergemRoot")
     protected String wondergemRoot;
@@ -165,13 +168,9 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
      * @param confirmation the confirmation given by the user
      */
     protected void validateNewPassword(U userAccount, String newPassword, String confirmation) {
-        int minPasswordLength =  userAccount.getUserAccountData().getMinPasswordLength();
-        if (Strings.isEmpty(newPassword) || newPassword.length() < minPasswordLength) {
+        if (!passwordValidator.isPasswordValid(userAccount, newPassword)) {
             UserContext.setFieldError("password", null);
-            throw Exceptions.createHandled()
-                            .withNLSKey("Model.password.minLengthError")
-                            .set("minChars", minPasswordLength)
-                            .handle();
+            throw Exceptions.createHandled().withNLSKey("Model.password.invalid").handle();
         }
 
         if (!Strings.areEqual(newPassword, confirmation)) {
