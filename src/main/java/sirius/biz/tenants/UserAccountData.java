@@ -225,24 +225,6 @@ public class UserAccountData extends Composite implements MessageProvider {
         TenantUserManager.flushCacheForUserAccount((UserAccount<?, ?>) userObject);
     }
 
-    /**
-     * Contains the minimal length of a password to be accepted.
-     *
-     * @return the minimal length of a password to be accepted
-     */
-    public int getMinPasswordLength() {
-        return Sirius.getSettings().getInt("security.passwordMinLength");
-    }
-
-    /**
-     * Contains the minimal length of a sane password.
-     *
-     * @return the minimal length for a password to be considered sane / good / not totally unsafe
-     */
-    public int getSanePasswordLength() {
-        return Sirius.getSettings().getInt("security.passwordSaneLength");
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public <A> Optional<A> tryAs(Class<A> adapterType) {
