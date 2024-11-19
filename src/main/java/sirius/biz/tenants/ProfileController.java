@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.model.LoginData;
 import sirius.biz.password.PasswordValidator;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
@@ -176,6 +177,13 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
         if (!Strings.areEqual(newPassword, confirmation)) {
             UserContext.setFieldError("confirmation", null);
             throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
+        }
+
+        String oldHash = userAccount.getUserAccountData().getLogin().getPasswordHash();
+        String newHash = LoginData.hashPassword(userAccount.getUserAccountData().getLogin().getSalt(), newPassword);
+        if (Strings.areEqual(newHash, oldHash)) {
+            UserContext.setFieldError("password", null);
+            throw Exceptions.createHandled().withNLSKey("Model.password.passwordUnchanged").handle();
         }
     }
 
