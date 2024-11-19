@@ -9,8 +9,10 @@
 package sirius.biz.model;
 
 import sirius.biz.importer.AutoImport;
+import sirius.biz.password.PasswordGenerator;
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.web.Autoloaded;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
@@ -20,6 +22,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
@@ -199,14 +202,33 @@ public class LoginData extends Composite {
     @Transient
     private boolean skipPasswordCreation;
 
+    /**
+     * Contains the entity which owns this login data composite.
+     */
+    @Transient
+    private final BaseEntity<?> owner;
+
     @PriorityParts(PasswordHashFunction.class)
     private static List<PasswordHashFunction> hashFunctions;
+
+    @Part
+    private static PasswordGenerator passwordGenerator;
+
+    /**
+     * Creates a new login data for the given owner.
+     *
+     * @param owner the entity which owns this login data
+     */
+    public LoginData(BaseEntity<?> owner) {
+        super();
+        this.owner = owner;
+    }
 
     @BeforeSave
     protected void autofill() {
         // If there is no password set at all, generate one...
         if (!skipPasswordCreation && Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
-            this.generatedPassword = Strings.generatePassword();
+            this.generatedPassword = passwordGenerator.generatePassword(owner);
         }
 
         // If the generated password has been changed, mark it as the password to be set 

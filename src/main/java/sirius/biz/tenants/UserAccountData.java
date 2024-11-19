@@ -116,7 +116,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * Contains the login data used to authenticate the user.
      */
     public static final Mapping LOGIN = Mapping.named("login");
-    private final LoginData login = new LoginData();
+    private final LoginData login;
 
     /**
      * Contains the permissions granted to the user and the custom configuration.
@@ -177,6 +177,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     public UserAccountData(BaseEntity<?> userObject) {
         this.userObject = userObject;
         this.permissions = new PermissionData(userObject);
+        this.login = new LoginData(userObject);
     }
 
     @BeforeSave
