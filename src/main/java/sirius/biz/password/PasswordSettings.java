@@ -33,6 +33,7 @@ public class PasswordSettings {
 
     public static final String SETTING_GENERATED_LENGTH = "length";
     public static final String SETTING_GENERATED_CONSIDERED_CHARACTERS = "consideredCharacters";
+    public static final String SETTING_GENERATED_SHOW_FOR = "showFor";
 
     public static final String SETTING_USER_MIN_LENGTH = "minLength";
     public static final String SETTING_USER_REQUIRE_LETTERS_AND_DIGITS = "requireLettersAndDigits";

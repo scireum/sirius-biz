@@ -10,6 +10,7 @@ package sirius.biz.model;
 
 import sirius.biz.importer.AutoImport;
 import sirius.biz.password.PasswordGenerator;
+import sirius.biz.password.PasswordSettings;
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
@@ -20,7 +21,6 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
-import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
@@ -214,6 +214,9 @@ public class LoginData extends Composite {
     @Part
     private static PasswordGenerator passwordGenerator;
 
+    @Part
+    private static PasswordSettings passwordSettings;
+
     /**
      * Creates a new login data for the given owner.
      *
@@ -360,8 +363,8 @@ public class LoginData extends Composite {
             return false;
         }
 
-        Duration showGeneratedPasswordFor =
-                Duration.ofMillis(Sirius.getSettings().getMilliseconds("security.showGeneratedPasswordFor"));
+        Duration showGeneratedPasswordFor = Duration.ofMillis(passwordSettings.resolveGeneratedPasswordSettings(owner)
+                                                                              .getMilliseconds(PasswordSettings.SETTING_GENERATED_SHOW_FOR));
 
         if (showGeneratedPasswordFor == null) {
             return false;
