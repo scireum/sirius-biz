@@ -276,7 +276,7 @@ public class DistributedTasks implements MetricProvider {
         getFifo(queueName).offer(data);
     }
 
-    protected FifoQueue getFifo(String queueName) {
+    private FifoQueue getFifo(String queueName) {
         return fifos.computeIfAbsent(queueName, this::createFifo);
     }
 
@@ -385,7 +385,7 @@ public class DistributedTasks implements MetricProvider {
         getPrioritizedQueue(queueName).offer(priority, data);
     }
 
-    protected PrioritizedQueue getPrioritizedQueue(String queueName) {
+    private PrioritizedQueue getPrioritizedQueue(String queueName) {
         return prioritizedQueues.computeIfAbsent(queueName, this::createPrioritizedQueue);
     }
 
