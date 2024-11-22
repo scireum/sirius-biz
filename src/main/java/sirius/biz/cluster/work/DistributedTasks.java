@@ -236,11 +236,19 @@ public class DistributedTasks implements MetricProvider {
             return new DistributedQueueInfo(queueName, null, null);
         }
 
-        return new DistributedQueueInfo(queueName,
-                                        config.get("concurrencyToken").asString(),
-                                        config.get("prioritized").asBoolean() ?
-                                        Duration.ofMillis(config.getMilliseconds("penaltyTime")) :
-                                        null);
+        Duration penaltyTime = null;
+        if (config.get("prioritized").asBoolean()) {
+            long penaltyTimeMillis = config.getMilliseconds("penaltyTime");
+            if (penaltyTimeMillis == 0) {
+                LOG.WARN("A prioritized queue (%s) needs a penaltyTime!", queueName);
+            } else {
+                penaltyTime = Duration.ofMillis(penaltyTimeMillis);
+            }
+        } else if (config.getMilliseconds("penaltyTime") > 0) {
+            LOG.WARN("A FIFO queue (%s) must not have a penaltyTime!", queueName);
+        }
+
+        return new DistributedQueueInfo(queueName, config.get("concurrencyToken").asString(), penaltyTime);
     }
 
     /**
