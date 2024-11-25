@@ -11,6 +11,7 @@ package sirius.biz.web;
 import sirius.biz.codelists.CodeLists;
 import sirius.biz.isenguard.Isenguard;
 import sirius.biz.jobs.Jobs;
+import sirius.biz.password.PasswordSettings;
 import sirius.biz.process.Processes;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.tenants.Tenants;
@@ -63,6 +64,7 @@ public class BizClassAliasProvider implements ClassAliasProvider {
         consumer.accept("Tenants", Tenants.class);
         consumer.accept("Isenguard", Isenguard.class);
         consumer.accept("BizController", BizController.class);
+        consumer.accept("PasswordSettings", PasswordSettings.class);
     }
 
     @Override
