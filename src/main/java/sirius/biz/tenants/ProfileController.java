@@ -8,9 +8,12 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.model.LoginData;
+import sirius.biz.password.PasswordValidator;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -41,6 +44,9 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
 
     @Part
     private AuditLog auditLog;
+
+    @Part
+    private PasswordValidator passwordValidator;
 
     @ConfigValue("product.wondergemRoot")
     protected String wondergemRoot;
@@ -163,9 +169,22 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
      * @param confirmation the confirmation given by the user
      */
     protected void validateNewPassword(U userAccount, String newPassword, String confirmation) {
-        userAccount.getUserAccountData()
-                   .getLogin()
-                   .verifyPassword(newPassword, confirmation, userAccount.getUserAccountData().getMinPasswordLength());
+        if (!passwordValidator.isPasswordValid(userAccount, newPassword)) {
+            UserContext.setFieldError("password", null);
+            throw Exceptions.createHandled().withNLSKey("Model.password.invalid").handle();
+        }
+
+        if (!Strings.areEqual(newPassword, confirmation)) {
+            UserContext.setFieldError("confirmation", null);
+            throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
+        }
+
+        String oldHash = userAccount.getUserAccountData().getLogin().getPasswordHash();
+        String newHash = LoginData.hashPassword(userAccount.getUserAccountData().getLogin().getSalt(), newPassword);
+        if (Strings.areEqual(newHash, oldHash)) {
+            UserContext.setFieldError("password", null);
+            throw Exceptions.createHandled().withNLSKey("Model.password.passwordUnchanged").handle();
+        }
     }
 
     /**
