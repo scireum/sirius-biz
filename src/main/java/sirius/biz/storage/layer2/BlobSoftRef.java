@@ -14,7 +14,6 @@ import sirius.kernel.commons.Strings;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
-import java.util.regex.Pattern;
 
 /**
  * Represents a reference to a {@link Blob} which can be placed as field within an {@link BaseEntity}.
@@ -27,8 +26,6 @@ public class BlobSoftRef extends BlobHardRef {
 
     private final boolean supportsURL;
     private final BaseEntityRef.OnDelete deleteHandler;
-
-    private static final Pattern URL_PATTERN = Pattern.compile("^https?://", Pattern.CASE_INSENSITIVE);
 
     /**
      * Creates a new reference for the given space.
@@ -61,8 +58,8 @@ public class BlobSoftRef extends BlobHardRef {
 
     @Override
     public BlobSoftRef withFallbackUri(String fallbackUri) {
-         super.withFallbackUri(fallbackUri);
-         return this;
+        super.withFallbackUri(fallbackUri);
+        return this;
     }
 
     @Override
@@ -92,7 +89,7 @@ public class BlobSoftRef extends BlobHardRef {
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean isURL() {
-        return supportsURL && Strings.isFilled(key) && URL_PATTERN.matcher(key).find();
+        return supportsURL && Strings.isHttpUrl(key);
     }
 
     @Override
