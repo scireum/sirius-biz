@@ -35,7 +35,7 @@
                                        value="@WebContext.getCurrent().get('user').asString()"
                                        class="form-control input-block-level"/>
                             </div>
-                            <div class="form-group mb-3 position-relative">
+                            <div class="form-group input-group mb-3">
                                 <input id="password"
                                        tabindex="2"
                                        placeholder="@i18n('Model.login.password')"
@@ -44,10 +44,9 @@
                                        required
                                        autocomplete="off"
                                        spellcheck="false"
-                                       class="form-control input-block-level pe-5"/>
-                                <span id="passwordToggleButton">
-                                    <i class="fa fa-eye position-absolute" id="passwordToggleIcon"
-                                       style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer;"></i>
+                                       class="form-control input-block-level"/>
+                                <span id="passwordToggleButton" class="input-group-text">
+                                    <i class="fa fa-eye" id="passwordToggleIcon" style="cursor: pointer;"></i>
                                 </span>
                             </div>
                             <div>
