@@ -29,7 +29,9 @@
                                        placeholder="@i18n('Model.login.user')"
                                        name="user"
                                        type="text"
+                                       required
                                        autocomplete="off"
+                                       spellcheck="false"
                                        value="@WebContext.getCurrent().get('user').asString()"
                                        class="form-control input-block-level"/>
                             </div>
@@ -37,9 +39,11 @@
                                 <input id="password"
                                        tabindex="2"
                                        placeholder="@i18n('Model.login.password')"
-                                       autocomplete="off"
                                        name="password"
                                        type="password"
+                                       required
+                                       autocomplete="off"
+                                       spellcheck="false"
                                        class="form-control input-block-level"/>
                             </div>
                             <div>
