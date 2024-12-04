@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>12.1.1</version>
+        <version>13.0.0</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -17,9 +17,9 @@
     <url>https://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-43.2.2</sirius.kernel>
-        <sirius.web>dev-85.5.0</sirius.web>
-        <sirius.db>dev-58.3.0</sirius.db>
+        <sirius.kernel>dev-44.0.0</sirius.kernel>
+        <sirius.web>dev-86.0.0</sirius.web>
+        <sirius.db>dev-59.0.0</sirius.db>
     </properties>
 
     <repositories>
