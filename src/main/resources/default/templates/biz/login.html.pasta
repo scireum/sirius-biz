@@ -35,7 +35,7 @@
                                        value="@WebContext.getCurrent().get('user').asString()"
                                        class="form-control input-block-level"/>
                             </div>
-                            <div class="form-group mb-3">
+                            <div class="form-group mb-3 position-relative">
                                 <input id="password"
                                        tabindex="2"
                                        placeholder="@i18n('Model.login.password')"
@@ -44,7 +44,11 @@
                                        required
                                        autocomplete="off"
                                        spellcheck="false"
-                                       class="form-control input-block-level"/>
+                                       class="form-control input-block-level pe-5"/>
+                                <span id="passwordToggleButton">
+                                    <i class="fa fa-eye position-absolute" id="passwordToggleIcon"
+                                       style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer;"></i>
+                                </span>
                             </div>
                             <div>
                                 <input type="checkbox" tabindex="4" value="true" name="keepLogin" checked/>
@@ -100,12 +104,27 @@
         sirius.ready(function () {
             const _userField = document.getElementById('user');
             const _passwordField = document.getElementById('password');
+            const _togglePasswordButton = document.getElementById('passwordToggleButton');
 
             if (!sirius.isEmpty(_userField.value)) {
                 _passwordField.focus();
             } else {
                 _userField.focus();
             }
+
+            _togglePasswordButton.addEventListener('click', function () {
+                const _togglePasswordIcon = document.getElementById('passwordToggleIcon');
+
+                if (_passwordField.getAttribute('type') === 'password') {
+                    _passwordField.setAttribute('type', 'text');
+                    _togglePasswordIcon.classList.remove('fa-eye');
+                    _togglePasswordIcon.classList.add('fa-eye-slash');
+                } else {
+                    _passwordField.setAttribute('type', 'password');
+                    _togglePasswordIcon.classList.remove('fa-eye-slash');
+                    _togglePasswordIcon.classList.add('fa-eye');
+                }
+            });
 
             try {
                 window.localStorage.setItem('samlPostLoginUri', '<i:raw>@originalUrl</i:raw>');
