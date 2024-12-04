@@ -13,6 +13,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.settings.ExtendedSettings;
 import sirius.kernel.settings.Settings;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 /**
  * Provides the settings for password generation and validation.
@@ -56,6 +57,7 @@ public class PasswordSettings {
      * @param entity the entity to resolve the settings for
      * @return the resolved settings
      */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public ExtendedSettings resolveUserPasswordSettings(Entity entity) {
         return new ExtendedSettings(Sirius.getSettings().getConfig(SETTINGS_USER_BASE), true);
     }
