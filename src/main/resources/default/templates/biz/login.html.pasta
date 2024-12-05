@@ -112,6 +112,7 @@
             }
 
             _togglePasswordButton.addEventListener('click', function () {
+                // the <i> is changed to the <svg> after loading so we need to get the icon on clicking to make it work.
                 const _togglePasswordIcon = document.getElementById('passwordToggleIcon');
 
                 if (_passwordField.getAttribute('type') === 'password') {
