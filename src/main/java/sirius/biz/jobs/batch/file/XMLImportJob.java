@@ -18,7 +18,9 @@ import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.xml.NoContentNodeHandler;
 import sirius.kernel.xml.NodeHandler;
+import sirius.kernel.xml.StructuredNode;
 import sirius.kernel.xml.XMLReader;
 import sirius.web.resources.Resource;
 import sirius.web.resources.Resources;
@@ -128,11 +130,22 @@ public abstract class XMLImportJob extends FileImportJob {
         XMLReader reader = new XMLReader();
         if (importer.getContext().getEventDispatcher().isActive()) {
             stage.accept((name, originalHandler) -> {
-                reader.addHandler(name, structuredNode -> {
-                    AfterNodeLoadEvent event = new AfterNodeLoadEvent(structuredNode, importer.getContext());
-                    importer.getContext().getEventDispatcher().handleEvent(event);
-                    originalHandler.process(structuredNode);
-                });
+                if (originalHandler.ignoreContent()) {
+                    reader.addHandler(name, new NoContentNodeHandler() {
+                        @Override
+                        public void process(StructuredNode node) {
+                            AfterNodeLoadEvent event = new AfterNodeLoadEvent(node, importer.getContext());
+                            importer.getContext().getEventDispatcher().handleEvent(event);
+                            originalHandler.process(node);
+                        }
+                    });
+                } else {
+                    reader.addHandler(name, structuredNode -> {
+                        AfterNodeLoadEvent event = new AfterNodeLoadEvent(structuredNode, importer.getContext());
+                        importer.getContext().getEventDispatcher().handleEvent(event);
+                        originalHandler.process(structuredNode);
+                    });
+                }
             });
         } else {
             stage.accept(reader::addHandler);
