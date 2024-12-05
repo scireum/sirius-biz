@@ -126,15 +126,17 @@ public abstract class XMLImportJob extends FileImportJob {
     protected void executeProcessingStage(InputStream in, Consumer<BiConsumer<String, NodeHandler>> stage)
             throws Exception {
         XMLReader reader = new XMLReader();
-        stage.accept((name, originalHandler) -> {
-            reader.addHandler(name, structuredNode -> {
-                if (importer.getContext().getEventDispatcher().isActive()) {
+        if (importer.getContext().getEventDispatcher().isActive()) {
+            stage.accept((name, originalHandler) -> {
+                reader.addHandler(name, structuredNode -> {
                     AfterNodeLoadEvent event = new AfterNodeLoadEvent(structuredNode, importer.getContext());
                     importer.getContext().getEventDispatcher().handleEvent(event);
-                }
-                originalHandler.process(structuredNode);
+                    originalHandler.process(structuredNode);
+                });
             });
-        });
+        } else {
+            stage.accept(reader::addHandler);
+        }
         reader.parse(in, this::resolveResource);
     }
 
