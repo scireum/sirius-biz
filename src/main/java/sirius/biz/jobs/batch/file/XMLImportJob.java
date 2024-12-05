@@ -140,10 +140,10 @@ public abstract class XMLImportJob extends FileImportJob {
                         }
                     });
                 } else {
-                    reader.addHandler(name, structuredNode -> {
-                        AfterNodeLoadEvent event = new AfterNodeLoadEvent(structuredNode, importer.getContext());
+                    reader.addHandler(name, node -> {
+                        AfterNodeLoadEvent event = new AfterNodeLoadEvent(node, importer.getContext());
                         importer.getContext().getEventDispatcher().handleEvent(event);
-                        originalHandler.process(structuredNode);
+                        originalHandler.process(node);
                     });
                 }
             });
