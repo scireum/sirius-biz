@@ -242,25 +242,25 @@ public class BlobDispatcher implements WebDispatcher {
             response.error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
-        response.cachedForSeconds(cacheSeconds);
-
-        BlobStorageSpace storageSpace = blobStorage.getSpace(blobUri.getStorageSpace());
 
         if (blobUri.isCacheable()) {
-            // If a virtual request is marked as cacheable, we try to redirect to the proper physical blob key
-            // as this will remain in cache much longer (and the redirect itself will also be cached). The additional
-            // HTTP round-trip for the redirect shouldn't hurt too much, as it is most probably optimized away due to
-            // keep-alive. However, using a physical delivery with infinite cache settings will enable any downstream
-            // reverse-proxies to maximize their cache utilization...
-            URLBuilder.UrlResult urlResult =
-                    buildPhysicalRedirectUrl(storageSpace, blobUri, cacheSeconds == Response.HTTP_CACHE_INFINITE);
-
-            if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
-                response.redirectTemporarily(urlResult.url());
-                return;
-            }
+            response.cachedForSeconds(cacheSeconds);
         } else {
             response.notCached();
+        }
+
+        // Check if we have an actual file to deliver ...
+        BlobStorageSpace storageSpace = blobStorage.getSpace(blobUri.getStorageSpace());
+        URLBuilder.UrlResult urlResult =
+                buildPhysicalRedirectUrl(storageSpace, blobUri, cacheSeconds == Response.HTTP_CACHE_INFINITE);
+        if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
+            // ... and if so, redirect to the physical URL ...
+            if (blobUri.isCacheable()) {
+                // ... but only caches the redirect URL to maximum 1 hour, so the underlying URL can be changed.
+                response.cachedForSeconds(Math.min(cacheSeconds, 3600));
+            }
+            response.redirectTemporarily(urlResult.url());
+            return;
         }
 
         String filename = blobUri.getFilename();
