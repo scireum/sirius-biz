@@ -165,11 +165,11 @@ public class BlobDispatcher implements WebDispatcher {
      */
     private void physicalDelivery(WebContext request, BlobUri blobUri) {
         Response response = request.respondWith();
-        Integer cacheSeconds = computeCacheDurationFromHash(response,
-                                                            blobUri.getAccessToken(),
+        Integer cacheSeconds = computeCacheDurationFromHash(blobUri.getAccessToken(),
                                                             blobUri.getPhysicalKey(),
                                                             blobUri.getStorageSpace());
         if (cacheSeconds == null) {
+            response.error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
         response.cachedForSeconds(cacheSeconds);
@@ -190,17 +190,15 @@ public class BlobDispatcher implements WebDispatcher {
     /**
      * Checks if the provided accessToken is invalid and return the cache time in seconds based on the hash validity.
      *
-     * @param response    the response to return
      * @param accessToken the security token to verify
      * @param key         the key to verify
      * @param space       the space which is accessed
      * @return the cache time in seconds or <tt>null</tt> if the hash is invalid
      */
-    private Integer computeCacheDurationFromHash(Response response, String accessToken, String key, String space) {
+    private Integer computeCacheDurationFromHash(String accessToken, String key, String space) {
         BlobStorageSpace storageSpace = blobStorage.getSpace(space);
         Optional<Integer> optionalHashDays = utils.verifyHash(key, accessToken, storageSpace.getUrlValidityDays());
         if (optionalHashDays.isEmpty()) {
-            response.error(HttpResponseStatus.UNAUTHORIZED);
             return null;
         }
 
@@ -238,11 +236,10 @@ public class BlobDispatcher implements WebDispatcher {
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
 
         Response response = request.respondWith();
-        Integer cacheSeconds = computeCacheDurationFromHash(response,
-                                                            blobUri.getAccessToken(),
-                                                            effectiveKey,
-                                                            blobUri.getStorageSpace());
+        Integer cacheSeconds =
+                computeCacheDurationFromHash(blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace());
         if (cacheSeconds == null) {
+            response.error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
         response.cachedForSeconds(cacheSeconds);
