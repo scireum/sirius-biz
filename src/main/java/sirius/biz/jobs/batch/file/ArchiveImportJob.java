@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -42,6 +43,11 @@ import java.util.zip.ZipFile;
 public abstract class ArchiveImportJob extends FileImportJob {
 
     private static final String ZIP_FILE_EXTENSION = "zip";
+
+    /**
+     * Contains a list of file names which should be ignored when extracting files from the archive.
+     */
+    private static final List <String> FILE_FILTER = List.of("__MACOSX");
 
     /**
      * Contains a customized parameter which should be used in {@link FileImportJobFactory#createFileParameter()}
