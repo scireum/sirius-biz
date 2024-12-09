@@ -527,7 +527,9 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean markCanceled(String processId) {
-        return modify(processId, process -> process.getState() == ProcessState.RUNNING, process -> {
+        return modify(processId, process -> {
+            return process.getState() == ProcessState.WAITING || process.getState() == ProcessState.RUNNING;
+        }, process -> {
             process.setErrorneous(true);
             process.setCanceled(LocalDateTime.now());
             process.setState(ProcessState.CANCELED);
@@ -572,7 +574,8 @@ public class Processes {
      */
     protected boolean changeDebugging(String processId, boolean debuggingEnabled) {
         return modify(processId,
-                      process -> process.getState() == ProcessState.RUNNING
+                      process -> process.getState() == ProcessState.WAITING
+                                 || process.getState() == ProcessState.RUNNING
                                  || process.getState() == ProcessState.STANDBY,
                       process -> process.setDebugging(debuggingEnabled));
     }
@@ -1018,7 +1021,11 @@ public class Processes {
      */
     public boolean hasActiveProcesses() {
         try {
-            return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
+            return queryProcessesForCurrentUser().where(elastic.filters()
+                                                               .oneInField(Process.STATE,
+                                                                           List.of(ProcessState.WAITING,
+                                                                                   ProcessState.RUNNING))
+                                                               .build()).exists();
         } catch (Exception exception) {
             Exceptions.handle(Log.SYSTEM, exception);
             return false;

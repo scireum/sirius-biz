@@ -405,7 +405,7 @@ public class Process extends SearchableEntity {
      */
     public String getStateColor() {
         return switch (state) {
-            case RUNNING -> "blue";
+            case WAITING, RUNNING -> "blue";
             case STANDBY -> "violet-light";
             case TERMINATED -> "green";
             case CANCELED -> "yellow";
