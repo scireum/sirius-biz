@@ -110,7 +110,7 @@ public abstract class ArchiveImportJob extends FileImportJob {
         Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
         while (zipEntries.hasMoreElements() && taskContext.isActive()) {
             ZipEntry zipEntry = zipEntries.nextElement();
-            if(zipEntry.getName().contains("__MACOSX")) {
+            if (FILE_FILTER.stream().anyMatch(zipEntry.getName()::contains)) {
                 continue;
             }
             if (Strings.areEqual(fileName, zipEntry.getName())) {
