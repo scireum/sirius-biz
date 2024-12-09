@@ -110,7 +110,7 @@ public abstract class ArchiveImportJob extends FileImportJob {
         Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
         while (zipEntries.hasMoreElements() && taskContext.isActive()) {
             ZipEntry zipEntry = zipEntries.nextElement();
-            if (FILE_FILTER.stream().anyMatch(zipEntry.getName()::contains)) {
+            if (FILE_FILTER.stream().anyMatch(zipEntry.getName()::startsWith)) {
                 continue;
             }
             if (Strings.areEqual(fileName, zipEntry.getName())) {
