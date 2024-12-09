@@ -230,6 +230,15 @@ public class Process extends SearchableEntity {
     private LocalDateTime completed;
 
     /**
+     * Contains the waiting time in seconds.
+     * <p>
+     * This is the time between the creation of the process and the actual start of the process.
+     */
+    public static final Mapping WAITING_TIME = Mapping.named("waitingTime");
+    @NullAllowed
+    private int waitingTime;
+
+    /**
      * Contains the estimated computation time performed in this process in seconds.
      * <p>
      * Note that this is not an exact value, as we might skip very short computations (esp. for standby processes)
@@ -705,6 +714,15 @@ public class Process extends SearchableEntity {
 
     public void setWarnings(boolean warnings) {
         this.warnings = warnings;
+    }
+
+    public int getWaitingTime() {
+        return waitingTime;
+    }
+
+    public Process setWaitingTime(int waitingTime) {
+        this.waitingTime = waitingTime;
+        return this;
     }
 
     public int getComputationTime() {

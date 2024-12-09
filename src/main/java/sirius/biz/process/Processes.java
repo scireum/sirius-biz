@@ -513,6 +513,7 @@ public class Processes {
     protected boolean markRunning(String processId) {
         return modify(processId, process -> process.getState() == ProcessState.WAITING, process -> {
             process.setStarted(LocalDateTime.now());
+            process.setWaitingTime((int) Duration.between(process.getCreated(), process.getStarted()).getSeconds());
             process.setState(ProcessState.RUNNING);
         });
     }
