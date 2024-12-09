@@ -198,6 +198,15 @@ public class Process extends SearchableEntity {
     private final StringIntMap adminTimings = new StringIntMap();
 
     /**
+     * Contains the timestamp when the process was created / initialized.
+     * <p>
+     * Note, for standby processes, this contains the timestamp of the last invocation.
+     */
+    public static final Mapping CREATED = Mapping.named("created");
+    @NullAllowed
+    private LocalDateTime created;
+
+    /**
      * Contains the timestamp when the process was started.
      * <p>
      * Note, for standby processes, this contains the timestamp of the last invocation.
@@ -587,6 +596,15 @@ public class Process extends SearchableEntity {
 
     public StringIntMap getAdminTimings() {
         return adminTimings;
+    }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public Process setCreated(LocalDateTime created) {
+        this.created = created;
+        return this;
     }
 
     public LocalDateTime getStarted() {

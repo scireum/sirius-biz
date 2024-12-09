@@ -165,7 +165,7 @@ public class Processes {
         process.setTenantName(user.getTenantName());
         process.setState(ProcessState.WAITING);
         process.setProcessType(type);
-        process.setStarted(LocalDateTime.now());
+        process.setCreated(LocalDateTime.now());
         process.setPersistencePeriod(persistencePeriod);
         process.getContext().modify().putAll(context);
 
@@ -399,6 +399,7 @@ public class Processes {
         process.setTenantId(tenantId);
         process.setTenantName(tenantName);
         process.setState(ProcessState.STANDBY);
+        process.setCreated(LocalDateTime.now());
         process.setStarted(LocalDateTime.now());
         elastic.update(process);
 
