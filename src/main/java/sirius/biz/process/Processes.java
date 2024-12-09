@@ -1038,7 +1038,8 @@ public class Processes {
      * @return a query for all processes visible to the current user
      */
     public ElasticQuery<Process> queryProcessesForCurrentUser() {
-        ElasticQuery<Process> query = elastic.select(Process.class).orderDesc(Process.STARTED);
+        ElasticQuery<Process> query =
+                elastic.select(Process.class).orderDesc(Process.CREATED).orderDesc(Process.STARTED);
 
         UserInfo user = UserContext.getCurrentUser();
         if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
