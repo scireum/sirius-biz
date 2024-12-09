@@ -163,7 +163,7 @@ public class Processes {
         process.setUserName(user.getUserName());
         process.setTenantId(user.getTenantId());
         process.setTenantName(user.getTenantName());
-        process.setState(ProcessState.RUNNING);
+        process.setState(ProcessState.WAITING);
         process.setProcessType(type);
         process.setStarted(LocalDateTime.now());
         process.setPersistencePeriod(persistencePeriod);
