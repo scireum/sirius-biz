@@ -505,6 +505,19 @@ public class Processes {
     }
 
     /**
+     * Marks a process as running.
+     *
+     * @param processId the process to update
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    protected boolean markRunning(String processId) {
+        return modify(processId, process -> process.getState() == ProcessState.WAITING, process -> {
+            process.setStarted(LocalDateTime.now());
+            process.setState(ProcessState.RUNNING);
+        });
+    }
+
+    /**
      * Marks a process as canceled.
      * <p>
      * Note that this also marks the process as {@link Process#ERRORNEOUS}.
