@@ -10,6 +10,7 @@ package sirius.biz.tycho.updates;
 
 import sirius.biz.analytics.events.Event;
 import sirius.biz.analytics.events.UserData;
+import sirius.biz.analytics.events.UserEvent;
 import sirius.db.mixing.Mapping;
 
 /**
@@ -17,7 +18,7 @@ import sirius.db.mixing.Mapping;
  *
  * @see UpdateManager
  */
-public class UpdateClickEvent extends Event<UpdateClickEvent> {
+public class UpdateClickEvent extends Event<UpdateClickEvent> implements UserEvent {
 
     public static final Mapping UPDATE_GUID = Mapping.named("updateGuid");
     private String updateGuid;
@@ -25,7 +26,6 @@ public class UpdateClickEvent extends Event<UpdateClickEvent> {
     /**
      * Contains the current user, tenant and scope if available.
      */
-    public static final Mapping USER_DATA = Mapping.named("userData");
     private final UserData userData = new UserData();
 
     /**
@@ -43,6 +43,7 @@ public class UpdateClickEvent extends Event<UpdateClickEvent> {
         return updateGuid;
     }
 
+    @Override
     public UserData getUserData() {
         return userData;
     }
