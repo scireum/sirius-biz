@@ -49,7 +49,7 @@
                 <i:render name="header-actions"/>
             </i:block>
             <i:block name="additionalActions">
-                <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING || process.getState() == sirius.biz.process.ProcessState.STANDBY">
+                <i:if test="process.getState() == sirius.biz.process.ProcessState.WAITING || process.getState() == sirius.biz.process.ProcessState.RUNNING || process.getState() == sirius.biz.process.ProcessState.STANDBY">
                     <i:if test="process.isDebugging()">
                         <t:dropdownItem labelKey="ProcessController.disableDebugging"
                                         icon="fa-solid fa-bug-slash fa-fw"
@@ -63,7 +63,7 @@
                         </i:else>
                     </i:if>
                 </i:if>
-                <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+                <i:if test="process.getState() == sirius.biz.process.ProcessState.WAITING || process.getState() == sirius.biz.process.ProcessState.RUNNING">
                     <t:dropdownItem labelKey="NLS.cancel"
                                     icon="fa-solid fa-ban fa-fw"
                                     url="@apply('/ps/%s/cancel', process.getId())"
