@@ -17,6 +17,7 @@ import sirius.biz.util.ExtractedFile;
 import sirius.biz.util.ExtractedZipFile;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Amount;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
@@ -110,7 +111,7 @@ public abstract class ArchiveImportJob extends FileImportJob {
         Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
         while (zipEntries.hasMoreElements() && taskContext.isActive()) {
             ZipEntry zipEntry = zipEntries.nextElement();
-            if (FILE_FILTER.stream().anyMatch(zipEntry.getName()::startsWith)) {
+            if (Files.isConsideredHidden(zipEntry.getName()) || Files.isConsideredMetadata(zipEntry.getName())) {
                 continue;
             }
             if (Strings.areEqual(fileName, zipEntry.getName())) {
