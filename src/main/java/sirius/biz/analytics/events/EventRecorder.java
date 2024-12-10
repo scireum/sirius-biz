@@ -42,7 +42,10 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Responsible for collecting and storing {@link Event events} for analytical and statistical purposes.
@@ -538,5 +541,18 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         }
 
         return result;
+    }
+
+    /**
+     * Fetches all events which match the given query considering the given duplicate preventer.
+     *
+     * @param query              the query to execute
+     * @param duplicatePreventer the duplicate preventer to apply to prevent fetching the same events multiple times
+     * @param <E>                the type of the events to fetch
+     * @return a stream of events which match the given query
+     */
+    public <E extends Event<E>> Stream<E> fetchEventsBlockwise(SmartQuery<E> query,
+                                                               BiConsumer<SmartQuery<E>, E> duplicatePreventer) {
+        return StreamSupport.stream(new EventSpliterator<>(query, duplicatePreventer), false);
     }
 }
