@@ -544,6 +544,25 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
+     * Fetches all user events which match the given query.
+     * <p>
+     * Duplicates are prevented by assuming that users do not generate multiple events of the same type at the same
+     * time.
+     *
+     * @param query the query to execute
+     * @param <E>   the type of the events to fetch
+     * @return a stream of events which match the given query
+     */
+    public <E extends Event<E> & UserEvent> Stream<E> fetchUserEventsBlockwise(SmartQuery<E> query) {
+        return StreamSupport.stream(new EventSpliterator<E>(query, (effectiveQuery, lastEvent) -> {
+            query.where(OMA.FILTERS.not(OMA.FILTERS.and(OMA.FILTERS.eq(Event.EVENT_TIMESTAMP,
+                                                                       lastEvent.getEventTimestamp()),
+                                                        OMA.FILTERS.eq(UserEvent.USER_DATA.inner(UserData.USER_ID),
+                                                                       lastEvent.getUserData().getUserId()))));
+        }), false);
+    }
+
+    /**
      * Fetches all events which match the given query considering the given duplicate preventer.
      *
      * @param query              the query to execute
