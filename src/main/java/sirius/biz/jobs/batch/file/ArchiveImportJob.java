@@ -46,11 +46,6 @@ public abstract class ArchiveImportJob extends FileImportJob {
     private static final String ZIP_FILE_EXTENSION = "zip";
 
     /**
-     * Contains a list of file names which should be ignored when extracting files from the archive.
-     */
-    private static final List <String> FILE_FILTER = List.of("__MACOSX");
-
-    /**
      * Contains a customized parameter which should be used in {@link FileImportJobFactory#createFileParameter()}
      * in its factory.
      */
