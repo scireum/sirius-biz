@@ -61,6 +61,7 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
     }
 
     protected void executeInProcess(String factoryId, ProcessContext process) {
+        process.markRunning();
         process.log(ProcessLog.info().withNLSKey("BatchProcessTaskExecutor.started"));
         try {
             jobs.findFactory(factoryId, BatchProcessJobFactory.class).executeTask(process);
@@ -76,6 +77,7 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
     }
 
     protected void partiallyExecuteInProcess(String factoryId, ProcessContext process) {
+        process.markRunning();
         process.log(ProcessLog.info().withNLSKey("BatchProcessTaskExecutor.started"));
         Watch watch = Watch.start();
         try {

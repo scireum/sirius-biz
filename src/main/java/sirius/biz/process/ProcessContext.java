@@ -160,6 +160,11 @@ public interface ProcessContext extends TaskContextAdapter {
     boolean isErroneous();
 
     /**
+     * Marks the process as running.
+     */
+    void markRunning();
+
+    /**
      * Marks the process as completed.
      * <p>
      * This is most probably done by {@link Processes#execute(String, Consumer)}. However, when executing in
