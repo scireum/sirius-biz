@@ -46,24 +46,17 @@ public class Charts {
     }
 
     /**
-     * Creates an empty SVG element with the relevant attributes set.
-     *
-     * @return an empty SVG element
-     */
-    protected static Element createSvgElement() {
-        return SVGDOMImplementation.getDOMImplementation()
-                                   .createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, BaseChart.TAG_SVG, null)
-                                   .getDocumentElement();
-    }
-
-    /**
      * Creates an empty SVG element with the view box centered.
      *
      * @param bounds the dimensions of the viewport
      * @return an empty SVG element with the view box centered
      */
     protected static Element createSvgElementWithCenteredViewbox(Dimension bounds) {
-        Element svgElement = createSvgElement();
+        Element svgElement = SVGDOMImplementation.getDOMImplementation()
+                                                 .createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI,
+                                                                 BaseChart.TAG_SVG,
+                                                                 null)
+                                                 .getDocumentElement();
         svgElement.setAttribute(BaseChart.ATTRIBUTE_VIEW_BOX,
                                 String.format("%f %f %f %f",
                                               -0.5 * bounds.width,
