@@ -551,10 +551,10 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     /// @return a stream of events which match the given query
     public <E extends Event<E> & UserEvent> Stream<E> fetchUserEventsBlockwise(SmartQuery<E> query) {
         return StreamSupport.stream(new EventSpliterator<E>(query, (effectiveQuery, lastEvent) -> {
-            query.where(OMA.FILTERS.not(OMA.FILTERS.and(OMA.FILTERS.eq(Event.EVENT_TIMESTAMP,
-                                                                       lastEvent.getEventTimestamp()),
-                                                        OMA.FILTERS.eq(UserEvent.USER_DATA.inner(UserData.USER_ID),
-                                                                       lastEvent.getUserData().getUserId()))));
+            effectiveQuery.where(OMA.FILTERS.not(OMA.FILTERS.and(OMA.FILTERS.eq(Event.EVENT_TIMESTAMP,
+                                                                                lastEvent.getEventTimestamp()),
+                                                                 OMA.FILTERS.eq(UserEvent.USER_DATA.inner(UserData.USER_ID),
+                                                                                lastEvent.getUserData().getUserId()))));
         }), false);
     }
 
