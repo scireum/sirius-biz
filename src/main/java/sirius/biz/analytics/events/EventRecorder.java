@@ -551,17 +551,11 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     /// @param <E>   the type of the events to fetch
     /// @return a stream of events which match the given query
     public <E extends Event<E> & UserEvent> Stream<E> fetchUserEventsBlockwise(SmartQuery<E> query) {
-        return StreamSupport.stream(new EventSpliterator<E>(query, (effectiveQuery, lastEvents) -> {
-            effectiveQuery.where(OMA.FILTERS.not(OMA.FILTERS.and(OMA.FILTERS.eq(Event.EVENT_TIMESTAMP,
-                                                                                lastEvents.getLast()
-                                                                                          .getEventTimestamp()),
-                                                                 OMA.FILTERS.oneInField(UserEvent.USER_DATA.inner(
-                                                                                                UserData.USER_ID),
-                                                                                        lastEvents.stream()
-                                                                                                  .map(UserEvent::getUserData)
-                                                                                                  .map(UserData::getUserId)
-                                                                                                  .toList()).build())));
-        }), false);
+        return StreamSupport.stream(new EventSpliterator<E>(query,
+                                                            List.of(UserEvent.USER_DATA.inner(UserData.SCOPE_ID),
+                                                                    UserEvent.USER_DATA.inner(UserData.TENANT_ID),
+                                                                    UserEvent.USER_DATA.inner(UserData.USER_ID))),
+                                    false);
     }
 
     /// Fetches all events which match the given query considering the given duplicate preventer.
