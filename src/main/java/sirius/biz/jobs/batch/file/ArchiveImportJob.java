@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -173,6 +172,9 @@ public abstract class ArchiveImportJob extends FileImportJob {
         Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
         while (zipEntries.hasMoreElements() && taskContext.isActive()) {
             ZipEntry zipEntry = zipEntries.nextElement();
+            if (Files.isConsideredHidden(zipEntry.getName()) || Files.isConsideredMetadata(zipEntry.getName())) {
+                continue;
+            }
             fileHandler.accept(new ExtractedZipFile(zipEntry, () -> zipFile.getInputStream(zipEntry), Amount.NOTHING));
         }
     }
