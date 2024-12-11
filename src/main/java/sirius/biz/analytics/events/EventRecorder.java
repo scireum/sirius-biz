@@ -543,16 +543,13 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         return result;
     }
 
-    /**
-     * Fetches all user events which match the given query.
-     * <p>
-     * Duplicates are prevented by assuming that users do not generate multiple events of the same type at the same
-     * time.
-     *
-     * @param query the query to execute
-     * @param <E>   the type of the events to fetch
-     * @return a stream of events which match the given query
-     */
+    /// Fetches all user events which match the given query assuming that users can only trigger one event (of the type
+    /// in question) at the same time.
+    ///
+    ///
+    /// @param query the query to execute
+    /// @param <E>   the type of the events to fetch
+    /// @return a stream of events which match the given query
     public <E extends Event<E> & UserEvent> Stream<E> fetchUserEventsBlockwise(SmartQuery<E> query) {
         return StreamSupport.stream(new EventSpliterator<E>(query, (effectiveQuery, lastEvent) -> {
             query.where(OMA.FILTERS.not(OMA.FILTERS.and(OMA.FILTERS.eq(Event.EVENT_TIMESTAMP,
@@ -562,14 +559,13 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         }), false);
     }
 
-    /**
-     * Fetches all events which match the given query considering the given duplicate preventer.
-     *
-     * @param query              the query to execute
-     * @param duplicatePreventer the duplicate preventer to apply to prevent fetching the same events multiple times
-     * @param <E>                the type of the events to fetch
-     * @return a stream of events which match the given query
-     */
+    /// Fetches all events which match the given query considering the given duplicate preventer.
+    ///
+    /// @param query              the query to execute
+    /// @param duplicatePreventer the duplicate preventer to apply to prevent fetching the same events multiple times
+    /// @param <E>                the type of the events to fetch
+    /// @return a stream of events which match the given query
+    /// @see EventSpliterator for a detailed explanation of the duplicate preventer
     public <E extends Event<E>> Stream<E> fetchEventsBlockwise(SmartQuery<E> query,
                                                                BiConsumer<SmartQuery<E>, E> duplicatePreventer) {
         return StreamSupport.stream(new EventSpliterator<>(query, duplicatePreventer), false);
