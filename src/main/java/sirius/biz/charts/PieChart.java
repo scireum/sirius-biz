@@ -164,7 +164,7 @@ public class PieChart<N extends Number> extends Chart {
 
         // if the start and end point are precisely the same, we need to add a small offset to avoid rendering issues
         double delta = endRadians - startRadians;
-        double offset = (Math.abs(delta % Math.TAU) < 2.0e-4) ? 1.0e-4 : 0.0;
+        double offset = (Math.abs(delta % Math.TAU) < 0.0002) ? 0.0001 : 0.0;
 
         // cache the sine and cosine values, as they are relatively expensive to compute
         double startSine = Math.sin(startRadians + offset);
