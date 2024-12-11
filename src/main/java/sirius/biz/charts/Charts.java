@@ -38,11 +38,11 @@ public class Charts {
                                            bounds.height));
 
         // note that the string writer uses a string buffer internally; no additional buffering or flushing is required
-        StringWriter out = new StringWriter();
-        XmlDomWriter xmlOut = new XmlDomWriter();
-        xmlOut.setOutput(out);
-        xmlOut.write(element);
-        return out.toString();
+        StringWriter writer = new StringWriter();
+        XmlDomWriter xmlWriter = new XmlDomWriter();
+        xmlWriter.setOutput(writer);
+        xmlWriter.write(element);
+        return writer.toString();
     }
 
     /**
