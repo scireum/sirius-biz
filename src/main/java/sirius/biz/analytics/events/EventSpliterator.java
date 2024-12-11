@@ -44,6 +44,10 @@ import java.util.function.BiConsumer;
 /// [UserData#USER_ID] and [Event#EVENT_TIMESTAMP] are used to prevent fetching the same event triggered by the
 /// same user at the same time again.
 ///
+/// Event deduplication may result in complex queries, which can potentially slow down performance or generate queries
+/// that are too large to process.Therefore, if individual events are not needed, using
+/// [metrics][sirius.kernel.health.metrics.Metric] may be a better choice for fetching aggregated data.
+///
 /// @param <E> the type of the events to fetch
 public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E> {
 
