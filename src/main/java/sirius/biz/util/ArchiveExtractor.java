@@ -244,7 +244,7 @@ public class ArchiveExtractor {
 
     private boolean ignoreHiddenFiles(String path) {
         String filename = Files.getFilenameAndExtension(path);
-        return Strings.isFilled(filename) && !filename.startsWith(".") && !filename.startsWith("__MACOSX");
+        return Strings.isFilled(filename) && !Files.isConsideredHidden(filename) && !Files.isConsideredMetadata(path);
     }
 
     private void extractZip(File archiveFile,

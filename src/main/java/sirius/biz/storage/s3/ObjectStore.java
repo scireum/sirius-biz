@@ -194,7 +194,7 @@ public class ObjectStore {
                                                      .withS3Client(client)
                                                      .build();
 
-        if (Strings.isFilled(bucketSuffix) && bucketSuffix.contains(".") && !bucketSuffix.startsWith(".")) {
+        if (Strings.isFilled(bucketSuffix) && bucketSuffix.contains(".") && !Files.isConsideredHidden(bucketSuffix)) {
             ObjectStores.LOG.WARN(
                     "The bucketSuffix '%s' contains a '.' but does not start with one. This might lead to errors!",
                     bucketSuffix);

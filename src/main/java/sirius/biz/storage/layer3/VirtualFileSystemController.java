@@ -13,6 +13,7 @@ import sirius.biz.storage.layer2.Blob;
 import sirius.biz.tycho.QuickAction;
 import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
@@ -380,7 +381,7 @@ public class VirtualFileSystemController extends BizController {
             Arrays.stream(extensionString.asString().split(","))
                   .map(Strings::trim)
                   .filter(Strings::isFilled)
-                  .map(string -> string.startsWith(".") ? string.substring(1) : string)
+                  .map(string -> Files.isConsideredHidden(string) ? string.substring(1) : string)
                   .forEach(search::withFileExtension);
         });
 
