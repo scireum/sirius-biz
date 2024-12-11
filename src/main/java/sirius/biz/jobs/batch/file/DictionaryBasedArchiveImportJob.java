@@ -16,6 +16,7 @@ import sirius.biz.util.ExtractedFile;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.UnitOfWork;
 import sirius.web.data.LineBasedProcessor;
@@ -177,7 +178,9 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
                     handleMissingFile(importFile.filename, importFile.required);
                 }
 
-                handledFiles.add(importFile.filename);
+                if(!(Files.isConsideredHidden(importFile.filename) || Files.isConsideredMetadata(importFile.filename))) {
+                    handledFiles.add(importFile.filename);
+                }
             }
         }
 
