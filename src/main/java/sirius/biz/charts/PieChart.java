@@ -53,11 +53,11 @@ public class PieChart<N extends Number> extends Chart {
         Element svgElement = Charts.createSvgElementWithCenteredViewbox(bounds);
 
         Element pieGroupElement =
-                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);
         svgElement.appendChild(pieGroupElement);
 
         Element labelsGroupElement =
-                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);
         svgElement.appendChild(labelsGroupElement);
 
         double radius = 0.5 * Math.min(bounds.width, bounds.height) - 5.0;
@@ -99,20 +99,20 @@ public class PieChart<N extends Number> extends Chart {
             previousLabel.setLocation(label);
 
             Element labelGroupElement =
-                    svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
+                    svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);
             labelsGroupElement.appendChild(labelGroupElement);
 
             Element labelCircle =
                     svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_CIRCLE);
-            labelCircle.setAttribute(ATTRIBUTE_CX, Double.toString(pin.getX()));
-            labelCircle.setAttribute(ATTRIBUTE_CY, Double.toString(pin.getY()));
-            labelCircle.setAttribute(ATTRIBUTE_R, "0.4");
+            labelCircle.setAttribute(ATTRIBUTE_CENTER_X, Double.toString(pin.getX()));
+            labelCircle.setAttribute(ATTRIBUTE_CENTER_Y, Double.toString(pin.getY()));
+            labelCircle.setAttribute(ATTRIBUTE_RADIUS, "0.4");
             labelCircle.setAttribute(ATTRIBUTE_FILL, COLOR_BLACK);
             labelGroupElement.appendChild(labelCircle);
 
             Element labelPath =
                     svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
-            labelPath.setAttribute(ATTRIBUTE_D,
+            labelPath.setAttribute(ATTRIBUTE_DEFINITION,
                                    String.format("M %f %f L %f %f",
                                                  pin.getX(),
                                                  pin.getY(),
@@ -149,7 +149,7 @@ public class PieChart<N extends Number> extends Chart {
         Element piecePath =
                 svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
 
-        piecePath.setAttribute(ATTRIBUTE_D, assemblePathDefinitionForSlice(startRadians, endRadians, radius));
+        piecePath.setAttribute(ATTRIBUTE_DEFINITION, assemblePathDefinitionForSlice(startRadians, endRadians, radius));
         piecePath.setAttribute(ATTRIBUTE_STROKE, COLOR_GRAY_DARK);
         piecePath.setAttribute(ATTRIBUTE_STROKE_WIDTH, "0.1");
 

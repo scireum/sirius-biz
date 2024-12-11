@@ -165,19 +165,19 @@ public class RadarChart<N extends Number> extends Chart {
         Element svgElement = Charts.createSvgElementWithCenteredViewbox(bounds);
 
         Element backgroundGroupElement =
-                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);
         svgElement.appendChild(backgroundGroupElement);
 
         Element axesGroupElement =
-                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);
         backgroundGroupElement.appendChild(axesGroupElement);
 
         Element labelsGroupElement =
-                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);
         backgroundGroupElement.appendChild(labelsGroupElement);
 
         Element graphsGroupElement =
-                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);
         svgElement.appendChild(graphsGroupElement);
 
         double radius = 0.5 * Math.min(bounds.width, bounds.height) - 7.5;
@@ -216,7 +216,7 @@ public class RadarChart<N extends Number> extends Chart {
 
             Element valuePath =
                     svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
-            valuePath.setAttribute(ATTRIBUTE_D, pathDefinition.append(" Z").toString());
+            valuePath.setAttribute(ATTRIBUTE_DEFINITION, pathDefinition.append(" Z").toString());
             valuePath.setAttribute(ATTRIBUTE_STROKE, dataset.getColor());
             valuePath.setAttribute(ATTRIBUTE_FILL, dataset.getColor());
             valuePath.setAttribute(ATTRIBUTE_FILL_OPACITY, "0.5");
@@ -257,9 +257,9 @@ public class RadarChart<N extends Number> extends Chart {
 
             if (rings) {
                 Element circleElement = document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_CIRCLE);
-                circleElement.setAttribute(ATTRIBUTE_CX, "0");
-                circleElement.setAttribute(ATTRIBUTE_CY, "0");
-                circleElement.setAttribute(ATTRIBUTE_R, Double.toString(markRadius));
+                circleElement.setAttribute(ATTRIBUTE_CENTER_X, "0");
+                circleElement.setAttribute(ATTRIBUTE_CENTER_Y, "0");
+                circleElement.setAttribute(ATTRIBUTE_RADIUS, Double.toString(markRadius));
                 circleElement.setAttribute(ATTRIBUTE_STROKE, COLOR_GRAY_LIGHT);
                 circleElement.setAttribute(ATTRIBUTE_FILL, VALUE_FILL_NONE);
                 circleElement.setAttribute(ATTRIBUTE_STROKE_WIDTH, "0.1");
@@ -287,7 +287,8 @@ public class RadarChart<N extends Number> extends Chart {
             // draw axis
             double axisRadius = radius + 2.5;
             Element axisPath = document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
-            axisPath.setAttribute(ATTRIBUTE_D, String.format("M 0 0 L %f %f", sine * axisRadius, -cosine * axisRadius));
+            axisPath.setAttribute(ATTRIBUTE_DEFINITION,
+                                  String.format("M 0 0 L %f %f", sine * axisRadius, -cosine * axisRadius));
             axisPath.setAttribute(ATTRIBUTE_STROKE, COLOR_BLACK);
             axisPath.setAttribute(ATTRIBUTE_STROKE_WIDTH, "0.2");
             axesGroupElement.appendChild(axisPath);
@@ -299,7 +300,7 @@ public class RadarChart<N extends Number> extends Chart {
                 double markY = -cosine * markRadius;
 
                 Element markPath = document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
-                markPath.setAttribute(ATTRIBUTE_D,
+                markPath.setAttribute(ATTRIBUTE_DEFINITION,
                                       String.format("M %f %f L %f %f",
                                                     markX + 0.5 * TICK_LENGTH * cosine,
                                                     markY + 0.5 * TICK_LENGTH * sine,

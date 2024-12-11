@@ -25,7 +25,7 @@ public abstract class Chart {
     /**
      * Contains the tag name for group elements, {@value}.
      */
-    protected static final String TAG_G = "g";
+    protected static final String TAG_GROUP = "g";
 
     /**
      * Contains the tag name for path elements, {@value}.
@@ -45,17 +45,17 @@ public abstract class Chart {
     /**
      * Contains the attribute name for the center x coordinate, {@value}.
      */
-    protected static final String ATTRIBUTE_CX = "cx";
+    protected static final String ATTRIBUTE_CENTER_X = "cx";
 
     /**
      * Contains the attribute name for the center y coordinate, {@value}.
      */
-    protected static final String ATTRIBUTE_CY = "cy";
+    protected static final String ATTRIBUTE_CENTER_Y = "cy";
 
     /**
      * Contains the attribute name for path definitions, {@value}.
      */
-    protected static final String ATTRIBUTE_D = "d";
+    protected static final String ATTRIBUTE_DEFINITION = "d";
 
     /**
      * Contains the attribute name for the fill colour, {@value}.
@@ -75,7 +75,7 @@ public abstract class Chart {
     /**
      * Contains the attribute name for the radius, {@value}.
      */
-    protected static final String ATTRIBUTE_R = "r";
+    protected static final String ATTRIBUTE_RADIUS = "r";
 
     /**
      * Contains the attribute name for the stroke colour, {@value}.
