@@ -30,7 +30,6 @@ public class Charts {
      * @return the SVG string representing the chart
      */
     public String exportChartForPdf(BaseChart chart, Dimension bounds) {
-
         // we need to clean the SVG code a bit to make it compatible with the PDF renderer
         Element element = chart.toSvg(bounds);
         element.setAttribute("style",
