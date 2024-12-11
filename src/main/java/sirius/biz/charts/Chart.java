@@ -15,7 +15,7 @@ import java.awt.Dimension;
 /**
  * Provides an interface for charts that can be rendered as SVG.
  */
-public abstract class BaseChart {
+public abstract class Chart {
 
     /**
      * Contains the tag name for circle elements, {@value}.

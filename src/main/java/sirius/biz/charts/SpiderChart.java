@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  *
  * @param <N> the type of the numeric values
  */
-public class SpiderChart<N extends Number> extends BaseChart {
+public class SpiderChart<N extends Number> extends Chart {
 
     private static final double TICK_LENGTH = 2.0;
 

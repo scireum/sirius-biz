@@ -30,7 +30,7 @@ public class Charts {
      * @param bounds the dimensions of the viewport
      * @return the SVG string representing the chart
      */
-    public String exportChartForPdf(BaseChart chart, Dimension bounds) {
+    public String exportChartForPdf(Chart chart, Dimension bounds) {
         // we need to clean the SVG code a bit to make it compatible with the PDF renderer
         Element element = chart.toSvg(bounds);
         element.setAttribute("style",
@@ -54,10 +54,10 @@ public class Charts {
     protected static Element createSvgElementWithCenteredViewbox(Dimension bounds) {
         Element svgElement = SVGDOMImplementation.getDOMImplementation()
                                                  .createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI,
-                                                                 BaseChart.TAG_SVG,
+                                                                 Chart.TAG_SVG,
                                                                  null)
                                                  .getDocumentElement();
-        svgElement.setAttribute(BaseChart.ATTRIBUTE_VIEW_BOX,
+        svgElement.setAttribute(Chart.ATTRIBUTE_VIEW_BOX,
                                 String.format("%f %f %f %f",
                                               -0.5 * bounds.width,
                                               -0.5 * bounds.height,

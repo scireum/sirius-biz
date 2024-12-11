@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.DoubleAdder;
  *
  * @param <N> the type of the numeric values
  */
-public class PieChart<N extends Number> extends BaseChart {
+public class PieChart<N extends Number> extends Chart {
 
     private static final double RING_WIDTH = 4.0;
 
