@@ -20,17 +20,18 @@ import java.util.concurrent.atomic.DoubleAdder;
  * Represents a pie chart which can be rendered as SVG.
  *
  * @param <N> the type of the numeric values
+ * @see DoughnutChart
  */
 public class PieChart<N extends Number> extends Chart {
 
-    private static final double RING_WIDTH = 4.0;
+    protected static final double DOUGHNUT_WIDTH = 4.0;
 
-    private Dataset<N> dataset;
+    protected Dataset<N> dataset;
 
     /**
-     * Flag to determine if the pie chart should be rendered as a ring rather than filled.
+     * Flag to determine if the pie chart should be rendered as a doughnut rather than filled.
      */
-    private boolean ring = false;
+    protected boolean doughnut = false;
 
     /**
      * Sets up the chart with the given dataset.
@@ -40,16 +41,6 @@ public class PieChart<N extends Number> extends Chart {
      */
     public PieChart<N> withDataset(Dataset<N> dataset) {
         this.dataset = dataset;
-        return this;
-    }
-
-    /**
-     * Enables the rendering of the pie chart as a ring rather than filled.
-     *
-     * @return the chart itself for fluent method calls
-     */
-    public PieChart<N> asRing() {
-        this.ring = true;
         return this;
     }
 
@@ -95,8 +86,8 @@ public class PieChart<N extends Number> extends Chart {
                                                                   slice.getColor()));
 
             double halfRadians = 0.5 * (startRadians + endRadians);
-            pin.setLocation(Math.sin(halfRadians) * (radius - 0.5 * RING_WIDTH),
-                            -Math.cos(halfRadians) * (radius - 0.5 * RING_WIDTH));
+            pin.setLocation(Math.sin(halfRadians) * (radius - 0.5 * DOUGHNUT_WIDTH),
+                            -Math.cos(halfRadians) * (radius - 0.5 * DOUGHNUT_WIDTH));
 
             label.setLocation((pin.getX() > 0 ? 0.5 : -0.5) * bounds.width, pin.getY());
             String textAnchor = pin.getX() > 0 ? VALUE_TEXT_ANCHOR_END : VALUE_TEXT_ANCHOR_START;
@@ -187,11 +178,11 @@ public class PieChart<N extends Number> extends Chart {
         double endX = endSine * radius;
         double endY = -endCosine * radius;
 
-        double innerRadius = radius - RING_WIDTH;
+        double innerRadius = radius - DOUGHNUT_WIDTH;
         int largeArcFlag = delta > Math.PI ? 1 : 0;
 
-        // draw a ring segment
-        if (ring && innerRadius > 0) {
+        // draw a doughnut segment
+        if (doughnut && innerRadius > 0) {
             double innerStartX = startSine * innerRadius;
             double innerStartY = -startCosine * innerRadius;
 
