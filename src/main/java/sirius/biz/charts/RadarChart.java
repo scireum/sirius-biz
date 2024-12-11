@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  *
  * @param <N> the type of the numeric values
  */
-public class SpiderChart<N extends Number> extends Chart {
+public class RadarChart<N extends Number> extends Chart {
 
     private static final double TICK_LENGTH = 2.0;
 
@@ -53,7 +53,7 @@ public class SpiderChart<N extends Number> extends Chart {
      *
      * @param labels the labels for the chart axes
      */
-    public SpiderChart(String... labels) {
+    public RadarChart(String... labels) {
         this(List.of(labels));
     }
 
@@ -62,7 +62,7 @@ public class SpiderChart<N extends Number> extends Chart {
      *
      * @param labels the labels for the chart axes
      */
-    public SpiderChart(SequencedCollection<String> labels) {
+    public RadarChart(SequencedCollection<String> labels) {
         if (labels.size() < 3) {
             throw new IllegalArgumentException("At least three keys are required.");
         }
@@ -76,7 +76,7 @@ public class SpiderChart<N extends Number> extends Chart {
      * @param dataset the dataset to add
      * @return the chart itself for fluent method calls
      */
-    public SpiderChart<N> addDataset(Dataset<N> dataset) {
+    public RadarChart<N> addDataset(Dataset<N> dataset) {
         if (!labels.equals(dataset.getLabels())) {
             throw new IllegalArgumentException("Incompatible dataset labels.");
         }
@@ -90,7 +90,7 @@ public class SpiderChart<N extends Number> extends Chart {
      * @param values the values of the dataset
      * @return the chart itself for fluent method calls
      */
-    public SpiderChart<N> addDataset(List<N> values) {
+    public RadarChart<N> addDataset(List<N> values) {
         return addDataset(null, values);
     }
 
@@ -101,7 +101,7 @@ public class SpiderChart<N extends Number> extends Chart {
      * @param values the values of the dataset
      * @return the chart itself for fluent method calls
      */
-    public SpiderChart<N> addDataset(@Nullable String name, List<N> values) {
+    public RadarChart<N> addDataset(@Nullable String name, List<N> values) {
         if (values.size() != labels.size()) {
             throw new IllegalArgumentException("Incompatible dataset size.");
         }
@@ -123,7 +123,7 @@ public class SpiderChart<N extends Number> extends Chart {
      * @return the chart itself for fluent method calls
      * @see #withRings()
      */
-    public SpiderChart<N> withMarks(List<N> marks) {
+    public RadarChart<N> withMarks(List<N> marks) {
         this.marks.clear();
         this.marks.addAll(marks);
         this.marks.sort(Comparator.comparingDouble(Number::doubleValue));
@@ -136,7 +136,7 @@ public class SpiderChart<N extends Number> extends Chart {
      * @return the chart itself for fluent method calls
      * @see #withMarks(List)
      */
-    public SpiderChart<N> withRings() {
+    public RadarChart<N> withRings() {
         this.rings = true;
         return this;
     }
@@ -147,7 +147,7 @@ public class SpiderChart<N extends Number> extends Chart {
      * @param formatter the formatter to use
      * @return the chart itself for fluent method calls
      */
-    public SpiderChart<N> withFormatter(Function<N, String> formatter) {
+    public RadarChart<N> withFormatter(Function<N, String> formatter) {
         this.formatter = formatter;
         return this;
     }
