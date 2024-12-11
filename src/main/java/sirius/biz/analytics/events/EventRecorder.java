@@ -546,7 +546,6 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     /// Fetches all user events which match the given query assuming that users can only trigger one event (of the type
     /// in question) at the same time.
     ///
-    ///
     /// @param query the query to execute
     /// @param <E>   the type of the events to fetch
     /// @return a stream of events which match the given query
