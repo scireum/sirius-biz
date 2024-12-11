@@ -38,6 +38,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -550,11 +551,16 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     /// @param <E>   the type of the events to fetch
     /// @return a stream of events which match the given query
     public <E extends Event<E> & UserEvent> Stream<E> fetchUserEventsBlockwise(SmartQuery<E> query) {
-        return StreamSupport.stream(new EventSpliterator<E>(query, (effectiveQuery, lastEvent) -> {
+        return StreamSupport.stream(new EventSpliterator<E>(query, (effectiveQuery, lastEvents) -> {
             effectiveQuery.where(OMA.FILTERS.not(OMA.FILTERS.and(OMA.FILTERS.eq(Event.EVENT_TIMESTAMP,
-                                                                                lastEvent.getEventTimestamp()),
-                                                                 OMA.FILTERS.eq(UserEvent.USER_DATA.inner(UserData.USER_ID),
-                                                                                lastEvent.getUserData().getUserId()))));
+                                                                                lastEvents.getLast()
+                                                                                          .getEventTimestamp()),
+                                                                 OMA.FILTERS.oneInField(UserEvent.USER_DATA.inner(
+                                                                                                UserData.USER_ID),
+                                                                                        lastEvents.stream()
+                                                                                                  .map(UserEvent::getUserData)
+                                                                                                  .map(UserData::getUserId)
+                                                                                                  .toList()).build())));
         }), false);
     }
 
@@ -566,7 +572,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     /// @return a stream of events which match the given query
     /// @see EventSpliterator for a detailed explanation of the duplicate preventer
     public <E extends Event<E>> Stream<E> fetchEventsBlockwise(SmartQuery<E> query,
-                                                               BiConsumer<SmartQuery<E>, E> duplicatePreventer) {
+                                                               BiConsumer<SmartQuery<E>, List<E>> duplicatePreventer) {
         return StreamSupport.stream(new EventSpliterator<>(query, duplicatePreventer), false);
     }
 }
