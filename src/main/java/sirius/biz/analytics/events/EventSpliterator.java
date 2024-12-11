@@ -14,6 +14,7 @@ import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.PullBasedSpliterator;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -48,9 +49,8 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
 
     private final SmartQuery<E> query;
 
-    /// Contains the last events fetched (all sharing the same [timestamp][Event#EVENT_TIMESTAMP]) to
-    /// prevent fetching the same events multiple times.
-    private List<E> lastEvents;
+    /// Contains the last events fetched.
+    private final ArrayList<E> lastEvents = new ArrayList<>();
 
     /// Contains a consumer which is used to prevent fetching the same events multiple times.
     private final BiConsumer<SmartQuery<E>, E> duplicatePreventer;
@@ -79,19 +79,18 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
             return null;
         }
 
-        if (lastEvents != null && lastEvents.size() < BLOCK_SIZE) {
-            return null;
-        }
-
         List<E> events = resolveEffectiveQuery().queryList();
         if (events.isEmpty()) {
             return null;
         }
 
-        lastEvents = events.reversed()
-                           .stream()
-                           .filter(event -> event.getEventTimestamp().equals(events.getLast().getEventTimestamp()))
-                           .toList();
+        if (!lastEvents.isEmpty() && !lastEvents.getLast()
+                                                .getEventTimestamp()
+                                                .equals(events.getLast().getEventTimestamp())) {
+            lastEvents.clear();
+        }
+
+        lastEvents.addAll(events);
 
         return events.iterator();
     }
@@ -104,9 +103,12 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
     private SmartQuery<E> resolveEffectiveQuery() {
         SmartQuery<E> effectiveQuery = query.copy();
 
-        if (lastEvents != null) {
-            effectiveQuery.where(OMA.FILTERS.gte(Event.EVENT_TIMESTAMP, lastEvents.getFirst().getEventTimestamp()));
-            lastEvents.forEach(lastEvent -> duplicatePreventer.accept(effectiveQuery, lastEvent));
+        if (!lastEvents.isEmpty()) {
+            effectiveQuery.where(OMA.FILTERS.gte(Event.EVENT_TIMESTAMP, lastEvents.getLast().getEventTimestamp()));
+            lastEvents.reversed()
+                      .stream()
+                      .filter(event -> event.getEventTimestamp().equals(lastEvents.getLast().getEventTimestamp()))
+                      .forEach(lastEvent -> duplicatePreventer.accept(effectiveQuery, lastEvent));
         }
 
         return effectiveQuery;
