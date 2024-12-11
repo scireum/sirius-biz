@@ -36,7 +36,7 @@ import java.util.function.BiConsumer;
 /// next fetch starting with the timestamp of the last event of the block.
 ///
 /// Implementations of the duplicate preventer should in most cases add an 'AND NOT (A=X AND B=Y AND ...)' constraint
-/// to the query for each of the supplied events. Here, A and B are fields specific to the event type while X and Y
+/// to the query based on the supplied events. Here, A and B are fields specific to the event type while X and Y
 /// are the values of the supplied event. The combination of the fields and values should take care of not fetching the
 /// same events multiple times. See [EventRecorder#fetchUserEventsBlockwise(SmartQuery)] for an example where the fields
 /// [UserData#USER_ID] and [Event#EVENT_TIMESTAMP] are used to prevent fetching the same event triggered by the
@@ -53,7 +53,7 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
     private final ArrayList<E> lastEvents = new ArrayList<>();
 
     /// Contains a consumer which is used to prevent fetching the same events multiple times.
-    private final BiConsumer<SmartQuery<E>, E> duplicatePreventer;
+    private final BiConsumer<SmartQuery<E>, List<E>> duplicatePreventer;
 
     /// Creates a new spliterator for the given query and duplicate preventer.
     ///
@@ -66,7 +66,7 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
     /// @param query              the query to use to fetch the events
     /// @param duplicatePreventer a consumer which is used to prevent fetching the same events multiple times
     /// @see EventSpliterator the class description for more information
-    public EventSpliterator(SmartQuery<E> query, BiConsumer<SmartQuery<E>, E> duplicatePreventer) {
+    public EventSpliterator(SmartQuery<E> query, BiConsumer<SmartQuery<E>, List<E>> duplicatePreventer) {
         super();
         this.query = query.copy().orderAsc(Event.EVENT_TIMESTAMP).limit(BLOCK_SIZE);
         this.duplicatePreventer = duplicatePreventer;
@@ -105,10 +105,12 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
 
         if (!lastEvents.isEmpty()) {
             effectiveQuery.where(OMA.FILTERS.gte(Event.EVENT_TIMESTAMP, lastEvents.getLast().getEventTimestamp()));
-            lastEvents.reversed()
-                      .stream()
-                      .filter(event -> event.getEventTimestamp().equals(lastEvents.getLast().getEventTimestamp()))
-                      .forEach(lastEvent -> duplicatePreventer.accept(effectiveQuery, lastEvent));
+            duplicatePreventer.accept(effectiveQuery,
+                                      lastEvents.reversed()
+                                                .stream()
+                                                .filter(event -> event.getEventTimestamp()
+                                                                      .equals(lastEvents.getLast().getEventTimestamp()))
+                                                .toList());
         }
 
         return effectiveQuery;
