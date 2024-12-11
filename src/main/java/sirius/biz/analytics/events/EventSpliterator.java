@@ -10,6 +10,8 @@ package sirius.biz.analytics.events;
 
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.constraints.SQLConstraint;
+import sirius.db.mixing.Mapping;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.PullBasedSpliterator;
 
@@ -70,6 +72,50 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
         super();
         this.query = query.copy().orderAsc(Event.EVENT_TIMESTAMP).limit(BLOCK_SIZE);
         this.duplicatePreventer = duplicatePreventer;
+    }
+
+    /// Creates a new spliterator for the given query and considers the given fields as distinct fields to prevent
+    /// duplicates.
+    ///
+    /// The given query will be copied to allow re-use by the caller. Additionally, the given query does not need to
+    /// provide ordering or limits as this is handled by the spliterator itself.
+    ///
+    /// The given fields will be used to ignore events where the timestamp plus all distinct fields match those of one
+    /// of the previously fetched events.
+    ///
+    /// The duplicate preventing portion of the SQL query will have the form:
+    /// ```
+    /// AND NOT (timestamp = last_timestamp -- Only constraint events with the same timestamp
+    ///         AND ((field1 = event_1_field_1 AND field2 = event_1_field_2 AND ...) -- Ignore already fetched event 1
+    ///             OR (field1 = event_2_field_1 AND field2 = event_2_field_2 AND ...) -- Ignore already fetched event 2
+    ///             OR ...))
+    ///```
+    ///
+    /// @param query          the query to use to fetch the events
+    /// @param distinctFields the fields to consider when preventing duplicates
+    /// @see EventSpliterator the class description for more information
+    public EventSpliterator(SmartQuery<E> query, List<Mapping> distinctFields) {
+        this(query, (effectiveQuery, events) -> {
+            effectiveQuery.where(createDuplicatePreventerConstraint(events, distinctFields));
+        });
+    }
+
+    private static <E extends Event<E>> SQLConstraint createDuplicatePreventerConstraint(List<E> events,
+                                                                                         List<Mapping> distinctFields) {
+        return OMA.FILTERS.not(OMA.FILTERS.and(OMA.FILTERS.eq(Event.EVENT_TIMESTAMP,
+                                                              events.getLast().getEventTimestamp()),
+                                               createEventsConstraint(events, distinctFields)));
+    }
+
+    private static <E extends Event<E>> SQLConstraint createEventsConstraint(List<E> events,
+                                                                             List<Mapping> distinctFields) {
+        return OMA.FILTERS.or(events.stream().map(event -> createFieldsConstraint(event, distinctFields)).toList());
+    }
+
+    private static <E extends Event<E>> SQLConstraint createFieldsConstraint(E event, List<Mapping> distinctFields) {
+        return OMA.FILTERS.and(distinctFields.stream().map(field -> {
+            return OMA.FILTERS.eq(field, event.getDescriptor().findProperty(field.getName()).getValue(event));
+        }).toList());
     }
 
     @Nullable

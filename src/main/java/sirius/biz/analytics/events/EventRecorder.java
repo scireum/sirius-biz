@@ -575,4 +575,15 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
                                                                BiConsumer<SmartQuery<E>, List<E>> duplicatePreventer) {
         return StreamSupport.stream(new EventSpliterator<>(query, duplicatePreventer), false);
     }
+
+    /// Fetches all events which match the given query considering the given distinct fields to prevent duplicates.
+    ///
+    /// @param query          the query to execute
+    /// @param distinctFields the fields to consider when preventing duplicates
+    /// @param <E>            the type of the events to fetch
+    /// @return a stream of events which match the given query
+    /// @see EventSpliterator#EventSpliterator(SmartQuery, List)  for a detailed explanation of the distinct fields
+    public <E extends Event<E>> Stream<E> fetchEventsBlockwise(SmartQuery<E> query, List<Mapping> distinctFields) {
+        return StreamSupport.stream(new EventSpliterator<E>(query, distinctFields), false);
+    }
 }
