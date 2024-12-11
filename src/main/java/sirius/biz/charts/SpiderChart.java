@@ -197,7 +197,7 @@ public class SpiderChart<N extends Number> extends BaseChart {
             labels.forEach(label -> {
                 int labelIndex = labelCounter.getAndIncrement();
 
-                double radians = 2.0 * Math.PI * labelIndex / labels.size();
+                double radians = Math.TAU * labelIndex / labels.size();
                 double sine = Math.sin(radians);
                 double cosine = Math.cos(radians);
 
@@ -280,7 +280,7 @@ public class SpiderChart<N extends Number> extends BaseChart {
         labels.forEach(label -> {
             int labelIndex = labelCounter.getAndIncrement();
 
-            double radians = 2.0 * Math.PI * labelIndex / labels.size();
+            double radians = Math.TAU * labelIndex / labels.size();
             double sine = Math.sin(radians);
             double cosine = Math.cos(radians);
 

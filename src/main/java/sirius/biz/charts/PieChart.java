@@ -23,8 +23,6 @@ import java.util.concurrent.atomic.DoubleAdder;
  */
 public class PieChart<N extends Number> extends BaseChart {
 
-    private static final double TWO_PI = 2.0 * Math.PI;
-
     private static final double RING_WIDTH = 4.0;
 
     private Dataset<N> dataset;
@@ -74,7 +72,7 @@ public class PieChart<N extends Number> extends BaseChart {
         double radius = 0.5 * Math.min(bounds.width, bounds.height) - 5.0;
 
         // determines the multipliers to represent each slice in degrees and as percent
-        double multiplierRadians = 2.0 * Math.PI / dataset.sum();
+        double multiplierRadians = Math.TAU / dataset.sum();
 
         DoubleAdder accumulatedRadians = new DoubleAdder();
         Point2D pin = new Point2D.Double();
@@ -175,7 +173,7 @@ public class PieChart<N extends Number> extends BaseChart {
 
         // if the start and end point are precisely the same, we need to add a small offset to avoid rendering issues
         double delta = endRadians - startRadians;
-        double offset = (Math.abs(delta % TWO_PI) < 2.0e-4) ? 1.0e-4 : 0.0;
+        double offset = (Math.abs(delta % Math.TAU) < 2.0e-4) ? 1.0e-4 : 0.0;
 
         // cache the sine and cosine values, as they are relatively expensive to compute
         double startSine = Math.sin(startRadians + offset);
