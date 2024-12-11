@@ -178,9 +178,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
                     handleMissingFile(importFile.filename, importFile.required);
                 }
 
-                if(!(Files.isConsideredHidden(importFile.filename) || Files.isConsideredMetadata(importFile.filename))) {
-                    handledFiles.add(importFile.filename);
-                }
+                handledFiles.add(importFile.filename);
             }
         }
 
