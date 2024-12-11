@@ -162,7 +162,7 @@ public class RadarChart<N extends Number> extends Chart {
 
     @Override
     public Element toSvg(Dimension bounds) {
-        Element svgElement = Charts.createSvgElementWithCenteredViewbox(bounds);
+        Element svgElement = createSvgElementWithCenteredViewbox(bounds);
 
         Element backgroundGroupElement =
                 svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);

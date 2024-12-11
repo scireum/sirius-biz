@@ -50,7 +50,7 @@ public class PieChart<N extends Number> extends Chart {
 
     @Override
     public Element toSvg(Dimension bounds) {
-        Element svgElement = Charts.createSvgElementWithCenteredViewbox(bounds);
+        Element svgElement = createSvgElementWithCenteredViewbox(bounds);
 
         Element pieGroupElement =
                 svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_GROUP);

@@ -8,6 +8,7 @@
 
 package sirius.biz.charts;
 
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.w3c.dom.Element;
 
 import java.awt.Dimension;
@@ -156,4 +157,25 @@ public abstract class Chart {
      * @return the SVG representation of the chart
      */
     public abstract Element toSvg(Dimension bounds);
+
+    /**
+     * Creates an empty SVG element with the view box centered.
+     *
+     * @param bounds the dimensions of the viewport
+     * @return an empty SVG element with the view box centered
+     */
+    protected Element createSvgElementWithCenteredViewbox(Dimension bounds) {
+        Element svgElement = SVGDOMImplementation.getDOMImplementation()
+                                                 .createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI,
+                                                                 Chart.TAG_SVG,
+                                                                 null)
+                                                 .getDocumentElement();
+        svgElement.setAttribute(Chart.ATTRIBUTE_VIEW_BOX,
+                                String.format("%f %f %f %f",
+                                              -0.5 * bounds.width,
+                                              -0.5 * bounds.height,
+                                              (double) bounds.width,
+                                              (double) bounds.height));
+        return svgElement;
+    }
 }
