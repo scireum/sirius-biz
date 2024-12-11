@@ -162,7 +162,7 @@ public class SpiderChart<N extends Number> extends BaseChart {
 
     @Override
     public Element toSvg(Dimension bounds) {
-        Element svgElement = createSvgElementWithCenteredViewbox(bounds);
+        Element svgElement = Charts.createSvgElementWithCenteredViewbox(bounds);
 
         Element backgroundGroupElement =
                 svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);

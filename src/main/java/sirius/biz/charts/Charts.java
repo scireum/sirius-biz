@@ -9,6 +9,7 @@
 package sirius.biz.charts;
 
 import com.lowagie.text.xml.XmlDomWriter;
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.w3c.dom.Element;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.pdf.TagliatellePDFContentHandler;
@@ -42,5 +43,33 @@ public class Charts {
         xmlOut.setOutput(out);
         xmlOut.write(element);
         return out.toString();
+    }
+
+    /**
+     * Creates an empty SVG element with the relevant attributes set.
+     *
+     * @return an empty SVG element
+     */
+    protected static Element createSvgElement() {
+        return SVGDOMImplementation.getDOMImplementation()
+                                   .createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, BaseChart.TAG_SVG, null)
+                                   .getDocumentElement();
+    }
+
+    /**
+     * Creates an empty SVG element with the view box centered.
+     *
+     * @param bounds the dimensions of the viewport
+     * @return an empty SVG element with the view box centered
+     */
+    protected static Element createSvgElementWithCenteredViewbox(Dimension bounds) {
+        Element svgElement = createSvgElement();
+        svgElement.setAttribute(BaseChart.ATTRIBUTE_VIEW_BOX,
+                                String.format("%f %f %f %f",
+                                              -0.5 * bounds.width,
+                                              -0.5 * bounds.height,
+                                              (double) bounds.width,
+                                              (double) bounds.height));
+        return svgElement;
     }
 }
