@@ -142,7 +142,7 @@ public class PieChart<N extends Number> extends Chart {
                                                                     label.getX(),
                                                                     label.getY() + 3.5,
                                                                     3.0,
-                                                                    COLOR_GRAY,
+                                                                    COLOR_GRAY_DARK,
                                                                     textAnchor,
                                                                     slice.formatQuantity()));
         });
@@ -159,7 +159,7 @@ public class PieChart<N extends Number> extends Chart {
                 svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
 
         piecePath.setAttribute(ATTRIBUTE_D, assemblePathDefinitionForSlice(startRadians, endRadians, radius));
-        piecePath.setAttribute(ATTRIBUTE_STROKE, COLOR_GRAY);
+        piecePath.setAttribute(ATTRIBUTE_STROKE, COLOR_GRAY_DARK);
         piecePath.setAttribute(ATTRIBUTE_STROKE_WIDTH, "0.1");
 
         if (Strings.isFilled(color)) {

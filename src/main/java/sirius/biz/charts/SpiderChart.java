@@ -260,7 +260,7 @@ public class SpiderChart<N extends Number> extends Chart {
                 circleElement.setAttribute(ATTRIBUTE_CX, "0");
                 circleElement.setAttribute(ATTRIBUTE_CY, "0");
                 circleElement.setAttribute(ATTRIBUTE_R, Double.toString(markRadius));
-                circleElement.setAttribute(ATTRIBUTE_STROKE, COLOR_LIGHT_GRAY);
+                circleElement.setAttribute(ATTRIBUTE_STROKE, COLOR_GRAY_LIGHT);
                 circleElement.setAttribute(ATTRIBUTE_FILL, VALUE_FILL_NONE);
                 circleElement.setAttribute(ATTRIBUTE_STROKE_WIDTH, "0.1");
                 axesGroupElement.appendChild(circleElement);

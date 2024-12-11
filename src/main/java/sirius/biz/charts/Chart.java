@@ -136,14 +136,18 @@ public abstract class Chart {
     protected static final String COLOR_BLACK = "#000000";
 
     /**
-     * Contains the gray colour as hex-string, {@value}. The value is used as secondary colour for charts.
+     * Contains a dark gray colour as hex-string, {@value}. Its design system equivalent is {@code sirius-gray-dark}.
+     * <p>
+     * The value is used as secondary colour for charts.
      */
-    protected static final String COLOR_GRAY = "#808080";
+    protected static final String COLOR_GRAY_DARK = "#808080";
 
     /**
-     * Contains the light gray colour as hex-string, {@value}. The value is used as secondary colour for charts.
+     * Contains the light gray colour as hex-string, {@value}. Its design system equivalent is {@code sirius-gray-light}.
+     * <p>
+     * The value is used as secondary colour for charts.
      */
-    protected static final String COLOR_LIGHT_GRAY = "#c0c0c0";
+    protected static final String COLOR_GRAY_LIGHT = "#c7c7c7";
 
     /**
      * Renders the chart as SVG.
