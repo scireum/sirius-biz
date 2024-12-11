@@ -62,15 +62,15 @@ public class PieChart<N extends Number> extends Chart {
 
         double radius = 0.5 * Math.min(bounds.width, bounds.height) - 5.0;
 
-        // determines the multipliers to represent each slice in degrees and as percent
+        // determines the multiplier to represent each quantity in radians
         double multiplierRadians = Math.TAU / dataset.sum();
 
         DoubleAdder accumulatedRadians = new DoubleAdder();
         Point2D pin = new Point2D.Double();
         Point2D label = new Point2D.Double();
         Point2D previousLabel = new Point2D.Double();
-        dataset.stream().forEach(slice -> {
-            double radians = slice.doubleValue() * multiplierRadians;
+        dataset.stream().forEach(quantity -> {
+            double radians = quantity.doubleValue() * multiplierRadians;
             if (radians <= 0.0) {
                 return;
             }
@@ -83,7 +83,7 @@ public class PieChart<N extends Number> extends Chart {
                                                                   startRadians,
                                                                   endRadians,
                                                                   radius,
-                                                                  slice.getColor()));
+                                                                  quantity.getColor()));
 
             double halfRadians = 0.5 * (startRadians + endRadians);
             pin.setLocation(Math.sin(halfRadians) * (radius - 0.5 * DOUGHNUT_WIDTH),
@@ -128,14 +128,14 @@ public class PieChart<N extends Number> extends Chart {
                                                                     3.0,
                                                                     COLOR_BLACK,
                                                                     textAnchor,
-                                                                    slice.getLabel()));
+                                                                    quantity.getLabel()));
             labelGroupElement.appendChild(createTextElementForLabel(svgElement,
                                                                     label.getX(),
                                                                     label.getY() + 3.5,
                                                                     3.0,
                                                                     COLOR_GRAY_DARK,
                                                                     textAnchor,
-                                                                    slice.formatQuantity()));
+                                                                    quantity.formatQuantity()));
         });
 
         return svgElement;

@@ -20,9 +20,10 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * Represents a dataset for charts and tables.
+ * Represents a dataset for charts and tables. A dateset is understood to consist of a series of {@linkplain Quantity
+ * quantities}.
  *
- * @param <N> the type of the numeric values
+ * @param <N> the numeric type used for the quantities
  */
 public class Dataset<N extends Number> implements Named {
 
@@ -42,59 +43,73 @@ public class Dataset<N extends Number> implements Named {
                                                       "#b6e2d4" // light teal
     );
 
+    /**
+     * The optional name of the dataset.
+     */
     private String name;
 
+    /**
+     * An optional primary color to use when displaying the dataset.
+     */
     private String color;
 
-    private final LinkedHashMap<String, Slice> slices = new LinkedHashMap<>();
-
-    private Optional<Double> sum = Optional.empty();
+    /**
+     * The individual quantities of the dataset, indexed by their label.
+     */
+    private final LinkedHashMap<String, Quantity> quantities = new LinkedHashMap<>();
 
     /**
-     * Helper that allows to format the numeric values of the slices.
+     * The cached sum of all quantities, used to avoid renewed computation when invoking {@link #sum()} multiple times.
+     *
+     * @see #sum()
+     */
+    private Optional<Double> cachedSum = Optional.empty();
+
+    /**
+     * Helper method that allows to format the numeric quantities as needed. Defaults to {@link Object#toString()}.
      */
     private Function<N, String> formatter = Object::toString;
 
     /**
-     * Flag to determine if the rendered charts or tables should also display percentages.
+     * Flag to determine if the rendered charts or tables should also display percentages besides the raw quantities.
      */
     private boolean percentagesShown = false;
 
     /**
-     * Adds a slice to the dataset.
+     * Adds a quantity to the dataset.
      *
-     * @param label    the label of the slice
-     * @param quantity the quantity of the slice
+     * @param label the label of the quantity
+     * @param value the value of the quantity
      * @return the dataset itself for fluent method calls
      */
-    public Dataset<N> addSlice(String label, N quantity) {
+    public Dataset<N> addQuantity(String label, N value) {
         if (Strings.isEmpty(label)) {
             throw new IllegalArgumentException("Label must not be empty.");
         }
-        if (quantity.doubleValue() < 0.0) {
+        if (value.doubleValue() < 0.0) {
             throw new IllegalArgumentException("Quantity must be non-negative.");
         }
 
-        slices.compute(label, (key, slice) -> {
-            if (slice == null) {
-                return new Slice(slices.size(), label, quantity);
+        quantities.compute(label, (key, quantity) -> {
+            if (quantity == null) {
+                return new Quantity(quantities.size(), label, value);
             }
-            slice.setQuantity(quantity);
-            return slice;
+            quantity.setValue(value);
+            return quantity;
         });
-        sum = Optional.empty();
+        cachedSum = Optional.empty();
 
         return this;
     }
 
     /**
-     * Retrieves a slice by its label.
+     * Retrieves a quantity by its label.
      *
-     * @param label the label of the slice
-     * @return the slice with the given label or an empty optional if no such slice exists
+     * @param label the label of the quantity to retrieve
+     * @return the quantity with the given label, or an empty optional if no such quantity exists
      */
-    public Optional<Slice> resolveSlice(String label) {
-        return Optional.ofNullable(slices.get(label));
+    public Optional<Quantity> resolveQuantity(String label) {
+        return Optional.ofNullable(quantities.get(label));
     }
 
     /**
@@ -120,7 +135,7 @@ public class Dataset<N extends Number> implements Named {
     }
 
     /**
-     * Enables the display of percentages for each slice.
+     * Enables the display of percentages for each quantity.
      *
      * @return the dataset itself for fluent method calls
      */
@@ -130,7 +145,7 @@ public class Dataset<N extends Number> implements Named {
     }
 
     /**
-     * Enables the display of percentages for each slice.
+     * Enables the <em>additional</em> display of percentages for each quantity.
      *
      * @param percentagesShown determines if the percentages should be displayed
      * @return the dataset itself for fluent method calls
@@ -141,7 +156,7 @@ public class Dataset<N extends Number> implements Named {
     }
 
     /**
-     * Sets a formatter for the numeric values of the slices.
+     * Sets a formatter for the numeric values of the quantities.
      *
      * @param formatter the formatter to use
      * @return the dataset itself for fluent method calls
@@ -152,37 +167,41 @@ public class Dataset<N extends Number> implements Named {
     }
 
     /**
-     * Computes a new dataset containing the percentages of all slices of this dataset.
+     * Computes a new dataset containing the percentages of all quantities of this dataset.
      *
-     * @return a new dataset containing the percentages of all slices
+     * @return a new dataset containing the percentages of all quantities
      */
     public Dataset<Double> computePercentageDataset() {
         var result = new Dataset<Double>().withFormatter(number -> String.format("%.2f %%", number));
-        for (Slice slice : slices.values()) {
-            result.addSlice(slice.getLabel(), slice.percentageValue());
+        for (Quantity quantity : quantities.values()) {
+            result.addQuantity(quantity.getLabel(), quantity.percentageValue());
         }
         return result;
     }
 
     /**
-     * Determines the sum of all slices.
+     * Determines the sum of all quantities.
      *
-     * @return the sum of all slices
+     * @return the sum of all quantities
      */
     public double sum() {
-        if (sum.isEmpty()) {
-            sum = Optional.of(slices.values().stream().map(Slice::getQuantity).mapToDouble(Number::doubleValue).sum());
+        if (cachedSum.isEmpty()) {
+            cachedSum = Optional.of(quantities.values()
+                                              .stream()
+                                              .map(Quantity::getValue)
+                                              .mapToDouble(Number::doubleValue)
+                                              .sum());
         }
-        return sum.get();
+        return cachedSum.get();
     }
 
     /**
-     * Streams all slices of the dataset.
+     * Streams all quantities of the dataset.
      *
-     * @return a stream of all slices
+     * @return a stream of all quantities
      */
-    public Stream<Slice> stream() {
-        return slices.values().stream();
+    public Stream<Quantity> stream() {
+        return quantities.values().stream();
     }
 
     @Nonnull
@@ -196,61 +215,63 @@ public class Dataset<N extends Number> implements Named {
     }
 
     public SequencedSet<String> getLabels() {
-        return slices.sequencedKeySet();
+        return quantities.sequencedKeySet();
     }
 
-    public List<Slice> getSlices() {
-        return List.copyOf(slices.values());
+    public List<Quantity> getQuantities() {
+        return List.copyOf(quantities.values());
     }
 
     /**
-     * Represents a slice of the datset.
+     * Represents a single quantity of the dataset. Effectively, a quantity has a numeric value and additional metadata.
      */
-    public class Slice {
+    public class Quantity {
         private final int index;
         private final String label;
-        private N quantity;
+        private N value;
         private final String color;
 
-        private Slice(int index, String label, N quantity) {
+        private Quantity(int index, String label, N value) {
             this.index = index;
             this.label = label;
-            this.quantity = quantity;
+            this.value = value;
             this.color = COLORS.get(index % COLORS.size());
         }
 
         /**
-         * Converts the quantity to a double value.
+         * Computes the equivalent double-precision value of this quantity.
          *
-         * @return the quantity as a double value
+         * @return the quantity's value as a double-precision number
          */
         public double doubleValue() {
-            return quantity.doubleValue();
+            return value.doubleValue();
         }
 
         /**
-         * Computes the percentage of this slice.
+         * Computes the percentage of this quantity in comparison to the sum of all quantities.
          *
-         * @return the percentage of this slice
+         * @return the percentage of this quantity in comparison to the sum of all quantities as a double-precision number
          */
         public double percentageValue() {
             // the "+ 1.0e-20" is to avoid division by zero; the value is small enough to not affect the result
-            return 100 * quantity.doubleValue() / (sum() + 1.0e-20);
+            return 100 * value.doubleValue() / (sum() + 1.0e-20);
         }
 
         /**
-         * Formats the value of this slice as a string.
+         * Formats the value of this quantity as a string.
          *
-         * @return the formatted value of this slice
+         * @return the formatted value of this quantity
+         * @see #withFormatter(Function)
          */
         public String formatValue() {
-            return formatter.apply(quantity);
+            return formatter.apply(value);
         }
 
         /**
-         * Formats the percentage of this slice as a string.
+         * Formats the percentage of this quantity as a string.
          *
-         * @return the formatted percentage of this slice
+         * @return the formatted percentage of this quantity
+         * @see #percentageValue()
          */
         public String formatPercentage() {
             if (!percentagesShown) {
@@ -260,7 +281,7 @@ public class Dataset<N extends Number> implements Named {
         }
 
         /**
-         * Formats the quantity as a string, potentially including a percentage.
+         * Formats the quantity as a string, potentially also including a percentage.
          *
          * @return the formatted quantity
          */
@@ -268,27 +289,27 @@ public class Dataset<N extends Number> implements Named {
             if (!percentagesShown) {
                 return formatValue();
             }
-            return new StringBuilder(quantity.toString()).append(String.format(" (%s)", formatPercentage())).toString();
+            return new StringBuilder(formatValue()).append(String.format(" (%s)", formatPercentage())).toString();
         }
 
         /**
-         * Fetches the equivalent slice from a previous dataset.
-         *
-         * @param previousDataset the previous dataset to fetch the slice from
-         * @return the equivalent slice from the previous dataset, or an empty optional if no such slice exists
-         */
-        public Optional<Slice> fetchPreviousSlice(Dataset<N> previousDataset) {
-            return previousDataset.resolveSlice(label);
-        }
-
-        /**
-         * Fetches the quantity of the equivalent slice from a previous dataset.
+         * Fetches the equivalent quantity from a previous dataset.
          *
          * @param previousDataset the previous dataset to fetch the quantity from
-         * @return the quantity of the equivalent slice from the previous dataset, or an empty optional if no such slice exists
+         * @return the equivalent quantity from the previous dataset, or an empty optional if no such quantity exists
          */
-        public Optional<N> fetchPreviousQuantity(Dataset<N> previousDataset) {
-            return fetchPreviousSlice(previousDataset).map(Slice::getQuantity);
+        public Optional<Quantity> fetchPreviousQuantity(Dataset<N> previousDataset) {
+            return previousDataset.resolveQuantity(label);
+        }
+
+        /**
+         * Fetches the value of the equivalent quantity from a previous dataset.
+         *
+         * @param previousDataset the previous dataset to fetch the quantity from
+         * @return the value of the equivalent quantity from the previous dataset, or an empty optional if no such quantity exists
+         */
+        public Optional<N> fetchPreviousValue(Dataset<N> previousDataset) {
+            return fetchPreviousQuantity(previousDataset).map(Quantity::getValue);
         }
 
         public int getIndex() {
@@ -299,12 +320,12 @@ public class Dataset<N extends Number> implements Named {
             return label;
         }
 
-        public N getQuantity() {
-            return quantity;
+        public N getValue() {
+            return value;
         }
 
-        private void setQuantity(N quantity) {
-            this.quantity = quantity;
+        private void setValue(N value) {
+            this.value = value;
         }
 
         public String getColor() {

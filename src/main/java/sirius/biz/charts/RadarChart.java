@@ -44,7 +44,7 @@ public class RadarChart<N extends Number> extends Chart {
     private boolean rings = false;
 
     /**
-     * Helper that allows to format the numeric values of the slices.
+     * Helper that allows to format the numeric values of the quantities.
      */
     private Function<N, String> formatter = Object::toString;
 
@@ -110,7 +110,7 @@ public class RadarChart<N extends Number> extends Chart {
         AtomicInteger labelCounter = new AtomicInteger();
         labels.forEach(label -> {
             int labelIndex = labelCounter.getAndIncrement();
-            dataset.addSlice(label, values.get(labelIndex));
+            dataset.addQuantity(label, values.get(labelIndex));
         });
 
         return addDataset(dataset);
@@ -201,8 +201,8 @@ public class RadarChart<N extends Number> extends Chart {
                 double sine = Math.sin(radians);
                 double cosine = Math.cos(radians);
 
-                double value = dataset.resolveSlice(label)
-                                      .map(Dataset.Slice::getQuantity)
+                double value = dataset.resolveQuantity(label)
+                                      .map(Dataset.Quantity::getValue)
                                       .map(Number::doubleValue)
                                       .orElse(0.0);
                 double normalizedValue = radius * value / normaliser;
@@ -240,7 +240,7 @@ public class RadarChart<N extends Number> extends Chart {
      */
     private double computeNormaliser() {
         Stream<N> numbers = marks.isEmpty() ?
-                            datasets.stream().flatMap(dataset -> dataset.stream().map(Dataset.Slice::getQuantity)) :
+                            datasets.stream().flatMap(dataset -> dataset.stream().map(Dataset.Quantity::getValue)) :
                             marks.stream();
         return numbers.mapToDouble(Number::doubleValue).max().orElse(1.0);
     }
