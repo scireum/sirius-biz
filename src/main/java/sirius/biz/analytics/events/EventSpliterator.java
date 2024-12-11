@@ -18,37 +18,54 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-/**
- * Provides a spliterator which fetches events blockwise.
- *
- * @param <E> the type of events to fetch
- */
+/// Provides a spliterator which fetches events blockwise.
+///
+/// The spliterator is pull-based and fetches the next block of events when the current block is exhausted. Because
+/// events have no natural order or distinct fields by default and multiple events of the same type can be recorded at
+/// the same time, the next block of events is fetched starting with the timestamp of the last event of the last block.
+/// To prevent fetching the same events multiple times, a "duplicate preventer" is used to add additional constraints to
+/// the query to prevent fetching the same events multiple times.
+///
+/// The duplicate preventer is a consumer which is supplied with the query and the last events of the previous block.
+/// The given query must be modified by the preventer to prevent fetching the same events again based on fields
+/// that are unique to the event type, e.g. [UserData#USER_ID] in case of [user events][UserEvent].
+///
+/// Note, that only the last events of the previous block (meaning every event that shares the same timestamp as the
+/// last event of the block) are supplied to the preventer as all preceding events will not be fetched again due to the
+/// next fetch starting with the timestamp of the last event of the block.
+///
+/// Implementations of the duplicate preventer should in most cases add an 'AND NOT (A=X AND B=Y AND ...)' constraint
+/// to the query for each of the supplied events. Here, A and B are fields specific to the event type while X and Y
+/// are the values of the supplied event. The combination of the fields and values should take care of not fetching the
+/// same events multiple times. See [EventRecorder#fetchUserEventsBlockwise(SmartQuery)] for an example where the fields
+/// [UserData#USER_ID] and [Event#EVENT_TIMESTAMP] are used to prevent fetching the same event triggered by the
+/// same user at the same time again.
+///
+/// @param <E> the type of the events to fetch
 public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E> {
 
     private static final int BLOCK_SIZE = 1000;
 
     private final SmartQuery<E> query;
 
-    /**
-     * Contains the last events fetched (all sharing the same {@linkplain Event#getEventTimestamp() timestamp}) to
-     * prevent fetching the same events multiple times.
-     */
+    /// Contains the last events fetched (all sharing the same [timestamp][Event#EVENT_TIMESTAMP]) to
+    /// prevent fetching the same events multiple times.
     private List<E> lastEvents;
 
-    /**
-     * Contains a consumer which is used to prevent fetching the same events multiple times.
-     */
+    /// Contains a consumer which is used to prevent fetching the same events multiple times.
     private final BiConsumer<SmartQuery<E>, E> duplicatePreventer;
 
-    /**
-     * Creates a new spliterator for the given query and duplicate preventer.
-     * <p>
-     * The duplicate preventer is supposed to add additional constraints to the query to prevent fetching the same
-     * events multiple times.
-     *
-     * @param query              the query to use to fetch the events
-     * @param duplicatePreventer a consumer which is used to prevent fetching the same events multiple times
-     */
+    /// Creates a new spliterator for the given query and duplicate preventer.
+    ///
+    /// The given will be copied to allow re-use by the caller. Additionally, the given query does not need to
+    /// provide ordering or limits as this is handled by the spliterator itself.
+    ///
+    /// The given duplicate preventer must add additional constraints to the query to prevent fetching the same events
+    /// multiple times.
+    ///
+    /// @param query              the query to use to fetch the events
+    /// @param duplicatePreventer a consumer which is used to prevent fetching the same events multiple times
+    /// @see EventSpliterator the class description for more information
     public EventSpliterator(SmartQuery<E> query, BiConsumer<SmartQuery<E>, E> duplicatePreventer) {
         super();
         this.query = query.copy().orderAsc(Event.EVENT_TIMESTAMP).limit(BLOCK_SIZE);
