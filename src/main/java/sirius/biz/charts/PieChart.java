@@ -8,6 +8,7 @@
 
 package sirius.biz.charts;
 
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.w3c.dom.Element;
 import sirius.kernel.commons.Strings;
 
@@ -62,10 +63,12 @@ public class PieChart<N extends Number> extends BaseChart {
     public Element toSvg(Dimension bounds) {
         Element svgElement = createSvgElementWithCenteredViewbox(bounds);
 
-        Element pieGroupElement = createGroupElement(svgElement.getOwnerDocument());
+        Element pieGroupElement =
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
         svgElement.appendChild(pieGroupElement);
 
-        Element labelsGroupElement = createGroupElement(svgElement.getOwnerDocument());
+        Element labelsGroupElement =
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
         svgElement.appendChild(labelsGroupElement);
 
         double radius = 0.5 * Math.min(bounds.width, bounds.height) - 5.0;
@@ -106,17 +109,20 @@ public class PieChart<N extends Number> extends BaseChart {
             }
             previousLabel.setLocation(label);
 
-            Element labelGroupElement = createGroupElement(svgElement.getOwnerDocument());
+            Element labelGroupElement =
+                    svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
             labelsGroupElement.appendChild(labelGroupElement);
 
-            Element labelCircle = createCircleElement(svgElement.getOwnerDocument());
+            Element labelCircle =
+                    svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_CIRCLE);
             labelCircle.setAttribute(ATTRIBUTE_CX, Double.toString(pin.getX()));
             labelCircle.setAttribute(ATTRIBUTE_CY, Double.toString(pin.getY()));
             labelCircle.setAttribute(ATTRIBUTE_R, "0.4");
             labelCircle.setAttribute(ATTRIBUTE_FILL, COLOR_BLACK);
             labelGroupElement.appendChild(labelCircle);
 
-            Element labelPath = createPathElement(svgElement.getOwnerDocument());
+            Element labelPath =
+                    svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
             labelPath.setAttribute(ATTRIBUTE_D,
                                    String.format("M %f %f L %f %f",
                                                  pin.getX(),
@@ -151,7 +157,8 @@ public class PieChart<N extends Number> extends BaseChart {
                                               double endRadians,
                                               double radius,
                                               String color) {
-        Element piecePath = createPathElement(svgElement.getOwnerDocument());
+        Element piecePath =
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
 
         piecePath.setAttribute(ATTRIBUTE_D, assemblePathDefinitionForSlice(startRadians, endRadians, radius));
         piecePath.setAttribute(ATTRIBUTE_STROKE, COLOR_GRAY);
@@ -228,7 +235,8 @@ public class PieChart<N extends Number> extends BaseChart {
                                               String fontColor,
                                               String textAnchor,
                                               String text) {
-        Element valueLabel = createTextElement(svgElement.getOwnerDocument());
+        Element valueLabel =
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_TEXT);
         valueLabel.setTextContent(text);
 
         valueLabel.setAttribute(ATTRIBUTE_X, Double.toString(x));

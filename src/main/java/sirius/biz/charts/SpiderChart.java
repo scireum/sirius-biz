@@ -8,6 +8,7 @@
 
 package sirius.biz.charts;
 
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import sirius.kernel.commons.Strings;
@@ -163,16 +164,20 @@ public class SpiderChart<N extends Number> extends BaseChart {
     public Element toSvg(Dimension bounds) {
         Element svgElement = createSvgElementWithCenteredViewbox(bounds);
 
-        Element backgroundGroupElement = createGroupElement(svgElement.getOwnerDocument());
+        Element backgroundGroupElement =
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
         svgElement.appendChild(backgroundGroupElement);
 
-        Element axesGroupElement = createGroupElement(svgElement.getOwnerDocument());
+        Element axesGroupElement =
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
         backgroundGroupElement.appendChild(axesGroupElement);
 
-        Element labelsGroupElement = createGroupElement(svgElement.getOwnerDocument());
+        Element labelsGroupElement =
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
         backgroundGroupElement.appendChild(labelsGroupElement);
 
-        Element graphsGroupElement = createGroupElement(svgElement.getOwnerDocument());
+        Element graphsGroupElement =
+                svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
         svgElement.appendChild(graphsGroupElement);
 
         double radius = 0.5 * Math.min(bounds.width, bounds.height) - 7.5;
@@ -209,7 +214,8 @@ public class SpiderChart<N extends Number> extends BaseChart {
                               .append(-cosine * normalizedValue);
             });
 
-            Element valuePath = createPathElement(svgElement.getOwnerDocument());
+            Element valuePath =
+                    svgElement.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
             valuePath.setAttribute(ATTRIBUTE_D, pathDefinition.append(" Z").toString());
             valuePath.setAttribute(ATTRIBUTE_STROKE, dataset.getColor());
             valuePath.setAttribute(ATTRIBUTE_FILL, dataset.getColor());
@@ -250,7 +256,7 @@ public class SpiderChart<N extends Number> extends BaseChart {
             double markRadius = radius * mark.doubleValue() / normaliser;
 
             if (rings) {
-                Element circleElement = createCircleElement(document);
+                Element circleElement = document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_CIRCLE);
                 circleElement.setAttribute(ATTRIBUTE_CX, "0");
                 circleElement.setAttribute(ATTRIBUTE_CY, "0");
                 circleElement.setAttribute(ATTRIBUTE_R, Double.toString(markRadius));
@@ -260,7 +266,7 @@ public class SpiderChart<N extends Number> extends BaseChart {
                 axesGroupElement.appendChild(circleElement);
             }
 
-            Element markTextElement = createTextElement(document);
+            Element markTextElement = document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_TEXT);
             markTextElement.setTextContent(formatter.apply(mark));
             markTextElement.setAttribute(ATTRIBUTE_X, Double.toString(1 + 0.5 * TICK_LENGTH));
             markTextElement.setAttribute(ATTRIBUTE_Y, Double.toString(-markRadius + 0.75));
@@ -280,7 +286,7 @@ public class SpiderChart<N extends Number> extends BaseChart {
 
             // draw axis
             double axisRadius = radius + 2.5;
-            Element axisPath = createPathElement(document);
+            Element axisPath = document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
             axisPath.setAttribute(ATTRIBUTE_D, String.format("M 0 0 L %f %f", sine * axisRadius, -cosine * axisRadius));
             axisPath.setAttribute(ATTRIBUTE_STROKE, COLOR_BLACK);
             axisPath.setAttribute(ATTRIBUTE_STROKE_WIDTH, "0.2");
@@ -292,7 +298,7 @@ public class SpiderChart<N extends Number> extends BaseChart {
                 double markX = sine * markRadius;
                 double markY = -cosine * markRadius;
 
-                Element markPath = createPathElement(document);
+                Element markPath = document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
                 markPath.setAttribute(ATTRIBUTE_D,
                                       String.format("M %f %f L %f %f",
                                                     markX + 0.5 * TICK_LENGTH * cosine,
@@ -333,7 +339,7 @@ public class SpiderChart<N extends Number> extends BaseChart {
             yOffset = 0.75;
         }
 
-        Element labelElement = createTextElement(document);
+        Element labelElement = document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_TEXT);
         labelElement.setTextContent(label);
 
         labelElement.setAttribute(ATTRIBUTE_X, Double.toString(x));

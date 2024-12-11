@@ -9,7 +9,6 @@
 package sirius.biz.charts;
 
 import org.apache.batik.anim.dom.SVGDOMImplementation;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.awt.Dimension;
@@ -181,45 +180,5 @@ public abstract class BaseChart {
                                               (double) bounds.width,
                                               (double) bounds.height));
         return svgElement;
-    }
-
-    /**
-     * Creates an empty, unattached group element.
-     *
-     * @param document the document to create the element in
-     * @return an empty, unattached group element
-     */
-    protected static Element createGroupElement(Document document) {
-        return document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_G);
-    }
-
-    /**
-     * Creates an empty, unattached path element.
-     *
-     * @param document the document to create the element in
-     * @return an empty, unattached path element
-     */
-    protected static Element createPathElement(Document document) {
-        return document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_PATH);
-    }
-
-    /**
-     * Creates an empty, unattached circle element.
-     *
-     * @param document the document to create the element in
-     * @return an empty, unattached circle element
-     */
-    protected static Element createCircleElement(Document document) {
-        return document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_CIRCLE);
-    }
-
-    /**
-     * Creates an empty, unattached text element.
-     *
-     * @param document the document to create the element in
-     * @return an empty, unattached text element
-     */
-    protected static Element createTextElement(Document document) {
-        return document.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, TAG_TEXT);
     }
 }
