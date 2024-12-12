@@ -45,7 +45,7 @@ import java.util.function.BiConsumer;
 /// same user at the same time again.
 ///
 /// Event deduplication may result in complex queries, which can potentially slow down performance or generate queries
-/// that are too large to process.Therefore, if individual events are not needed, using
+/// that are too large to process. Therefore, if individual events are not needed, using
 /// [metrics][sirius.kernel.health.metrics.Metric] may be a better choice for fetching aggregated data.
 ///
 /// @param <E> the type of the events to fetch
@@ -56,14 +56,14 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
     private final SmartQuery<E> query;
 
     /// Contains the last events fetched.
-    private final ArrayList<E> lastEvents = new ArrayList<>();
+    private final List<E> lastEvents = new ArrayList<>();
 
     /// Contains a consumer which is used to prevent fetching the same events multiple times.
     private final BiConsumer<SmartQuery<E>, List<E>> duplicatePreventer;
 
     /// Creates a new spliterator for the given query and duplicate preventer.
     ///
-    /// The given will be copied to allow re-use by the caller. Additionally, the given query does not need to
+    /// The given query will be copied to allow re-use by the caller. Additionally, the given query does not need to
     /// provide ordering or limits as this is handled by the spliterator itself.
     ///
     /// The given duplicate preventer must add additional constraints to the query to prevent fetching the same events
@@ -88,7 +88,7 @@ public class EventSpliterator<E extends Event<E>> extends PullBasedSpliterator<E
     /// of the previously fetched events.
     ///
     /// The duplicate preventing portion of the SQL query will have the form:
-    /// ```
+    /// ```sql
     /// AND NOT (timestamp = last_timestamp -- Only constraint events with the same timestamp
     ///         AND ((field1 = event_1_field_1 AND field2 = event_1_field_2 AND ...) -- Ignore already fetched event 1
     ///             OR (field1 = event_2_field_1 AND field2 = event_2_field_2 AND ...) -- Ignore already fetched event 2
