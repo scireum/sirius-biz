@@ -37,12 +37,13 @@ import java.util.function.BiConsumer;
 /// last event of the block) are supplied to the preventer as all preceding events will not be fetched again due to the
 /// next fetch starting with the timestamp of the last event of the block.
 ///
-/// Implementations of the duplicate preventer should in most cases add an 'AND NOT (A=X AND B=Y AND ...)' constraint
-/// to the query based on the supplied events. Here, A and B are fields specific to the event type while X and Y
-/// are the values of the supplied event. The combination of the fields and values should take care of not fetching the
-/// same events multiple times. See [EventRecorder#fetchUserEventsBlockwise(SmartQuery)] for an example where the fields
-/// [UserData#USER_ID] and [Event#EVENT_TIMESTAMP] are used to prevent fetching the same event triggered by the
-/// same user at the same time again.
+/// Implementations of the duplicate preventer should in most cases add an 'AND NOT (eventTimestamp=X AND (A=Y OR A=Z
+/// OR ...)' constraint to the query based on the supplied events. Here, X is the timestamp of the last event in the
+/// preceding block and A is a distinct field where Y and Z are the corresponding values based on the supplied events.
+/// The combination of the fields and values should take care of not fetching the same events multiple times. See
+/// [EventRecorder#fetchUserEventsBlockwise(SmartQuery)] for an example where the fields [Event#EVENT_TIMESTAMP] and
+/// user event specific fields [UserData#SCOPE_ID], [UserData#TENANT_ID] and [UserData#USER_ID] are used to prevent
+/// fetching the same event triggered by the same user at the same time again.
 ///
 /// Event deduplication may result in complex queries, which can potentially slow down performance or generate queries
 /// that are too large to process. Therefore, if individual events are not needed, using
