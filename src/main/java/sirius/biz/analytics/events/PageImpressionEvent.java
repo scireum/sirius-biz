@@ -35,7 +35,7 @@ import sirius.web.http.WebContext;
  * @see EventRecorder
  * @see #withAggregationUrl(String)
  */
-public class PageImpressionEvent extends Event<PageImpressionEvent> {
+public class PageImpressionEvent extends Event<PageImpressionEvent> implements UserEvent {
 
     /**
      * Contains a generic or shortened URI which can be used to aggregate on.
@@ -82,7 +82,6 @@ public class PageImpressionEvent extends Event<PageImpressionEvent> {
     /**
      * Contains the current user, tenant and scope if available.
      */
-    public static final Mapping USER_DATA = Mapping.named("userData");
     private final UserData userData = new UserData();
 
     /**
@@ -168,6 +167,7 @@ public class PageImpressionEvent extends Event<PageImpressionEvent> {
         return aggregationUri;
     }
 
+    @Override
     public UserData getUserData() {
         return userData;
     }

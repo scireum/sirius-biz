@@ -10,6 +10,7 @@ package sirius.biz.util;
 
 import sirius.biz.analytics.events.Event;
 import sirius.biz.analytics.events.UserData;
+import sirius.biz.analytics.events.UserEvent;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
@@ -17,11 +18,11 @@ import sirius.db.mixing.annotations.Trim;
 /**
  * Record a SOAP call performed by {@link sirius.biz.util.MonitoredSOAPClient}.
  */
-public class SOAPCallEvent extends Event<SOAPCallEvent> {
+public class SOAPCallEvent extends Event<SOAPCallEvent> implements UserEvent {
+
     /**
      * Contains the shop, customer and user which triggered the event.
      */
-    public static final Mapping USER_DATA = Mapping.named("userData");
     private final UserData userData = new UserData();
 
     /**
@@ -155,6 +156,7 @@ public class SOAPCallEvent extends Event<SOAPCallEvent> {
         return erroneous;
     }
 
+    @Override
     public UserData getUserData() {
         return userData;
     }
