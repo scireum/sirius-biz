@@ -17,8 +17,8 @@
     <url>https://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-43.1.0</sirius.kernel>
-        <sirius.web>dev-84.5.0</sirius.web>
+        <sirius.kernel>dev-43.2.1</sirius.kernel>
+        <sirius.web>dev-85.5.0</sirius.web>
         <sirius.db>dev-58.3.0</sirius.db>
     </properties>
 
@@ -159,6 +159,13 @@
             <groupId>net.sf.sevenzipjbinding</groupId>
             <artifactId>sevenzipjbinding-all-platforms</artifactId>
             <version>16.02-2.01</version>
+        </dependency>
+
+        <!-- Used to render diagrams into SVG -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-all</artifactId>
+            <version>1.18</version>
         </dependency>
     </dependencies>
 </project>
