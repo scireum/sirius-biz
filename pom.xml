@@ -160,5 +160,12 @@
             <artifactId>sevenzipjbinding-all-platforms</artifactId>
             <version>16.02-2.01</version>
         </dependency>
+
+        <!-- Used to render diagrams into SVG -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-all</artifactId>
+            <version>1.18</version>
+        </dependency>
     </dependencies>
 </project>
