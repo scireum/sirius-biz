@@ -24,12 +24,11 @@ import sirius.web.security.UserManager;
  *
  * @see sirius.biz.tenants.TenantUserManager#recordUserActivityEvent(UserInfo)
  */
-public class UserActivityEvent extends Event<UserActivityEvent> {
+public class UserActivityEvent extends Event<UserActivityEvent> implements UserEvent {
 
     /**
      * Contains the current user, tenant and scope if available.
      */
-    public static final Mapping USER_DATA = Mapping.named("userData");
     private final UserData userData = new UserData();
 
     /**
@@ -38,6 +37,7 @@ public class UserActivityEvent extends Event<UserActivityEvent> {
     public static final Mapping WEB_DATA = Mapping.named("webData");
     private final WebData webData = new WebData();
 
+    @Override
     public UserData getUserData() {
         return userData;
     }

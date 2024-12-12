@@ -38,11 +38,15 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Responsible for collecting and storing {@link Event events} for analytical and statistical purposes.
@@ -538,5 +542,41 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         }
 
         return result;
+    }
+
+    /// Fetches all user events which match the given query assuming that users can only trigger one event (of the type
+    /// in question) at the same time.
+    ///
+    /// @param query the query to execute
+    /// @param <E>   the type of the events to fetch
+    /// @return a stream of events which match the given query
+    public <E extends Event<E> & UserEvent> Stream<E> fetchUserEventsBlockwise(SmartQuery<E> query) {
+        return fetchEventsBlockwise(query,
+                                    List.of(UserEvent.USER_DATA.inner(UserData.SCOPE_ID),
+                                            UserEvent.USER_DATA.inner(UserData.TENANT_ID),
+                                            UserEvent.USER_DATA.inner(UserData.USER_ID)));
+    }
+
+    /// Fetches all events which match the given query considering the given duplicate preventer.
+    ///
+    /// @param query              the query to execute
+    /// @param duplicatePreventer the duplicate preventer to apply to prevent fetching the same events multiple times
+    /// @param <E>                the type of the events to fetch
+    /// @return a stream of events which match the given query
+    /// @see EventSpliterator for a detailed explanation of the duplicate preventer
+    public <E extends Event<E>> Stream<E> fetchEventsBlockwise(SmartQuery<E> query,
+                                                               BiConsumer<SmartQuery<E>, List<E>> duplicatePreventer) {
+        return StreamSupport.stream(new EventSpliterator<>(query, duplicatePreventer), false);
+    }
+
+    /// Fetches all events which match the given query considering the given distinct fields to prevent duplicates.
+    ///
+    /// @param query          the query to execute
+    /// @param distinctFields the fields to consider when preventing duplicates
+    /// @param <E>            the type of the events to fetch
+    /// @return a stream of events which match the given query
+    /// @see EventSpliterator#EventSpliterator(SmartQuery, List)  for a detailed explanation of the distinct fields
+    public <E extends Event<E>> Stream<E> fetchEventsBlockwise(SmartQuery<E> query, List<Mapping> distinctFields) {
+        return StreamSupport.stream(new EventSpliterator<E>(query, distinctFields), false);
     }
 }
