@@ -29,18 +29,25 @@
                                        placeholder="@i18n('Model.login.user')"
                                        name="user"
                                        type="text"
+                                       required
                                        autocomplete="off"
+                                       spellcheck="false"
                                        value="@WebContext.getCurrent().get('user').asString()"
                                        class="form-control input-block-level"/>
                             </div>
-                            <div class="form-group mb-3">
+                            <div class="form-group input-group mb-3">
                                 <input id="password"
                                        tabindex="2"
                                        placeholder="@i18n('Model.login.password')"
-                                       autocomplete="off"
                                        name="password"
                                        type="password"
+                                       required
+                                       autocomplete="off"
+                                       spellcheck="false"
                                        class="form-control input-block-level"/>
+                                <span id="passwordToggleButton" class="input-group-text">
+                                    <i class="fa fa-eye" id="passwordToggleIcon" style="cursor: pointer;"></i>
+                                </span>
                             </div>
                             <div>
                                 <input type="checkbox" tabindex="4" value="true" name="keepLogin" checked/>
@@ -96,12 +103,28 @@
         sirius.ready(function () {
             const _userField = document.getElementById('user');
             const _passwordField = document.getElementById('password');
+            const _togglePasswordButton = document.getElementById('passwordToggleButton');
 
             if (!sirius.isEmpty(_userField.value)) {
                 _passwordField.focus();
             } else {
                 _userField.focus();
             }
+
+            _togglePasswordButton.addEventListener('click', function () {
+                // the <i> is changed to the <svg> after loading so we need to get the icon on clicking to make it work.
+                const _togglePasswordIcon = document.getElementById('passwordToggleIcon');
+
+                if (_passwordField.getAttribute('type') === 'password') {
+                    _passwordField.setAttribute('type', 'text');
+                    _togglePasswordIcon.classList.remove('fa-eye');
+                    _togglePasswordIcon.classList.add('fa-eye-slash');
+                } else {
+                    _passwordField.setAttribute('type', 'password');
+                    _togglePasswordIcon.classList.remove('fa-eye-slash');
+                    _togglePasswordIcon.classList.add('fa-eye');
+                }
+            });
 
             try {
                 window.localStorage.setItem('samlPostLoginUri', '<i:raw>@originalUrl</i:raw>');

@@ -21,6 +21,13 @@ public enum ProcessState {
     STANDBY,
 
     /**
+     * Represents a process which is waiting for the execution to start.
+     * <p>
+     * This may be the case when the number of parallel processes is limited and the process is waiting for a slot.
+     */
+    WAITING,
+
+    /**
      * Represents a process which is actively running.
      */
     RUNNING,

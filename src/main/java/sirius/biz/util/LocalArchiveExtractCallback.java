@@ -72,7 +72,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
             skipExtraction |= (attributes & PropID.AttributesBitMask.FILE_ATTRIBUTE_HIDDEN) != 0;
         }
         if (filePath != null) {
-            skipExtraction |= filePath.startsWith("__MACOSX");
+            skipExtraction |= Files.isConsideredMetadata(filePath);
             if (filter != null) {
                 skipExtraction |= !filter.apply(filePath);
             }
@@ -80,7 +80,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
         if (fileName != null) {
             // need to filter hidden files (starting with dot), because some tar implementations create
             // hidden index files (ending with xml, too)
-            skipExtraction |= fileName.startsWith(".");
+            skipExtraction |= Files.isConsideredHidden(fileName);
         }
 
         if (skipExtraction) {
