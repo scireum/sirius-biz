@@ -369,7 +369,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return <tt>true</tt> if this user belongs to the current user's tenant, <tt>false</tt> otherwise
      */
     public boolean isOwnTenant() {
-        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().fetchValue(), getTenant());
+        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().getIdAsString(), getTenant().getIdAsString());
     }
 
     /**
