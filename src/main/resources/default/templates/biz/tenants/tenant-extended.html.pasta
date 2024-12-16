@@ -40,7 +40,7 @@
                             suggestionUri="/tenants/autocomplete">
                 <i:if test="tenant.getParent().isFilled()">
                     <option value="@tenant.getParent().getId()" selected="selected">
-                        @tenant.getParent().fetchValue()
+                        @tenant.getParent().fetchCachedValue()
                     </option>
                 </i:if>
             </t:singleSelect>

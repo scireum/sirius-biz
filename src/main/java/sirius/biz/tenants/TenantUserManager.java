@@ -451,9 +451,10 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         U account = optionalAccount.get();
+        T tenant = account.getTenant().forceFetchValue();
 
         userAccountCache.put(account.getUniqueName(), account);
-        tenantsCache.put(account.getTenant().fetchValue().getIdAsString(), account.getTenant().fetchValue());
+        tenantsCache.put(tenant.getIdAsString(), tenant);
         rolesCache.remove(account.getUniqueName());
         configCache.remove(account.getUniqueName());
 
@@ -569,7 +570,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                 return null;
             }
             userAccountCache.put(account.getUniqueName(), account);
-            tenantsCache.put(account.getTenant().fetchValue().getIdAsString(), account.getTenant().fetchValue());
+            T tenant = account.getTenant().forceFetchValue();
+            tenantsCache.put(tenant.getIdAsString(), tenant);
             rolesCache.remove(account.getUniqueName());
             configCache.remove(account.getUniqueName());
 
