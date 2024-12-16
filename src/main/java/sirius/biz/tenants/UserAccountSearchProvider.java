@@ -87,7 +87,7 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
             } else {
                 openSearchResult.withDescription(userAccount
                                                  + " ("
-                                                 + userAccount.getTenant().fetchValue().toString()
+                                                 + userAccount.getTenant().fetchCachedValue().toString()
                                                  + ")")
                                 .withURL("/tenants/select/"
                                          + userAccount.getTenant().getIdAsString()

@@ -170,7 +170,7 @@ public class VersionManager {
     }
 
     private void performVersionComputation(VirtualObjectVersion objectVersion) {
-        VirtualObject object = objectVersion.getVirtualObject().fetchValue();
+        VirtualObject object = objectVersion.getVirtualObject().fetchCachedValue();
         try {
             Tuple<Integer, Integer> size = Tuple.create(0, 0);
             Tuple<Integer, Integer> extendedSize = Tuple.create(0, 0);

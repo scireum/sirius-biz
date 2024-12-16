@@ -311,7 +311,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
         }
 
         if (tenantRef.isValueLoaded()) {
-            return Optional.of(tenantRef.fetchValue());
+            return Optional.of(tenantRef.fetchCachedValue());
         }
 
         return fetchCachedTenant(String.valueOf(tenantRef.getId()));
@@ -402,7 +402,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
         }
 
         if (userRef.isValueLoaded()) {
-            return Optional.of(userRef.fetchValue());
+            return Optional.of(userRef.fetchCachedValue());
         }
 
         return fetchCachedUserAccount(userRef.getIdAsString());

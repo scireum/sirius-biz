@@ -109,7 +109,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     @AfterDelete
     protected void onDelete() {
-        SQLBlob sqlBlob = sourceBlob.fetchValue();
+        SQLBlob sqlBlob = sourceBlob.fetchCachedValue();
         if (sqlBlob == null) {
             return;
         }

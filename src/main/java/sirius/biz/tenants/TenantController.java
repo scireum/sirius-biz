@@ -407,7 +407,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                         .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                         .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                         .forTenant(account.getTenant().getIdAsString(),
-                                   account.getTenant().fetchValue().getTenantData().getName())
+                                   account.getTenant().fetchCachedValue().getTenantData().getName())
                         .log();
 
                 webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()

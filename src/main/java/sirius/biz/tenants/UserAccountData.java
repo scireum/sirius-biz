@@ -239,7 +239,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     protected Tenant<?> getTenant() {
-        return ((UserAccount<?, ?>) userObject).getTenant().fetchValue();
+        return ((UserAccount<?, ?>) userObject).getTenant().fetchCachedValue();
     }
 
     @Override
@@ -369,7 +369,8 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return <tt>true</tt> if this user belongs to the current user's tenant, <tt>false</tt> otherwise
      */
     public boolean isOwnTenant() {
-        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().fetchValue(), getTenant());
+        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().fetchCachedValue(),
+                              getTenant());
     }
 
     /**
