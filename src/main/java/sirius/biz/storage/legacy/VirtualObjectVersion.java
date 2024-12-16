@@ -23,6 +23,7 @@ import java.time.LocalDate;
 
 /**
  * Represents a resized image version of a {@link VirtualObject}.
+ *
  * @deprecated use the new storage APIs
  */
 @Deprecated
@@ -100,8 +101,9 @@ public class VirtualObjectVersion extends SQLEntity {
     @AfterDelete
     protected void removeVersionFromCaches() {
         if (this.getVirtualObject().isFilled()) {
-            versionManager.clearCacheForVirtualObject(this.getVirtualObject().forceFetchValue());
-            storage.clearCacheForVirtualObject(this.getVirtualObject().fetchCachedValue());
+            VirtualObject referencedObject = this.getVirtualObject().forceFetchValue();
+            versionManager.clearCacheForVirtualObject(referencedObject);
+            storage.clearCacheForVirtualObject(referencedObject);
         }
     }
 
