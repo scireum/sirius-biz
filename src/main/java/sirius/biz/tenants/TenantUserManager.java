@@ -451,9 +451,10 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         U account = optionalAccount.get();
+        T tenant = account.getTenant().forceFetchValue();
 
         userAccountCache.put(account.getUniqueName(), account);
-        tenantsCache.put(account.getTenant().fetchValue().getIdAsString(), account.getTenant().fetchValue());
+        tenantsCache.put(tenant.getIdAsString(), tenant);
         rolesCache.remove(account.getUniqueName());
         configCache.remove(account.getUniqueName());
 
@@ -525,7 +526,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return defaultUser;
         }
 
-        T tenant = account.getTenant().fetchValue();
+        T tenant = fetchTenant(account.getTenant().getIdAsString());
 
         if (tenant != null && !tenant.getTenantData().matchesIPRange(webContext)) {
             return createUserWithLimitedRoles(info, tenant.getTenantData().getRolesToKeepAsSet());
@@ -569,7 +570,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                 return null;
             }
             userAccountCache.put(account.getUniqueName(), account);
-            tenantsCache.put(account.getTenant().fetchValue().getIdAsString(), account.getTenant().fetchValue());
+            T tenant = account.getTenant().forceFetchValue();
+            tenantsCache.put(tenant.getIdAsString(), tenant);
             rolesCache.remove(account.getUniqueName());
             configCache.remove(account.getUniqueName());
 
@@ -604,7 +606,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         return UserInfo.Builder.createUser(account.getUniqueName())
                                .withUsername(account.getUserAccountData().getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
-                               .withTenantName(account.getTenant().fetchValue().getTenantData().getName())
+                               .withTenantName(fetchTenant(account.getTenant().getIdAsString()).getTenantData()
+                                                                                               .getName())
                                .withLanguage(computeLanguage(null, account.getUniqueName()))
                                .withPermissions(roles)
                                .withSettingsSupplier(user -> getUserSettings(getScopeSettings(), user))
@@ -637,13 +640,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         U account = result.getUserObject(getUserClass());
+        T tenant = fetchTenant(account.getTenant().getIdAsString());
         if (account.getUserAccountData().isExternalLoginRequired() && !isWithinInterval(account.getUserAccountData()
                                                                                                .getLogin()
                                                                                                .getLastExternalLogin(),
-                                                                                        account.getTenant()
-                                                                                               .fetchValue()
-                                                                                               .getTenantData()
-                                                                                               .getExternalLoginIntervalDays())) {
+                                                                                        tenant.getTenantData()
+                                                                                              .getExternalLoginIntervalDays())) {
             completeAuditLogForUser(auditLog.negative("AuditLog.externalLoginRequired"), account);
             throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
         }
@@ -672,8 +674,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         auditLog.negative("AuditLog.loginRejected")
                 .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                .forTenant(String.valueOf(account.getTenant().getId()),
-                           account.getTenant().fetchValue().getTenantData().getName())
+                .forTenant(tenant.getIdAsString(), tenant.getTenantData().getName())
                 .log();
 
         return null;
@@ -718,7 +719,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         builder.causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                .forTenant(String.valueOf(account.getTenant().getId()),
-                          account.getTenant().fetchValue().getTenantData().getName())
+                          fetchTenant(account.getTenant().getIdAsString()).getTenantData().getName())
                .log();
     }
 
@@ -791,7 +792,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
         U user = userInfo.getUserObject(getUserClass());
         Config userAccountConfig = user.getUserAccountData().getPermissions().getConfig();
-        Config tenantConfig = user.getTenant().fetchValue().getTenantData().getConfig();
+        Config tenantConfig = fetchTenant(user.getTenant().getIdAsString()).getTenantData().getConfig();
 
         if (userAccountConfig == null) {
             if (tenantConfig == null) {
@@ -852,7 +853,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         LoginData loginData = user.getUserAccountData().getLogin();
-        TenantData tenantData = user.getTenant().fetchValue().getTenantData();
+        TenantData tenantData = fetchTenant(user.getTenant().getIdAsString()).getTenantData();
 
         if (loginData.isAccountLocked()) {
             return false;
@@ -966,7 +967,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         Set<String> roles = computeRoles(user,
-                                         user.getTenant().fetchValue(),
+                                         fetchTenant(user.getTenant().getIdAsString()),
                                          Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getId())));
 
         rolesCache.put(accountUniqueName, Tuple.create(roles, user.getTenant().getUniqueObjectName()));
@@ -1041,7 +1042,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return NLS.getDefaultLanguage();
         }
         return Strings.firstFilled(userAccount.getUserAccountData().getLanguage().getValue(),
-                                   userAccount.getTenant().fetchValue().getTenantData().getLanguage().getValue(),
+                                   fetchTenant(userAccount.getTenant().getIdAsString()).getTenantData().getLanguage().getValue(),
                                    NLS.getDefaultLanguage());
     }
 }

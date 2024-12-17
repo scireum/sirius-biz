@@ -181,7 +181,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
 
     private void verifyUser(SAMLResponse response, UserInfo user) {
         U account = user.getUserObject(getUserClass());
-        T tenant = account.getTenant().fetchValue();
+        T tenant = account.getTenant().forceFetchValue();
 
         if (!checkIssuer(tenant, response)) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Issuer mismatch!").handle();

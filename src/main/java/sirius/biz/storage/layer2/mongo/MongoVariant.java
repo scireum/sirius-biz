@@ -107,7 +107,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     @AfterDelete
     protected void onDelete() {
-        MongoBlob mongoBlob = blob.fetchValue();
+        MongoBlob mongoBlob = blob.forceFetchValue();
         if (mongoBlob == null) {
             return;
         }
