@@ -1,0 +1,23 @@
+<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
+<i:arg type="Map" name="context"/>
+
+<i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
+<t:dateTimeField class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
+                 name="@param.getName()"
+                 label="@param.getLabel()"
+                 step="1"
+                 help="@param.getDescription()"
+                 value="@param.get(context).orElse(null).as(LocalDateTime.class)"/>
+
+<script>
+    sirius.ready(function () {
+        const _elem = sirius.querySelector(".param-___param.getName()");
+        const _input = _elem.querySelector("input");
+        _elem.addEventListener("clear", function () {
+            _input.value = null;
+        });
+        _elem.addEventListener("updated-value", function (event) {
+            _input.value = event.detail;
+        });
+    });
+</script>

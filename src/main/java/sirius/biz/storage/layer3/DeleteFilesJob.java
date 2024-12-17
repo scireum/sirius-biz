@@ -13,7 +13,7 @@ import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.FileParameter;
-import sirius.biz.jobs.params.LocalDateParameter;
+import sirius.biz.jobs.params.LocalDateTimeParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.PersistencePeriod;
@@ -33,7 +33,6 @@ import javax.annotation.Nullable;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,8 +68,8 @@ public class DeleteFilesJob extends BatchJob {
             new StringParameter("filter", "$DeleteFilesJob.pathFilter").withDescription(
                     "$DeleteFilesJob.pathFilter.help").build();
 
-    private static final Parameter<LocalDate> LAST_MODIFIED_BEFORE_PARAMETER =
-            new LocalDateParameter("lastModifiedBefore", "$DeleteFilesJob.lastModifiedBefore").withDescription(
+    private static final Parameter<LocalDateTime> LAST_MODIFIED_BEFORE_PARAMETER =
+            new LocalDateTimeParameter("lastModifiedBefore", "$DeleteFilesJob.lastModifiedBefore").withDescription(
                     "$DeleteFilesJob.lastModifiedBefore.help").build();
 
     private static final Parameter<Boolean> ONLY_UNUSED_PARAMETER =
@@ -116,8 +115,7 @@ public class DeleteFilesJob extends BatchJob {
         deleteEmpty = process.require(DELETE_EMPTY_DIRECTORIES_PARAMETER);
         onlyUnused = process.require(ONLY_UNUSED_PARAMETER);
         process.getParameter(PATH_FILTER_PARAMETER).ifPresent(this::initializePathMatcher);
-        process.getParameter(LAST_MODIFIED_BEFORE_PARAMETER)
-               .ifPresent(date -> lastModifiedBefore = date.atStartOfDay());
+        process.getParameter(LAST_MODIFIED_BEFORE_PARAMETER).ifPresent(date -> lastModifiedBefore = date);
         handleDirectory(sourcePath);
     }
 
