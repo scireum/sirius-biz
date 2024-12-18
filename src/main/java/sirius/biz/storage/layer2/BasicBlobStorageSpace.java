@@ -1074,8 +1074,20 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         touch(blobKey);
 
         try {
-            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
+            // first, attempt to resolve the physical key for the given blob and variant in a non-blocking manner; if
+            // the variant has been created before, independent of whether this node has conversion enabled, this will
+            // lead to a physical key that can be used to download the blob
+            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
 
+            // if a physical key cannot be determined, the blob has not yet been created in the requested variant; we
+            // now need to check if this node is allowed to perform the conversion itself; if so, we run the physical
+            // key lookup again in a blocking manner to ensure that the conversion is performed
+            if (conversionEnabled && physicalKey == null) {
+                physicalKey = resolvePhysicalKey(blobKey, variant, false);
+            }
+
+            // if the physical key is still null, this node is not allowed to perform the conversion itself or
+            // conversion on this node failed gracefully; in this case, we attempt to delegate the conversion
             if (physicalKey == null) {
                 return tryDelegateDownload(blobKey, variant, MAX_CONVERSION_DELEGATE_ATTEMPTS);
             }
