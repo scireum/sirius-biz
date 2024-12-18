@@ -261,6 +261,12 @@ public class BlobDispatcher implements WebDispatcher {
             return;
         }
 
+        if (urlResult.urlType() == URLBuilder.UrlType.VIRTUAL) {
+            // A conversion will be attempted and tunneled over. Disable caching completely as we expect
+            // subsequent requests to deliver a redirect URL the new converted physical file.
+            response.notCached();
+        }
+
         String filename = blobUri.getFilename();
 
         if (blobUri.isDownload()) {
