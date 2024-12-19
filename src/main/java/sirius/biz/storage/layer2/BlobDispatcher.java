@@ -244,7 +244,9 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (blobUri.isCacheable()) {
-            response.cachedForSeconds(cacheSeconds);
+            // Limit the cache time to a maximum of 1 hour for all virtual URLs, since it does not make sense to cache
+            // those for long as the underlying file might change.
+            response.cachedForSeconds(Math.min(cacheSeconds, 3600));
         } else {
             response.notCached();
         }
@@ -255,12 +257,14 @@ public class BlobDispatcher implements WebDispatcher {
                 buildPhysicalRedirectUrl(storageSpace, blobUri, cacheSeconds == Response.HTTP_CACHE_INFINITE);
         if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
             // ... and if so, redirect to the physical URL ...
-            if (blobUri.isCacheable()) {
-                // ... but only caches the redirect URL to maximum 1 hour, so the underlying URL can be changed.
-                response.cachedForSeconds(Math.min(cacheSeconds, 3600));
-            }
             response.redirectTemporarily(urlResult.url());
             return;
+        }
+
+        if (urlResult.urlType() == URLBuilder.UrlType.VIRTUAL) {
+            // A conversion will be attempted and tunneled over. Disable caching completely as we expect
+            // subsequent requests to deliver a redirect URL the new converted physical file.
+            response.notCached();
         }
 
         String filename = blobUri.getFilename();
