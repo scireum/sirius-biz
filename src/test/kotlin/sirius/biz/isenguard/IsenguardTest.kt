@@ -26,32 +26,32 @@ class IsenguardTest {
     @Test
     fun `Rate limiting works as intended`() {
         val counter = AtomicInteger()
-        isenguard.isRateLimitReached("127.0.0.1",
+        isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
                 "test",
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        isenguard.isRateLimitReached("127.0.0.1",
+        isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
                 "test",
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        isenguard.isRateLimitReached("127.0.0.1",
+        isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
                 "test",
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        val fourth = isenguard.isRateLimitReached("127.0.0.1",
+        val fourth = isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
                 "test",
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        val fifth = isenguard.isRateLimitReached("127.0.0.1",
+        val fifth = isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
                 "test",
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        val sixth = isenguard.isRateLimitReached("127.0.0.1",
+        val sixth = isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
                 "test",
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },

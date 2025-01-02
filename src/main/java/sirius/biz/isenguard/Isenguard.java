@@ -52,8 +52,8 @@ public class Isenguard {
     /**
      * Signals that the limit as given in the system configuration should be used.
      * <p>
-     * This is used by {@link #isRateLimitReached(String, String, int, Supplier)} and
-     * {@link #isRateLimitReached(String, String, int, Runnable, Supplier)}.
+     * This is used by {@link #increaseAndCheckRateLimitReached(String, String, int, Supplier)} and
+     * {@link #increaseAndCheckRateLimitReached(String, String, int, Runnable, Supplier)}.
      */
     public static final int USE_LIMIT_FROM_CONFIG = 0;
 
@@ -153,7 +153,7 @@ public class Isenguard {
                                     String realm,
                                     int explicitLimit,
                                     Supplier<RateLimitingInfo> infoSupplier) {
-        if (isRateLimitReached(scope, realm, explicitLimit, infoSupplier)) {
+        if (increaseAndCheckRateLimitReached(scope, realm, explicitLimit, infoSupplier)) {
             throw Exceptions.createHandled()
                             .withSystemErrorMessage("Rate Limit reached: %s (%s)",
                                                     realm,
@@ -164,7 +164,7 @@ public class Isenguard {
     }
 
     /**
-     * Determines if the rate limit of the given realm for the given scope is reached.
+     * Registers an event and determines if the rate limit of the given realm for the given scope is reached.
      * <p>
      * Note that invoking this method counts towards the limit.
      *
@@ -177,15 +177,15 @@ public class Isenguard {
      * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
      * created.
      */
-    public boolean isRateLimitReached(String scope,
-                                      String realm,
-                                      int explicitLimit,
-                                      Supplier<RateLimitingInfo> infoSupplier) {
-        return isRateLimitReached(scope, realm, explicitLimit, null, infoSupplier);
+    public boolean increaseAndCheckRateLimitReached(String scope,
+                                                    String realm,
+                                                    int explicitLimit,
+                                                    Supplier<RateLimitingInfo> infoSupplier) {
+        return increaseAndCheckRateLimitReached(scope, realm, explicitLimit, null, infoSupplier);
     }
 
     /**
-     * Determines if the rate limit of the given realm for the given scope is reached.
+     * Registers an event and determines if the rate limit of the given realm for the given scope is reached.
      * <p>
      * Note that invoking this method counts towards the limit.
      *
@@ -199,11 +199,11 @@ public class Isenguard {
      * @return <tt>true</tt> if the rate limit for the given ip, realm and check interval is reached,
      * <tt>false</tt> otherwise.
      */
-    public boolean isRateLimitReached(String scope,
-                                      String realm,
-                                      int explicitLimit,
-                                      Runnable limitReachedOnce,
-                                      Supplier<RateLimitingInfo> infoSupplier) {
+    public boolean increaseAndCheckRateLimitReached(String scope,
+                                                    String realm,
+                                                    int explicitLimit,
+                                                    Runnable limitReachedOnce,
+                                                    Supplier<RateLimitingInfo> infoSupplier) {
         try {
             Tuple<Integer, Integer> limit = fetchLimit(realm, explicitLimit);
 
