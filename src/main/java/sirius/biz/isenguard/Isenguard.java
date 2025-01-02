@@ -182,10 +182,6 @@ public class Isenguard {
         return isRateLimitReached(scope, realm, explicitLimit, null, infoSupplier);
     }
 
-    private String formatLimit(Tuple<Integer, Integer> limit) {
-        return Strings.apply("%s calls within %ss", limit.getFirst(), limit.getSecond());
-    }
-
     /**
      * Determines if the rate limit of the given realm for the given IP is reached.
      *
@@ -258,6 +254,10 @@ public class Isenguard {
                                                       .withIp(info.getIp())
                                                       .withTenant(info.getTenantId())
                                                       .withLocation(Strings.limit(info.getLocation(), 255)));
+    }
+
+    private String formatLimit(Tuple<Integer, Integer> limit) {
+        return Strings.apply("%s calls within %ss", limit.getFirst(), limit.getSecond());
     }
 
     private boolean increaseAndCheckLimit(String scope,
