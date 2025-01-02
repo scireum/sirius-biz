@@ -25,34 +25,37 @@ class IsenguardTest {
 
     @Test
     fun `Rate limiting works as intended`() {
+        val scope = "127.0.0.1"
+        val realm = "test"
+
         val counter = AtomicInteger()
-        isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
-                "test",
+        isenguard.increaseAndCheckRateLimitReached(scope,
+                realm,
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
-                "test",
+        isenguard.increaseAndCheckRateLimitReached(scope,
+                realm,
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
-                "test",
+        isenguard.increaseAndCheckRateLimitReached(scope,
+                realm,
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        val fourth = isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
-                "test",
+        val fourth = isenguard.increaseAndCheckRateLimitReached(scope,
+                realm,
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        val fifth = isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
-                "test",
+        val fifth = isenguard.increaseAndCheckRateLimitReached(scope,
+                realm,
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
-        val sixth = isenguard.increaseAndCheckRateLimitReached("127.0.0.1",
-                "test",
+        val sixth = isenguard.increaseAndCheckRateLimitReached(scope,
+                realm,
                 Isenguard.USE_LIMIT_FROM_CONFIG,
                 { -> counter.incrementAndGet() },
                 { -> RateLimitingInfo(null, null, null) })
