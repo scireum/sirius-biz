@@ -211,7 +211,7 @@ public class Isenguard {
                 return false;
             }
 
-            return isRateLimitReached(scope, realm, limit.getSecond(), limit.getFirst(), () -> {
+            return increaseAndCheckLimit(scope, realm, limit.getSecond(), limit.getFirst(), () -> {
                 handleLimitReached(scope, realm, limit, infoSupplier.get());
 
                 if (limitReachedOnce != null) {
@@ -260,11 +260,11 @@ public class Isenguard {
                                                       .withLocation(Strings.limit(info.getLocation(), 255)));
     }
 
-    private boolean isRateLimitReached(String scope,
-                                       String realm,
-                                       int intervalInSeconds,
-                                       int limit,
-                                       Runnable limitReachedOnce) {
+    private boolean increaseAndCheckLimit(String scope,
+                                          String realm,
+                                          int intervalInSeconds,
+                                          int limit,
+                                          Runnable limitReachedOnce) {
         String key = computeRateLimitingKey(scope, realm, intervalInSeconds);
         return limiter.increaseAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
     }
