@@ -58,7 +58,7 @@ public class Isenguard {
     public static final int USE_LIMIT_FROM_CONFIG = 0;
 
     /**
-     * Contains the logged used for all firewall sepcific events.
+     * Contains the log used for all firewall-specific events.
      */
     public static final Log LOG = Log.get("isenguard");
 
@@ -89,9 +89,9 @@ public class Isenguard {
     private EventRecorder events;
 
     /**
-     * Determins if the given ipAddress has already been blocked via {@link #blockIP(String)}.
+     * Determines if the given {@code ipAddress} has already been blocked via {@link #blockIP(String)}.
      *
-     * @param ipAddress the ip address to check
+     * @param ipAddress the IP address to check
      * @return <tt>true</tt> if the address has been blocked, <tt>false</tt> otherwise
      */
     public boolean isIPBlacklisted(String ipAddress) {
@@ -194,7 +194,7 @@ public class Isenguard {
      * @param explicitLimit    the explicit limit which overwrites the limit given in the config.
      *                         Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
      * @param limitReachedOnce specifies an action which is executed once the limit was reached, but then skipped for
-     *                         this scope, relam and check interval.
+     *                         this scope, realm and check interval.
      * @param infoSupplier     a supplier which is invoked to provide additional incident data once the rate limit is first hit
      * @return <tt>true</tt> if the rate limit for the given ip, realm and check interval is reached,
      * <tt>false</tt> otherwise.
@@ -300,7 +300,7 @@ public class Isenguard {
     }
 
     /**
-     * Lists all known relams with the given type.
+     * Lists all known realms with the given type.
      * <p>
      * Note that there a some common types:
      * <ul>

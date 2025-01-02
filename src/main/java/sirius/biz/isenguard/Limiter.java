@@ -40,7 +40,7 @@ public interface Limiter extends Named {
     void unblock(String ipAddress);
 
     /**
-     * Increates the interval counter and determines if the given limit was reached.
+     * Increases the interval counter and determines if the given limit was reached.
      *
      * @param key               the unique name of this counter which represents the ip, realm and check-interval
      * @param intervalInSeconds the duration of this interval in seconds (used to remove outdated counters)
@@ -59,11 +59,11 @@ public interface Limiter extends Named {
     int readLimit(String key);
 
     /**
-     * Returns a list of currently blocked IPs.
+     * Returns the set of currently blocked IPs.
      * <p>
      * For efficiency reasons, this list can be limited to the latest matches (e.g. the top 50).
      *
-     * @return a list of currently blocked IPs
+     * @return a set of currently blocked IPs
      */
     Set<String> getBlockedIPs();
 }
