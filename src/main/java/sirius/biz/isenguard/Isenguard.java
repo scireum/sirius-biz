@@ -165,6 +165,8 @@ public class Isenguard {
 
     /**
      * Determines if the rate limit of the given realm for the given scope is reached.
+     * <p>
+     * Note that invoking this method counts towards the limit.
      *
      * @param scope         the key which is used for grouping multiple events - e.g. the ip of the caller
      * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
@@ -183,7 +185,9 @@ public class Isenguard {
     }
 
     /**
-     * Determines if the rate limit of the given realm for the given IP is reached.
+     * Determines if the rate limit of the given realm for the given scope is reached.
+     * <p>
+     * Note that invoking this method counts towards the limit.
      *
      * @param scope            the key which is used for grouping multiple events - e.g. the ip of the caller
      * @param realm            the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
