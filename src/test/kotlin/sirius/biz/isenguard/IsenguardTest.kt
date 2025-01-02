@@ -33,38 +33,38 @@ class IsenguardTest {
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
-            { -> counter.incrementAndGet() },
-            { -> RateLimitingInfo(null, null, null) })
+            { counter.incrementAndGet() },
+            { RateLimitingInfo(null, null, null) })
         isenguard.increaseAndCheckRateLimitReached(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
-            { -> counter.incrementAndGet() },
-            { -> RateLimitingInfo(null, null, null) })
+            { counter.incrementAndGet() },
+            { RateLimitingInfo(null, null, null) })
         isenguard.increaseAndCheckRateLimitReached(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
-            { -> counter.incrementAndGet() },
-            { -> RateLimitingInfo(null, null, null) })
+            { counter.incrementAndGet() },
+            { RateLimitingInfo(null, null, null) })
         val fourth = isenguard.increaseAndCheckRateLimitReached(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
-            { -> counter.incrementAndGet() },
-            { -> RateLimitingInfo(null, null, null) })
+            { counter.incrementAndGet() },
+            { RateLimitingInfo(null, null, null) })
         val fifth = isenguard.increaseAndCheckRateLimitReached(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
-            { -> counter.incrementAndGet() },
-            { -> RateLimitingInfo(null, null, null) })
+            { counter.incrementAndGet() },
+            { RateLimitingInfo(null, null, null) })
         val sixth = isenguard.increaseAndCheckRateLimitReached(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
-            { -> counter.incrementAndGet() },
-            { -> RateLimitingInfo(null, null, null) })
+            { counter.incrementAndGet() },
+            { RateLimitingInfo(null, null, null) })
 
         assertFalse { fourth }
         assertTrue { fifth }
