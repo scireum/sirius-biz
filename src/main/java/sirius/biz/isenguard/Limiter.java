@@ -23,7 +23,7 @@ public interface Limiter extends Named {
      * @param ip the ip to check
      * @return <tt>true</tt> if the IP is currently blacklisted, <tt>false</tt> otherwise
      */
-    boolean isIPBLacklisted(String ip);
+    boolean isIPBlacklisted(String ip);
 
     /**
      * Blocks the given IP for a certain amount of time.

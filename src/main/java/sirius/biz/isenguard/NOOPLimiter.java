@@ -27,7 +27,7 @@ public class NOOPLimiter implements Limiter {
     }
 
     @Override
-    public boolean isIPBLacklisted(String ip) {
+    public boolean isIPBlacklisted(String ip) {
         return false;
     }
 

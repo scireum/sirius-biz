@@ -47,8 +47,8 @@ public class SmartLimiter implements Limiter {
     }
 
     @Override
-    public boolean isIPBLacklisted(String ip) {
-        return getLimiter().isIPBLacklisted(ip);
+    public boolean isIPBlacklisted(String ip) {
+        return getLimiter().isIPBlacklisted(ip);
     }
 
     @Override

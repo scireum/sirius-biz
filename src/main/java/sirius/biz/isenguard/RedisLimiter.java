@@ -44,7 +44,7 @@ public class RedisLimiter implements Limiter {
     }
 
     @Override
-    public boolean isIPBLacklisted(String ip) {
+    public boolean isIPBlacklisted(String ip) {
         return getDB().query(() -> "Check for blocked IP", db -> db.zrank(BLOCKED_IPS, ip) != null);
     }
 
