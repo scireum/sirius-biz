@@ -52,8 +52,8 @@ public class Isenguard {
     /**
      * Signals that the limit as given in the system configuration should be used.
      * <p>
-     * This is used by {@link #increaseAndCheckRateLimitReached(String, String, int, Supplier)} and
-     * {@link #increaseAndCheckRateLimitReached(String, String, int, Runnable, Supplier)}.
+     * This is used by {@link #registerCallAndCheckRateLimitReached(String, String, int, Supplier)} and
+     * {@link #registerCallAndCheckRateLimitReached(String, String, int, Runnable, Supplier)}.
      */
     public static final int USE_LIMIT_FROM_CONFIG = 0;
 
@@ -153,7 +153,7 @@ public class Isenguard {
                                     String realm,
                                     int explicitLimit,
                                     Supplier<RateLimitingInfo> infoSupplier) {
-        if (increaseAndCheckRateLimitReached(scope, realm, explicitLimit, infoSupplier)) {
+        if (registerCallAndCheckRateLimitReached(scope, realm, explicitLimit, infoSupplier)) {
             throw Exceptions.createHandled()
                             .withSystemErrorMessage("Rate Limit reached: %s (%s)",
                                                     realm,
@@ -177,11 +177,11 @@ public class Isenguard {
      * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
      * created.
      */
-    public boolean increaseAndCheckRateLimitReached(String scope,
-                                                    String realm,
-                                                    int explicitLimit,
-                                                    Supplier<RateLimitingInfo> infoSupplier) {
-        return increaseAndCheckRateLimitReached(scope, realm, explicitLimit, null, infoSupplier);
+    public boolean registerCallAndCheckRateLimitReached(String scope,
+                                                        String realm,
+                                                        int explicitLimit,
+                                                        Supplier<RateLimitingInfo> infoSupplier) {
+        return registerCallAndCheckRateLimitReached(scope, realm, explicitLimit, null, infoSupplier);
     }
 
     /**
@@ -199,11 +199,11 @@ public class Isenguard {
      * @return <tt>true</tt> if the rate limit for the given ip, realm and check interval is reached,
      * <tt>false</tt> otherwise.
      */
-    public boolean increaseAndCheckRateLimitReached(String scope,
-                                                    String realm,
-                                                    int explicitLimit,
-                                                    Runnable limitReachedOnce,
-                                                    Supplier<RateLimitingInfo> infoSupplier) {
+    public boolean registerCallAndCheckRateLimitReached(String scope,
+                                                        String realm,
+                                                        int explicitLimit,
+                                                        Runnable limitReachedOnce,
+                                                        Supplier<RateLimitingInfo> infoSupplier) {
         try {
             Tuple<Integer, Integer> limit = fetchLimit(realm, explicitLimit);
 
@@ -211,7 +211,7 @@ public class Isenguard {
                 return false;
             }
 
-            return increaseAndCheckLimit(scope, realm, limit.getSecond(), limit.getFirst(), () -> {
+            return registerCallAndCheckLimit(scope, realm, limit.getSecond(), limit.getFirst(), () -> {
                 handleLimitReached(scope, realm, limit, infoSupplier.get());
 
                 if (limitReachedOnce != null) {
@@ -264,13 +264,13 @@ public class Isenguard {
         return Strings.apply("%s calls within %ss", limit.getFirst(), limit.getSecond());
     }
 
-    private boolean increaseAndCheckLimit(String scope,
-                                          String realm,
-                                          int intervalInSeconds,
-                                          int limit,
-                                          Runnable limitReachedOnce) {
+    private boolean registerCallAndCheckLimit(String scope,
+                                              String realm,
+                                              int intervalInSeconds,
+                                              int limit,
+                                              Runnable limitReachedOnce) {
         String key = computeRateLimitingKey(scope, realm, intervalInSeconds);
-        return limiter.increaseAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
+        return limiter.registerCallAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
     }
 
     private String computeRateLimitingKey(String scope, String realm, int intervalInSeconds) {
@@ -299,7 +299,7 @@ public class Isenguard {
         }
 
         String key = computeRateLimitingKey(scope, realm, limit.getSecond());
-        int currentValue = limiter.readLimit(key);
+        int currentValue = limiter.readCallCount(key);
         return Strings.apply("%s / %s (per %ss)", currentValue, limit.getFirst(), limit.getSecond());
     }
 

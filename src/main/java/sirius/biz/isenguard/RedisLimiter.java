@@ -71,9 +71,9 @@ public class RedisLimiter implements Limiter {
     }
 
     @Override
-    public boolean increaseAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
+    public boolean registerCallAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
         String effectiveKey = COUNTER_PREFIX + key;
-        return getDB().query(() -> "Update rate limit: " + effectiveKey, db -> {
+        return getDB().query(() -> "Update rate limiting call counter: " + effectiveKey, db -> {
             long value = db.incr(effectiveKey);
             if (value == 1) {
                 db.expire(effectiveKey, intervalInSeconds);
@@ -86,9 +86,9 @@ public class RedisLimiter implements Limiter {
     }
 
     @Override
-    public int readLimit(String key) {
+    public int readCallCount(String key) {
         String effectiveKey = COUNTER_PREFIX + key;
-        return getDB().query(() -> "Read rate limit: " + effectiveKey, db -> {
+        return getDB().query(() -> "Read rate limiting call counter: " + effectiveKey, db -> {
             String value = db.get(effectiveKey);
             if (Strings.isEmpty(value)) {
                 return 0;
