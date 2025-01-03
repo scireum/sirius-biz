@@ -228,6 +228,48 @@ public class Isenguard {
         }
     }
 
+    /**
+     * Determines if the rate limit of the given realm for the given scope is reached. This check does not have side
+     * effects.
+     *
+     * @param scope the key which is used for grouping multiple events - e.g. the IP of the caller
+     * @param realm the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
+     * <tt>false</tt> otherwise
+     */
+    public boolean checkRateLimitReached(String scope, String realm) {
+        return checkRateLimitReached(scope, realm, USE_LIMIT_FROM_CONFIG);
+    }
+
+    /**
+     * Determines if the rate limit of the given realm for the given scope is reached. This check does not have side
+     * effects.
+     *
+     * @param scope         the key which is used for grouping multiple events - e.g. the IP of the caller
+     * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
+     * @param explicitLimit the explicit limit which overwrites the limit given in the config.
+     *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
+     * <tt>false</tt> otherwise
+     */
+    public boolean checkRateLimitReached(String scope, String realm, int explicitLimit) {
+        try {
+            Tuple<Integer, Integer> limit = fetchLimit(realm, explicitLimit);
+            if (limit.getFirst() == 0 || limit.getSecond() == 0) {
+                return false;
+            }
+
+            return checkLimit(scope, realm, limit.getSecond(), limit.getFirst());
+        } catch (Exception exception) {
+            // In case of an error e.g. Redis might not be available,
+            // we resort to ignoring any limits and let the application run.
+            // The other option would be to block everything and essentially
+            // shut down the application, which isn't feasible either...
+            Exceptions.handle(LOG, exception);
+            return false;
+        }
+    }
+
     private Tuple<Integer, Integer> fetchLimit(String realm, int explicitLimit) {
         Tuple<Integer, Integer> limitSetting = limits.computeIfAbsent(realm, this::loadLimit);
         return explicitLimit == USE_LIMIT_FROM_CONFIG ?
@@ -262,6 +304,11 @@ public class Isenguard {
 
     private String formatLimit(Tuple<Integer, Integer> limit) {
         return Strings.apply("%s calls within %ss", limit.getFirst(), limit.getSecond());
+    }
+
+    private boolean checkLimit(String scope, String realm, int intervalInSeconds, int limit) {
+        String key = computeRateLimitingKey(scope, realm, intervalInSeconds);
+        return limiter.readCallCount(key) >= limit;
     }
 
     private boolean registerCallAndCheckLimit(String scope,
