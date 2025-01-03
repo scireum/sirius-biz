@@ -47,28 +47,36 @@ class IsenguardTest {
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
+        val thirdCheck = isenguard.checkRateLimitReached(scope, realm)
         val fourth = isenguard.registerCallAndCheckRateLimitReached(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
+        val fourthCheck = isenguard.checkRateLimitReached(scope, realm)
         val fifth = isenguard.registerCallAndCheckRateLimitReached(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
+        val fifthCheck = isenguard.checkRateLimitReached(scope, realm)
         val sixth = isenguard.registerCallAndCheckRateLimitReached(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
+        val sixthCheck = isenguard.checkRateLimitReached(scope, realm)
 
+        assertFalse { thirdCheck }
         assertFalse { fourth }
+        assertFalse { fourthCheck }
         assertTrue { fifth }
+        assertTrue { fifthCheck }
         assertTrue { sixth }
+        assertTrue { sixthCheck }
         assertEquals(1, counter.get())
     }
 
