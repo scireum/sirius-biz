@@ -27,7 +27,7 @@ public class NOOPLimiter implements Limiter {
     }
 
     @Override
-    public boolean isIPBLacklisted(String ip) {
+    public boolean isIPBlacklisted(String ip) {
         return false;
     }
 
@@ -42,12 +42,12 @@ public class NOOPLimiter implements Limiter {
     }
 
     @Override
-    public boolean increaseAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
+    public boolean registerCallAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
         return false;
     }
 
     @Override
-    public int readLimit(String key) {
+    public int readCallCount(String key) {
         return 0;
     }
 

@@ -47,8 +47,8 @@ public class SmartLimiter implements Limiter {
     }
 
     @Override
-    public boolean isIPBLacklisted(String ip) {
-        return getLimiter().isIPBLacklisted(ip);
+    public boolean isIPBlacklisted(String ip) {
+        return getLimiter().isIPBlacklisted(ip);
     }
 
     @Override
@@ -62,13 +62,13 @@ public class SmartLimiter implements Limiter {
     }
 
     @Override
-    public boolean increaseAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
-        return getLimiter().increaseAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
+    public boolean registerCallAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
+        return getLimiter().registerCallAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
     }
 
     @Override
-    public int readLimit(String key) {
-        return getLimiter().readLimit(key);
+    public int readCallCount(String key) {
+        return getLimiter().readCallCount(key);
     }
 
     @Override
