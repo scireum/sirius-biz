@@ -18,6 +18,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 import sirius.web.controller.Controller;
@@ -154,13 +155,35 @@ public class Isenguard {
                                     int explicitLimit,
                                     Supplier<RateLimitingInfo> infoSupplier) {
         if (registerCallAndCheckRateLimitReached(scope, realm, explicitLimit, infoSupplier)) {
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Rate Limit reached: %s (%s)",
-                                                    realm,
-                                                    formatLimit(fetchLimit(realm, explicitLimit)))
-                            .hint(Controller.HTTP_STATUS, HttpResponseStatus.TOO_MANY_REQUESTS.code())
-                            .handle();
+            throw createException(realm, explicitLimit);
         }
+    }
+
+    /**
+     * Creates an exception which indicates that the rate limit for the given realm is reached.
+     *
+     * @param realm the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
+     * @return an exception which indicates that the rate limit for the given realm is reached
+     */
+    public HandledException createException(String realm) {
+        return createException(realm, USE_LIMIT_FROM_CONFIG);
+    }
+
+    /**
+     * Creates an exception which indicates that the rate limit for the given realm is reached.
+     *
+     * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
+     * @param explicitLimit the explicit limit which overwrites the limit given in the config.
+     *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
+     * @return an exception which indicates that the rate limit for the given realm is reached
+     */
+    public HandledException createException(String realm, int explicitLimit) {
+        return Exceptions.createHandled()
+                         .withSystemErrorMessage("Rate Limit reached: %s (%s)",
+                                                 realm,
+                                                 formatLimit(fetchLimit(realm, explicitLimit)))
+                         .hint(Controller.HTTP_STATUS, HttpResponseStatus.TOO_MANY_REQUESTS.code())
+                         .handle();
     }
 
     /**
