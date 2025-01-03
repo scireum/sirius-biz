@@ -166,14 +166,15 @@ public class Isenguard {
     /**
      * Registers an event and determines if the rate limit of the given realm for the given scope is reached.
      * <p>
-     * Note that invoking this method counts towards the limit.
+     * Note that invoking this method counts towards the limit. Use {@link #checkRateLimitReached(String, String, int)}
+     * if you only want to check the current state without counting the call.
      *
-     * @param scope         the key which is used for grouping multiple events - e.g. the ip of the caller
+     * @param scope         the key which is used for grouping multiple events - e.g. the IP of the caller
      * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit the explicit limit which overwrites the limit given in the config.
      *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
      * @param infoSupplier  a supplier which is invoked to provide additional incident data once the rate limit is first hit
-     * @return <tt>true</tt> if the rate limit for the given ip, realm and check interval is reached,
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
      * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
      * created.
      */
@@ -187,17 +188,19 @@ public class Isenguard {
     /**
      * Registers an event and determines if the rate limit of the given realm for the given scope is reached.
      * <p>
-     * Note that invoking this method counts towards the limit.
+     * Note that invoking this method counts towards the limit. Use {@link #checkRateLimitReached(String, String, int)}
+     * if you only want to check the current state without counting the call.
      *
-     * @param scope            the key which is used for grouping multiple events - e.g. the ip of the caller
+     * @param scope            the key which is used for grouping multiple events - e.g. the IP of the caller
      * @param realm            the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit    the explicit limit which overwrites the limit given in the config.
      *                         Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
      * @param limitReachedOnce specifies an action which is executed once the limit was reached, but then skipped for
      *                         this scope, realm and check interval.
      * @param infoSupplier     a supplier which is invoked to provide additional incident data once the rate limit is first hit
-     * @return <tt>true</tt> if the rate limit for the given ip, realm and check interval is reached,
-     * <tt>false</tt> otherwise.
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
+     * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
+     * created.
      */
     public boolean registerCallAndCheckRateLimitReached(String scope,
                                                         String realm,
@@ -206,7 +209,6 @@ public class Isenguard {
                                                         Supplier<RateLimitingInfo> infoSupplier) {
         try {
             Tuple<Integer, Integer> limit = fetchLimit(realm, explicitLimit);
-
             if (limit.getFirst() == 0 || limit.getSecond() == 0) {
                 return false;
             }
