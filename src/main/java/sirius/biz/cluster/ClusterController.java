@@ -535,7 +535,7 @@ public class ClusterController extends BasicController {
                                                    .withTextMessage(Strings.apply("Cleared cache '%s'.", cacheName)));
                     }, () -> {
                         UserContext.message(Message.warn()
-                                                   .withTextMessage(Strings.apply("Unknown cachw '%s'.", cacheName)));
+                                                   .withTextMessage(Strings.apply("Unknown cache '%s'.", cacheName)));
                     });
         webContext.respondWith().redirectToGet(CACHES_URI);
     }
