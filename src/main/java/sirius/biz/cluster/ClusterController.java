@@ -21,6 +21,8 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.cache.Cache;
+import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -93,6 +95,7 @@ public class ClusterController extends BasicController {
     public static final String FLAG_DISABLE = "disable";
     private static final String CLUSTER_URI = "/system/cluster";
     private static final String BACKGROUND_JOBS_URI = "/system/cluster/background-jobs";
+    private static final String CACHES_URI = "/system/cluster/caches";
     private static final String EOD_TASKS_URI = "/system/cluster/eod-tasks";
     private static final String ANALYTICS_URI = "/system/cluster/analytics";
     private static final String LOCKS_URI = "/system/cluster/locks";
@@ -235,6 +238,17 @@ public class ClusterController extends BasicController {
                                                                                 (a, b) -> a));
         webContext.respondWith()
                   .template("/templates/biz/cluster/background-jobs.html.pasta", clusterInfo, descriptions, jobKeys);
+    }
+
+    /**
+     * Lists the caches registered in the cluster and on the current node.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed(CACHES_URI)
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void caches(WebContext webContext) {
+        webContext.respondWith().template("/templates/biz/cluster/caches.html.pasta");
     }
 
     /**
@@ -487,6 +501,43 @@ public class ClusterController extends BasicController {
 
         UserContext.message(Message.success().withTextMessage(Strings.apply("Released %d locks.", counter.getCount())));
         webContext.respondWith().redirectToGet(LOCKS_URI);
+    }
+
+    /**
+     * Clears all caches.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/system/cluster/caches/clear-all")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void clearAllCaches(WebContext webContext) {
+        CacheManager.getCaches().forEach(Cache::clear);
+        UserContext.message(Message.success().withTextMessage("Cleared all caches."));
+        webContext.respondWith().redirectToGet(CACHES_URI);
+    }
+
+    /**
+     * Clears the cache with the given name.
+     *
+     * @param webContext the request to handle
+     * @param cacheName  the name of the cache to clear
+     */
+    @Routed("/system/cluster/caches/clear/:1")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void clearCache(WebContext webContext, String cacheName) {
+        CacheManager.getCaches()
+                    .stream()
+                    .filter(cache -> cache.getName().equals(cacheName))
+                    .findFirst()
+                    .ifPresentOrElse(cache -> {
+                        cache.clear();
+                        UserContext.message(Message.success()
+                                                   .withTextMessage(Strings.apply("Cleared cache '%s'.", cacheName)));
+                    }, () -> {
+                        UserContext.message(Message.warn()
+                                                   .withTextMessage(Strings.apply("Unknown cache '%s'.", cacheName)));
+                    });
+        webContext.respondWith().redirectToGet(CACHES_URI);
     }
 
     /**
