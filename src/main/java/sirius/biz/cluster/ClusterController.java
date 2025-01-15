@@ -512,7 +512,7 @@ public class ClusterController extends BasicController {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void clearAllCaches(WebContext webContext) {
         CacheManager.getCaches().forEach(Cache::clear);
-        UserContext.message(Message.success().withTextMessage(Strings.apply("Cleared all caches.")));
+        UserContext.message(Message.success().withTextMessage("Cleared all caches."));
         webContext.respondWith().redirectToGet(CACHES_URI);
     }
 
