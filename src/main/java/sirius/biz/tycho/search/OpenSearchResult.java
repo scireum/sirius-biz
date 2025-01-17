@@ -67,7 +67,18 @@ public class OpenSearchResult {
      * @return the result itself for fluent method calls.
      */
     public OpenSearchResult withDescription(String description) {
-        this.htmlDescription = Strings.cleanup(description, StringCleanup::escapeXml);
+        withHtmlDescription(Strings.cleanup(description, StringCleanup::escapeXml));
+        return this;
+    }
+
+    /**
+     * Provides an additional HTML description to show.
+     *
+     * @param htmlDescription the description of this result, expected to contain HTML.
+     * @return the result itself for fluent method calls.
+     */
+    public OpenSearchResult withHtmlDescription(String htmlDescription) {
+        this.htmlDescription = htmlDescription;
         return this;
     }
 
