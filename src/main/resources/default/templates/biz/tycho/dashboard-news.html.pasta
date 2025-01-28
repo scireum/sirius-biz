@@ -17,7 +17,8 @@
                     </div>
                     <i:local name="linkId" value="@apply('update-link-%s', generateId())"/>
                     <div>
-                        <a id="@linkId" class="small stretched-link" href="@info.getLink()" target="_blank">@i18n("DashboardController.more")</a>
+                        <a id="@linkId" class="small stretched-link" href="@info.getLink()" rel="nofollow"
+                           target="_blank">@i18n("DashboardController.more")</a>
                     </div>
                     <script type="text/javascript">
                         sirius.ready(function () {
