@@ -35,12 +35,10 @@ public class EnumPropertyTransformer extends BaseFieldDefinitionTransformer<Enum
     @SuppressWarnings("unchecked")
     protected void customizeField(EnumProperty property, FieldDefinition field) {
         List<String> allowedValues = new ArrayList<>();
-        allowedValues.addAll(Arrays.stream(((Class<Enum<?>>) property.getField().getType()).getEnumConstants())
-                                   .map(Enum::name)
-                                   .toList());
-        allowedValues.addAll(Arrays.stream(((Class<Enum<?>>) property.getField().getType()).getEnumConstants())
-                                   .map(e -> "$" + e.getClass().getSimpleName() + "." + e.name())
-                                   .toList());
+        Arrays.stream(((Class<Enum<?>>) property.getField().getType()).getEnumConstants()).forEach(enumValue -> {
+            allowedValues.add(enumValue.name());
+            allowedValues.add("$" + enumValue.getClass().getSimpleName() + "." + enumValue.name());
+        });
         field.withCheck(new ValueInListCheck(allowedValues));
     }
 }
