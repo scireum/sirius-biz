@@ -61,8 +61,8 @@ public class RateLimitingTriggeredEvent extends Event<RateLimitingTriggeredEvent
     /**
      * Contains the location (if available) which caused the event.
      */
-    @NullAllowed
     public static final Mapping LOCATION = Mapping.named("location");
+    @NullAllowed
     private String location;
 
     /**
