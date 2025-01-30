@@ -30,8 +30,6 @@ import java.util.stream.Collectors;
  */
 public class FieldDefinition {
 
-    private static final ValueInListCheck BOOLEAN_VALUES_CHECK = new ValueInListCheck("true", "false");
-
     protected String name;
     protected String type;
     protected String typeUrl;
@@ -162,7 +160,10 @@ public class FieldDefinition {
      * @return the newly created field
      */
     public static FieldDefinition booleanField(String name) {
-        return new FieldDefinition(name, typeBoolean()).withCheck(BOOLEAN_VALUES_CHECK);
+        return new FieldDefinition(name, typeBoolean()).withCheck(new ValueInListCheck("true",
+                                                                                       "false",
+                                                                                       "$" + NLS.CommonKeys.YES.key(),
+                                                                                       "$" + NLS.CommonKeys.NO.key()));
     }
 
     /**

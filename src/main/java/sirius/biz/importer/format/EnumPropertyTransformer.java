@@ -11,7 +11,9 @@ package sirius.biz.importer.format;
 import sirius.db.mixing.properties.EnumProperty;
 import sirius.kernel.di.std.Register;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Generates a {@link FieldDefinition} for an {@link EnumProperty}.
@@ -32,9 +34,11 @@ public class EnumPropertyTransformer extends BaseFieldDefinitionTransformer<Enum
     @Override
     @SuppressWarnings("unchecked")
     protected void customizeField(EnumProperty property, FieldDefinition field) {
-        field.withCheck(new ValueInListCheck(Arrays.stream(((Class<Enum<?>>) property.getField()
-                                                                                     .getType()).getEnumConstants())
-                                                   .map(Enum::name)
-                                                   .toList()));
+        List<String> allowedValues = new ArrayList<>();
+        Arrays.stream(((Class<Enum<?>>) property.getField().getType()).getEnumConstants()).forEach(enumValue -> {
+            allowedValues.add(enumValue.name());
+            allowedValues.add("$" + enumValue.getClass().getSimpleName() + "." + enumValue.name());
+        });
+        field.withCheck(new ValueInListCheck(allowedValues));
     }
 }
