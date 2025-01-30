@@ -16,15 +16,13 @@ import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
 
-import javax.annotation.Nonnull;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +92,7 @@ public class UpdatesReport extends ReportJobFactory {
                         """).set("start", start).set("end", LocalDate.now()).iterateAll(row -> {
             String guid = row.getValue("updateGuid").asString();
             report.addRow(List.of(Tuple.create(COLUMN_GUID,
-                                               isURL(guid) ? cells.link(guid, guid, true) : cells.of(guid)),
+                                               Strings.isHttpUrl(guid) ? cells.link(guid, guid, true) : cells.of(guid)),
                                   Tuple.create(COLUMN_TOTAL, cells.of(row.getValue("all").asInt(0))),
                                   Tuple.create(COLUMN_LOGGED_IN, cells.of(row.getValue(COLUMN_LOGGED_IN).asInt(0))),
                                   Tuple.create(COLUMN_ANONYMOUS, cells.of(row.getValue(COLUMN_ANONYMOUS).asInt(0)))));
@@ -104,16 +102,6 @@ public class UpdatesReport extends ReportJobFactory {
         additionalMetricConsumer.accept(NLS.get("UpdatesReport.totalClicks"), cells.of(totalClicks.get()));
     }
 
-    private boolean isURL(String guid) {
-        try {
-            URI.create(guid).toURL();
-            return true;
-        } catch (MalformedURLException exception) {
-            return false;
-        }
-    }
-
-    @Nonnull
     @Override
     public String getName() {
         return "UpdatesReport";
