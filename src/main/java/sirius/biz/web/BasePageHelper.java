@@ -410,7 +410,6 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      */
     public Q buildUnderlyingQueryWithFacets() {
         buildUnderlyingQuery();
-
         applyFacets(null);
         return baseQuery;
     }
