@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.db.mixing.InvalidFieldException;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyValidator;
 import sirius.kernel.commons.Strings;
@@ -54,6 +55,7 @@ public class PhoneNumberValidator implements PropertyValidator {
 
     private HandledException createInvalidPhoneException(Property property, String value) {
         return Exceptions.createHandled()
+                         .error(new InvalidFieldException(property.getName()))
                          .withNLSKey("ContactData.invalidPhone")
                          .set("field", property.getLabel())
                          .set("value", value)
