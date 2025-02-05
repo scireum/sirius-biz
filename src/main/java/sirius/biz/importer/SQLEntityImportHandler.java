@@ -8,8 +8,6 @@
 
 package sirius.biz.importer;
 
-import sirius.biz.protocol.TraceData;
-import sirius.biz.protocol.Traced;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.DeleteQuery;
@@ -92,19 +90,6 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
                          .map(Property::getName)
                          .map(Mapping::named)
                          .filter(mapping -> !SQLEntity.ID.equals(mapping))
-                         .toList();
-    }
-
-    protected List<Mapping> getMappingsToCheckForChanges() {
-        return descriptor.getProperties()
-                         .stream()
-                         .map(Property::getName)
-                         .map(Mapping::named)
-                         .filter(mapping -> !SQLEntity.ID.equals(mapping))
-                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_BY).equals(mapping))
-                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_AT).equals(mapping))
-                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_IN).equals(mapping))
-                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_ON).equals(mapping))
                          .toList();
     }
 
