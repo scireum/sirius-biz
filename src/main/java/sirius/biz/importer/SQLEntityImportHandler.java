@@ -336,7 +336,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @param persistentEntity  the entity which was loaded from the database and is to be updated
      */
     protected void updatePersistentEntity(E entityWithUpdates, E persistentEntity) {
-        for (Mapping mapping : mappingsToLoad) {
+        for (Mapping mapping : mappingsToUpdate) {
             Property property = descriptor.getProperty(mapping);
             property.setValue(persistentEntity, property.getValue(entityWithUpdates));
         }
