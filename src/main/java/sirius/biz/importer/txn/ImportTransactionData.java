@@ -8,7 +8,6 @@
 
 package sirius.biz.importer.txn;
 
-import sirius.biz.importer.AutoImport;
 import sirius.biz.protocol.NoJournal;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
@@ -33,7 +32,6 @@ public class ImportTransactionData extends Composite {
      */
     public static final Mapping TXN_ID = Mapping.named("txnId");
     @NoJournal
-    @AutoImport(hidden = true)
     private long txnId;
 
     /**
@@ -43,7 +41,6 @@ public class ImportTransactionData extends Composite {
      */
     public static final Mapping SOURCE = Mapping.named("source");
     @NoJournal
-    @AutoImport(hidden = true)
     @SkipDefaultValue
     @NullAllowed
     @Length(50)
