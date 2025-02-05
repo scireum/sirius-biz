@@ -8,6 +8,8 @@
 
 package sirius.biz.importer;
 
+import sirius.biz.protocol.TraceData;
+import sirius.biz.protocol.Traced;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.DeleteQuery;
@@ -51,6 +53,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected Mapping[] mappingsToLoad;
     protected Mapping[] mappingsToUpdate;
     protected Mapping[] mappingsToCompare;
+    protected Mapping[] mappingsToCheckForChanges;
 
     /**
      * Creates a new instance for the given type of entities and import context.
@@ -67,6 +70,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         this.mappingsToLoad = getAutoImportMappings().toArray(MAPPING_ARRAY);
         this.mappingsToUpdate = getMappingsToUpdate().toArray(MAPPING_ARRAY);
         this.mappingsToLoadForFind = getMappingsToLoadForFind().toArray(MAPPING_ARRAY);
+        this.mappingsToCheckForChanges = getMappingsToCheckForChanges().toArray(MAPPING_ARRAY);
     }
 
     @SuppressWarnings("unchecked")
@@ -88,6 +92,19 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
                          .map(Property::getName)
                          .map(Mapping::named)
                          .filter(mapping -> !SQLEntity.ID.equals(mapping))
+                         .toList();
+    }
+
+    protected List<Mapping> getMappingsToCheckForChanges() {
+        return descriptor.getProperties()
+                         .stream()
+                         .map(Property::getName)
+                         .map(Mapping::named)
+                         .filter(mapping -> !SQLEntity.ID.equals(mapping))
+                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_BY).equals(mapping))
+                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_AT).equals(mapping))
+                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_IN).equals(mapping))
+                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_ON).equals(mapping))
                          .toList();
     }
 
@@ -347,7 +364,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return <tt>true</tt> if any property checked is changed, <tt>false</tt> otherwise
      */
     protected boolean isChanged(E entity) {
-        return entity.isChanged(mappingsToLoad);
+        return entity.isChanged(mappingsToCheckForChanges);
     }
 
     /**
