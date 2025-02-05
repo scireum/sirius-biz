@@ -496,6 +496,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
                                                                          Collections.emptyMap());
                 processes.execute(processId, processContext -> {
                     try {
+                        processContext.markRunning();
                         task.invoke(processContext);
                     } catch (Exception exception) {
                         processContext.handle(exception);
