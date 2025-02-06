@@ -461,6 +461,7 @@ public class BizController extends BasicController {
                                                                  PersistencePeriod.THREE_MONTHS,
                                                                  Collections.emptyMap());
         tasks.executor(COMPLEX_DELETION_EXECUTOR).fork(() -> processes.execute(processId, process -> {
+            process.markRunning();
             process.log(ProcessLog.info()
                                   .withNLSKey("BizController.startDelete")
                                   .withContext("entity", String.valueOf(entity)));
