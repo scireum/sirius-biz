@@ -443,7 +443,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                          .filter(property -> !property.isAnnotationPresent(IgnoreInImportChangedCheck.class))
                          .map(Property::getName)
                          .map(Mapping::named)
-                         .filter(mapping -> !BaseEntity.ID.equals(mapping))
                          .toList();
     }
 
