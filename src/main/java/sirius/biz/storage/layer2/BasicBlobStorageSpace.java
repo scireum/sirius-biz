@@ -82,23 +82,26 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Specifies the total number of attempts for the optimistic locking strategies used by this class.
      */
-    private static final int NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS = 5;
+    @ConfigValue("storage.layer2.conversion.maxOptimisticLockAttempts")
+    private static int maxOptimisticLockAttempts;
 
     /**
      * Specifies the total number of attempts to wait for a conversion result.
      */
-    private static final int NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION = 4;
+    @ConfigValue("storage.layer2.conversion.maxConversionAttempts")
+    private static int maxConversionAttempts;
 
     /**
-     * Specifies the number of milliseconds to wait for a conversion (note that we do this up to
-     * NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION times).
+     * Specifies the number of milliseconds to wait for a conversion.
      */
-    private static final int TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS = 500;
+    @ConfigValue("storage.layer2.conversion.conversionRetryDelay")
+    private static Duration conversionRetryDelay;
 
     /**
      * Specifies the interval (in minutes) after which a conversion is retried for a given blob variant.
      */
-    private static final int VARIANT_CONVERSION_RETRY_INTERVAL_MINUTES = 45;
+    @ConfigValue("storage.layer2.conversion.hangingConversionRetryInterval")
+    private static Duration hangingConversionRetryInterval;
 
     /**
      * Specifies the maximal number of attempts to generate a variant.
@@ -400,7 +403,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                                             Callback<R> commit,
                                                                             Callback<R> rollback,
                                                                             Function<Exception, HandledException> errorHandler) {
-        int attempts = NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS;
+        int attempts = maxOptimisticLockAttempts;
         try {
             while (attempts-- > 0) {
                 R result = tryFindOrCreate(lookup, factory, correctnessTest, commit, rollback);
@@ -413,7 +416,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
             throw errorHandler.apply(new IllegalStateException(Strings.apply(
                     "Failed to execute an optimistic locked update after %s retries",
-                    NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS)));
+                    maxOptimisticLockAttempts)));
         } catch (Exception exception) {
             throw errorHandler.apply(exception);
         }
@@ -1506,10 +1509,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Nullable
     protected V findOrCreateVariant(B blob, String variantName, boolean nonblocking) {
         try {
-            return attemptToFindOrCreateVariant(blob,
-                                                variantName,
-                                                nonblocking,
-                                                NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS - 1);
+            return attemptToFindOrCreateVariant(blob, variantName, nonblocking, maxOptimisticLockAttempts - 1);
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -1659,11 +1659,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
         // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish...
-        Wait.millis(TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS);
-        return attemptToFindOrCreateVariant(blob,
-                                            variantName,
-                                            false,
-                                            Math.min(retries - 1, NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION - 1));
+        Wait.millis((int) conversionRetryDelay.toMillis());
+        return attemptToFindOrCreateVariant(blob, variantName, false, Math.min(retries - 1, maxConversionAttempts - 1));
     }
 
     /**
@@ -1748,14 +1745,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     /**
      * Determines if another conversion of the variant should be attempted.
+     * <p>
+     * We do want to start a conversion if no conversion is currently queued, or is killed but has been stuck
+     * for a while.
      *
      * @param variant the variant to check
      * @return <tt>true</tt> if another conversion should be triggered, <tt>false</tt> otherwise
      */
     private boolean shouldRetryConversion(V variant) {
         return !variant.isQueuedForConversion()
-               || Duration.between(variant.getLastConversionAttempt(), LocalDateTime.now()).toMinutes()
-                  > VARIANT_CONVERSION_RETRY_INTERVAL_MINUTES;
+               || Duration.between(variant.getLastConversionAttempt(), LocalDateTime.now())
+                          .compareTo(hangingConversionRetryInterval) > 0;
     }
 
     /**
@@ -1802,7 +1802,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             Future future = new Future();
             future.fail(new IllegalStateException(Strings.apply(
                     "Failed to execute an optimistic locked update after %s retries",
-                    NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS)));
+                    maxOptimisticLockAttempts)));
             return future;
         }
 
@@ -1848,7 +1848,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return a future holding the conversion process
      */
     public Future tryCreateVariant(B blob, String variantName) {
-        return tryCreateVariant(blob, null, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
+        return tryCreateVariant(blob, null, variantName, maxOptimisticLockAttempts);
     }
 
     /**
@@ -1860,7 +1860,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return a future holding the conversion process
      */
     public Future tryCreateVariant(B blob, FileHandle inputFile, String variantName) {
-        return tryCreateVariant(blob, inputFile, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
+        return tryCreateVariant(blob, inputFile, variantName, maxOptimisticLockAttempts);
     }
 
     /**
