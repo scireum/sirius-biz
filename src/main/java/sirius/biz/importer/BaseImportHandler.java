@@ -440,13 +440,10 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected List<Mapping> getMappingsToCheckForChanges() {
         return descriptor.getProperties()
                          .stream()
+                         .filter(property -> !property.isAnnotationPresent(IgnoreInImportChangedCheck.class))
                          .map(Property::getName)
                          .map(Mapping::named)
                          .filter(mapping -> !BaseEntity.ID.equals(mapping))
-                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_BY).equals(mapping))
-                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_AT).equals(mapping))
-                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_IN).equals(mapping))
-                         .filter(mapping -> !Traced.TRACE.inner(TraceData.CHANGED_ON).equals(mapping))
                          .toList();
     }
 
