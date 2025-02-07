@@ -92,6 +92,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static int maxConversionAttempts;
 
     /**
+     * Specifies the total number of attempts to wait for a conversion result when requested to wait longer.
+     */
+    @ConfigValue("storage.layer2.conversion.maxLongConversionAttempts")
+    private static int maxLongConversionAttempts;
+
+    /**
      * Specifies the number of milliseconds to wait for a conversion.
      */
     @ConfigValue("storage.layer2.conversion.conversionRetryDelay")
