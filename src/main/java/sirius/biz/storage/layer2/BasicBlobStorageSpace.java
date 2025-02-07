@@ -1080,13 +1080,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             // first, attempt to resolve the physical key for the given blob and variant in a non-blocking manner; if
             // the variant has been created before, independent of whether this node has conversion enabled, this will
             // lead to a physical key that can be used to download the blob
-            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
+            Tuple<String, Boolean> physicalKey = tryFetchPhysicalKey(blobKey, variant);
 
             // if a physical key cannot be determined, the blob has not yet been created in the requested variant; we
             // now need to check if this node is allowed to perform the conversion itself; if so, we run the physical
             // key lookup again in a blocking manner to ensure that the conversion is performed
             if (conversionEnabled && physicalKey == null) {
-                physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                physicalKey = tryCreatePhysicalKey(blobKey, variant);
             }
 
             // if the physical key is still null, this node is not allowed to perform the conversion itself or
@@ -1341,7 +1341,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         touch(blobKey);
 
         try {
-            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
+            Tuple<String, Boolean> physicalKey = tryFetchPhysicalKey(blobKey, variant);
             if (physicalKey != null) {
                 response.addHeader(HEADER_VARIANT_SOURCE,
                                    Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "lookup");
@@ -1392,14 +1392,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      *
      * @param blobKey     the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found. We also return an indicator
      * if the key was read from the internal cache or if a lookup was required.
      * @throws HandledException         if a requested variant cannot be computed
      * @throws IllegalArgumentException if an unknown variant is requested
      */
-    private Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
+    protected Tuple<String, Boolean> tryFetchPhysicalKey(String blobKey, String variantName) {
         String variantCacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalVariantKey = blobKeyToPhysicalCache.get(variantCacheKey);
         if (Strings.isFilled(cachedPhysicalVariantKey)) {
@@ -1408,7 +1406,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         try {
-            String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
+            String physicalKey = lookupPhysicalKey(blobKey, variantName);
             if (physicalKey != null) {
                 blobKeyToPhysicalCache.put(variantCacheKey, physicalKey);
                 return Tuple.create(physicalKey, false);
@@ -1420,6 +1418,40 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             // will happen...
             blobKeyToPhysicalCache.put(variantCacheKey, CACHED_FAILURE_MARKER);
             throw exception;
+        }
+    }
+
+    /**
+     * Creates the physical key for the given blob and variant.
+     * <p>
+     * This method should be used when {@link #tryCreatePhysicalKey(String, String)} yield no results and we want
+     * to trigger the conversion of the requested variant.
+     *
+     * @param blobKey     the blob for which the variant is to be resolved
+     * @param variantName the variant of the blob to find
+     * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found. We also return an indicator
+     * if the key was read from the internal cache or if a lookup was required.
+     * @throws HandledException         if a requested variant cannot be computed
+     * @throws IllegalArgumentException if an unknown variant is requested
+     */
+    @SuppressWarnings("unchecked")
+    protected Tuple<String, Boolean> tryCreatePhysicalKey(String blobKey, String variantName) {
+        Tuple<String, Boolean> keyAndCache = tryFetchPhysicalKey(blobKey, variantName);
+        if (keyAndCache != null) {
+            return keyAndCache;
+        }
+
+        B blob = (B) findByBlobKey(blobKey).orElse(null);
+        if (blob == null) {
+            return null;
+        }
+
+        V variant = findOrCreateVariant(blob, variantName);
+
+        if (variant == null || Strings.isEmpty(variant.getPhysicalObjectKey())) {
+            return null;
+        } else {
+            return Tuple.create(variant.getPhysicalObjectKey(), false);
         }
     }
 
@@ -1438,39 +1470,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to resolve the physical key for the given blob and variant.
-     *
-     * @param blobKey     the blob for which the variant is to be resolved
-     * @param variantName the variant of the blob to find
-     * @return the physical key wrapped as optional or an empty optional if the appropriate variant wasn't found
-     * @see #resolvePhysicalKey(String, String, boolean)
-     */
-    protected Optional<String> tryResolvePhysicalKey(String blobKey, String variantName) {
-        try {
-            Tuple<String, Boolean> keyAndCacheFlag = resolvePhysicalKey(blobKey, variantName, true);
-            if (keyAndCacheFlag == null) {
-                return Optional.empty();
-            } else {
-                return Optional.ofNullable(keyAndCacheFlag.getFirst());
-            }
-        } catch (Exception exception) {
-            handleFailedConversion(blobKey, variantName, exception);
-            return Optional.empty();
-        }
-    }
-
-    /**
      * Performs the actual lookup of the physical key for the given blob and variant.
      *
      * @param blobKey     the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found
      */
     @SuppressWarnings("unchecked")
     @Nullable
-    protected String lookupPhysicalKey(String blobKey, @Nonnull String variantName, boolean nonblocking) {
+    protected String lookupPhysicalKey(String blobKey, @Nonnull String variantName) {
         B blob = (B) findByBlobKey(blobKey).orElse(null);
         if (blob == null) {
             return null;
@@ -1484,7 +1492,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw new IllegalArgumentException(Strings.apply("Unknown variant type: %s", variantName));
         }
 
-        V variant = findOrCreateVariant(blob, variantName, nonblocking);
+        V variant = tryFetchVariant(blob, variantName);
 
         if (variant == null || Strings.isEmpty(variant.getPhysicalObjectKey())) {
             return null;
@@ -1494,22 +1502,20 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to either find or create the requested variant for the given blob.
+     * Tries to find the requested variant for the given blob and creates it if missing.
      * <p>
      * Note that there this is a recursive optimistic locking algorithm at work where
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)} and
+     * {@link #attemptToFindOrCreateVariant(Blob, String, int)} and
      * {@link #awaitConversionResultAndRetryToFindVariant(Blob, String, int)} build the "loop".
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @return the variant for the given blob with the given name or null if no such variant exists
      */
     @Nullable
-    protected V findOrCreateVariant(B blob, String variantName, boolean nonblocking) {
+    protected V findOrCreateVariant(B blob, String variantName) {
         try {
-            return attemptToFindOrCreateVariant(blob, variantName, nonblocking, maxOptimisticLockAttempts - 1);
+            return attemptToFindOrCreateVariant(blob, variantName, maxOptimisticLockAttempts - 1);
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -1546,12 +1552,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Actually attempts to either look up or create the requested variant.
+     * Actually attempts to look up and create the requested variant when none was found.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @param retries     the number of retries left
      * @return the variant for the given blob with the given name or null if no such variant exists
      * @throws Exception in case of an error while searching or creating the variant
@@ -1559,20 +1563,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Nullable
     @SuppressWarnings("java:S3776")
     @Explain("This is a complex beast, but we rather keep the whole logic in one place.")
-    private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
-            throws Exception {
+    private V attemptToFindOrCreateVariant(B blob, String variantName, int retries) throws Exception {
+        // Always try to fetch the variant first, which could be present due to a previous conversion attempt
+        // or a conversion has been created from another thread or node...
         V variant = tryFetchVariant(blob, variantName);
 
         if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
             // We hit the nail on the head - we found a variant which has successfully been converted already.
             // -> use it
             return variant;
-        }
-
-        if (nonblocking) {
-            // We didn't find anything and the caller doesn't permit to block and wait for either our node or
-            // another to create the variant -> abort with null
-            return null;
         }
 
         if (variant == null) {
@@ -1627,7 +1626,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     /**
      * Handles the retry (after an optimistic lock error) path of
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
+     * {@link #attemptToFindOrCreateVariant(Blob, String, int)}.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1639,12 +1638,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
         // wait a short and random amount of time and retry...
         Wait.randomMillis(0, 150);
-        return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
+        return attemptToFindOrCreateVariant(blob, variantName, retries - 1);
     }
 
     /**
      * Handles the retry (when waiting for a conversion result) path of
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
+     * {@link #attemptToFindOrCreateVariant(Blob, String, int)}.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1660,7 +1659,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
         // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish...
         Wait.millis((int) conversionRetryDelay.toMillis());
-        return attemptToFindOrCreateVariant(blob, variantName, false, Math.min(retries - 1, maxConversionAttempts - 1));
+        return attemptToFindOrCreateVariant(blob, variantName, Math.min(retries - 1, maxConversionAttempts - 1));
     }
 
     /**
@@ -1915,7 +1914,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                  }
 
                  try {
-                     Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                     Tuple<String, Boolean> physicalKey = tryCreatePhysicalKey(blobKey, variant);
                      if (physicalKey == null) {
                          response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
                      } else {

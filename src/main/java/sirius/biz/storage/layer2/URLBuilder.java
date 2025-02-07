@@ -13,6 +13,7 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -562,13 +563,15 @@ public class URLBuilder {
             return blob.getPhysicalObjectKey();
         }
 
-        if (cachedPhysicalKey != null) {
-            return cachedPhysicalKey;
+        if (cachedPhysicalKey == null) {
+            Tuple<String, Boolean> physicalKey =
+                    ((BasicBlobStorageSpace<?, ?, ?>) space).tryFetchPhysicalKey(blobKey, variant);
+            if (physicalKey != null) {
+                this.cachedPhysicalKey = physicalKey.getFirst();
+            }
         }
 
-        Optional<String> physicalKey = ((BasicBlobStorageSpace<?, ?, ?>) space).tryResolvePhysicalKey(blobKey, variant);
-        physicalKey.ifPresent(key -> this.cachedPhysicalKey = key);
-        return physicalKey.orElse(null);
+        return cachedPhysicalKey;
     }
 
     private String computeAccessToken(String authToken) {
