@@ -301,12 +301,13 @@ public interface BlobStorageSpace {
     /**
      * Downloads and provides the contents of the requested blob with the given variant.
      *
-     * @param blobKey the blob key of the blob to download
-     * @param variant the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @param blobKey    the blob key of the blob to download
+     * @param variant    the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @param waitLonger whether to wait longer for the conversion to complete
      * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
      * be converted
      */
-    Optional<FileHandle> download(String blobKey, String variant);
+    Optional<FileHandle> download(String blobKey, String variant, boolean waitLonger);
 
     /**
      * Resolves the filename of the given blob.

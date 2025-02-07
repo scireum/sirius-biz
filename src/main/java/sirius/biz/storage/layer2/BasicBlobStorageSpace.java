@@ -1080,13 +1080,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Note: This method will not be able to return a file if the blob doesn't yet exist in the requested variant and
      * the conversion is disabled on this node (see {@link #conversionEnabled}).
      *
-     * @param blobKey the blob key of the blob to download
-     * @param variant the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @param blobKey    the blob key of the blob to download
+     * @param variant    the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @param waitLonger whether to wait longer for the conversion to complete
      * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
      * be converted
      */
     @Override
-    public Optional<FileHandle> download(String blobKey, String variant) {
+    public Optional<FileHandle> download(String blobKey, String variant, boolean waitLonger) {
         touch(blobKey);
 
         try {
@@ -1099,13 +1100,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             // now need to check if this node is allowed to perform the conversion itself; if so, we run the physical
             // key lookup again in a blocking manner to ensure that the conversion is performed
             if (conversionEnabled && physicalKey == null) {
-                physicalKey = tryCreatePhysicalKey(blobKey, variant);
+                physicalKey = tryCreatePhysicalKey(blobKey, variant, waitLonger);
             }
 
             // if the physical key is still null, this node is not allowed to perform the conversion itself or
             // conversion on this node failed gracefully; in this case, we attempt to delegate the conversion
             if (physicalKey == null) {
-                return tryDelegateDownload(blobKey, variant, MAX_CONVERSION_DELEGATE_ATTEMPTS);
+                return tryDelegateDownload(blobKey, variant, MAX_CONVERSION_DELEGATE_ATTEMPTS, waitLonger);
             }
 
             return getPhysicalSpace().download(physicalKey.getFirst());
@@ -1124,13 +1125,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param blobKey           the blob key of the blob to download
      * @param variant           the variant of the blob to download
      * @param remainingAttempts the max number of attempts to re-try in case of a connectivity problem
+     * @param waitLonger        whether to wait longer for the conversion to complete
      * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
      * be converted
      * @throws IOException in case of an IO error
      */
-    private Optional<FileHandle> tryDelegateDownload(String blobKey, String variant, int remainingAttempts)
-            throws IOException {
-        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
+    private Optional<FileHandle> tryDelegateDownload(String blobKey,
+                                                     String variant,
+                                                     int remainingAttempts,
+                                                     boolean waitLonger) throws IOException {
+        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant, waitLonger);
 
         if (url.isEmpty()) {
             return Optional.empty();
@@ -1152,7 +1156,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 // but we have several to pick from, so lets try again
                 Exceptions.ignore(connectException);
                 recordHostConnectivityIssue(url.get().getHost());
-                return tryDelegateDownload(blobKey, variant, remainingAttempts - 1);
+                return tryDelegateDownload(blobKey, variant, remainingAttempts - 1, waitLonger);
             } else {
                 throw connectException;
             }
