@@ -200,11 +200,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final int CONNECT_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(5, TimeUnit.SECONDS);
 
     /**
-     * Read timeout for delegated blob downloads
-     */
-    private static final int READ_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(15, TimeUnit.SECONDS);
-
-    /**
      * Determines the blacklisting interval if a conversion host is unreachable.
      */
     private static final Duration MAX_CONVERSION_HOST_BLACKLISTING = Duration.ofMinutes(5);
@@ -1140,9 +1135,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return Optional.empty();
         }
 
+        int maxConversionTime =
+                (int) conversionRetryDelay.multipliedBy(waitLonger ? maxLongConversionAttempts : maxConversionAttempts)
+                                          .toMillis();
+
         URLConnection connection = url.get().openConnection();
         connection.setConnectTimeout(CONNECT_TIMEOUT);
-        connection.setReadTimeout(READ_TIMEOUT);
+        // Uses the expected maximum conversion time with the fixed connection timeout as a buffer.
+        connection.setReadTimeout(CONNECT_TIMEOUT + maxConversionTime);
         connection.connect();
 
         File temporaryFile = File.createTempFile("delegate-", null);
