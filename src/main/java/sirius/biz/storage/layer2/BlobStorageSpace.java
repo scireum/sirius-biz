@@ -62,7 +62,7 @@ public interface BlobStorageSpace {
     /**
      * Provides the <tt>kba</tt> if present in the config block.
      *
-     * @returns the code of the {@link sirius.biz.tycho.kb.KnowledgeBase kba} to show when browsing this space.
+     * @return the code of the {@link sirius.biz.tycho.kb.KnowledgeBase kba} to show when browsing this space.
      */
     @Nullable
     String getKnowledgeBaseArticleCode();
@@ -87,7 +87,7 @@ public interface BlobStorageSpace {
      * Returns the root directory for the given tenant.
      * <p>
      * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
-     * <tt>tenants</tt> framework is used.
+     * <tt>tenants</tt> framework is used).
      *
      * @param tenantId the tenant to determine the directory for
      * @return the root directory for the given tenant
@@ -99,7 +99,7 @@ public interface BlobStorageSpace {
      * Resolves the given path into a blob.
      * <p>
      * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
-     * <tt>tenants</tt> framework is used.
+     * <tt>tenants</tt> framework is used).
      *
      * @param tenantId the tenant which owns the directory structure to search in
      * @param path     the path to resolve (may start with a "/" but not with the space name itself)
@@ -121,7 +121,7 @@ public interface BlobStorageSpace {
      * Note that all intermediate directories will be auto-created.
      * <p>
      * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
-     * <tt>tenants</tt> framework is used.
+     * <tt>tenants</tt> framework is used).
      *
      * @param tenantId the tenant which owns the directory structure to search in
      * @param path     the path to resolve (may start with a "/" but not with the space name itself)
@@ -146,7 +146,7 @@ public interface BlobStorageSpace {
      * deleted. It is made permanent as soon as the referencing entity is saved, otherwise it will be deleted
      * automatically.
      * <p>
-     * Note that there is almost no use-case to directly call this method (outside of {@link BlobHardRef}.
+     * Note that there is almost no use-case to directly call this method outside of {@link BlobHardRef}.
      *
      * @return the newly created temporary blob. To make this blob permanent, it has to be stored in a
      * {@link BlobHardRef} and the referencing entity has to be persisted.
@@ -312,7 +312,7 @@ public interface BlobStorageSpace {
     /**
      * Resolves the filename of the given blob.
      *
-     * @param blobKey the blob to lookup the filename for
+     * @param blobKey the blob to look up the filename for
      * @return the filename if present or an empty optional if non was found
      */
     Optional<String> resolveFilename(@Nonnull String blobKey);

@@ -1440,9 +1440,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     /**
      * Creates the physical key for the given blob and variant.
-     * <p>
-     * This method should be used when {@link #tryCreatePhysicalKey(String, String)} yield no results and we want
-     * to trigger the conversion of the requested variant.
      *
      * @param blobKey     the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
