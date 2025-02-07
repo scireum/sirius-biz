@@ -30,5 +30,110 @@ import data from and export data to.
 Blobs can also be served via HTTP bei using the [URLBuilder](URLBuilder.java) which most probably
 generates an URL served by the [BlobDispatcher](BlobDispatcher.java). Next to serving the raw data,
 the framework permits to generate [variants](variants/BlobVariant.java) on demand via one or more
-[converters](variants/Converter.java). These converters are configured via the system configuration
+[converters](variants/Converter.java). Typical example for a variant are various image sizes or preview images from
+videos.
+These converters are configured via the system configuration
 and managed by the [ConversionEngine](variants/ConversionEngine.java).
+
+## Physical vs Virtual
+
+In our framework we often use the term *physical* to represent a real file (raw or variant). Delivering these
+files is easy we already know exactly which file to serve as a physical object ID is present.
+
+The term *virtual* means we are requesting a variant, and we do not know if it exists yet. In this case a quite
+complex process takes place in order to trigger a conversion, which must cope with parallel requests coming from
+various nodes in the cluster and even the conversion itself, which can be delegated to dedicated nodes.
+
+## Virtual Delivery
+
+A virtual delivery means that a file is being requested via a `/dasd/` served by
+our [BlobDispatcher](BlobDispatcher.java).
+
+In both cases, the main flow follows this pattern:
+
+```mermaid
+flowchart TD
+    start(START) --> tryFetchPhysicalKey
+    tryFetchPhysicalKey -->|key exists| finish((END))
+    tryFetchPhysicalKey -->|key missing| deliverAsync
+    deliverAsync -->|node can convert| tryCreatePhysicalKey[[tryCreatePhysicalKey]]
+    deliverAsync -->|node cannot convert| delegateConversion[[delegateConversion]]
+    delegateConversion -.-> start
+    tryCreatePhysicalKey -->|variant created| finish
+    tryCreatePhysicalKey -->|variant missing| error[/ERROR/]
+```
+
+## Virtual Download
+
+A virtual download means that a file is being requested via an API call to the [BlobStorage](layer2/BlobStorage.java).
+
+The following diagram displays the main flow of the virtual download process:
+
+```mermaid
+flowchart TD
+    start(START) --> tryFetchPhysicalKey
+    tryFetchPhysicalKey -->|key exists| finish((END))
+    tryFetchPhysicalKey -->|key missing| canConvert{node can convert?}
+    canConvert -->|yes| tryCreatePhysicalKey[[tryCreatePhysicalKey]]
+    canConvert -->|no| delegateConversion[[delegateConversion]]
+    delegateConversion -.->|delivery flow from above| deliver[[deliver]]
+    tryCreatePhysicalKey --> variant_created{variant created?}
+    variant_created -->|yes| finish
+    variant_created -->|no| error[/ERROR/]
+```
+
+## Delegation
+
+Delegation simply means that the current node is not configured to convert variants and all it does is to pick
+a random conversion node from a predefined list and delegate the conversion to it by invoking the very same `/dasd/` URL
+on it, causing the very same entry point to happen, just in a different node.
+
+The creation is centrally controlled in the database as the physical object key will be written to the database.
+
+```mermaid
+flowchart TD
+    start(tryDelegateDownload) --> determineDelegateConversionUrl
+    determineDelegateConversionUrl -.-> HTTPRequest[HTTP Request]
+    HTTPRequest -->|success| finish((end))
+    HTTPRequest -->|failure| retry{retry?}
+    retry -->|yes| start
+    retry -->|no| error[/ERROR/]
+```
+
+## Creation
+
+The creation involves 2 steps: creating the variant in the database and triggering the conversion.
+
+A variant might also exist in the database and a conversion is taking place `Variant.queuedForConversion = true` or the
+last conversion failed, which attempts are stored in `Variant.conversionAttempts`.
+
+For the creation of the variant in the database the `maxOptimisticLockAttempts` setting is used as this process concurs
+with other threads in the same node as well as other nodes trying to create the same variant.
+
+Once a creation actually starts, the `maxConversionAttempts`, `maxLongConversionAttempts` and `conversionRetryDelay` is
+used to wait for the conversion to finish. We provide an option for callers to wait longer for a conversion to finish,
+thus having 2 settings.
+
+This diagram displays the main flow of the creation process and retry mechanisms:
+
+```mermaid
+flowchart TD
+    start(tryCreatePhysicalKey) --> tryFetchPhysicalKey
+    tryFetchPhysicalKey -->|key exists| finish((END))
+    tryFetchPhysicalKey -->|key missing| findOrCreateVariant
+    findOrCreateVariant -->|retries based on short or long attempts| attemptToFindOrCreateVariant
+    attemptToFindOrCreateVariant --> tryFetchVariant
+    tryFetchVariant -->|key exists| finish((END))
+    tryFetchVariant -->|variant missing| tryCreateVariantAsync
+    tryCreateVariantAsync --> invokeConversionPipelineAsync[[invokeConversionPipelineAsync]]
+    invokeConversionPipelineAsync --> awaitConversionResultAndRetryToFindVariant
+    awaitConversionResultAndRetryToFindVariant -->|retries - 1| attemptToFindOrCreateVariant
+    tryFetchVariant -->|variant still converting| awaitConversionResultAndRetryToFindVariant
+    tryFetchVariant -->|exhausted conversion attempts| error[/ERROR/]
+    invokeConversionPipelineAsync --> startConversion[convert]
+    startConversion -->|conversion successful| success(set key and duration)
+    startConversion -->|conversion failed| failure[no key set]
+    tryFetchVariant -->|variant failed to convert| shouldRetryConversion
+    shouldRetryConversion -->|last conversion past 45m| attemptToFindOrCreateVariant
+    shouldRetryConversion -->|last conversion within last 45m| error[/ERROR/]
+```
