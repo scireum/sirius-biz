@@ -49,7 +49,7 @@ various nodes in the cluster and even the conversion itself, which can be delega
 A virtual delivery means that a file is being requested via a `/dasd/` served by
 our [BlobDispatcher](BlobDispatcher.java).
 
-In both cases, the main flow follows this pattern:
+The following diagram displays the main flow of the virtual delivery process:
 
 ```mermaid
 flowchart TD
