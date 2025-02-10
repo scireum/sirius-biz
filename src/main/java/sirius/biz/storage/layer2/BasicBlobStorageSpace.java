@@ -185,7 +185,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
 
     /**
-     * Describes if the variant as obtained from cache, lookup or delegated (where a conversion was requested).
+     * Describes if the variant was obtained from cache, lookup or delegated (where a conversion was requested).
      */
     private static final String HEADER_VARIANT_SOURCE = "X-VariantSource";
 
