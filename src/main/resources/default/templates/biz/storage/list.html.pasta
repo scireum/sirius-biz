@@ -281,6 +281,44 @@
             });
         }
 
+        function moveFiles(filePaths) {
+            const _form = document.getElementById('move-multiple-file-form');
+
+            selectVFSFile({
+                path: '@dir.path()',
+                allowDirectories: true,
+                allowFiles: false,
+                modalTitle: '___i18n("VFSController.selectDirectory")'
+            }).then(newParent => {
+                const filePathString = filePaths.join(",");
+                _form.querySelector("input[name='paths']").value = filePathString;
+                _form.querySelector("input[name='newParent']").value = newParent;
+                _form.submit();
+            });
+        }
+
+        document.getElementById("move-selected-files-button").addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default anchor behavior
+            moveFiles(getSelectedFiles());
+        });
+
+        function deleteFiles(filePaths) {
+            const _form = document.getElementById('delete-multiple-file-form');
+            _form.querySelector("input[name='paths']").value = filePaths.join(",");
+            _form.submit();
+        }
+
+        document.getElementById("delete-selected-files-button").addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default anchor behavior
+
+            deleteFiles(getSelectedFiles());
+        });
+
+        function getSelectedFiles() {
+            return Array.from(document.querySelectorAll('.select-table-row-checkbox-js:checked'))
+                .map(checkbox => checkbox.getAttribute('data-entity-id'));
+        }
+
         function createDirectory() {
             const _modalElement = document.getElementById("create-directory-modal");
             if (!_modalElement.modal) {
