@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Provides a web based UI for the {@link VirtualFileSystem}.
@@ -220,6 +221,41 @@ public class VirtualFileSystemController extends BizController {
         } else {
             webContext.respondWith().redirectToGet("/fs");
         }
+    }
+
+    /**
+     * Deletes the given list of files or directories.
+     *
+     * @param webContext the request to handle
+     */
+    @LoginRequired
+    @Routed("/fs/delete/multiple")
+    @Permission(PERMISSION_VIEW_FILES)
+    public void deleteMulitple(WebContext webContext) {
+        List<String> filePaths = Arrays.stream(webContext.get("paths").asString().split("[,;]"))
+                                       .map(String::trim)
+                                       .filter(Strings::isFilled)
+                                       .toList();
+        AtomicReference<String> workingDirectory = new AtomicReference<>();
+        filePaths.forEach(filePath -> {
+            VirtualFile file = vfs.resolve(filePath);
+            workingDirectory.set(file.parent.path());
+            if (webContext.isSafePOST()) {
+                try {
+                    if (file.exists()) {
+                        file.delete();
+                    }
+                } catch (Exception exception) {
+                    UserContext.handle(exception);
+                }
+            }
+        });
+        UserContext.get()
+                   .addMessage(Message.info()
+                                      .withTextMessage(NLS.fmtr("VFSController.deletedMultipleMessage")
+                                                          .set("count", filePaths.size())
+                                                          .format()));
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", workingDirectory).toString());
     }
 
     /**
