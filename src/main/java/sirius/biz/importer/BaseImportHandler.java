@@ -16,6 +16,8 @@ import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.process.ErrorContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Journaled;
+import sirius.biz.protocol.TraceData;
+import sirius.biz.protocol.Traced;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -426,6 +428,21 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                          .map(Property::getName)
                          .map(Mapping::named)
                          .filter(this::isAutoImportMappingAccepted)
+                         .toList();
+    }
+
+    /**
+     * Returns all mappings which should be checked for changes to determine if the persisted entity should be
+     * updated.
+     *
+     * @return a list of all mappings which should be checked for changes
+     */
+    protected List<Mapping> getMappingsToCheckForChanges() {
+        return descriptor.getProperties()
+                         .stream()
+                         .filter(property -> !property.isAnnotationPresent(IgnoreInImportChangedCheck.class))
+                         .map(Property::getName)
+                         .map(Mapping::named)
                          .toList();
     }
 

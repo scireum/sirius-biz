@@ -8,6 +8,7 @@
 
 package sirius.biz.protocol;
 
+import sirius.biz.importer.IgnoreInImportChangedCheck;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
@@ -69,6 +70,7 @@ public class TraceData extends Composite {
     @NoJournal
     @NullAllowed
     @Length(50)
+    @IgnoreInImportChangedCheck
     private String changedBy;
 
     /**
@@ -77,6 +79,7 @@ public class TraceData extends Composite {
     public static final Mapping CHANGED_AT = Mapping.named("changedAt");
     @NoJournal
     @NullAllowed
+    @IgnoreInImportChangedCheck
     private LocalDateTime changedAt;
 
     /**
@@ -86,6 +89,7 @@ public class TraceData extends Composite {
     @NoJournal
     @NullAllowed
     @Length(150)
+    @IgnoreInImportChangedCheck
     private String changedIn;
 
     /**
@@ -95,6 +99,7 @@ public class TraceData extends Composite {
     @NoJournal
     @NullAllowed
     @Length(50)
+    @IgnoreInImportChangedCheck
     private String changedOn;
 
     @Transient
