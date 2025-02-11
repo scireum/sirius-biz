@@ -354,6 +354,50 @@ public class VirtualFileSystemController extends BizController {
     }
 
     /**
+     * Moves the given list of files or directories to a new parent directory.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/fs/move/multiple")
+    @LoginRequired
+    @Permission(PERMISSION_VIEW_FILES)
+    public void moveMultiple(WebContext webContext) {
+        List<String> filePaths = Arrays.stream(webContext.get("paths").asString().split("[,;]"))
+                                       .map(String::trim)
+                                       .filter(Strings::isFilled)
+                                       .toList();
+        AtomicReference<String> path = new AtomicReference<>();
+        filePaths.forEach(filePath -> {
+            VirtualFile file = vfs.resolve(filePath);
+            VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
+            path.getAndSet(file.parent().path());
+            if (!file.exists()) {
+                webContext.respondWith().redirectToGet("/fs");
+                return;
+            }
+
+            try {
+                if (newParent.exists() && newParent.isDirectory()) {
+                    Optional<String> processId = file.transferTo(newParent).move();
+                    processId.ifPresent(_ -> UserContext.message(Message.info()
+                                                                        .withTextAndLink(NLS.get(
+                                                                                                 "VFSController.movedInProcess"),
+                                                                                         NLS.get("VFSController.moveProcess"),
+                                                                                         "/ps/" + processId.get())));
+                }
+            } catch (Exception exception) {
+                UserContext.handle(exception);
+            }
+        });
+        UserContext.get()
+                   .addMessage(Message.info()
+                                      .withTextMessage(NLS.fmtr("VFSController.movedMultipleMessage")
+                                                          .set("count", filePaths.size())
+                                                          .format()));
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", path).toString());
+    }
+
+    /**
      * Sets the read-only flag of the given file to false.
      *
      * @param webContext the request to handle
