@@ -342,5 +342,23 @@
             });
             _modalElement.modal.show();
         }
+
+        function toggleBulkActionButtons() {
+            const anyChecked = document.querySelectorAll('.select-table-row-checkbox-js:checked').length > 0;
+            document.getElementById("move-selected-files-button").classList.toggle('disabled', !anyChecked);
+            document.getElementById("delete-selected-files-button").classList.toggle('disabled', !anyChecked);
+        }
+
+        document.querySelectorAll('.select-all-visible-table-rows-checkbox-js').forEach(function (_selectAllCheckbox) {
+            _selectAllCheckbox.addEventListener('change', function () {
+                toggleBulkActionButtons();
+            });
+        });
+
+        document.querySelectorAll('.select-table-row-checkbox-js').forEach(function (_checkbox) {
+            _checkbox.addEventListener('change', function (event) {
+                toggleBulkActionButtons();
+            });
+        });
     </script>
 </t:page>
