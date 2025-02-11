@@ -44,14 +44,14 @@
                         <i class="fa-solid fa-arrow-right"></i>
                         <span class="d-none d-xl-inline">&nbsp;@i18n('VFSController.moveSelected')</span>
                     </a>
-                        <a id="delete-selected-files-button"
-                           class="btn d-inline-flex flex-row align-items-center btn-outline-secondary audit-confirm-link-js disabled"
-                           title="@i18n('VFSController.deleteSelected')"
-                           data-action=""
-                           href="">
-                            <i class="fa-solid fa-trash fa-fw"></i>
-                            <span class="d-none d-xl-inline">&nbsp;@i18n('VFSController.deleteSelected')</span>
-                        </a>
+                    <a id="delete-selected-files-button"
+                       class="btn d-inline-flex flex-row align-items-center btn-outline-secondary audit-confirm-link-js disabled"
+                       title="@i18n('VFSController.deleteSelected')"
+                       data-action=""
+                       href="">
+                        <i class="fa-solid fa-trash fa-fw"></i>
+                        <span class="d-none d-xl-inline">&nbsp;@i18n('VFSController.deleteSelected')</span>
+                    </a>
                 </div>
             </t:searchHeader>
 
@@ -102,10 +102,10 @@
                             </i:if>
                             <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child"
                                    items="children.getItems()">
-                                <tr>
+                                <t:selectableTableRow entityId="@child.path()">
                                     <td>
                                         <div>
-                                            <a class="link text-decoration-none"
+                                            <a class="link"
                                                href="/fs?path=@urlEncode(child.path())">
                                                 <i:if test="child.isDirectory()">
                                                     <i class="fa-solid fa-folder-open"></i>
@@ -122,8 +122,6 @@
                                                     </div>
                                                 </i:if>
                                             </a>
-                                        </div>
-                                        <div>
                                             <small class="text-muted">
                                                 <i:if test="isFilled(child.htmlDescription())">
                                                     <i:raw>@child.htmlDescription()</i:raw>
@@ -195,7 +193,7 @@
                                             </t:permission>
                                         </t:additionalActions>
                                     </td>
-                                </tr>
+                                </t:selectableTableRow>
                             </i:for>
                             </tbody>
                         </table>
