@@ -13,6 +13,7 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -70,6 +71,7 @@ public class URLBuilder {
     protected String fallbackUri;
     protected boolean largeFile;
     protected boolean hasLargeFileCheck;
+    protected boolean waitLonger;
 
     @Part
     private static StorageUtils utils;
@@ -171,6 +173,16 @@ public class URLBuilder {
         this.variant = variant;
         this.cachedPhysicalKey = null;
 
+        return this;
+    }
+
+    /**
+     * Adds the marker to virtual URLs that the caller is willing to wait longer for the conversion to complete.
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder waitLonger() {
+        this.waitLonger = true;
         return this;
     }
 
@@ -517,7 +529,11 @@ public class URLBuilder {
             result.append(fetchUrlEncodedFileExtension());
         }
 
-        appendHook(result);
+        boolean hasHook = appendHook(result);
+
+        if (waitLonger) {
+            result.append(Strings.apply("%s%s=true", hasHook ? "&" : "?", BlobDispatcher.WAIT_LONGER_PARAMETER));
+        }
 
         return result.toString();
     }
@@ -529,8 +545,9 @@ public class URLBuilder {
      * BlobDispatcherHook...
      *
      * @param urlBuilder the builder to append the strings to
+     * @return <tt>true</tt> if a hook was appended, <tt>false</tt> otherwise
      */
-    private void appendHook(StringBuilder urlBuilder) {
+    private boolean appendHook(StringBuilder urlBuilder) {
         if (Strings.isFilled(hook)) {
             urlBuilder.append("?hook=");
             urlBuilder.append(Strings.urlEncode(hook));
@@ -538,7 +555,9 @@ public class URLBuilder {
                 urlBuilder.append("&payload=");
                 urlBuilder.append(Strings.urlEncode(payload));
             }
+            return true;
         }
+        return false;
     }
 
     /**
@@ -562,13 +581,15 @@ public class URLBuilder {
             return blob.getPhysicalObjectKey();
         }
 
-        if (cachedPhysicalKey != null) {
-            return cachedPhysicalKey;
+        if (cachedPhysicalKey == null) {
+            Tuple<String, Boolean> physicalKey =
+                    ((BasicBlobStorageSpace<?, ?, ?>) space).tryFetchPhysicalKey(blobKey, variant);
+            if (physicalKey != null) {
+                this.cachedPhysicalKey = physicalKey.getFirst();
+            }
         }
 
-        Optional<String> physicalKey = ((BasicBlobStorageSpace<?, ?, ?>) space).tryResolvePhysicalKey(blobKey, variant);
-        physicalKey.ifPresent(key -> this.cachedPhysicalKey = key);
-        return physicalKey.orElse(null);
+        return cachedPhysicalKey;
     }
 
     private String computeAccessToken(String authToken) {

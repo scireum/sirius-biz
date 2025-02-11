@@ -72,7 +72,7 @@ public class BlobPdfReplaceHandler extends PdfReplaceHandler {
 
         BlobStorageSpace space = storage.getSpace(spaceKey);
         Optional<FileHandle> optionalFileHandle =
-                tryResolveVariant(variantOrPhysicalKey).flatMap(variant -> space.download(blobKey, variant))
+                tryResolveVariant(variantOrPhysicalKey).flatMap(variant -> space.download(blobKey, variant, true))
                                                        .or(() -> tryResolvePhysicalKey(variantOrPhysicalKey).flatMap(
                                                                physicalKey -> space.getPhysicalSpace()
                                                                                    .download(physicalKey)));
