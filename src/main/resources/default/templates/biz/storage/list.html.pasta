@@ -218,6 +218,16 @@
         <input type="hidden" name="newParent" value=""/>
         <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
     </form>
+    <form id="move-multiple-file-form" method="post" action="/fs/move/multiple">
+        <input type="hidden" name="paths" value=""/>
+        <input type="hidden" name="newParent" value=""/>
+        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
+    </form>
+    <form id="delete-multiple-file-form" method="post" action="/fs/delete/multiple">
+        <input type="hidden" name="paths" value=""/>
+        <input type="hidden" name="newParent" value=""/>
+        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
+    </form>
     <form id="create-directory-form" method="post" action="/fs/createDirectory">
         <t:modal name="create-directory-modal" titleKey="VFSController.createDirectory" submitKey="NLS.ok"
                  cancelKey="NLS.cancel">
