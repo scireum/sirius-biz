@@ -250,6 +250,11 @@
             </fieldset>
         </t:modal>
     </form>
+    <t:modal name="delete-confirm-modal" titleKey="template.html.confirmHeader" submitKey="NLS.yes" cancelKey="NLS.cancel">
+        <fieldset>
+            <p>@i18n("template.html.confirmText")</p>
+        </fieldset>
+    </t:modal>
     <script type="text/javascript">
         function renameFile(path, name) {
             const _modalElement = document.getElementById("rename-modal");
