@@ -231,7 +231,7 @@ public class VirtualFileSystemController extends BizController {
     @LoginRequired
     @Routed("/fs/delete/multiple")
     @Permission(PERMISSION_VIEW_FILES)
-    public void deleteMulitple(WebContext webContext) {
+    public void deleteMultiple(WebContext webContext) {
         List<String> filePaths = Arrays.stream(webContext.get("paths").asString().split("[,;]"))
                                        .map(String::trim)
                                        .filter(Strings::isFilled)
