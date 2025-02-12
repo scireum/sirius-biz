@@ -368,6 +368,10 @@
 
         document.querySelectorAll('.select-all-visible-table-rows-checkbox-js').forEach(function (_selectAllCheckbox) {
             _selectAllCheckbox.addEventListener('change', function () {
+                const checkboxes = document.querySelectorAll('.select-table-row-checkbox-js');
+                checkboxes.forEach(function (_checkbox) {
+                    _checkbox.checked = _selectAllCheckbox.checked;
+                });
                 toggleBulkActionButtons();
             });
         });
