@@ -308,9 +308,21 @@
         });
 
         function deleteFiles(filePaths) {
+            const _modalElement = document.getElementById("delete-confirm-modal");
+            if (!_modalElement.modal) {
+                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            }
+
             const _form = document.getElementById('delete-multiple-file-form');
             _form.querySelector("input[name='paths']").value = filePaths.join(",");
-            _form.submit();
+
+            _modalElement.addEventListener('shown.bs.modal', () => {
+                _modalElement.querySelector(".modal-footer .btn-primary").addEventListener('click', () => {
+                    _form.submit();
+                }, { once: true });
+            });
+
+            _modalElement.modal.show();
         }
 
         document.getElementById("delete-selected-files-button").addEventListener('click', function (event) {
