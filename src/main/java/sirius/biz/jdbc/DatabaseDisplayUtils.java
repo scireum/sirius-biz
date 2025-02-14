@@ -49,6 +49,10 @@ public class DatabaseDisplayUtils {
             }
         }
 
+        if (value instanceof Number) {
+            return value.toString();
+        }
+
         return NLS.toUserString(value);
     }
 }
