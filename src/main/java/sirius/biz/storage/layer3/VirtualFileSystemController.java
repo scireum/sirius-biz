@@ -380,22 +380,23 @@ public class VirtualFileSystemController extends BizController {
             VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
             path.set(file.parent().path());
             if (!file.exists()) {
-                if (file.canMove()) {
-                    webContext.respondWith().redirectToGet("/fs");
-                } else {
-                    failedMoves.inc();
-                }
+                webContext.respondWith().redirectToGet("/fs");
                 return;
             }
 
             try {
                 if (newParent.exists() && newParent.isDirectory()) {
-                    Optional<String> processId = file.transferTo(newParent).move();
-                    processId.ifPresent(_ -> UserContext.message(Message.info()
-                                                                        .withTextAndLink(NLS.get(
-                                                                                                 "VFSController.movedInProcess"),
-                                                                                         NLS.get("VFSController.moveProcess"),
-                                                                                         "/ps/" + processId.get())));
+                    if (file.canMove()) {
+                        Optional<String> processId = file.transferTo(newParent).move();
+                        processId.ifPresent(_ -> UserContext.message(Message.info()
+                                                                            .withTextAndLink(NLS.get(
+                                                                                                     "VFSController.movedInProcess"),
+                                                                                             NLS.get("VFSController.moveProcess"),
+                                                                                             "/ps/"
+                                                                                             + processId.get())));
+                    } else {
+                        failedMoves.inc();
+                    }
                 }
             } catch (Exception exception) {
                 UserContext.handle(exception);
