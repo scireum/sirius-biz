@@ -252,9 +252,8 @@ public class VirtualFileSystemController extends BizController {
         });
         UserContext.get()
                    .addMessage(Message.info()
-                                      .withTextMessage(NLS.fmtr("VFSController.deletedMultipleMessage")
-                                                          .set("count", filePaths.size())
-                                                          .format()));
+                                      .withTextMessage(NLS.get("VFSController.deletedMultipleMessage",
+                                                               filePaths.size())));
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", workingDirectory).toString());
     }
 
@@ -391,9 +390,8 @@ public class VirtualFileSystemController extends BizController {
         });
         UserContext.get()
                    .addMessage(Message.info()
-                                      .withTextMessage(NLS.fmtr("VFSController.movedMultipleMessage")
-                                                          .set("count", filePaths.size())
-                                                          .format()));
+                                      .withTextMessage(NLS.get("VFSController.movedMultipleMessage",
+                                                               filePaths.size())));
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", path).toString());
     }
 
