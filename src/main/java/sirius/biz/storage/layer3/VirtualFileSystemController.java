@@ -21,6 +21,7 @@ import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Counter;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
@@ -40,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Provides a web based UI for the {@link VirtualFileSystem}.
@@ -235,17 +235,17 @@ public class VirtualFileSystemController extends BizController {
     public void deleteMultiple(WebContext webContext) {
         List<String> filePaths = webContext.getParameters("paths");
         filePaths.removeAll(Arrays.asList("", null));
-        AtomicInteger failedDeletions = new AtomicInteger();
+        Counter failedDeletions = new Counter();
         ValueHolder<String> workingDirectory = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
             VirtualFile file = vfs.resolve(filePath);
             workingDirectory.set(file.parent.path());
             try {
                 if (file.exists()) {
-                    if(file.canDelete()){
+                    if (file.canDelete()) {
                         file.delete();
-                    }else{
-                        failedDeletions.getAndIncrement();
+                    } else {
+                        failedDeletions.inc();
                     }
                 }
             } catch (Exception exception) {
@@ -255,12 +255,12 @@ public class VirtualFileSystemController extends BizController {
         UserContext.get()
                    .addMessage(Message.info()
                                       .withTextMessage(NLS.get("VFSController.deletedMultipleMessage",
-                                                               filePaths.size()-failedDeletions.get())));
-        if(failedDeletions.get() > 0){
+                                                               filePaths.size() - (int) failedDeletions.getCount())));
+        if (failedDeletions.getCount() > 0) {
             UserContext.get()
-                   .addMessage(Message.error()
-                                      .withTextMessage(NLS.get("VFSController.deletedMultipleFailed",
-                                                               failedDeletions.get())));
+                       .addMessage(Message.error()
+                                          .withTextMessage(NLS.get("VFSController.deletedMultipleFailed",
+                                                                   (int) failedDeletions.getCount())));
         }
 
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", workingDirectory).toString());
@@ -372,17 +372,17 @@ public class VirtualFileSystemController extends BizController {
     public void moveMultiple(WebContext webContext) {
         List<String> filePaths = webContext.getParameters("paths");
         filePaths.removeAll(Arrays.asList("", null));
-        AtomicInteger failedMoves = new AtomicInteger();
+        Counter failedMoves = new Counter();
         ValueHolder<String> path = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
             VirtualFile file = vfs.resolve(filePath);
             VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
             path.set(file.parent().path());
             if (!file.exists()) {
-                if(file.canMove()){
+                if (file.canMove()) {
                     webContext.respondWith().redirectToGet("/fs");
-                }else{
-                    failedMoves.getAndIncrement();
+                } else {
+                    failedMoves.inc();
                 }
                 return;
             }
@@ -403,12 +403,12 @@ public class VirtualFileSystemController extends BizController {
         UserContext.get()
                    .addMessage(Message.info()
                                       .withTextMessage(NLS.get("VFSController.movedMultipleMessage",
-                                                               filePaths.size()-failedMoves.get())));
-        if(failedMoves.get() > 0){
+                                                               filePaths.size() - (int) failedMoves.getCount())));
+        if (failedMoves.getCount() > 0) {
             UserContext.get()
-                   .addMessage(Message.error()
-                                      .withTextMessage(NLS.get("VFSController.movedMultipleFailed",
-                                                               failedMoves.get())));
+                       .addMessage(Message.error()
+                                          .withTextMessage(NLS.get("VFSController.movedMultipleFailed",
+                                                                   (int) failedMoves.getCount())));
         }
 
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", path).toString());
