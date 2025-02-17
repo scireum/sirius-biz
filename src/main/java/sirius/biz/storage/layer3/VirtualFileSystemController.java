@@ -250,6 +250,7 @@ public class VirtualFileSystemController extends BizController {
                 }
             } catch (Exception exception) {
                 UserContext.handle(exception);
+                failedDeletions.inc();
             }
         });
         UserContext.get()
@@ -398,6 +399,7 @@ public class VirtualFileSystemController extends BizController {
                 }
             } catch (Exception exception) {
                 UserContext.handle(exception);
+                failedMoves.inc();
             }
         });
         UserContext.get()
