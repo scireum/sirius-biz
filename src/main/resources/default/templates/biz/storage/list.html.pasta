@@ -166,7 +166,8 @@
                                                 <i:if test="child.canMove()">
                                                     <t:dropdownItem
                                                             url="@apply('javascript:moveFile(\'%s\')', child.path().replace('\'', '\\\''))"
-                                                            icon="fa-solid fa-arrow-right" labelKey="VFSController.move"/>
+                                                            icon="fa-solid fa-arrow-right"
+                                                            labelKey="VFSController.move"/>
                                                 </i:if>
                                                 <i:if test="!child.isDirectory()">
                                                     <t:dropdownItem
@@ -250,7 +251,10 @@
             </fieldset>
         </t:modal>
     </form>
-    <t:modal name="delete-confirm-modal" titleKey="template.html.confirmHeader" submitKey="NLS.yes" cancelKey="NLS.cancel">
+    <t:modal name="delete-confirm-modal"
+             titleKey="template.html.confirmHeader"
+             submitKey="NLS.yes"
+             cancelKey="NLS.cancel">
         <fieldset>
             <p>@i18n("template.html.confirmText")</p>
         </fieldset>
@@ -331,7 +335,7 @@
             _modalElement.addEventListener('shown.bs.modal', () => {
                 _modalElement.querySelector(".modal-footer .btn-primary").addEventListener('click', () => {
                     _form.submit();
-                }, { once: true });
+                }, {once: true});
             });
 
             _modalElement.modal.show();
