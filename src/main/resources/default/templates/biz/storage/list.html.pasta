@@ -295,9 +295,15 @@
                 allowFiles: false,
                 modalTitle: '___i18n("VFSController.selectDirectory")'
             }).then(newParent => {
-                const filePathString = filePaths.join(",");
-                _form.querySelector("input[name='paths']").value = filePathString;
                 _form.querySelector("input[name='newParent']").value = newParent;
+                filePaths.forEach(filePath => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'paths';
+                    input.value = filePath;
+                    _form.appendChild(input);
+                });
+
                 _form.submit();
             });
         }
@@ -314,7 +320,13 @@
             }
 
             const _form = document.getElementById('delete-multiple-file-form');
-            _form.querySelector("input[name='paths']").value = filePaths.join(",");
+            filePaths.forEach(filePath => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'paths';
+                input.value = filePath;
+                _form.appendChild(input);
+            });
 
             _modalElement.addEventListener('shown.bs.modal', () => {
                 _modalElement.querySelector(".modal-footer .btn-primary").addEventListener('click', () => {
