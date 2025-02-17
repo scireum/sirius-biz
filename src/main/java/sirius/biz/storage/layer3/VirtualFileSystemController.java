@@ -40,7 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Provides a web based UI for the {@link VirtualFileSystem}.
@@ -235,13 +235,18 @@ public class VirtualFileSystemController extends BizController {
     public void deleteMultiple(WebContext webContext) {
         List<String> filePaths = webContext.getParameters("paths");
         filePaths.removeAll(Arrays.asList("", null));
+        AtomicInteger failedDeletions = new AtomicInteger();
         ValueHolder<String> workingDirectory = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
             VirtualFile file = vfs.resolve(filePath);
             workingDirectory.set(file.parent.path());
             try {
                 if (file.exists()) {
-                    file.delete();
+                    if(file.canDelete()){
+                        file.delete();
+                    }else{
+                        failedDeletions.getAndIncrement();
+                    }
                 }
             } catch (Exception exception) {
                 UserContext.handle(exception);
@@ -250,7 +255,14 @@ public class VirtualFileSystemController extends BizController {
         UserContext.get()
                    .addMessage(Message.info()
                                       .withTextMessage(NLS.get("VFSController.deletedMultipleMessage",
-                                                               filePaths.size())));
+                                                               filePaths.size()-failedDeletions.get())));
+        if(failedDeletions.get() > 0){
+            UserContext.get()
+                   .addMessage(Message.error()
+                                      .withTextMessage(NLS.get("VFSController.deletedMultipleFailed",
+                                                               failedDeletions.get())));
+        }
+
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", workingDirectory).toString());
     }
 
