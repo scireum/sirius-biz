@@ -232,22 +232,18 @@ public class VirtualFileSystemController extends BizController {
     @Routed("/fs/delete/multiple")
     @Permission(PERMISSION_VIEW_FILES)
     public void deleteMultiple(WebContext webContext) {
-        List<String> filePaths = Arrays.stream(webContext.get("paths").asString().split("[,;]"))
-                                       .map(String::trim)
-                                       .filter(Strings::isFilled)
-                                       .toList();
+        List<String> filePaths = webContext.getParameters("paths");
+        filePaths.removeAll(Arrays.asList("", null));
         AtomicReference<String> workingDirectory = new AtomicReference<>();
         filePaths.forEach(filePath -> {
             VirtualFile file = vfs.resolve(filePath);
             workingDirectory.set(file.parent.path());
-            if (webContext.isSafePOST()) {
-                try {
-                    if (file.exists()) {
-                        file.delete();
-                    }
-                } catch (Exception exception) {
-                    UserContext.handle(exception);
+            try {
+                if (file.exists()) {
+                    file.delete();
                 }
+            } catch (Exception exception) {
+                UserContext.handle(exception);
             }
         });
         UserContext.get()
@@ -361,10 +357,8 @@ public class VirtualFileSystemController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_VIEW_FILES)
     public void moveMultiple(WebContext webContext) {
-        List<String> filePaths = Arrays.stream(webContext.get("paths").asString().split("[,;]"))
-                                       .map(String::trim)
-                                       .filter(Strings::isFilled)
-                                       .toList();
+        List<String> filePaths = webContext.getParameters("paths");
+        filePaths.removeAll(Arrays.asList("", null));
         AtomicReference<String> path = new AtomicReference<>();
         filePaths.forEach(filePath -> {
             VirtualFile file = vfs.resolve(filePath);
