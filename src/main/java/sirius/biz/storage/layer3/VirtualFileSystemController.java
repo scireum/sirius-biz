@@ -372,13 +372,18 @@ public class VirtualFileSystemController extends BizController {
     public void moveMultiple(WebContext webContext) {
         List<String> filePaths = webContext.getParameters("paths");
         filePaths.removeAll(Arrays.asList("", null));
+        AtomicInteger failedMoves = new AtomicInteger();
         ValueHolder<String> path = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
             VirtualFile file = vfs.resolve(filePath);
             VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
             path.set(file.parent().path());
             if (!file.exists()) {
-                webContext.respondWith().redirectToGet("/fs");
+                if(file.canMove()){
+                    webContext.respondWith().redirectToGet("/fs");
+                }else{
+                    failedMoves.getAndIncrement();
+                }
                 return;
             }
 
@@ -398,7 +403,14 @@ public class VirtualFileSystemController extends BizController {
         UserContext.get()
                    .addMessage(Message.info()
                                       .withTextMessage(NLS.get("VFSController.movedMultipleMessage",
-                                                               filePaths.size())));
+                                                               filePaths.size()-failedMoves.get())));
+        if(failedMoves.get() > 0){
+            UserContext.get()
+                   .addMessage(Message.error()
+                                      .withTextMessage(NLS.get("VFSController.movedMultipleFailed",
+                                                               failedMoves.get())));
+        }
+
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", path).toString());
     }
 
