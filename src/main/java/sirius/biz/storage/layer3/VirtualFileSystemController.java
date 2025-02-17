@@ -17,6 +17,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
@@ -234,7 +235,7 @@ public class VirtualFileSystemController extends BizController {
     public void deleteMultiple(WebContext webContext) {
         List<String> filePaths = webContext.getParameters("paths");
         filePaths.removeAll(Arrays.asList("", null));
-        AtomicReference<String> workingDirectory = new AtomicReference<>();
+        ValueHolder<String> workingDirectory = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
             VirtualFile file = vfs.resolve(filePath);
             workingDirectory.set(file.parent.path());
@@ -359,11 +360,11 @@ public class VirtualFileSystemController extends BizController {
     public void moveMultiple(WebContext webContext) {
         List<String> filePaths = webContext.getParameters("paths");
         filePaths.removeAll(Arrays.asList("", null));
-        AtomicReference<String> path = new AtomicReference<>();
+        ValueHolder<String> path = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
             VirtualFile file = vfs.resolve(filePath);
             VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
-            path.getAndSet(file.parent().path());
+            path.set(file.parent().path());
             if (!file.exists()) {
                 webContext.respondWith().redirectToGet("/fs");
                 return;
