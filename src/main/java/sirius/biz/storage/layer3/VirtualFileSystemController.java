@@ -17,9 +17,11 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Counter;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
@@ -223,6 +225,49 @@ public class VirtualFileSystemController extends BizController {
     }
 
     /**
+     * Deletes the given list of files or directories.
+     *
+     * @param webContext the request to handle
+     */
+    @LoginRequired
+    @Routed("/fs/delete/multiple")
+    @Permission(PERMISSION_VIEW_FILES)
+    public void deleteMultiple(WebContext webContext) {
+        List<String> filePaths = webContext.getParameters("paths");
+        filePaths.removeAll(Arrays.asList("", null));
+        Counter failedDeletions = new Counter();
+        ValueHolder<String> workingDirectory = new ValueHolder<>("");
+        filePaths.forEach(filePath -> {
+            VirtualFile file = vfs.resolve(filePath);
+            workingDirectory.set(file.parent.path());
+            try {
+                if (file.exists()) {
+                    if (file.canDelete()) {
+                        file.delete();
+                    } else {
+                        failedDeletions.inc();
+                    }
+                }
+            } catch (Exception exception) {
+                UserContext.handle(exception);
+                failedDeletions.inc();
+            }
+        });
+        UserContext.get()
+                   .addMessage(Message.info()
+                                      .withTextMessage(NLS.get("VFSController.deletedMultipleMessage",
+                                                               filePaths.size() - (int) failedDeletions.getCount())));
+        if (failedDeletions.getCount() > 0) {
+            UserContext.get()
+                       .addMessage(Message.error()
+                                          .withTextMessage(NLS.get("VFSController.deletedMultipleFailed",
+                                                                   (int) failedDeletions.getCount())));
+        }
+
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", workingDirectory).toString());
+    }
+
+    /**
      * Renames the given file or directory.
      *
      * @param webContext the request to handle
@@ -315,6 +360,61 @@ public class VirtualFileSystemController extends BizController {
         }
 
         webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+    }
+
+    /**
+     * Moves the given list of files or directories to a new parent directory.
+     *
+     * @param webContext the request to handle
+     */
+    @Routed("/fs/move/multiple")
+    @LoginRequired
+    @Permission(PERMISSION_VIEW_FILES)
+    public void moveMultiple(WebContext webContext) {
+        List<String> filePaths = webContext.getParameters("paths");
+        filePaths.removeAll(Arrays.asList("", null));
+        Counter failedMoves = new Counter();
+        ValueHolder<String> path = new ValueHolder<>("");
+        filePaths.forEach(filePath -> {
+            VirtualFile file = vfs.resolve(filePath);
+            VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
+            path.set(file.parent().path());
+            if (!file.exists()) {
+                webContext.respondWith().redirectToGet("/fs");
+                return;
+            }
+
+            try {
+                if (newParent.exists() && newParent.isDirectory()) {
+                    if (file.canMove()) {
+                        Optional<String> processId = file.transferTo(newParent).move();
+                        processId.ifPresent(_ -> UserContext.message(Message.info()
+                                                                            .withTextAndLink(NLS.get(
+                                                                                                     "VFSController.movedInProcess"),
+                                                                                             NLS.get("VFSController.moveProcess"),
+                                                                                             "/ps/"
+                                                                                             + processId.get())));
+                    } else {
+                        failedMoves.inc();
+                    }
+                }
+            } catch (Exception exception) {
+                UserContext.handle(exception);
+                failedMoves.inc();
+            }
+        });
+        UserContext.get()
+                   .addMessage(Message.info()
+                                      .withTextMessage(NLS.get("VFSController.movedMultipleMessage",
+                                                               filePaths.size() - (int) failedMoves.getCount())));
+        if (failedMoves.getCount() > 0) {
+            UserContext.get()
+                       .addMessage(Message.error()
+                                          .withTextMessage(NLS.get("VFSController.movedMultipleFailed",
+                                                                   (int) failedMoves.getCount())));
+        }
+
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", path).toString());
     }
 
     /**

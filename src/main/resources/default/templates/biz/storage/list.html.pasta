@@ -34,7 +34,27 @@
 
     <div class="row">
         <div class="col">
-            <t:searchHeader page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
+            <t:searchHeader page="children" baseUrl="@apply('/fs?path=%s', dir.path())">
+                <div class="btn-group me-4"
+                     role="group">
+                    <a id="move-selected-files-button"
+                       class="btn d-inline-flex flex-row align-items-center btn-outline-secondary audit-confirm-link-js disabled"
+                       title="@i18n('VFSController.moveSelected')"
+                       href="">
+                        <i class="fa-solid fa-arrow-right"></i>
+                        <span class="d-none d-xl-inline">&nbsp;@i18n('VFSController.moveSelected')</span>
+                    </a>
+                    <a id="delete-selected-files-button"
+                       class="btn d-inline-flex flex-row align-items-center btn-outline-secondary audit-confirm-link-js disabled"
+                       title="@i18n('VFSController.deleteSelected')"
+                       data-action=""
+                       href="">
+                        <i class="fa-solid fa-trash fa-fw"></i>
+                        <span class="d-none d-xl-inline">&nbsp;@i18n('VFSController.deleteSelected')</span>
+                    </a>
+                </div>
+            </t:searchHeader>
+
             <div id="sirius-upload-progress" class="mt-3 mb-3 dropzone-items">
                 <div class="sirius-upload-hover h-100 d-none flex-column align-items-center justify-content-center">
                     <i class="fa-solid fa-2x fa-cloud-upload-alt"></i>
@@ -49,26 +69,25 @@
 
                 <div class="card mb-4">
                     <div class="card-body">
-                        <table class="table table-hover" style="table-layout: fixed">
-                            <thead>
-                            <tr>
-                                <th scope="col">
+                        <table class="table table-hover ">
+                            <t:selectableTableHeaderRow>
+                                <th scope="col" class="align-top">
                                     @i18n("Model.name")<br>
                                     <small class="text-muted text-nowrap">@i18n("Model.description")</small>
                                 </th>
-                                <th scope="col" class="text-end">
+                                <th scope="col" class="text-end align-top">
                                     @i18n("VirtualFile.size")<br>
                                 </th>
-                                <th scope="col" class="text-end">
+                                <th scope="col" class="text-end align-top">
                                     @i18n("VirtualFile.lastModified")<br>
                                 </th>
-                                <th scope="col">
+                                <th scope="col" class="align-top">
                                 </th>
-                            </tr>
-                            </thead>
+                            </t:selectableTableHeaderRow>
                             <tbody>
                             <i:if test="dir.parent() != null">
                                 <tr>
+                                    <td></td>
                                     <td>
                                         <a class="link text-decoration-none"
                                            href="/fs?path=@urlEncode(dir.parent().path())">
@@ -83,10 +102,10 @@
                             </i:if>
                             <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child"
                                    items="children.getItems()">
-                                <tr>
+                                <t:selectableTableRow entityId="@child.path()">
                                     <td>
                                         <div>
-                                            <a class="link text-decoration-none"
+                                            <a class="link"
                                                href="/fs?path=@urlEncode(child.path())">
                                                 <i:if test="child.isDirectory()">
                                                     <i class="fa-solid fa-folder-open"></i>
@@ -103,8 +122,6 @@
                                                     </div>
                                                 </i:if>
                                             </a>
-                                        </div>
-                                        <div>
                                             <small class="text-muted">
                                                 <i:if test="isFilled(child.htmlDescription())">
                                                     <i:raw>@child.htmlDescription()</i:raw>
@@ -149,7 +166,8 @@
                                                 <i:if test="child.canMove()">
                                                     <t:dropdownItem
                                                             url="@apply('javascript:moveFile(\'%s\')', child.path().replace('\'', '\\\''))"
-                                                            icon="fa-solid fa-arrow-right" labelKey="VFSController.move"/>
+                                                            icon="fa-solid fa-arrow-right"
+                                                            labelKey="VFSController.move"/>
                                                 </i:if>
                                                 <i:if test="!child.isDirectory()">
                                                     <t:dropdownItem
@@ -176,7 +194,7 @@
                                             </t:permission>
                                         </t:additionalActions>
                                     </td>
-                                </tr>
+                                </t:selectableTableRow>
                             </i:for>
                             </tbody>
                         </table>
@@ -198,6 +216,16 @@
     </form>
     <form id="move-file-form" method="post" action="/fs/move">
         <input type="hidden" name="path" value=""/>
+        <input type="hidden" name="newParent" value=""/>
+        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
+    </form>
+    <form id="move-multiple-file-form" method="post" action="/fs/move/multiple">
+        <input type="hidden" name="paths" value=""/>
+        <input type="hidden" name="newParent" value=""/>
+        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
+    </form>
+    <form id="delete-multiple-file-form" method="post" action="/fs/delete/multiple">
+        <input type="hidden" name="paths" value=""/>
         <input type="hidden" name="newParent" value=""/>
         <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
     </form>
@@ -223,6 +251,14 @@
             </fieldset>
         </t:modal>
     </form>
+    <t:modal name="delete-confirm-modal"
+             titleKey="template.html.confirmHeader"
+             submitKey="NLS.yes"
+             cancelKey="NLS.cancel">
+        <fieldset>
+            <p>@i18n("template.html.confirmText")</p>
+        </fieldset>
+    </t:modal>
     <script type="text/javascript">
         function renameFile(path, name) {
             const _modalElement = document.getElementById("rename-modal");
@@ -254,6 +290,68 @@
             });
         }
 
+        function moveFiles(filePaths) {
+            const _form = document.getElementById('move-multiple-file-form');
+
+            selectVFSFile({
+                path: '@dir.path()',
+                allowDirectories: true,
+                allowFiles: false,
+                modalTitle: '___i18n("VFSController.selectDirectory")'
+            }).then(newParent => {
+                _form.querySelector("input[name='newParent']").value = newParent;
+                filePaths.forEach(filePath => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'paths';
+                    input.value = filePath;
+                    _form.appendChild(input);
+                });
+
+                _form.submit();
+            });
+        }
+
+        document.getElementById("move-selected-files-button").addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default anchor behavior
+            moveFiles(getSelectedFiles());
+        });
+
+        function deleteFiles(filePaths) {
+            const _modalElement = document.getElementById("delete-confirm-modal");
+            if (!_modalElement.modal) {
+                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            }
+
+            const _form = document.getElementById('delete-multiple-file-form');
+            filePaths.forEach(filePath => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'paths';
+                input.value = filePath;
+                _form.appendChild(input);
+            });
+
+            _modalElement.addEventListener('shown.bs.modal', () => {
+                _modalElement.querySelector(".modal-footer .btn-primary").addEventListener('click', () => {
+                    _form.submit();
+                }, {once: true});
+            });
+
+            _modalElement.modal.show();
+        }
+
+        document.getElementById("delete-selected-files-button").addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default anchor behavior
+
+            deleteFiles(getSelectedFiles());
+        });
+
+        function getSelectedFiles() {
+            return Array.from(document.querySelectorAll('.select-table-row-checkbox-js:checked'))
+                .map(checkbox => checkbox.getAttribute('data-entity-id'));
+        }
+
         function createDirectory() {
             const _modalElement = document.getElementById("create-directory-modal");
             if (!_modalElement.modal) {
@@ -277,5 +375,27 @@
             });
             _modalElement.modal.show();
         }
+
+        function toggleBulkActionButtons() {
+            const anyChecked = document.querySelectorAll('.select-table-row-checkbox-js:checked').length > 0;
+            document.getElementById("move-selected-files-button").classList.toggle('disabled', !anyChecked);
+            document.getElementById("delete-selected-files-button").classList.toggle('disabled', !anyChecked);
+        }
+
+        document.querySelectorAll('.select-all-visible-table-rows-checkbox-js').forEach(function (_selectAllCheckbox) {
+            _selectAllCheckbox.addEventListener('change', function () {
+                const checkboxes = document.querySelectorAll('.select-table-row-checkbox-js');
+                checkboxes.forEach(function (_checkbox) {
+                    _checkbox.checked = _selectAllCheckbox.checked;
+                });
+                toggleBulkActionButtons();
+            });
+        });
+
+        document.querySelectorAll('.select-table-row-checkbox-js').forEach(function (_checkbox) {
+            _checkbox.addEventListener('change', function (event) {
+                toggleBulkActionButtons();
+            });
+        });
     </script>
 </t:page>
