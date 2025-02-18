@@ -8,7 +8,6 @@
 
 package sirius.biz.jupiter;
 
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import sirius.biz.process.ProcessContext;
@@ -41,6 +40,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.settings.Extension;
 import sirius.kernel.timer.EndOfDayTask;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import javax.annotation.Nullable;
 import java.io.OutputStream;
@@ -424,9 +424,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
         ObjectStore objectStore = objectStores.getStore(store);
         BucketName uplinkBucketName = objectStore.getBucketName(bucket);
         objectStore.listObjects(uplinkBucketName, null, object -> {
-            if (object.getSize() > 0 && uplinkStore.getStringList("ignoredPaths")
-                                                   .stream()
-                                                   .noneMatch(ignoredPath -> object.getKey().startsWith(ignoredPath))) {
+            if (object.size() > 0 && uplinkStore.getStringList("ignoredPaths")
+                                                .stream()
+                                                .noneMatch(ignoredPath -> object.key().startsWith(ignoredPath))) {
                 handleUplinkFile(processContext,
                                  connection,
                                  repositoryFiles,
@@ -458,8 +458,8 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                   Set<String> filesToDelete,
                                   ObjectStore store,
                                   BucketName uplinkBucketName,
-                                  S3ObjectSummary object) {
-        String effectiveFileName = "/" + object.getKey();
+                                  S3Object object) {
+        String effectiveFileName = "/" + object.key();
         RepositoryFile repositoryFile = repositoryFiles.stream()
                                                        .filter(file -> Strings.areEqual(file.getName(),
                                                                                         effectiveFileName))
@@ -467,11 +467,10 @@ public class JupiterSync implements Startable, EndOfDayTask {
                                                        .orElse(null);
 
         if (repositoryFile == null || repositoryFile.getLastModified()
-                                                    .isBefore(object.getLastModified()
-                                                                    .toInstant()
+                                                    .isBefore(object.lastModified()
                                                                     .atZone(ZoneId.systemDefault())
                                                                     .toLocalDateTime())) {
-            String url = store.objectUrl(uplinkBucketName, object.getKey());
+            String url = store.objectUrl(uplinkBucketName, object.key());
             updateTaskConsumer.accept(() -> {
                 processContext.log(ProcessLog.info()
                                              .withFormattedMessage("Fetching %s for %s as it is new or updated...",

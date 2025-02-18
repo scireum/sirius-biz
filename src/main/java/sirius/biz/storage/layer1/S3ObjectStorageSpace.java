@@ -8,10 +8,6 @@
 
 package sirius.biz.storage.layer1;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
@@ -29,6 +25,10 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -224,25 +224,24 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey) throws IOException {
+        // TODO SIRI-1025: Check how to open an input stream for an S3 object
         return getS3Object(objectKey).getObjectContent();
     }
 
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey, ByteBlockTransformer transformer) throws IOException {
-        S3ObjectInputStream rawStream = getS3Object(objectKey).getObjectContent();
-        return new TransformingInputStream(rawStream, transformer);
+        return new TransformingInputStream(getAsStream(objectKey), transformer);
     }
 
     @Override
     public void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException {
         store.listObjects(bucketName(), null, s3Object -> {
-            return objectHandler.test(new ObjectMetadata(s3Object.getKey(),
-                                                         s3Object.getLastModified()
-                                                                 .toInstant()
+            return objectHandler.test(new ObjectMetadata(s3Object.key(),
+                                                         s3Object.lastModified()
                                                                  .atZone(ZoneId.systemDefault())
                                                                  .toLocalDateTime(),
-                                                         s3Object.getSize()));
+                                                         s3Object.size()));
         });
     }
 
@@ -278,16 +277,19 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         return !hasTransformer() && !s3ObjectStorageSpace.hasTransformer();
     }
 
-    private S3Object getS3Object(String objectKey) throws IOException {
+    private GetObjectResponse getS3Object(String objectKey) throws IOException {
         try {
-            return store.getClient().getObject(bucketName().getName(), objectKey);
-        } catch (AmazonClientException exception) {
-            if (exception instanceof AmazonS3Exception s3Exception
-                && s3Exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+            return store.getClient()
+                        .getObject(GetObjectRequest.builder().bucket(bucketName().getName()).key(objectKey).build())
+                        .response();
+        } catch (S3Exception exception) {
+            if (exception.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(Strings.apply("Layer 1: No object found for key '%s' in bucket '%s'",
                                                               objectKey,
                                                               bucketName()));
             }
+            throw new IOException(exception);
+        } catch (SdkClientException exception) {
             throw new IOException(exception);
         }
     }

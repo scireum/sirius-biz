@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.legacy;
 
-import com.amazonaws.internal.ResettableInputStream;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import sirius.biz.protocol.TraceData;
@@ -32,6 +31,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
+import software.amazon.awssdk.core.io.ResettableInputStream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

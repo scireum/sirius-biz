@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer1;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Represents metadata about a stored object.
@@ -41,5 +42,9 @@ public class ObjectMetadata {
 
     public long getSize() {
         return size;
+    }
+
+    public Map<String, String> asMap() {
+        return Map.of("key", key, "lastModified", lastModified.toString(), "size", String.valueOf(size));
     }
 }

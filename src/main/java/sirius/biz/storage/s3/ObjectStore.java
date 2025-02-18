@@ -8,35 +8,12 @@
 
 package sirius.biz.storage.s3;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.event.ProgressEvent;
-import com.amazonaws.event.ProgressEventType;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
-import com.amazonaws.services.s3.model.ListBucketsPaginatedRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PartETag;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.UploadPartRequest;
-import com.amazonaws.services.s3.transfer.PersistableTransfer;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
-import com.amazonaws.services.s3.transfer.Upload;
-import com.amazonaws.services.s3.transfer.internal.S3ProgressListener;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer1.ObjectMetadata;
 import sirius.kernel.async.Operation;
 import sirius.kernel.async.Promise;
 import sirius.kernel.async.TaskContext;
@@ -49,6 +26,35 @@ import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.Bucket;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.transfer.s3.S3TransferManager;
+import software.amazon.awssdk.transfer.s3.model.DownloadFileRequest;
+import software.amazon.awssdk.transfer.s3.model.Upload;
+import software.amazon.awssdk.transfer.s3.model.UploadRequest;
+import software.amazon.awssdk.transfer.s3.progress.TransferListener;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -63,6 +69,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 
 /**
@@ -99,8 +106,8 @@ public class ObjectStore {
 
     protected final ObjectStores stores;
     protected final String name;
-    protected final AmazonS3 client;
-    protected final TransferManager transferManager;
+    protected final S3AsyncClient client;
+    protected final S3TransferManager transferManager;
     protected final String bucketSuffix;
 
     @Part
@@ -109,42 +116,44 @@ public class ObjectStore {
     /**
      * Provides some bookkeeping and monitoring for S3 up- and downloads.
      */
-    private class MonitoringProgressListener implements S3ProgressListener {
+    private class MonitoringProgressListener implements TransferListener {
 
         private final Watch watch = Watch.start();
         private final boolean upload;
+        private long transferredBytes;
 
         MonitoringProgressListener(boolean upload) {
             this.upload = upload;
         }
 
         @Override
-        public void onPersistableTransfer(PersistableTransfer persistableTransfer) {
-            // NOOP
+        public void transferInitiated(Context.TransferInitiated context) {
+            watch.reset();
+            transferredBytes = 0;
         }
 
         @Override
-        public void progressChanged(ProgressEvent progressEvent) {
-            if (progressEvent.getEventType() == ProgressEventType.TRANSFER_STARTED_EVENT) {
-                watch.reset();
-            }
+        public void bytesTransferred(Context.BytesTransferred context) {
+            transferredBytes += context.progressSnapshot().transferredBytes();
+        }
 
-            if (progressEvent.getEventType() == ProgressEventType.TRANSFER_COMPLETED_EVENT) {
-                if (upload) {
-                    stores.uploads.addValue(watch.elapsedMillis());
-                    stores.uploadedBytes.add(progressEvent.getBytesTransferred());
-                } else {
-                    stores.downloads.addValue(watch.elapsedMillis());
-                    stores.downloadedBytes.add(progressEvent.getBytesTransferred());
-                }
+        @Override
+        public void transferComplete(Context.TransferComplete context) {
+            if (upload) {
+                stores.uploads.addValue(watch.elapsedMillis());
+                stores.uploadedBytes.add(transferredBytes);
+            } else {
+                stores.downloads.addValue(watch.elapsedMillis());
+                stores.downloadedBytes.add(transferredBytes);
             }
+        }
 
-            if (progressEvent.getEventType() == ProgressEventType.TRANSFER_FAILED_EVENT) {
-                if (upload) {
-                    stores.failedUploads.inc();
-                } else {
-                    stores.failedDownloads.inc();
-                }
+        @Override
+        public void transferFailed(Context.TransferFailed context) {
+            if (upload) {
+                stores.failedUploads.inc();
+            } else {
+                stores.failedDownloads.inc();
             }
         }
     }
@@ -167,32 +176,31 @@ public class ObjectStore {
         }
 
         @Override
-        public void progressChanged(ProgressEvent progressEvent) {
-            super.progressChanged(progressEvent);
-            if (progressEvent.getEventType() == ProgressEventType.TRANSFER_COMPLETED_EVENT) {
-                if (!promise.isCompleted()) {
-                    promise.success(FileHandle.temporaryFileHandle(file));
-                }
-            } else if (progressEvent.getEventType() == ProgressEventType.TRANSFER_FAILED_EVENT) {
-                Files.delete(file);
-                promise.fail(Exceptions.handle()
-                                       .to(ObjectStores.LOG)
-                                       .withSystemErrorMessage("An error occurred while trying to download: %s/%s",
-                                                               bucket,
-                                                               objectId)
-                                       .handle());
+        public void transferComplete(Context.TransferComplete context) {
+            super.transferComplete(context);
+            if (!promise.isCompleted()) {
+                promise.success(FileHandle.temporaryFileHandle(file));
             }
+        }
+
+        @Override
+        public void transferFailed(Context.TransferFailed context) {
+            Files.delete(file);
+            promise.fail(Exceptions.handle()
+                                   .to(ObjectStores.LOG)
+                                   .withSystemErrorMessage("An error occurred while trying to download: %s/%s",
+                                                           bucket,
+                                                           objectId)
+                                   .handle());
         }
     }
 
-    protected ObjectStore(ObjectStores stores, String name, AmazonS3 client, String bucketSuffix) {
+    protected ObjectStore(ObjectStores stores, String name, S3AsyncClient client, String bucketSuffix) {
         this.stores = stores;
         this.name = name;
         this.client = client;
-        this.transferManager = TransferManagerBuilder.standard()
-                                                     .withExecutorFactory(() -> tasks.executorService(EXECUTOR_S3))
-                                                     .withS3Client(client)
-                                                     .build();
+        this.transferManager =
+                S3TransferManager.builder().executor(tasks.executorService(EXECUTOR_S3)).s3Client(client).build();
 
         if (Strings.isFilled(bucketSuffix) && bucketSuffix.contains(".") && !Files.isConsideredHidden(bucketSuffix)) {
             ObjectStores.LOG.WARN(
@@ -207,7 +215,7 @@ public class ObjectStore {
      *
      * @return the client used to talk to the S3 store
      */
-    public AmazonS3 getClient() {
+    public S3AsyncClient getClient() {
         return client;
     }
 
@@ -255,7 +263,7 @@ public class ObjectStore {
     public void ensureBucketExists(BucketName bucket) {
         if (!doesBucketExist(bucket)) {
             try {
-                client.createBucket(bucket.getName());
+                client.createBucket(CreateBucketRequest.builder().bucket(bucket.getName()).build());
             } catch (Exception exception) {
                 Exceptions.handle()
                           .to(ObjectStores.LOG)
@@ -292,11 +300,7 @@ public class ObjectStore {
      * @return a list of all buckets in the given store
      */
     public List<String> listBuckets() {
-        return getClient().listBuckets(new ListBucketsPaginatedRequest())
-                          .getBuckets()
-                          .stream()
-                          .map(Bucket::getName)
-                          .toList();
+        return getClient().listBuckets().buckets().stream().map(Bucket::name).toList();
     }
 
     /**
@@ -310,8 +314,8 @@ public class ObjectStore {
      * @param consumer the consumer to be supplied with each found object. As soon as <tt>false</tt> is returned,
      *                 the iteration stops.
      */
-    public void listObjects(BucketName bucket, @Nullable String prefix, Predicate<S3ObjectSummary> consumer) {
-        ObjectListing objectListing = null;
+    public void listObjects(BucketName bucket, @Nullable String prefix, Predicate<S3Object> consumer) {
+        ListObjectsV2Response objectListing = null;
         TaskContext taskContext = TaskContext.get();
 
         do {
@@ -319,13 +323,35 @@ public class ObjectStore {
                                                                          bucket.getName(),
                                                                          prefix), Duration.ofSeconds(10))) {
                 if (objectListing != null) {
-                    objectListing = getClient().listNextBatchOfObjects(objectListing);
+                    // TODO SIRI-1025: Still necessary?
+//                    getClient().listObjectsV2Paginator()
+//                    objectListing = getClient().listNextBatchOfObjects(objectListing);
                 } else {
-                    objectListing = getClient().listObjects(bucket.getName(), prefix);
+                    objectListing = getClient().listObjectsV2(ListObjectsV2Request.builder()
+                                                                                  .bucket(bucket.getName())
+                                                                                  .prefix(prefix)
+                                                                                  .build()).get();
                 }
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw Exceptions.handle()
+                                .to(ObjectStores.LOG)
+                                .error(exception)
+                                .withSystemErrorMessage(
+                                        "Got interrupted while listing the objects of a bucket: %s - %s (%s)",
+                                        bucket)
+                                .handle();
+            } catch (ExecutionException exception) {
+                throw Exceptions.handle()
+                                .to(ObjectStores.LOG)
+                                .error(exception)
+                                .withSystemErrorMessage(
+                                        "An error occurred while listing the objects of a bucket: %s - %s (%s)",
+                                        bucket)
+                                .handle();
             }
 
-            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+            for (S3Object objectSummary : objectListing.contents()) {
                 if (!consumer.test(objectSummary) || !taskContext.isActive()) {
                     return;
                 }
@@ -343,7 +369,7 @@ public class ObjectStore {
         try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object %s from %s",
                                                                      objectId,
                                                                      bucket), Duration.ofMinutes(1))) {
-            getClient().deleteObject(bucket.getName(), objectId);
+            getClient().deleteObject(DeleteObjectRequest.builder().bucket(bucket.getName()).key(objectId).build());
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
@@ -372,7 +398,12 @@ public class ObjectStore {
                                                                      sourceObjectId,
                                                                      targetBucket,
                                                                      targetObjectId), Duration.ofMinutes(5))) {
-            getClient().copyObject(sourceBucket.getName(), sourceObjectId, targetBucket.getName(), targetObjectId);
+            getClient().copyObject(CopyObjectRequest.builder()
+                                                    .sourceBucket(sourceBucket.getName())
+                                                    .sourceKey(sourceObjectId)
+                                                    .destinationBucket(targetBucket.getName())
+                                                    .destinationKey(targetObjectId)
+                                                    .build());
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
@@ -396,7 +427,7 @@ public class ObjectStore {
     public void deleteBucket(BucketName bucket) {
         try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting bucket %s", bucket),
                                                  Duration.ofMinutes(1))) {
-            getClient().deleteBucket(bucket.getName());
+            getClient().deleteBucket(DeleteBucketRequest.builder().bucket(bucket.getName()).build());
             stores.bucketCache.remove(Tuple.create(name, bucket.getName()));
         } catch (Exception exception) {
             throw Exceptions.handle()
@@ -409,7 +440,10 @@ public class ObjectStore {
 
     private boolean checkExistence(BucketName bucket) {
         try {
-            return client.doesBucketExistV2(bucket.getName());
+            client.headBucket(HeadBucketRequest.builder().bucket(bucket.getName()).build());
+            return true;
+        } catch (NoSuchBucketException exception) {
+            return false;
         } catch (SdkClientException exception) {
             Exceptions.handle()
                       .to(ObjectStores.LOG)
@@ -444,8 +478,15 @@ public class ObjectStore {
      * @return a pre-signed download URL for the object
      */
     public String objectUrl(BucketName bucket, String objectId) {
-        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket.getName(), objectId);
-        return getClient().generatePresignedUrl(request).toString();
+        try (S3Presigner presigner = S3Presigner.create()) {
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                                                                            .getObjectRequest(GetObjectRequest.builder()
+                                                                                                              .bucket(bucket.getName())
+                                                                                                              .key(objectId)
+                                                                                                              .build())
+                                                                            .build();
+            return presigner.presignGetObject(presignRequest).url().toExternalForm();
+        }
     }
 
     /**
@@ -465,9 +506,14 @@ public class ObjectStore {
                                                                      bucket), Duration.ofHours(4))) {
             dest = File.createTempFile("AMZS3", null);
             ensureBucketExists(bucket);
-            transferManager.download(new GetObjectRequest(bucket.getName(), objectId),
-                                     dest,
-                                     new MonitoringProgressListener(false)).waitForCompletion();
+            transferManager.downloadFile(DownloadFileRequest.builder()
+                                                            .getObjectRequest(GetObjectRequest.builder()
+                                                                                              .bucket(bucket.getName())
+                                                                                              .key(objectId)
+                                                                                              .build())
+                                                            .addTransferListener(new MonitoringProgressListener(false))
+                                                            .destination(dest)
+                                                            .build()).completionFuture().get();
             return dest;
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
@@ -481,9 +527,9 @@ public class ObjectStore {
                                     bucket,
                                     objectId)
                             .handle();
-        } catch (AmazonS3Exception exception) {
+        } catch (S3Exception exception) {
             Files.delete(dest);
-            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+            if (exception.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(objectId);
             } else {
                 throw handleDownloadError(bucket, objectId, exception);
@@ -520,13 +566,15 @@ public class ObjectStore {
                                                                      bucket), Duration.ofSeconds(90))) {
             ensureBucketExists(bucket);
             try (ByteArrayOutputStream output = new ByteArrayOutputStream();
-                 InputStream input = getClient().getObject(new GetObjectRequest(bucket.getName(), objectId))
-                                                .getObjectContent()) {
+                 InputStream input = getClient().getObject(GetObjectRequest.builder()
+                                                                           .bucket(bucket.getName())
+                                                                           .key(objectId)
+                                                                           .build())) {
                 Streams.transfer(input, output);
                 return output.toByteArray();
             }
-        } catch (AmazonS3Exception exception) {
-            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+        } catch (S3Exception exception) {
+            if (exception.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(objectId);
             } else {
                 throw handleDownloadError(bucket, objectId, exception);
@@ -550,13 +598,21 @@ public class ObjectStore {
             dest = File.createTempFile("AMZS3", null);
             Promise<FileHandle> promise = new Promise<>();
             ensureBucketExists(bucket);
-            transferManager.download(new GetObjectRequest(bucket.getName(), objectId),
-                                     dest,
-                                     new AsyncDownloadListener(bucket.getName(), objectId, dest, promise));
+            transferManager.downloadFile(DownloadFileRequest.builder()
+                                                            .getObjectRequest(GetObjectRequest.builder()
+                                                                                              .bucket(bucket.getName())
+                                                                                              .key(objectId)
+                                                                                              .build())
+                                                            .destination(dest)
+                                                            .addTransferListener(new AsyncDownloadListener(bucket.getName(),
+                                                                                                           objectId,
+                                                                                                           dest,
+                                                                                                           promise))
+                                                            .build());
             return promise;
-        } catch (AmazonS3Exception exception) {
+        } catch (S3Exception exception) {
             Files.delete(dest);
-            if (exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+            if (exception.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(objectId);
             }
 
@@ -591,8 +647,15 @@ public class ObjectStore {
     public Upload uploadAsync(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
         try {
             ensureBucketExists(bucket);
-            return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, data).withMetadata(metadata),
-                                          new MonitoringProgressListener(true));
+            return transferManager.upload(UploadRequest.builder()
+                                                       .putObjectRequest(PutObjectRequest.builder()
+                                                                                         .bucket(bucket.getName())
+                                                                                         .key(objectId)
+                                                                                         .metadata(metadata.asMap())
+                                                                                         .build())
+                                                       .requestBody(AsyncRequestBody.fromFile(data))
+                                                       .addTransferListener(new MonitoringProgressListener(true))
+                                                       .build());
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
@@ -626,7 +689,7 @@ public class ObjectStore {
     public void upload(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
         try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
                                                  Duration.ofHours(4))) {
-            uploadAsync(bucket, objectId, data, metadata).waitForUploadResult();
+            uploadAsync(bucket, objectId, data, metadata).completionFuture().get();
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw Exceptions.handle()
@@ -634,6 +697,15 @@ public class ObjectStore {
                             .error(exception)
                             .withSystemErrorMessage(
                                     "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
+                                    bucket,
+                                    objectId)
+                            .handle();
+        } catch (ExecutionException exception) {
+            throw Exceptions.handle()
+                            .to(ObjectStores.LOG)
+                            .error(exception)
+                            .withSystemErrorMessage(
+                                    "An error occurred while waiting for an upload to complete: %s/%s - %s (%s)",
                                     bucket,
                                     objectId)
                             .handle();
@@ -721,7 +793,7 @@ public class ObjectStore {
             try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s",
                                                                          objectId,
                                                                          bucket), Duration.ofMinutes(30))) {
-                uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
+                uploadAsync(bucket, objectId, inputStream, contentLength, metadata).completionFuture().get();
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
                 throw Exceptions.handle()
@@ -729,6 +801,15 @@ public class ObjectStore {
                                 .error(exception)
                                 .withSystemErrorMessage(
                                         "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
+                                        bucket,
+                                        objectId)
+                                .handle();
+            } catch (ExecutionException exception) {
+                throw Exceptions.handle()
+                                .to(ObjectStores.LOG)
+                                .error(exception)
+                                .withSystemErrorMessage(
+                                        "An error occurred while waiting for an upload to complete: %s/%s - %s (%s)",
                                         bucket,
                                         objectId)
                                 .handle();
@@ -749,12 +830,15 @@ public class ObjectStore {
      */
     public void upload(BucketName bucket, String objectId, InputStream inputStream) {
         ensureBucketExists(bucket);
-        InitiateMultipartUploadResult multipartUpload =
-                getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
+        CreateMultipartUploadResponse multipartUpload = null;
         try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object %s to %s",
                                                                      objectId,
                                                                      bucket), Duration.ofHours(4))) {
-            List<PartETag> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());
+            multipartUpload = getClient().createMultipartUpload(CreateMultipartUploadRequest.builder()
+                                                                                            .bucket(bucket.getName())
+                                                                                            .key(objectId)
+                                                                                            .build()).get();
+            List<String> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.uploadId());
 
             if (ObjectStores.LOG.isFINE()) {
                 ObjectStores.LOG.FINE("Completing upload of %s to %s using %s parts...",
@@ -767,12 +851,14 @@ public class ObjectStore {
                 // If the input stream had no contents, attempting to complete the multipart upload will error out.
                 // Therefore, we abort it and put an empty string, creating an object with 0 bytes
                 abortMultipartUpload(bucket, objectId, multipartUpload);
-                getClient().putObject(bucket.getName(), objectId, "");
+                getClient().putObject(PutObjectRequest.builder().bucket(bucket.getName()).key(objectId).build(),
+                                      AsyncRequestBody.fromString(""));
             } else {
-                getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
-                                                                                       objectId,
-                                                                                       multipartUpload.getUploadId(),
-                                                                                       eTags));
+                getClient().completeMultipartUpload(CompleteMultipartUploadRequest.builder()
+                                                                                  .bucket(bucket.getName())
+                                                                                  .key(objectId)
+                                                                                  .uploadId(multipartUpload.uploadId())
+                                                                                  .build());
             }
         } catch (Exception exception) {
             abortMultipartUpload(bucket, objectId, multipartUpload);
@@ -796,22 +882,24 @@ public class ObjectStore {
 
     private void abortMultipartUpload(BucketName bucket,
                                       String objectId,
-                                      InitiateMultipartUploadResult multipartUpload) {
-        getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
-                                                                         objectId,
-                                                                         multipartUpload.getUploadId()));
+                                      CreateMultipartUploadResponse multipartUpload) {
+        getClient().abortMultipartUpload(AbortMultipartUploadRequest.builder()
+                                                                    .bucket(bucket.getName())
+                                                                    .key(objectId)
+                                                                    .uploadId(multipartUpload.uploadId())
+                                                                    .build());
     }
 
     @Nonnull
-    protected List<PartETag> uploadInChunks(BucketName bucket,
-                                            String objectId,
-                                            InputStream inputStream,
-                                            String multipartUploadId) throws IOException {
+    protected List<String> uploadInChunks(BucketName bucket,
+                                          String objectId,
+                                          InputStream inputStream,
+                                          String multipartUploadId) throws IOException {
         if (ObjectStores.LOG.isFINE()) {
             ObjectStores.LOG.FINE("Uploading %s to %s", objectId, bucket);
         }
 
-        List<PartETag> eTags = new ArrayList<>();
+        List<String> eTags = new ArrayList<>();
         int partNumber = 1;
 
         ByteBuf localAggregationBuffer = Unpooled.buffer(INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE);
@@ -838,11 +926,11 @@ public class ObjectStore {
         return eTags;
     }
 
-    protected PartETag uploadChunk(BucketName bucket,
-                                   String objectId,
-                                   String multipartUploadId,
-                                   ByteBuf buffer,
-                                   int partNumber) {
+    protected String uploadChunk(BucketName bucket,
+                                 String objectId,
+                                 String multipartUploadId,
+                                 ByteBuf buffer,
+                                 int partNumber) {
         if (ObjectStores.LOG.isFINE()) {
             ObjectStores.LOG.FINE("Uploading %s bytes (part %s) for %s to %s",
                                   buffer.readableBytes(),
@@ -851,13 +939,15 @@ public class ObjectStore {
                                   bucket);
         }
 
-        UploadPartRequest request = new UploadPartRequest().withBucketName(bucket.getName())
-                                                           .withKey(objectId)
-                                                           .withUploadId(multipartUploadId)
-                                                           .withPartNumber(partNumber)
-                                                           .withPartSize(buffer.readableBytes())
-                                                           .withInputStream(new ByteBufInputStream(buffer));
-        return getClient().uploadPart(request).getPartETag();
+        UploadPartRequest request = UploadPartRequest.builder()
+                                                     .bucket(bucket.getName())
+                                                     .key(objectId)
+                                                     .uploadId(multipartUploadId)
+                                                     .partNumber(partNumber)
+                                                     .build();
+        return getClient().uploadPart(request,
+                                      RequestBody.fromInputStream(new ByteBufInputStream(buffer),
+                                                                  buffer.readableBytes())).eTag();
     }
 
     @Override

@@ -8,14 +8,6 @@
 
 package sirius.biz.storage.s3;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.util.AwsHostNameUtils;
 import sirius.kernel.Sirius;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -28,6 +20,14 @@ import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 import sirius.kernel.settings.PortMapper;
 import sirius.kernel.settings.Settings;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.awscore.util.AwsHostNameUtils;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -135,7 +135,7 @@ public class ObjectStores {
             throw Exceptions.handle().to(LOG).withSystemErrorMessage("Unknown object store: %s", name).handle();
         }
 
-        AmazonS3 newClient = createClient(name, extension);
+        S3AsyncClient newClient = createClient(name, extension);
         result = new ObjectStore(this, name, newClient, extension.get(KEY_BUCKET_SUFFIX).asString());
 
         stores.put(name, result);
@@ -143,39 +143,46 @@ public class ObjectStores {
         return result;
     }
 
-    protected AmazonS3 createClient(String name, Settings extension) {
-        ClientConfiguration config =
-                new ClientConfiguration().withSocketTimeout((int) extension.getDuration(KEY_SOCKET_TIMEOUT).toMillis())
-                                         .withConnectionTimeout((int) extension.getDuration(KEY_CONNECTION_TIMEOUT)
-                                                                               .toMillis())
-                                         .withMaxConnections(extension.getInt(KEY_MAX_CONNECTIONS));
+    protected S3AsyncClient createClient(String name, Settings extension) {
+        // TODO SIRI-1025: Make relevant timeouts configurable again
+        NettyNioAsyncHttpClient.Builder httpClientBuilder = NettyNioAsyncHttpClient.builder()
+//                                                                                   .socketTimeout(extension.getDuration(
+//                                                                                           KEY_SOCKET_TIMEOUT))
+                                                                                   .connectionTimeout(extension.getDuration(
+                                                                                           KEY_CONNECTION_TIMEOUT));
+//                                                                                   .maxConnections(extension.getInt(
+//                                                                                           KEY_MAX_CONNECTIONS));
         Duration connectionTTL = extension.getDuration(KEY_CONNECTION_TTL);
         if (connectionTTL.isPositive()) {
-            config.setConnectionTTL(connectionTTL.toMillis());
+            httpClientBuilder.connectionTimeToLive(connectionTTL);
         }
+
+        ClientOverrideConfiguration.Builder overrideBuilder = ClientOverrideConfiguration.builder();
 
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
-            config.withSignerOverride(extension.get(KEY_SIGNER).asString());
+            // TODO SIRI-1025 still necessary?
+//            overrideBuilder.putAdvancedOption(SdkAdvancedClientOption.SIGNER, extension.get(KEY_SIGNER).asString());
         }
 
-        AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard()
-                                                                   .withPathStyleAccessEnabled(extension.get(
-                                                                           KEY_PATH_STYLE_ACCESS).asBoolean())
-                                                                   .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
-                                                                           extension.get(KEY_ACCESS_KEY).asString(),
-                                                                           extension.get(KEY_SECRET_KEY).asString())))
-                                                                   .withClientConfiguration(config);
+        S3AsyncClientBuilder clientBuilder = S3AsyncClient.builder()
+                                                          .forcePathStyle(extension.get(KEY_PATH_STYLE_ACCESS)
+                                                                                   .asBoolean())
+                                                          .credentialsProvider(StaticCredentialsProvider.create(
+                                                                  AwsBasicCredentials.create(extension.get(
+                                                                                                     KEY_ACCESS_KEY).asString(),
+                                                                                             extension.get(
+                                                                                                              KEY_SECRET_KEY)
+                                                                                                      .asString())))
+                                                          .httpClient(httpClientBuilder.build())
+                                                          .overrideConfiguration(overrideBuilder.build());
 
         try {
             URI endpoint = URI.create(extension.get(KEY_END_POINT).asString());
             int defaultPort =
                     PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getScheme()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
-            clientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(mapEndpoint(name,
-                                                                                                           endpoint,
-                                                                                                           defaultPort),
-                                                                                               AwsHostNameUtils.parseRegion(
-                                                                                                       endpoint.getHost(),
-                                                                                                       AmazonS3Client.S3_SERVICE_NAME)));
+            AwsHostNameUtils.parseSigningRegion(endpoint.getHost(), S3Client.SERVICE_NAME)
+                            .ifPresent(clientBuilder::region);
+            clientBuilder.endpointOverride(mapEndpoint(name, endpoint, defaultPort));
         } catch (URISyntaxException exception) {
             throw Exceptions.handle()
                             .error(exception)
@@ -189,7 +196,7 @@ public class ObjectStores {
         return clientBuilder.build();
     }
 
-    private String mapEndpoint(String name, URI endpoint, int defaultPort) throws URISyntaxException {
+    private URI mapEndpoint(String name, URI endpoint, int defaultPort) throws URISyntaxException {
         Tuple<String, Integer> hostAndPort = PortMapper.mapPort(SERVICE_PREFIX_S3 + name,
                                                                 endpoint.getHost(),
                                                                 endpoint.getPort() < 0 ?
@@ -202,6 +209,6 @@ public class ObjectStores {
                        Integer.valueOf(defaultPort).equals(hostAndPort.getSecond()) ? -1 : hostAndPort.getSecond(),
                        endpoint.getPath(),
                        endpoint.getQuery(),
-                       endpoint.getFragment()).toString();
+                       endpoint.getFragment());
     }
 }
