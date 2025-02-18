@@ -40,6 +40,7 @@ import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
@@ -465,7 +466,9 @@ public class ObjectStore {
      * @return a download URL for the object
      */
     public String url(BucketName bucket, String objectId) {
-        return getClient().getUrl(bucket.getName(), objectId).toString();
+        return getClient().utilities()
+                          .getUrl(GetUrlRequest.builder().bucket(bucket.getName()).key(objectId).build())
+                          .toString();
     }
 
     /**
