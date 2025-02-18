@@ -20,6 +20,7 @@
         <sirius.kernel>dev-44.3.0</sirius.kernel>
         <sirius.web>dev-88.1.0</sirius.web>
         <sirius.db>dev-60.0.2</sirius.db>
+        <aws.sdk>2.30.12</aws.sdk>
     </properties>
 
     <repositories>
@@ -127,9 +128,19 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.771</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>${aws.sdk}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3-transfer-manager</artifactId>
+            <version>${aws.sdk}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>netty-nio-client</artifactId>
+            <version>${aws.sdk}</version>
         </dependency>
         <!--
          required by aws-java-sdk-s3, can't switch to jakarta.xml.bind-api as
