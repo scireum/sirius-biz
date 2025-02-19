@@ -9,10 +9,10 @@
 
 <div class="col mb-4">
     <div class="card card-border card-hover-shadow cursor-pointer w-100 @class">
-        <a onclick="openImageOverlay('@imageUrl')">
+        <a onclick="openImageOverlay('@url')">
             <div class="d-flex flex-grow-1 flex-column">
                 <div class="d-flex flex-grow-1 flex-row">
-                    <img src="@imageUrl"
+                    <img src="@url"
                          class="img-fluid"
                          style="height: 150px;width: 240px; object-fit: cover;"
                          alt="Preview"/>
