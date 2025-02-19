@@ -177,7 +177,7 @@ public class BlobDispatcher implements WebDispatcher {
      * @param blobUri the parsed blob URI
      */
     private void physicalDelivery(WebContext request, BlobUri blobUri) {
-        Response response = request.respondWith();
+        Response response = buildResponse(request);
         Integer cacheSeconds = computeCacheDurationFromHash(blobUri.getAccessToken(),
                                                             blobUri.getPhysicalKey(),
                                                             blobUri.getStorageSpace());
@@ -248,7 +248,7 @@ public class BlobDispatcher implements WebDispatcher {
         String variant = blobUri.getVariant();
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
 
-        Response response = request.respondWith();
+        Response response = buildResponse(request);
         Integer cacheSeconds =
                 computeCacheDurationFromHash(blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace());
         if (cacheSeconds == null) {
@@ -299,6 +299,18 @@ public class BlobDispatcher implements WebDispatcher {
                              variant != null ? variant : URLBuilder.VARIANT_RAW,
                              response,
                              request::markAsLongCall);
+    }
+
+    /**
+     * Builds the standard response for blob storage URLs which includes headers to prevent indexing by search engines.
+     *
+     * @param request the request to respond to
+     * @return the response to send
+     */
+    private Response buildResponse(WebContext request) {
+        Response response = request.respondWith();
+        response.addHeader("X-Robots-Tag", "noindex, nofollow");
+        return response;
     }
 
     private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace,
