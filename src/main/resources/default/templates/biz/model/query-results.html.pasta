@@ -112,7 +112,15 @@
                                                                             @enumValue.as(java.lang.Enum.class).name()
                                                                         </t:tag>
                                                                         <i:else>
-                                                                            @toUserString(property.getValue(entity))
+                                                                            <i:if test="property.is(sirius.db.mixing.properties.AmountProperty.class) && property.getValue(entity) != null">
+                                                                                <i:local name="amountValue" value="property.getValue(entity).as(sirius.kernel.commons.Amount.class)"/>
+                                                                                <i:local name="numberFormat" value="property.as(sirius.db.mixing.properties.AmountProperty.class).getAnnotatedNumberFormat().orElse(sirius.kernel.commons.NumberFormat.TWO_DECIMAL_PLACES)"/>
+                                                                                @amountValue.toString(numberFormat)
+
+                                                                                <i:else>
+                                                                                    @toUserString(property.getValue(entity))
+                                                                                </i:else>
+                                                                            </i:if>
                                                                         </i:else>
                                                                     </i:if>
                                                                 </i:else>
