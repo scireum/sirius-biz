@@ -14,7 +14,7 @@
                 <div class="d-flex flex-grow-1 flex-row">
                     <img src="@imageUrl"
                          class="img-fluid"
-                         style="height: 150px;width: 300px; object-fit: cover;"
+                         style="height: 150px;width: 240px; object-fit: cover;"
                          alt="Preview"/>
                     <div class="w-75 m-2 flex-column">
                         <p class="card-text sci-text-align-left">@title</p>
