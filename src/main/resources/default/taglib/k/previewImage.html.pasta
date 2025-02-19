@@ -1,6 +1,6 @@
 <i:arg type="String" name="url" description="Contains the url to the image."/>
 <i:arg type="String" name="title" description="Contains the title for the image."/>
-<i:arg type="String" name="description" description="Contains the description for the image."/>
+<i:arg type="String" name="description" description="Contains the description for the image." default=""/>
 <i:arg type="String" name="class" description="Contains additional classes for the card." default=""/>
 
 <i:pragma name="description">
