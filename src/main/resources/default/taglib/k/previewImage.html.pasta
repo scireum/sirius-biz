@@ -1,0 +1,36 @@
+<i:arg type="String" name="url" description="Contains the url to the image."/>
+<i:arg type="String" name="title" description="Contains the title for the image."/>
+<i:arg type="String" name="description" description="Contains the description for the image." default=""/>
+<i:arg type="String" name="class" description="Contains additional classes for the card." default=""/>
+
+<i:pragma name="description">
+    Shows a preview for an image.
+</i:pragma>
+
+<div class="col mb-4">
+    <div class="card card-border card-hover-shadow cursor-pointer w-100 @class">
+        <a onclick="openImageOverlay('@url')">
+            <div class="d-flex flex-grow-1 flex-column">
+                <div class="d-flex flex-grow-1 flex-row">
+                    <img src="@url"
+                         class="img-fluid"
+                         style="height: 150px;width: 240px; object-fit: cover;"
+                         alt="Preview"/>
+                    <div class="w-75 m-2 flex-column">
+                        <p class="card-text sci-text-align-left">@title</p>
+                        <p class="card-text sci-text-align-left text-muted">@description</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function openImageOverlay(imageUrl) {
+        const content = '<img src="' + imageUrl + '" class="img-fluid w-100" alt=""/>';
+
+        sirius.overlay.createOverlay({closable: true, yieldable: true, useFullScreen: true, content: content});
+        sirius.overlay.showOverlay();
+    }
+</script>
