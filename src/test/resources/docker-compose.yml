@@ -1,12 +1,12 @@
 services:
   redis:
-    image: redis:7.2.6-alpine
+    image: redis:7.4.2-alpine
     ports:
       - "6379"
     hostname: redis
 
   redis-jupiter:
-    image: scireum/jupiter-io:3.1.3
+    image: scireum/jupiter-io:3.1.4
     ports:
       - "2410"
     hostname: redis-jupiter
@@ -18,7 +18,7 @@ services:
     hostname: mongo
 
   mariadb:
-    image: mariadb:11.4.2-noble
+    image: mariadb:11.4.5-noble
     ports:
       - "3306"
     environment:
@@ -31,7 +31,7 @@ services:
       - "9000"
     hostname: clickhouse
   elasticsearch:
-    image: elasticsearch:8.15.3
+    image: elasticsearch:8.17.2
     ports:
       - "9200"
     environment:
