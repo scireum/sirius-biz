@@ -177,7 +177,7 @@ public class BlobDispatcher implements WebDispatcher {
      * @param blobUri the parsed blob URI
      */
     private void physicalDelivery(WebContext request, BlobUri blobUri) {
-        Response response = request.respondWith();
+        Response response = request.respondWith().preventSearchEngineIndexing();
         Integer cacheSeconds = computeCacheDurationFromHash(blobUri.getAccessToken(),
                                                             blobUri.getPhysicalKey(),
                                                             blobUri.getStorageSpace());
@@ -248,7 +248,7 @@ public class BlobDispatcher implements WebDispatcher {
         String variant = blobUri.getVariant();
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
 
-        Response response = request.respondWith();
+        Response response = request.respondWith().preventSearchEngineIndexing();
         Integer cacheSeconds =
                 computeCacheDurationFromHash(blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace());
         if (cacheSeconds == null) {
