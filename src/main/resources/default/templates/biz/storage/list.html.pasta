@@ -122,7 +122,7 @@
                                                     </div>
                                                 </i:if>
                                             </a>
-                                            <small class="text-muted">
+                                            <small class="text-muted" style="display:table-caption;width: 300%;">
                                                 <i:if test="isFilled(child.htmlDescription())">
                                                     <i:raw>@child.htmlDescription()</i:raw>
                                                     <i:else>
