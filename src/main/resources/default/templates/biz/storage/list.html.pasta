@@ -122,14 +122,16 @@
                                                     </div>
                                                 </i:if>
                                             </a>
-                                            <small class="text-muted" style="display:table-caption;width: 300%;">
-                                                <i:if test="isFilled(child.htmlDescription())">
-                                                    <i:raw>@child.htmlDescription()</i:raw>
-                                                    <i:else>
-                                                        @child.description()
-                                                    </i:else>
-                                                </i:if>
-                                            </small>
+                                            <div class="col-6">
+                                                <small class="text-muted">
+                                                    <i:if test="isFilled(child.htmlDescription())">
+                                                        <i:raw>@child.htmlDescription()</i:raw>
+                                                        <i:else>
+                                                            @child.description()
+                                                        </i:else>
+                                                    </i:if>
+                                                </small>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="text-end">
