@@ -8,29 +8,47 @@
 </i:pragma>
 
 <div class="col mb-4">
-    <div class="card card-border card-hover-shadow cursor-pointer w-100 @class">
-        <a onclick="openImageOverlay('@url')">
-            <div class="d-flex flex-grow-1 flex-column">
-                <div class="d-flex flex-grow-1 flex-row">
+    <div class="card w-100 @class">
+        <div class="d-flex flex-grow-1 flex-column">
+            <div class="d-flex flex-grow-1 flex-row">
+                <a onclick="openImageOverlay('@url')">
                     <img src="@url"
-                         class="img-fluid"
-                         style="height: 150px;width: 240px; object-fit: cover;"
+                         class="img-fluid cursor-pointer sci-preview-image sci-object-fit-contain card card-hover-shadow card-border"
                          alt="Preview"/>
-                    <div class="w-75 m-2 flex-column">
-                        <p class="card-text sci-text-align-left">@title</p>
-                        <p class="card-text sci-text-align-left text-muted">@description</p>
-                    </div>
+                </a>
+                <div class="w-75 m-4 flex-column align-content-center">
+                    <p class="card-text sci-text-align-left h5">@title</p>
+                    <p class="card-text sci-text-align-left text-muted">@description</p>
                 </div>
             </div>
-        </a>
+        </div>
     </div>
 </div>
 
 <script type="text/javascript">
     function openImageOverlay(imageUrl) {
-        const content = '<img src="' + imageUrl + '" class="img-fluid w-100" alt=""/>';
+        const content = '<div class="sci-overlay-content sci-kba-image-overlay d-flex justify-content-center sci-align-items-center sci-h-100 sci-w-100 sci-bg-white">' +
+            '<img src="' + imageUrl + '" class="img-fluid" alt=""/>' +
+            '</div>';
 
-        sirius.overlay.createOverlay({closable: true, yieldable: true, useFullScreen: true, content: content});
+        sirius.overlay.createOverlay({closable: true, yieldable: true, useFullScreen: false, content: content});
         sirius.overlay.showOverlay();
     }
 </script>
+
+<style>
+    .sci-preview-image {
+        height: 110px;
+        width: 200px;
+    }
+
+    .sci-kba-image-overlay img {
+        max-width: calc(100% - 2 * var(--sci-margin-2));
+        max-height: calc(100% - 2 * var(--sci-margin-2));
+        min-width: 50%;
+        min-height: 50%;
+        object-fit: contain;
+        margin: var(--sci-margin-2);
+        box-sizing: border-box;
+    }
+</style>
