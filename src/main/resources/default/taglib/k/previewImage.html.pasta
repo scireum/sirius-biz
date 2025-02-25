@@ -43,7 +43,7 @@
     .sci-preview-image {
         height: 150px;
         width: 240px;
-        object-fit: cover;
+        object-fit: contain;
     }
 
     .sci-overlay-content {
