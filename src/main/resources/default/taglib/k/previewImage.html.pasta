@@ -27,7 +27,7 @@
 
 <script type="text/javascript">
     function openImageOverlay(imageUrl) {
-        const content = '<div class="sci-overlay-content sci-kba-image-overlay sci-d-flex sci-justify-content-center sci-align-items-center sci-h-100 sci-w-100 sci-bg-white">' +
+        const content = '<div class="sci-overlay-content sci-kba-image-overlay d-flex justify-content-center sci-align-items-center sci-h-100 sci-w-100 sci-bg-white">' +
             '<img src="' + imageUrl + '" class="img-fluid" alt=""/>' +
             '</div>';
 
