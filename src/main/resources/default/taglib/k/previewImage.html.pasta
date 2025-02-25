@@ -41,8 +41,8 @@
     }
 
     .sci-preview-image {
-        height: 150px;
-        width: 240px;
+        height: 110px;
+        width: 200px;
         object-fit: contain;
     }
 
