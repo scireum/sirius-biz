@@ -17,7 +17,7 @@
                          alt="Preview"/>
                 </a>
                 <div class="w-75 m-4 flex-column align-content-center">
-                    <p class="card-text sci-text-align-left sci-preview-image-title">@title</p>
+                    <p class="card-text sci-text-align-left h5">@title</p>
                     <p class="card-text sci-text-align-left text-muted">@description</p>
                 </div>
             </div>
@@ -35,11 +35,6 @@
 </script>
 
 <style>
-    .sci-preview-image-title {
-        font-size: 1.20rem;
-        font-weight: 500;
-    }
-
     .sci-preview-image {
         height: 110px;
         width: 200px;
