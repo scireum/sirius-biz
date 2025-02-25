@@ -34,3 +34,35 @@
         sirius.overlay.showOverlay();
     }
 </script>
+
+<style>
+    .sci-preview-image-title {
+        font-size: 1.20rem;
+        font-weight: 500;
+    }
+
+    .sci-preview-image {
+        height: 150px;
+        width: 240px;
+        object-fit: cover;
+    }
+
+    .sci-overlay-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+
+    }
+
+    .sci-overlay-content img {
+        max-width: calc(100% - 2 * var(--sci-margin-2));
+        max-height: calc(100% - 2 * var(--sci-margin-2));
+        min-width: 50%;
+        min-height: 50%;
+        object-fit: contain;
+        margin: var(--sci-margin-2);
+        box-sizing: border-box;
+    }
+</style>
