@@ -13,7 +13,7 @@
             <div class="d-flex flex-grow-1 flex-row">
                 <a onclick="openImageOverlay('@url')">
                     <img src="@url"
-                         class="img-fluid cursor-pointer sci-preview-image sci-border-solid-1 sci-border-gray"
+                         class="img-fluid cursor-pointer sci-preview-image card card-hover-shadow card-border"
                          alt="Preview"/>
                 </a>
                 <div class="w-75 m-4 flex-column align-content-center">
