@@ -8,21 +8,20 @@
 </i:pragma>
 
 <div class="col mb-4">
-    <div class="card card-border card-hover-shadow cursor-pointer w-100 @class">
-        <a onclick="openImageOverlay('@url')">
-            <div class="d-flex flex-grow-1 flex-column">
-                <div class="d-flex flex-grow-1 flex-row">
+    <div class="card w-100 @class">
+        <div class="d-flex flex-grow-1 flex-column">
+            <div class="d-flex flex-grow-1 flex-row">
+                <a onclick="openImageOverlay('@url')">
                     <img src="@url"
-                         class="img-fluid"
-                         style="height: 150px;width: 240px; object-fit: cover;"
+                         class="img-fluid cursor-pointer sci-preview-image"
                          alt="Preview"/>
-                    <div class="w-75 m-2 flex-column">
-                        <p class="card-text sci-text-align-left">@title</p>
-                        <p class="card-text sci-text-align-left text-muted">@description</p>
-                    </div>
+                </a>
+                <div class="w-75 m-4 flex-column align-content-center">
+                    <p class="card-text sci-text-align-left sci-preview-image-title">@title</p>
+                    <p class="card-text sci-text-align-left text-muted">@description</p>
                 </div>
             </div>
-        </a>
+        </div>
     </div>
 </div>
 
