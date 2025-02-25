@@ -27,7 +27,9 @@
 
 <script type="text/javascript">
     function openImageOverlay(imageUrl) {
-        const content = '<div class="sci-overlay-content"><div class="sci-kba-image-overlay"><img src="' + imageUrl + '" class="img-fluid" alt=""/></div></div>';
+        const content = '<div class="sci-overlay-content sci-kba-image-overlay sci-d-flex sci-justify-content-center sci-align-items-center sci-h-100 sci-w-100 sci-bg-white">' +
+            '<img src="' + imageUrl + '" class="img-fluid" alt=""/>' +
+            '</div>';
 
         sirius.overlay.createOverlay({closable: true, yieldable: true, useFullScreen: false, content: content});
         sirius.overlay.showOverlay();
@@ -38,15 +40,6 @@
     .sci-preview-image {
         height: 110px;
         width: 200px;
-    }
-
-    .sci-kba-image-overlay {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-        width: 100%;
-        background-color: white;
     }
 
     .sci-kba-image-overlay img {
