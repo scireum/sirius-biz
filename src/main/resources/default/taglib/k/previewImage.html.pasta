@@ -28,7 +28,7 @@
 
 <script type="text/javascript">
     function openImageOverlay(imageUrl) {
-        const content = '<img src="' + imageUrl + '" class="img-fluid w-100" alt=""/>';
+        const content = '<div class="sci-overlay-content"><img src="' + imageUrl + '" class="img-fluid" alt=""/></div>';
 
         sirius.overlay.createOverlay({closable: true, yieldable: true, useFullScreen: true, content: content});
         sirius.overlay.showOverlay();
