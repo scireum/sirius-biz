@@ -29,7 +29,7 @@
     function openImageOverlay(imageUrl) {
         const content = '<div class="sci-overlay-content"><img src="' + imageUrl + '" class="img-fluid" alt=""/></div>';
 
-        sirius.overlay.createOverlay({closable: true, yieldable: true, useFullScreen: true, content: content});
+        sirius.overlay.createOverlay({closable: true, yieldable: true, useFullScreen: false, content: content});
         sirius.overlay.showOverlay();
     }
 </script>
