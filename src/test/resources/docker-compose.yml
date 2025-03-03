@@ -31,7 +31,7 @@ services:
       - "9000"
     hostname: clickhouse
   elasticsearch:
-    image: elasticsearch:8.17.2
+    image: elasticsearch:8.15.3
     ports:
       - "9200"
     environment:
