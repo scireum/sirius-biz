@@ -482,6 +482,15 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
+     * Determines if the requested object exists.
+     *
+     * @param objectKey the id of the object
+     * @return <tt>true</tt> if the object exists, <tt>false</tt> otherwise
+     * @throws IOException in case of an IO error
+     */
+    public abstract boolean exists(String objectKey) throws IOException;
+
+    /**
      * Provides the contents of the request object as input stream.
      *
      * @param objectKey the id of the object
