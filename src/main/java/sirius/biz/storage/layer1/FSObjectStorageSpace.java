@@ -186,7 +186,9 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
         File file = getFile(objectKey);
 
         if (file.isHidden() || !file.exists() || !file.isFile()) {
-            failureHandler.accept(HttpResponseStatus.NOT_FOUND.code());
+            if (failureHandler != null) {
+                failureHandler.accept(HttpResponseStatus.NOT_FOUND.code());
+            }
             return;
         }
 
