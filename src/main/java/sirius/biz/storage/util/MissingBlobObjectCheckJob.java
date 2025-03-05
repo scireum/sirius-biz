@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.util;
 
+import com.rometools.utils.Strings;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.ArchiveExportJob;
 import sirius.biz.jobs.params.Parameter;
@@ -16,22 +17,36 @@ import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.biz.storage.layer2.Blob;
+import sirius.db.mixing.BaseEntity;
+import sirius.kernel.async.ParallelTaskExecutor;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.CSVWriter;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 /**
  * This job is used to verify the actual existence of physical IDs of blobs for the selected {@linkplain ObjectStorageSpace storage space}.
+ *
+ * @param <B> the type of the blob being checked
+ * @param <I> the type of the ID of the blob being checked
  */
-public abstract class MissingBlobObjectCheckJob extends ArchiveExportJob {
+public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends ArchiveExportJob {
 
     @Part
     private static ObjectStorage objectStorage;
+
+    @ConfigValue("storage.layer1.missingBlobObjectCheckParallelTasks")
+    private static int parallelTasks;
 
     /**
      * The parameter name which specifies the storage space to be checked.
@@ -66,13 +81,63 @@ public abstract class MissingBlobObjectCheckJob extends ArchiveExportJob {
         writer = new CSVWriter(new OutputStreamWriter(outputStream));
         try {
             writer.writeArray("id", "blobKey", "physicalObjectKey", "filename", "lastModified");
+
+            I lastId = null;
+            while (TaskContext.get().isActive()) {
+                List<B> blobs = fetchNextBlobBatch(lastId);
+                if (blobs.isEmpty()) {
+                    break;
+                }
+
+                ParallelTaskExecutor executor = new ParallelTaskExecutor(parallelTasks);
+                for (B blob : blobs) {
+                    lastId = fetchBlobId(blob);
+                    executor.submitTask(() -> processBlob(blob));
+                }
+                executor.shutdownWhenDone();
+            }
         } finally {
             writer.close();
         }
     }
 
-    private String getStorageSpaceName() {
+    @SuppressWarnings("unchecked")
+    private I fetchBlobId(B blob) {
+        return ((BaseEntity<I>) blob).getId();
+    }
+
+    protected void processBlob(B blob) {
+        incrementCounter("total-blobs");
+        String physicalObjectKey = blob.getPhysicalObjectKey();
+        if (Strings.isEmpty(physicalObjectKey)) {
+            return;
+        }
+        try {
+            if (!storageSpace.exists(physicalObjectKey)) {
+                incrementCounter("missing-blobs");
+                writeLine(fetchBlobId(blob),
+                          blob.getBlobKey(),
+                          physicalObjectKey,
+                          blob.getFilename(),
+                          NLS.toMachineString(blob.getLastModified()));
+            }
+        } catch (IOException exception) {
+            process.handle(exception);
+        }
+    }
+
+    protected abstract List<B> fetchNextBlobBatch(I lastId);
+
+    protected String getStorageSpaceName() {
         return process.get(STORAGE_SPACE_PARAMETER).asString();
+    }
+
+    private synchronized void writeLine(Object... columns) throws IOException {
+        writer.writeArray(columns);
+    }
+
+    private synchronized void incrementCounter(String counter) {
+        process.incCounter(counter);
     }
 
     /**

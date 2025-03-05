@@ -9,18 +9,27 @@
 package sirius.biz.storage.util;
 
 import sirius.biz.process.ProcessContext;
+import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.layer2.mongo.MongoBlobStorage;
 import sirius.biz.tenants.TenantUserManager;
-import sirius.kernel.di.std.Framework;
+import sirius.db.mongo.Mango;
+import sirius.db.mongo.MongoQuery;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Implementation for the {@link MissingBlobObjectCheckJob} using the {@link MongoBlobStorage#FRAMEWORK_MONGO_BLOB_STORAGE}.
  */
-public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob {
+public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<MongoBlob, String> {
+
+    @Part
+    private static Mango mango;
+
     /**
      * Creates a new batch job for the given batch process.
      * <p>
@@ -31,6 +40,18 @@ public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob {
      */
     protected MissingMongoBlobObjectCheckJob(ProcessContext process) {
         super(process);
+    }
+
+    @Override
+    protected List<MongoBlob> fetchNextBlobBatch(String lastId) {
+        MongoQuery<MongoBlob> query = mango.select(MongoBlob.class)
+                                           .eq(MongoBlob.SPACE_NAME, getStorageSpaceName())
+                                           .eq(MongoBlob.DELETED, false)
+                                           .eq(MongoBlob.COMMITTED, true);
+        if (Strings.isFilled(lastId)) {
+            query.where(mango.filters().gt(MongoBlob.ID, lastId));
+        }
+        return query.orderAsc(MongoBlob.ID).queryList();
     }
 
     /**
