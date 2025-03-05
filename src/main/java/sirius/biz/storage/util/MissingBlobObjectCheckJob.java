@@ -11,6 +11,7 @@ package sirius.biz.storage.util;
 import com.rometools.utils.Strings;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.ArchiveExportJob;
+import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.PersistencePeriod;
@@ -52,9 +53,11 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
      * The parameter name which specifies the storage space to be checked.
      */
     public static final String STORAGE_SPACE_PARAMETER = "space";
+    public static final String INCLUDE_REPLICATION_SPACE_PARAMETER = "includeReplicationSpace";
 
     protected CSVWriter writer;
     protected ObjectStorageSpace storageSpace;
+    private boolean includeReplicationSpace;
 
     /**
      * Creates a new batch job for the given batch process.
@@ -77,10 +80,11 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
     public void execute() throws Exception {
         String spaceName = getStorageSpaceName();
         storageSpace = objectStorage.getSpace(spaceName);
+        includeReplicationSpace = process.get(INCLUDE_REPLICATION_SPACE_PARAMETER).asBoolean(false);
         OutputStream outputStream = createEntry(spaceName + ".csv");
         writer = new CSVWriter(new OutputStreamWriter(outputStream));
         try {
-            writer.writeArray("id", "blobKey", "physicalObjectKey", "filename", "lastModified");
+            writer.writeArray("id", "blobKey", "physicalObjectKey", "filename", "lastModified", "foundInReplication");
 
             I lastId = null;
             while (TaskContext.get().isActive()) {
@@ -119,7 +123,8 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
                           blob.getBlobKey(),
                           physicalObjectKey,
                           blob.getFilename(),
-                          NLS.toMachineString(blob.getLastModified()));
+                          NLS.toMachineString(blob.getLastModified()),
+                          existsInReplicationSpace(physicalObjectKey));
             }
         } catch (IOException exception) {
             process.handle(exception);
@@ -138,6 +143,13 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
 
     private synchronized void incrementCounter(String counter) {
         process.incCounter(counter);
+    }
+
+    private String existsInReplicationSpace(String objectId) throws IOException {
+        if (includeReplicationSpace && storageSpace.hasReplicationSpace()) {
+            return String.valueOf(storageSpace.getReplicationSpace().exists(objectId));
+        }
+        return "-";
     }
 
     /**
@@ -161,14 +173,16 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
         @Override
         protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
             SelectStringParameter spaceParameter =
-                    new SelectStringParameter(MissingBlobObjectCheckJob.STORAGE_SPACE_PARAMETER,
-                                              "Storage Space").markRequired();
+                    new SelectStringParameter(STORAGE_SPACE_PARAMETER, "Storage Space").markRequired();
             objectStorage.getSpaces()
                          .stream()
                          .map(ObjectStorageSpace::getName)
                          .forEach(spaceName -> spaceParameter.withEntry(spaceName, spaceName));
             parameterCollector.accept(spaceParameter.withDescription("Storage space to scan for missing objects.")
                                                     .build());
+            parameterCollector.accept(new BooleanParameter(INCLUDE_REPLICATION_SPACE_PARAMETER,
+                                                           "Include Replication Space").withDescription(
+                    "Search for missing objects in the replication space, if one is configured.").build());
         }
 
         @Override
