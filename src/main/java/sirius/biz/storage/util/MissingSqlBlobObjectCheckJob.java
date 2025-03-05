@@ -50,8 +50,19 @@ public class MissingSqlBlobObjectCheckJob extends MissingBlobObjectCheckJob<SQLB
                                        .eq(SQLBlob.COMMITTED, true);
         if (Strings.isFilled(lastId)) {
             query.where(oma.filters().gt(SQLBlob.ID, lastId));
+        } else {
+            long startId = fetchStartId();
+            if (startId > 0L) {
+                // This is the first query, and we want to start from a specific ID
+                query.where(oma.filters().gte(SQLBlob.ID, startId));
+            }
         }
         return query.orderAsc(SQLBlob.ID).queryList();
+    }
+
+    @Override
+    protected Long fetchStartId() {
+        return process.get(START_FROM_ID_PARAMETER).asLong(0L);
     }
 
     /**

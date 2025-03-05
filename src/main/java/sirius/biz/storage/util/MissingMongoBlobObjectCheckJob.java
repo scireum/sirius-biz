@@ -50,8 +50,19 @@ public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<Mo
                                            .eq(MongoBlob.COMMITTED, true);
         if (Strings.isFilled(lastId)) {
             query.where(mango.filters().gt(MongoBlob.ID, lastId));
+        } else {
+            String startId = fetchStartId();
+            if (Strings.isFilled(startId)) {
+                // This is the first query, and we want to start from a specific ID
+                query.where(mango.filters().gte(MongoBlob.ID, startId));
+            }
         }
         return query.orderAsc(MongoBlob.ID).queryList();
+    }
+
+    @Override
+    protected String fetchStartId() {
+        return process.get(START_FROM_ID_PARAMETER).asString();
     }
 
     /**

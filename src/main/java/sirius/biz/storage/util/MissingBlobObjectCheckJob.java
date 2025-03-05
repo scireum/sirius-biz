@@ -15,8 +15,10 @@ import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.IntParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
+import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.layer2.Blob;
@@ -54,6 +56,7 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
     public static final String STORAGE_SPACE_PARAMETER = "space";
     public static final String INCLUDE_REPLICATION_SPACE_PARAMETER = "includeReplicationSpace";
     public static final String PARALLEL_TASKS_PARAMETER = "parallelTasksParameter";
+    public static final String START_FROM_ID_PARAMETER = "startFromId";
 
     protected CSVWriter writer;
     protected ObjectStorageSpace storageSpace;
@@ -88,11 +91,13 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
             writer.writeArray("id", "blobKey", "physicalObjectKey", "filename", "lastModified", "foundInReplication");
 
             I lastId = null;
+            I firstIdInBlock = null;
             while (TaskContext.get().isActive()) {
                 List<B> blobs = fetchNextBlobBatch(lastId);
                 if (blobs.isEmpty()) {
                     break;
                 }
+                firstIdInBlock = fetchBlobId(blobs.getFirst());
 
                 ParallelTaskExecutor executor = new ParallelTaskExecutor(parallelTasks);
                 for (B blob : blobs) {
@@ -100,6 +105,12 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
                     executor.submitTask(() -> processBlob(blob));
                 }
                 executor.shutdownWhenDone();
+            }
+
+            if (!TaskContext.get().isActive() && firstIdInBlock != null) {
+                process.log(ProcessLog.warn()
+                                      .withFormattedMessage("Job was cancelled. Resume it starting from ID: %s",
+                                                            firstIdInBlock.toString()));
             }
         } finally {
             writer.close();
@@ -132,6 +143,8 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
         }
     }
 
+    protected abstract I fetchStartId();
+
     protected abstract List<B> fetchNextBlobBatch(I lastId);
 
     protected String getStorageSpaceName() {
@@ -139,11 +152,15 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
     }
 
     private synchronized void writeLine(Object... columns) throws IOException {
-        writer.writeArray(columns);
+        if (TaskContext.get().isActive()) {
+            writer.writeArray(columns);
+        }
     }
 
     private synchronized void incrementCounter(String counter) {
-        process.incCounter(counter);
+        if (TaskContext.get().isActive()) {
+            process.incCounter(counter);
+        }
     }
 
     private String existsInReplicationSpace(String objectId) throws IOException {
@@ -190,6 +207,8 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
                                                                                                   .withDescription(
                                                                                                           "Number of parallel tasks used to search for missing blobs.")
                                                                                                   .build());
+            parameterCollector.accept(new StringParameter(START_FROM_ID_PARAMETER, "Start from ID").withDescription(
+                    "Optional blob ID to start from. Useful for restarting a previous cancelled job.").build());
         }
 
         @Override
