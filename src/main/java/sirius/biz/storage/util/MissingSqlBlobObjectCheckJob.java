@@ -45,7 +45,7 @@ public class MissingSqlBlobObjectCheckJob extends MissingBlobObjectCheckJob<SQLB
 
     @Override
     protected List<SQLBlob> fetchNextBlobBatch(Long lastId) {
-        SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
+        SmartQuery<SQLBlob> query = oma.selectFromSecondary(SQLBlob.class)
                                        .eq(SQLBlob.SPACE_NAME, getStorageSpaceName())
                                        .eq(SQLBlob.DELETED, false)
                                        .eq(SQLBlob.COMMITTED, true);
@@ -63,7 +63,7 @@ public class MissingSqlBlobObjectCheckJob extends MissingBlobObjectCheckJob<SQLB
 
     @Override
     protected List<SQLVariant> fetchVariants(SQLBlob blob) {
-        return oma.select(SQLVariant.class)
+        return oma.selectFromSecondary(SQLVariant.class)
                   .eq(SQLVariant.SOURCE_BLOB, blob.getId())
                   .eq(SQLVariant.QUEUED_FOR_CONVERSION, false)
                   .where(oma.filters().filled(SQLBlob.PHYSICAL_OBJECT_KEY))

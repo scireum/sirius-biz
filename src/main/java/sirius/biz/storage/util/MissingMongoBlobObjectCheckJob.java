@@ -45,7 +45,7 @@ public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<Mo
 
     @Override
     protected List<MongoBlob> fetchNextBlobBatch(String lastId) {
-        MongoQuery<MongoBlob> query = mango.select(MongoBlob.class)
+        MongoQuery<MongoBlob> query = mango.selectFromSecondary(MongoBlob.class)
                                            .eq(MongoBlob.SPACE_NAME, getStorageSpaceName())
                                            .eq(MongoBlob.DELETED, false)
                                            .eq(MongoBlob.COMMITTED, true);
@@ -63,7 +63,7 @@ public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<Mo
 
     @Override
     protected List<MongoVariant> fetchVariants(MongoBlob blob) {
-        return mango.select(MongoVariant.class)
+        return mango.selectFromSecondary(MongoVariant.class)
                     .eq(MongoVariant.BLOB, blob.getId())
                     .eq(MongoVariant.QUEUED_FOR_CONVERSION, false)
                     .where(mango.filters().filled(MongoVariant.PHYSICAL_OBJECT_KEY))
