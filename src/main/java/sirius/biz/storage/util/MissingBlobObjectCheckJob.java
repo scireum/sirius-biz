@@ -12,6 +12,7 @@ import com.rometools.utils.Strings;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.ArchiveExportJob;
 import sirius.biz.jobs.params.BooleanParameter;
+import sirius.biz.jobs.params.IntParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.PersistencePeriod;
@@ -23,7 +24,6 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.async.ParallelTaskExecutor;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.CSVWriter;
-import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
@@ -46,14 +46,14 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
     @Part
     private static ObjectStorage objectStorage;
 
-    @ConfigValue("storage.layer1.missingBlobObjectCheckParallelTasks")
-    private static int parallelTasks;
+    private static final int DEFAULT_PARALLEL_TASKS = 4;
 
     /**
      * The parameter name which specifies the storage space to be checked.
      */
     public static final String STORAGE_SPACE_PARAMETER = "space";
     public static final String INCLUDE_REPLICATION_SPACE_PARAMETER = "includeReplicationSpace";
+    public static final String PARALLEL_TASKS_PARAMETER = "parallelTasksParameter";
 
     protected CSVWriter writer;
     protected ObjectStorageSpace storageSpace;
@@ -81,6 +81,7 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
         String spaceName = getStorageSpaceName();
         storageSpace = objectStorage.getSpace(spaceName);
         includeReplicationSpace = process.get(INCLUDE_REPLICATION_SPACE_PARAMETER).asBoolean(false);
+        int parallelTasks = process.get(PARALLEL_TASKS_PARAMETER).asInt(DEFAULT_PARALLEL_TASKS);
         OutputStream outputStream = createEntry(spaceName + ".csv");
         writer = new CSVWriter(new OutputStreamWriter(outputStream));
         try {
@@ -183,6 +184,12 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
             parameterCollector.accept(new BooleanParameter(INCLUDE_REPLICATION_SPACE_PARAMETER,
                                                            "Include Replication Space").withDescription(
                     "Search for missing objects in the replication space, if one is configured.").build());
+            parameterCollector.accept(new IntParameter(PARALLEL_TASKS_PARAMETER, "Parallel Tasks").markRequired()
+                                                                                                  .withDefault(
+                                                                                                          DEFAULT_PARALLEL_TASKS)
+                                                                                                  .withDescription(
+                                                                                                          "Number of parallel tasks used to search for missing blobs.")
+                                                                                                  .build());
         }
 
         @Override
