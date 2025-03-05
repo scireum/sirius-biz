@@ -11,6 +11,7 @@ package sirius.biz.storage.util;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer2.jdbc.SQLBlob;
 import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
+import sirius.biz.storage.layer2.jdbc.SQLVariant;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
@@ -25,7 +26,7 @@ import java.util.List;
 /**
  * Implementation for the {@link MissingBlobObjectCheckJob} using the {@link SQLBlobStorage#FRAMEWORK_JDBC_BLOB_STORAGE}.
  */
-public class MissingSqlBlobObjectCheckJob extends MissingBlobObjectCheckJob<SQLBlob, Long> {
+public class MissingSqlBlobObjectCheckJob extends MissingBlobObjectCheckJob<SQLBlob, SQLVariant, Long> {
 
     @Part
     private static OMA oma;
@@ -58,6 +59,15 @@ public class MissingSqlBlobObjectCheckJob extends MissingBlobObjectCheckJob<SQLB
             }
         }
         return query.orderAsc(SQLBlob.ID).queryList();
+    }
+
+    @Override
+    protected List<SQLVariant> fetchVariants(SQLBlob blob) {
+        return oma.select(SQLVariant.class)
+                  .eq(SQLVariant.SOURCE_BLOB, blob.getId())
+                  .eq(SQLVariant.QUEUED_FOR_CONVERSION, false)
+                  .where(oma.filters().filled(SQLBlob.PHYSICAL_OBJECT_KEY))
+                  .queryList();
     }
 
     @Override

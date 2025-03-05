@@ -22,6 +22,7 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.async.ParallelTaskExecutor;
 import sirius.kernel.async.TaskContext;
@@ -41,9 +42,11 @@ import java.util.function.Consumer;
  * This job is used to verify the actual existence of physical IDs of blobs for the selected {@linkplain ObjectStorageSpace storage space}.
  *
  * @param <B> the type of the blob being checked
+ * @param <V> the type of the blob variant being checked
  * @param <I> the type of the ID of the blob being checked
  */
-public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends ArchiveExportJob {
+public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, V extends BaseEntity<I> & BlobVariant, I>
+        extends ArchiveExportJob {
 
     @Part
     private static ObjectStorage objectStorage;
@@ -57,10 +60,12 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
     public static final String INCLUDE_REPLICATION_SPACE_PARAMETER = "includeReplicationSpace";
     public static final String PARALLEL_TASKS_PARAMETER = "parallelTasksParameter";
     public static final String START_FROM_ID_PARAMETER = "startFromId";
+    public static final String CHECK_VARIANTS_PARAMETER = "checkVariants";
 
     protected CSVWriter writer;
     protected ObjectStorageSpace storageSpace;
     private boolean includeReplicationSpace;
+    private boolean checkVariants;
 
     /**
      * Creates a new batch job for the given batch process.
@@ -84,11 +89,18 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
         String spaceName = getStorageSpaceName();
         storageSpace = objectStorage.getSpace(spaceName);
         includeReplicationSpace = process.get(INCLUDE_REPLICATION_SPACE_PARAMETER).asBoolean(false);
+        checkVariants = process.get(CHECK_VARIANTS_PARAMETER).asBoolean(false);
         int parallelTasks = process.get(PARALLEL_TASKS_PARAMETER).asInt(DEFAULT_PARALLEL_TASKS);
         OutputStream outputStream = createEntry(spaceName + ".csv");
         writer = new CSVWriter(new OutputStreamWriter(outputStream));
         try {
-            writer.writeArray("id", "blobKey", "physicalObjectKey", "filename", "lastModified", "foundInReplication");
+            writer.writeArray("id",
+                              "blobKey",
+                              "physicalObjectKey",
+                              "variant",
+                              "filename",
+                              "lastModified",
+                              "foundInReplication");
 
             I lastId = null;
             I firstIdInBlock = null;
@@ -97,11 +109,11 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
                 if (blobs.isEmpty()) {
                     break;
                 }
-                firstIdInBlock = fetchBlobId(blobs.getFirst());
+                firstIdInBlock = fetchId(blobs.getFirst());
 
                 ParallelTaskExecutor executor = new ParallelTaskExecutor(parallelTasks);
                 for (B blob : blobs) {
-                    lastId = fetchBlobId(blob);
+                    lastId = fetchId(blob);
                     executor.submitTask(() -> processBlob(blob));
                 }
                 executor.shutdownWhenDone();
@@ -117,9 +129,8 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private I fetchBlobId(B blob) {
-        return ((BaseEntity<I>) blob).getId();
+    private <E extends BaseEntity<I>> I fetchId(E entity) {
+        return entity.getId();
     }
 
     protected void processBlob(B blob) {
@@ -131,13 +142,15 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
         try {
             if (!storageSpace.exists(physicalObjectKey)) {
                 incrementCounter("missing-blobs");
-                writeLine(fetchBlobId(blob),
+                writeLine(fetchId(blob),
                           blob.getBlobKey(),
                           physicalObjectKey,
+                          "-",
                           blob.getFilename(),
                           NLS.toMachineString(blob.getLastModified()),
                           existsInReplicationSpace(physicalObjectKey));
             }
+            processVariantsForBlob(blob);
         } catch (IOException exception) {
             process.handle(exception);
         }
@@ -146,6 +159,8 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
     protected abstract I fetchStartId();
 
     protected abstract List<B> fetchNextBlobBatch(I lastId);
+
+    protected abstract List<V> fetchVariants(B blob);
 
     protected String getStorageSpaceName() {
         return process.get(STORAGE_SPACE_PARAMETER).asString();
@@ -168,6 +183,26 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
             return String.valueOf(storageSpace.getReplicationSpace().exists(objectId));
         }
         return "-";
+    }
+
+    private void processVariantsForBlob(B blob) throws IOException {
+        if (!checkVariants) {
+            return;
+        }
+
+        for (V variant : fetchVariants(blob)) {
+            String physicalObjectKey = variant.getPhysicalObjectKey();
+            if (!storageSpace.exists(physicalObjectKey)) {
+                incrementCounter("missing-variants");
+                writeLine(fetchId(variant),
+                          blob.getBlobKey(),
+                          physicalObjectKey,
+                          variant.getVariantName(),
+                          "-",
+                          NLS.toMachineString(variant.getLastConversionAttempt()),
+                          existsInReplicationSpace(physicalObjectKey));
+            }
+        }
     }
 
     /**
@@ -209,6 +244,8 @@ public abstract class MissingBlobObjectCheckJob<B extends Blob, I> extends Archi
                                                                                                   .build());
             parameterCollector.accept(new StringParameter(START_FROM_ID_PARAMETER, "Start from ID").withDescription(
                     "Optional blob ID to start from. Useful for restarting a previous cancelled job.").build());
+            parameterCollector.accept(new BooleanParameter(CHECK_VARIANTS_PARAMETER, "Check variants").withDescription(
+                    "Also check blob variants for missing objects.").build());
         }
 
         @Override

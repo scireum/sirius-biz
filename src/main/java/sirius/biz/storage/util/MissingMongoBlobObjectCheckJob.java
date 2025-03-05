@@ -11,6 +11,7 @@ package sirius.biz.storage.util;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.layer2.mongo.MongoBlobStorage;
+import sirius.biz.storage.layer2.mongo.MongoVariant;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoQuery;
@@ -25,7 +26,7 @@ import java.util.List;
 /**
  * Implementation for the {@link MissingBlobObjectCheckJob} using the {@link MongoBlobStorage#FRAMEWORK_MONGO_BLOB_STORAGE}.
  */
-public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<MongoBlob, String> {
+public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<MongoBlob, MongoVariant, String> {
 
     @Part
     private static Mango mango;
@@ -58,6 +59,15 @@ public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<Mo
             }
         }
         return query.orderAsc(MongoBlob.ID).queryList();
+    }
+
+    @Override
+    protected List<MongoVariant> fetchVariants(MongoBlob blob) {
+        return mango.select(MongoVariant.class)
+                    .eq(MongoVariant.BLOB, blob.getId())
+                    .eq(MongoVariant.QUEUED_FOR_CONVERSION, false)
+                    .where(mango.filters().filled(MongoVariant.PHYSICAL_OBJECT_KEY))
+                    .queryList();
     }
 
     @Override
