@@ -36,13 +36,12 @@ public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob {
     /**
      * Provides a factory to create instances of {@link MissingMongoBlobObjectCheckJob}.
      */
-    @Register
-    @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
+    @Register(framework = MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     public static class MissingMongoBlobObjectCheckJobFactory extends MissingBlobObjectCheckJobFactory {
 
         @Override
-        protected MissingBlobObjectCheckJob createJob(ProcessContext process) {
+        protected MissingMongoBlobObjectCheckJob createJob(ProcessContext process) {
             return new MissingMongoBlobObjectCheckJob(process);
         }
 
