@@ -15,6 +15,7 @@ import sirius.biz.storage.layer2.jdbc.SQLVariant;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
+import sirius.db.mixing.query.BaseQuery;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -58,7 +59,7 @@ public class MissingSqlBlobObjectCheckJob extends MissingBlobObjectCheckJob<SQLB
                 query.where(oma.filters().gte(SQLBlob.ID, startId));
             }
         }
-        return query.orderAsc(SQLBlob.ID).queryList();
+        return query.orderAsc(SQLBlob.ID).limit(BaseQuery.MAX_LIST_SIZE).queryList();
     }
 
     @Override
@@ -67,6 +68,7 @@ public class MissingSqlBlobObjectCheckJob extends MissingBlobObjectCheckJob<SQLB
                   .eq(SQLVariant.SOURCE_BLOB, blob.getId())
                   .eq(SQLVariant.QUEUED_FOR_CONVERSION, false)
                   .where(oma.filters().filled(SQLBlob.PHYSICAL_OBJECT_KEY))
+                  .limit(BaseQuery.MAX_LIST_SIZE)
                   .queryList();
     }
 

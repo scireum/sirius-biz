@@ -13,6 +13,7 @@ import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.layer2.mongo.MongoBlobStorage;
 import sirius.biz.storage.layer2.mongo.MongoVariant;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.db.mixing.query.BaseQuery;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.commons.Strings;
@@ -58,7 +59,7 @@ public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<Mo
                 query.where(mango.filters().gte(MongoBlob.ID, startId));
             }
         }
-        return query.orderAsc(MongoBlob.ID).queryList();
+        return query.orderAsc(MongoBlob.ID).limit(BaseQuery.MAX_LIST_SIZE).queryList();
     }
 
     @Override
@@ -67,6 +68,7 @@ public class MissingMongoBlobObjectCheckJob extends MissingBlobObjectCheckJob<Mo
                     .eq(MongoVariant.BLOB, blob.getId())
                     .eq(MongoVariant.QUEUED_FOR_CONVERSION, false)
                     .where(mango.filters().filled(MongoVariant.PHYSICAL_OBJECT_KEY))
+                    .limit(BaseQuery.MAX_LIST_SIZE)
                     .queryList();
     }
 
