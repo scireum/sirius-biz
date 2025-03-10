@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.util;
 
-import com.rometools.utils.Strings;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.ArchiveExportJob;
 import sirius.biz.jobs.params.BooleanParameter;
@@ -27,6 +26,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.async.ParallelTaskExecutor;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.CSVWriter;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
