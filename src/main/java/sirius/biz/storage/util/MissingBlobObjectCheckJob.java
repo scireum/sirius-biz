@@ -127,8 +127,10 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
                     executor.submitTask(() -> processBlob(blob));
                 }
                 executor.shutdownWhenDone();
+                process.tryUpdateState(buildStatusMessage());
             }
 
+            process.forceUpdateState(buildStatusMessage());
             if (!TaskContext.get().isActive() && firstIdInBlock != null) {
                 process.log(ProcessLog.warn()
                                       .withFormattedMessage("Job was cancelled. Resume it starting from ID: %s",
@@ -210,6 +212,19 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
                           NLS.toMachineString(variant.getLastConversionAttempt()),
                           existsInReplicationSpace(physicalObjectKey));
             }
+        }
+    }
+
+    private String buildStatusMessage() {
+        if (checkVariants) {
+            return Strings.apply("Total: %s, Missing Blobs: %s, Missing Variants: %s",
+                                 counters.get(COUNTER_TOTAL_BLOBS),
+                                 counters.get(COUNTER_MISSING_BLOBS),
+                                 counters.get(COUNTER_MISSING_VARIANTS));
+        } else {
+            return Strings.apply("Total: %s, Missing: %s",
+                                 counters.get(COUNTER_TOTAL_BLOBS),
+                                 counters.get(COUNTER_MISSING_BLOBS));
         }
     }
 
