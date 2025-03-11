@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -62,10 +63,15 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
     public static final String START_FROM_ID_PARAMETER = "startFromId";
     public static final String CHECK_VARIANTS_PARAMETER = "checkVariants";
 
+    private static final String COUNTER_TOTAL_BLOBS = "total-blobs";
+    private static final String COUNTER_MISSING_BLOBS = "missing-blobs";
+    private static final String COUNTER_MISSING_VARIANTS = "missing-variants";
+
     protected CSVWriter writer;
     protected ObjectStorageSpace storageSpace;
     private boolean includeReplicationSpace;
     private boolean checkVariants;
+    private final Map<String, Integer> counters = new HashMap<>();
 
     /**
      * Creates a new batch job for the given batch process.
@@ -86,6 +92,10 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
 
     @Override
     public void execute() throws Exception {
+        counters.put(COUNTER_TOTAL_BLOBS, 0);
+        counters.put(COUNTER_MISSING_BLOBS, 0);
+        counters.put(COUNTER_MISSING_VARIANTS, 0);
+
         String spaceName = getStorageSpaceName();
         storageSpace = objectStorage.getSpace(spaceName);
         includeReplicationSpace = process.get(INCLUDE_REPLICATION_SPACE_PARAMETER).asBoolean(false);
@@ -134,14 +144,14 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
     }
 
     protected void processBlob(B blob) {
-        incrementCounter("total-blobs");
+        incrementCounter(COUNTER_TOTAL_BLOBS);
         String physicalObjectKey = blob.getPhysicalObjectKey();
         if (Strings.isEmpty(physicalObjectKey)) {
             return;
         }
         try {
             if (!storageSpace.exists(physicalObjectKey)) {
-                incrementCounter("missing-blobs");
+                incrementCounter(COUNTER_MISSING_BLOBS);
                 writeLine(fetchId(blob),
                           blob.getBlobKey(),
                           physicalObjectKey,
@@ -173,9 +183,7 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
     }
 
     private synchronized void incrementCounter(String counter) {
-        if (TaskContext.get().isActive()) {
-            process.incCounter(counter);
-        }
+        counters.put(counter, counters.get(counter) + 1);
     }
 
     private String existsInReplicationSpace(String objectId) throws IOException {
@@ -193,7 +201,7 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
         for (V variant : fetchVariants(blob)) {
             String physicalObjectKey = variant.getPhysicalObjectKey();
             if (!storageSpace.exists(physicalObjectKey)) {
-                incrementCounter("missing-variants");
+                incrementCounter(COUNTER_MISSING_VARIANTS);
                 writeLine(fetchId(variant),
                           blob.getBlobKey(),
                           physicalObjectKey,
