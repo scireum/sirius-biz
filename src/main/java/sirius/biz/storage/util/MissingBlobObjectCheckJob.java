@@ -130,6 +130,10 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
                 process.tryUpdateState(buildStatusMessage());
             }
 
+            if (counters.get(COUNTER_MISSING_BLOBS) > 0 || counters.get(COUNTER_MISSING_VARIANTS) > 0) {
+                process.log(ProcessLog.warn().withMessage("Detected missing objects."));
+            }
+
             process.forceUpdateState(buildStatusMessage());
             if (!TaskContext.get().isActive() && firstIdInBlock != null) {
                 process.log(ProcessLog.warn()
