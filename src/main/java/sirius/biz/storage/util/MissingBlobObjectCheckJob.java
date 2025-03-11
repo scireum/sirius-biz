@@ -36,6 +36,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -66,6 +67,9 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
     protected ObjectStorageSpace storageSpace;
     private boolean includeReplicationSpace;
     private boolean checkVariants;
+    private final AtomicInteger totalBlobs = new AtomicInteger(0);
+    private final AtomicInteger missingBlobs = new AtomicInteger(0);
+    private final AtomicInteger missingVariants = new AtomicInteger(0);
 
     /**
      * Creates a new batch job for the given batch process.
@@ -117,8 +121,14 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
                     executor.submitTask(() -> processBlob(blob));
                 }
                 executor.shutdownWhenDone();
+                process.tryUpdateState(buildStatusMessage());
             }
 
+            if (missingBlobs.get() > 0 || missingVariants.get() > 0) {
+                process.log(ProcessLog.warn().withMessage("Detected missing objects."));
+            }
+
+            process.forceUpdateState(buildStatusMessage());
             if (!TaskContext.get().isActive() && firstIdInBlock != null) {
                 process.log(ProcessLog.warn()
                                       .withFormattedMessage("Job was cancelled. Resume it starting from ID: %s",
@@ -134,14 +144,14 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
     }
 
     protected void processBlob(B blob) {
-        incrementCounter("total-blobs");
+        totalBlobs.incrementAndGet();
         String physicalObjectKey = blob.getPhysicalObjectKey();
         if (Strings.isEmpty(physicalObjectKey)) {
             return;
         }
         try {
             if (!storageSpace.exists(physicalObjectKey)) {
-                incrementCounter("missing-blobs");
+                missingBlobs.incrementAndGet();
                 writeLine(fetchId(blob),
                           blob.getBlobKey(),
                           physicalObjectKey,
@@ -172,12 +182,6 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
         }
     }
 
-    private synchronized void incrementCounter(String counter) {
-        if (TaskContext.get().isActive()) {
-            process.incCounter(counter);
-        }
-    }
-
     private String existsInReplicationSpace(String objectId) throws IOException {
         if (includeReplicationSpace && storageSpace.hasReplicationSpace()) {
             return String.valueOf(storageSpace.getReplicationSpace().exists(objectId));
@@ -193,7 +197,7 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
         for (V variant : fetchVariants(blob)) {
             String physicalObjectKey = variant.getPhysicalObjectKey();
             if (!storageSpace.exists(physicalObjectKey)) {
-                incrementCounter("missing-variants");
+                missingVariants.incrementAndGet();
                 writeLine(fetchId(variant),
                           blob.getBlobKey(),
                           physicalObjectKey,
@@ -202,6 +206,17 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
                           NLS.toMachineString(variant.getLastConversionAttempt()),
                           existsInReplicationSpace(physicalObjectKey));
             }
+        }
+    }
+
+    private String buildStatusMessage() {
+        if (checkVariants) {
+            return Strings.apply("Total: %s, Missing Blobs: %s, Missing Variants: %s",
+                                 totalBlobs.get(),
+                                 missingBlobs.get(),
+                                 missingVariants.get());
+        } else {
+            return Strings.apply("Total: %s, Missing: %s", totalBlobs.get(), missingBlobs.get());
         }
     }
 
