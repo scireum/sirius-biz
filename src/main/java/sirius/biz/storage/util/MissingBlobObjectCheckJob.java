@@ -29,7 +29,9 @@ import sirius.kernel.commons.CSVWriter;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
+import sirius.web.http.QueryString;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -281,6 +283,17 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
         }
 
         @Override
+        protected void computePresetFor(@Nonnull QueryString queryString,
+                                        @Nullable Object targetObject,
+                                        Map<String, Object> preset) {
+            fillPresetFromUrl(STORAGE_SPACE_PARAMETER, queryString, preset);
+            fillPresetFromUrl(INCLUDE_REPLICATION_SPACE_PARAMETER, queryString, preset);
+            fillPresetFromUrl(PARALLEL_TASKS_PARAMETER, queryString, preset);
+            fillPresetFromUrl(START_FROM_ID_PARAMETER, queryString, preset);
+            fillPresetFromUrl(CHECK_VARIANTS_PARAMETER, queryString, preset);
+        }
+
+        @Override
         public String getCategory() {
             return StandardCategories.SYSTEM_ADMINISTRATION;
         }
@@ -294,6 +307,10 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
         @Override
         public String getDescription() {
             return "Checks if storage space objects associated to blobs are missing.";
+        }
+
+        private void fillPresetFromUrl(String parameter, @Nonnull QueryString queryString, Map<String, Object> preset) {
+            queryString.get(parameter).asOptionalString().ifPresent(value -> preset.put(parameter, value));
         }
     }
 }
