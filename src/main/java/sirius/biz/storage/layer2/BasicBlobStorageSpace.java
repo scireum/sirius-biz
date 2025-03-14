@@ -1418,7 +1418,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String variantCacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalVariantKey = blobKeyToPhysicalCache.get(variantCacheKey);
         if (Strings.isFilled(cachedPhysicalVariantKey)) {
-            assertNoFailureCached(cachedPhysicalVariantKey);
+            if (CACHED_FAILURE_MARKER.equals(cachedPhysicalVariantKey)) {
+                throwExhaustedConversionAttemptsException(blobKey, variantName);
+            }
             return Tuple.create(cachedPhysicalVariantKey, true);
         }
 
@@ -1467,16 +1469,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return null;
         } else {
             return Tuple.create(variant.getPhysicalObjectKey(), false);
-        }
-    }
-
-    private void assertNoFailureCached(String cachedPhysicalKey) {
-        if (CACHED_FAILURE_MARKER.equals(cachedPhysicalKey)) {
-            // We detected a cached failure. Throw an appropriate but exception to the user. No
-            // need to log anything as the incident has already been reported...
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Failed to create the requested variant from the given image.")
-                            .handle();
         }
     }
 
@@ -1561,11 +1553,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             && Strings.isEmpty(variant.getPhysicalObjectKey())) {
             // The conversion has failed - signal that to the client. We use a handled exception here, as the problem
             // has already been logged...
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Failed to create the requested variant from the given variant.")
-                            .handle();
+            throwExhaustedConversionAttemptsException(blob.getBlobKey(), variantName);
         }
         return variant;
+    }
+
+    private void throwExhaustedConversionAttemptsException(String blobKey, String variantName) {
+        throw Exceptions.createHandled()
+                        .withSystemErrorMessage("Exhausted conversion attempts for variant '%s' and blobKey '%s'",
+                                                variantName,
+                                                blobKey)
+                        .handle();
     }
 
     /**
