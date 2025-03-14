@@ -420,10 +420,16 @@ public class URLBuilder {
      * Determines if a conversion for the given variant is expected.
      *
      * @return <tt>true</tt> if a variant is selected, for which no physical key is present. <tt>false</tt> if there
-     * already exists a physical key for the given variant.
+     * already exists a physical key for the given variant or a conversion ultimately failed.
      */
     public boolean isConversionExpected() {
-        return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+        try {
+            return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
+            return false;
+        }
     }
 
     /**
