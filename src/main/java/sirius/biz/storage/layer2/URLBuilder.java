@@ -17,6 +17,8 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
@@ -355,11 +357,17 @@ public class URLBuilder {
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public Optional<String> buildURL() {
-        UrlResult urlResult = buildUrlResult();
-        if (urlResult.urlType() == UrlType.EMPTY) {
+        try {
+            UrlResult urlResult = buildUrlResult();
+            if (urlResult.urlType() == UrlType.EMPTY) {
+                return Optional.empty();
+            } else {
+                return Optional.of(urlResult.url);
+            }
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
             return Optional.empty();
-        } else {
-            return Optional.of(urlResult.url);
         }
     }
 
@@ -413,17 +421,34 @@ public class URLBuilder {
      * @see #safeBuildURL(String)
      */
     public String buildImageURL() {
-        return safeBuildURL(IMAGE_FALLBACK_URI);
+        try {
+            UrlResult urlResult = buildUrlResult();
+            if (urlResult.urlType() == UrlType.EMPTY) {
+                return createBaseURL().append(IMAGE_FALLBACK_URI).toString();
+            } else {
+                return urlResult.url();
+            }
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
+            return createBaseURL().append(IMAGE_FAILED_URI).toString();
+        }
     }
 
     /**
      * Determines if a conversion for the given variant is expected.
      *
      * @return <tt>true</tt> if a variant is selected, for which no physical key is present. <tt>false</tt> if there
-     * already exists a physical key for the given variant.
+     * already exists a physical key for the given variant or a conversion ultimately failed.
      */
     public boolean isConversionExpected() {
-        return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+        try {
+            return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
+            return false;
+        }
     }
 
     /**
