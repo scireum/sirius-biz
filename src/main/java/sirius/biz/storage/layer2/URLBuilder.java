@@ -421,7 +421,18 @@ public class URLBuilder {
      * @see #safeBuildURL(String)
      */
     public String buildImageURL() {
-        return safeBuildURL(IMAGE_FALLBACK_URI);
+        try {
+            UrlResult urlResult = buildUrlResult();
+            if (urlResult.urlType() == UrlType.EMPTY) {
+                return createBaseURL().append(IMAGE_FALLBACK_URI).toString();
+            } else {
+                return urlResult.url();
+            }
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
+            return createBaseURL().append(IMAGE_FAILED_URI).toString();
+        }
     }
 
     /**
