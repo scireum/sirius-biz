@@ -17,6 +17,8 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
@@ -355,11 +357,17 @@ public class URLBuilder {
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public Optional<String> buildURL() {
-        UrlResult urlResult = buildUrlResult();
-        if (urlResult.urlType() == UrlType.EMPTY) {
+        try {
+            UrlResult urlResult = buildUrlResult();
+            if (urlResult.urlType() == UrlType.EMPTY) {
+                return Optional.empty();
+            } else {
+                return Optional.of(urlResult.url);
+            }
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
             return Optional.empty();
-        } else {
-            return Optional.of(urlResult.url);
         }
     }
 
