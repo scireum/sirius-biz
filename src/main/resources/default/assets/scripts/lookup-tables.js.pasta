@@ -22,16 +22,16 @@ function LookupTableInfo(options) {
     this.entriesToSkip = 0;
     this._paginationLeft = this._modal.querySelector('.pagination-left-js');
     this._paginationLeft.addEventListener('click', event => {
-        if (event.target.dataset.skip != null) {
-            this.entriesToSkip = event.target.dataset.skip;
+        if (this._paginationLeft.dataset.skip != null) {
+            this.entriesToSkip = this._paginationLeft.dataset.skip;
             this.reload();
         }
         event.preventDefault();
     });
     this._paginationRight = this._modal.querySelector('.pagination-right-js');
     this._paginationRight.addEventListener('click', event => {
-        if (event.target.dataset.skip != null) {
-            this.entriesToSkip = event.target.dataset.skip;
+        if (this._paginationRight.dataset.skip != null) {
+            this.entriesToSkip = this._paginationRight.dataset.skip;
             this.reload();
         }
         event.preventDefault();

@@ -48,7 +48,7 @@
                                         </a>
                                     </div>
                                     <div class="text-decoration-none text-small text-muted description-js">
-                                        @action.getDescription()
+                                        <i:raw>@action.getDescription()</i:raw>
                                     </div>
                                 </div>
                             </div>

@@ -47,14 +47,28 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E load(Context data, E entity) {
+        if (data.containsKey(SCRIPT_ABORTED)) {
+            return null;
+        }
+
         if (context.getEventDispatcher().isActive()) {
-            context.getEventDispatcher().handleEvent(new BeforeLoadEvent<E>(entity, data, context));
+            BeforeLoadEvent<E> beforeLoadEvent = new BeforeLoadEvent<>(entity, data, context);
+            context.getEventDispatcher().handleEvent(beforeLoadEvent);
+            if (beforeLoadEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
+                return null;
+            }
         }
 
         E result = load(data, entity, mappingsToLoad);
 
         if (context.getEventDispatcher().isActive()) {
-            context.getEventDispatcher().handleEvent(new AfterLoadEvent<E>(result, data, context));
+            AfterLoadEvent<E> afterLoadEvent = new AfterLoadEvent<>(result, data, context);
+            context.getEventDispatcher().handleEvent(afterLoadEvent);
+            if (afterLoadEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
+                return null;
+            }
         }
 
         return result;
@@ -85,8 +99,12 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     @Override
     public final Optional<E> tryFind(Context data) {
         if (context.getEventDispatcher().isActive()) {
-            context.getEventDispatcher()
-                   .handleEvent(new BeforeFindEvent<E>((Class<E>) descriptor.getType(), data, context));
+            BeforeFindEvent<E> beforeFindEvent = new BeforeFindEvent<>((Class<E>) descriptor.getType(), data, context);
+            context.getEventDispatcher().handleEvent(beforeFindEvent);
+            if (beforeFindEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
+                return Optional.empty();
+            }
         }
 
         return findByExample(data);
@@ -131,9 +149,18 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E createOrUpdateNow(E entity) {
+        if (entity == null) {
+            return null;
+        }
+
         try {
             if (context.getEventDispatcher().isActive()) {
-                context.getEventDispatcher().handleEvent(new BeforeCreateOrUpdateEvent<E>(entity, context));
+                BeforeCreateOrUpdateEvent<E> beforeCreateOrUpdateEvent =
+                        new BeforeCreateOrUpdateEvent<>(entity, context);
+                context.getEventDispatcher().handleEvent(beforeCreateOrUpdateEvent);
+                if (beforeCreateOrUpdateEvent.isAborted()) {
+                    return null;
+                }
             }
 
             enforcePreSaveConstraints(entity);

@@ -272,14 +272,31 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String language) {
+    protected Stream<LookupTableEntry> performSuggest(Limit limit,
+                                                      String searchTerm,
+                                                      String language,
+                                                      boolean considerDeprecatedValues) {
         try {
+            // Caveat: IDBTable$QueryBuilder#manyRows can only be used when no filtering is applied afterwards.
+            if (considerDeprecatedValues) {
+                return table.query()
+                            .searchInAllFields()
+                            .searchValue(searchTerm)
+                            .translate(language)
+                            .manyRows(limit, codeField, nameField, descriptionField)
+                            .map(row -> new LookupTableEntry(row.at(0).asString(),
+                                                             row.at(1).asString(),
+                                                             row.at(2).getString()));
+            }
+
             return table.query()
                         .searchInAllFields()
                         .searchValue(searchTerm)
                         .translate(language)
-                        .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED)
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
                         .filter(row -> row.at(3).asLong(0) != 1L)
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
                                                          row.at(1).asString(),
                                                          row.at(2).getString()));
@@ -297,11 +314,22 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    public Stream<LookupTableEntry> scan(String language, Limit limit) {
+    public Stream<LookupTableEntry> scan(String language, Limit limit, boolean considerDeprecatedValues) {
         try {
+            // Caveat: IDBTable$QueryBuilder#manyRows can only be used when no filtering is applied afterwards.
+            if (considerDeprecatedValues) {
+                return table.query()
+                            .translate(language)
+                            .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
+                            .map(this::processSearchOrScanRow);
+            }
+
             return table.query()
                         .translate(language)
-                        .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
+                        .filter(row -> row.at(3).asLong(0) != 1L)
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
                         .map(this::processSearchOrScanRow);
         } catch (Exception exception) {
             Exceptions.createHandled()

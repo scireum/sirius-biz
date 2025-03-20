@@ -9,9 +9,11 @@
 package sirius.biz.jupiter
 
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.kernel.SiriusExtension
+import sirius.kernel.Tags
 import sirius.kernel.commons.Wait
 import sirius.kernel.di.std.Part
 import sirius.web.resources.Resources
@@ -22,6 +24,7 @@ import kotlin.test.assertFalse
 /**
  * Provides a simple test for the communication with the [Jupiter] repository.
  */
+@Tag(Tags.NIGHTLY)
 @ExtendWith(SiriusExtension::class)
 class JupiterTest {
 
@@ -103,6 +106,7 @@ class JupiterTest {
                     return
                 }
             }
+            throw IllegalStateException("Jupiter did not process the repository contents in time.")
         }
     }
 }

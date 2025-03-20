@@ -26,6 +26,10 @@
                               label="Background Jobs"
                               url="/system/cluster/background-jobs"
                               active="page == 'background-jobs'"/>
+                <t:navboxLink icon="fa-regular fa-memory"
+                              label="Caches"
+                              url="/system/cluster/caches"
+                              active="page == 'caches'"/>
                 <t:navboxLink icon="fa-regular fa-clock"
                               label="End of Day Tasks"
                               url="/system/cluster/eod-tasks"

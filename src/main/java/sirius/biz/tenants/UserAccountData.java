@@ -116,7 +116,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * Contains the login data used to authenticate the user.
      */
     public static final Mapping LOGIN = Mapping.named("login");
-    private final LoginData login = new LoginData();
+    private final LoginData login;
 
     /**
      * Contains the permissions granted to the user and the custom configuration.
@@ -177,6 +177,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     public UserAccountData(BaseEntity<?> userObject) {
         this.userObject = userObject;
         this.permissions = new PermissionData(userObject);
+        this.login = new LoginData(userObject);
     }
 
     @BeforeSave
@@ -224,24 +225,6 @@ public class UserAccountData extends Composite implements MessageProvider {
         TenantUserManager.flushCacheForUserAccount((UserAccount<?, ?>) userObject);
     }
 
-    /**
-     * Contains the minimal length of a password to be accepted.
-     *
-     * @return the minimal length of a password to be accepted
-     */
-    public int getMinPasswordLength() {
-        return Sirius.getSettings().getInt("security.passwordMinLength");
-    }
-
-    /**
-     * Contains the minimal length of a sane password.
-     *
-     * @return the minimal length for a password to be considered sane / good / not totally unsafe
-     */
-    public int getSanePasswordLength() {
-        return Sirius.getSettings().getInt("security.passwordSaneLength");
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public <A> Optional<A> tryAs(Class<A> adapterType) {
@@ -256,7 +239,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     protected Tenant<?> getTenant() {
-        return ((UserAccount<?, ?>) userObject).getTenant().fetchValue();
+        return ((UserAccount<?, ?>) userObject).getTenant().forceFetchValue();
     }
 
     @Override
@@ -386,7 +369,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return <tt>true</tt> if this user belongs to the current user's tenant, <tt>false</tt> otherwise
      */
     public boolean isOwnTenant() {
-        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().fetchValue(), getTenant());
+        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().getIdAsString(), getTenant().getIdAsString());
     }
 
     /**

@@ -9,8 +9,11 @@
 package sirius.biz.model;
 
 import sirius.biz.importer.AutoImport;
+import sirius.biz.password.PasswordGenerator;
+import sirius.biz.password.PasswordSettings;
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.web.Autoloaded;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
@@ -18,12 +21,10 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
-import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
-import sirius.kernel.health.Exceptions;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
-import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
@@ -43,7 +44,7 @@ import java.util.List;
 public class LoginData extends Composite {
 
     /**
-     * Describes the possible outcome of {@link #verifyPassword(String, String, int)}.
+     * Describes the possible outcome of {@link #checkPassword(String, String)}.
      */
     public enum PasswordVerificationResult {
 
@@ -199,14 +200,36 @@ public class LoginData extends Composite {
     @Transient
     private boolean skipPasswordCreation;
 
+    /**
+     * Contains the entity which owns this login data composite.
+     */
+    @Transient
+    private final BaseEntity<?> owner;
+
     @PriorityParts(PasswordHashFunction.class)
     private static List<PasswordHashFunction> hashFunctions;
+
+    @Part
+    private static PasswordGenerator passwordGenerator;
+
+    @Part
+    private static PasswordSettings passwordSettings;
+
+    /**
+     * Creates a new login data for the given owner.
+     *
+     * @param owner the entity which owns this login data
+     */
+    public LoginData(BaseEntity<?> owner) {
+        super();
+        this.owner = owner;
+    }
 
     @BeforeSave
     protected void autofill() {
         // If there is no password set at all, generate one...
         if (!skipPasswordCreation && Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
-            this.generatedPassword = Strings.generatePassword();
+            this.generatedPassword = passwordGenerator.generatePassword(owner);
         }
 
         // If the generated password has been changed, mark it as the password to be set 
@@ -254,29 +277,6 @@ public class LoginData extends Composite {
      */
     public void resetFingerprint() {
         this.fingerprint = null;
-    }
-
-    /**
-     * Verifies the given password if it meets the length requirement and is equal to its confirmation.
-     *
-     * @param password          the password to check for
-     * @param confirmation      the confirmation password to check for
-     * @param minPasswordLength the minimum password length
-     * @throws sirius.kernel.health.HandledException if password is too short or if passwords do mismatch
-     */
-    public void verifyPassword(String password, String confirmation, int minPasswordLength) {
-        if (Strings.isEmpty(password) || password.length() < minPasswordLength) {
-            UserContext.setFieldError("password", null);
-            throw Exceptions.createHandled()
-                            .withNLSKey("Model.password.minLengthError")
-                            .set("minChars", minPasswordLength)
-                            .handle();
-        }
-
-        if (!Strings.areEqual(password, confirmation)) {
-            UserContext.setFieldError("confirmation", null);
-            throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
-        }
     }
 
     /**
@@ -361,8 +361,8 @@ public class LoginData extends Composite {
             return false;
         }
 
-        Duration showGeneratedPasswordFor =
-                Duration.ofMillis(Sirius.getSettings().getMilliseconds("security.showGeneratedPasswordFor"));
+        Duration showGeneratedPasswordFor = Duration.ofMillis(passwordSettings.resolveGeneratedPasswordSettings(owner)
+                                                                              .getMilliseconds(PasswordSettings.SETTING_GENERATED_SHOW_FOR));
 
         if (showGeneratedPasswordFor == null) {
             return false;

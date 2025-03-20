@@ -13,8 +13,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
-import java.util.regex.Pattern;
-
 /**
  * Represents a reference to a {@link StoredObject} which can be placed as field within an {@link BaseEntity}.
  * <p>
@@ -35,8 +33,6 @@ public class StoredObjectRef {
 
     @Part
     private static Storage storage;
-
-    private static final Pattern URL_PATTERN = Pattern.compile("^https?://", Pattern.CASE_INSENSITIVE);
 
     /**
      * Creates a new reference for the given bucket and owner.
@@ -226,7 +222,7 @@ public class StoredObjectRef {
      * @return <tt>true</tt> if an URL was stored, <tt>false</tt> if an object key or nothing yet is stored
      */
     public boolean isURL() {
-        return supportsURL && Strings.isFilled(key) && URL_PATTERN.matcher(key).find();
+        return supportsURL && Strings.isHttpUrl(key);
     }
 
     /**

@@ -223,6 +223,9 @@ public class Importer implements Closeable {
      */
     @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> E createOrUpdateNow(E entity) {
+        if (entity == null) {
+            return null;
+        }
         return context.findHandler((Class<E>) entity.getClass()).createOrUpdateNow(entity);
     }
 
@@ -244,6 +247,9 @@ public class Importer implements Closeable {
      */
     @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> void createOrUpdateInBatch(E entity) {
+        if (entity == null) {
+            return;
+        }
         context.findHandler((Class<E>) entity.getClass()).createOrUpdateInBatch(entity);
     }
 

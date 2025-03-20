@@ -310,10 +310,6 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
             return Optional.empty();
         }
 
-        if (tenantRef.isValueLoaded()) {
-            return Optional.of(tenantRef.fetchValue());
-        }
-
         return fetchCachedTenant(String.valueOf(tenantRef.getId()));
     }
 
@@ -399,10 +395,6 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     public Optional<U> fetchCachedUserAccount(BaseEntityRef<I, U> userRef) {
         if (userRef.isEmpty()) {
             return Optional.empty();
-        }
-
-        if (userRef.isValueLoaded()) {
-            return Optional.of(userRef.fetchValue());
         }
 
         return fetchCachedUserAccount(userRef.getIdAsString());

@@ -407,12 +407,19 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                         .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                         .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                         .forTenant(account.getTenant().getIdAsString(),
-                                   account.getTenant().fetchValue().getTenantData().getName())
+                                   account.getTenant().forceFetchValue().getTenantData().getName())
                         .log();
 
                 webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
                                            + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
             }
+            webContext.respondWith().redirectTemporarily(redirectTarget);
+            return;
+        }
+
+        if (Strings.areEqual(getUser().getTenantId(), tenantId)) {
+            // The tenant of the current user we are spying is the same as the one we want to switch to,
+            // so we simply navigate to the target URL.
             webContext.respondWith().redirectTemporarily(redirectTarget);
             return;
         }

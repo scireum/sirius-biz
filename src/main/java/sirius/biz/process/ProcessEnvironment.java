@@ -270,6 +270,11 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
+    public void markRunning() {
+        processes.markRunning(processId);
+    }
+
+    @Override
     public void markCompleted(int computationTimeInSeconds) {
         processes.reportLimitedMessages(processId, messageCountsPerType, limitsPerType);
         processes.markCompleted(processId, timings, adminTimings, computationTimeInSeconds);
@@ -325,7 +330,9 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public boolean isActive() {
         return processes.fetchProcess(processId)
-                        .map(proc -> proc.getState() == ProcessState.RUNNING || proc.getState() == ProcessState.STANDBY)
+                        .map(process -> process.getState() == ProcessState.WAITING
+                                        || process.getState() == ProcessState.RUNNING
+                                        || process.getState() == ProcessState.STANDBY)
                         .orElse(false) && tasks.isRunning();
     }
 

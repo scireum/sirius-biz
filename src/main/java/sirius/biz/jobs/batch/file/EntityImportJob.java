@@ -43,7 +43,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      */
     public static final Parameter<ImportMode> IMPORT_MODE_PARAMETER =
             new EnumParameter<>("importMode", "$EntityImportJobFactory.importMode", ImportMode.class).withDefault(
-                    ImportMode.NEW_AND_UPDATES)
+                                                                                                             ImportMode.NEW_AND_UPDATES)
                                                                                                      .markRequired()
                                                                                                      .withDescription(
                                                                                                              "$EntityImportJobFactory.importMode.help")
@@ -105,12 +105,12 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         }
 
         E entity = findAndLoad(context);
-        ErrorContext.get().performImport(entity::toString, () -> {
-            if (shouldSkip(entity)) {
-                process.incCounter("EntityImportJob.rowIgnored");
-                return;
-            }
+        if (shouldSkip(entity)) {
+            process.incCounter("EntityImportJob.rowIgnored");
+            return;
+        }
 
+        ErrorContext.get().performImport(entity::toString, () -> {
             fillAndVerify(entity, context);
             boolean isNew = entity.isNew();
 
@@ -152,7 +152,15 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     }
 
     protected boolean shouldSkip(E entity) {
-        return mode == ImportMode.NEW_ONLY && !entity.isNew() || (mode == ImportMode.UPDATE_ONLY && entity.isNew());
+        if (entity == null) {
+            return true;
+        }
+
+        if (mode == ImportMode.NEW_ONLY && !entity.isNew()) {
+            return true;
+        }
+
+        return mode == ImportMode.UPDATE_ONLY && entity.isNew();
     }
 
     /**

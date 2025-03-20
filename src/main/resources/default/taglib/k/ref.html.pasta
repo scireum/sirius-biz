@@ -1,27 +1,43 @@
-<i:arg type="String" name="code"/>
-<i:arg type="String" name="class" default=""/>
+<i:arg name="code" type="String"/>
+<i:arg name="anchor" type="String" default=""/>
+<i:arg name="label"
+       type="String"
+       default="@renderToString('body')"
+       description="Defines a speaking label or description, defaults to the rendered child content of the element."/>
+<i:arg name="icon" type="String" default="" description="Defines the icon left to the label."/>
+<i:arg name="class" type="String" default=""/>
 
-<i:pragma name="description">Provides a link which points to the given knowledge base article.</i:pragma>
+<i:pragma name="description">Renders a link which points to the given knowledge base article.</i:pragma>
 
 <i:local name="currentArticle" value="@helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
 <i:local name="referencedArticle"
          value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(currentArticle != null ? currentArticle.getLanguage() : NLS.getCurrentLanguage(), code, true).orElse(null)"/>
+
 <i:if test="referencedArticle != null">
+    <i:local name="effectiveIcon"
+             value="isFilled(icon) ? icon : (referencedArticle.isChapter() ? 'fa-solid fa-book' : 'fa-solid fa-file-alt')"/>
+    <i:local name="effectiveLabel" value="isFilled(label) ? label : referencedArticle.getTitle()"/>
+    <i:local name="effectiveAnchor" value="(isFilled(anchor) && !anchor.startsWith('#')) ? ('#' + anchor) : anchor"/>
+
     <a class="@class text-decoration-none"
        target="_blank"
-       href="/kba/@referencedArticle.getLanguage()/@code"
+       href="/kba/@referencedArticle.getLanguage()/@code@effectiveAnchor"
        data-bs-toggle="tooltip"
        data-bs-placement="top"
        title="@referencedArticle.getDescription()">
-        <i:if test="referencedArticle.isChapter()">
-            <i class="fa-solid fa-book"></i>
-            <i:else>
-                <i class="fa-solid fa-file-alt"></i>
-            </i:else>
-        </i:if>
-        <span class="text-decoration-underline">@referencedArticle.getTitle()</span>
-    </a>
-    <i:else>
-        <i>Missing KnowledgeBase article.</i>
-    </i:else>
+        <i class="@effectiveIcon"></i>
+        <span class="text-decoration-underline"><i:raw>@effectiveLabel</i:raw></span><!--@ (suppress whitespace)
+ --></a><!--@ (suppress whitespace)
+
+ --><i:else>
+        <i:local name="effectiveLabel" value="isFilled(label) ? label : i18n('KnowledgeBase.missingArticleLabel')"/>
+
+        <span class="text-danger"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="@i18n('KnowledgeBase.missingPermission')">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <i>@effectiveLabel</i><!--@ (suppress whitespace)
+     --></span><!--@ (suppress whitespace)
+ --></i:else>
 </i:if>

@@ -32,5 +32,9 @@
         <i:render name="sidebar"/>
     </i:block>
 
+    <i:block name="head">
+        <i:render name="head"/>
+    </i:block>
+
     <i:render name="body"/>
 </k:base>

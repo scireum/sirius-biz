@@ -93,7 +93,7 @@ public class MongoCustomScriptController extends BizController {
         if (webContext.isSafePOST()) {
             String script = webContext.get(PARAM_SCRIPT).asString();
             CompilationContext compilationContext =
-                    new CompilationContext(SourceCodeInfo.forInlineCode(script, SandboxMode.WARN_ONLY));
+                    new CompilationContext(SourceCodeInfo.forInlineCode(script, SandboxMode.DISABLED));
             compilationContext.getVariableScoper()
                               .defineVariable(Position.UNKNOWN,
                                               MongoCustomEventDispatcherRepository.SCRIPT_PARAMETER_REGISTRY,

@@ -198,6 +198,15 @@ public class Process extends SearchableEntity {
     private final StringIntMap adminTimings = new StringIntMap();
 
     /**
+     * Contains the timestamp when the process was created / initialized.
+     * <p>
+     * Note, for standby processes, this contains the timestamp of the last invocation.
+     */
+    public static final Mapping CREATED = Mapping.named("created");
+    @NullAllowed
+    private LocalDateTime created;
+
+    /**
      * Contains the timestamp when the process was started.
      * <p>
      * Note, for standby processes, this contains the timestamp of the last invocation.
@@ -219,6 +228,15 @@ public class Process extends SearchableEntity {
     public static final Mapping COMPLETED = Mapping.named("completed");
     @NullAllowed
     private LocalDateTime completed;
+
+    /**
+     * Contains the waiting time in seconds.
+     * <p>
+     * This is the time between the creation of the process and the actual start of the process.
+     */
+    public static final Mapping WAITING_TIME = Mapping.named("waitingTime");
+    @NullAllowed
+    private int waitingTime;
 
     /**
      * Contains the estimated computation time performed in this process in seconds.
@@ -387,7 +405,7 @@ public class Process extends SearchableEntity {
      */
     public String getStateColor() {
         return switch (state) {
-            case RUNNING -> "blue";
+            case WAITING, RUNNING -> "blue";
             case STANDBY -> "violet-light";
             case TERMINATED -> "green";
             case CANCELED -> "yellow";
@@ -589,6 +607,15 @@ public class Process extends SearchableEntity {
         return adminTimings;
     }
 
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public Process setCreated(LocalDateTime created) {
+        this.created = created;
+        return this;
+    }
+
     public LocalDateTime getStarted() {
         return started;
     }
@@ -687,6 +714,15 @@ public class Process extends SearchableEntity {
 
     public void setWarnings(boolean warnings) {
         this.warnings = warnings;
+    }
+
+    public int getWaitingTime() {
+        return waitingTime;
+    }
+
+    public Process setWaitingTime(int waitingTime) {
+        this.waitingTime = waitingTime;
+        return this;
     }
 
     public int getComputationTime() {

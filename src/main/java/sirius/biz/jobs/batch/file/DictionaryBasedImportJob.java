@@ -8,11 +8,13 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.importer.AfterLineLoadEvent;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Values;
 
 import javax.annotation.Nullable;
@@ -41,13 +43,18 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     @Override
     public void execute() throws Exception {
         VirtualFile file = process.require(FILE_PARAMETER);
-        this.dictionaryBasedImport = new DictionaryBasedImport(file.name(),
-                                                               dictionary,
-                                                               process,
-                                                               indexAndRow -> handleRow(indexAndRow.getFirst(),
-                                                                                        indexAndRow.getSecond())).withIgnoreEmptyValues(
-                process.getParameter(DictionaryBasedImport.IGNORE_EMPTY_PARAMETER).orElse(true));
+        this.dictionaryBasedImport =
+                new DictionaryBasedImport(file.name(), dictionary, process, this::handleRow).withIgnoreEmptyValues(
+                        process.getParameter(DictionaryBasedImport.IGNORE_EMPTY_PARAMETER).orElse(true));
         super.execute();
+    }
+
+    private void handleRow(Tuple<Integer, Context> indexAndRow) {
+        if (importer.getContext().getEventDispatcher().isActive()) {
+            AfterLineLoadEvent event = new AfterLineLoadEvent(indexAndRow.getSecond(), importer.getContext());
+            importer.getContext().getEventDispatcher().handleEvent(event);
+        }
+        handleRow(indexAndRow.getFirst(), indexAndRow.getSecond());
     }
 
     @Nullable

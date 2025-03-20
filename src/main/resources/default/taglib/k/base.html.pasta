@@ -30,6 +30,7 @@
             <link rel="stylesheet" type="text/css" href="/assets/libs/prettify/skins/desert.css">
             <script type="text/javascript" src="/assets/libs/prettify/prettify.js"></script>
             <script type="text/javascript" src="/assets/libs/mermaid/mermaid.min.js"></script>
+            <i:render name="head"/>
         </i:block>
 
         <i:block name="breadcrumbs">
@@ -60,8 +61,9 @@
                     <i:if test="parent != null">
                         <t:inlineInfo>
                             <k:link link="@apply('/kba/%s/%s', parent.getLanguage(), parent.getArticleId())"
-                                    icon="fa-solid fa-book"
-                                    name="@parent.getTitle()"/>
+                                    icon="fa-solid fa-book">
+                                @parent.getTitle()
+                            </k:link>
                         </t:inlineInfo>
                     </i:if>
                     <t:inlineInfo>
@@ -131,8 +133,9 @@
                                 <div class="pb-2">
                                     <div>
                                         <k:link link="@apply('/kba/%s/%s', reference.getLanguage(), reference.getArticleId())"
-                                                icon="@(reference.isChapter() ? 'fa-solid fa-book' : 'fa-solid fa-file-alt')"
-                                                name="@reference.getTitle()"/>
+                                                icon="@(reference.isChapter() ? 'fa-solid fa-book' : 'fa-solid fa-file-alt')">
+                                            @reference.getTitle()
+                                        </k:link>
                                     </div>
                                     <div class="text-muted">
                                         @reference.getDescription()

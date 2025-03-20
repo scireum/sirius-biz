@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class KnowledgeBaseMessageExpander implements MessageExpander {
 
     private static final Pattern LOCKED_KBA_PATTERN =
-            Pattern.compile("\\[(.*?)kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?(.*)]");
+            Pattern.compile("\\[(.*?)kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?(.*?)]");
     private static final Pattern KBA_PATTERN = Pattern.compile("kba:([a-zA-Z0-9]+)(#[a-zA-Z0-9-_]+)?");
 
     private static final String EXPANDED_LINK_TEMPLATE = """

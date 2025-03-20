@@ -8,6 +8,7 @@
 
 package sirius.biz.protocol;
 
+import com.google.common.base.Throwables;
 import sirius.biz.elastic.AutoBatchLoop;
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
@@ -23,7 +24,6 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Incident;
 import sirius.kernel.health.LogMessage;
 import sirius.kernel.health.LogTap;
-import sirius.kernel.nls.NLS;
 import sirius.web.mails.MailLog;
 import sirius.web.security.UserContext;
 
@@ -41,6 +41,8 @@ import java.util.logging.Level;
 public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
     private static final int DISABLE_ON_ERROR_PERIOD_MILLIS = 1000 * 60;
+
+    private static final int NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE = 1000;
 
     /**
      * Names the framework which must be enabled to activate all protocol features.
@@ -80,7 +82,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     private AtomicLong disabledUntil;
 
     /**
-     * In case the ES cluster is unreachable or we can for some reason not log errors or log messages,
+     * In case the ES cluster is unreachable, or we can for some reason not log errors or log messages,
      * we disable the facility for one minute so that the local syslogs aren't jammed with errors.
      */
     private void disableForOneMinute() {
@@ -108,35 +110,83 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
         try {
             LocalDate yesterday = LocalDate.now().minusDays(1);
-            StoredIncident si = null;
+            StoredIncident storedIncident = null;
             if (incident.getLocation() != null) {
-                si = elastic.select(StoredIncident.class)
-                            .eq(StoredIncident.LOCATION, incident.getLocation())
-                            .where(Elastic.FILTERS.gt(StoredIncident.LAST_OCCURRENCE, yesterday))
-                            .queryFirst();
+                storedIncident = elastic.select(StoredIncident.class)
+                                        .eq(StoredIncident.LOCATION, incident.getLocation())
+                                        .where(Elastic.FILTERS.gt(StoredIncident.LAST_OCCURRENCE, yesterday))
+                                        .queryFirst();
             }
 
-            if (si == null) {
-                si = new StoredIncident();
-                si.setLocation(incident.getLocation());
-                si.setFirstOccurrence(LocalDateTime.now());
+            if (storedIncident == null) {
+                storedIncident = new StoredIncident();
+                storedIncident.setLocation(incident.getLocation());
+                storedIncident.setFirstOccurrence(LocalDateTime.now());
             }
 
-            si.setNumberOfOccurrences(si.getNumberOfOccurrences() + 1);
-            si.setNode(CallContext.getNodeName());
-            for (Tuple<String, String> t : incident.getMDC()) {
-                si.getMdc().put(t.getFirst(), t.getSecond());
+            storedIncident.setNumberOfOccurrences(storedIncident.getNumberOfOccurrences() + 1);
+            storedIncident.setNode(CallContext.getNodeName());
+            for (Tuple<String, String> tuple : incident.getMDC()) {
+                storedIncident.getMdc().put(tuple.getFirst(), tuple.getSecond());
             }
-            si.setUser(UserContext.getCurrentUser().getProtocolUsername());
-            si.setMessage(incident.getException().getMessage());
-            si.setStack(NLS.toUserString(incident.getException()));
-            si.setCategory(incident.getCategory());
-            si.setLastOccurrence(LocalDateTime.now());
+            storedIncident.setUser(UserContext.getCurrentUser().getProtocolUsername());
+            storedIncident.setMessage(buildErrorMessages(incident.getException()));
+            storedIncident.setStack(Exceptions.buildStackTraceWithoutErrorMessage(incident.getException()));
+            storedIncident.setCategory(incident.getCategory());
+            storedIncident.setLastOccurrence(LocalDateTime.now());
 
-            elastic.update(si);
+            elastic.update(storedIncident);
         } catch (Exception exception) {
             Elastic.LOG.SEVERE(exception);
             disableForOneMinute();
+        }
+    }
+
+    private String buildErrorMessages(Throwable throwable) {
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        int numberOfCharactersPerMessage = calcCharactersPerMessage(throwable);
+
+        stringBuilder.append(throwable.getClass().getName()).append(":").append("\n");
+        stringBuilder.append(truncateErrorMessage(throwable.getMessage(), numberOfCharactersPerMessage)).append("\n");
+
+        try {
+            // The first element of the causal chain is always the throwable followed by its cause hierarchy.
+            // Therefore, the first element is skipped.
+            Throwables.getCausalChain(throwable).stream().skip(1).forEach(cause -> {
+                stringBuilder.append("\n").append("Caused by: ").append(cause.getClass().getName()).append(":").append("\n");
+                stringBuilder.append(truncateErrorMessage(determineErrorMessage(cause), numberOfCharactersPerMessage)).append("\n\n");
+            });
+        } catch (IllegalArgumentException exception) {
+            // This happens if the causal chain has a circular reference.
+            stringBuilder.append("Warning: Circular reference detected in causal chain. Skipping causes: ")
+                         .append(exception.getMessage());
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private String determineErrorMessage(Throwable throwable) {
+        if (Strings.isFilled(throwable.getMessage())) {
+            return throwable.getMessage();
+        }
+        if (Strings.areEqual(throwable.getClass().getName(), throwable.toString())) {
+            return "";
+        }
+        return throwable.toString();
+    }
+
+    private String truncateErrorMessage(String errorMessage, int length) {
+        int charsToPreserveFromStart = Math.max(0, length - NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE);
+        return Strings.truncateMiddle(errorMessage, charsToPreserveFromStart, NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE);
+    }
+
+    private int calcCharactersPerMessage(Throwable throwable) {
+        try {
+            return maxMessageLength / Throwables.getCausalChain(throwable).size();
+        } catch (IllegalArgumentException ignored) {
+            return maxMessageLength;
         }
     }
 

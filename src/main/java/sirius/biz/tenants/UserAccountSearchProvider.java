@@ -87,7 +87,7 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
             } else {
                 openSearchResult.withDescription(userAccount
                                                  + " ("
-                                                 + userAccount.getTenant().fetchValue().toString()
+                                                 + userAccount.getTenant().fetchCachedValue().toString()
                                                  + ")")
                                 .withURL("/tenants/select/"
                                          + userAccount.getTenant().getIdAsString()
@@ -98,10 +98,19 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)) {
                 openSearchResult.withTemplateFromCode("""
                                                               <i:arg name="user" type="sirius.biz.tenants.UserAccount"/>
-                                                                                                                            
-                                                              @user (@user.getTenant().fetchValue().toString())
+                                                              @user (
+                                                              <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
+                                                                <t:smartValue type="tenant"
+                                                                    id="@generateId('smarty-useraccount-%s')"
+                                                                    payload="@user.getTenantAsString()"
+                                                                    label="@user.getTenant().fetchCachedValue().toString()"/>
+                                                                <i:else>
+                                                                    @user.getTenant().fetchCachedValue().toString()
+                                                                </i:else>
+                                                              </i:if>
+                                                              )
                                                               <br>
-                                                              <a href=/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              <a href="/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
                                                               """, userAccount);
             }
             resultCollector.accept(openSearchResult);
@@ -112,6 +121,6 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
 
     @Override
     public int getPriority() {
-        return 100;
+        return 110;
     }
 }

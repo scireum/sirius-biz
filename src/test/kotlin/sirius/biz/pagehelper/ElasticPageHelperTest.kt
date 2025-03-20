@@ -16,6 +16,7 @@ import sirius.biz.web.pagehelper.ElasticPageHelperEntity
 import sirius.db.es.Elastic
 import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
+import sirius.web.http.QueryString
 import sirius.web.http.WebContext
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -34,7 +35,7 @@ class ElasticPageHelperTest {
         val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
-            set(webContext, mapOf<String, List<String>>())
+            set(webContext, QueryString("?"))
         }
         pageHelper.withContext(webContext)
         pageHelper.addBooleanAggregation(ElasticPageHelperEntity.BOOLEAN_FIELD)
@@ -62,7 +63,7 @@ class ElasticPageHelperTest {
         val webContext = WebContext.getCurrent()
         webContext.javaClass.getDeclaredField("queryString").apply {
             isAccessible = true
-            set(webContext, mapOf("booleanField" to listOf("1")))
+            set(webContext, QueryString("?booleanField=1"))
         }
         pageHelper.withContext(webContext)
         pageHelper.addBooleanAggregation(ElasticPageHelperEntity.BOOLEAN_FIELD)

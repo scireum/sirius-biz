@@ -1,4 +1,4 @@
-<i:local name="updates" value="part(sirius.biz.tycho.updates.UpdateManager.class).fetchUpdates()" />
+<i:local name="updates" value="part(sirius.biz.tycho.updates.UpdateManager.class).fetchUpdates()"/>
 <i:if test="!updates.isEmpty()">
     <div class="card mb-4 flex-grow-1">
         <div class="card-body">
@@ -12,14 +12,21 @@
                     <div class="mb-1">
                         <b>@info.getLabel()</b>
                     </div>
-                    <div><i:raw>@info.getDescription()</i:raw></div>
-                    <i:local name="linkId" value="@apply('update-link-%s', generateId())" />
-                    <div><a id="@linkId" class="small stretched-link" href="@info.getLink()" target="_blank">@i18n("DashboardController.more")</a></div>
+                    <div>
+                        <i:raw>@info.getDescription()</i:raw>
+                    </div>
+                    <i:local name="linkId" value="@apply('update-link-%s', generateId())"/>
+                    <div>
+                        <a id="@linkId" class="small stretched-link" href="@info.getLink()" rel="nofollow"
+                           target="_blank">@i18n("DashboardController.more")</a>
+                    </div>
                     <script type="text/javascript">
                         sirius.ready(function () {
-                            document.querySelector('#@linkId').addEventListener('click', function() {
+                            document.querySelector('#@linkId').addEventListener('click', function () {
                                 sirius.postJSON('/tycho/updates/markAsSeen',
-                                    {updateId: '@info.getGuid()'});
+                                    {
+                                        updateId: '@info.getGuid()'
+                                    });
                             });
                         });
                     </script>

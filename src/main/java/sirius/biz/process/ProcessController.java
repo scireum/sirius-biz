@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import sirius.biz.cluster.work.DistributedTasks;
+import sirius.biz.jobs.JobFactory;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogHandler;
 import sirius.biz.process.logs.ProcessLogState;
@@ -105,7 +106,7 @@ public class ProcessController extends BizController {
                                      Process.REFERENCES,
                                      NLS.get("ProcessController.reference"),
                                      null);
-        pageHelper.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(null));
+        pageHelper.addTermAggregation(Process.PROCESS_TYPE, this::findJobLabel);
         pageHelper.addTimeAggregation(Process.STARTED,
                                       false,
                                       DateRange.LAST_FIVE_MINUTES,
@@ -119,6 +120,11 @@ public class ProcessController extends BizController {
         pageHelper.withTotalCount();
 
         webContext.respondWith().template("/templates/biz/process/processes.html.pasta", pageHelper.asPage());
+    }
+
+    private String findJobLabel(String value) {
+        JobFactory result = context.getPart(value, JobFactory.class);
+        return result != null ? result.getLabel() : null;
     }
 
     private Process findAccessibleProcess(String processId) {

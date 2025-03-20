@@ -18,6 +18,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 import sirius.web.controller.Controller;
@@ -52,13 +53,13 @@ public class Isenguard {
     /**
      * Signals that the limit as given in the system configuration should be used.
      * <p>
-     * This is used by {@link #isRateLimitReached(String, String, int, Supplier)} and
-     * {@link #isRateLimitReached(String, String, int, Runnable, Supplier)}.
+     * This is used by {@link #registerCallAndCheckRateLimitReached(String, String, int, Supplier)} and
+     * {@link #registerCallAndCheckRateLimitReached(String, String, int, Runnable, Supplier)}.
      */
     public static final int USE_LIMIT_FROM_CONFIG = 0;
 
     /**
-     * Contains the logged used for all firewall sepcific events.
+     * Contains the log used for all firewall-specific events.
      */
     public static final Log LOG = Log.get("isenguard");
 
@@ -89,14 +90,14 @@ public class Isenguard {
     private EventRecorder events;
 
     /**
-     * Determins if the given ipAddress has already been blocked via {@link #blockIP(String)}.
+     * Determines if the given {@code ipAddress} has already been blocked via {@link #blockIP(String)}.
      *
-     * @param ipAddress the ip address to check
+     * @param ipAddress the IP address to check
      * @return <tt>true</tt> if the address has been blocked, <tt>false</tt> otherwise
      */
     public boolean isIPBlacklisted(String ipAddress) {
         try {
-            return limiter != null && limiter.isIPBLacklisted(ipAddress);
+            return limiter != null && limiter.isIPBlacklisted(ipAddress);
         } catch (Exception exception) {
             // In case of an error e.g. Redis might not be available,
             // we resort to ignoring any checks and let the application run.
@@ -153,71 +154,137 @@ public class Isenguard {
                                     String realm,
                                     int explicitLimit,
                                     Supplier<RateLimitingInfo> infoSupplier) {
-        if (isRateLimitReached(scope, realm, explicitLimit, infoSupplier)) {
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Rate Limit reached: %s (%s)",
-                                                    realm,
-                                                    formatLimit(fetchLimit(realm, explicitLimit)))
-                            .hint(Controller.HTTP_STATUS, HttpResponseStatus.TOO_MANY_REQUESTS.code())
-                            .handle();
+        if (registerCallAndCheckRateLimitReached(scope, realm, explicitLimit, infoSupplier)) {
+            throw createException(realm, explicitLimit);
         }
     }
 
     /**
-     * Determines if the rate limit of the given realm for the given scope is reached.
+     * Creates an exception which indicates that the rate limit for the given realm is reached.
      *
-     * @param scope         the key which is used for grouping multiple events - e.g. the ip of the caller
+     * @param realm the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
+     * @return an exception which indicates that the rate limit for the given realm is reached
+     */
+    public HandledException createException(String realm) {
+        return createException(realm, USE_LIMIT_FROM_CONFIG);
+    }
+
+    /**
+     * Creates an exception which indicates that the rate limit for the given realm is reached.
+     *
+     * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
+     * @param explicitLimit the explicit limit which overwrites the limit given in the config.
+     *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
+     * @return an exception which indicates that the rate limit for the given realm is reached
+     */
+    public HandledException createException(String realm, int explicitLimit) {
+        return Exceptions.createHandled()
+                         .withSystemErrorMessage("Rate Limit reached: %s (%s)",
+                                                 realm,
+                                                 formatLimit(fetchLimit(realm, explicitLimit)))
+                         .hint(Controller.HTTP_STATUS, HttpResponseStatus.TOO_MANY_REQUESTS.code())
+                         .handle();
+    }
+
+    /**
+     * Registers an event and determines if the rate limit of the given realm for the given scope is reached.
+     * <p>
+     * Note that invoking this method counts towards the limit. Use {@link #checkRateLimitReached(String, String, int)}
+     * if you only want to check the current state without counting the call.
+     *
+     * @param scope         the key which is used for grouping multiple events - e.g. the IP of the caller
      * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit the explicit limit which overwrites the limit given in the config.
      *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
      * @param infoSupplier  a supplier which is invoked to provide additional incident data once the rate limit is first hit
-     * @return <tt>true</tt> if the rate limit for the given ip, realm and check interval is reached,
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
      * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
      * created.
      */
-    public boolean isRateLimitReached(String scope,
-                                      String realm,
-                                      int explicitLimit,
-                                      Supplier<RateLimitingInfo> infoSupplier) {
-        return isRateLimitReached(scope, realm, explicitLimit, null, infoSupplier);
-    }
-
-    private String formatLimit(Tuple<Integer, Integer> limit) {
-        return Strings.apply("%s calls within %ss", limit.getFirst(), limit.getSecond());
+    public boolean registerCallAndCheckRateLimitReached(String scope,
+                                                        String realm,
+                                                        int explicitLimit,
+                                                        Supplier<RateLimitingInfo> infoSupplier) {
+        return registerCallAndCheckRateLimitReached(scope, realm, explicitLimit, null, infoSupplier);
     }
 
     /**
-     * Determines if the rate limit of the given realm for the given IP is reached.
+     * Registers an event and determines if the rate limit of the given realm for the given scope is reached.
+     * <p>
+     * Note that invoking this method counts towards the limit. Use {@link #checkRateLimitReached(String, String, int)}
+     * if you only want to check the current state without counting the call.
      *
-     * @param scope            the key which is used for grouping multiple events - e.g. the ip of the caller
+     * @param scope            the key which is used for grouping multiple events - e.g. the IP of the caller
      * @param realm            the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit    the explicit limit which overwrites the limit given in the config.
      *                         Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
      * @param limitReachedOnce specifies an action which is executed once the limit was reached, but then skipped for
-     *                         this scope, relam and check interval.
+     *                         this scope, realm and check interval.
      * @param infoSupplier     a supplier which is invoked to provide additional incident data once the rate limit is first hit
-     * @return <tt>true</tt> if the rate limit for the given ip, realm and check interval is reached,
-     * <tt>false</tt> otherwise.
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
+     * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
+     * created.
      */
-    public boolean isRateLimitReached(String scope,
-                                      String realm,
-                                      int explicitLimit,
-                                      Runnable limitReachedOnce,
-                                      Supplier<RateLimitingInfo> infoSupplier) {
+    public boolean registerCallAndCheckRateLimitReached(String scope,
+                                                        String realm,
+                                                        int explicitLimit,
+                                                        Runnable limitReachedOnce,
+                                                        Supplier<RateLimitingInfo> infoSupplier) {
         try {
             Tuple<Integer, Integer> limit = fetchLimit(realm, explicitLimit);
-
             if (limit.getFirst() == 0 || limit.getSecond() == 0) {
                 return false;
             }
 
-            return isRateLimitReached(scope, realm, limit.getSecond(), limit.getFirst(), () -> {
+            return registerCallAndCheckLimit(scope, realm, limit.getSecond(), limit.getFirst(), () -> {
                 handleLimitReached(scope, realm, limit, infoSupplier.get());
 
                 if (limitReachedOnce != null) {
                     limitReachedOnce.run();
                 }
             });
+        } catch (Exception exception) {
+            // In case of an error e.g. Redis might not be available,
+            // we resort to ignoring any limits and let the application run.
+            // The other option would be to block everything and essentially
+            // shut down the application, which isn't feasible either...
+            Exceptions.handle(LOG, exception);
+            return false;
+        }
+    }
+
+    /**
+     * Determines if the rate limit of the given realm for the given scope is reached. This check does not have side
+     * effects.
+     *
+     * @param scope the key which is used for grouping multiple events - e.g. the IP of the caller
+     * @param realm the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
+     * <tt>false</tt> otherwise
+     */
+    public boolean checkRateLimitReached(String scope, String realm) {
+        return checkRateLimitReached(scope, realm, USE_LIMIT_FROM_CONFIG);
+    }
+
+    /**
+     * Determines if the rate limit of the given realm for the given scope is reached. This check does not have side
+     * effects.
+     *
+     * @param scope         the key which is used for grouping multiple events - e.g. the IP of the caller
+     * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
+     * @param explicitLimit the explicit limit which overwrites the limit given in the config.
+     *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
+     * <tt>false</tt> otherwise
+     */
+    public boolean checkRateLimitReached(String scope, String realm, int explicitLimit) {
+        try {
+            Tuple<Integer, Integer> limit = fetchLimit(realm, explicitLimit);
+            if (limit.getFirst() == 0 || limit.getSecond() == 0) {
+                return false;
+            }
+
+            return checkLimit(scope, realm, limit.getSecond(), limit.getFirst());
         } catch (Exception exception) {
             // In case of an error e.g. Redis might not be available,
             // we resort to ignoring any limits and let the application run.
@@ -260,13 +327,22 @@ public class Isenguard {
                                                       .withLocation(Strings.limit(info.getLocation(), 255)));
     }
 
-    private boolean isRateLimitReached(String scope,
-                                       String realm,
-                                       int intervalInSeconds,
-                                       int limit,
-                                       Runnable limitReachedOnce) {
+    private String formatLimit(Tuple<Integer, Integer> limit) {
+        return Strings.apply("%s calls within %ss", limit.getFirst(), limit.getSecond());
+    }
+
+    private boolean checkLimit(String scope, String realm, int intervalInSeconds, int limit) {
         String key = computeRateLimitingKey(scope, realm, intervalInSeconds);
-        return limiter.increaseAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
+        return limiter.readCallCount(key) >= limit;
+    }
+
+    private boolean registerCallAndCheckLimit(String scope,
+                                              String realm,
+                                              int intervalInSeconds,
+                                              int limit,
+                                              Runnable limitReachedOnce) {
+        String key = computeRateLimitingKey(scope, realm, intervalInSeconds);
+        return limiter.registerCallAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
     }
 
     private String computeRateLimitingKey(String scope, String realm, int intervalInSeconds) {
@@ -295,12 +371,12 @@ public class Isenguard {
         }
 
         String key = computeRateLimitingKey(scope, realm, limit.getSecond());
-        int currentValue = limiter.readLimit(key);
+        int currentValue = limiter.readCallCount(key);
         return Strings.apply("%s / %s (per %ss)", currentValue, limit.getFirst(), limit.getSecond());
     }
 
     /**
-     * Lists all known relams with the given type.
+     * Lists all known realms with the given type.
      * <p>
      * Note that there a some common types:
      * <ul>

@@ -9,6 +9,7 @@
 package sirius.biz.scripting;
 
 import sirius.kernel.health.HandledException;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import java.util.Optional;
 
@@ -26,6 +27,13 @@ public abstract class ScriptableEvent {
      * Stores if an error / exception occurred while invoking an event handler.
      */
     protected boolean failed;
+
+    /**
+     * Stores if an event handler marked the event as aborted.
+     * <p>
+     * This can be parsed by event callers to evaluate if an operation should be stopped.
+     */
+    private boolean aborted;
 
     /**
      * Stores the exception which occurred while invoking an event handler.
@@ -50,6 +58,25 @@ public abstract class ScriptableEvent {
      */
     public boolean isFailed() {
         return failed;
+    }
+
+    /**
+     * Determines if the event was marked as aborted.
+     * <p>
+     * This can be parsed by event callers to evaluate if an operation should be stopped.
+     *
+     * @return <tt>true</tt> if the event is marked as aborted, <tt>false</tt> otherwise
+     */
+    public boolean isAborted() {
+        return aborted;
+    }
+
+    /**
+     * Marks the event as aborted.
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public void abort() {
+        this.aborted = true;
     }
 
     /**

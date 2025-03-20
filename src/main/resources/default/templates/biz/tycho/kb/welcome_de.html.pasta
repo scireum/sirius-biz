@@ -1,19 +1,27 @@
 <div class="pb-4">
-    <img src="/assets/images/login_logo.png" style="max-height: 100px"/>
+    <img src="/assets/images/login_logo.png"
+         alt="@sirius.kernel.info.Product.getProduct().getName()"
+         style="max-height: 100px"/>
 </div>
 
 <p>
-Willkommen in der Knowledge Base von @sirius.kernel.info.Product.getProduct().getName()
+    Willkommen in der Knowledge Base von @sirius.kernel.info.Product.getProduct().getName()
 </p>
 <p>
-    Hier finden Sie eine Übersicht über alle Hilfeseiten und Anleitungen die wir für Sie bereitstellen. Bitte beachten
-    Sie, dass Sie auch die <k:link link="/open-search" icon="fa-solid fa-search" name="Systemweite Suche"/> verwenden
-    können, um entsprechende Hilfeseiten zu finden.
-
-    Passende Anleitungen oder Erklärungen finden Sie auch direkt in den Anwendungen. Achten Sie hierfür auf dieses
+    Hier finden Sie eine Übersicht über alle Hilfeseiten und Anleitungen die wir für Sie bereitstellen.
+    Passende Anleitungen oder Erklärungen finden Sie direkt in den Anwendungen. Achten Sie hierfür auf dieses
     Symbol <a class="btn btn-info"><i class="fa-solid fa-lightbulb"></i></a> im rechten oberen Bereich.
 
-    Bitte beachten Sie, dass einige Hilfeseiten nur mit einer entsprechenden Berechtigung und nach einem Login sichtbar
+    <i:if test="isFrameworkEnabled('tycho.open-search')">
+        <t:permission permission="permission-open-search">
+            Bitte beachten Sie, dass Sie auch die
+            <k:link link="/open-search" icon="fa-solid fa-search">Systemweite Suche</k:link>
+            verwenden können, um entsprechende Hilfeseiten zu finden.
+        </t:permission>
+    </i:if>
+
+    Bitte beachten Sie, dass einige Hilfeseiten nur mit einer entsprechenden Berechtigung und nach einem Login
+    sichtbar
     sind. Wenn Sie eine Hilfeseite an weitere Personen versenden möchten, nutzen Sie hierfür den Button
     <a class="btn btn-outline-secondary"><i class="fa-solid fa-link"></i></a> im rechten oberen Bereich.
 </p>

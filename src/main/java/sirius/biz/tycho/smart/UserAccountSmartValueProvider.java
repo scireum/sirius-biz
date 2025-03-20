@@ -8,6 +8,7 @@
 
 package sirius.biz.tycho.smart;
 
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccount;
 import sirius.kernel.commons.Strings;
@@ -33,14 +34,15 @@ public class UserAccountSmartValueProvider implements SmartValueProvider {
     public void collectValues(String type, Object payload, Consumer<SmartValue> valueCollector) {
         if (payload instanceof UserAccount<?, ?> user) {
             if (tenants != null
-                && UserContext.getCurrentUser().hasPermission("permission-select-tenant")
+                && UserContext.getCurrentUser()
+                              .hasPermission(TenantUserManager.PERMISSION_SELECT_TENANT)
                 && !Strings.areEqual(user.getTenantAsString(), UserContext.getCurrentUser().getTenantId())) {
                 valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                      tenants.fetchCachedTenantName(user.getTenantAsString()),
                                                      "/tenants/select/" + user.getTenantAsString(),
                                                      null));
             }
-            if (UserContext.getCurrentUser().hasPermission("permission-select-user-account")
+            if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
                 && !Strings.areEqual(user.getUniqueName(), UserContext.getCurrentUser().getUserId())) {
                 valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                      user.getUserAccountData().getShortName(),

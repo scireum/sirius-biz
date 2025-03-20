@@ -38,13 +38,15 @@
                     </i:for>
                 </t:singleSelect>
             </div>
+            <div class="small text-muted mb-2" id="info"></div>
         </div>
     </div>
 
-    <div class="card mb-2">
+
+    <div class="card mb-4">
         <div class="card-body">
             <div class="overflow-auto">
-                <table class="table table-bordered mb-4">
+                <table class="table table-bordered table-hover mb-4">
                     <thead id="columns">
                     </thead>
                     <tbody id="rows">
@@ -53,8 +55,6 @@
             </div>
         </div>
     </div>
-
-    <div class="small mb-4" id="info"></div>
 
     <form id="exportForm" action="/system/sql/export" method="post">
         <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
@@ -91,6 +91,11 @@
                     }
                     if (data.rows !== undefined && data.columns !== undefined) {
                         if (data.rows.length > 0) {
+                            _info.textContent +=' ⋅ ' + data.rows.length + ' rows';
+                            if (data.effectiveLimit) {
+                                _info.textContent += ' (limited to ' + data.effectiveLimit + ')';
+                            }
+
                             document.getElementById('exportQuery').value = document.getElementById('query').value;
                             document.getElementById('exportDatabase').value = document.getElementById("db").tokenAutocomplete.val()[0];
                             _exportBtn.classList.remove("d-none");

@@ -13,6 +13,7 @@ import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.InternalService;
@@ -39,8 +40,12 @@ public class UpdatesController extends BizController {
     @Routed("/tycho/updates/markAsSeen")
     public void markUpdatesAsSeen(WebContext webContext, JSONStructuredOutput output) {
         String updateId = webContext.require("updateId").asString();
-        if (Strings.isFilled(updateId)) {
+        if (Strings.isHttpUrl(updateId)) {
             eventRecorder.record(new UpdateClickEvent().forUpdateGuid(updateId));
+        } else {
+            throw Exceptions.createHandled()
+                            .withDirectMessage(Strings.apply("Invalid updateId: %s", updateId))
+                            .handle();
         }
     }
 }

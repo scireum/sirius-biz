@@ -165,11 +165,11 @@ public class BlobDispatcher implements WebDispatcher {
      */
     private void physicalDelivery(WebContext request, BlobUri blobUri) {
         Response response = request.respondWith();
-        Integer cacheSeconds = computeCacheDurationFromHash(response,
-                                                            blobUri.getAccessToken(),
+        Integer cacheSeconds = computeCacheDurationFromHash(blobUri.getAccessToken(),
                                                             blobUri.getPhysicalKey(),
                                                             blobUri.getStorageSpace());
         if (cacheSeconds == null) {
+            response.error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
         response.cachedForSeconds(cacheSeconds);
@@ -190,17 +190,15 @@ public class BlobDispatcher implements WebDispatcher {
     /**
      * Checks if the provided accessToken is invalid and return the cache time in seconds based on the hash validity.
      *
-     * @param response    the response to return
      * @param accessToken the security token to verify
      * @param key         the key to verify
      * @param space       the space which is accessed
      * @return the cache time in seconds or <tt>null</tt> if the hash is invalid
      */
-    private Integer computeCacheDurationFromHash(Response response, String accessToken, String key, String space) {
+    private Integer computeCacheDurationFromHash(String accessToken, String key, String space) {
         BlobStorageSpace storageSpace = blobStorage.getSpace(space);
         Optional<Integer> optionalHashDays = utils.verifyHash(key, accessToken, storageSpace.getUrlValidityDays());
         if (optionalHashDays.isEmpty()) {
-            response.error(HttpResponseStatus.UNAUTHORIZED);
             return null;
         }
 
@@ -238,31 +236,34 @@ public class BlobDispatcher implements WebDispatcher {
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
 
         Response response = request.respondWith();
-        Integer cacheSeconds = computeCacheDurationFromHash(response,
-                                                            blobUri.getAccessToken(),
-                                                            effectiveKey,
-                                                            blobUri.getStorageSpace());
+        Integer cacheSeconds =
+                computeCacheDurationFromHash(blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace());
         if (cacheSeconds == null) {
+            response.error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
-        response.cachedForSeconds(cacheSeconds);
-
-        BlobStorageSpace storageSpace = blobStorage.getSpace(blobUri.getStorageSpace());
 
         if (blobUri.isCacheable()) {
-            // If a virtual request is marked as cacheable, we try to redirect to the proper physical blob key
-            // as this will remain in cache much longer (and the redirect itself will also be cached). The additional
-            // HTTP round-trip for the redirect shouldn't hurt too much, as it is most probably optimized away due to
-            // keep-alive. However, using a physical delivery with infinite cache settings will enable any downstream
-            // reverse-proxies to maximize their cache utilization...
-            URLBuilder.UrlResult urlResult =
-                    buildPhysicalRedirectUrl(storageSpace, blobUri, cacheSeconds == Response.HTTP_CACHE_INFINITE);
-
-            if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
-                response.redirectTemporarily(urlResult.url());
-                return;
-            }
+            // Limit the cache time to a maximum of 1 hour for all virtual URLs, since it does not make sense to cache
+            // those for long as the underlying file might change.
+            response.cachedForSeconds(Math.min(cacheSeconds, 3600));
         } else {
+            response.notCached();
+        }
+
+        // Check if we have an actual file to deliver ...
+        BlobStorageSpace storageSpace = blobStorage.getSpace(blobUri.getStorageSpace());
+        URLBuilder.UrlResult urlResult =
+                buildPhysicalRedirectUrl(storageSpace, blobUri, cacheSeconds == Response.HTTP_CACHE_INFINITE);
+        if (urlResult.urlType() == URLBuilder.UrlType.PHYSICAL) {
+            // ... and if so, redirect to the physical URL ...
+            response.redirectTemporarily(urlResult.url());
+            return;
+        }
+
+        if (urlResult.urlType() == URLBuilder.UrlType.VIRTUAL) {
+            // A conversion will be attempted and tunneled over. Disable caching completely as we expect
+            // subsequent requests to deliver a redirect URL the new converted physical file.
             response.notCached();
         }
 

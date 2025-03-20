@@ -9,6 +9,10 @@
        type="String"
        default=""
        description="Contains the textual representation of the payload to show as link"/>
+<i:arg name="id"
+       type="String"
+       default="@generateId('smarty-%s')"
+       description="Contains the id of the smartValue"/>
 
 <i:pragma name="description">
     Permits to show a link in the UI when (on click) will load additional data and show this as tooltip. This can
@@ -17,7 +21,7 @@
 
 <i:if test="isFilled(payload)">
     <i:local name="signature" value="@computeAuthSignature(apply('%s/%s', type, payload))"/>
-    <i:local name="id" value="@generateId('smarty-%s')"/>
+    <i:local name="id" value="@id"/>
     <a id="@id"
        class="text-black link smart-values-link-js"
        href="javascript:openSmartValues('@id', '@type','@payload', '@signature')">@label</a>

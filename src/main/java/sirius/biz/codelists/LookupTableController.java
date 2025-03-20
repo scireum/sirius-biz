@@ -51,14 +51,15 @@ public class LookupTableController extends BizController {
                                        String tableName,
                                        String display,
                                        String extendedDisplay) {
+        boolean considerDeprecatedValues = webContext.get("considerDeprecatedValues").asBoolean();
+
         LookupTable lookupTable = lookupTables.fetchTable(tableName);
         LookupValue.Display fieldDisplayMode =
                 Value.of(display).getEnum(LookupValue.Display.class).orElse(LookupValue.Display.NAME);
         LookupValue.Display completionDisplayMode =
                 Value.of(extendedDisplay).getEnum(LookupValue.Display.class).orElse(LookupValue.Display.NAME);
         AutocompleteHelper.handle(webContext, (query, result) -> {
-            lookupTable.suggest(query)
-                       .filter(entry -> !entry.isDeprecated())
+            lookupTable.suggest(query, NLS.getCurrentLanguage(), considerDeprecatedValues)
                        .limit(MAX_SUGGESTIONS_ITEMS)
                        .map(entry -> entry.toAutocompletion(fieldDisplayMode, completionDisplayMode))
                        .forEach(result);

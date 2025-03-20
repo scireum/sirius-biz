@@ -47,7 +47,7 @@ public class JobsSearchProvider implements OpenSearchProvider {
         jobs.getAvailableJobs(query).filter(JobFactory::canStartInteractive).forEach(jobFactory -> {
             OpenSearchResult result = new OpenSearchResult();
             result.withLabel(jobFactory.getLabel())
-                  .withDescription(jobFactory.getDescription())
+                  .withHtmlDescription(jobFactory.getDescription())
                   .withURL("/job/" + jobFactory.getName());
             resultCollector.accept(result);
         });

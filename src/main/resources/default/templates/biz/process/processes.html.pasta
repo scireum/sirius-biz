@@ -38,7 +38,7 @@
                         </i:block>
 
                         <i:block name="actions">
-                            <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING || process.getState() == sirius.biz.process.ProcessState.STANDBY">
+                            <i:if test="process.getState() == sirius.biz.process.ProcessState.WAITING || process.getState() == sirius.biz.process.ProcessState.RUNNING || process.getState() == sirius.biz.process.ProcessState.STANDBY">
                                 <i:local name="debugToggleUrl"
                                          value="apply('/ps/%s/toggleDebugging', process.getId())"/>
                                 <i:if test="process.isDebugging()">
@@ -54,7 +54,7 @@
                                     </i:else>
                                 </i:if>
                             </i:if>
-                            <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+                            <i:if test="process.getState() == sirius.biz.process.ProcessState.WAITING || process.getState() == sirius.biz.process.ProcessState.RUNNING">
                                 <t:dropdownItem labelKey="NLS.cancel"
                                                 icon="fa-solid fa-ban fa-fw"
                                                 url="@apply('/ps/%s/cancel', process.getId())"
