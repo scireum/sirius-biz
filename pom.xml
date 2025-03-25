@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>13.1.0</version>
+        <version>14.0.1</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -17,9 +17,9 @@
     <url>https://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-44.6.0</sirius.kernel>
-        <sirius.web>dev-89.3.0</sirius.web>
-        <sirius.db>dev-60.1.0</sirius.db>
+        <sirius.kernel>dev-45.0.1</sirius.kernel>
+        <sirius.web>dev-90.0.0</sirius.web>
+        <sirius.db>dev-62.0.0</sirius.db>
     </properties>
 
     <repositories>
