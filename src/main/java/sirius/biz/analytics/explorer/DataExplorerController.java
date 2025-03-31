@@ -253,7 +253,7 @@ public class DataExplorerController extends BizController {
 
     private Granularity computeGranularity(String range) {
         return switch (range) {
-            case VALUE_LAST_30_DAYS, VALUE_LAST_90_DAYS, VALUE_LAST_MONTH -> Granularity.DAY;
+            case VALUE_LAST_30_DAYS, VALUE_LAST_90_DAYS, VALUE_LAST_MONTH, VALUE_MONTHLY -> Granularity.DAY;
             default -> Granularity.MONTH;
         };
     }
