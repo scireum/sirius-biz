@@ -97,7 +97,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="col-12 col-md-6 mb-2">
+                    <div class="col-12 col-md-3 mb-2">
                         <div class="mb-2 text-small text-muted">@i18n("DataExplorerController.comparisonPeriod")</div>
                         <div class="btn-group">
                             <button type="button"
@@ -115,6 +115,20 @@
                                     data-period="lastMonth"
                                     onclick="changePeriod('lastMonth')">@i18n("DataExplorerController.periodLastMonth")
                             </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3 mb-2">
+                        <div id="monthlyField" style="display: none;">
+                            <div class="mb-2 text-small text-muted">@i18n("DataExplorerController.monthly.select")</div>
+                            <div class="input-group">
+                                <button type="button" class="btn btn-primary" onclick="changeMonth(1)">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <input type="text" id="monthlyInput" name="monthlyInput" class="form-control" readonly>
+                                <button type="button" class="btn btn-primary" onclick="changeMonth(-1)">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
