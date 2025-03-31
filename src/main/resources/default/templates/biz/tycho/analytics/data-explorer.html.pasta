@@ -350,6 +350,14 @@
                     }
                 });
 
+                const monthlyField = document.getElementById('monthlyField');
+                if (range === 'monthly') {
+                    monthlyField.style.display = 'block';
+                    populateMonthlyInput();
+                } else {
+                    monthlyField.style.display = 'none';
+                }
+
                 refresh(silent);
             }
         }
