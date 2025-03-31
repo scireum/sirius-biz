@@ -232,21 +232,25 @@ public class DataExplorerController extends BizController {
         };
     }
 
-    private LocalDate computeStart(String range) {
+    private LocalDate computeStart(String range, int month, int year) {
         return switch (range) {
             case VALUE_LAST_30_DAYS -> LocalDate.now().minusDays(30);
             case VALUE_LAST_90_DAYS -> LocalDate.now().minusDays(90);
             case VALUE_LAST_MONTH -> LocalDate.now().minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
             case VALUE_LAST_YEAR -> LocalDate.now().minusYears(1).with(TemporalAdjusters.firstDayOfYear());
+            case VALUE_MONTHLY ->
+                    LocalDate.now().minusYears(year).minusMonths(month).with(TemporalAdjusters.firstDayOfMonth());
             default -> LocalDate.now().with(TemporalAdjusters.firstDayOfMonth()).minusMonths(11);
         };
     }
 
-    private LocalDate computeEnd(String range) {
+    private LocalDate computeEnd(String range, int month, int year) {
         return switch (range) {
             case VALUE_LAST_MONTH -> LocalDate.now().minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
             case VALUE_LAST_YEAR -> LocalDate.now().minusYears(1).with(TemporalAdjusters.lastDayOfYear());
             case VALUE_LAST_12_MONTHS -> LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
+            case VALUE_MONTHLY ->
+                    LocalDate.now().minusYears(year).minusMonths(month).with(TemporalAdjusters.lastDayOfMonth());
             default -> LocalDate.now();
         };
     }
