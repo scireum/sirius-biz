@@ -89,6 +89,12 @@
                                     onclick="changeRange('lastYear')">
                                 @i18n("DataExplorerController.lastYear")
                             </button>
+                            <button type="button"
+                                    class="range-select-js btn btn-outline-primary"
+                                    data-range="monthly"
+                                    onclick="changeRange('monthly')">
+                                @i18n("DataExplorerController.monthly")
+                            </button>
                         </div>
                     </div>
                     <div class="col-12 col-md-6 mb-2">
