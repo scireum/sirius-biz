@@ -201,6 +201,8 @@
             return sirius.getJSON('/data-explorer/api/load-chart', {
                 identifier: _chart.dataset.identifier,
                 range: range,
+                month: selectedMonth,
+                year: selectedYear,
                 comparisonPeriod: comparisonPeriod,
             }).then(function (json) {
                 if (json.error) {
