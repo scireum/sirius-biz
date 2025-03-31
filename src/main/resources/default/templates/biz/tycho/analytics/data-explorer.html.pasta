@@ -118,7 +118,7 @@
                         </div>
                     </div>
                     <div class="col-12 col-md-3 mb-2">
-                        <div id="monthlyField" style="display: none;">
+                        <div id="monthlyField" class="d-none">
                             <div class="mb-2 text-small text-muted">@i18n("DataExplorerController.monthly.select")</div>
                             <div class="input-group">
                                 <button type="button" class="btn btn-primary" onclick="changeMonth(1)">
@@ -354,10 +354,10 @@
 
                 const _monthlyField = document.getElementById('monthlyField');
                 if (range === 'monthly') {
-                    _monthlyField.style.display = 'block';
+                    _monthlyField.classList.remove("d-none");
                     populateMonthlyInput();
                 } else {
-                    _monthlyField.style.display = 'none';
+                    _monthlyField.classList.add("d-none");
                 }
 
                 refresh(silent);
@@ -377,7 +377,7 @@
             const _monthlyInput = document.getElementById('monthlyInput');
             const date = new Date();
             date.setDate(1); // Set to the first day of the month to avoid rollover issues
-            date.setMonth(date.getMonth() - 1  + currentMonthIndex);
+            date.setMonth(date.getMonth() - 1 + currentMonthIndex);
             selectedMonth = date.getMonth() + 1;
             selectedYear = date.getFullYear();
             _monthlyInput.value = `${months[selectedMonth - 1]} ${selectedYear}`;
@@ -385,7 +385,7 @@
 
         function changeMonth(offset) {
             currentMonthIndex -= offset;
-            if (currentMonthIndex > 0 ){
+            if (currentMonthIndex > 0) {
                 currentMonthIndex = 0;
             }
             populateMonthlyInput();
