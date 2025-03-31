@@ -59,6 +59,7 @@ public class DataExplorerController extends BizController {
     private static final String VALUE_LAST_30_DAYS = "last30Days";
     private static final String VALUE_LAST_90_DAYS = "last90Days";
     private static final String VALUE_LAST_12_MONTHS = "last12Months";
+    private static final String VALUE_MONTHLY = "monthly";
 
     @Part
     private Tasks tasks;
