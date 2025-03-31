@@ -125,7 +125,10 @@ public class DataExplorerController extends BizController {
         String identifier = webContext.require(PARAM_IDENTIFIER).asString();
         Tuple<ChartFactory<Object>, Object> providerAndObject = resolveProviderAndObject(identifier);
 
+        LocalDate localDate = LocalDate.now();
         String range = webContext.require(PARAM_RANGE).asString();
+        int monthsToSubtract = localDate.getMonthValue() - webContext.require("month").asInt(0);
+        int yearsToSubtract = localDate.getYear() - webContext.require("year").asInt(0);
         ComparisonPeriod comparisonPeriod =
                 computeComparisonPeriod(webContext.require(PARAM_COMPARISON_PERIOD).asString());
 
@@ -133,8 +136,8 @@ public class DataExplorerController extends BizController {
             try {
                 providerAndObject.getFirst()
                                  .generateOutput(providerAndObject.getSecond(),
-                                                 computeStart(range),
-                                                 computeEnd(range),
+                                                 computeStart(range, monthsToSubtract, yearsToSubtract),
+                                                 computeEnd(range, monthsToSubtract, yearsToSubtract),
                                                  computeGranularity(range),
                                                  comparisonPeriod,
                                                  output);
@@ -173,8 +176,13 @@ public class DataExplorerController extends BizController {
      */
     @Routed("/data-explorer/export")
     public void export(WebContext webContext) throws IOException {
+        LocalDate localDate = LocalDate.now();
         String range = webContext.require(PARAM_RANGE).asString();
-        TimeSeries timeSeries = new TimeSeries(computeStart(range), computeEnd(range), computeGranularity(range));
+        int month = localDate.getMonthValue() - webContext.require("month").asInt(0);
+        int year = localDate.getYear() - webContext.require("year").asInt(0);
+        TimeSeries timeSeries = new TimeSeries(computeStart(range, month, year),
+                                               computeEnd(range, month, year),
+                                               computeGranularity(range));
         ComparisonPeriod comparisonPeriod =
                 computeComparisonPeriod(webContext.require(PARAM_COMPARISON_PERIOD).asString());
 
