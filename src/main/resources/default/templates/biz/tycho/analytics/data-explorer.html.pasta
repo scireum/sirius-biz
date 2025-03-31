@@ -366,9 +366,9 @@
 
         let currentMonthIndex = 0;
         const months = [
-            '@i18n("Month.january")', '@i18n("Month.february")', '@i18n("Month.march")', '@i18n("Month.april")',
-            '@i18n("Month.may")', '@i18n("Month.june")', '@i18n("Month.july")', '@i18n("Month.august")',
-            '@i18n("Month.september")', '@i18n("Month.october")', '@i18n("Month.november")', '@i18n("Month.december")'
+            '@i18n("NLS.january")', '@i18n("NLS.february")', '@i18n("NLS.march")', '@i18n("NLS.april")',
+            '@i18n("NLS.may")', '@i18n("NLS.june")', '@i18n("NLS.july")', '@i18n("NLS.august")',
+            '@i18n("NLS.september")', '@i18n("NLS.october")', '@i18n("NLS.november")', '@i18n("NLS.december")'
         ];
         let selectedMonth = 0;
         let selectedYear = 0;
