@@ -362,6 +362,34 @@
             }
         }
 
+        let currentMonthIndex = 0;
+        const months = [
+            '@i18n("Month.january")', '@i18n("Month.february")', '@i18n("Month.march")', '@i18n("Month.april")',
+            '@i18n("Month.may")', '@i18n("Month.june")', '@i18n("Month.july")', '@i18n("Month.august")',
+            '@i18n("Month.september")', '@i18n("Month.october")', '@i18n("Month.november")', '@i18n("Month.december")'
+        ];
+        let selectedMonth = 0;
+        let selectedYear = 0;
+
+        function populateMonthlyInput() {
+            const monthlyInput = document.getElementById('monthlyInput');
+            const date = new Date();
+            date.setDate(1); // Set to the first day of the month to avoid rollover issues
+            date.setMonth(date.getMonth() - 1  + currentMonthIndex);
+            selectedMonth = date.getMonth() + 1;
+            selectedYear = date.getFullYear();
+            monthlyInput.value = `${months[selectedMonth - 1]} ${selectedYear}`;
+        }
+
+        function changeMonth(offset) {
+            currentMonthIndex -= offset;
+            if (currentMonthIndex > 0 ){
+                currentMonthIndex = 0;
+            }
+            populateMonthlyInput();
+            refresh(true);
+        }
+
         function changePeriod(newPeriod, silent) {
             if (comparisonPeriod !== newPeriod && sirius.isFilled(newPeriod)) {
                 comparisonPeriod = newPeriod;
@@ -451,6 +479,7 @@
 
         sirius.ready(function () {
             openTypeSelector();
+            populateMonthlyInput();
 
             const params = new URLSearchParams(window.location.search);
             changeRange(params.get('range') || 'last12Months', true);
