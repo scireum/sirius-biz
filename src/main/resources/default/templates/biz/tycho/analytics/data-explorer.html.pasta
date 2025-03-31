@@ -352,12 +352,12 @@
                     }
                 });
 
-                const monthlyField = document.getElementById('monthlyField');
+                const _monthlyField = document.getElementById('monthlyField');
                 if (range === 'monthly') {
-                    monthlyField.style.display = 'block';
+                    _monthlyField.style.display = 'block';
                     populateMonthlyInput();
                 } else {
-                    monthlyField.style.display = 'none';
+                    _monthlyField.style.display = 'none';
                 }
 
                 refresh(silent);
@@ -374,13 +374,13 @@
         let selectedYear = 0;
 
         function populateMonthlyInput() {
-            const monthlyInput = document.getElementById('monthlyInput');
+            const _monthlyInput = document.getElementById('monthlyInput');
             const date = new Date();
             date.setDate(1); // Set to the first day of the month to avoid rollover issues
             date.setMonth(date.getMonth() - 1  + currentMonthIndex);
             selectedMonth = date.getMonth() + 1;
             selectedYear = date.getFullYear();
-            monthlyInput.value = `${months[selectedMonth - 1]} ${selectedYear}`;
+            _monthlyInput.value = `${months[selectedMonth - 1]} ${selectedYear}`;
         }
 
         function changeMonth(offset) {
