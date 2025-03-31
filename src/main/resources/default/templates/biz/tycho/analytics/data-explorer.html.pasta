@@ -383,6 +383,11 @@
             _monthlyInput.value = `${months[selectedMonth - 1]} ${selectedYear}`;
         }
 
+        /**
+         * Changes the current month by the given offset and updates the month display.
+         *
+         * param {number} offset - The offset by which to change the current month. A positive value goes to the previous month, a negative value goes to the next month.
+         */
         function changeMonth(offset) {
             currentMonthIndex -= offset;
             if (currentMonthIndex > 0) {
