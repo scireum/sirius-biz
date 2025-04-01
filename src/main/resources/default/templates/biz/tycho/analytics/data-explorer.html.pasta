@@ -89,9 +89,15 @@
                                     onclick="changeRange('lastYear')">
                                 @i18n("DataExplorerController.lastYear")
                             </button>
+                            <button type="button"
+                                    class="range-select-js btn btn-outline-primary"
+                                    data-range="monthly"
+                                    onclick="changeRange('monthly')">
+                                @i18n("DataExplorerController.monthly")
+                            </button>
                         </div>
                     </div>
-                    <div class="col-12 col-md-6 mb-2">
+                    <div class="col-12 col-md-3 mb-2">
                         <div class="mb-2 text-small text-muted">@i18n("DataExplorerController.comparisonPeriod")</div>
                         <div class="btn-group">
                             <button type="button"
@@ -109,6 +115,20 @@
                                     data-period="lastMonth"
                                     onclick="changePeriod('lastMonth')">@i18n("DataExplorerController.periodLastMonth")
                             </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3 mb-2">
+                        <div id="monthlyField" class="d-none">
+                            <div class="mb-2 text-small text-muted">@i18n("DataExplorerController.monthly.select")</div>
+                            <div class="input-group">
+                                <button type="button" class="btn btn-primary" onclick="changeMonth(1)">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <input type="text" id="monthlyInput" name="monthlyInput" class="form-control text-center" readonly>
+                                <button type="button" class="btn btn-primary" onclick="changeMonth(-1)">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -181,6 +201,8 @@
             return sirius.getJSON('/data-explorer/api/load-chart', {
                 identifier: _chart.dataset.identifier,
                 range: range,
+                month: selectedMonth,
+                year: selectedYear,
                 comparisonPeriod: comparisonPeriod,
             }).then(function (json) {
                 if (json.error) {
@@ -330,8 +352,49 @@
                     }
                 });
 
+                const _monthlyField = document.getElementById('monthlyField');
+                if (range === 'monthly') {
+                    _monthlyField.classList.remove("d-none");
+                    populateMonthlyInput();
+                } else {
+                    _monthlyField.classList.add("d-none");
+                }
+
                 refresh(silent);
             }
+        }
+
+        let currentMonthIndex = 0;
+        const months = [
+            '@i18n("NLS.january")', '@i18n("NLS.february")', '@i18n("NLS.march")', '@i18n("NLS.april")',
+            '@i18n("NLS.may")', '@i18n("NLS.june")', '@i18n("NLS.july")', '@i18n("NLS.august")',
+            '@i18n("NLS.september")', '@i18n("NLS.october")', '@i18n("NLS.november")', '@i18n("NLS.december")'
+        ];
+        let selectedMonth = 0;
+        let selectedYear = 0;
+
+        function populateMonthlyInput() {
+            const _monthlyInput = document.getElementById('monthlyInput');
+            const date = new Date();
+            date.setDate(1); // Set to the first day of the month to avoid rollover issues
+            date.setMonth(date.getMonth() - 1 + currentMonthIndex);
+            selectedMonth = date.getMonth() + 1;
+            selectedYear = date.getFullYear();
+            _monthlyInput.value = `${months[selectedMonth - 1]} ${selectedYear}`;
+        }
+
+        /**
+         * Changes the current month by the given offset and updates the month display.
+         *
+         * @@param {number} offset - The offset by which to change the current month. A positive value goes to the previous month, a negative value goes to the next month.
+         */
+        function changeMonth(offset) {
+            currentMonthIndex -= offset;
+            if (currentMonthIndex > 0) {
+                currentMonthIndex = 0;
+            }
+            populateMonthlyInput();
+            refresh(true);
         }
 
         function changePeriod(newPeriod, silent) {
@@ -423,6 +486,7 @@
 
         sirius.ready(function () {
             openTypeSelector();
+            populateMonthlyInput();
 
             const params = new URLSearchParams(window.location.search);
             changeRange(params.get('range') || 'last12Months', true);
