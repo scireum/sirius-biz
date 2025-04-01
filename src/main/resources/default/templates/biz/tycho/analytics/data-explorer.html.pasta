@@ -124,7 +124,7 @@
                                 <button type="button" class="btn btn-primary" onclick="changeMonth(1)">
                                     <i class="fa-solid fa-chevron-left"></i>
                                 </button>
-                                <input type="text" id="monthlyInput" name="monthlyInput" class="form-control" readonly>
+                                <input type="text" id="monthlyInput" name="monthlyInput" class="form-control text-center" readonly>
                                 <button type="button" class="btn btn-primary" onclick="changeMonth(-1)">
                                     <i class="fa-solid fa-chevron-right"></i>
                                 </button>
