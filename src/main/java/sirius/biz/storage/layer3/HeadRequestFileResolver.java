@@ -144,39 +144,45 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
                                                              FetchFromUrlMode mode,
                                                              Predicate<String> fileExtensionVerifier,
                                                              Set<Options> options) throws IOException {
-        Outcall request = createOutcallWithDefaultOptions(uri);
+        try {
+            Outcall request = createOutcallWithDefaultOptions(uri);
 
-        PathAndUri result = resolvePathAndEffectiveUri(uri, request, fileExtensionVerifier);
+            PathAndUri result = resolvePathAndEffectiveUri(uri, request, fileExtensionVerifier);
 
-        if (Strings.isEmpty(result.path())) {
-            // Drain any content, the server sent, as we have no way of processing it...
-            Streams.exhaust(request.getResponse().body());
-            return null;
+            if (Strings.isEmpty(result.path())) {
+                // Drain any content, the server sent, as we have no way of processing it...
+                Streams.exhaust(request.getResponse().body());
+                return null;
+            }
+
+            VirtualFile file = resolveVirtualFile(parent, result.path(), uri.getHost(), options);
+            if (file.exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
+                // Drain any content, as the mode dictates not to update the file (which might require another upload,
+                // so discarding the data is faster).
+                Streams.exhaust(request.getResponse().body());
+                return Tuple.create(file, false);
+            }
+
+            LocalDateTime lastModifiedHeader =
+                    request.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
+            if (lastModifiedHeader == null
+                || !file.exists()
+                || mode == FetchFromUrlMode.ALWAYS_FETCH
+                || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
+                // Directly load the file from the response, we don't need another request.
+                file.loadFromResponse(request.getResponse());
+                return Tuple.create(file, true);
+            } else {
+                // Drain any content, as the mode dictates not to update the file (which might require another upload,
+                // so discarding the data is faster).
+                Streams.exhaust(request.getResponse().body());
+                return Tuple.create(file, false);
+            }
+        } catch (HttpTimeoutException | URISyntaxException exception) {
+            Exceptions.ignore(exception);
         }
 
-        VirtualFile file = resolveVirtualFile(parent, result.path(), uri.getHost(), options);
-        if (file.exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
-            // Drain any content, as the mode dictates not to update the file (which might require another upload,
-            // so discarding the data is faster).
-            Streams.exhaust(request.getResponse().body());
-            return Tuple.create(file, false);
-        }
-
-        LocalDateTime lastModifiedHeader =
-                request.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
-        if (lastModifiedHeader == null
-            || !file.exists()
-            || mode == FetchFromUrlMode.ALWAYS_FETCH
-            || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-            // Directly load the file from the response, we don't need another request.
-            file.loadFromResponse(request.getResponse());
-            return Tuple.create(file, true);
-        } else {
-            // Drain any content, as the mode dictates not to update the file (which might require another upload,
-            // so discarding the data is faster).
-            Streams.exhaust(request.getResponse().body());
-            return Tuple.create(file, false);
-        }
+        return null;
     }
 
     @Override
