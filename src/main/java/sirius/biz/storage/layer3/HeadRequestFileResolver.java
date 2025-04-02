@@ -53,13 +53,8 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
                                                Predicate<String> fileExtensionVerifier,
                                                Set<Options> options) throws IOException {
         try {
-            Outcall headRequest = new Outcall(uri);
-            headRequest.markAsHeadRequest();
-            headRequest.alwaysFollowRedirects();
+            Outcall headRequest = createOutcallWithDefaultOptions(uri).markAsHeadRequest();
             headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
-
-            CookieManager cookieManager = new CookieManager();
-            headRequest.modifyClient().cookieHandler(cookieManager);
 
             String path = headRequest.parseFileNameFromContentDisposition()
                                      .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
@@ -106,6 +101,16 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
         return resolveViaGetRequest(parent, uri, mode, options);
     }
 
+    private Outcall createOutcallWithDefaultOptions(URI uri) {
+        Outcall outcall = new Outcall(uri);
+        outcall.alwaysFollowRedirects();
+
+        CookieManager cookieManager = new CookieManager();
+        outcall.modifyClient().cookieHandler(cookieManager);
+
+        return outcall;
+    }
+
     private boolean shouldRetryWithGet(HttpResponse<?> response) {
         if (response.statusCode() == HttpResponseStatus.METHOD_NOT_ALLOWED.code() && allowsGet(response)) {
             // server disallows HEAD request and indicates GET is allowed
@@ -129,8 +134,8 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
                                                              URI uri,
                                                              FetchFromUrlMode mode,
                                                              Set<Options> options) throws IOException {
-        Outcall request = new Outcall(uri);
-        request.alwaysFollowRedirects();
+        Outcall request = createOutcallWithDefaultOptions(uri);
+
         String path = request.parseFileNameFromContentDisposition().orElse(null);
         if (Strings.isEmpty(path)) {
             // Drain any content, the server sent, as we have no way of processing it...
