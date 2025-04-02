@@ -107,13 +107,11 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
         // we don't have a path yet, but we followed redirects, so we check the new URI
         if (Strings.isEmpty(path) && !uri.getPath().equals(lastConnectedURI.getPath())) {
             if (request.getResponseCode() == HttpResponseStatus.NOT_FOUND.code() && lastConnectedURI.toString()
-                                                                                                    .contains(
-                                                                                                                "Ã")) {
+                                                                                                    .contains("Ã")) {
                 // We followed a redirect header in UTF-8 that was interpreted as ISO-8859-1, indicated by 'Ã' in the url
                 // as the starting byte of two byte characters in UTF-8 will always be interpreted as 'Ã' in ISO-8859-1
-                lastConnectedURI =
-                        new URI(new String(lastConnectedURI.toString().getBytes(StandardCharsets.ISO_8859_1),
-                                           StandardCharsets.UTF_8));
+                lastConnectedURI = new URI(new String(lastConnectedURI.toString().getBytes(StandardCharsets.ISO_8859_1),
+                                                      StandardCharsets.UTF_8));
             }
 
             path = parsePathFromUri(lastConnectedURI, fileExtensionVerifier);
