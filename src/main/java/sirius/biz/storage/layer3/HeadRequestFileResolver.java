@@ -19,6 +19,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.xml.Outcall;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.CookieManager;
 import java.net.URI;
@@ -56,35 +57,17 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
             Outcall headRequest = createOutcallWithDefaultOptions(uri).markAsHeadRequest();
             headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
 
-            String path = headRequest.parseFileNameFromContentDisposition()
-                                     .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
-                                     .orElse(null);
+            PathAndUri result = resolvePathAndEffectiveUri(uri, headRequest, fileExtensionVerifier);
 
-            URI lastConnectedURI = headRequest.getResponse().request().uri();
-
-            if (Strings.isEmpty(path) && !uri.getPath().equals(lastConnectedURI.getPath())) {
-                // We don't have a path yet, but we followed redirects, so we check the new URI
-                if (headRequest.getResponseCode() == HttpResponseStatus.NOT_FOUND.code() && lastConnectedURI.toString()
-                                                                                                            .contains(
-                                                                                                                    "Ã")) {
-                    // We followed a redirect header in UTF-8 that was interpreted as ISO-8859-1, indicated by 'Ã' in the url
-                    // as the starting byte of two byte characters in UTF-8 will always be interpreted as 'Ã' in ISO-8859-1
-                    lastConnectedURI =
-                            new URI(new String(lastConnectedURI.toString().getBytes(StandardCharsets.ISO_8859_1),
-                                               StandardCharsets.UTF_8));
-                }
-                path = parsePathFromUri(lastConnectedURI, fileExtensionVerifier);
-            }
-
-            if (Strings.isFilled(path)) {
-                VirtualFile file = resolveVirtualFile(parent, path, uri.getHost(), options);
+            if (Strings.isFilled(result.path())) {
+                VirtualFile file = resolveVirtualFile(parent, result.path(), uri.getHost(), options);
                 LocalDateTime lastModifiedHeader =
                         headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString()).orElse(null);
                 if (lastModifiedHeader == null
                     || !file.exists()
                     || mode == FetchFromUrlMode.ALWAYS_FETCH
                     || file.lastModifiedDate().isBefore(lastModifiedHeader)) {
-                    return Tuple.create(file, file.performLoadFromUri(lastConnectedURI, mode));
+                    return Tuple.create(file, file.performLoadFromUri(result.uri(), mode));
                 } else {
                     return Tuple.create(file, false);
                 }
@@ -98,7 +81,7 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
         }
 
         // We either ran into a timeout or the server doesn't support HEAD requests -> re-attempt with a GET
-        return resolveViaGetRequest(parent, uri, mode, options);
+        return resolveViaGetRequest(parent, uri, mode, fileExtensionVerifier, options);
     }
 
     private Outcall createOutcallWithDefaultOptions(URI uri) {
@@ -109,6 +92,34 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
         outcall.modifyClient().cookieHandler(cookieManager);
 
         return outcall;
+    }
+
+    @Nonnull
+    private PathAndUri resolvePathAndEffectiveUri(URI uri, Outcall request, Predicate<String> fileExtensionVerifier)
+            throws IOException, URISyntaxException {
+        String path = request.parseFileNameFromContentDisposition()
+                             .filter(filename -> fileExtensionVerifier.test(Files.getFileExtension(filename)))
+                             .orElse(null);
+
+        // this URI is the one the server finally redirected us to
+        URI lastConnectedURI = request.getResponse().request().uri();
+
+        // we don't have a path yet, but we followed redirects, so we check the new URI
+        if (Strings.isEmpty(path) && !uri.getPath().equals(lastConnectedURI.getPath())) {
+            if (request.getResponseCode() == HttpResponseStatus.NOT_FOUND.code() && lastConnectedURI.toString()
+                                                                                                    .contains(
+                                                                                                                "Ã")) {
+                // We followed a redirect header in UTF-8 that was interpreted as ISO-8859-1, indicated by 'Ã' in the url
+                // as the starting byte of two byte characters in UTF-8 will always be interpreted as 'Ã' in ISO-8859-1
+                lastConnectedURI =
+                        new URI(new String(lastConnectedURI.toString().getBytes(StandardCharsets.ISO_8859_1),
+                                           StandardCharsets.UTF_8));
+            }
+
+            path = parsePathFromUri(lastConnectedURI, fileExtensionVerifier);
+        }
+
+        return new PathAndUri(path, lastConnectedURI);
     }
 
     private boolean shouldRetryWithGet(HttpResponse<?> response) {
@@ -133,17 +144,19 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
     private Tuple<VirtualFile, Boolean> resolveViaGetRequest(VirtualFile parent,
                                                              URI uri,
                                                              FetchFromUrlMode mode,
+                                                             Predicate<String> fileExtensionVerifier,
                                                              Set<Options> options) throws IOException {
         Outcall request = createOutcallWithDefaultOptions(uri);
 
-        String path = request.parseFileNameFromContentDisposition().orElse(null);
-        if (Strings.isEmpty(path)) {
+        PathAndUri result = resolvePathAndEffectiveUri(uri, request, fileExtensionVerifier);
+
+        if (Strings.isEmpty(result.path())) {
             // Drain any content, the server sent, as we have no way of processing it...
             Streams.exhaust(request.getResponse().body());
             return null;
         }
 
-        VirtualFile file = resolveVirtualFile(parent, path, uri.getHost(), options);
+        VirtualFile file = resolveVirtualFile(parent, result.path(), uri.getHost(), options);
         if (file.exists() && mode == FetchFromUrlMode.NON_EXISTENT) {
             // Drain any content, as the mode dictates not to update the file (which might require another upload,
             // so discarding the data is faster).
@@ -171,5 +184,8 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
     @Override
     public int getPriority() {
         return 300;
+    }
+
+    private record PathAndUri(String path, URI uri) {
     }
 }
