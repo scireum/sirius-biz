@@ -77,6 +77,8 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
                 return null;
             }
         } catch (HttpTimeoutException | URISyntaxException exception) {
+            // Exceptions are thrown if the server doesn't support HEAD requests, if the request times out or if the
+            // URI is malformed. In all cases we want to retry with a GET request.
             Exceptions.ignore(exception);
         }
 
@@ -179,6 +181,8 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
                 return Tuple.create(file, false);
             }
         } catch (HttpTimeoutException | URISyntaxException exception) {
+            // Exceptions are thrown if the GET request fails or yields faulty data. We cannot do anything about it, so
+            // we just ignore it and return null, so that a lower-priority resolver can take over.
             Exceptions.ignore(exception);
         }
 
