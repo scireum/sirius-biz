@@ -13,7 +13,7 @@
             <div class="d-flex flex-grow-1 flex-row">
                 <a onclick="openImageOverlay('@url')">
                     <img src="@url"
-                         class="img-fluid cursor-pointer sci-preview-image sci-object-fit-contain card card-hover-shadow card-border"
+                         class="img-fluid cursor-pointer sci-kba-preview-image card card-hover-shadow card-border"
                          alt="Preview"/>
                 </a>
                 <div class="w-75 m-4 flex-column align-content-center">
@@ -37,9 +37,10 @@
 </script>
 
 <style>
-    .sci-preview-image {
+    .sci-kba-preview-image {
         height: 110px;
         width: 200px;
+        object-fit: contain;
     }
 
     .sci-kba-image-overlay img {
