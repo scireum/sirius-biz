@@ -14,10 +14,13 @@
         </li>
     </i:block>
 
-    <i:block name="page-header">
-        <t:pageHeader title="@script.toString()"/>
-    </i:block>
-
+    <t:pageHeader title="@script.toString()">
+         <i:block name="additionalActions">
+            <t:dropdownSection>
+                <t:dropdownDeleteItem url="@apply('/scripting/scripts/%s/delete', script.getIdAsString())"/>
+            </t:dropdownSection>
+        </i:block>
+    </t:pageHeader>
 
     <t:editForm url="@apply('/scripting/scripts/%s', script.getIdAsString())">
         <input id="scriptField" name="script" value="@script.getScript()" type="hidden"/>
