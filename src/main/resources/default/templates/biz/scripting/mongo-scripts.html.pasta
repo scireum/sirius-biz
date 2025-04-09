@@ -27,6 +27,9 @@
                             </i:else>
                         </i:if>
                     </i:block>
+                    <i:block name="actions">
+                        <t:dropdownDeleteItem url="@apply('/scripting/scripts/%s/delete', script.getIdAsString())"/>
+                    </i:block>
                 </t:datacard>
             </i:for>
         </t:datacards>
