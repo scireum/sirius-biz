@@ -76,6 +76,9 @@ public class MongoCustomScriptController extends BizController {
     @Routed("/scripting/scripts/:1/delete")
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
     public void deleteScript(WebContext webContext, String id) {
+        if (!webContext.isSafePOST()) {
+            return;
+        }
         deleteEntity(webContext, tryFindForTenant(MongoCustomScript.class, id));
         webContext.respondWith().redirectToGet("/scripting/scripts");
     }
