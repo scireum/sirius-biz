@@ -14,6 +14,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -387,8 +388,18 @@ public class FieldDefinition {
      * @return the label to use for this field
      */
     public String getLabel() {
+        return Objects.requireNonNullElse(getRawLabel(), name);
+    }
+
+    /**
+     * Returns the real label for this field.
+     *
+     * @return the real label to use for this field
+     */
+    @Nullable
+    public String getRawLabel() {
         if (label == null) {
-            return name;
+            return null;
         }
 
         return label.get();
