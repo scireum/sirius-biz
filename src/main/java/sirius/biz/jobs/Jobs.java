@@ -21,6 +21,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -114,5 +116,39 @@ public class Jobs {
         }
 
         return (J) result;
+    }
+
+    /**
+     * Tries to resolve the job factory with the given name.
+     * <p>
+     * Note that this method does not check if the current user may invoke this job at all. {@linkplain
+     * Optional#filter(Predicate) Filter} the returned optional with
+     * {@link JobFactory#isAccessibleToCurrentUser()} if you need to check this.
+     *
+     * @param name the name of the job factory to resolve
+     * @return the job factory with the given name or an empty optional if no such factory exists
+     */
+    public Optional<JobFactory> tryFindFactory(String name) {
+        return tryFindFactory(name, JobFactory.class);
+    }
+
+    /**
+     * Tries to resolve the job factory with the given name and class.
+     * <p>
+     * Note that this method does not check if the current user may invoke this job at all. {@linkplain
+     * Optional#filter(Predicate) Filter} the returned optional with
+     * {@link JobFactory#isAccessibleToCurrentUser()} if you need to check this.
+     *
+     * @param name         the name of the job factory to resolve
+     * @param expectedType a type to cast the job factory to
+     * @param <J>          the generic value of <tt>expectedType</tt>
+     * @return the job factory with the given name or an empty optional if no such factory exists
+     */
+    public <J extends JobFactory> Optional<J> tryFindFactory(String name, Class<J> expectedType) {
+        try {
+            return Optional.ofNullable(findFactory(name, expectedType));
+        } catch (Exception _) {
+            return Optional.empty();
+        }
     }
 }
