@@ -30,6 +30,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Provides a base class to create the management UI for the job scheduler.
@@ -180,12 +181,17 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     }
 
     private boolean handleJobSelection(J entry, WebContext webContext) {
-        if (entry.isNew() && webContext.isSafePOST()) {
+        if (entry.isNew()) {
             if (webContext.hasParameter("selectedJob")) {
-                entry.getJobConfigData().setJob(webContext.get("selectedJob").asString());
-                webContext.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
-                return true;
-            } else if (webContext.hasParameter("job")) {
+                String jobName = webContext.get("selectedJob").asString();
+                Optional<JobFactory> possibleJobFactory =
+                        jobs.tryFindFactory(jobName).filter(JobFactory::isAccessibleToCurrentUser);
+                if (possibleJobFactory.isPresent()) {
+                    entry.getJobConfigData().setJob(jobName);
+                    webContext.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
+                    return true;
+                }
+            } else if (webContext.hasParameter("job") && webContext.isSafePOST()) {
                 entry.getJobConfigData().setJob(webContext.get("job").asString());
             }
         }
