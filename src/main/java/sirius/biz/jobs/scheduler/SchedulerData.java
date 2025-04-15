@@ -166,38 +166,32 @@ public class SchedulerData extends Composite {
      * @return <tt>true</tt> if the task should be executed / scheduled, <tt>false</tt> otherwise
      */
     public boolean shouldRun(LocalDateTime checkpoint) {
-        if (!enabled) {
-            return false;
-        }
-        if (runs != null && runs <= 0) {
-            return false;
-        }
+        return shouldRunBasedOnGeneralSettings() && shouldRunBasedOnLastExecution(checkpoint) && shouldRunBasedOnDate(
+                checkpoint) && shouldRunBasedOnTime(checkpoint);
+    }
 
+    private boolean shouldRunBasedOnGeneralSettings() {
+        return enabled && (runs == null || runs > 0);
+    }
+
+    private boolean shouldRunBasedOnLastExecution(LocalDateTime checkpoint) {
         // Since the scheduler runs about every 50s, we might fire twice in the same minute - in this case,
         // we abort here. If however, an entry is to be executed in two consecutive minutes, we have to execute it
         // even if the execution interval isn't exactly 60s - otherwise we might miss an execution.
-        if (lastExecution != null
-            && Duration.between(lastExecution, checkpoint).getSeconds() <= 60
-            && lastExecution.getMinute() == checkpoint.getMinute()) {
-            return false;
-        }
-        if (!matches(checkpoint.getYear(), year)) {
-            return false;
-        }
-        if (!matches(checkpoint.getMonthValue(), month)) {
-            return false;
-        }
-        if (!matches(checkpoint.getDayOfMonth(), dayOfMonth)) {
-            return false;
-        }
-        if (!matches(checkpoint.getDayOfWeek().getValue(), dayOfWeek)) {
-            return false;
-        }
-        if (!matches(checkpoint.getHour(), hourOfDay)) {
-            return false;
-        }
+        return lastExecution == null
+               || Duration.between(lastExecution, checkpoint).getSeconds() > 60
+               || lastExecution.getMinute() != checkpoint.getMinute();
+    }
 
-        return matches(checkpoint.getMinute(), minute);
+    private boolean shouldRunBasedOnDate(LocalDateTime checkpoint) {
+        return matches(checkpoint.getYear(), year)
+               && matches(checkpoint.getMonthValue(), month)
+               && matches(checkpoint.getDayOfMonth(), dayOfMonth)
+               && matches(checkpoint.getDayOfWeek().getValue(), dayOfWeek);
+    }
+
+    private boolean shouldRunBasedOnTime(LocalDateTime checkpoint) {
+        return matches(checkpoint.getHour(), hourOfDay) && matches(checkpoint.getMinute(), minute);
     }
 
     private boolean matches(int value, String expression) {
