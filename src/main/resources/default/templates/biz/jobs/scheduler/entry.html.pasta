@@ -15,6 +15,9 @@
 
     <i:block name="page-header">
         <t:pageHeader title="@entry.toString()">
+            <i:block name="actions">
+                <t:helpLink url="/kba/92A2A"/>
+            </i:block>
             <i:block name="additionalActions">
                 <i:if test="!entry.isNew()">
                     <t:dropdownDeleteItem url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())"/>
