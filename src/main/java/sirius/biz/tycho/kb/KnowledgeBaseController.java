@@ -14,15 +14,24 @@ import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Routed;
+import sirius.web.http.MimeHelper;
+import sirius.web.http.Response;
 import sirius.web.http.WebContext;
+import sirius.web.resources.Resources;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
+
+import java.io.IOException;
+import java.net.URLConnection;
+import java.time.Duration;
+import java.util.List;
 
 /**
  * Provides the UI of the knowledge base.
@@ -35,6 +44,12 @@ public class KnowledgeBaseController extends BizController {
 
     @Part
     private EventRecorder eventRecorder;
+
+    @Part
+    private Resources resources;
+
+    @ConfigValue("http.response.defaultStaticAssetTTL")
+    private static Duration defaultStaticAssetTTL;
 
     /**
      * Renders the entry point of the knowledge base in the current language.
@@ -62,11 +77,37 @@ public class KnowledgeBaseController extends BizController {
      * Renders the entry point of the knowledge base in the given language.
      *
      * @param webContext the current request to respond to
-     * @param language   the language top open the knowledge base in
+     * @param language   the language to open the knowledge base in
      */
     @Routed("/kb/:1")
     public void langKb(WebContext webContext, String language) {
         langArticle(webContext, language, KnowledgeBase.ROOT_CHAPTER_ID);
+    }
+
+    /**
+     * Delivers static assets from within the knowledge base file structure.
+     * <p>
+     * This route currently only delivers images.
+     *
+     * @param webContext the current request to respond to
+     * @param subPath    the sub path of the requested asset
+     */
+    @Routed(value = "/kb/**", priority = 200)
+    public void deliverAsset(WebContext webContext, List<String> subPath) {
+        resources.resolve("/kb/" + Strings.join(subPath, "/"))
+                 .filter(resource -> MimeHelper.isProbablyAnImage(MimeHelper.guessMimeType(subPath.getLast())))
+                 .ifPresentOrElse(resource -> {
+                     try {
+                         URLConnection urlConnection = resource.getUrl().openConnection();
+                         Response response = webContext.respondWith();
+                         if (!response.handleIfModifiedSince(urlConnection.getLastModified())) {
+                             response.cachedForSeconds((int) defaultStaticAssetTTL.getSeconds())
+                                     .resource(urlConnection);
+                         }
+                     } catch (IOException exception) {
+                         throw Exceptions.handle(exception);
+                     }
+                 }, () -> webContext.respondWith().error(HttpResponseStatus.NOT_FOUND));
     }
 
     /**
