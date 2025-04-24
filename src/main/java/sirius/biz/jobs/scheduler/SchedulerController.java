@@ -23,6 +23,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
+import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
@@ -184,13 +185,20 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         if (entry.isNew()) {
             if (webContext.hasParameter("selectedJob")) {
                 String jobName = webContext.get("selectedJob").asString();
-                Optional<JobFactory> possibleJobFactory =
-                        jobs.tryFindFactory(jobName).filter(JobFactory::isAccessibleToCurrentUser);
-                if (possibleJobFactory.isPresent()) {
+
+                if (jobs.tryFindFactory(jobName).filter(JobFactory::isAccessibleToCurrentUser).isPresent()) {
                     entry.getJobConfigData().setJob(jobName);
                     webContext.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
                     return true;
                 }
+
+                UserContext.get()
+                           .addMessage(Message.error()
+                                              .withTextMessage(NLS.fmtr("JobsController.unknownJob")
+                                                                  .set("jobType", jobName)
+                                                                  .format()));
+                webContext.respondWith().redirectToGet("/jobs/scheduler");
+                return true;
             } else if (webContext.hasParameter("job") && webContext.isSafePOST()) {
                 entry.getJobConfigData().setJob(webContext.get("job").asString());
             }
