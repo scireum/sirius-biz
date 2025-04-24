@@ -185,9 +185,8 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         if (entry.isNew()) {
             if (webContext.hasParameter("selectedJob")) {
                 String jobName = webContext.get("selectedJob").asString();
-                Optional<JobFactory> possibleJobFactory =
-                        jobs.tryFindFactory(jobName).filter(JobFactory::isAccessibleToCurrentUser);
-                if (possibleJobFactory.isPresent()) {
+
+                if (jobs.tryFindFactory(jobName).filter(JobFactory::isAccessibleToCurrentUser).isPresent()) {
                     entry.getJobConfigData().setJob(jobName);
                     webContext.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
                     return true;
