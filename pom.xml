@@ -17,9 +17,9 @@
     <url>https://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>ga-12.0.0</sirius.kernel>
-        <sirius.web>ga-13.0.0</sirius.web>
-        <sirius.db>ga-13.0.0</sirius.db>
+        <sirius.kernel>ga-13.0.0</sirius.kernel>
+        <sirius.web>ga-14.0.0</sirius.web>
+        <sirius.db>ga-14.0.0</sirius.db>
     </properties>
 
     <repositories>
