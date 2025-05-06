@@ -1,0 +1,55 @@
+<i:arg type="String" name="url" description="Contains the url to the image."/>
+<i:arg type="String" name="title" description="Contains the title for the image."/>
+<i:arg type="String" name="description" description="Contains the description for the image." default=""/>
+<i:arg type="String" name="class" description="Contains additional classes for the card." default=""/>
+
+<i:pragma name="description">
+    Shows a preview for an image.
+</i:pragma>
+
+<div class="col mb-4">
+    <div class="card w-100 @class">
+        <div class="d-flex flex-grow-1 flex-column">
+            <div class="d-flex flex-grow-1 flex-row">
+                <a onclick="openImageOverlay('@url')">
+                    <img src="@url"
+                         class="img-fluid cursor-pointer sci-kba-preview-image card card-hover-shadow card-border"
+                         alt="Preview"/>
+                </a>
+                <div class="w-75 m-4 flex-column align-content-center">
+                    <p class="card-text sci-text-align-left h5">@title</p>
+                    <p class="card-text sci-text-align-left text-muted">@description</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function openImageOverlay(imageUrl) {
+        const content = '<div class="sci-overlay-content sci-kba-image-overlay d-flex justify-content-center sci-align-items-center sci-h-100 sci-w-100 sci-bg-white">' +
+            '<img src="' + imageUrl + '" class="img-fluid" alt=""/>' +
+            '</div>';
+
+        sirius.overlay.createOverlay({closable: true, yieldable: true, useFullScreen: false, content: content});
+        sirius.overlay.showOverlay();
+    }
+</script>
+
+<style>
+    .sci-kba-preview-image {
+        height: 110px;
+        width: 200px;
+        object-fit: contain;
+    }
+
+    .sci-kba-image-overlay img {
+        max-width: calc(100% - 2 * var(--sci-margin-2));
+        max-height: calc(100% - 2 * var(--sci-margin-2));
+        min-width: 50%;
+        min-height: 50%;
+        object-fit: contain;
+        margin: var(--sci-margin-2);
+        box-sizing: border-box;
+    }
+</style>

@@ -51,6 +51,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected Mapping[] mappingsToLoad;
     protected Mapping[] mappingsToUpdate;
     protected Mapping[] mappingsToCompare;
+    protected Mapping[] mappingsToCheckForChanges;
 
     /**
      * Creates a new instance for the given type of entities and import context.
@@ -67,6 +68,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         this.mappingsToLoad = getAutoImportMappings().toArray(MAPPING_ARRAY);
         this.mappingsToUpdate = getMappingsToUpdate().toArray(MAPPING_ARRAY);
         this.mappingsToLoadForFind = getMappingsToLoadForFind().toArray(MAPPING_ARRAY);
+        this.mappingsToCheckForChanges = getMappingsToCheckForChanges().toArray(MAPPING_ARRAY);
     }
 
     @SuppressWarnings("unchecked")
@@ -319,7 +321,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @param persistentEntity  the entity which was loaded from the database and is to be updated
      */
     protected void updatePersistentEntity(E entityWithUpdates, E persistentEntity) {
-        for (Mapping mapping : mappingsToLoad) {
+        for (Mapping mapping : mappingsToUpdate) {
             Property property = descriptor.getProperty(mapping);
             property.setValue(persistentEntity, property.getValue(entityWithUpdates));
         }
@@ -347,7 +349,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return <tt>true</tt> if any property checked is changed, <tt>false</tt> otherwise
      */
     protected boolean isChanged(E entity) {
-        return entity.isChanged(mappingsToLoad);
+        return entity.isChanged(mappingsToCheckForChanges);
     }
 
     /**

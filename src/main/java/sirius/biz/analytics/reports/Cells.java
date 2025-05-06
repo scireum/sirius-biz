@@ -116,6 +116,18 @@ public class Cells {
     }
 
     /**
+     * Creates a cell which contains a list of lines.
+     *
+     * @param values the values to render
+     * @return a cell containing the given values
+     */
+    public Cell lines(List<String> values) {
+        return new Cell(Json.createObject()
+                            .put(KEY_TYPE, LinesCellFormat.TYPE)
+                            .set(LinesCellFormat.KEY_VALUES, Json.createArray(values)));
+    }
+
+    /**
      * Generates a green cell.
      *
      * @param value the value to output

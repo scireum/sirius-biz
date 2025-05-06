@@ -408,11 +408,20 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      *
      * @return the {@link Query} object
      */
+    public Q buildUnderlyingQueryWithFacets() {
+        buildUnderlyingQuery();
+        applyFacets(null);
+        return baseQuery;
+    }
+
+    /**
+     * Returns the underlying query for this page helper.
+     *
+     * @return the {@link Query} object
+     */
     public Q buildUnderlyingQuery() {
         String query = getParameterValue("query").getString();
         applyQuery(query);
-
-        applyFacets(null);
         return baseQuery;
     }
 

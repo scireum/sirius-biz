@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.db.mixing.InvalidFieldException;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyValidator;
 import sirius.kernel.commons.Strings;
@@ -40,6 +41,7 @@ public class HttpsUrlValidator implements PropertyValidator {
 
     private HandledException createInvalidHttpsUrlException(Property property, String value) {
         return Exceptions.createHandled()
+                         .error(new InvalidFieldException(property.getName()))
                          .withNLSKey("HttpsUrlValidator.invalidHttpsUrl")
                          .set("field", property.getLabel())
                          .set("value", value)

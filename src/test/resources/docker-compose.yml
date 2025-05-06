@@ -1,24 +1,24 @@
 services:
   redis:
-    image: redis:7.2.6-alpine
+    image: redis:7.4.2-alpine
     ports:
       - "6379"
     hostname: redis
 
   redis-jupiter:
-    image: scireum/jupiter-io:3.1.3
+    image: scireum/jupiter-io:3.1.4
     ports:
       - "2410"
     hostname: redis-jupiter
 
   mongo:
-    image: mongo:6.0.13
+    image: mongo:7.0.16
     ports:
       - "27017"
     hostname: mongo
 
   mariadb:
-    image: mariadb:11.4.2-noble
+    image: mariadb:11.4.5-noble
     ports:
       - "3306"
     environment:
@@ -41,7 +41,7 @@ services:
       - ingest.geoip.downloader.enabled=false
     hostname: es
   s3-system:
-    image: scireum/s3-ninja:8.3.2
+    image: scireum/s3-ninja:8.4.0
     ports:
       - "9000"
     hostname: s3ninja

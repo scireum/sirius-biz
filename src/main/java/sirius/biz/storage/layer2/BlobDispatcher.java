@@ -88,6 +88,19 @@ public class BlobDispatcher implements WebDispatcher {
      */
     public static final String FLAG_CACHEABLE = "c";
 
+    /**
+     * Signalizes that the caller is ready to wait longer for a response.
+     * <p>
+     * This is especially used when the variant retrieved will be converted on-the-fly, and you want to increase the
+     * chance of getting one without having to implement a client-side retry mechanism.
+     */
+    public static final String WAIT_LONGER_PARAMETER = "waitLonger";
+
+    /**
+     * Header set to signalize that the caller is ready to wait longer for a response.
+     */
+    public static final String HEADER_WAIT_LONGER = "X-Wait-Longer";
+
     private static final String PARAM_HOOK = "hook";
     private static final String PARAM_PAYLOAD = "payload";
 
@@ -164,7 +177,7 @@ public class BlobDispatcher implements WebDispatcher {
      * @param blobUri the parsed blob URI
      */
     private void physicalDelivery(WebContext request, BlobUri blobUri) {
-        Response response = request.respondWith();
+        Response response = request.respondWith().preventSearchEngineIndexing();
         Integer cacheSeconds = computeCacheDurationFromHash(blobUri.getAccessToken(),
                                                             blobUri.getPhysicalKey(),
                                                             blobUri.getStorageSpace());
@@ -235,7 +248,7 @@ public class BlobDispatcher implements WebDispatcher {
         String variant = blobUri.getVariant();
         String effectiveKey = Strings.isFilled(variant) ? blobKey + "-" + variant : blobKey;
 
-        Response response = request.respondWith();
+        Response response = request.respondWith().preventSearchEngineIndexing();
         Integer cacheSeconds =
                 computeCacheDurationFromHash(blobUri.getAccessToken(), effectiveKey, blobUri.getStorageSpace());
         if (cacheSeconds == null) {
@@ -276,6 +289,10 @@ public class BlobDispatcher implements WebDispatcher {
             response.download(filename);
         } else {
             response.named(filename);
+        }
+
+        if (request.get(WAIT_LONGER_PARAMETER).asBoolean()) {
+            response.addHeader(HEADER_WAIT_LONGER, true);
         }
 
         storageSpace.deliver(blobKey,

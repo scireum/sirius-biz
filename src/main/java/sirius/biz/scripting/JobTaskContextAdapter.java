@@ -25,6 +25,7 @@ class JobTaskContextAdapter implements TaskContextAdapter {
     private final String jobNumber;
     private final RateLimit logLimiter;
     private final RateLimit stateLimiter;
+    private boolean cancelled;
 
     protected JobTaskContextAdapter(Scripting scripting, String jobNumber) {
         this.scripting = scripting;
@@ -89,11 +90,11 @@ class JobTaskContextAdapter implements TaskContextAdapter {
 
     @Override
     public void cancel() {
-        // unsupported by this adapter.
+        cancelled = true;
     }
 
     @Override
     public boolean isActive() {
-        return true;
+        return !cancelled;
     }
 }

@@ -115,6 +115,14 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
+    public boolean exists(String objectKey) throws IOException {
+        if (Strings.isEmpty(objectKey)) {
+            return false;
+        }
+        return getFile(objectKey).exists();
+    }
+
+    @Override
     protected void storePhysicalObject(String objectKey, File file) throws IOException {
         try (FileInputStream inputStream = new FileInputStream(file)) {
             storePhysicalObject(objectKey, inputStream, file.length());
@@ -178,7 +186,9 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
         File file = getFile(objectKey);
 
         if (file.isHidden() || !file.exists() || !file.isFile()) {
-            failureHandler.accept(HttpResponseStatus.NOT_FOUND.code());
+            if (failureHandler != null) {
+                failureHandler.accept(HttpResponseStatus.NOT_FOUND.code());
+            }
             return;
         }
 

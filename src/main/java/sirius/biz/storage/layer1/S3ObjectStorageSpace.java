@@ -100,6 +100,11 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
+    public boolean exists(String objectKey) throws IOException {
+        return store.getClient().doesObjectExist(bucketName().getName(), objectKey);
+    }
+
+    @Override
     protected void storePhysicalObject(String objectKey, InputStream data, long size) throws IOException {
         if (size > 0) {
             store.upload(bucketName(), objectKey, data, size);

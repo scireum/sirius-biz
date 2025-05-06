@@ -189,7 +189,7 @@ public class FTPServer implements Startable, Stoppable, AdditionalRolesProvider 
         ssl.setKeystoreFile(new File(keystore));
         ssl.setKeystorePassword(keystorePassword);
         ssl.setKeyAlias(keyAlias);
-        ssl.setSslProtocol(tlsProtocol);
+        ssl.setSslProtocol(new String[]{tlsProtocol});
         factory.setSslConfiguration(ssl.createSslConfiguration());
         factory.setImplicitSsl(forceSSL);
     }

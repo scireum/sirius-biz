@@ -13,9 +13,12 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
@@ -70,6 +73,7 @@ public class URLBuilder {
     protected String fallbackUri;
     protected boolean largeFile;
     protected boolean hasLargeFileCheck;
+    protected boolean waitLonger;
 
     @Part
     private static StorageUtils utils;
@@ -171,6 +175,16 @@ public class URLBuilder {
         this.variant = variant;
         this.cachedPhysicalKey = null;
 
+        return this;
+    }
+
+    /**
+     * Adds the marker to virtual URLs that the caller is willing to wait longer for the conversion to complete.
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder waitLonger() {
+        this.waitLonger = true;
         return this;
     }
 
@@ -343,11 +357,17 @@ public class URLBuilder {
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public Optional<String> buildURL() {
-        UrlResult urlResult = buildUrlResult();
-        if (urlResult.urlType() == UrlType.EMPTY) {
+        try {
+            UrlResult urlResult = buildUrlResult();
+            if (urlResult.urlType() == UrlType.EMPTY) {
+                return Optional.empty();
+            } else {
+                return Optional.of(urlResult.url);
+            }
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
             return Optional.empty();
-        } else {
-            return Optional.of(urlResult.url);
         }
     }
 
@@ -401,17 +421,34 @@ public class URLBuilder {
      * @see #safeBuildURL(String)
      */
     public String buildImageURL() {
-        return safeBuildURL(IMAGE_FALLBACK_URI);
+        try {
+            UrlResult urlResult = buildUrlResult();
+            if (urlResult.urlType() == UrlType.EMPTY) {
+                return createBaseURL().append(IMAGE_FALLBACK_URI).toString();
+            } else {
+                return urlResult.url();
+            }
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
+            return createBaseURL().append(IMAGE_FAILED_URI).toString();
+        }
     }
 
     /**
      * Determines if a conversion for the given variant is expected.
      *
      * @return <tt>true</tt> if a variant is selected, for which no physical key is present. <tt>false</tt> if there
-     * already exists a physical key for the given variant.
+     * already exists a physical key for the given variant or a conversion ultimately failed.
      */
     public boolean isConversionExpected() {
-        return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+        try {
+            return isFilled() && !Strings.areEqual(variant, VARIANT_RAW) && Strings.isEmpty(determinePhysicalKey());
+        } catch (HandledException exception) {
+            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
+            Exceptions.ignore(exception);
+            return false;
+        }
     }
 
     /**
@@ -517,7 +554,11 @@ public class URLBuilder {
             result.append(fetchUrlEncodedFileExtension());
         }
 
-        appendHook(result);
+        boolean hasHook = appendHook(result);
+
+        if (waitLonger) {
+            result.append(Strings.apply("%s%s=true", hasHook ? "&" : "?", BlobDispatcher.WAIT_LONGER_PARAMETER));
+        }
 
         return result.toString();
     }
@@ -529,8 +570,9 @@ public class URLBuilder {
      * BlobDispatcherHook...
      *
      * @param urlBuilder the builder to append the strings to
+     * @return <tt>true</tt> if a hook was appended, <tt>false</tt> otherwise
      */
-    private void appendHook(StringBuilder urlBuilder) {
+    private boolean appendHook(StringBuilder urlBuilder) {
         if (Strings.isFilled(hook)) {
             urlBuilder.append("?hook=");
             urlBuilder.append(Strings.urlEncode(hook));
@@ -538,7 +580,9 @@ public class URLBuilder {
                 urlBuilder.append("&payload=");
                 urlBuilder.append(Strings.urlEncode(payload));
             }
+            return true;
         }
+        return false;
     }
 
     /**
@@ -562,13 +606,15 @@ public class URLBuilder {
             return blob.getPhysicalObjectKey();
         }
 
-        if (cachedPhysicalKey != null) {
-            return cachedPhysicalKey;
+        if (cachedPhysicalKey == null) {
+            Tuple<String, Boolean> physicalKey =
+                    ((BasicBlobStorageSpace<?, ?, ?>) space).tryFetchPhysicalKey(blobKey, variant);
+            if (physicalKey != null) {
+                this.cachedPhysicalKey = physicalKey.getFirst();
+            }
         }
 
-        Optional<String> physicalKey = ((BasicBlobStorageSpace<?, ?, ?>) space).tryResolvePhysicalKey(blobKey, variant);
-        physicalKey.ifPresent(key -> this.cachedPhysicalKey = key);
-        return physicalKey.orElse(null);
+        return cachedPhysicalKey;
     }
 
     private String computeAccessToken(String authToken) {

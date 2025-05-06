@@ -82,23 +82,32 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Specifies the total number of attempts for the optimistic locking strategies used by this class.
      */
-    private static final int NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS = 5;
+    @ConfigValue("storage.layer2.conversion.maxOptimisticLockAttempts")
+    private static int maxOptimisticLockAttempts;
 
     /**
      * Specifies the total number of attempts to wait for a conversion result.
      */
-    private static final int NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION = 4;
+    @ConfigValue("storage.layer2.conversion.maxConversionAttempts")
+    private static int maxConversionAttempts;
 
     /**
-     * Specifies the number of milliseconds to wait for a conversion (note that we do this up to
-     * NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION times).
+     * Specifies the total number of attempts to wait for a conversion result when requested to wait longer.
      */
-    private static final int TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS = 500;
+    @ConfigValue("storage.layer2.conversion.maxLongConversionAttempts")
+    private static int maxLongConversionAttempts;
+
+    /**
+     * Specifies the number of milliseconds to wait for a conversion.
+     */
+    @ConfigValue("storage.layer2.conversion.conversionRetryDelay")
+    private static Duration conversionRetryDelay;
 
     /**
      * Specifies the interval (in minutes) after which a conversion is retried for a given blob variant.
      */
-    private static final int VARIANT_CONVERSION_RETRY_INTERVAL_MINUTES = 45;
+    @ConfigValue("storage.layer2.conversion.hangingConversionRetryInterval")
+    private static Duration hangingConversionRetryInterval;
 
     /**
      * Specifies the maximal number of attempts to generate a variant.
@@ -175,18 +184,20 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
 
+    /**
+     * Describes if the variant was obtained from cache, lookup or delegated (where a conversion was requested).
+     */
     private static final String HEADER_VARIANT_SOURCE = "X-VariantSource";
+
+    /**
+     * Contains the host which performed the conversion in case of delegated conversions.
+     */
     private static final String HEADER_VARIANT_COMPUTER = "X-VariantComputer";
 
     /**
      * Connect timeout for delegated blob downloads
      */
     private static final int CONNECT_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(5, TimeUnit.SECONDS);
-
-    /**
-     * Read timeout for delegated blob downloads
-     */
-    private static final int READ_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(15, TimeUnit.SECONDS);
 
     /**
      * Determines the blacklisting interval if a conversion host is unreachable.
@@ -400,7 +411,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                                             Callback<R> commit,
                                                                             Callback<R> rollback,
                                                                             Function<Exception, HandledException> errorHandler) {
-        int attempts = NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS;
+        int attempts = maxOptimisticLockAttempts;
         try {
             while (attempts-- > 0) {
                 R result = tryFindOrCreate(lookup, factory, correctnessTest, commit, rollback);
@@ -413,7 +424,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
             throw errorHandler.apply(new IllegalStateException(Strings.apply(
                     "Failed to execute an optimistic locked update after %s retries",
-                    NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS)));
+                    maxOptimisticLockAttempts)));
         } catch (Exception exception) {
             throw errorHandler.apply(exception);
         }
@@ -1064,32 +1075,33 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Note: This method will not be able to return a file if the blob doesn't yet exist in the requested variant and
      * the conversion is disabled on this node (see {@link #conversionEnabled}).
      *
-     * @param blobKey the blob key of the blob to download
-     * @param variant the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @param blobKey    the blob key of the blob to download
+     * @param variant    the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @param waitLonger whether to wait longer for the conversion to complete
      * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
      * be converted
      */
     @Override
-    public Optional<FileHandle> download(String blobKey, String variant) {
+    public Optional<FileHandle> download(String blobKey, String variant, boolean waitLonger) {
         touch(blobKey);
 
         try {
             // first, attempt to resolve the physical key for the given blob and variant in a non-blocking manner; if
             // the variant has been created before, independent of whether this node has conversion enabled, this will
             // lead to a physical key that can be used to download the blob
-            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
+            Tuple<String, Boolean> physicalKey = tryFetchPhysicalKey(blobKey, variant);
 
             // if a physical key cannot be determined, the blob has not yet been created in the requested variant; we
             // now need to check if this node is allowed to perform the conversion itself; if so, we run the physical
             // key lookup again in a blocking manner to ensure that the conversion is performed
             if (conversionEnabled && physicalKey == null) {
-                physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                physicalKey = tryCreatePhysicalKey(blobKey, variant, waitLonger);
             }
 
             // if the physical key is still null, this node is not allowed to perform the conversion itself or
             // conversion on this node failed gracefully; in this case, we attempt to delegate the conversion
             if (physicalKey == null) {
-                return tryDelegateDownload(blobKey, variant, MAX_CONVERSION_DELEGATE_ATTEMPTS);
+                return tryDelegateDownload(blobKey, variant, MAX_CONVERSION_DELEGATE_ATTEMPTS, waitLonger);
             }
 
             return getPhysicalSpace().download(physicalKey.getFirst());
@@ -1108,21 +1120,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param blobKey           the blob key of the blob to download
      * @param variant           the variant of the blob to download
      * @param remainingAttempts the max number of attempts to re-try in case of a connectivity problem
+     * @param waitLonger        whether to wait longer for the conversion to complete
      * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
      * be converted
      * @throws IOException in case of an IO error
      */
-    private Optional<FileHandle> tryDelegateDownload(String blobKey, String variant, int remainingAttempts)
-            throws IOException {
-        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
+    private Optional<FileHandle> tryDelegateDownload(String blobKey,
+                                                     String variant,
+                                                     int remainingAttempts,
+                                                     boolean waitLonger) throws IOException {
+        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant, waitLonger);
 
         if (url.isEmpty()) {
             return Optional.empty();
         }
 
+        int maxConversionTime =
+                (int) conversionRetryDelay.multipliedBy(waitLonger ? maxLongConversionAttempts : maxConversionAttempts)
+                                          .toMillis();
+
         URLConnection connection = url.get().openConnection();
         connection.setConnectTimeout(CONNECT_TIMEOUT);
-        connection.setReadTimeout(READ_TIMEOUT);
+        // Uses the expected maximum conversion time with the fixed connection timeout as a buffer.
+        connection.setReadTimeout(CONNECT_TIMEOUT + maxConversionTime);
         connection.connect();
 
         File temporaryFile = File.createTempFile("delegate-", null);
@@ -1136,7 +1156,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 // but we have several to pick from, so lets try again
                 Exceptions.ignore(connectException);
                 recordHostConnectivityIssue(url.get().getHost());
-                return tryDelegateDownload(blobKey, variant, remainingAttempts - 1);
+                return tryDelegateDownload(blobKey, variant, remainingAttempts - 1, waitLonger);
             } else {
                 throw connectException;
             }
@@ -1338,7 +1358,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         touch(blobKey);
 
         try {
-            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
+            Tuple<String, Boolean> physicalKey = tryFetchPhysicalKey(blobKey, variant);
             if (physicalKey != null) {
                 response.addHeader(HEADER_VARIANT_SOURCE,
                                    Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "lookup");
@@ -1389,23 +1409,23 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      *
      * @param blobKey     the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found. We also return an indicator
      * if the key was read from the internal cache or if a lookup was required.
      * @throws HandledException         if a requested variant cannot be computed
      * @throws IllegalArgumentException if an unknown variant is requested
      */
-    private Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
+    protected Tuple<String, Boolean> tryFetchPhysicalKey(String blobKey, String variantName) {
         String variantCacheKey = buildCacheLookupKey(blobKey, variantName);
         String cachedPhysicalVariantKey = blobKeyToPhysicalCache.get(variantCacheKey);
         if (Strings.isFilled(cachedPhysicalVariantKey)) {
-            assertNoFailureCached(cachedPhysicalVariantKey);
+            if (CACHED_FAILURE_MARKER.equals(cachedPhysicalVariantKey)) {
+                throwExhaustedConversionAttemptsException(blobKey, variantName);
+            }
             return Tuple.create(cachedPhysicalVariantKey, true);
         }
 
         try {
-            String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
+            String physicalKey = lookupPhysicalKey(blobKey, variantName);
             if (physicalKey != null) {
                 blobKeyToPhysicalCache.put(variantCacheKey, physicalKey);
                 return Tuple.create(physicalKey, false);
@@ -1420,13 +1440,35 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
     }
 
-    private void assertNoFailureCached(String cachedPhysicalKey) {
-        if (CACHED_FAILURE_MARKER.equals(cachedPhysicalKey)) {
-            // We detected a cached failure. Throw an appropriate but exception to the user. No
-            // need to log anything as the incident has already been reported...
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Failed to create the requested variant from the given image.")
-                            .handle();
+    /**
+     * Creates the physical key for the given blob and variant.
+     *
+     * @param blobKey     the blob for which the variant is to be resolved
+     * @param variantName the variant of the blob to find
+     * @param waitLonger  whether to wait longer for the conversion to complete
+     * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found. We also return an indicator
+     * if the key was read from the internal cache or if a lookup was required.
+     * @throws HandledException         if a requested variant cannot be computed
+     * @throws IllegalArgumentException if an unknown variant is requested
+     */
+    @SuppressWarnings("unchecked")
+    protected Tuple<String, Boolean> tryCreatePhysicalKey(String blobKey, String variantName, boolean waitLonger) {
+        Tuple<String, Boolean> keyAndCache = tryFetchPhysicalKey(blobKey, variantName);
+        if (keyAndCache != null) {
+            return keyAndCache;
+        }
+
+        B blob = (B) findByBlobKey(blobKey).orElse(null);
+        if (blob == null) {
+            return null;
+        }
+
+        V variant = findOrCreateVariant(blob, variantName, waitLonger);
+
+        if (variant == null || Strings.isEmpty(variant.getPhysicalObjectKey())) {
+            return null;
+        } else {
+            return Tuple.create(variant.getPhysicalObjectKey(), false);
         }
     }
 
@@ -1435,39 +1477,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to resolve the physical key for the given blob and variant.
-     *
-     * @param blobKey     the blob for which the variant is to be resolved
-     * @param variantName the variant of the blob to find
-     * @return the physical key wrapped as optional or an empty optional if the appropriate variant wasn't found
-     * @see #resolvePhysicalKey(String, String, boolean)
-     */
-    protected Optional<String> tryResolvePhysicalKey(String blobKey, String variantName) {
-        try {
-            Tuple<String, Boolean> keyAndCacheFlag = resolvePhysicalKey(blobKey, variantName, true);
-            if (keyAndCacheFlag == null) {
-                return Optional.empty();
-            } else {
-                return Optional.ofNullable(keyAndCacheFlag.getFirst());
-            }
-        } catch (Exception exception) {
-            handleFailedConversion(blobKey, variantName, exception);
-            return Optional.empty();
-        }
-    }
-
-    /**
      * Performs the actual lookup of the physical key for the given blob and variant.
      *
      * @param blobKey     the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found
      */
     @SuppressWarnings("unchecked")
     @Nullable
-    protected String lookupPhysicalKey(String blobKey, @Nonnull String variantName, boolean nonblocking) {
+    protected String lookupPhysicalKey(String blobKey, @Nonnull String variantName) {
         B blob = (B) findByBlobKey(blobKey).orElse(null);
         if (blob == null) {
             return null;
@@ -1481,7 +1499,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw new IllegalArgumentException(Strings.apply("Unknown variant type: %s", variantName));
         }
 
-        V variant = findOrCreateVariant(blob, variantName, nonblocking);
+        V variant = tryFetchVariant(blob, variantName);
 
         if (variant == null || Strings.isEmpty(variant.getPhysicalObjectKey())) {
             return null;
@@ -1491,25 +1509,22 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to either find or create the requested variant for the given blob.
+     * Tries to find the requested variant for the given blob and creates it if missing.
      * <p>
      * Note that there this is a recursive optimistic locking algorithm at work where
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)} and
+     * {@link #attemptToFindOrCreateVariant(Blob, String, int)} and
      * {@link #awaitConversionResultAndRetryToFindVariant(Blob, String, int)} build the "loop".
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
+     * @param waitLonger  whether to wait longer for the conversion to complete
      * @return the variant for the given blob with the given name or null if no such variant exists
      */
     @Nullable
-    protected V findOrCreateVariant(B blob, String variantName, boolean nonblocking) {
+    protected V findOrCreateVariant(B blob, String variantName, boolean waitLonger) {
         try {
-            return attemptToFindOrCreateVariant(blob,
-                                                variantName,
-                                                nonblocking,
-                                                NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS - 1);
+            int retries = waitLonger ? maxLongConversionAttempts : maxConversionAttempts;
+            return attemptToFindOrCreateVariant(blob, variantName, retries);
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -1538,20 +1553,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             && Strings.isEmpty(variant.getPhysicalObjectKey())) {
             // The conversion has failed - signal that to the client. We use a handled exception here, as the problem
             // has already been logged...
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Failed to create the requested variant from the given variant.")
-                            .handle();
+            throwExhaustedConversionAttemptsException(blob.getBlobKey(), variantName);
         }
         return variant;
     }
 
+    private void throwExhaustedConversionAttemptsException(String blobKey, String variantName) {
+        throw Exceptions.createHandled()
+                        .withSystemErrorMessage("Exhausted conversion attempts for variant '%s' and blobKey '%s'",
+                                                variantName,
+                                                blobKey)
+                        .handle();
+    }
+
     /**
-     * Actually attempts to either look up or create the requested variant.
+     * Actually attempts to look up and create the requested variant when none was found.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
-     * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
-     *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
      * @param retries     the number of retries left
      * @return the variant for the given blob with the given name or null if no such variant exists
      * @throws Exception in case of an error while searching or creating the variant
@@ -1559,20 +1578,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Nullable
     @SuppressWarnings("java:S3776")
     @Explain("This is a complex beast, but we rather keep the whole logic in one place.")
-    private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
-            throws Exception {
+    private V attemptToFindOrCreateVariant(B blob, String variantName, int retries) throws Exception {
+        // Always try to fetch the variant first, which could be present due to a previous conversion attempt
+        // or a conversion has been created from another thread or node...
         V variant = tryFetchVariant(blob, variantName);
 
         if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
             // We hit the nail on the head - we found a variant which has successfully been converted already.
             // -> use it
             return variant;
-        }
-
-        if (nonblocking) {
-            // We didn't find anything and the caller doesn't permit to block and wait for either our node or
-            // another to create the variant -> abort with null
-            return null;
         }
 
         if (variant == null) {
@@ -1627,7 +1641,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     /**
      * Handles the retry (after an optimistic lock error) path of
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
+     * {@link #attemptToFindOrCreateVariant(Blob, String, int)}.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1639,12 +1653,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
         // wait a short and random amount of time and retry...
         Wait.randomMillis(0, 150);
-        return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
+        return attemptToFindOrCreateVariant(blob, variantName, retries - 1);
     }
 
     /**
      * Handles the retry (when waiting for a conversion result) path of
-     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
+     * {@link #attemptToFindOrCreateVariant(Blob, String, int)}.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1659,11 +1673,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
         // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish...
-        Wait.millis(TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS);
-        return attemptToFindOrCreateVariant(blob,
-                                            variantName,
-                                            false,
-                                            Math.min(retries - 1, NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION - 1));
+        Wait.millis((int) conversionRetryDelay.toMillis());
+        return attemptToFindOrCreateVariant(blob, variantName, Math.min(retries - 1, retries));
     }
 
     /**
@@ -1748,14 +1759,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     /**
      * Determines if another conversion of the variant should be attempted.
+     * <p>
+     * We do want to start a conversion if no conversion is currently queued, or is killed but has been stuck
+     * for a while.
      *
      * @param variant the variant to check
      * @return <tt>true</tt> if another conversion should be triggered, <tt>false</tt> otherwise
      */
     private boolean shouldRetryConversion(V variant) {
         return !variant.isQueuedForConversion()
-               || Duration.between(variant.getLastConversionAttempt(), LocalDateTime.now()).toMinutes()
-                  > VARIANT_CONVERSION_RETRY_INTERVAL_MINUTES;
+               || Duration.between(variant.getLastConversionAttempt(), LocalDateTime.now())
+                          .compareTo(hangingConversionRetryInterval) > 0;
     }
 
     /**
@@ -1802,7 +1816,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             Future future = new Future();
             future.fail(new IllegalStateException(Strings.apply(
                     "Failed to execute an optimistic locked update after %s retries",
-                    NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS)));
+                    maxOptimisticLockAttempts)));
             return future;
         }
 
@@ -1848,7 +1862,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return a future holding the conversion process
      */
     public Future tryCreateVariant(B blob, String variantName) {
-        return tryCreateVariant(blob, null, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
+        return tryCreateVariant(blob, null, variantName, maxOptimisticLockAttempts);
     }
 
     /**
@@ -1860,7 +1874,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return a future holding the conversion process
      */
     public Future tryCreateVariant(B blob, FileHandle inputFile, String variantName) {
-        return tryCreateVariant(blob, inputFile, variantName, NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS);
+        return tryCreateVariant(blob, inputFile, variantName, maxOptimisticLockAttempts);
     }
 
     /**
@@ -1915,7 +1929,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                  }
 
                  try {
-                     Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                     Tuple<String, Boolean> physicalKey =
+                             tryCreatePhysicalKey(blobKey, variant, isMarkedToWaitLonger(response));
                      if (physicalKey == null) {
                          response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
                      } else {
@@ -1941,7 +1956,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param response the response to populate
      */
     private void delegateConversion(String blobKey, String variant, Response response, int maxAttempts) {
-        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
+        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant, isMarkedToWaitLonger(response));
 
         if (url.isEmpty()) {
             response.error(HttpResponseStatus.NOT_FOUND);
@@ -1965,6 +1980,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
     }
 
+    private boolean isMarkedToWaitLonger(Response response) {
+        return Boolean.parseBoolean(response.getHeader(BlobDispatcher.HEADER_WAIT_LONGER));
+    }
+
     private void recordHostConnectivityIssue(String host) {
         conversionHostLastConnectivityIssue.put(host, LocalDateTime.now());
         StorageUtils.LOG.WARN("Layer 2: Detected a connectivity issue for conversion host %s!", host);
@@ -1983,7 +2002,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     @SuppressWarnings("HttpUrlsUsage")
     @Explain("These are cluster internal URLs and thus http is acceptable.")
-    private Optional<URL> determineDelegateConversionUrl(String blobKey, String variant) {
+    private Optional<URL> determineDelegateConversionUrl(String blobKey, String variant, boolean waitLonger) {
         if (conversionEnabled || conversionHosts.isEmpty()) {
             return Optional.empty();
         }
@@ -2002,6 +2021,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                + variant
                                + "/"
                                + blobKey;
+
+        if (waitLonger) {
+            conversionUrl += Strings.apply("?%s=true", BlobDispatcher.WAIT_LONGER_PARAMETER);
+        }
 
         try {
             return Optional.of(URI.create(conversionUrl).toURL());

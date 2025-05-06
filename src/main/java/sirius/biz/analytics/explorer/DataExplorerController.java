@@ -59,6 +59,7 @@ public class DataExplorerController extends BizController {
     private static final String VALUE_LAST_30_DAYS = "last30Days";
     private static final String VALUE_LAST_90_DAYS = "last90Days";
     private static final String VALUE_LAST_12_MONTHS = "last12Months";
+    private static final String VALUE_MONTHLY = "monthly";
 
     @Part
     private Tasks tasks;
@@ -124,7 +125,10 @@ public class DataExplorerController extends BizController {
         String identifier = webContext.require(PARAM_IDENTIFIER).asString();
         Tuple<ChartFactory<Object>, Object> providerAndObject = resolveProviderAndObject(identifier);
 
+        LocalDate localDate = LocalDate.now();
         String range = webContext.require(PARAM_RANGE).asString();
+        int monthsToSubtract = localDate.getMonthValue() - webContext.require("month").asInt(0);
+        int yearsToSubtract = localDate.getYear() - webContext.require("year").asInt(0);
         ComparisonPeriod comparisonPeriod =
                 computeComparisonPeriod(webContext.require(PARAM_COMPARISON_PERIOD).asString());
 
@@ -132,8 +136,8 @@ public class DataExplorerController extends BizController {
             try {
                 providerAndObject.getFirst()
                                  .generateOutput(providerAndObject.getSecond(),
-                                                 computeStart(range),
-                                                 computeEnd(range),
+                                                 computeStart(range, monthsToSubtract, yearsToSubtract),
+                                                 computeEnd(range, monthsToSubtract, yearsToSubtract),
                                                  computeGranularity(range),
                                                  comparisonPeriod,
                                                  output);
@@ -172,8 +176,13 @@ public class DataExplorerController extends BizController {
      */
     @Routed("/data-explorer/export")
     public void export(WebContext webContext) throws IOException {
+        LocalDate localDate = LocalDate.now();
         String range = webContext.require(PARAM_RANGE).asString();
-        TimeSeries timeSeries = new TimeSeries(computeStart(range), computeEnd(range), computeGranularity(range));
+        int month = localDate.getMonthValue() - webContext.require("month").asInt(0);
+        int year = localDate.getYear() - webContext.require("year").asInt(0);
+        TimeSeries timeSeries = new TimeSeries(computeStart(range, month, year),
+                                               computeEnd(range, month, year),
+                                               computeGranularity(range));
         ComparisonPeriod comparisonPeriod =
                 computeComparisonPeriod(webContext.require(PARAM_COMPARISON_PERIOD).asString());
 
@@ -231,28 +240,32 @@ public class DataExplorerController extends BizController {
         };
     }
 
-    private LocalDate computeStart(String range) {
+    private LocalDate computeStart(String range, int month, int year) {
         return switch (range) {
             case VALUE_LAST_30_DAYS -> LocalDate.now().minusDays(30);
             case VALUE_LAST_90_DAYS -> LocalDate.now().minusDays(90);
             case VALUE_LAST_MONTH -> LocalDate.now().minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
             case VALUE_LAST_YEAR -> LocalDate.now().minusYears(1).with(TemporalAdjusters.firstDayOfYear());
+            case VALUE_MONTHLY ->
+                    LocalDate.now().minusYears(year).minusMonths(month).with(TemporalAdjusters.firstDayOfMonth());
             default -> LocalDate.now().with(TemporalAdjusters.firstDayOfMonth()).minusMonths(11);
         };
     }
 
-    private LocalDate computeEnd(String range) {
+    private LocalDate computeEnd(String range, int month, int year) {
         return switch (range) {
             case VALUE_LAST_MONTH -> LocalDate.now().minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
             case VALUE_LAST_YEAR -> LocalDate.now().minusYears(1).with(TemporalAdjusters.lastDayOfYear());
             case VALUE_LAST_12_MONTHS -> LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
+            case VALUE_MONTHLY ->
+                    LocalDate.now().minusYears(year).minusMonths(month).with(TemporalAdjusters.lastDayOfMonth());
             default -> LocalDate.now();
         };
     }
 
     private Granularity computeGranularity(String range) {
         return switch (range) {
-            case VALUE_LAST_30_DAYS, VALUE_LAST_90_DAYS, VALUE_LAST_MONTH -> Granularity.DAY;
+            case VALUE_LAST_30_DAYS, VALUE_LAST_90_DAYS, VALUE_LAST_MONTH, VALUE_MONTHLY -> Granularity.DAY;
             default -> Granularity.MONTH;
         };
     }
