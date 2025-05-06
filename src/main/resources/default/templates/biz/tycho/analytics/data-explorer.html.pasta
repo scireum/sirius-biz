@@ -449,6 +449,8 @@
         function exportCharts() {
             const searchParams = new URLSearchParams();
             searchParams.set("range", range);
+            searchParams.set("month", selectedMonth);
+            searchParams.set("year", selectedYear);
             searchParams.set("comparisonPeriod", comparisonPeriod);
             document.querySelectorAll('.chart-js').forEach(function (_chart) {
                 searchParams.append('identifier', _chart.dataset.identifier);
