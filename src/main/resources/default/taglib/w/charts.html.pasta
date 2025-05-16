@@ -1,0 +1,20 @@
+<i:arg type="String" name="uri" default="@WebContext.getCurrent().getRequest().uri()"/>
+<i:arg type="Object" name="target"/>
+
+<i:local name="explorer" value="part(sirius.biz.analytics.explorer.DataExplorerController.class)"/>
+<i:local name="chartList" value="explorer.fetchAvailableCharts(uri, target)"/>
+
+<i:if test="!chartList.isEmpty()">
+    <w:navbox labelKey="DataExplorerController.matchingCharts">
+        <i:for type="Tuple" var="idAndFactory" items="chartList">
+            <i:local name="id" value="idAndFactory.getFirst().as(String.class)"/>
+            <i:local name="factory"
+                     value="idAndFactory.getSecond().as(sirius.biz.analytics.explorer.ChartFactory.class)"/>
+
+            <w:navboxLink
+                    icon="fa fa-line-chart"
+                    label="@factory.getLabel()"
+                    url="@apply('/data-explorer?chart=%s', urlEncode(id))"/>
+        </i:for>
+    </w:navbox>
+</i:if>
