@@ -478,7 +478,7 @@ public class BizController extends BasicController {
     /**
      * Performs a validation and reports the first warnings via the {@link UserContext}.
      * <p>
-     * Note that this is only done, if no error messages are present which might otherwise confuse the user.
+     * Note that this is only done if no error messages are present which might otherwise confuse the user.
      *
      * @param entity the entity to validate
      */
@@ -489,7 +489,7 @@ public class BizController extends BasicController {
                   .validate(entity)
                   .stream()
                   .findFirst()
-                  .ifPresent(message -> userCtx.addMessage(Message.warn().withTextMessage(message)));
+                  .ifPresent(message -> userCtx.addMessage(Message.warn().withHTMLMessage(message)));
         }
     }
 
