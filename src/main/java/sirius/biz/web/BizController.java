@@ -487,9 +487,7 @@ public class BizController extends BasicController {
         if (userCtx.getMessages().stream().noneMatch(message -> MessageLevel.PROBLEM == message.getType())) {
             entity.getMapper()
                   .validate(entity)
-                  .stream()
-                  .findFirst()
-                  .ifPresent(message -> userCtx.addMessage(Message.warn().withHTMLMessage(message)));
+                  .forEach(message -> userCtx.addMessage(Message.warn().withHTMLMessage(message)));
         }
     }
 
