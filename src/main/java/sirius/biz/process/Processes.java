@@ -533,6 +533,7 @@ public class Processes {
             process.setErrorneous(true);
             process.setCanceled(LocalDateTime.now());
             process.setState(ProcessState.CANCELED);
+            process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
         });
     }
 
