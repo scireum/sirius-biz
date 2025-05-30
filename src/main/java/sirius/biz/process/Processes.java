@@ -533,6 +533,7 @@ public class Processes {
             process.setErrorneous(true);
             process.setCanceled(LocalDateTime.now());
             process.setState(ProcessState.CANCELED);
+            process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
         });
     }
 
@@ -542,7 +543,7 @@ public class Processes {
      * @param processId the process to update
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean markErrorneous(String processId) {
+    protected boolean markErroneous(String processId) {
         return modify(processId,
                       process -> !process.isErrorneous() && process.getState() == ProcessState.RUNNING,
                       process -> {
@@ -798,7 +799,7 @@ public class Processes {
     public void log(String processId, ProcessLog logEntry) {
         try {
             if (logEntry.getType() == ProcessLogType.ERROR) {
-                markErrorneous(processId);
+                markErroneous(processId);
             } else if (logEntry.getType() == ProcessLogType.WARNING) {
                 markWarnings(processId);
             }

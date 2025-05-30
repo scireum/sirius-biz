@@ -319,7 +319,7 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void markErroneous() {
-        processes.markErrorneous(processId);
+        processes.markErroneous(processId);
     }
 
     @Override
