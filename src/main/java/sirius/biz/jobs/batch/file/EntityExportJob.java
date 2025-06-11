@@ -84,7 +84,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected final VirtualFile templateFile;
     protected final ImportDictionary dictionary;
     protected final EntityDescriptor descriptor;
-    protected final Importer importer;
+    protected Importer importer;
     protected final List<String> defaultMapping;
     protected Class<E> type;
     protected List<? extends Function<? super E, ?>> extractors;
