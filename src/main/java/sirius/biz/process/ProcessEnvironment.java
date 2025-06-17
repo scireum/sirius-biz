@@ -135,20 +135,6 @@ class ProcessEnvironment implements ProcessContext {
         }
     }
 
-    /**
-     * @param counter   the counter to increment
-     * @param millis    the current duration for the block being counted
-     * @param adminOnly whether to show the timing only to administrators instead of all users
-     * @deprecated see ProcessContext.addDebugTiming
-     */
-    @Override
-    @Deprecated
-    public void addDebugTiming(String counter, long millis, boolean adminOnly) {
-        if (isDebugging()) {
-            addTiming(counter, millis, true);
-        }
-    }
-
     @Override
     public void incCounter(String counter) {
         incCounter(counter, false);
