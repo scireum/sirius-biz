@@ -8,7 +8,7 @@
 
 package sirius.biz.process;
 
-import sirius.biz.jobs.batch.file.FileImportJobFactory;
+import sirius.biz.jobs.BasicJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ChartOutput;
@@ -236,7 +236,7 @@ class ProcessEnvironment implements ProcessContext {
 
     private boolean shouldLimitLogMessages() {
         if (limitLogMessages == null) {
-            limitLogMessages = getParameter(FileImportJobFactory.LIMIT_LOG_MESSAGES_PARAMETER).orElse(true);
+            limitLogMessages = getParameter(BasicJobFactory.LIMIT_LOG_MESSAGES_PARAMETER).orElse(true);
         }
         return limitLogMessages;
     }
