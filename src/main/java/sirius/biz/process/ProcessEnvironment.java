@@ -581,7 +581,7 @@ class ProcessEnvironment implements ProcessContext {
                     lineLogged = true;
                     logCsvWriter.writeArray(LocalDateTime.now().format(formatter),
                                             logEntry.getType().name(),
-                                            logEntry.getMessageType(),
+                                            NLS.smartGet(logEntry.getMessageType()),
                                             logEntry.getMessage());
                 } catch (IOException exception) {
                     // Failure to create or write to the log file is not critical, so we ignore it.
