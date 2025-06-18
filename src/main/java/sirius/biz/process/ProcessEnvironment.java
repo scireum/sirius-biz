@@ -592,11 +592,11 @@ class ProcessEnvironment implements ProcessContext {
 
         protected void closeAndUpload() {
             try {
+                logFileWriter.close();
                 if (lineLogged) {
-                    logFileWriter.close();
                     addFile(logFileName, logFile);
-                    sirius.kernel.commons.Files.delete(logFile);
                 }
+                sirius.kernel.commons.Files.delete(logFile);
             } catch (IOException exception) {
                 handle(exception);
             }
