@@ -24,6 +24,7 @@ import sirius.kernel.async.Future;
 import sirius.kernel.async.Promise;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.CSVWriter;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.RateLimit;
@@ -39,22 +40,29 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -79,6 +87,8 @@ class ProcessEnvironment implements ProcessContext {
 
     private Boolean limitLogMessages = null;
     private final ProgressTracker progressTracker = new ProgressTracker(this);
+
+    private final List<LogFileCollector> logFileCollectors = new CopyOnWriteArrayList<>();
 
     @Part
     @Nullable
@@ -145,6 +155,11 @@ class ProcessEnvironment implements ProcessContext {
         addTiming(counter, -1L, adminOnly);
     }
 
+    @Override
+    public void addLogFile(@Nonnull String fileName, @Nonnull Predicate<ProcessLog> logFileFilter) {
+        logFileCollectors.add(new LogFileCollector(fileName, logFileFilter));
+    }
+
     private Map<String, Average> getTimings() {
         if (timings == null) {
             initializeTimings();
@@ -206,6 +221,11 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void log(ProcessLog logEntry) {
+        logEntryToProcess(logEntry);
+        logEntryToFiles(logEntry);
+    }
+
+    private void logEntryToProcess(ProcessLog logEntry) {
         if (Strings.isFilled(logEntry.getMessageType())
             && logEntry.getMaxMessagesToLog() > 0
             && shouldLimitLogMessages()) {
@@ -218,6 +238,10 @@ class ProcessEnvironment implements ProcessContext {
         }
 
         processes.log(processId, logEntry);
+    }
+
+    private void logEntryToFiles(ProcessLog logEntry) {
+        logFileCollectors.forEach(collector -> collector.logEntry(logEntry));
     }
 
     private boolean shouldLimitLogMessages() {
@@ -262,6 +286,7 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void markCompleted(int computationTimeInSeconds) {
+        logFileCollectors.forEach(LogFileCollector::closeAndUpload);
         processes.reportLimitedMessages(processId, messageCountsPerType, limitsPerType);
         processes.markCompleted(processId, timings, adminTimings, computationTimeInSeconds);
     }
@@ -526,5 +551,55 @@ class ProcessEnvironment implements ProcessContext {
                                    BiConsumer<List<String>, List<String>> columnsAndLabelsConsumer,
                                    BiPredicate<List<String>, List<String>> columnsAndValues) {
         processes.fetchOutputEntries(processId, outputName, columnsAndLabelsConsumer, columnsAndValues);
+    }
+
+    private class LogFileCollector {
+        private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        private String logFileName;
+        private File logFile;
+        private BufferedWriter logFileWriter;
+        private CSVWriter logCsvWriter;
+        private Predicate<ProcessLog> logFileFilter;
+        private boolean lineLogged = false;
+
+        protected LogFileCollector(String fileName, Predicate<ProcessLog> logFileFilter) {
+            try {
+                this.logFileName = fileName;
+                this.logFile = File.createTempFile("ProcessLogFile", ".csv");
+                this.logFileWriter = new BufferedWriter(new FileWriter(logFile));
+                this.logCsvWriter = new CSVWriter(logFileWriter);
+                this.logFileFilter = logFileFilter;
+                logCsvWriter.writeArray("timestamp", "level", "messageType", "message");
+            } catch (IOException exception) {
+                handle(exception);
+            }
+        }
+
+        protected void logEntry(ProcessLog logEntry) {
+            if (logFileFilter.test(logEntry)) {
+                try {
+                    lineLogged = true;
+                    logCsvWriter.writeArray(LocalDateTime.now().format(formatter),
+                                            logEntry.getType().name(),
+                                            logEntry.getMessageType(),
+                                            logEntry.getMessage());
+                } catch (IOException exception) {
+                    // Failure to create or write to the log file is not critical, so we ignore it.
+                    Exceptions.ignore(exception);
+                }
+            }
+        }
+
+        protected void closeAndUpload() {
+            try {
+                if (lineLogged) {
+                    logFileWriter.close();
+                    addFile(logFileName, logFile);
+                    sirius.kernel.commons.Files.delete(logFile);
+                }
+            } catch (IOException exception) {
+                handle(exception);
+            }
+        }
     }
 }

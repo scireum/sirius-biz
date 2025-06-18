@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -369,4 +370,21 @@ public interface ProcessContext extends TaskContextAdapter {
      * @return the progress tracker
      */
     ProgressTracker getProgressTracker();
+
+    /**
+     * Adds a log file which collects log messages in addition to the process log.
+     * <p>
+     * Several log files might be added simultaneously. The messages which are written into the log file
+     * are filtered using the provided {@link Predicate}, so a user could for example create a file with
+     * warnings and another with errors. If anything has been written into the log file, it will be
+     * uploaded to the process upon completion.
+     * <p>
+     * This feature is very useful when using limited process logging, so a process can still collect
+     * all messages into a separate file.
+     *
+     * @param fileName      the name of the file to be created.
+     * @param logFileFilter permits to filter the log messages which are written into the file.
+     * @see #log(ProcessLog)
+     */
+    void addLogFile(@Nonnull String fileName, @Nonnull Predicate<ProcessLog> logFileFilter);
 }
