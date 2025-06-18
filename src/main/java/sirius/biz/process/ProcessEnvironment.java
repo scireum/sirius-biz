@@ -592,6 +592,7 @@ class ProcessEnvironment implements ProcessContext {
 
         protected void closeAndUpload() {
             try {
+                logCsvWriter.close();
                 logFileWriter.close();
                 if (lineLogged) {
                     addFile(logFileName, logFile);
