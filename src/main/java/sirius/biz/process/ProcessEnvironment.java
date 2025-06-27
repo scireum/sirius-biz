@@ -421,6 +421,16 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
+    public void addUniqueLink(ProcessLink link) {
+        processes.addUniqueLink(processId, link);
+    }
+
+    @Override
+    public void clearLinks() {
+        processes.clearLinks(processId);
+    }
+
+    @Override
     public void addReference(String reference) {
         processes.addReference(processId, reference);
     }

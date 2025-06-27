@@ -209,6 +209,19 @@ public interface ProcessContext extends TaskContextAdapter {
     void addLink(ProcessLink link);
 
     /**
+     * Adds an external link to the process if it is not already present, based on the link's
+     * {@link ProcessLink#equals(Object) equals(Object)} method.
+     *
+     * @param link the link to add
+     */
+    void addUniqueLink(ProcessLink link);
+
+    /**
+     * Clears all links from the process.
+     */
+    void clearLinks();
+
+    /**
      * Adds the given reference to the process.
      *
      * @param reference the reference to attach
