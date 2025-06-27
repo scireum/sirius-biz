@@ -501,7 +501,7 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean updateState(String processId, ProcessState newState) {
-        return modify(processId, null, process -> process.setState(newState));
+        return modify(processId, process -> true, process -> process.setState(newState));
     }
 
     /**
