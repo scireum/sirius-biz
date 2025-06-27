@@ -14,12 +14,12 @@ import sirius.db.mixing.Entity;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 /**
- * Triggered within {@link ImportHandler#createOrUpdateNow(BaseEntity)} (or the batch equivalent) in order to update an
- * entity using the given context.
+ * Triggered within {@link ImportHandler#createOrUpdateNow(BaseEntity)} (or the batch equivalent) after an entity
+ * has been created or updated.
  *
  * @param <E> the type of entity being updated
  */
-public class BeforeCreateOrUpdateEvent<E extends Entity> extends TypedScriptableEvent<E> {
+public class AfterCreateOrUpdateEvent<E extends Entity> extends TypedScriptableEvent<E> {
     private final E entity;
     private final ImporterContext importerContext;
 
@@ -29,7 +29,7 @@ public class BeforeCreateOrUpdateEvent<E extends Entity> extends TypedScriptable
      * @param entity          the entity to update
      * @param importerContext the import context which can be used to access other handlers / the importer itself
      */
-    public BeforeCreateOrUpdateEvent(E entity, ImporterContext importerContext) {
+    public AfterCreateOrUpdateEvent(E entity, ImporterContext importerContext) {
         this.importerContext = importerContext;
         this.entity = entity;
     }
@@ -41,7 +41,7 @@ public class BeforeCreateOrUpdateEvent<E extends Entity> extends TypedScriptable
 
     @Override
     public String toString() {
-        return "BeforeCreateOrUpdateEvent: "
+        return "AfterCreateOrUpdateEvent: "
                + getType().getName()
                + " with entity "
                + entity
@@ -54,11 +54,6 @@ public class BeforeCreateOrUpdateEvent<E extends Entity> extends TypedScriptable
     @Override
     public Class<E> getType() {
         return (Class<E>) entity.getClass();
-    }
-
-    @Override
-    public void abort() {
-        throw new IllegalStateException(this + ": aborting is not supported since the entity has already been saved.");
     }
 
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)

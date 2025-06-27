@@ -173,6 +173,12 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
             if (isChanged(entity)) {
                 mango.update(entity);
+
+                if (context.getEventDispatcher().isActive()) {
+                    AfterCreateOrUpdateEvent<E> afterCreateOrUpdateEvent =
+                            new AfterCreateOrUpdateEvent<>(entity, context);
+                    context.getEventDispatcher().handleEvent(afterCreateOrUpdateEvent);
+                }
             }
 
             return entity;
