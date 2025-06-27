@@ -501,7 +501,7 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean updateState(String processId, ProcessState newState) {
-        return modify(processId, null, process -> process.setState(newState));
+        return modify(processId, process -> true, process -> process.setState(newState));
     }
 
     /**
@@ -691,6 +691,41 @@ public class Processes {
      */
     public boolean addLink(String processId, ProcessLink link) {
         return modify(processId, process -> true, process -> process.getLinks().add(link));
+    }
+
+    /**
+     * Adds the given link to the given process if it is not already present, based on the link's
+     * {@link ProcessLink#equals(Object) equals(Object)} method.
+     * <p>
+     * When running inside a process the preferred way to add a link is using
+     * {@link ProcessContext#addUniqueLink(ProcessLink)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
+     *
+     * @param processId the process to update
+     * @param link      the link to add
+     * @return <tt>true</tt> if the process was successfully modified or if the link was present before, <tt>false</tt>
+     * otherwise
+     */
+    public boolean addUniqueLink(String processId, ProcessLink link) {
+        return modify(processId, process -> true, process -> {
+            if (!process.getLinks().contains(link)) {
+                process.getLinks().add(link);
+            }
+        });
+    }
+
+    /**
+     * Clears all links from the given process.
+     * <p>
+     * When running inside a process the preferred way to add a link is using
+     * {@link ProcessContext#clearLinks()}. This method is only made public so that outside helper classes
+     * can contribute to the process.
+     *
+     * @param processId the process to update
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    public boolean clearLinks(String processId) {
+        return modify(processId, process -> true, process -> process.getLinks().clear());
     }
 
     /**
