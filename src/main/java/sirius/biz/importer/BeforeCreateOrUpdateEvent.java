@@ -56,6 +56,11 @@ public class BeforeCreateOrUpdateEvent<E extends Entity> extends TypedScriptable
         return (Class<E>) entity.getClass();
     }
 
+    @Override
+    public void abort() {
+        throw new IllegalStateException(this + ": aborting is not supported since the entity has already been saved.");
+    }
+
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public ImporterContext getImporterContext() {
         return importerContext;
