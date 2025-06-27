@@ -309,6 +309,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected E createIfChanged(E entity, boolean batch) {
         if (isChanged(entity)) {
             getInsertQuery().insert(entity, true, batch);
+            invokeAfterSaveEvent(entity);
         }
 
         return entity;
@@ -337,6 +338,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected E updateIfChanged(E entity, boolean batch) {
         if (isChanged(entity)) {
             getUpdateQuery().update(entity, true, batch);
+            invokeAfterSaveEvent(entity);
         }
 
         return entity;
@@ -423,6 +425,13 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
         if (deleteQuery != null) {
             deleteQuery.commit();
+        }
+    }
+
+    private void invokeAfterSaveEvent(E entity) {
+        if (context.getEventDispatcher().isActive()) {
+            AfterCreateOrUpdateEvent<E> afterCreateOrUpdateEvent = new AfterCreateOrUpdateEvent<>(entity, context);
+            context.getEventDispatcher().handleEvent(afterCreateOrUpdateEvent);
         }
     }
 }
