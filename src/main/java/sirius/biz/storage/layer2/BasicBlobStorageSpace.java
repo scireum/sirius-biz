@@ -1106,8 +1106,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
             return getPhysicalSpace().download(physicalKey.getFirst());
         } catch (Exception exception) {
-            handleFailedConversion(blobKey, variant, exception);
-
             return Optional.empty();
         }
     }
@@ -1166,17 +1164,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
-    }
-
-    private void handleFailedConversion(String blobKey, String variant, Exception exception) {
-        failedVariantHandlers.forEach(handler -> handler.handle(exception, blobKey, variant));
-        Exceptions.handle()
-                  .error(exception)
-                  .to(StorageUtils.LOG)
-                  .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
-                                          blobKey,
-                                          variant)
-                  .handle();
     }
 
     /**
@@ -1373,7 +1360,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         } catch (IllegalArgumentException exception) {
             response.notCached().error(HttpResponseStatus.BAD_REQUEST, exception.getMessage());
         } catch (Exception exception) {
-            handleFailedConversion(blobKey, variant, exception);
             response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -1559,11 +1545,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     private void throwExhaustedConversionAttemptsException(String blobKey, String variantName) {
-        throw Exceptions.createHandled()
-                        .withSystemErrorMessage("Exhausted conversion attempts for variant '%s' and blobKey '%s'",
-                                                variantName,
-                                                blobKey)
-                        .handle();
+        HandledException exception = Exceptions.handle()
+                                               .to(StorageUtils.LOG)
+                                               .withSystemErrorMessage(
+                                                       "Layer2: Exhausted conversion attempts for variant '%s' and blobKey '%s'",
+                                                       variantName,
+                                                       blobKey)
+                                               .handle();
+        failedVariantHandlers.forEach(handler -> handler.handle(exception, blobKey, variantName));
+        throw exception;
     }
 
     /**
@@ -1939,7 +1929,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                          getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
                      }
                  } catch (Exception exception) {
-                     handleFailedConversion(blobKey, variant, exception);
                      response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                  }
              });
