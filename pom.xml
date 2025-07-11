@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
-            <version>3.5.2</version>
+            <version>3.5.4</version>
         </dependency>
 
         <!-- Changelog: https://github.com/ClickHouse/clickhouse-java/releases -->
@@ -61,11 +61,11 @@
             <classifier>http</classifier>
         </dependency>
         <!-- Required for clickhouse-jdbc -->
-        <!-- Changelog: https://downloads.apache.org/httpcomponents/httpclient/RELEASE_NOTES-5.4.x.txt -->
+        <!-- Changelog: https://downloads.apache.org/httpcomponents/httpclient/RELEASE_NOTES-5.5.x.txt -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
-            <version>5.4.3</version>
+            <version>5.5</version>
         </dependency>
 
         <!-- Changelog: https://mina.apache.org/ftpserver-project/download_1_2.html -->
@@ -79,27 +79,27 @@
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-core</artifactId>
-            <version>2.14.0</version>
+            <version>2.15.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-sftp</artifactId>
-            <version>2.14.0</version>
+            <version>2.15.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-scp</artifactId>
-            <version>2.14.0</version>
+            <version>2.15.0</version>
         </dependency>
 
         <!-- Changelog: https://github.com/codelibs/jcifs/tags -->
         <dependency>
             <groupId>org.codelibs</groupId>
             <artifactId>jcifs</artifactId>
-            <version>2.1.39</version>
+            <version>2.1.40</version>
         </dependency>
         <!-- Required as the version provided by jcifs has security issues -->
-        <!-- https://www.bouncycastle.org/news/?filter=gk_format%3Drelease%26gk_category%3Djava -->
+        <!-- https://www.bouncycastle.org/download/bouncy-castle-java/#release-notesa -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
@@ -130,7 +130,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.771</version>
+            <version>1.12.787</version>
         </dependency>
         <!--
          required by aws-java-sdk-s3, can't switch to jakarta.xml.bind-api as
