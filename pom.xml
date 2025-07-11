@@ -99,7 +99,7 @@
             <version>2.1.40</version>
         </dependency>
         <!-- Required as the version provided by jcifs has security issues -->
-        <!-- https://www.bouncycastle.org/download/bouncy-castle-java/#release-notesa -->
+        <!-- https://www.bouncycastle.org/download/bouncy-castle-java/#release-notes -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
