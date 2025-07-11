@@ -676,7 +676,7 @@ public abstract class LookupTable {
     }
 
     private static List<String> transformArrayToStringList(ArrayNode array) {
-        return Json.streamEntries(array).map(JsonNode::asText).filter(Strings::isFilled).toList();
+        return array.valueStream().map(JsonNode::asText).filter(Strings::isFilled).toList();
     }
 
     /**

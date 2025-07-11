@@ -18,6 +18,7 @@ import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
@@ -31,7 +32,6 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 /**
  * Provides a base class to create the management UI for the job scheduler.
@@ -139,7 +139,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         executeInBelongingProvider(entry);
         String entryProcessesUrl = Strings.apply("/ps?reference=%s&reference-label=%s",
                                                  entry.getUniqueName(),
-                                                 Strings.urlEncode(entry.toString()));
+                                                 Urls.encode(entry.toString()));
         webContext.respondWith().redirectToGet(entryProcessesUrl);
     }
 

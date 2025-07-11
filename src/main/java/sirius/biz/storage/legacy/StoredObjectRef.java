@@ -10,6 +10,7 @@ package sirius.biz.storage.legacy;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.std.Part;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
@@ -18,6 +19,7 @@ import sirius.pasta.noodle.sandbox.NoodleSandbox;
  * <p>
  * If the owning entity is deleted, the referenced object is also deleted if it was uploaded specifically
  * for this reference. If it was a shared object from within a bucket, the referenced object remains untouched.
+ *
  * @deprecated use the new storage APIs
  */
 @Deprecated
@@ -222,7 +224,7 @@ public class StoredObjectRef {
      * @return <tt>true</tt> if an URL was stored, <tt>false</tt> if an object key or nothing yet is stored
      */
     public boolean isURL() {
-        return supportsURL && Strings.isHttpUrl(key);
+        return supportsURL && Urls.isHttpUrl(key);
     }
 
     /**

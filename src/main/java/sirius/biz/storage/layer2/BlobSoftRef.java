@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 import javax.annotation.Nullable;
@@ -89,7 +90,7 @@ public class BlobSoftRef extends BlobHardRef {
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public boolean isURL() {
-        return supportsURL && Strings.isHttpUrl(key);
+        return supportsURL && Urls.isHttpUrl(key);
     }
 
     @Override

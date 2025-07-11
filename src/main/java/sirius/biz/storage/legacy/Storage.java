@@ -24,6 +24,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -641,7 +642,7 @@ public class Storage {
         result.append(downloadBuilder.getFileExtension());
         if (Strings.isFilled(downloadBuilder.getFilename())) {
             result.append("?name=");
-            result.append(Strings.urlEncode(downloadBuilder.getFilename()));
+            result.append(Urls.encode(downloadBuilder.getFilename()));
         }
 
         return result.toString();

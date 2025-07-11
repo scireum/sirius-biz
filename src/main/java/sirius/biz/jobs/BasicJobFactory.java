@@ -21,6 +21,7 @@ import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
@@ -214,7 +215,7 @@ public abstract class BasicJobFactory implements JobFactory {
             sb.append(mf.firstCall() ? "?" : "&");
             sb.append(setting.getKey());
             sb.append("=");
-            sb.append(Strings.urlEncode(NLS.toMachineString(setting.getValue())));
+            sb.append(Urls.encode(NLS.toMachineString(setting.getValue())));
         }
         return sb.toString();
     }

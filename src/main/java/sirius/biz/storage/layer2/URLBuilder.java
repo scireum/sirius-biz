@@ -14,6 +14,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -518,8 +519,7 @@ public class URLBuilder {
         result.append(physicalKey);
         result.append("/");
         appendAddonText(result);
-        result.append(Strings.urlEncode(Files.toSaneFileName(filename)
-                                             .orElse(physicalKey + fetchUrlEncodedFileExtension())));
+        result.append(Urls.encode(Files.toSaneFileName(filename).orElse(physicalKey + fetchUrlEncodedFileExtension())));
     }
 
     private String createVirtualDeliveryUrl() {
@@ -546,7 +546,7 @@ public class URLBuilder {
             result.append(blobKey);
             result.append("/");
             appendAddonText(result);
-            result.append(Strings.urlEncode(determineEffectiveFilename()));
+            result.append(Urls.encode(determineEffectiveFilename()));
         } else {
             result.append("/");
             appendAddonText(result);
@@ -575,10 +575,10 @@ public class URLBuilder {
     private boolean appendHook(StringBuilder urlBuilder) {
         if (Strings.isFilled(hook)) {
             urlBuilder.append("?hook=");
-            urlBuilder.append(Strings.urlEncode(hook));
+            urlBuilder.append(Urls.encode(hook));
             if (Strings.isFilled(payload)) {
                 urlBuilder.append("&payload=");
-                urlBuilder.append(Strings.urlEncode(payload));
+                urlBuilder.append(Urls.encode(payload));
             }
             return true;
         }
@@ -666,7 +666,7 @@ public class URLBuilder {
         String result = determineVariantFileExtension().orElseGet(() -> Files.getFileExtension(determineFilename()));
 
         if (Strings.isFilled(result)) {
-            return "." + Strings.urlEncode(result);
+            return "." + Urls.encode(result);
         } else {
             return "";
         }

@@ -9,7 +9,6 @@
 package sirius.biz.jobs;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.biz.jobs.batch.BatchProcessJobFactory;
 import sirius.biz.process.PersistencePeriod;
@@ -157,10 +156,11 @@ public class JobConfigData extends Composite {
                 Json.parseObject(configuration).properties().forEach(entry -> {
                     if (entry.getValue().isArray()) {
                         configMap.put(entry.getKey(),
-                                      Json.streamEntries((ArrayNode) entry.getValue())
-                                          .map(JsonNode::asText)
-                                          .filter(Strings::isFilled)
-                                          .toList());
+                                      entry.getValue()
+                                           .valueStream()
+                                           .map(JsonNode::asText)
+                                           .filter(Strings::isFilled)
+                                           .toList());
                     } else {
                         configMap.put(entry.getKey(), Stream.ofNullable(entry.getValue().asText(null)).toList());
                     }
