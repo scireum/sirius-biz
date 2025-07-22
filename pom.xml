@@ -19,7 +19,7 @@
     <properties>
         <sirius.kernel>dev-48.0.0</sirius.kernel>
         <sirius.web>dev-91.0.0</sirius.web>
-        <sirius.db>dev-64.1.0</sirius.db>
+        <sirius.db>dev-64.2.0</sirius.db>
     </properties>
 
     <repositories>
@@ -51,21 +51,6 @@
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <version>3.5.4</version>
-        </dependency>
-
-        <!-- Changelog: https://github.com/ClickHouse/clickhouse-java/releases -->
-        <dependency>
-            <groupId>com.clickhouse</groupId>
-            <artifactId>clickhouse-jdbc</artifactId>
-            <version>0.6.5</version>
-            <classifier>http</classifier>
-        </dependency>
-        <!-- Required for clickhouse-jdbc -->
-        <!-- Changelog: https://downloads.apache.org/httpcomponents/httpclient/RELEASE_NOTES-5.5.x.txt -->
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <version>5.5</version>
         </dependency>
 
         <!-- Changelog: https://mina.apache.org/ftpserver-project/download_1_2.html -->
