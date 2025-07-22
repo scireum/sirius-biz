@@ -1,0 +1,19 @@
+<!--
+  ~ Made with all the love in the world
+  ~ by scireum in Remshalden, Germany
+  ~
+  ~ Copyright by scireum GmbH
+  ~ http://www.scireum.de - info@scireum.de
+  -->
+
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="run" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="sirius.kernel.Setup" />
+    <module name="sirius-biz" />
+    <option name="PROGRAM_PARAMETERS" value="-Dide=true -Ddebug=true -Xmx8192m" />
+    <option name="VM_PARAMETERS" value="-Djdk.xml.maxGeneralEntitySizeLimit=5000000 -Djdk.xml.totalEntitySizeLimit=5000000" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
