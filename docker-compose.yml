@@ -24,12 +24,17 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
     hostname: mariadb
+
   clickhouse:
-    image: clickhouse/clickhouse-server:24.5.1-alpine
+    image: clickhouse/clickhouse-server:25.5.9.14-alpine
     ports:
       - "8123"
       - "9000"
     hostname: clickhouse
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: secret
+
   elasticsearch:
     image: elasticsearch:8.18.3
     ports:
