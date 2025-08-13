@@ -15,7 +15,7 @@
     </i:block>
 
     <t:pageHeader title="@script.toString()">
-         <i:block name="additionalActions">
+        <i:block name="additionalActions">
             <t:dropdownSection>
                 <t:dropdownDeleteItem url="@apply('/scripting/scripts/%s/delete', script.getIdAsString())"/>
             </t:dropdownSection>
@@ -39,7 +39,10 @@
             <t:codeEditor id="editor" mode="text">@script.getScript()</t:codeEditor>
         </div>
 
-        <t:formBar/>
+        <t:formBar>
+            <t:tracing trace="@script.getTrace()"/>
+        </t:formBar>
+
     </t:editForm>
 
     <script type="text/javascript">
