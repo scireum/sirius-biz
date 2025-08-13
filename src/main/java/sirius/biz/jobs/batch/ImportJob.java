@@ -11,7 +11,6 @@ package sirius.biz.jobs.batch;
 import sirius.biz.importer.Importer;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.scripting.ScriptableEventDispatcher;
 import sirius.biz.scripting.ScriptableEvents;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.types.BaseEntityRef;
@@ -43,12 +42,17 @@ public abstract class ImportJob extends BatchJob {
     protected ImportJob(ProcessContext process) {
         super(process);
         this.importer = new Importer(process.getTitle());
+    }
 
-        //TODO SIRI-1120 rework how the dispatcher will be initialized
-        ScriptableEventDispatcher dispatcher = ScriptableEvents.NOOP_DISPATCHER;
-        this.importer.getContext().withEventDispatcher(dispatcher);
+    @Override
+    protected void initializeEventDispatchers(boolean enabled) {
+        super.initializeEventDispatchers(enabled);
+        if (enabled) {
+            importer.getContext().withEventExecutor(this::handleEvent);
 
-        dispatcher.handleEvent(new ImportJobStartedEvent<>(this, process));
+            ImportJobStartedEvent event = new ImportJobStartedEvent(this, process);
+            handleEvent(event);
+        }
     }
 
     /**
