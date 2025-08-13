@@ -44,15 +44,11 @@ public abstract class ImportJob extends BatchJob {
         super(process);
         this.importer = new Importer(process.getTitle());
 
-        ScriptableEventDispatcher dispatcher = obtainEventDispatcher(process);
+        //TODO SIRI-1120 rework how the dispatcher will be initialized
+        ScriptableEventDispatcher dispatcher = ScriptableEvents.NOOP_DISPATCHER;
         this.importer.getContext().withEventDispatcher(dispatcher);
 
         dispatcher.handleEvent(new ImportJobStartedEvent<>(this, process));
-    }
-
-    private ScriptableEventDispatcher obtainEventDispatcher(ProcessContext process) {
-        String dispatcher = process.getParameter(ImportBatchProcessFactory.DISPATCHER_PARAMETER).orElse(null);
-        return scriptableEvents.fetchDispatcherForCurrentTenant(dispatcher);
     }
 
     /**
