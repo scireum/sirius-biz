@@ -33,6 +33,7 @@ import sirius.web.services.JSONStructuredOutput;
 public class MongoCustomScriptController extends BizController {
 
     private static final String PARAM_SCRIPT = "script";
+    private static final String LIST_ROUTE = "/scripting/scripts";
 
     /**
      * Lists all scripts available for the current tenant.
@@ -61,7 +62,7 @@ public class MongoCustomScriptController extends BizController {
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
     public void editScript(WebContext webContext, String id) {
         MongoCustomScript script = findForTenant(MongoCustomScript.class, id);
-        boolean requestHandled = prepareSave(webContext).withAfterSaveURI("/scripting/scripts").saveEntity(script);
+        boolean requestHandled = prepareSave(webContext).withAfterSaveURI(LIST_ROUTE).saveEntity(script);
         if (!requestHandled) {
             webContext.respondWith().template("/templates/biz/scripting/mongo-script.html.pasta", script);
         }
@@ -79,7 +80,38 @@ public class MongoCustomScriptController extends BizController {
         if (webContext.isSafePOST()) {
             deleteEntity(webContext, tryFindForTenant(MongoCustomScript.class, id));
         }
-        webContext.respondWith().redirectToGet("/scripting/scripts");
+        webContext.respondWith().redirectToGet(LIST_ROUTE);
+    }
+
+    /**
+     * Markes the given script as enabled.
+     *
+     * @param webContext the request to handle
+     * @param id         the ID of the script to enable
+     */
+    @Routed("/scripting/scripts/:1/enable")
+    @Permission(ScriptingController.PERMISSION_SCRIPTING)
+    public void enableScript(WebContext webContext, String id) {
+        setScriptState(webContext, id, false);
+    }
+
+    /**
+     * Markes the given script as disabled.
+     *
+     * @param webContext the request to handle
+     * @param id         the ID of the script to disable
+     */
+    @Routed("/scripting/scripts/:1/disable")
+    @Permission(ScriptingController.PERMISSION_SCRIPTING)
+    public void disableScript(WebContext webContext, String id) {
+        setScriptState(webContext, id, true);
+    }
+
+    private void setScriptState(WebContext webContext, String id, boolean disabled) {
+        MongoCustomScript script = findForTenant(MongoCustomScript.class, id);
+        script.setDisabled(disabled);
+        mango.update(script);
+        webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
 
     /**
