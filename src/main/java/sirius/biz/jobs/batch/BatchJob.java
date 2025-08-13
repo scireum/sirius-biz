@@ -9,6 +9,7 @@
 package sirius.biz.jobs.batch;
 
 import sirius.biz.process.ProcessContext;
+import sirius.biz.scripting.ScriptableEvent;
 import sirius.biz.scripting.ScriptableEventDispatcher;
 import sirius.biz.scripting.ScriptableEvents;
 import sirius.biz.storage.layer1.FileHandle;
@@ -93,6 +94,17 @@ public abstract class BatchJob implements Closeable {
         if (enabled) {
             eventDispatchers.addAll(scriptableEvents.fetchDispatcherForCurrentTenant());
         }
+    }
+
+    /**
+     * Executes all active event dispatchers for the given event.
+     *
+     * @param event the event to dispatch
+     */
+    protected void handleEvent(ScriptableEvent event) {
+        eventDispatchers.stream()
+                        .filter(ScriptableEventDispatcher::isActive)
+                        .forEach(dispatcher -> dispatcher.handleEvent(event));
     }
 
     /**
