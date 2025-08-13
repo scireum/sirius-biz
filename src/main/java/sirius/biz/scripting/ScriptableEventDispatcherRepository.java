@@ -12,7 +12,6 @@ import sirius.kernel.di.std.AutoRegister;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Provides a repository which stores and manages {@link ScriptableEventDispatcher custom event dispatchers}.
@@ -23,24 +22,12 @@ import java.util.Optional;
 public interface ScriptableEventDispatcherRepository {
 
     /**
-     * Fetches all available dispatchers for the given tenant.
-     * <p>
-     * Note that this will include dispatchers defined in any parent tenant.
-     *
-     * @param tenantId the tenant for which to fetch the dispatchers
-     * @return a list of all available dispatchers for the given tenant
-     */
-    List<String> fetchAvailableDispatchers(@Nonnull String tenantId);
-
-    /**
-     * Fetches the dispatcher with the given name for the given tenant.
+     * Fetches the dispatchers for the given tenant.
      * <p>
      * Note that this will include dispatchers defined in any parent tenant.
      *
      * @param tenantId the tenant for which to fetch the dispatcher
-     * @param name     the name of the dispatcher to fetch
-     * @return the dispatcher with the given name for the given tenant wrapped as optional or an empty optional if
-     * no such dispatcher exists.
+     * @return a list of dispatchers for the given tenant, or an empty list if no dispatchers are available
      */
-    Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nonnull String name);
+    List<ScriptableEventDispatcher> fetchDispatchers(@Nonnull String tenantId);
 }

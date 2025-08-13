@@ -258,6 +258,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected void executeTask(ProcessContext process) throws Exception {
         logParameters(process);
         try (BatchJob job = createJob(process)) {
+            job.initializeEventDispatchers(enableScriptableEvents());
             executeJob(process, job);
         }
     }
