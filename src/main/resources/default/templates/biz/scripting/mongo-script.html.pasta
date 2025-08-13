@@ -40,7 +40,7 @@
         </div>
 
         <t:formBar>
-            <t:tracing trace="@script.getTrace()"/>
+            <t:tracing trace="@script.getTrace()" journal="@script.getJournal()"/>
         </t:formBar>
 
     </t:editForm>

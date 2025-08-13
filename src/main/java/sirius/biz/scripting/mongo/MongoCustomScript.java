@@ -10,6 +10,8 @@ package sirius.biz.scripting.mongo;
 
 import sirius.biz.importer.AutoImport;
 import sirius.biz.mongo.PrefixSearchContent;
+import sirius.biz.protocol.JournalData;
+import sirius.biz.protocol.Journaled;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
@@ -28,7 +30,7 @@ import sirius.kernel.nls.NLS;
 @Index(name = "script_lookup",
         columns = {"tenant", "disabled", "code"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
-public class MongoCustomScript extends MongoTenantAware {
+public class MongoCustomScript extends MongoTenantAware implements Journaled {
 
     /**
      * Contains the code or name of the script.
@@ -53,6 +55,13 @@ public class MongoCustomScript extends MongoTenantAware {
     @Autoloaded
     @AutoImport
     private String script;
+
+    private final JournalData journalData = new JournalData(this);
+
+    @Override
+    public JournalData getJournal() {
+        return journalData;
+    }
 
     @Override
     public String toString() {
