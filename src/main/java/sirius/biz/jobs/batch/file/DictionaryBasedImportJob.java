@@ -50,9 +50,9 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     }
 
     private void handleRow(Tuple<Integer, Context> indexAndRow) {
-        if (importer.getContext().getEventDispatcher().isActive()) {
+        if (importer.getContext().isEventExecutorActive()) {
             AfterLineLoadEvent event = new AfterLineLoadEvent(indexAndRow.getSecond(), importer.getContext());
-            importer.getContext().getEventDispatcher().handleEvent(event);
+            importer.getContext().handleEvent(event);
         }
         handleRow(indexAndRow.getFirst(), indexAndRow.getSecond());
     }
