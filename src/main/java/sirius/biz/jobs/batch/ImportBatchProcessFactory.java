@@ -71,17 +71,6 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
         return dispatcherParameter.build();
     }
 
-    /**
-     * Determines if scriptable events are enabled for this factory.
-     * <p>
-     * Disabled by default. Override this method to enable scriptable events where needed.
-     *
-     * @return <tt>true</tt> if scriptable events should be enabled, <tt>false</tt> otherwise
-     */
-    protected boolean enableScriptableEvents() {
-        return false;
-    }
-
     @Override
     protected abstract ImportJob createJob(ProcessContext process);
 
