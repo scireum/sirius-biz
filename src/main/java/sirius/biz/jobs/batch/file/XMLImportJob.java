@@ -97,7 +97,7 @@ public abstract class XMLImportJob extends FileImportJob {
     /**
      * Determines if the import should continue or be aborted because the xml file has to be valid but isn't
      *
-     * @param inputSupplier the {@link InputStream} of an xml file which should be validated
+     * @param inputSupplier the {@link InputStream} of a xml file which should be validated
      * @return <tt>true</tt> if the import should continue, <tt>false</tt> otherwise
      * @throws Exception in case of an exception during validation
      */
@@ -154,7 +154,7 @@ public abstract class XMLImportJob extends FileImportJob {
     }
 
     /**
-     * Provides a list of stages (or passes) to be performed over an xml file.
+     * Provides a list of stages (or passes) to be performed over a xml file.
      * <p>
      * The xml file will be streamed from beginning for each entry provided. The contents of the list
      * defines a consumer responsible to feed the required handlers for each pass.
@@ -171,7 +171,7 @@ public abstract class XMLImportJob extends FileImportJob {
     }
 
     /**
-     * Registers handlers which are invoked for each appropriate node or sub tree parsed by the reader.
+     * Registers handlers which are invoked for each appropriate node or subtree parsed by the reader.
      *
      * @param handler the handler to register
      */
