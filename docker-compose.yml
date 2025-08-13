@@ -18,7 +18,7 @@ services:
     hostname: mongo
 
   mariadb:
-    image: mariadb:11.4.5-noble
+    image: mariadb:11.8.3-noble
     ports:
       - "3306"
     environment:
