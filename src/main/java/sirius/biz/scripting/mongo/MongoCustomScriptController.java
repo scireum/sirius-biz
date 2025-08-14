@@ -8,10 +8,12 @@
 
 package sirius.biz.scripting.mongo;
 
+import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.scripting.ScriptableEventRegistry;
 import sirius.biz.scripting.ScriptingController;
 import sirius.biz.web.BizController;
 import sirius.biz.web.MongoPageHelper;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.tokenizer.Position;
@@ -48,7 +50,7 @@ public class MongoCustomScriptController extends BizController {
                 MongoPageHelper.withQuery(tenants.forCurrentTenant(mango.select(MongoCustomScript.class)
                                                                         .orderAsc(MongoCustomScript.CODE)))
                                .withContext(webContext);
-
+        pageHelper.withSearchFields(QueryField.startsWith(PrefixSearchableEntity.SEARCH_PREFIXES));
         webContext.respondWith().template("/templates/biz/scripting/mongo-scripts.html.pasta", pageHelper.asPage());
     }
 
