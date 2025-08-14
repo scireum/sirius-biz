@@ -9,20 +9,15 @@
 package sirius.biz.jobs.batch;
 
 import sirius.biz.process.ProcessContext;
-import sirius.biz.scripting.ScriptableEvent;
-import sirius.biz.scripting.ScriptableEventDispatcher;
-import sirius.biz.scripting.ScriptableEvents;
+import sirius.biz.scripting.ScriptableEventHandler;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Streams;
-import sirius.kernel.di.std.Part;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Provides a base class for jobs executed by subclasses of {@link BatchProcessJobFactory}.
@@ -32,11 +27,8 @@ import java.util.List;
  */
 public abstract class BatchJob implements Closeable {
 
-    @Part
-    private static ScriptableEvents scriptableEvents;
-
     protected ProcessContext process;
-    protected List<ScriptableEventDispatcher> eventDispatchers = new ArrayList<>();
+    protected ScriptableEventHandler eventHandler = new ScriptableEventHandler();
 
     /**
      * Creates a new batch job for the given batch process.
@@ -92,19 +84,8 @@ public abstract class BatchJob implements Closeable {
      */
     protected void initializeEventDispatchers(boolean enabled) {
         if (enabled) {
-            eventDispatchers.addAll(scriptableEvents.fetchDispatcherForCurrentTenant());
+            eventHandler.initializeEventDispatchers();
         }
-    }
-
-    /**
-     * Executes all active event dispatchers for the given event.
-     *
-     * @param event the event to dispatch
-     */
-    protected void handleEvent(ScriptableEvent event) {
-        eventDispatchers.stream()
-                        .filter(ScriptableEventDispatcher::isActive)
-                        .forEach(dispatcher -> dispatcher.handleEvent(event));
     }
 
     /**

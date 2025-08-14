@@ -11,7 +11,7 @@ package sirius.biz.importer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import sirius.biz.jobs.batch.ImportJob;
-import sirius.biz.scripting.ScriptableEvent;
+import sirius.biz.scripting.ScriptableEventHandler;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Provides a shared context which is available to all {@link ImportHandler import handlers} of an {@link Importer}.
@@ -52,7 +51,7 @@ public class ImporterContext {
 
     private final List<Runnable> postCommitCallbacks = new ArrayList<>();
 
-    private Consumer<ScriptableEvent> eventExecutor;
+    private ScriptableEventHandler eventHandler = new ScriptableEventHandler();
 
     /**
      * Creates a new context for the given importer.
@@ -64,13 +63,13 @@ public class ImporterContext {
     }
 
     /**
-     * Defines the event executor to use for this context.
+     * Defines the scriptable event handler to use for this context.
      *
-     * @param eventExecutor the executor used to consume the provided events.
+     * @param eventHandler an instance of a {@link ScriptableEventHandler} which will be used to handle scriptable events
      * @return the context itself to allow fluent method calls
      */
-    public ImporterContext withEventExecutor(Consumer<ScriptableEvent> eventExecutor) {
-        this.eventExecutor = eventExecutor;
+    public ImporterContext withScriptableEventHandler(ScriptableEventHandler eventHandler) {
+        this.eventHandler = eventHandler;
         return this;
     }
 
@@ -259,22 +258,11 @@ public class ImporterContext {
     }
 
     /**
-     * Determines if an event executor has been defined for this context.
+     * Provides access to the scriptable event handler used by this context.
      *
-     * @return <tt>true</tt> if an event executor is available, <tt>false</tt> otherwise
+     * @return the scriptable event handler used by this context
      */
-    public boolean isEventExecutorActive() {
-        return eventExecutor != null;
-    }
-
-    /**
-     * Executes the given event using the defined event executor.
-     *
-     * @param event the event to execute
-     */
-    public void handleEvent(ScriptableEvent event) {
-        if (isEventExecutorActive()) {
-            eventExecutor.accept(event);
-        }
+    public ScriptableEventHandler getEventHandler() {
+        return eventHandler;
     }
 }

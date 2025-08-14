@@ -48,10 +48,8 @@ public abstract class ImportJob extends BatchJob {
     protected void initializeEventDispatchers(boolean enabled) {
         super.initializeEventDispatchers(enabled);
         if (enabled) {
-            importer.getContext().withEventExecutor(this::handleEvent);
-
-            ImportJobStartedEvent event = new ImportJobStartedEvent(this, process);
-            handleEvent(event);
+            importer.getContext().withScriptableEventHandler(eventHandler);
+            eventHandler.handleEvent(new ImportJobStartedEvent(this, process));
         }
     }
 
