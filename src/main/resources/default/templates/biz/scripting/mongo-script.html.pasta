@@ -15,8 +15,26 @@
     </i:block>
 
     <t:pageHeader title="@script.toString()">
+        <i:if test="script.isDisabled()">
+            <t:tag color="red">@i18n("MongoCustomScript.state.inactive")</t:tag>
+            <i:else>
+                <t:tag color="green">@i18n("MongoCustomScript.state.active")</t:tag>
+            </i:else>
+        </i:if>
         <i:block name="additionalActions">
             <t:dropdownSection>
+                <i:if test="script.isDisabled()">
+                    <t:dropdownItem icon="fa-solid fa-circle-check"
+                                    labelKey="MongoCustomScript.action.enableScript"
+                                    sendPostRequest="true"
+                                    url="@apply('/scripting/scripts/%s/enable', script.getIdAsString())"/>
+                    <i:else>
+                        <t:dropdownItem icon="fa-solid fa-ban"
+                                        labelKey="MongoCustomScript.action.disableScript"
+                                        sendPostRequest="true"
+                                        url="@apply('/scripting/scripts/%s/disable', script.getIdAsString())"/>
+                    </i:else>
+                </i:if>
                 <t:dropdownDeleteItem url="@apply('/scripting/scripts/%s/delete', script.getIdAsString())"/>
             </t:dropdownSection>
         </i:block>
@@ -25,13 +43,10 @@
     <t:editForm url="@apply('/scripting/scripts/%s', script.getIdAsString())">
         <input id="scriptField" name="script" value="@script.getScript()" type="hidden"/>
         <div class="row">
-            <t:textfield class="col-12 col-md-6 required"
+            <t:textfield class="col-12 required"
                          name="code"
                          value="@script.getCode()"
                          labelKey="MongoCustomScript.code"/>
-            <t:booleanSelect class="col-12 col-md-6"
-                             name="disabled" value="script.isDisabled()"
-                             labelKey="MongoCustomScript.disabled"/>
         </div>
 
         <t:heading labelKey="MongoCustomScript.script"/>
