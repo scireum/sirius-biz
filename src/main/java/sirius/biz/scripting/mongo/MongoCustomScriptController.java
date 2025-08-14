@@ -12,7 +12,7 @@ import sirius.biz.scripting.ScriptableEventRegistry;
 import sirius.biz.scripting.ScriptingController;
 import sirius.biz.web.BizController;
 import sirius.biz.web.MongoPageHelper;
-import sirius.db.mixing.query.QueryField;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.tokenizer.Position;
 import sirius.pasta.noodle.compiler.CompilationContext;
@@ -26,6 +26,8 @@ import sirius.web.security.Permission;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
+import java.util.Optional;
+
 /**
  * Provides the management UI for {@link MongoCustomScript custom scripts}.
  */
@@ -33,7 +35,6 @@ import sirius.web.services.JSONStructuredOutput;
 public class MongoCustomScriptController extends BizController {
 
     private static final String PARAM_SCRIPT = "script";
-    private static final String LIST_ROUTE = "/scripting/scripts";
 
     /**
      * Lists all scripts available for the current tenant.
@@ -48,7 +49,6 @@ public class MongoCustomScriptController extends BizController {
                                                                         .orderAsc(MongoCustomScript.CODE)))
                                .withContext(webContext);
 
-        pageHelper.withSearchFields(QueryField.startsWith(MongoCustomScript.SEARCH_PREFIXES));
         webContext.respondWith().template("/templates/biz/scripting/mongo-scripts.html.pasta", pageHelper.asPage());
     }
 
@@ -62,56 +62,33 @@ public class MongoCustomScriptController extends BizController {
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
     public void editScript(WebContext webContext, String id) {
         MongoCustomScript script = findForTenant(MongoCustomScript.class, id);
-        boolean requestHandled = prepareSave(webContext).withAfterSaveURI(LIST_ROUTE).saveEntity(script);
+        boolean requestHandled = prepareSave(webContext).withAfterSaveURI("/scripting/scripts").saveEntity(script);
         if (!requestHandled) {
             webContext.respondWith().template("/templates/biz/scripting/mongo-script.html.pasta", script);
         }
     }
 
     /**
-     * Deletes the given script.
+     * Handles deletion, enabling and disabling of scripts.
      *
      * @param webContext the request to handle
-     * @param id         the ID of the script to delete
+     * @param id         the ID of the script to handle
+     * @param action     the action to perform, which can be either <tt>delete</tt>, <tt>enable</tt>, or <tt>disable</tt>
      */
-    @Routed("/scripting/scripts/:1/delete")
+    @Routed("/scripting/scripts/:1/:2")
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
-    public void deleteScript(WebContext webContext, String id) {
-        if (webContext.isSafePOST()) {
-            deleteEntity(webContext, tryFindForTenant(MongoCustomScript.class, id));
-        }
-        webContext.respondWith().redirectToGet(LIST_ROUTE);
-    }
-
-    /**
-     * Markes the given script as enabled.
-     *
-     * @param webContext the request to handle
-     * @param id         the ID of the script to enable
-     */
-    @Routed("/scripting/scripts/:1/enable")
-    @Permission(ScriptingController.PERMISSION_SCRIPTING)
-    public void enableScript(WebContext webContext, String id) {
-        setScriptState(webContext, id, false);
-    }
-
-    /**
-     * Markes the given script as disabled.
-     *
-     * @param webContext the request to handle
-     * @param id         the ID of the script to disable
-     */
-    @Routed("/scripting/scripts/:1/disable")
-    @Permission(ScriptingController.PERMISSION_SCRIPTING)
-    public void disableScript(WebContext webContext, String id) {
-        setScriptState(webContext, id, true);
-    }
-
-    private void setScriptState(WebContext webContext, String id, boolean disabled) {
+    public void handleScriptAction(WebContext webContext, String id, String action) {
         MongoCustomScript script = findForTenant(MongoCustomScript.class, id);
-        script.setDisabled(disabled);
-        mango.update(script);
-        webContext.respondWith().redirectToGet(LIST_ROUTE);
+        if (Strings.isFilled(action) && webContext.isSafePOST()) {
+            if ("delete".equals(action)) {
+                deleteEntity(webContext, Optional.of(script));
+            }
+            if ("enable".equals(action) || "disable".equals(action)) {
+                script.setDisabled("disable".equals(action));
+                mango.update(script);
+            }
+        }
+        webContext.respondWith().redirectToGet("/scripting/scripts");
     }
 
     /**
