@@ -128,21 +128,21 @@ public abstract class XMLImportJob extends FileImportJob {
     protected void executeProcessingStage(InputStream in, Consumer<BiConsumer<String, NodeHandler>> stage)
             throws Exception {
         XMLReader reader = new XMLReader();
-        if (importer.getContext().isEventExecutorActive()) {
+        if (importer.getContext().getEventHandler().isActive()) {
             stage.accept((name, originalHandler) -> {
                 if (originalHandler.ignoreContent()) {
                     reader.addHandler(name, new NoContentNodeHandler() {
                         @Override
                         public void process(StructuredNode node) {
                             AfterNodeLoadEvent event = new AfterNodeLoadEvent(node, importer.getContext());
-                            importer.getContext().handleEvent(event);
+                            importer.getContext().getEventHandler().handleEvent(event);
                             originalHandler.process(node);
                         }
                     });
                 } else {
                     reader.addHandler(name, node -> {
                         AfterNodeLoadEvent event = new AfterNodeLoadEvent(node, importer.getContext());
-                        importer.getContext().handleEvent(event);
+                        importer.getContext().getEventHandler().handleEvent(event);
                         originalHandler.process(node);
                     });
                 }

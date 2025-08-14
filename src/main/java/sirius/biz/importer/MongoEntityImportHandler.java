@@ -53,9 +53,9 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
             return null;
         }
 
-        if (context.isEventExecutorActive()) {
+        if (context.getEventHandler().isActive()) {
             BeforeLoadEvent<E> beforeLoadEvent = new BeforeLoadEvent<>(entity, data, context);
-            context.handleEvent(beforeLoadEvent);
+            context.getEventHandler().handleEvent(beforeLoadEvent);
             if (beforeLoadEvent.isAborted()) {
                 data.put(SCRIPT_ABORTED, true);
                 return null;
@@ -64,9 +64,9 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
         E result = load(data, entity, mappingsToLoad);
 
-        if (context.isEventExecutorActive()) {
+        if (context.getEventHandler().isActive()) {
             AfterLoadEvent<E> afterLoadEvent = new AfterLoadEvent<>(result, data, context);
-            context.handleEvent(afterLoadEvent);
+            context.getEventHandler().handleEvent(afterLoadEvent);
             if (afterLoadEvent.isAborted()) {
                 data.put(SCRIPT_ABORTED, true);
                 return null;
@@ -100,9 +100,9 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     @SuppressWarnings("unchecked")
     @Override
     public final Optional<E> tryFind(Context data) {
-        if (context.isEventExecutorActive()) {
+        if (context.getEventHandler().isActive()) {
             BeforeFindEvent<E> beforeFindEvent = new BeforeFindEvent<>((Class<E>) descriptor.getType(), data, context);
-            context.handleEvent(beforeFindEvent);
+            context.getEventHandler().handleEvent(beforeFindEvent);
             if (beforeFindEvent.isAborted()) {
                 data.put(SCRIPT_ABORTED, true);
                 return Optional.empty();
@@ -156,10 +156,10 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         }
 
         try {
-            if (context.isEventExecutorActive()) {
+            if (context.getEventHandler().isActive()) {
                 BeforeCreateOrUpdateEvent<E> beforeCreateOrUpdateEvent =
                         new BeforeCreateOrUpdateEvent<>(entity, context);
-                context.handleEvent(beforeCreateOrUpdateEvent);
+                context.getEventHandler().handleEvent(beforeCreateOrUpdateEvent);
                 if (beforeCreateOrUpdateEvent.isAborted()) {
                     return null;
                 }
@@ -174,10 +174,10 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
             if (isChanged(entity)) {
                 mango.update(entity);
 
-                if (context.isEventExecutorActive()) {
+                if (context.getEventHandler().isActive()) {
                     AfterCreateOrUpdateEvent<E> afterCreateOrUpdateEvent =
                             new AfterCreateOrUpdateEvent<>(entity, context);
-                    context.handleEvent(afterCreateOrUpdateEvent);
+                    context.getEventHandler().handleEvent(afterCreateOrUpdateEvent);
                 }
             }
 

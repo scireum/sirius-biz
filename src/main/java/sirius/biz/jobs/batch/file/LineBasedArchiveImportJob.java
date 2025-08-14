@@ -123,9 +123,9 @@ public abstract class LineBasedArchiveImportJob extends DictionaryBasedArchiveIm
         }
 
         try {
-            if (importer.getContext().isEventExecutorActive()) {
+            if (importer.getContext().getEventHandler().isActive()) {
                 AfterLineLoadEvent event = new AfterLineLoadEvent(context, importer.getContext());
-                importer.getContext().handleEvent(event);
+                importer.getContext().getEventHandler().handleEvent(event);
             }
             importFile.rowHandler.invoke(Tuple.create(line, context));
         } catch (Exception exception) {
