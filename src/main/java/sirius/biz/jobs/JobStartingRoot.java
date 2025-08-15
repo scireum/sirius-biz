@@ -12,6 +12,7 @@ import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
+import sirius.biz.process.logs.OpenProcessLogHandler;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
@@ -46,6 +47,9 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
 
     @Part
     protected Processes processes;
+
+    @Part
+    protected OpenProcessLogHandler openProcessLogHandler;
 
     /**
      * Creates an <tt>OutputStream</tt> which triggers the given job with the given parameters once the stream is closed.
@@ -115,7 +119,7 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
                                   ProcessContext processContext) {
         processContext.log(ProcessLog.info()
                                      .withFormattedMessage(
-                                             "Starting job '%s' for user '%s' using the uploaded file '%s' (%s')",
+                                             "Starting job '%s' for user '%s' using the uploaded file '%s' (%s)",
                                              jobToRun.getLabel(),
                                              UserContext.getCurrentUser().getUserName(),
                                              virtualFile.path(),
@@ -126,13 +130,20 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
         String effectiveFilePath =
                 virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), virtualFile.name());
         try {
-            jobToRun.startInBackground(param -> {
+            String processId = jobToRun.startInBackground(param -> {
                 if (Strings.areEqual(param, parameterName)) {
                     return Value.of(effectiveFilePath);
                 } else {
                     return parameterProvider.apply(param);
                 }
             });
+            processContext.log(ProcessLog.success()
+                                         .withFormattedMessage(
+                                                 "Job '%s' for the uploaded file '%s' submitted successfully.",
+                                                 jobToRun.getLabel(),
+                                                 virtualFile.path())
+                                         .withMessageHandler(openProcessLogHandler)
+                                         .withContext(OpenProcessLogHandler.PARAM_TARGET_PROCESS_ID, processId));
         } catch (HandledException exception) {
             processContext.log(ProcessLog.error()
                                          .withFormattedMessage(
