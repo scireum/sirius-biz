@@ -88,6 +88,7 @@ public class JobsRoot extends JobStartingRoot {
         jobs.getAvailableJobs(null)
             .filter(JobFactory::canStartInBackground)
             .filter(this::isFileJob)
+            .filter(fileJobFactory -> !presets.fetchPresets(fileJobFactory).isEmpty())
             .forEach(fileJobFactory -> {
                 MutableVirtualFile jobDirectory =
                         MutableVirtualFile.checkedCreate(jobsDirectory, fileJobFactory.getName());
