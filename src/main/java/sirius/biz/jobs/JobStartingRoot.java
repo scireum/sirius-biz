@@ -109,15 +109,13 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
                                   Blob buffer,
                                   String filename,
                                   ProcessContext processContext) {
-        if (processContext.isDebugging()) {
-            processContext.debug(ProcessLog.info()
-                                           .withFormattedMessage(
-                                                   "Starting job '%s' for user '%s' using the uploaded file '%s' (%s')",
-                                                   jobToRun.getLabel(),
-                                                   UserContext.getCurrentUser().getUserName(),
-                                                   buffer.getFilename(),
-                                                   NLS.formatSize(buffer.getSize())));
-        }
+        processContext.log(ProcessLog.info()
+                                     .withFormattedMessage(
+                                             "Starting job '%s' for user '%s' using the uploaded file '%s' (%s')",
+                                             jobToRun.getLabel(),
+                                             UserContext.getCurrentUser().getUserName(),
+                                             buffer.getFilename(),
+                                             NLS.formatSize(buffer.getSize())));
 
         String parameterName = findFileParameter(jobToRun);
 
