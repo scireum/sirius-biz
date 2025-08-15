@@ -142,6 +142,12 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
                                                  effectiveFilePath,
                                                  NLS.formatSize(buffer.getSize()),
                                                  exception.getMessage()));
+            throw Exceptions.createHandled()
+                            .withNLSKey("JobStartingRoot.failedJobSubmission")
+                            .set("job", NLS.quote(jobToRun.getLabel()))
+                            .set("file", NLS.quote(virtualFile.path()))
+                            .set("cause", exception.getMessage())
+                            .handle();
         }
     }
 
