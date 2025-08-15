@@ -136,7 +136,7 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
         } catch (HandledException exception) {
             processContext.log(ProcessLog.error()
                                          .withFormattedMessage(
-                                                 "Failed to start job '%s' for user '%s' using the uploaded file '%s' (%s'): %s",
+                                                 "Failed to start job '%s' for user '%s' using the uploaded file '%s' (%s): %s",
                                                  jobToRun.getLabel(),
                                                  UserContext.getCurrentUser().getUserName(),
                                                  effectiveFilePath,
