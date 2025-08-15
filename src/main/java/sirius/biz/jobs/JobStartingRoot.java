@@ -18,6 +18,7 @@ import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.layer3.SingularVFSRoot;
 import sirius.biz.storage.layer3.TmpRoot;
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -52,35 +53,38 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
      * @param jobToRun          the job to actually run
      * @param parameterProvider permits to control the parameter values for the job (the file is automatically used as
      *                          first {@link FileParameter} of the job)
-     * @param filename          the actual filename of the file being processed
+     * @param virtualFile       the actual file being processed
      * @return an output stream which triggers the job once the stream is closed
      */
     protected OutputStream uploadAndTrigger(JobFactory jobToRun,
                                             Function<String, Value> parameterProvider,
-                                            String filename) {
+                                            VirtualFile virtualFile) {
         try {
             BlobStorageSpace temporaryStorageSpace = blobStorage.getSpace(TmpRoot.TMP_SPACE);
             Blob buffer = temporaryStorageSpace.createTemporaryBlob(UserContext.getCurrentUser().getTenantId());
             return buffer.createOutputStream(() -> {
                 if (buffer.getSize() > 0) {
                     temporaryStorageSpace.markAsUsed(buffer);
-                    trigger(jobToRun, parameterProvider, buffer, filename);
+                    trigger(jobToRun, parameterProvider, buffer, virtualFile);
                 } else {
                     buffer.delete();
                 }
-            }, filename);
+            }, virtualFile.name());
         } catch (Exception exception) {
             throw Exceptions.handle(exception);
         }
     }
 
-    private void trigger(JobFactory jobToRun, Function<String, Value> parameterProvider, Blob buffer, String filename) {
+    private void trigger(JobFactory jobToRun,
+                         Function<String, Value> parameterProvider,
+                         Blob buffer,
+                         VirtualFile virtualFile) {
         processes.executeInStandbyProcessForCurrentTenant(getStandbyProcessType(),
                                                           this::getStandbyProcessDescription,
                                                           ctx -> triggerInProcess(jobToRun,
                                                                                   parameterProvider,
                                                                                   buffer,
-                                                                                  filename,
+                                                                                  virtualFile,
                                                                                   ctx));
     }
 
@@ -107,22 +111,24 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
     private void triggerInProcess(JobFactory jobToRun,
                                   Function<String, Value> parameterProvider,
                                   Blob buffer,
-                                  String filename,
+                                  VirtualFile virtualFile,
                                   ProcessContext processContext) {
         processContext.log(ProcessLog.info()
                                      .withFormattedMessage(
                                              "Starting job '%s' for user '%s' using the uploaded file '%s' (%s')",
                                              jobToRun.getLabel(),
                                              UserContext.getCurrentUser().getUserName(),
-                                             buffer.getFilename(),
+                                             virtualFile.path(),
                                              NLS.formatSize(buffer.getSize())));
 
         String parameterName = findFileParameter(jobToRun);
 
+        String effectiveFilePath =
+                virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), virtualFile.name());
         try {
             jobToRun.startInBackground(param -> {
                 if (Strings.areEqual(param, parameterName)) {
-                    return Value.of(virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), filename));
+                    return Value.of(effectiveFilePath);
                 } else {
                     return parameterProvider.apply(param);
                 }
@@ -133,7 +139,7 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
                                                  "Failed to start job '%s' for user '%s' using the uploaded file '%s' (%s'): %s",
                                                  jobToRun.getLabel(),
                                                  UserContext.getCurrentUser().getUserName(),
-                                                 buffer.getFilename(),
+                                                 effectiveFilePath,
                                                  NLS.formatSize(buffer.getSize()),
                                                  exception.getMessage()));
         }

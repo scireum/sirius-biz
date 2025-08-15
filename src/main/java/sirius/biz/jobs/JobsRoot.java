@@ -126,7 +126,7 @@ public class JobsRoot extends JobStartingRoot {
         MutableVirtualFile result = MutableVirtualFile.checkedCreate(parent, name);
         result.withOutputStreamSupplier(uploadFile -> {
             JobConfigData jobConfigData = preset.getJobConfigData();
-            return uploadAndTrigger(jobConfigData.getJobFactory(), jobConfigData::fetchParameter, uploadFile.name());
+            return uploadAndTrigger(jobConfigData.getJobFactory(), jobConfigData::fetchParameter, uploadFile);
         });
 
         return result;
