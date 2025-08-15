@@ -11,8 +11,7 @@ package sirius.biz.importer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import sirius.biz.jobs.batch.ImportJob;
-import sirius.biz.scripting.ScriptableEventDispatcher;
-import sirius.biz.scripting.ScriptableEvents;
+import sirius.biz.scripting.ScriptableEventHandler;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
@@ -20,7 +19,6 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -42,7 +40,6 @@ public class ImporterContext {
     private static List<ImportHandlerFactory> factories;
 
     private final Importer importer;
-    private ScriptableEventDispatcher eventDispatcher = ScriptableEvents.NOOP_DISPATCHER;
 
     private BatchContext batchContext;
 
@@ -54,13 +51,26 @@ public class ImporterContext {
 
     private final List<Runnable> postCommitCallbacks = new ArrayList<>();
 
+    private ScriptableEventHandler eventHandler = new ScriptableEventHandler();
+
     /**
      * Creates a new context for the given importer.
      *
-     * @param importer the imported which which this context was created
+     * @param importer the imported which this context was created
      */
     protected ImporterContext(Importer importer) {
         this.importer = importer;
+    }
+
+    /**
+     * Defines the scriptable event handler to use for this context.
+     *
+     * @param eventHandler an instance of a {@link ScriptableEventHandler} which will be used to handle scriptable events
+     * @return the context itself to allow fluent method calls
+     */
+    public ImporterContext withScriptableEventHandler(ScriptableEventHandler eventHandler) {
+        this.eventHandler = eventHandler;
+        return this;
     }
 
     /**
@@ -247,19 +257,12 @@ public class ImporterContext {
         return batchContext;
     }
 
-    @Nonnull
-    public ScriptableEventDispatcher getEventDispatcher() {
-        return eventDispatcher;
-    }
-
     /**
-     * Specifies which event dispatcher to use for this import.
+     * Provides access to the scriptable event handler used by this context.
      *
-     * @param eventDispatcher the event dispatcher to use
-     * @return the context itself for fluent method calls
+     * @return the scriptable event handler used by this context
      */
-    public ImporterContext withEventDispatcher(@Nonnull ScriptableEventDispatcher eventDispatcher) {
-        this.eventDispatcher = eventDispatcher;
-        return this;
+    public ScriptableEventHandler getEventHandler() {
+        return eventHandler;
     }
 }

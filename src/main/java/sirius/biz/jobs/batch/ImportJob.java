@@ -11,7 +11,6 @@ package sirius.biz.jobs.batch;
 import sirius.biz.importer.Importer;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.scripting.ScriptableEventDispatcher;
 import sirius.biz.scripting.ScriptableEvents;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.types.BaseEntityRef;
@@ -43,20 +42,19 @@ public abstract class ImportJob extends BatchJob {
     protected ImportJob(ProcessContext process) {
         super(process);
         this.importer = new Importer(process.getTitle());
-
-        ScriptableEventDispatcher dispatcher = obtainEventDispatcher(process);
-        this.importer.getContext().withEventDispatcher(dispatcher);
-
-        dispatcher.handleEvent(new ImportJobStartedEvent<>(this, process));
     }
 
-    private ScriptableEventDispatcher obtainEventDispatcher(ProcessContext process) {
-        String dispatcher = process.getParameter(ImportBatchProcessFactory.DISPATCHER_PARAMETER).orElse(null);
-        return scriptableEvents.fetchDispatcherForCurrentTenant(dispatcher);
+    @Override
+    protected void initializeEventDispatchers(boolean enabled) {
+        super.initializeEventDispatchers(enabled);
+        if (enabled) {
+            importer.getContext().withScriptableEventHandler(eventHandler);
+            eventHandler.handleEvent(new ImportJobStartedEvent(this, process));
+        }
     }
 
     /**
-     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()} write-once semantic}.
+     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()} write-once semantic.
      * <p>
      * For new entities (owner), the given reference is initialized with the given target. For existing entities
      * it is verified, that the given reference points to the given target.

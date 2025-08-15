@@ -31,7 +31,6 @@ import sirius.pasta.noodle.sandbox.SandboxMode;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Stores and manages {@link ScriptableEventDispatcher custom event dispatchers} in a MongoDB.
@@ -56,33 +55,21 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     private MongoTenants tenants;
 
     @Override
-    public List<String> fetchAvailableDispatchers(@Nonnull String tenantId) {
+    public List<ScriptableEventDispatcher> fetchDispatchers(@Nonnull String tenantId) {
         return mango.select(MongoCustomScript.class)
                     .where(QueryBuilder.FILTERS.oneInField(MongoCustomScript.TENANT,
                                                            tenants.fetchAllParentIds(tenantId)).build())
                     .eq(MongoCustomScript.DISABLED, false)
-                    .orderAsc(MongoCustomScript.CODE)
                     .queryList()
                     .stream()
-                    .map(MongoCustomScript::getCode)
+                    .map(this::compileAndLoad)
                     .toList();
     }
 
-    @Override
-    public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nonnull String name) {
-        return mango.select(MongoCustomScript.class)
-                    .where(QueryBuilder.FILTERS.oneInField(MongoCustomScript.TENANT,
-                                                           tenants.fetchAllParentIds(tenantId)).build())
-                    .eq(MongoCustomScript.CODE, name)
-                    .eq(MongoCustomScript.DISABLED, false)
-                    .first()
-                    .flatMap(this::compileAndLoad);
-    }
-
-    private Optional<ScriptableEventDispatcher> compileAndLoad(MongoCustomScript script) {
+    private ScriptableEventDispatcher compileAndLoad(MongoCustomScript script) {
         try {
             if (Strings.isEmpty(script.getScript())) {
-                return Optional.empty();
+                return null;
             }
 
             CompilationContext compilationContext =
@@ -100,13 +87,13 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
             environment.writeVariable(0, dispatcher);
             compiledScript.call(environment);
 
-            return Optional.of(dispatcher);
+            return dispatcher;
         } catch (ScriptingException | HandledException exception) {
             TaskContext.get()
                        .log("Failed compiling custom event dispatcher '%s': %s",
                             script.getCode(),
                             exception.getMessage());
-            return Optional.empty();
+            return null;
         }
     }
 }

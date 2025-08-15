@@ -225,6 +225,17 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     /**
+     * Determines if scriptable events are enabled for this factory.
+     * <p>
+     * Disabled by default. Override this method to enable scriptable events where needed.
+     *
+     * @return <tt>true</tt> if scriptable events should be enabled, <tt>false</tt> otherwise
+     */
+    protected boolean enableScriptableEvents() {
+        return false;
+    }
+
+    /**
      * Indicates if the execution of this process should only be visible to the system tenant.
      * <p>
      * This helps prevent exposing system processes like database migrations or confidential evaluations to the wrong
@@ -247,6 +258,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected void executeTask(ProcessContext process) throws Exception {
         logParameters(process);
         try (BatchJob job = createJob(process)) {
+            job.initializeEventDispatchers(enableScriptableEvents());
             executeJob(process, job);
         }
     }
