@@ -40,7 +40,7 @@ public class OpenProcessLogHandler implements ProcessLogHandler {
     public List<ProcessLogAction> getActions(ProcessLog log) {
         if (log.getContext().containsKey(PARAM_TARGET_PROCESS_ID)) {
             return Collections.singletonList(new ProcessLogAction(log, ACTION_NAME).withLabelKey(
-                    "BatchProcessJobFactory.jobLink").withIcon("fa-solid fa-up-right-from-square"));
+                    "OpenProcessLogHandler.jobLink").withIcon("fa-solid fa-up-right-from-square"));
         }
         return Collections.emptyList();
     }
