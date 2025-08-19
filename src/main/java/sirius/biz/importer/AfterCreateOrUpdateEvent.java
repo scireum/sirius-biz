@@ -50,6 +50,11 @@ public class AfterCreateOrUpdateEvent<E extends Entity> extends TypedScriptableE
                + ")";
     }
 
+    @Override
+    public void abort() {
+        throw new IllegalStateException(this + ": aborting is not supported since the entity has already been saved.");
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public Class<E> getType() {
