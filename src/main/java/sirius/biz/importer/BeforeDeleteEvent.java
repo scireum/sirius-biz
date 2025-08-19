@@ -27,7 +27,7 @@ public class BeforeDeleteEvent<E extends Entity> extends TypedScriptableEvent<E>
     /**
      * Creates a new event for the given entity
      *
-     * @param entity          the entity to update
+     * @param entity          the entity to delete
      * @param importerContext the import context which can be used to access other handlers / the importer itself
      */
     public BeforeDeleteEvent(E entity, ImporterContext importerContext) {
