@@ -9,27 +9,28 @@
 package sirius.biz.importer;
 
 import sirius.biz.scripting.TypedScriptableEvent;
-import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Entity;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
+import java.util.function.Consumer;
+
 /**
- * Triggered within {@link ImportHandler#createOrUpdateNow(BaseEntity)} (or the batch equivalent) after an entity
- * has been created or updated.
+ * Triggered within {@link sirius.biz.importer.txn.ImportTransactionHelper#deleteUnmarked(Class, Consumer, Consumer)}
+ * before an entity is deleted.
  *
- * @param <E> the type of entity being updated
+ * @param <E> the type of entity being deleted
  */
-public class AfterCreateOrUpdateEvent<E extends Entity> extends TypedScriptableEvent<E> {
+public class BeforeDeleteEvent<E extends Entity> extends TypedScriptableEvent<E> {
     private final E entity;
     private final ImporterContext importerContext;
 
     /**
      * Creates a new event for the given entity
      *
-     * @param entity          the entity to update
+     * @param entity          the entity to delete
      * @param importerContext the import context which can be used to access other handlers / the importer itself
      */
-    public AfterCreateOrUpdateEvent(E entity, ImporterContext importerContext) {
+    public BeforeDeleteEvent(E entity, ImporterContext importerContext) {
         this.importerContext = importerContext;
         this.entity = entity;
     }
@@ -41,18 +42,13 @@ public class AfterCreateOrUpdateEvent<E extends Entity> extends TypedScriptableE
 
     @Override
     public String toString() {
-        return "AfterCreateOrUpdateEvent: "
+        return "BeforeDeleteEvent: "
                + getType().getName()
                + " with entity "
                + entity
                + "(ID: "
                + entity.getIdAsString()
                + ")";
-    }
-
-    @Override
-    public void abort() {
-        throw new IllegalStateException(this + ": aborting is not supported since the entity has already been saved.");
     }
 
     @SuppressWarnings("unchecked")
