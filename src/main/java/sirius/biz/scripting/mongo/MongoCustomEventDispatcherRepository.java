@@ -31,6 +31,7 @@ import sirius.pasta.noodle.sandbox.SandboxMode;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Stores and manages {@link ScriptableEventDispatcher custom event dispatchers} in a MongoDB.
@@ -63,13 +64,14 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
                     .queryList()
                     .stream()
                     .map(this::compileAndLoad)
+                    .flatMap(Optional::stream)
                     .toList();
     }
 
-    private ScriptableEventDispatcher compileAndLoad(MongoCustomScript script) {
+    private Optional<ScriptableEventDispatcher> compileAndLoad(MongoCustomScript script) {
         try {
             if (Strings.isEmpty(script.getScript())) {
-                return null;
+                return Optional.empty();
             }
 
             CompilationContext compilationContext =
@@ -87,13 +89,13 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
             environment.writeVariable(0, dispatcher);
             compiledScript.call(environment);
 
-            return dispatcher;
+            return Optional.of(dispatcher);
         } catch (ScriptingException | HandledException exception) {
             TaskContext.get()
                        .log("Failed compiling custom event dispatcher '%s': %s",
                             script.getCode(),
                             exception.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 }
