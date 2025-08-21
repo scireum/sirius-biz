@@ -10,15 +10,16 @@ package sirius.biz.importer;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Entity;
+import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
 import sirius.pasta.noodle.sandbox.NoodleSandbox;
 
 /**
- * Triggered within {@link ImportHandler#load(Context, BaseEntity)} in order to update an entity
- * using the given context.
+ * Triggered within {@link ImportHandler#load(Context, BaseEntity)} and {@link BaseImportHandler#load(Context, BaseEntity, Mapping...)}
+ * in order to update an entity using the given context.
  * <p>
- * Note that this is triggered before actually loading the data into the entity. Therefore the context should
- * be modified by the entity shouldn't.
+ * Note that this is triggered before actually loading the data into the entity. Therefore, the context should
+ * be modified but the entity shouldn't.
  *
  * @param <E> the type of entity being updated
  */
