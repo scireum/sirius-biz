@@ -19,6 +19,7 @@
                 <button type="button"
                         id="exportBtn"
                         class="btn btn-link me-2 text-decoration-none"
+                        style="display: none"
                         onclick="exportCharts()">
                     <span><i class="fa-solid fa-download"></i></span>
                     <span class="d-none ms-2 d-xl-inline-block">@i18n("DataExplorerController.export")</span>
@@ -495,6 +496,11 @@
             performForEach(0, params.getAll('chart'), function (identifier) {
                 return addChart(identifier, true)
             });
+            
+            // Update URL after initial charts are loaded to show export button if charts exist
+            if (params.getAll('chart').length > 0) {
+                updateUrl(true);
+            }
 
             window.addEventListener('popstate', function (event) {
                 let state = history.state;
