@@ -496,6 +496,11 @@
             performForEach(0, params.getAll('chart'), function (identifier) {
                 return addChart(identifier, true)
             });
+            
+            // Update URL after initial charts are loaded to show export button if charts exist
+            if (params.getAll('chart').length > 0) {
+                updateUrl(true);
+            }
 
             window.addEventListener('popstate', function (event) {
                 let state = history.state;
