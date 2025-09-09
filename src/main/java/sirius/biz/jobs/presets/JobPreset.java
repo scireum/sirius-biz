@@ -9,6 +9,7 @@
 package sirius.biz.jobs.presets;
 
 import sirius.biz.jobs.JobConfigData;
+import sirius.biz.protocol.Journaled;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Explain;
@@ -18,7 +19,7 @@ import sirius.kernel.commons.Explain;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
-public interface JobPreset extends TenantAware {
+public interface JobPreset extends TenantAware, Journaled {
 
     /**
      * Contains the job configuration composite which describes the job to execute along with its parameters.
