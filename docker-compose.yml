@@ -36,7 +36,7 @@ services:
       CLICKHOUSE_PASSWORD: secret
 
   elasticsearch:
-    image: elasticsearch:8.18.3
+    image: elasticsearch:8.19.3
     ports:
       - "9200"
     environment:
