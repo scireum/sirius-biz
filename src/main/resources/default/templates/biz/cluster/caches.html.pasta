@@ -30,7 +30,7 @@
                                 @toUserString(cache.getSize())
                                 <i:if test="cache.getMaxSize() > 0">
                                     <div class="tiny-pie-chart ms-2"
-                                         style="--tiny-pie-chart-percentage: @(cache.getSize() / cache.getMaxSize() * 100)%"></div>
+                                         style="--tiny-pie-chart-percentage: @(cache.getSize() * 1.0 / cache.getMaxSize() * 100)%"></div>
                                 </i:if>
                             </div>
                         </td>
