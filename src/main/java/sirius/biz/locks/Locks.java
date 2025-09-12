@@ -20,6 +20,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -309,5 +310,14 @@ public class Locks implements MetricProvider {
      */
     public List<LockInfo> getLocks() {
         return manager.getLocks();
+    }
+
+    /**
+     * Returns the map of local locks. This is mainly intended for debugging purposes.
+     *
+     * @return the map of local locks
+     */
+    public Map<String, Tuple<Long, AtomicInteger>> getLocalLocks() {
+        return Collections.unmodifiableMap(localLocks);
     }
 }
