@@ -280,6 +280,11 @@ public class BlobDispatcher implements WebDispatcher {
             response.notCached();
         }
 
+        if (urlResult.urlType() == URLBuilder.UrlType.EMPTY) {
+            response.error(HttpResponseStatus.NOT_FOUND);
+            return;
+        }
+
         String filename = blobUri.getFilename();
 
         if (blobUri.isDownload()) {
@@ -319,6 +324,13 @@ public class BlobDispatcher implements WebDispatcher {
             urlBuilder.markAsLargeFile();
         }
 
-        return urlBuilder.buildUrlResult();
+        try {
+            return urlBuilder.buildUrlResult();
+        } catch (Exception exception) {
+            // Conversion ultimately failed. The error has already been logged during conversion, all we need is to
+            // return an empty result so that a 404 is returned to the caller.
+            Exceptions.ignore(exception);
+            return new URLBuilder.UrlResult(null, URLBuilder.UrlType.EMPTY);
+        }
     }
 }
