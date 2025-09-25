@@ -242,8 +242,8 @@ public class ConversionEngine {
                                               String message) {
         processContext.log(ProcessLog.error()
                                      .withNLSKey("ConversionEngine.conversionError")
-                                     .withContext("variantName", conversionProcess.getVariantName())
-                                     .withContext("filename", conversionProcess.getBlobToConvert().getFilename())
+                                     .withContext("variantName", NLS.quote(conversionProcess.getVariantName()))
+                                     .withContext("filename", NLS.quote(conversionProcess.getBlobToConvert().getFilename()))
                                      .withContext("message", message));
     }
 
