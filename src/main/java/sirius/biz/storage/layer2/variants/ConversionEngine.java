@@ -209,7 +209,7 @@ public class ConversionEngine {
 
                 throw Exceptions.createHandled()
                                 .withSystemErrorMessage(Strings.apply(
-                                        "The conversion engine created an empty result for variant %s of %s (%s)",
+                                        "The conversion engine created an empty result for variant '%s' of '%s' (blobKey: %s)",
                                         conversionProcess.getVariantName(),
                                         conversionProcess.getBlobToConvert().getFilename(),
                                         conversionProcess.getBlobToConvert().getBlobKey()))
