@@ -1545,15 +1545,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     private void throwExhaustedConversionAttemptsException(String blobKey, String variantName) {
-        HandledException exception = Exceptions.handle()
-                                               .to(StorageUtils.LOG)
-                                               .withSystemErrorMessage(
-                                                       "Layer2: Exhausted conversion attempts for variant '%s' and blobKey '%s'",
-                                                       variantName,
-                                                       blobKey)
-                                               .handle();
-        failedVariantHandlers.forEach(handler -> handler.handle(exception, blobKey, variantName));
-        throw exception;
+        throw Exceptions.handle()
+                        .to(StorageUtils.LOG)
+                        .withSystemErrorMessage(
+                                "Layer2: Exhausted conversion attempts for variant '%s' and blobKey '%s'",
+                                variantName,
+                                blobKey)
+                        .handle();
     }
 
     /**
@@ -1571,7 +1569,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private V attemptToFindOrCreateVariant(B blob, String variantName, int retries) throws Exception {
         // Always try to fetch the variant first, which could be present due to a previous conversion attempt
         // or a conversion has been created from another thread or node...
-        V variant = tryFetchVariant(blob, variantName);
+        V variant = null;
+        try {
+            variant = tryFetchVariant(blob, variantName);
+        } catch (HandledException exception) {
+            // The conversion ultimately failed. Invoke the handlers and re-throw the exception...
+            failedVariantHandlers.forEach(handler -> handler.handle(exception, blob.getBlobKey(), variantName));
+            throw exception;
+        }
 
         if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
             // We hit the nail on the head - we found a variant which has successfully been converted already.
