@@ -158,7 +158,7 @@ public class BlobDispatcher implements WebDispatcher {
             if (dispatcherHook != null) {
                 dispatcherHook.hook(payload);
             }
-        } catch (Exception exception) {
+        } catch (Exception _) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
                       .withSystemErrorMessage(
