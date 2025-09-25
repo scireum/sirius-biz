@@ -1545,7 +1545,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     private void throwExhaustedConversionAttemptsException(String blobKey, String variantName) {
-        throw Exceptions.handle()
+        throw Exceptions.createHandled()
                         .to(StorageUtils.LOG)
                         .withSystemErrorMessage(
                                 "Layer2: Exhausted conversion attempts for variant '%s' and blobKey '%s'",
