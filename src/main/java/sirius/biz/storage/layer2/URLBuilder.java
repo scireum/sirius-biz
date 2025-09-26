@@ -479,7 +479,19 @@ public class URLBuilder {
     private UrlResult createPhysicalDeliveryUrlResult() {
         StringBuilder result = createBaseURL();
 
-        String physicalKey = determinePhysicalKey();
+        String physicalKey = null;
+        try {
+            physicalKey = determinePhysicalKey();
+        } catch (Exception exception) {
+            // The conversion ultimately failed. Return the fallback URL if specified, otherwise an empty result.
+            Exceptions.ignore(exception);
+            if (Strings.isFilled(fallbackUri)) {
+                return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
+            } else {
+                return new UrlResult(null, UrlType.EMPTY);
+            }
+        }
+
         if (Strings.isEmpty(physicalKey)) {
             return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
         }
