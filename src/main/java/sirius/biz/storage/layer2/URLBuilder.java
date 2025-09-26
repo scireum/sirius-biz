@@ -379,6 +379,10 @@ public class URLBuilder {
      * virtual, physical, the fallback URL or empty.
      */
     public UrlResult buildUrlResult() {
+        return buildUrlResult(null);
+    }
+
+    private UrlResult buildUrlResult(String alternativeFailedUrl) {
         if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
             if (Strings.isFilled(fallbackUri)) {
                 return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
@@ -396,7 +400,7 @@ public class URLBuilder {
             return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
         }
 
-        return createPhysicalDeliveryUrlResult();
+        return createPhysicalDeliveryUrlResult(alternativeFailedUrl);
     }
 
     /**
@@ -422,18 +426,11 @@ public class URLBuilder {
      * @see #safeBuildURL(String)
      */
     public String buildImageURL() {
-        try {
-            UrlResult urlResult = buildUrlResult();
-            if (urlResult.urlType() == UrlType.EMPTY) {
-                return createBaseURL().append(IMAGE_FALLBACK_URI).toString();
-            } else {
-                return urlResult.url();
-            }
-        } catch (HandledException exception) {
-            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
-            Exceptions.ignore(exception);
-            return createBaseURL().append(IMAGE_FAILED_URI).toString();
+        UrlResult urlResult = buildUrlResult(IMAGE_FAILED_URI);
+        if (urlResult.urlType() == UrlType.EMPTY && Strings.isEmpty(urlResult.url())) {
+            return createBaseURL().append(IMAGE_FALLBACK_URI).toString();
         }
+        return urlResult.url();
     }
 
     /**
@@ -476,7 +473,7 @@ public class URLBuilder {
         return Strings.areEqual(variant, VARIANT_RAW) && blob != null;
     }
 
-    private UrlResult createPhysicalDeliveryUrlResult() {
+    private UrlResult createPhysicalDeliveryUrlResult(String alternativeFailedUrl) {
         StringBuilder result = createBaseURL();
 
         String physicalKey = null;
@@ -485,7 +482,9 @@ public class URLBuilder {
         } catch (Exception exception) {
             // The conversion ultimately failed. Return the fallback URL if specified, otherwise an empty result.
             Exceptions.ignore(exception);
-            if (Strings.isFilled(fallbackUri)) {
+            if (Strings.isFilled(alternativeFailedUrl)) {
+                return new UrlResult(createBaseURL().append(alternativeFailedUrl).toString(), UrlType.EMPTY);
+            } else if (Strings.isFilled(fallbackUri)) {
                 return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
             } else {
                 return new UrlResult(null, UrlType.EMPTY);
