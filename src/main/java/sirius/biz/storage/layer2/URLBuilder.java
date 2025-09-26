@@ -452,7 +452,7 @@ public class URLBuilder {
         return Strings.areEqual(variant, VARIANT_RAW) && blob != null;
     }
 
-    private UrlResult buildUrlResult(String alternativeFailedUrl) {
+    private UrlResult buildUrlResult(String alternativeFailedUri) {
         if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
             if (Strings.isFilled(fallbackUri)) {
                 return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
@@ -470,10 +470,10 @@ public class URLBuilder {
             return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
         }
 
-        return createPhysicalDeliveryUrlResult(alternativeFailedUrl);
+        return createPhysicalDeliveryUrlResult(alternativeFailedUri);
     }
 
-    private UrlResult createPhysicalDeliveryUrlResult(String alternativeFailedUrl) {
+    private UrlResult createPhysicalDeliveryUrlResult(String alternativeFailedUri) {
         StringBuilder result = createBaseURL();
 
         String physicalKey = null;
@@ -482,8 +482,8 @@ public class URLBuilder {
         } catch (Exception exception) {
             // The conversion ultimately failed. Return the fallback URL if specified, otherwise an empty result.
             Exceptions.ignore(exception);
-            if (Strings.isFilled(alternativeFailedUrl)) {
-                return new UrlResult(createBaseURL().append(alternativeFailedUrl).toString(), UrlType.EMPTY);
+            if (Strings.isFilled(alternativeFailedUri)) {
+                return new UrlResult(createBaseURL().append(alternativeFailedUri).toString(), UrlType.EMPTY);
             } else if (Strings.isFilled(fallbackUri)) {
                 return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
             } else {
