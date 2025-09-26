@@ -382,27 +382,6 @@ public class URLBuilder {
         return buildUrlResult(null);
     }
 
-    private UrlResult buildUrlResult(String alternativeFailedUrl) {
-        if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
-            if (Strings.isFilled(fallbackUri)) {
-                return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
-            }
-            return new UrlResult(null, UrlType.EMPTY);
-        }
-
-        if (suppressCache) {
-            // Manual cache control is only supported in virtual calls, not physical...
-            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
-        }
-        if (delayResolve && !isPhysicalKeyReadilyAvailable()) {
-            // The caller specifically requested, that we do not forcefully compute the physical URL (which might
-            // require a lookup), but to rather use the virtual URL...
-            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
-        }
-
-        return createPhysicalDeliveryUrlResult(alternativeFailedUrl);
-    }
-
     /**
      * Builds the URL and permits to specify a custom fallback URI to deliver if no blob or blob-key is available.
      *
@@ -471,6 +450,27 @@ public class URLBuilder {
         // If the raw file is requested and the blob object is available, we can easily determine the effective
         // physical key to serve.
         return Strings.areEqual(variant, VARIANT_RAW) && blob != null;
+    }
+
+    private UrlResult buildUrlResult(String alternativeFailedUrl) {
+        if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
+            if (Strings.isFilled(fallbackUri)) {
+                return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
+            }
+            return new UrlResult(null, UrlType.EMPTY);
+        }
+
+        if (suppressCache) {
+            // Manual cache control is only supported in virtual calls, not physical...
+            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
+        }
+        if (delayResolve && !isPhysicalKeyReadilyAvailable()) {
+            // The caller specifically requested, that we do not forcefully compute the physical URL (which might
+            // require a lookup), but to rather use the virtual URL...
+            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
+        }
+
+        return createPhysicalDeliveryUrlResult(alternativeFailedUrl);
     }
 
     private UrlResult createPhysicalDeliveryUrlResult(String alternativeFailedUrl) {
