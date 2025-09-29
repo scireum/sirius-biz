@@ -1360,7 +1360,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         } catch (IllegalArgumentException exception) {
             response.notCached().error(HttpResponseStatus.BAD_REQUEST, exception.getMessage());
         } catch (Exception _) {
-            response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            response.notCached().error(HttpResponseStatus.NOT_FOUND);
         }
     }
 
@@ -1934,7 +1934,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                          getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
                      }
                  } catch (Exception _) {
-                     response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                     response.notCached().error(HttpResponseStatus.NOT_FOUND);
                  }
              });
     }
