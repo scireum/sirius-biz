@@ -12,6 +12,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPSClient;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 
@@ -25,14 +26,29 @@ import java.util.function.Function;
  */
 class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
 
+    /**
+     * Specifies which SSL protocol to use.
+     *
+     * @see <a href="https://docs.oracle.com/en/java/javase/24/docs/specs/security/standard-names.html#sslcontext-algorithms">list of possible values</a>
+     */
+    public static final String CONFIG_SSL_PROTOCOL = "sslProtocol";
+
+    private final String sslProtocol;
+
     protected FTPSUplinkConnectorConfig(String id, Function<String, Value> config) {
         super(id, config);
+        this.sslProtocol = config.apply(CONFIG_SSL_PROTOCOL).asString();
     }
 
     @Override
     protected FTPClient create() {
         try {
             FTPSClient client = new FTPSClient();
+
+            if (Strings.isFilled(sslProtocol)) {
+                client.setEnabledProtocols(new String[]{sslProtocol});
+            }
+
             client.setConnectTimeout(connectTimeoutMillis);
             client.setDataTimeout(Duration.ofMillis(readTimeoutMillis));
             client.setDefaultTimeout(readTimeoutMillis);
