@@ -22,6 +22,7 @@ import sirius.db.es.IndexMappings;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
@@ -118,7 +119,8 @@ public class MigrateEsIndexJobFactory extends SimpleBatchProcessJobFactory {
 
         Watch watch = Watch.start();
         while (TaskContext.get().isActive() && elastic.getLowLevelClient().checkTaskActivity(reindexTaskId)) {
-            process.tryUpdateState("Migration is still active (Runtime: " + watch.duration() + ")");
+            process.tryUpdateState(Strings.apply("Migration of %s is still active (Runtime: " + watch.duration() + ")",
+                                                 entityDescriptor.getRelationName()));
             Wait.seconds(5);
         }
 
