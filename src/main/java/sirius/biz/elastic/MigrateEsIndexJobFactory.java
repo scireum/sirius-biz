@@ -99,22 +99,22 @@ public class MigrateEsIndexJobFactory extends SimpleBatchProcessJobFactory {
         migratableEntities.forEach(ed -> migrateIndexForEntity(process, ed));
     }
 
-    private void migrateIndexForEntity(ProcessContext process, EntityDescriptor ed) {
-        String oldIndex = elastic.determineEffectiveIndex(ed);
-        String nextIndex = mappings.determineNextIndexName(ed);
+    private void migrateIndexForEntity(ProcessContext process, EntityDescriptor entityDescriptor) {
+        String oldIndex = elastic.determineEffectiveIndex(entityDescriptor);
+        String nextIndex = mappings.determineNextIndexName(entityDescriptor);
 
         // Set the dynamic mapping mode to "false", so that legacy fields in documents are just ignored and don't
         // cause the reindex process to abort
-        mappings.createMapping(ed, nextIndex, IndexMappings.DynamicMapping.FALSE);
-        elastic.installWriteIndex(ed, nextIndex);
+        mappings.createMapping(entityDescriptor, nextIndex, IndexMappings.DynamicMapping.FALSE);
+        elastic.installWriteIndex(entityDescriptor, nextIndex);
         process.log(ProcessLog.info()
                               .withFormattedMessage("Created new write index for %s: " + nextIndex,
-                                                    ed.getRelationName()));
+                                                    entityDescriptor.getRelationName()));
 
         String reindexTaskId = elastic.getLowLevelClient().startReindex(oldIndex, nextIndex);
         process.log(ProcessLog.info()
                               .withFormattedMessage("Started a reindex job for %s in elasticsearch: " + reindexTaskId,
-                                                    ed.getRelationName()));
+                                                    entityDescriptor.getRelationName()));
 
         Watch watch = Watch.start();
         while (TaskContext.get().isActive() && elastic.getLowLevelClient().checkTaskActivity(reindexTaskId)) {
@@ -126,8 +126,8 @@ public class MigrateEsIndexJobFactory extends SimpleBatchProcessJobFactory {
 
         if (!elastic.getLowLevelClient().checkTaskActivity(reindexTaskId)) {
             // If successful, we set the use the write index as the new index
-            elastic.commitWriteIndex(ed);
-            mappings.createMapping(ed, nextIndex, IndexMappings.DynamicMapping.STRICT);
+            elastic.commitWriteIndex(entityDescriptor);
+            mappings.createMapping(entityDescriptor, nextIndex, IndexMappings.DynamicMapping.STRICT);
 
             if (process.require(deleteOldIndexParameter)) {
                 elastic.getLowLevelClient().deleteIndex(oldIndex);
@@ -136,7 +136,7 @@ public class MigrateEsIndexJobFactory extends SimpleBatchProcessJobFactory {
 
             process.log(ProcessLog.success()
                                   .withFormattedMessage("Migration of %s is complete! Runtime: " + watch.duration(),
-                                                        ed.getRelationName()));
+                                                        entityDescriptor.getRelationName()));
         } else {
             process.log(ProcessLog.warn().withFormattedMessage("""
                                                                        The task %s is still active in Elasticsearch. Use the Task API to kill
