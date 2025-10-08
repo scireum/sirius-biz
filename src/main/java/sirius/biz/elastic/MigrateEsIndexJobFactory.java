@@ -136,8 +136,9 @@ public class MigrateEsIndexJobFactory extends SimpleBatchProcessJobFactory {
                 process.log("Deleted old index: " + oldIndex);
             }
 
+            process.addTiming(entityDescriptor.getRelationName(), watch.elapsedMillis());
             process.log(ProcessLog.success()
-                                  .withFormattedMessage("Migration of %s is complete! Runtime: " + watch.duration(),
+                                  .withFormattedMessage("Migration of %s has completed successfully!",
                                                         entityDescriptor.getRelationName()));
         } else {
             process.log(ProcessLog.warn().withFormattedMessage("""
