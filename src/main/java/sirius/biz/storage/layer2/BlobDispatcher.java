@@ -125,6 +125,11 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.CONTINUE;
         }
 
+        if (!request.canReadParameters(null)) {
+            request.respondWith().status(HttpResponseStatus.BAD_REQUEST);
+            return DispatchDecision.DONE;
+        }
+
         Optional<BlobUri> blobUri = BlobUriParser.parseBlobUri(uri);
 
         if (blobUri.isPresent()) {
