@@ -63,7 +63,7 @@ public class UserAssistant {
             return null;
         }
 
-        return webContext.get(WEB_CONTEXT_SETTING_ACADEMY_TRACK)
+        return webContext.safeGet(WEB_CONTEXT_SETTING_ACADEMY_TRACK)
                          .asOptionalString()
                          .or(() -> getSettingIfPresent("academy-track", webContext.getRequestedURI()))
                          .orElse(null);
@@ -93,7 +93,7 @@ public class UserAssistant {
             return null;
         }
 
-        return webContext.get(WEB_CONTEXT_SETTING_ACADEMY_VIDEO)
+        return webContext.safeGet(WEB_CONTEXT_SETTING_ACADEMY_VIDEO)
                          .asOptionalString()
                          .or(() -> getSettingIfPresent("academy-video", webContext.getRequestedURI()))
                          .orElse(null);
@@ -110,7 +110,7 @@ public class UserAssistant {
             return null;
         }
 
-        return webContext.get(WEB_CONTEXT_SETTING_KBA)
+        return webContext.safeGet(WEB_CONTEXT_SETTING_KBA)
                          .asOptionalString()
                          .or(() -> getSettingIfPresent("kba", webContext.getRequestedURI()))
                          .orElse(null);
