@@ -125,7 +125,7 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.CONTINUE;
         }
 
-        if (!request.canReadParameters(null)) {
+        if (request.checkParameterReadability().isPresent()) {
             request.respondWith().status(HttpResponseStatus.BAD_REQUEST);
             return DispatchDecision.DONE;
         }
