@@ -274,6 +274,11 @@ public abstract class MissingBlobObjectCheckJob<B extends BaseEntity<I> & Blob, 
         }
 
         @Override
+        public int getPriority() {
+            return 10600;
+        }
+
+        @Override
         public String getLabel() {
             return "Missing storage space objects check";
         }
