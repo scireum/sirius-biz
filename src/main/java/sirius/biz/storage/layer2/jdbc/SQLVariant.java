@@ -32,6 +32,7 @@ import java.util.Optional;
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @Index(name = "physical_key_lookup", columns = {"sourceBlob", "variantName"})
+@Index(name = "physical_object_lookup", columns = "physicalObjectKey")
 public class SQLVariant extends SQLEntity implements BlobVariant {
 
     /**

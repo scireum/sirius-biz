@@ -63,6 +63,7 @@ import java.util.Optional;
 @Index(name = "blob_deleted_loop", columns = "deleted")
 @Index(name = "blob_parent_changed_loop", columns = "parentChanged")
 @Index(name = "blob_delete_temporary_loop", columns = {"spaceName", "temporary", "deleted", "lastModified"})
+@Index(name = "physical_object_lookup", columns = "physicalObjectKey")
 @TranslationSource(Blob.class)
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
