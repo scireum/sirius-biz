@@ -24,6 +24,7 @@ import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.CSVWriter;
 import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -108,7 +109,7 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
                                       .withFormattedMessage("Found %s orphan objects (%s)",
                                                             Amount.of(missingCount.get())
                                                                   .toString(NumberFormat.NO_DECIMAL_PLACES),
-                                                            humanReadableByteCountSI(missingSize.get())));
+                                                            NLS.formatSize(missingSize.get())));
             }
             writer.close();
         }
@@ -121,16 +122,6 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
             executor.submitTask(() -> checkObject(object));
         }
         executor.shutdownWhenDone();
-    }
-
-    private static String humanReadableByteCountSI(long bytes) {
-        int unit = 1000;
-        if (bytes < unit) {
-            return bytes + " B";
-        }
-        int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = "kMGTPE".charAt(exp - 1) + "";
-        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
     protected abstract boolean blobExists(String physicalObjectKey);
