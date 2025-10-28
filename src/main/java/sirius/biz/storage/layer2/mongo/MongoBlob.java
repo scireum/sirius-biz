@@ -80,6 +80,7 @@ import java.util.Optional;
 @Index(name = "blob_delete_temporary_loop",
         columns = {"spaceName", "temporary", "deleted", "lastModified"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "physical_object_lookup", columns = "physicalObjectKey", columnSettings = Mango.INDEX_ASCENDING)
 @TranslationSource(Blob.class)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 

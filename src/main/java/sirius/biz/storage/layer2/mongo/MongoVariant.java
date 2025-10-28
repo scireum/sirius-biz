@@ -34,6 +34,7 @@ import java.util.Optional;
 @Index(name = "physical_key_lookup",
         columns = {"blob", "variantName"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "physical_object_lookup", columns = "physicalObjectKey", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoVariant extends MongoEntity implements BlobVariant {
 
     /**
