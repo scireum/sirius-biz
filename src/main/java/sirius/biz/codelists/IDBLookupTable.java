@@ -19,6 +19,7 @@ import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -43,6 +44,7 @@ import java.util.stream.Stream;
 class IDBLookupTable extends LookupTable {
 
     private static final String COL_DEPRECATED = "deprecated";
+    private static final String COL_PERMISSION = "permission";
     private static final String COL_SOURCE = ".";
 
     private static final String CACHE_PREFIX_FETCH_FIELD = "fetch-field-";
@@ -277,24 +279,13 @@ class IDBLookupTable extends LookupTable {
                                                       String language,
                                                       boolean considerDeprecatedValues) {
         try {
-            // Caveat: IDBTable$QueryBuilder#manyRows can only be used when no filtering is applied afterwards.
-            if (considerDeprecatedValues) {
-                return table.query()
-                            .searchInAllFields()
-                            .searchValue(searchTerm)
-                            .translate(language)
-                            .manyRows(limit, codeField, nameField, descriptionField)
-                            .map(row -> new LookupTableEntry(row.at(0).asString(),
-                                                             row.at(1).asString(),
-                                                             row.at(2).getString()));
-            }
-
             return table.query()
                         .searchInAllFields()
                         .searchValue(searchTerm)
                         .translate(language)
-                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
-                        .filter(row -> row.at(3).asLong(0) != 1L)
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED, COL_PERMISSION)
+                        .filter(row -> filterDeprecatedValues(considerDeprecatedValues, row))
+                        .filter(this::filterRequiredPermission)
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
@@ -316,18 +307,11 @@ class IDBLookupTable extends LookupTable {
     @Override
     public Stream<LookupTableEntry> scan(String language, Limit limit, boolean considerDeprecatedValues) {
         try {
-            // Caveat: IDBTable$QueryBuilder#manyRows can only be used when no filtering is applied afterwards.
-            if (considerDeprecatedValues) {
-                return table.query()
-                            .translate(language)
-                            .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
-                            .map(this::processSearchOrScanRow);
-            }
-
             return table.query()
                         .translate(language)
-                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
-                        .filter(row -> row.at(3).asLong(0) != 1L)
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED, COL_PERMISSION, COL_SOURCE)
+                        .filter(row -> filterDeprecatedValues(considerDeprecatedValues, row))
+                        .filter(this::filterRequiredPermission)
                         .skip(limit.getItemsToSkip())
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
                         .map(this::processSearchOrScanRow);
@@ -341,6 +325,14 @@ class IDBLookupTable extends LookupTable {
         }
     }
 
+    private boolean filterRequiredPermission(Values row) {
+        return UserContext.getCurrentUser().hasPermission(row.at(4).asString());
+    }
+
+    private boolean filterDeprecatedValues(boolean considerDeprecatedValues, Values row) {
+        return considerDeprecatedValues || row.at(3).asLong(0) != 1L;
+    }
+
     @Override
     public Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String language) {
         try {
@@ -348,8 +340,10 @@ class IDBLookupTable extends LookupTable {
                         .searchInAllFields()
                         .searchValue(searchTerm)
                         .translate(language)
-                        .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
-                        .map(this::processSearchOrScanRow);
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED, COL_PERMISSION, COL_SOURCE)
+                        .filter(row -> filterRequiredPermission(row))
+                        .map(this::processSearchOrScanRow)
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
         } catch (Exception exception) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
@@ -366,9 +360,9 @@ class IDBLookupTable extends LookupTable {
         if (row.at(3).asLong(0) == 1L) {
             entry.markDeprecated();
         }
-        if (row.at(4).isFilled()) {
+        if (row.at(5).isFilled()) {
             try {
-                entry.withSource(Json.parseObject(row.at(4).asString()));
+                entry.withSource(Json.parseObject(row.at(5).asString()));
             } catch (Exception exception) {
                 Exceptions.ignore(exception);
             }
@@ -398,8 +392,9 @@ class IDBLookupTable extends LookupTable {
                         .translate(language)
                         .lookupPaths(lookupPath)
                         .searchValue(lookupValue)
-                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
-                        .filter(row -> row.at(3).asLong(0) != 1L)
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED, COL_PERMISSION)
+                        .filter(row -> filterDeprecatedValues(false, row))
+                        .filter(this::filterRequiredPermission)
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
                                                          row.at(1).asString(),
                                                          row.at(2).getString()));
