@@ -92,7 +92,7 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
             BucketName bucketName = new BucketName(getBucketName(), "");
             Queue<S3ObjectSummary> queue = new LinkedList<>();
             objectStores.store().listObjects(bucketName, null, object -> {
-                process.tryUpdateState("Total: " + total.incrementAndGet());
+                process.tryUpdateState("Total: " + total.getAndIncrement());
                 queue.add(object);
                 if (queue.size() >= MAX_QUEUE_SIZE) {
                     drainQueue(queue, parallelTasks);
@@ -101,7 +101,7 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
             });
             drainQueue(queue, parallelTasks);
         } finally {
-            process.forceUpdateState("Total: " + total.incrementAndGet());
+            process.forceUpdateState("Total: " + total.get());
             if (missingCount.get() == 0) {
                 process.log(ProcessLog.success().withMessage("No orphan objects found."));
             } else {
