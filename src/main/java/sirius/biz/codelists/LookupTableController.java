@@ -75,7 +75,7 @@ public class LookupTableController extends BizController {
      */
     @Routed("/system/lookuptable/info/:1")
     @InternalService
-    public void lookuptableInfo(WebContext webContext, JSONStructuredOutput output, String tableName) {
+    public void lookupTableInfo(WebContext webContext, JSONStructuredOutput output, String tableName) {
         LookupTable lookupTable = lookupTables.fetchTable(tableName);
         output.property("title", lookupTable.getTitle());
         output.property("description", lookupTable.getDescription());
