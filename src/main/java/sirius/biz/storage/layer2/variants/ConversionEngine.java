@@ -220,6 +220,8 @@ public class ConversionEngine {
             result.success();
         } catch (Exception exception) {
             recordErrorInStandbyProcess(conversionProcess, exception);
+            // Already logged as standby process log entry. Fail the promise without additional log to the system protocol.
+            result.doNotLogErrors();
             result.fail(exception);
         }
     }
@@ -243,7 +245,8 @@ public class ConversionEngine {
         processContext.log(ProcessLog.error()
                                      .withNLSKey("ConversionEngine.conversionError")
                                      .withContext("variantName", NLS.quote(conversionProcess.getVariantName()))
-                                     .withContext("filename", NLS.quote(conversionProcess.getBlobToConvert().getFilename()))
+                                     .withContext("filename",
+                                                  NLS.quote(conversionProcess.getBlobToConvert().getFilename()))
                                      .withContext("message", message));
     }
 
