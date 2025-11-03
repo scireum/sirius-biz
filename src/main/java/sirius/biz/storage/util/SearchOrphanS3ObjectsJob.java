@@ -19,11 +19,15 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.s3.BucketName;
 import sirius.biz.storage.s3.ObjectStores;
+import sirius.biz.tenants.AdditionalRolesProvider;
+import sirius.biz.tenants.UserAccount;
 import sirius.kernel.async.ParallelTaskExecutor;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.CSVWriter;
 import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
@@ -211,6 +215,30 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
         @Override
         public String getDescription() {
             return "Searches for orphan S3 objects, without a blob or variant counterpart.";
+        }
+    }
+
+    /**
+     * Provides a role if S3 is used as object store.
+     */
+    @Register
+    public static class S3ObjectStore implements AdditionalRolesProvider {
+
+        public static final String ROLE_S3_OBJECT_STORE = "role-s3-object-store";
+
+        @Part
+        private ObjectStores objectStores;
+
+        @Override
+        public void addAdditionalRoles(UserAccount<?, ?> user, Consumer<String> roleConsumer) {
+            try {
+                // Sets the role if an S3 object store can be obtained...
+                objectStores.store();
+                roleConsumer.accept(ROLE_S3_OBJECT_STORE);
+            } catch (Exception exception) {
+                // ... or ignores it if the system is not using S3 as system store.
+                Exceptions.ignore(exception);
+            }
         }
     }
 }

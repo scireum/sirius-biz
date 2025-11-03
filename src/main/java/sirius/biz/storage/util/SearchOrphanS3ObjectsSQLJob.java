@@ -55,6 +55,7 @@ public class SearchOrphanS3ObjectsSQLJob extends SearchOrphanS3ObjectsJob {
      */
     @Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    @Permission(S3ObjectStore.ROLE_S3_OBJECT_STORE)
     public static class SearchOrphanS3ObjectsSQLJobFactory extends SearchOrphanS3ObjectsJobFactory {
 
         @Override

@@ -57,6 +57,7 @@ public class SearchOrphanS3ObjectsMongoJob extends SearchOrphanS3ObjectsJob {
      */
     @Register(framework = MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    @Permission(S3ObjectStore.ROLE_S3_OBJECT_STORE)
     public static class SearchOrphanS3ObjectsMongoJobFactory extends SearchOrphanS3ObjectsJobFactory {
 
         @Override
