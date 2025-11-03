@@ -224,6 +224,9 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
     @Register
     public static class S3ObjectStore implements AdditionalRolesProvider {
 
+        /**
+         * Defines the role which is granted if S3 is used as object store.
+         */
         public static final String ROLE_S3_OBJECT_STORE = "role-s3-object-store";
 
         @Part
