@@ -19,6 +19,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.s3.BucketName;
 import sirius.biz.storage.s3.ObjectStores;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.async.ParallelTaskExecutor;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.CSVWriter;
@@ -26,6 +27,7 @@ import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -219,7 +221,7 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
             try {
                 // Checks if an S3 object store can be obtained...
                 objectStores.store();
-                return true;
+                return super.isAccessibleToCurrentUser();
             } catch (Exception exception) {
                 // ... or hide the job if the system is not using S3 as system store.
                 Exceptions.ignore(exception);
