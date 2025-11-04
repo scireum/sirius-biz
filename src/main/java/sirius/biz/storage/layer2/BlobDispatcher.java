@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer2;
 
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
@@ -100,6 +101,13 @@ public class BlobDispatcher implements WebDispatcher {
      * Header set to signalize that the caller is ready to wait longer for a response.
      */
     public static final String HEADER_WAIT_LONGER = "X-Wait-Longer";
+
+    /**
+     * Header to provide additional information for a response.
+     * <p>
+     * For instance, a 404 (Not Found) can specify if the variant has not been converted yet.
+     */
+    public static final String HEADER_CAUSE = "X-Cause";
 
     private static final String PARAM_HOOK = "hook";
     private static final String PARAM_PAYLOAD = "payload";
@@ -280,6 +288,12 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (urlResult.urlType() == URLBuilder.UrlType.VIRTUAL) {
+            if (isHeadRequest(request)) {
+                // For HEAD requests we do not want to trigger a conversion, so we simply return a 404 with its cause.
+                response.addHeader(HEADER_CAUSE, "Requested variant has not been produced yet");
+                response.status(HttpResponseStatus.NOT_FOUND);
+                return;
+            }
             // A conversion will be attempted and tunneled over. Disable caching completely as we expect
             // subsequent requests to deliver a redirect URL the new converted physical file.
             response.notCached();
@@ -309,6 +323,10 @@ public class BlobDispatcher implements WebDispatcher {
                              variant != null ? variant : URLBuilder.VARIANT_RAW,
                              response,
                              request::markAsLongCall);
+    }
+
+    private boolean isHeadRequest(WebContext request) {
+        return request.getRequest().method() == HttpMethod.HEAD;
     }
 
     private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace,
