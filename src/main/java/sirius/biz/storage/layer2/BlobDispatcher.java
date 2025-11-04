@@ -138,6 +138,11 @@ public class BlobDispatcher implements WebDispatcher {
             return DispatchDecision.DONE;
         }
 
+        if (request.getRequest().method() != HttpMethod.GET && request.getRequest().method() != HttpMethod.HEAD) {
+            request.respondWith().status(HttpResponseStatus.METHOD_NOT_ALLOWED);
+            return DispatchDecision.DONE;
+        }
+
         Optional<BlobUri> blobUri = BlobUriParser.parseBlobUri(uri);
 
         if (blobUri.isPresent()) {
