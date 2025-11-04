@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer2;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.util.StorageUtils;
@@ -296,7 +297,8 @@ public class BlobDispatcher implements WebDispatcher {
             if (isHeadRequest(request)) {
                 // For HEAD requests we do not want to trigger a conversion, so we simply return a 404 with its cause.
                 response.addHeader(HEADER_CAUSE, "Requested variant has not been produced yet");
-                response.status(HttpResponseStatus.NOT_FOUND);
+                response.addHeader(HttpHeaderNames.ALLOW, HttpMethod.GET.name());
+                response.status(HttpResponseStatus.METHOD_NOT_ALLOWED);
                 return;
             }
             // A conversion will be attempted and tunneled over. Disable caching completely as we expect
