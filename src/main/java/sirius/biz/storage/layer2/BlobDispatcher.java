@@ -140,7 +140,9 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (request.getRequest().method() != HttpMethod.GET && request.getRequest().method() != HttpMethod.HEAD) {
-            request.respondWith().status(HttpResponseStatus.METHOD_NOT_ALLOWED);
+            request.respondWith()
+                   .addHeader(HttpHeaderNames.ALLOW, HttpMethod.GET.name() + ", " + HttpMethod.HEAD.name())
+                   .status(HttpResponseStatus.METHOD_NOT_ALLOWED);
             return DispatchDecision.DONE;
         }
 
