@@ -206,11 +206,11 @@ public class BlobDispatcher implements WebDispatcher {
             response.named(blobUri.getFilename());
         }
 
+        // Treats HEAD requests as non-large files, which cause the request to be tunneled to the storage where such
+        // requests are properly handled.
+        boolean isLargeFileExpected = !isHeadRequest(request) && blobUri.isLargeFileExpected();
         blobStorage.getSpace(blobUri.getStorageSpace())
-                   .deliverPhysical(blobUri.getBlobKey(),
-                                    blobUri.getPhysicalKey(),
-                                    response,
-                                    blobUri.isLargeFileExpected());
+                   .deliverPhysical(blobUri.getBlobKey(), blobUri.getPhysicalKey(), response, isLargeFileExpected);
     }
 
     /**
