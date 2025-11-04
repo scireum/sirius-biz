@@ -17,7 +17,7 @@
                     <form class="samlForm" id="@id" method="post"
                           action="@tenant.getTenantData().getSamlIssuerUrl()">
                         <input type="hidden" name="SAMLRequest"
-                               value="@part(sirius.web.security.SAMLHelper.class).generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
+                               value="@part(sirius.web.security.SAMLHelper.class).generateAuthenticationRequestForPostBinding(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
                     </form>
                     <a class="stretched-link" href="javascript:document.getElementById('@id').submit()"></a>
                 </t:datacard>
