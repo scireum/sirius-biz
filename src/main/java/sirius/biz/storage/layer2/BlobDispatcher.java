@@ -8,6 +8,8 @@
 
 package sirius.biz.storage.layer2;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
@@ -101,6 +103,13 @@ public class BlobDispatcher implements WebDispatcher {
      */
     public static final String HEADER_WAIT_LONGER = "X-Wait-Longer";
 
+    /**
+     * Header to provide additional information for a response.
+     * <p>
+     * For instance, a 404 (Not Found) can specify if the variant has not been converted yet.
+     */
+    public static final String HEADER_CAUSE = "X-Cause";
+
     private static final String PARAM_HOOK = "hook";
     private static final String PARAM_PAYLOAD = "payload";
 
@@ -127,6 +136,13 @@ public class BlobDispatcher implements WebDispatcher {
 
         if (request.checkParameterReadability().isPresent()) {
             request.respondWith().status(HttpResponseStatus.BAD_REQUEST);
+            return DispatchDecision.DONE;
+        }
+
+        if (request.getRequest().method() != HttpMethod.GET && request.getRequest().method() != HttpMethod.HEAD) {
+            request.respondWith()
+                   .addHeader(HttpHeaderNames.ALLOW, HttpMethod.GET.name() + ", " + HttpMethod.HEAD.name())
+                   .status(HttpResponseStatus.METHOD_NOT_ALLOWED);
             return DispatchDecision.DONE;
         }
 
@@ -198,11 +214,11 @@ public class BlobDispatcher implements WebDispatcher {
             response.named(blobUri.getFilename());
         }
 
+        // Treats HEAD requests as non-large files, which cause the request to be tunneled to the storage where such
+        // requests are properly handled.
+        boolean isLargeFileExpected = !isHeadRequest(request) && blobUri.isLargeFileExpected();
         blobStorage.getSpace(blobUri.getStorageSpace())
-                   .deliverPhysical(blobUri.getBlobKey(),
-                                    blobUri.getPhysicalKey(),
-                                    response,
-                                    blobUri.isLargeFileExpected());
+                   .deliverPhysical(blobUri.getBlobKey(), blobUri.getPhysicalKey(), response, isLargeFileExpected);
     }
 
     /**
@@ -280,6 +296,13 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (urlResult.urlType() == URLBuilder.UrlType.VIRTUAL) {
+            if (isHeadRequest(request)) {
+                // For HEAD requests we do not want to trigger a conversion, so we simply return a 404 with its cause.
+                response.addHeader(HEADER_CAUSE, "Requested variant has not been produced yet");
+                response.addHeader(HttpHeaderNames.ALLOW, HttpMethod.GET.name());
+                response.status(HttpResponseStatus.METHOD_NOT_ALLOWED);
+                return;
+            }
             // A conversion will be attempted and tunneled over. Disable caching completely as we expect
             // subsequent requests to deliver a redirect URL the new converted physical file.
             response.notCached();
@@ -309,6 +332,10 @@ public class BlobDispatcher implements WebDispatcher {
                              variant != null ? variant : URLBuilder.VARIANT_RAW,
                              response,
                              request::markAsLongCall);
+    }
+
+    private boolean isHeadRequest(WebContext request) {
+        return request.getRequest().method() == HttpMethod.HEAD;
     }
 
     private static URLBuilder.UrlResult buildPhysicalRedirectUrl(BlobStorageSpace storageSpace,
