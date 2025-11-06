@@ -65,7 +65,7 @@ public class Jwts {
     private static final String CLAIM_ISSUED_AT = "iat";
 
     @ConfigValue("security.jwt.jwksPemFiles")
-    private String keyPairFiles;
+    private String jwksPemFiles;
 
     @ConfigValue("security.jwt.issuer")
     private String issuer;
@@ -115,8 +115,8 @@ public class Jwts {
     }
 
     private void parse() {
-        if (Strings.isFilled(keyPairFiles)) {
-            List<JWK> parsedKeys = Stream.of(keyPairFiles.split(";"))
+        if (Strings.isFilled(jwksPemFiles)) {
+            List<JWK> parsedKeys = Stream.of(jwksPemFiles.split(";"))
                                          .filter(Strings::isFilled)
                                          .map(this::parsePemFile)
                                          .filter(Objects::nonNull)
