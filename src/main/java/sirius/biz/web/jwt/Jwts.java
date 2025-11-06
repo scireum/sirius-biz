@@ -160,7 +160,6 @@ public class Jwts {
     }
 
     private String sign(Map<String, Object> providedClaimsSet) {
-
         JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder();
         providedClaimsSet.forEach(claimsSetBuilder::claim);
         claimsSetBuilder.issuer(issuer);
