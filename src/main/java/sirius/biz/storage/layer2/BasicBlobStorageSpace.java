@@ -1928,9 +1928,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param blob              the blob for which the variant is to be created
      * @param variantName       the variant to generate
      * @param physicalObjectKey the physical object to set
+     * @param checksum          the checksum of the variant
      * @return the newly created database object
      */
-    protected abstract V createVariant(B blob, String variantName, String physicalObjectKey, long size);
+    protected abstract V createVariant(B blob,
+                                       String variantName,
+                                       String physicalObjectKey,
+                                       long size,
+                                       @Nullable String checksum);
 
     /**
      * Detects if the variant is still unique.

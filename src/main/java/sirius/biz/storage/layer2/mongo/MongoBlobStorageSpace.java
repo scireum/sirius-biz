@@ -800,7 +800,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected MongoVariant createVariant(MongoBlob blob, String variantName, String physicalObjectKey, long size) {
+    protected MongoVariant createVariant(MongoBlob blob,
+                                         String variantName,
+                                         String physicalObjectKey,
+                                         long size,
+                                         @Nullable String checksum) {
         MongoVariant variant = new MongoVariant();
         variant.getBlob().setValue(blob);
         variant.setVariantName(variantName);
@@ -813,6 +817,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         variant.setNode(CallContext.getNodeName());
         variant.setLastConversionAttempt(LocalDateTime.now());
         variant.setNumAttempts(1);
+        variant.setChecksum(checksum);
         mango.update(variant);
         return variant;
     }

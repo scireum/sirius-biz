@@ -891,7 +891,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected SQLVariant createVariant(SQLBlob blob, String variantName, String physicalObjectKey, long size) {
+    protected SQLVariant createVariant(SQLBlob blob, String variantName, String physicalObjectKey, long size, @Nullable String checksum) {
         SQLVariant variant = new SQLVariant();
         variant.getSourceBlob().setValue(blob);
         variant.setVariantName(variantName);
@@ -904,6 +904,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         variant.setNode(CallContext.getNodeName());
         variant.setLastConversionAttempt(LocalDateTime.now());
         variant.setNumAttempts(1);
+        variant.setChecksum(checksum);
         oma.update(variant);
         return variant;
     }

@@ -241,4 +241,8 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
     public String getCheckSum() {
         return checksum;
     }
+
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
+    }
 }

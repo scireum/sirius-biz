@@ -241,4 +241,8 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
     public String getCheckSum() {
         return checksum;
     }
+
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
+    }
 }
