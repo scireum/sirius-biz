@@ -456,7 +456,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     protected Optional<String> updateBlob(@Nonnull MongoBlob blob,
                                           @Nonnull String nextPhysicalId,
                                           long size,
-                                          @Nullable String filename) throws Exception {
+                                          @Nullable String filename,
+                                          @Nullable String checksum) throws Exception {
         int retries = UPDATE_BLOB_RETRIES;
         while (retries-- > 0) {
             Updater updater = mongo.update()
@@ -468,6 +469,9 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                 updater.set(MongoBlob.FILENAME, filename)
                        .set(MongoBlob.NORMALIZED_FILENAME, filename.toLowerCase())
                        .set(MongoBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
+            }
+            if (Strings.isFilled(checksum)) {
+                updater.set(MongoBlob.CHECKSUM, checksum);
             }
 
             String previousPhysicalObjectKey = blob.getPhysicalObjectKey();

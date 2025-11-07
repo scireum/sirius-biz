@@ -123,6 +123,14 @@ public interface Blob {
     LocalDateTime getLastTouched();
 
     /**
+     * Returns the checksum of the blob if available.
+     *
+     * @return the checksum of the blob or <tt>null</tt> if no checksum is available
+     */
+    @Nullable
+    String getCheckSum();
+
+    /**
      * Provides an on-disk copy of the data associated with this blob.
      * <p>
      * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.

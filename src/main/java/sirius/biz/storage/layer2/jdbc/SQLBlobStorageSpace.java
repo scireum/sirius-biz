@@ -546,7 +546,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected Optional<String> updateBlob(@Nonnull SQLBlob blob,
                                           @Nonnull String nextPhysicalId,
                                           long size,
-                                          @Nullable String filename) throws Exception {
+                                          @Nullable String filename,
+                                          @Nullable String checksum) throws Exception {
         int retries = UPDATE_BLOB_RETRIES;
         while (retries-- > 0) {
             UpdateStatement updateStatement = oma.updateStatement(SQLBlob.class)
@@ -558,6 +559,9 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 updateStatement.set(SQLBlob.FILENAME, filename)
                                .set(SQLBlob.NORMALIZED_FILENAME, filename.toLowerCase())
                                .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
+            }
+            if (Strings.isFilled(checksum)) {
+                updateStatement.set(SQLBlob.CHECKSUM, checksum);
             }
 
             String previousPhysicalObjectKey = blob.getPhysicalObjectKey();

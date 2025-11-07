@@ -1250,6 +1250,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param nextPhysicalId the physical id to store which contains the new contents
      * @param size           the size of the data
      * @param filename       the new filename to use (if set)
+     * @param checksum       the checksum of the data (if set)
      * @return the previous physical id which can now be deleted or an empty optional if there was no previous content
      * @throws Exception in case of an error while updating the metadata
      */
@@ -1257,7 +1258,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract Optional<String> updateBlob(@Nonnull B blob,
                                                    @Nonnull String nextPhysicalId,
                                                    long size,
-                                                   @Nullable String filename) throws Exception;
+                                                   @Nullable String filename,
+                                                   @Nullable String checksum) throws Exception;
 
     /**
      * Updates the contents of the given blob with the given stream data and optional filename.

@@ -200,6 +200,13 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     private LocalDateTime lastTouched;
 
     /**
+     * Stores the checksum of the file.
+     */
+    public static final Mapping CHECKSUM = Mapping.named("checksum");
+    @NullAllowed
+    private String checksum;
+
+    /**
      * Stores if a blob has been fully initialized.
      * <p>
      * This is used by the optimistic locking algorithms to ensure that blob names remain unique
@@ -492,6 +499,12 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     @Override
     public LocalDateTime getLastModified() {
         return lastModified;
+    }
+
+    @Nullable
+    @Override
+    public String getCheckSum() {
+        return checksum;
     }
 
     @Override
