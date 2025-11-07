@@ -860,15 +860,20 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     protected void markConversionSuccess(MongoVariant variant,
                                          String physicalKey,
                                          ConversionProcess conversionProcess) {
-        mongo.update()
-             .set(MongoVariant.PHYSICAL_OBJECT_KEY, physicalKey)
-             .set(MongoVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
-             .set(MongoVariant.QUEUED_FOR_CONVERSION, false)
-             .set(MongoVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
-             .set(MongoVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
-             .set(MongoVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
-             .where(MongoVariant.ID, variant.getId())
-             .executeForOne(MongoVariant.class);
+        Updater updater = mongo.update()
+                               .set(MongoVariant.PHYSICAL_OBJECT_KEY, physicalKey)
+                               .set(MongoVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
+                               .set(MongoVariant.QUEUED_FOR_CONVERSION, false)
+                               .set(MongoVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+                               .set(MongoVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+                               .set(MongoVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+                               .where(MongoVariant.ID, variant.getId());
+
+        String checksum = computeConversionCheckSum(conversionProcess);
+        if (Strings.isFilled(checksum)) {
+            updater.set(MongoVariant.CHECKSUM, checksum);
+        }
+        updater.executeForOne(MongoVariant.class);
     }
 
     @Override

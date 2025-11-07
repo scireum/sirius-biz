@@ -22,6 +22,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -100,6 +101,13 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      */
     public static final Mapping TRANSFER_DURATION = Mapping.named("transferDuration");
     private long transferDuration;
+
+    /**
+     * Stores the checksum of the variant.
+     */
+    public static final Mapping CHECKSUM = Mapping.named("checksum");
+    @NullAllowed
+    private String checksum;
 
     /**
      * Stores the node name on which the last conversion was attempted.
@@ -226,5 +234,11 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     public void setTransferDuration(long transferDuration) {
         this.transferDuration = transferDuration;
+    }
+
+    @Nullable
+    @Override
+    public String getCheckSum() {
+        return checksum;
     }
 }

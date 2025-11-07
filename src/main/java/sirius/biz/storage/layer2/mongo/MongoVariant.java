@@ -15,6 +15,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.SkipDefaultValue;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
@@ -22,6 +23,7 @@ import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -105,6 +107,14 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
      */
     public static final Mapping TRANSFER_DURATION = Mapping.named("transferDuration");
     private long transferDuration;
+
+    /**
+     * Stores the checksum of the variant.
+     */
+    public static final Mapping CHECKSUM = Mapping.named("checksum");
+    @NullAllowed
+    @SkipDefaultValue
+    private String checksum;
 
     @AfterDelete
     protected void onDelete() {
@@ -224,5 +234,11 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     public void setTransferDuration(long transferDuration) {
         this.transferDuration = transferDuration;
+    }
+
+    @Nullable
+    @Override
+    public String getCheckSum() {
+        return checksum;
     }
 }

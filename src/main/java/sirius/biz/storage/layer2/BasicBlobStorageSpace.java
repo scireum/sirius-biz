@@ -1779,6 +1779,21 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract void markConversionFailure(V variant, ConversionProcess conversionProcess);
 
     /**
+     * Computes the checksum of the converted file in the given conversion process.
+     *
+     * @param conversionProcess the conversion process which created a variant
+     * @return the checksum of the converted file or <tt>null</tt> if no hasher is configured or the file doesn't exist
+     */
+    protected String computeConversionCheckSum(ConversionProcess conversionProcess) {
+        Hasher hasher = getHasher();
+        FileHandle fileHandle = conversionProcess.getResultFileHandle();
+        if (hasher != null && fileHandle.exists()) {
+            return hasher.hashFile(fileHandle.getFile()).toHexString();
+        }
+        return null;
+    }
+
+    /**
      * Determines if another conversion of the variant should be attempted.
      * <p>
      * We do want to start a conversion if no conversion is currently queued, or is killed but has been stuck

@@ -959,15 +959,21 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Override
     protected void markConversionSuccess(SQLVariant variant, String physicalKey, ConversionProcess conversionProcess) {
         try {
-            oma.updateStatement(SQLVariant.class)
-               .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
-               .set(SQLVariant.PHYSICAL_OBJECT_KEY, physicalKey)
-               .set(SQLVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
-               .set(SQLVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
-               .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
-               .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
-               .where(SQLVariant.ID, variant.getId())
-               .executeUpdate();
+            UpdateStatement updater = oma.updateStatement(SQLVariant.class)
+                                         .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
+                                         .set(SQLVariant.PHYSICAL_OBJECT_KEY, physicalKey)
+                                         .set(SQLVariant.CHECKSUM, computeConversionCheckSum(conversionProcess))
+                                         .set(SQLVariant.SIZE,
+                                              conversionProcess.getResultFileHandle().getFile().length())
+                                         .set(SQLVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+                                         .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+                                         .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+                                         .where(SQLVariant.ID, variant.getId());
+            String checksum = computeConversionCheckSum(conversionProcess);
+            if (Strings.isFilled(checksum)) {
+                updater.set(SQLVariant.CHECKSUM, checksum);
+            }
+            updater.executeUpdate();
         } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
