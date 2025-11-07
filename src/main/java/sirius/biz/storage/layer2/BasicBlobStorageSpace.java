@@ -27,6 +27,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Streams;
@@ -178,6 +179,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_SORT_BY_LAST_MODIFIED = "sortByLastModified";
 
     /**
+     * Contains the name of the algorith used to compute the checksum of uploaded files.
+     */
+    private static final String CONFIG_KEY_CHECKSUM_ALGORITHM = "checksumAlgorithm";
+
+    /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
      * a separator one is used.
@@ -303,6 +309,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected int urlValidityDays;
     protected boolean touchTracking;
     protected boolean sortByLastModified;
+    protected String checksumAlgorithm;
     protected ObjectStorageSpace objectStorageSpace;
 
     /**
@@ -323,6 +330,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.urlValidityDays = config.get(CONFIG_KEY_URL_VALIDITY_DAYS).asInt(StorageUtils.DEFAULT_URL_VALIDITY_DAYS);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
         this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
+        this.checksumAlgorithm = config.get(CONFIG_KEY_CHECKSUM_ALGORITHM).asString();
     }
 
     @Override
@@ -385,6 +393,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Override
     public int getUrlValidityDays() {
         return urlValidityDays;
+    }
+
+    @Override
+    public Hasher getHasher() {
+        return switch (checksumAlgorithm) {
+            case "MD5" -> Hasher.md5();
+            case "SHA-1" -> Hasher.sha1();
+            case "SHA-256" -> Hasher.sha256();
+            case "SHA-512" -> Hasher.sha512();
+            default -> null;
+        };
     }
 
     /**
