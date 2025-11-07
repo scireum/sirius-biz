@@ -136,11 +136,13 @@ public interface Blob {
      * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
      * Do this ideally with a {@code try-with-resources} block:
      * <pre>
+     * {@code
      * blob.download().ifPresent(handle -> {
      *     try (handle) {
      *         // Read from the handle here...
      *     }
      * });
+     * }
      * </pre>
      *
      * @return a {@linkplain java.io.Closeable closeable} file handle to the data of this blob, or an empty optional if no data was present
@@ -204,7 +206,7 @@ public interface Blob {
      * @param newParent the new directory to move the blob to. Note that if <tt>null</tt> is passed in, a directory was
      *                  probably selected which was known to be incompatible - therefore the method is expected
      *                  to throw an appropriate exception.
-     * @throws HandledException if the blob cannot be moved into the given directory (different space etc).
+     * @throws HandledException if the blob cannot be moved into the given directory (different space etc.).
      */
     void move(@Nullable Directory newParent);
 

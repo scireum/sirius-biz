@@ -1069,11 +1069,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
      * Do this ideally with a {@code try-with-resources} block:
      * <pre>
+     * {@code
      * space.download(blob).ifPresent(handle -> {
      *     try (handle) {
      *         // Read from the handle here...
      *     }
      * });
+     * }
      * </pre>
      *
      * @param blob the blob to fetch the data for

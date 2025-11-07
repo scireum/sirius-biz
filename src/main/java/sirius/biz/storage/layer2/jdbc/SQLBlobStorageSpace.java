@@ -126,7 +126,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected void rollbackDirectory(SQLDirectory directory) {
         try {
             oma.deleteStatement(SQLDirectory.class).where(SQLDirectory.ID, directory.getId()).executeUpdate();
-        } catch (SQLException exception) {
+        } catch (SQLException _) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer2/SQL: Failed to rollback directory %s (%s) in %s: %s (%s)",

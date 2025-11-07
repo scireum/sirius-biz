@@ -34,7 +34,6 @@ public class BlobDuplicator {
      * Creates a new duplicator for the given blob.
      *
      * @param blob the blob to duplicate
-     * @return a new duplicator for the given blob
      */
     public BlobDuplicator(Blob blob) {
         this.blob = blob;

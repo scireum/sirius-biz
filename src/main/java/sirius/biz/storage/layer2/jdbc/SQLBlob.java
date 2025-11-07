@@ -127,7 +127,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     /**
      * Contains the file extension if a filename was provided.
      * <p>
-     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercase file extension without the ".".
+     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercase file extension without the {@code .}.
      */
     public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
     @NullAllowed
