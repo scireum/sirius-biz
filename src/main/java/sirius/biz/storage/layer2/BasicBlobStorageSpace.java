@@ -1277,9 +1277,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (Strings.isFilled(filename)) {
                 blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
             }
-            getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
+            Hasher hasher = getHasher();
+            HashingInputStream hashingInputStream = new HashingInputStream(data, hasher);
+            getPhysicalSpace().upload(nextPhysicalId, hashingInputStream, contentLength);
             blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
-            Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
+            String checksum = hasher != null ? hasher.toHexString() : null;
+            Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename, checksum);
             if (previousPhysicalId.isPresent()) {
                 deleteBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
