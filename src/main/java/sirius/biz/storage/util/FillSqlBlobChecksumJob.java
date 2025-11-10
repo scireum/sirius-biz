@@ -27,7 +27,7 @@ import sirius.web.security.Permission;
 import javax.annotation.Nonnull;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * Implementation for the {@link FillBlobChecksumJob} using the {@link SQLBlobStorage#FRAMEWORK_JDBC_BLOB_STORAGE}.
@@ -37,7 +37,7 @@ public class FillSqlBlobChecksumJob extends FillBlobChecksumJob<SQLBlob, Long> {
     @Part
     private static OMA oma;
 
-    private final Consumer<SmartQuery<SQLBlob>> queryTuner;
+    private final BiConsumer<ProcessContext, SmartQuery<SQLBlob>> queryTuner;
 
     /**
      * Creates a new batch job for the given batch process.
@@ -45,9 +45,11 @@ public class FillSqlBlobChecksumJob extends FillBlobChecksumJob<SQLBlob, Long> {
      * As a batch job is created per execution, subclasses can define fields and fill those from parameters
      * defined by their factory.
      *
-     * @param process the context in which the process will be executed
+     * @param process    the context in which the process will be executed
+     * @param queryTuner allows to tune the query used to fetch the blobs to be processed
      */
-    protected FillSqlBlobChecksumJob(ProcessContext process, Consumer<SmartQuery<SQLBlob>> queryTuner) {
+    protected FillSqlBlobChecksumJob(ProcessContext process,
+                                     BiConsumer<ProcessContext, SmartQuery<SQLBlob>> queryTuner) {
         super(process);
         this.queryTuner = queryTuner;
     }
@@ -100,7 +102,7 @@ public class FillSqlBlobChecksumJob extends FillBlobChecksumJob<SQLBlob, Long> {
             }
         }
         if (queryTuner != null) {
-            queryTuner.accept(query);
+            queryTuner.accept(process, query);
         }
         return query.orderAsc(SQLBlob.ID).limit(BaseQuery.MAX_LIST_SIZE).queryList();
     }
@@ -128,7 +130,7 @@ public class FillSqlBlobChecksumJob extends FillBlobChecksumJob<SQLBlob, Long> {
          *
          * @return a consumer which tunes the query or <tt>null</tt> to not modify it
          */
-        public Consumer<SmartQuery<SQLBlob>> getQueryTuner() {
+        public BiConsumer<ProcessContext, SmartQuery<SQLBlob>> getQueryTuner() {
             return null;
         }
     }

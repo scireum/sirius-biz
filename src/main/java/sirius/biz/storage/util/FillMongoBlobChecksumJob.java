@@ -26,7 +26,7 @@ import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * Implementation for the {@link FillBlobChecksumJob} using the {@link MongoBlobStorage#FRAMEWORK_MONGO_BLOB_STORAGE}.
@@ -39,7 +39,7 @@ public class FillMongoBlobChecksumJob extends FillBlobChecksumJob<MongoBlob, Str
     @Part
     private static Mongo mongo;
 
-    private final Consumer<MongoQuery<MongoBlob>> queryTuner;
+    private final BiConsumer<ProcessContext, MongoQuery<MongoBlob>> queryTuner;
 
     /**
      * Creates a new batch job for the given batch process.
@@ -47,9 +47,11 @@ public class FillMongoBlobChecksumJob extends FillBlobChecksumJob<MongoBlob, Str
      * As a batch job is created per execution, subclasses can define fields and fill those from parameters
      * defined by their factory.
      *
-     * @param process the context in which the process will be executed
+     * @param process    the context in which the process will be executed
+     * @param queryTuner allows to tune the query used to fetch the blobs to be processed
      */
-    protected FillMongoBlobChecksumJob(ProcessContext process, Consumer<MongoQuery<MongoBlob>> queryTuner) {
+    protected FillMongoBlobChecksumJob(ProcessContext process,
+                                       BiConsumer<ProcessContext, MongoQuery<MongoBlob>> queryTuner) {
         super(process);
         this.queryTuner = queryTuner;
     }
@@ -93,7 +95,7 @@ public class FillMongoBlobChecksumJob extends FillBlobChecksumJob<MongoBlob, Str
             }
         }
         if (queryTuner != null) {
-            queryTuner.accept(query);
+            queryTuner.accept(process, query);
         }
         return query.orderAsc(MongoBlob.ID).limit(BaseQuery.MAX_LIST_SIZE).queryList();
     }
@@ -121,7 +123,7 @@ public class FillMongoBlobChecksumJob extends FillBlobChecksumJob<MongoBlob, Str
          *
          * @return a consumer which tunes the query or <tt>null</tt> to not modify it
          */
-        public Consumer<MongoQuery<MongoBlob>> getQueryTuner() {
+        public BiConsumer<ProcessContext, MongoQuery<MongoBlob>> getQueryTuner() {
             return null;
         }
     }
