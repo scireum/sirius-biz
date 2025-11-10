@@ -472,6 +472,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
             }
             if (Strings.isFilled(checksum)) {
                 updater.set(MongoBlob.CHECKSUM, checksum);
+            } else {
+                updater.unset(MongoBlob.CHECKSUM);
             }
 
             String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
@@ -877,6 +879,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         String checksum = computeConversionCheckSum(conversionProcess);
         if (Strings.isFilled(checksum)) {
             updater.set(MongoVariant.CHECKSUM, checksum);
+        } else {
+            updater.unset(MongoVariant.CHECKSUM);
         }
         updater.executeForOne(MongoVariant.class);
     }

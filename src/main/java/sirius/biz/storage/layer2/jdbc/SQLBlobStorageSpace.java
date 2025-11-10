@@ -552,6 +552,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         while (retries-- > 0) {
             UpdateStatement updateStatement = oma.updateStatement(SQLBlob.class)
                                                  .set(SQLBlob.PHYSICAL_OBJECT_KEY, nextPhysicalId)
+                                                 .set(SQLBlob.CHECKSUM, checksum)
                                                  .set(SQLBlob.SIZE, size)
                                                  .setToNow(SQLBlob.LAST_MODIFIED);
             if (Strings.isFilled(filename)) {
@@ -559,9 +560,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 updateStatement.set(SQLBlob.FILENAME, filename)
                                .set(SQLBlob.NORMALIZED_FILENAME, filename.toLowerCase())
                                .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
-            }
-            if (Strings.isFilled(checksum)) {
-                updateStatement.set(SQLBlob.CHECKSUM, checksum);
             }
 
             String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
@@ -891,7 +889,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected SQLVariant createVariant(SQLBlob blob, String variantName, String physicalObjectKey, long size, @Nullable String checksum) {
+    protected SQLVariant createVariant(SQLBlob blob,
+                                       String variantName,
+                                       String physicalObjectKey,
+                                       long size,
+                                       @Nullable String checksum) {
         SQLVariant variant = new SQLVariant();
         variant.getSourceBlob().setValue(blob);
         variant.setVariantName(variantName);
@@ -960,9 +962,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Override
     protected void markConversionSuccess(SQLVariant variant, String physicalKey, ConversionProcess conversionProcess) {
         try {
+            String checksum = computeConversionCheckSum(conversionProcess);
             UpdateStatement updater = oma.updateStatement(SQLVariant.class)
                                          .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
                                          .set(SQLVariant.PHYSICAL_OBJECT_KEY, physicalKey)
+                                         .set(SQLVariant.CHECKSUM, checksum)
                                          .set(SQLVariant.CHECKSUM, computeConversionCheckSum(conversionProcess))
                                          .set(SQLVariant.SIZE,
                                               conversionProcess.getResultFileHandle().getFile().length())
@@ -970,10 +974,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                          .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
                                          .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
                                          .where(SQLVariant.ID, variant.getId());
-            String checksum = computeConversionCheckSum(conversionProcess);
-            if (Strings.isFilled(checksum)) {
-                updater.set(SQLVariant.CHECKSUM, checksum);
-            }
             updater.executeUpdate();
         } catch (SQLException exception) {
             Exceptions.handle()
