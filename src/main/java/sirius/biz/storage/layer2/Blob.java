@@ -128,7 +128,7 @@ public interface Blob {
      * @return the checksum of the blob or <tt>null</tt> if no checksum is available
      */
     @Nullable
-    String getCheckSum();
+    String getChecksum();
 
     /**
      * Provides an on-disk copy of the data associated with this blob.

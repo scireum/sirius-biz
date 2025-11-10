@@ -117,5 +117,5 @@ public interface BlobVariant {
      * @return the checksum of the variant or <tt>null</tt> if no checksum is available
      */
     @Nullable
-    String getCheckSum();
+    String getChecksum();
 }

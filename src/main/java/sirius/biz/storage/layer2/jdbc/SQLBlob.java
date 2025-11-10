@@ -503,7 +503,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Nullable
     @Override
-    public String getCheckSum() {
+    public String getChecksum() {
         return checksum;
     }
 

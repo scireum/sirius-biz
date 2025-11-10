@@ -89,7 +89,7 @@ public class BlobDuplicator {
             blob.getStorageSpace()
                 .getPhysicalSpace()
                 .duplicatePhysicalObject(blob.getPhysicalObjectKey(), newKey, storageSpace);
-            space.updateBlob(newBlob, newKey, blob.getSize(), blob.getFilename(), blob.getCheckSum());
+            space.updateBlob(newBlob, newKey, blob.getSize(), blob.getFilename(), blob.getChecksum());
         } catch (Exception exception) {
             throw Exceptions.createHandled().error(exception).handle();
         }
@@ -106,7 +106,7 @@ public class BlobDuplicator {
                                     blobVariant.getVariantName(),
                                     newKey,
                                     blobVariant.getSize(),
-                                    blobVariant.getCheckSum());
+                                    blobVariant.getChecksum());
             });
 
         return newBlob;

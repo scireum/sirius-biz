@@ -133,7 +133,7 @@ public abstract class FillBlobChecksumJob<B extends BaseEntity<I> & Blob, I> ext
         blob.fetchVariants()
             .stream()
             .filter(variant -> Strings.isFilled(variant.getPhysicalObjectKey()))
-            .filter(variant -> Strings.isEmpty(variant.getCheckSum()))
+            .filter(variant -> Strings.isEmpty(variant.getChecksum()))
             .forEach(variant -> {
                 String variantChecksum = computeChecksum(variant.getPhysicalObjectKey());
                 if (variantChecksum != null) {

@@ -238,7 +238,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     @Nullable
     @Override
-    public String getCheckSum() {
+    public String getChecksum() {
         return checksum;
     }
 

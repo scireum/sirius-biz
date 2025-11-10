@@ -508,7 +508,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Nullable
     @Override
-    public String getCheckSum() {
+    public String getChecksum() {
         return checksum;
     }
 
