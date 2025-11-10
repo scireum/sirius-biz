@@ -110,7 +110,7 @@ public class FillSqlBlobChecksumJob extends FillBlobChecksumJob<SQLBlob, Long> {
      */
     @Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    public static class FillMongoBlobJobFactory extends FillBlobChecksumJobFactory {
+    public static class FillSqlBlobJobFactory extends FillBlobChecksumJobFactory {
 
         @Override
         protected BatchJob createJob(ProcessContext process) throws Exception {
