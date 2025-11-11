@@ -8,6 +8,8 @@
 
 package sirius.biz.web.jwt;
 
+import com.nimbusds.jwt.JWTClaimNames;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +66,7 @@ public abstract class JwtBuilder {
      * @return the builder itself for fluent method calls
      */
     public JwtBuilder withSubject(String subject) {
-        this.claims.put("sub", subject);
+        this.claims.put(JWTClaimNames.SUBJECT, subject);
         return this;
     }
 
@@ -75,7 +77,7 @@ public abstract class JwtBuilder {
      * @return the builder itself for fluent method calls
      */
     public JwtBuilder withAudience(String audience) {
-        this.claims.put("aud", audience);
+        this.claims.put(JWTClaimNames.AUDIENCE, audience);
         return this;
     }
 

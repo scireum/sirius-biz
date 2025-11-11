@@ -20,6 +20,7 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import sirius.kernel.commons.Hasher;
@@ -60,10 +61,6 @@ import java.util.stream.Stream;
 @Register
 @AutoRegister
 public class Jwts {
-
-    private static final String CLAIM_NOT_BEFORE = "nbf";
-    private static final String CLAIM_EXPIRES = "exp";
-    private static final String CLAIM_ISSUED_AT = "iat";
 
     @ConfigValue("security.jwt.jwksPemFiles")
     private String jwksPemFiles;
@@ -168,9 +165,11 @@ public class Jwts {
         }
 
         // Note that we provide the timing data manually as the library only supports legacy Date APIs...
-        claimsSetBuilder.claim(CLAIM_NOT_BEFORE, Instant.now().minusSeconds(nbfThreshold.getSeconds()).getEpochSecond());
-        claimsSetBuilder.claim(CLAIM_EXPIRES, Instant.now().plusSeconds(expiry.getSeconds()).getEpochSecond());
-        claimsSetBuilder.claim(CLAIM_ISSUED_AT, Instant.now().getEpochSecond());
+        claimsSetBuilder.claim(JWTClaimNames.NOT_BEFORE,
+                               Instant.now().minusSeconds(nbfThreshold.getSeconds()).getEpochSecond());
+        claimsSetBuilder.claim(JWTClaimNames.EXPIRATION_TIME,
+                               Instant.now().plusSeconds(expiry.getSeconds()).getEpochSecond());
+        claimsSetBuilder.claim(JWTClaimNames.ISSUED_AT, Instant.now().getEpochSecond());
 
         if (getPrimaryKey() != null) {
             return signUsingKey(claimsSetBuilder.build());
