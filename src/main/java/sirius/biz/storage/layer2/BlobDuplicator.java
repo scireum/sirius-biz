@@ -34,7 +34,6 @@ public class BlobDuplicator {
      * Creates a new duplicator for the given blob.
      *
      * @param blob the blob to duplicate
-     * @return a new duplicator for the given blob
      */
     public BlobDuplicator(Blob blob) {
         this.blob = blob;
@@ -90,7 +89,7 @@ public class BlobDuplicator {
             blob.getStorageSpace()
                 .getPhysicalSpace()
                 .duplicatePhysicalObject(blob.getPhysicalObjectKey(), newKey, storageSpace);
-            space.updateBlob(newBlob, newKey, blob.getSize(), blob.getFilename());
+            space.updateBlob(newBlob, newKey, blob.getSize(), blob.getFilename(), blob.getChecksum());
         } catch (Exception exception) {
             throw Exceptions.createHandled().error(exception).handle();
         }
@@ -103,7 +102,11 @@ public class BlobDuplicator {
                 blob.getStorageSpace()
                     .getPhysicalSpace()
                     .duplicatePhysicalObject(blobVariant.getPhysicalObjectKey(), newKey, storageSpace);
-                space.createVariant(newBlob, blobVariant.getVariantName(), newKey, blobVariant.getSize());
+                space.createVariant(newBlob,
+                                    blobVariant.getVariantName(),
+                                    newKey,
+                                    blobVariant.getSize(),
+                                    blobVariant.getChecksum());
             });
 
         return newBlob;

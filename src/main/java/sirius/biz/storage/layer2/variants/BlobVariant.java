@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2.variants;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -109,4 +110,12 @@ public interface BlobVariant {
      * Deletes this variant.
      */
     void delete();
+
+    /**
+     * Returns the checksum of the variant if available.
+     *
+     * @return the checksum of the variant or <tt>null</tt> if no checksum is available
+     */
+    @Nullable
+    String getChecksum();
 }

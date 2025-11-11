@@ -127,7 +127,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     /**
      * Contains the file extension if a filename was provided.
      * <p>
-     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercase file extension without the ".".
+     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercase file extension without the {@code .}.
      */
     public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
     @NullAllowed
@@ -198,6 +198,13 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     public static final Mapping LAST_TOUCHED = Mapping.named("lastTouched");
     @NullAllowed
     private LocalDateTime lastTouched;
+
+    /**
+     * Stores the checksum of the file.
+     */
+    public static final Mapping CHECKSUM = Mapping.named("checksum");
+    @NullAllowed
+    private String checksum;
 
     /**
      * Stores if a blob has been fully initialized.
@@ -492,6 +499,12 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     @Override
     public LocalDateTime getLastModified() {
         return lastModified;
+    }
+
+    @Nullable
+    @Override
+    public String getChecksum() {
+        return checksum;
     }
 
     @Override

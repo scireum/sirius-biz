@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.tenants.Tenants;
+import sirius.kernel.commons.Hasher;
 import sirius.web.http.Response;
 
 import javax.annotation.Nonnull;
@@ -381,4 +382,12 @@ public interface BlobStorageSpace {
      * @return the amount of days
      */
     int getUrlValidityDays();
+
+    /**
+     * Returns a hasher for the configured checksum algorithm.
+     *
+     * @return the hasher or <tt>null</tt> if no valid checksum algorithm is configured
+     */
+    @Nullable
+    Hasher getHasher();
 }

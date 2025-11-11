@@ -126,7 +126,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected void rollbackDirectory(SQLDirectory directory) {
         try {
             oma.deleteStatement(SQLDirectory.class).where(SQLDirectory.ID, directory.getId()).executeUpdate();
-        } catch (SQLException exception) {
+        } catch (SQLException _) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage("Layer2/SQL: Failed to rollback directory %s (%s) in %s: %s (%s)",
@@ -546,11 +546,13 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected Optional<String> updateBlob(@Nonnull SQLBlob blob,
                                           @Nonnull String nextPhysicalId,
                                           long size,
-                                          @Nullable String filename) throws Exception {
+                                          @Nullable String filename,
+                                          @Nullable String checksum) throws Exception {
         int retries = UPDATE_BLOB_RETRIES;
         while (retries-- > 0) {
             UpdateStatement updateStatement = oma.updateStatement(SQLBlob.class)
                                                  .set(SQLBlob.PHYSICAL_OBJECT_KEY, nextPhysicalId)
+                                                 .set(SQLBlob.CHECKSUM, checksum)
                                                  .set(SQLBlob.SIZE, size)
                                                  .setToNow(SQLBlob.LAST_MODIFIED);
             if (Strings.isFilled(filename)) {
@@ -887,7 +889,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected SQLVariant createVariant(SQLBlob blob, String variantName, String physicalObjectKey, long size) {
+    protected SQLVariant createVariant(SQLBlob blob,
+                                       String variantName,
+                                       String physicalObjectKey,
+                                       long size,
+                                       @Nullable String checksum) {
         SQLVariant variant = new SQLVariant();
         variant.getSourceBlob().setValue(blob);
         variant.setVariantName(variantName);
@@ -900,6 +906,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         variant.setNode(CallContext.getNodeName());
         variant.setLastConversionAttempt(LocalDateTime.now());
         variant.setNumAttempts(1);
+        variant.setChecksum(checksum);
         oma.update(variant);
         return variant;
     }
@@ -955,15 +962,19 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Override
     protected void markConversionSuccess(SQLVariant variant, String physicalKey, ConversionProcess conversionProcess) {
         try {
-            oma.updateStatement(SQLVariant.class)
-               .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
-               .set(SQLVariant.PHYSICAL_OBJECT_KEY, physicalKey)
-               .set(SQLVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
-               .set(SQLVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
-               .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
-               .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
-               .where(SQLVariant.ID, variant.getId())
-               .executeUpdate();
+            String checksum = computeConversionCheckSum(conversionProcess);
+            UpdateStatement updater = oma.updateStatement(SQLVariant.class)
+                                         .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
+                                         .set(SQLVariant.PHYSICAL_OBJECT_KEY, physicalKey)
+                                         .set(SQLVariant.CHECKSUM, checksum)
+                                         .set(SQLVariant.CHECKSUM, computeConversionCheckSum(conversionProcess))
+                                         .set(SQLVariant.SIZE,
+                                              conversionProcess.getResultFileHandle().getFile().length())
+                                         .set(SQLVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+                                         .set(SQLVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+                                         .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+                                         .where(SQLVariant.ID, variant.getId());
+            updater.executeUpdate();
         } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)

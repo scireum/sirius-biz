@@ -144,7 +144,7 @@ public class ReplicationManager {
      * @param space         the primary space of the object to replicate
      * @param objectId      the id of the object to replicate
      * @param contentLength the expected content length to transfer
-     * @param performDelete <tt>true</tt> to replicate a delete, <tt>false</tt> to replicate a modification
+     * @param performDelete <tt>true</tt> to replicate a deletion, <tt>false</tt> to replicate a modification
      * @throws Exception in case of an error when replicating the changes performed on the specified object
      */
     public void executeReplicationTask(String space, String objectId, long contentLength, boolean performDelete)
