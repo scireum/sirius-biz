@@ -184,11 +184,13 @@
                                                             <t:dropdownItem
                                                                     url="@apply('javascript:sirius.copyToClipboard(\'%s\')', underlyingId)"
                                                                     icon="fa-solid fa-copy"
+                                                                    adminOnly="true"
                                                                     labelKey="VFSController.copyDirectoryId"/>
                                                             <i:else>
                                                                 <t:dropdownItem
                                                                         url="@apply('javascript:sirius.copyToClipboard(\'%s\')', underlyingId)"
                                                                         icon="fa-solid fa-copy"
+                                                                        adminOnly="true"
                                                                         labelKey="VFSController.copyBlobKey"/>
                                                             </i:else>
                                                         </i:if>
