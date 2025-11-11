@@ -55,7 +55,7 @@ import java.util.stream.Stream;
  * <tt>security.jwt.jwksPemFiles</tt>. The private key (of the first file in the list) is then used to sign the JWTs
  * where as all public keys are exposed using the {@link JwksController} under the uri <tt>/.well-known/jwks.json</tt>.
  * This URI is then scraped by downstream services when validating the given keys. This permits a simple setup while
- * still supporting key rotation. Therefore this is the preferred way to set up a production scenario whereas the
+ * still supporting key rotation. Therefore, this is the preferred way to set up a production scenario whereas the
  * shared secret approach should only be used to testing and development purposes.
  */
 @Register
@@ -242,16 +242,15 @@ public class Jwts {
 
     private JWSSigner determineSigner(JWK signingKey) {
         try {
-            if (signingKey instanceof RSAKey rsaKey) {
-                return new RSASSASigner(rsaKey);
-            } else if (signingKey instanceof ECKey ecKey) {
-                return new ECDSASigner(ecKey);
-            } else {
-                throw Exceptions.handle()
-                                .to(Log.SYSTEM)
-                                .withSystemErrorMessage("Unsupported signing key type: %s", signingKey.getClass())
-                                .handle();
-            }
+            return switch (signingKey) {
+                case RSAKey rsaKey -> new RSASSASigner(rsaKey);
+                case ECKey ecKey -> new ECDSASigner(ecKey);
+                default -> throw Exceptions.handle()
+                                           .to(Log.SYSTEM)
+                                           .withSystemErrorMessage("Unsupported signing key type: %s",
+                                                                   signingKey.getClass())
+                                           .handle();
+            };
         } catch (JOSEException e) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
