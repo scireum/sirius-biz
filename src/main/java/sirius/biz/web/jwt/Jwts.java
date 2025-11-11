@@ -162,7 +162,9 @@ public class Jwts {
     private String sign(Map<String, Object> providedClaimsSet) {
         JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder();
         providedClaimsSet.forEach(claimsSetBuilder::claim);
-        claimsSetBuilder.issuer(issuer);
+        if (Strings.isFilled(issuer)) {
+            claimsSetBuilder.issuer(issuer);
+        }
 
         // Note that we provide the timing data manually as the library only supports legacy Date APIs...
         claimsSetBuilder.claim(CLAIM_NOT_BEFORE, Instant.now().minusSeconds(nbfThreshold.getSeconds()).getEpochSecond());
