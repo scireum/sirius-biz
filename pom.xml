@@ -160,5 +160,11 @@
             <artifactId>sevenzipjbinding-all-platforms</artifactId>
             <version>16.02-2.01</version>
         </dependency>
+        <!-- Changelog: https://bitbucket.org/connect2id/nimbus-jose-jwt/src/master/CHANGELOG.txt -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>10.5</version>
+        </dependency>
     </dependencies>
 </project>
