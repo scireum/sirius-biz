@@ -9,6 +9,7 @@
 package sirius.biz.web.jwt;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
@@ -193,7 +194,8 @@ public class Jwts {
                                                                             signingKey.getClass().getName())
                                                                     .handle());
         try {
-            JWSHeader header = new JWSHeader.Builder(algorithm).keyID(signingKey.getKeyID()).build();
+            JWSHeader header =
+                    new JWSHeader.Builder(algorithm).type(JOSEObjectType.JWT).keyID(signingKey.getKeyID()).build();
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
             return jwt.serialize();
@@ -226,7 +228,7 @@ public class Jwts {
                                                                                 "Failed to sign JWT using shared secret: No recommended algorithm found.")
                                                                         .handle());
 
-            JWSHeader header = new JWSHeader.Builder(algorithm).build();
+            JWSHeader header = new JWSHeader.Builder(algorithm).type(JOSEObjectType.JWT).build();
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
             return jwt.serialize();
