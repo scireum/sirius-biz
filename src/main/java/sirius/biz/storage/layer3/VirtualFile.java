@@ -14,6 +14,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.async.TaskContext;
@@ -1421,6 +1422,24 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                             .hint(ProcessLog.HINT_MESSAGE_TYPE, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
                             .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
                             .handle();
+        }
+    }
+
+    /**
+     * Returns the underlying id of this virtual file, if it is backed by a {@link Directory} or a {@link Blob}.
+     * <p>
+     * For a directory, this returns the directory ID as string.
+     * For a file, this returns the blob key.
+     *
+     * @return the underlying id or <tt>null</tt> if this file is not backed by a directory or blob.
+     */
+    public String getUnderlyingId() {
+        if (exists() && isDirectory()) {
+            return tryAs(Directory.class).map(Directory::getIdAsString).orElse(null);
+        } else if (exists() && isFile()) {
+            return tryAs(Blob.class).map(Blob::getBlobKey).orElse(null);
+        } else {
+            return null;
         }
     }
 

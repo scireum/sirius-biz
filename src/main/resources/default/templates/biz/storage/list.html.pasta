@@ -176,6 +176,24 @@
                                                             url="@apply('javascript:sirius.copyToClipboard(\'%s\')', child.path().replace('\'', '\\\''))"
                                                             icon="fa-solid fa-copy" labelKey="VFSController.copyPath"/>
                                                 </i:if>
+                                                <t:dropdownSection permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR">
+                                                    <i:local name="underlyingId"
+                                                             value="@child.getUnderlyingId()"/>
+                                                    <i:if test="isFilled(underlyingId)">
+                                                        <i:if test="child.isDirectory()">
+                                                            <t:dropdownItem
+                                                                    url="@apply('javascript:sirius.copyToClipboard(\'%s\')', underlyingId)"
+                                                                    icon="fa-solid fa-copy"
+                                                                    labelKey="VFSController.copyDirectoryId"/>
+                                                            <i:else>
+                                                                <t:dropdownItem
+                                                                        url="@apply('javascript:sirius.copyToClipboard(\'%s\')', underlyingId)"
+                                                                        icon="fa-solid fa-copy"
+                                                                        labelKey="VFSController.copyBlobKey"/>
+                                                            </i:else>
+                                                        </i:if>
+                                                    </i:if>
+                                                </t:dropdownSection>
                                             </t:dropdownSection>
 
                                             <i:if test="child.canDelete()">
