@@ -9,6 +9,7 @@
 package sirius.biz.web.jwt;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
@@ -19,6 +20,7 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import sirius.kernel.commons.Hasher;
@@ -53,16 +55,12 @@ import java.util.stream.Stream;
  * <tt>security.jwt.jwksPemFiles</tt>. The private key (of the first file in the list) is then used to sign the JWTs
  * where as all public keys are exposed using the {@link JwksController} under the uri <tt>/.well-known/jwks.json</tt>.
  * This URI is then scraped by downstream services when validating the given keys. This permits a simple setup while
- * still supporting key rotation. Therefore this is the preferred way to set up a production scenario whereas the
+ * still supporting key rotation. Therefore, this is the preferred way to set up a production scenario whereas the
  * shared secret approach should only be used to testing and development purposes.
  */
 @Register
 @AutoRegister
 public class Jwts {
-
-    private static final String CLAIM_NOT_BEFORE = "nbf";
-    private static final String CLAIM_EXPIRES = "exp";
-    private static final String CLAIM_ISSUED_AT = "iat";
 
     @ConfigValue("security.jwt.jwksPemFiles")
     private String jwksPemFiles;
@@ -162,12 +160,16 @@ public class Jwts {
     private String sign(Map<String, Object> providedClaimsSet) {
         JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder();
         providedClaimsSet.forEach(claimsSetBuilder::claim);
-        claimsSetBuilder.issuer(issuer);
+        if (Strings.isFilled(issuer)) {
+            claimsSetBuilder.issuer(issuer);
+        }
 
         // Note that we provide the timing data manually as the library only supports legacy Date APIs...
-        claimsSetBuilder.claim(CLAIM_NOT_BEFORE, Instant.now().minusSeconds(nbfThreshold.getSeconds()).getEpochSecond());
-        claimsSetBuilder.claim(CLAIM_EXPIRES, Instant.now().plusSeconds(expiry.getSeconds()).getEpochSecond());
-        claimsSetBuilder.claim(CLAIM_ISSUED_AT, Instant.now().getEpochSecond());
+        claimsSetBuilder.claim(JWTClaimNames.NOT_BEFORE,
+                               Instant.now().minusSeconds(nbfThreshold.getSeconds()).getEpochSecond());
+        claimsSetBuilder.claim(JWTClaimNames.EXPIRATION_TIME,
+                               Instant.now().plusSeconds(expiry.getSeconds()).getEpochSecond());
+        claimsSetBuilder.claim(JWTClaimNames.ISSUED_AT, Instant.now().getEpochSecond());
 
         if (getPrimaryKey() != null) {
             return signUsingKey(claimsSetBuilder.build());
@@ -191,7 +193,8 @@ public class Jwts {
                                                                             signingKey.getClass().getName())
                                                                     .handle());
         try {
-            JWSHeader header = new JWSHeader.Builder(algorithm).keyID(signingKey.getKeyID()).build();
+            JWSHeader header =
+                    new JWSHeader.Builder(algorithm).type(JOSEObjectType.JWT).keyID(signingKey.getKeyID()).build();
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
             return jwt.serialize();
@@ -224,7 +227,7 @@ public class Jwts {
                                                                                 "Failed to sign JWT using shared secret: No recommended algorithm found.")
                                                                         .handle());
 
-            JWSHeader header = new JWSHeader.Builder(algorithm).build();
+            JWSHeader header = new JWSHeader.Builder(algorithm).type(JOSEObjectType.JWT).build();
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
             return jwt.serialize();
@@ -239,16 +242,15 @@ public class Jwts {
 
     private JWSSigner determineSigner(JWK signingKey) {
         try {
-            if (signingKey instanceof RSAKey rsaKey) {
-                return new RSASSASigner(rsaKey);
-            } else if (signingKey instanceof ECKey ecKey) {
-                return new ECDSASigner(ecKey);
-            } else {
-                throw Exceptions.handle()
-                                .to(Log.SYSTEM)
-                                .withSystemErrorMessage("Unsupported signing key type: %s", signingKey.getClass())
-                                .handle();
-            }
+            return switch (signingKey) {
+                case RSAKey rsaKey -> new RSASSASigner(rsaKey);
+                case ECKey ecKey -> new ECDSASigner(ecKey);
+                default -> throw Exceptions.handle()
+                                           .to(Log.SYSTEM)
+                                           .withSystemErrorMessage("Unsupported signing key type: %s",
+                                                                   signingKey.getClass())
+                                           .handle();
+            };
         } catch (JOSEException e) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
