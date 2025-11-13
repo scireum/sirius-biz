@@ -10,10 +10,14 @@ package sirius.biz.process;
 
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
+import sirius.biz.jobs.JobFactory;
+import sirius.biz.jobs.Jobs;
+import sirius.biz.jobs.batch.BatchProcessJobFactory;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.storage.layer2.BlobContainer;
 import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
@@ -55,6 +59,9 @@ import java.util.stream.Stream;
 @ComplexDelete(false)
 @Versioned
 public class Process extends SearchableEntity {
+
+    @Part
+    private static Jobs jobs;
 
     /**
      * Contains the duration after which auto-refreshing of the details page stops once a process has completed.
@@ -529,6 +536,32 @@ public class Process extends SearchableEntity {
         return getOutputs().data().stream().anyMatch(output -> !output.isSystemOutput()) || UserContext.getCurrentUser()
                                                                                                        .hasPermission(
                                                                                                                ProcessController.PERMISSION_MANAGE_ALL_PROCESSES);
+    }
+
+    /**
+     * Determines if the persistence period can be changed for this process.
+     * <p>
+     * This is defined by the underlying {@linkplain BatchProcessJobFactory process type}. If we cannot resolve
+     * the process type, or it is not a batch process, we assume that the persistence period can be changed.
+     *
+     * @return {@code true} if the persistence period can be changed, {@code false} otherwise
+     */
+    public boolean canChangePersistencePeriod() {
+        if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)) {
+            // Administrators can always change the persistence period
+            return true;
+        }
+
+        try {
+            JobFactory factory = jobs.findFactory(processType, JobFactory.class);
+            if (factory instanceof BatchProcessJobFactory processJobFactory) {
+                return processJobFactory.canChangePersistencePeriod();
+            } else {
+                return true;
+            }
+        } catch (Exception _) {
+            return true;
+        }
     }
 
     public String getTitle() {

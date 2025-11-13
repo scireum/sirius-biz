@@ -23,6 +23,7 @@ import sirius.biz.process.logs.ProcessLogState;
 import sirius.biz.process.logs.ProcessLogType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.ProcessOutputType;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.ElasticPageHelper;
 import sirius.db.es.Elastic;
@@ -238,6 +239,12 @@ public class ProcessController extends BizController {
     @Permission(PERMISSION_MANAGE_PROCESSES)
     public void updatePersistencePeriod(WebContext webContext, String processId) {
         Process process = findAccessibleProcess(processId);
+        if (process != null && !process.canChangePersistencePeriod()) {
+            // The persistence period cannot be changed for this process, unless by admins.
+            // We enforce this check here so a proper error page can be displayed if someone tries to circumvent the UI.
+            assertPermission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR);
+        }
+
         processes.updatePersistence(process.getId(),
                                     webContext.get("persistencePeriod")
                                               .getEnum(PersistencePeriod.class)
