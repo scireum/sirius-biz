@@ -9,20 +9,22 @@
     </i:block>
     <i:block name="header-actions">
         <i:if test="process.getState() == sirius.biz.process.ProcessState.TERMINATED">
-            <t:permission permission="permission-manage-processes">
-                <t:dropdown labelKey="Process.persistencePeriod"
-                            labelClass="d-none d-xl-inline"
-                            icon="fa-solid fa-archive"
-                            class="me-2">
-                    <i:for type="sirius.biz.process.PersistencePeriod"
-                           var="period"
-                           items="enumValues(sirius.biz.process.PersistencePeriod.class)">
-                        <t:dropdownItem label="@period.toString()"
-                                        class="@period == process.getPersistencePeriod() ? ' active' : ''"
-                                        url="@apply('/ps/%s/updatePersistence?persistencePeriod=%s', process.getId(), period.name())"/>
-                    </i:for>
-                </t:dropdown>
-            </t:permission>
+            <i:if test="process.canChangePersistencePeriod()">
+                <t:permission permission="permission-manage-processes">
+                    <t:dropdown labelKey="Process.persistencePeriod"
+                                labelClass="d-none d-xl-inline"
+                                icon="fa-solid fa-archive"
+                                class="me-2">
+                        <i:for type="sirius.biz.process.PersistencePeriod"
+                               var="period"
+                               items="enumValues(sirius.biz.process.PersistencePeriod.class)">
+                            <t:dropdownItem label="@period.toString()"
+                                            class="@period == process.getPersistencePeriod() ? ' active' : ''"
+                                            url="@apply('/ps/%s/updatePersistence?persistencePeriod=%s', process.getId(), period.name())"/>
+                        </i:for>
+                    </t:dropdown>
+                </t:permission>
+            </i:if>
             <t:dropdown labelKey="ProcessController.export"
                         icon="fa-solid fa-file-export"
                         class="me-2"

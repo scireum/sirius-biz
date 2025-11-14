@@ -480,7 +480,7 @@ public class Processes {
 
                 process2ndLevelCache.put(processId, process);
                 return true;
-            } catch (OptimisticLockException exception) {
+            } catch (OptimisticLockException _) {
                 Wait.randomMillis(250, 500);
                 process = elastic.find(Process.class, processId).orElse(null);
             } catch (IntegrityConstraintFailedException exception) {

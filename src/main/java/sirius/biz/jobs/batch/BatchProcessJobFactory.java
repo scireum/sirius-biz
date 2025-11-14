@@ -199,6 +199,17 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected abstract PersistencePeriod getPersistencePeriod();
 
     /**
+     * Determines if the persistence period may be changed by users. This is enabled by default.
+     * <p>
+     * Note that administrators may always override the persistence period.
+     *
+     * @return <tt>true</tt> if the persistence period may be changed, <tt>false</tt> otherwise
+     */
+    public boolean canChangePersistencePeriod() {
+        return true;
+    }
+
+    /**
      * Returns the executor which is responsible for resolving the created {@link sirius.biz.process.Process} and
      * then invoking {@link #executeTask(ProcessContext)}.
      * <p>
