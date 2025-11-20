@@ -53,7 +53,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     private static final String MESSAGE_ADDRESS = "address";
 
     private static final Duration PING_INTERVAL = Duration.ofMinutes(15);
-    private static final int SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS = 1000;
+    private static final Duration SHORT_CLUSTER_HTTP_TIMEOUT = Duration.ofSeconds(1);
 
     public static final String RESPONSE_NODE_NAME = "node";
     public static final String RESPONSE_ERROR = "error";
@@ -174,10 +174,8 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
             JSONCall call = JSONCall.to(new URI(endpoint + uri));
 
             // Set short-lived timeouts as we do not want to block a cluster wide query if one node is down...
-            call.getOutcall()
-                .modifyClient(CLIENT_SELECTOR_CLUSTER)
-                .connectTimeout(Duration.ofMillis(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS));
-            call.getOutcall().setReadTimeout(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS);
+            call.getOutcall().modifyClient(CLIENT_SELECTOR_CLUSTER).connectTimeout(SHORT_CLUSTER_HTTP_TIMEOUT);
+            call.getOutcall().setReadTimeout(SHORT_CLUSTER_HTTP_TIMEOUT);
 
             ObjectNode result = call.getInput();
             result.put(RESPONSE_NODE_NAME, nodeName);
