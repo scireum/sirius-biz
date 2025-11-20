@@ -16,6 +16,7 @@ import sirius.kernel.xml.SOAPClient;
 import sirius.kernel.xml.StructuredNode;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.net.URL;
 
 /**
@@ -36,8 +37,8 @@ public class MonitoredSOAPClient extends SOAPClient {
      *
      * @param endpoint the default endpoint to talk to
      */
-    public MonitoredSOAPClient(@Nonnull URL endpoint) {
-        super(endpoint);
+    public MonitoredSOAPClient(@Nullable String clientSelector, @Nonnull URL endpoint) {
+        super(clientSelector, endpoint);
     }
 
     @Override

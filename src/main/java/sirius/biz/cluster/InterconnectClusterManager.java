@@ -59,6 +59,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     public static final String RESPONSE_ERROR = "error";
     public static final String RESPONSE_ERROR_MESAGE = "errorMesage";
     private static final int HTTP_DEFAULT_PORT = 80;
+    private static final String CLIENT_SELECTOR_CLUSTER = "_cluster_";
 
     private final Map<String, String> members = new ConcurrentHashMap<>();
     private LocalDateTime lastPing = null;
@@ -173,7 +174,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
             JSONCall call = JSONCall.to(new URI(endpoint + uri));
 
             // Set short-lived timeouts as we do not want to block a cluster wide query if one node is down...
-            call.getOutcall().setConnectTimeout(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS);
+            call.getOutcall()
+                .modifyClient(CLIENT_SELECTOR_CLUSTER)
+                .connectTimeout(Duration.ofMillis(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS));
             call.getOutcall().setReadTimeout(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS);
 
             ObjectNode result = call.getInput();

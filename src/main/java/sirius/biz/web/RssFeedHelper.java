@@ -11,9 +11,9 @@ package sirius.biz.web;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.io.SyndFeedInput;
+import sirius.kernel.commons.Outcall;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
-import sirius.kernel.xml.Outcall;
 
 import java.io.StringReader;
 import java.net.URI;
