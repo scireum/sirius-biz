@@ -19,6 +19,7 @@ import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Outcall;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -31,7 +32,6 @@ import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
-import sirius.kernel.xml.Outcall;
 import sirius.web.http.MimeHelper;
 import sirius.web.http.Response;
 import sirius.web.http.WebContext;
@@ -1449,7 +1449,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         outcall.alwaysFollowRedirects();
 
         CookieManager cookieManager = new CookieManager();
-        outcall.modifyClient().cookieHandler(cookieManager);
+        outcall.modifyClient(null).cookieHandler(cookieManager);
 
         if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
             outcall.setIfModifiedSince(lastModifiedDate());

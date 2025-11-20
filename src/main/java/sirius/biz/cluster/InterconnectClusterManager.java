@@ -57,8 +57,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     public static final String RESPONSE_NODE_NAME = "node";
     public static final String RESPONSE_ERROR = "error";
-    public static final String RESPONSE_ERROR_MESAGE = "errorMesage";
+    private static final String RESPONSE_ERROR_MESSAGE = "errorMessage";
     private static final int HTTP_DEFAULT_PORT = 80;
+    private static final String CLIENT_SELECTOR_CLUSTER = "_cluster_";
 
     private final Map<String, String> members = new ConcurrentHashMap<>();
     private LocalDateTime lastPing = null;
@@ -139,7 +140,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
                 }
             }
             return localNodeAddress;
-        } catch (UnknownHostException exception) {
+        } catch (UnknownHostException _) {
             return "";
         }
     }
@@ -147,7 +148,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     /**
      * Removes a node as known cluster member.
      * <p>
-     * Note that if the node is still alive, it will be re-discovered. Therefore this should only be used to
+     * Note that if the node is still alive, it will be re-discovered. Therefore, this should only be used to
      * remove nodes which are permanently shut down.
      *
      * @param name the name of the node to remove as member
@@ -173,7 +174,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
             JSONCall call = JSONCall.to(new URI(endpoint + uri));
 
             // Set short-lived timeouts as we do not want to block a cluster wide query if one node is down...
-            call.getOutcall().setConnectTimeout(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS);
+            call.getOutcall()
+                .modifyClient(CLIENT_SELECTOR_CLUSTER)
+                .connectTimeout(Duration.ofMillis(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS));
             call.getOutcall().setReadTimeout(SHORT_CLUSTER_HTTP_TIMEOUT_MILLIS);
 
             ObjectNode result = call.getInput();
@@ -187,7 +190,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
             return Json.createObject()
                        .put(RESPONSE_NODE_NAME, nodeName)
                        .put(RESPONSE_ERROR, true)
-                       .put(RESPONSE_ERROR_MESAGE, exception.getMessage());
+                       .put(RESPONSE_ERROR_MESSAGE, exception.getMessage());
         }
     }
 

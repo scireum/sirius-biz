@@ -147,6 +147,7 @@ public class Jwts {
      * Generated s builder which can be used to build and sign a JWT using the current system configuration.
      *
      * @return a builder used to create and sign a JWT
+     * @see sirius.kernel.commons.Outcall#withBearerToken(String)
      */
     public JwtBuilder builder() {
         return new JwtBuilder() {

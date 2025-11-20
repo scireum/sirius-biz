@@ -12,18 +12,19 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Outcall;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.xml.Outcall;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.CookieManager;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
@@ -55,7 +56,6 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
                                                Set<Options> options) throws IOException {
         try {
             Outcall headRequest = createOutcallWithDefaultOptions(uri).markAsHeadRequest();
-            headRequest.modifyClient().connectTimeout(Duration.ofSeconds(10));
 
             PathAndUri result = resolvePathAndEffectiveUri(uri, headRequest, fileExtensionVerifier);
 
@@ -91,7 +91,11 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
         outcall.alwaysFollowRedirects();
 
         CookieManager cookieManager = new CookieManager();
-        outcall.modifyClient().cookieHandler(cookieManager);
+        // Note that as we attach a custom cookie manager here (to support cookies during redirects),
+        // we must not cache the created client here...
+        HttpClient.Builder builder = outcall.modifyClient(null);
+        builder.cookieHandler(cookieManager);
+        builder.connectTimeout(Duration.ofSeconds(10));
 
         return outcall;
     }
