@@ -217,13 +217,14 @@ public class ArchiveExtractor {
                         Processor<ExtractedFile, Boolean> extractedFileConsumer) {
         try {
             if (isZipFile(Files.getFileExtension(filename)) || !isSevenZipEnabled()) {
-                extractZip(archiveFile,
+                extractZip(filename,
+                           archiveFile,
                            enhanceFileFilter(filter),
                            extractedFileConsumer,
                            StandardCharsets.UTF_8,
                            StandardCharsets.ISO_8859_1);
             } else {
-                extract7z(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
+                extract7z(filename, archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             }
         } catch (Exception exception) {
             throw Exceptions.handle()
@@ -247,7 +248,8 @@ public class ArchiveExtractor {
         return Strings.isFilled(filename) && !Files.isConsideredHidden(filename) && !Files.isConsideredMetadata(path);
     }
 
-    private void extractZip(File archiveFile,
+    private void extractZip(String filename,
+                            File archiveFile,
                             Predicate<String> filter,
                             Processor<ExtractedFile, Boolean> extractedFileConsumer,
                             Charset charset,
@@ -258,12 +260,14 @@ public class ArchiveExtractor {
             if (fallbackCharset != null) {
                 // Retry extraction using the fallback charset
                 TaskContext.get()
-                           .log("Cannot unzip the given archive: "
+                           .log("Cannot unzip the archive '"
+                                + filename
+                                + "': "
                                 + zipException.getMessage()
                                 + ".\nFalling back to charset: "
                                 + fallbackCharset.displayName());
                 Exceptions.ignore(zipException);
-                extractZip(archiveFile, filter, extractedFileConsumer, fallbackCharset, null);
+                extractZip(filename, archiveFile, filter, extractedFileConsumer, fallbackCharset, null);
                 return;
             }
 
@@ -272,16 +276,18 @@ public class ArchiveExtractor {
                 // a handled exception to avoid jamming the syslog...
                 throw Exceptions.createHandled()
                                 .error(zipException)
-                                .withSystemErrorMessage("Failed to unzip the given archive: %s (%s)")
+                                .withSystemErrorMessage("Failed to unzip the given archive '%s': %s (%s)", filename)
                                 .handle();
             }
             // Retry extraction using 7zip
             TaskContext.get()
-                       .log("Cannot unzip the given archive: "
+                       .log("Cannot unzip the archive '"
+                            + filename
+                            + "': "
                             + zipException.getMessage()
                             + ".\nFalling back to 7zip...");
             Exceptions.ignore(zipException);
-            extract7z(archiveFile, filter, extractedFileConsumer);
+            extract7z(filename, archiveFile, filter, extractedFileConsumer);
         }
     }
 
@@ -307,7 +313,8 @@ public class ArchiveExtractor {
         }
     }
 
-    private void extract7z(File archiveFile,
+    private void extract7z(String filename,
+                           File archiveFile,
                            Predicate<String> filter,
                            Processor<ExtractedFile, Boolean> extractedFileConsumer) throws Exception {
         try (RandomAccessFile randomAccessFile = new RandomAccessFile(archiveFile, "r")) {
@@ -319,7 +326,8 @@ public class ArchiveExtractor {
                 // a handled exception to avoid jamming the syslog...
                 throw Exceptions.createHandled()
                                 .error(sevenZipException)
-                                .withSystemErrorMessage("7-ZIP failed (the archive is probably corrupted): %s (%s)")
+                                .withSystemErrorMessage("7-ZIP failed (the archive '%s' is probably corrupted): %s (%s)",
+                                                        filename)
                                 .handle();
             }
         }
