@@ -229,7 +229,7 @@ public class ArchiveExtractor {
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .error(exception)
-                            .withSystemErrorMessage("An error occurred while unzipping an archive (%s): %s (%s)",
+                            .withSystemErrorMessage("An error occurred while unzipping the archive '%s': %s (%s)",
                                                     filename)
                             .handle();
         }
