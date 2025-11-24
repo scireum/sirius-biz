@@ -9,8 +9,10 @@
 package sirius.biz.web.jwt;
 
 import com.nimbusds.jwt.JWTClaimNames;
+import sirius.kernel.commons.Json;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,8 @@ import java.util.Map;
  * Create new instances via {@link Jwts#builder()}.
  */
 public abstract class JwtBuilder {
+
+    private static final String CLAIM_PERMISSIONS = "permissions";
 
     protected Map<String, Object> claims = new HashMap<>();
 
@@ -79,6 +83,16 @@ public abstract class JwtBuilder {
     public JwtBuilder withAudience(String audience) {
         this.claims.put(JWTClaimNames.AUDIENCE, audience);
         return this;
+    }
+
+    /**
+     * Adds a <tt>permissions</tt> claim with the given list of permissions.
+     *
+     * @param permissions the permissions to add to the token
+     * @return the builder itself for fluent method calls
+     */
+    public JwtBuilder withPermissions(String... permissions) {
+        return withClaim(CLAIM_PERMISSIONS, Json.createArray(Arrays.stream(permissions).toList()));
     }
 
     /**
