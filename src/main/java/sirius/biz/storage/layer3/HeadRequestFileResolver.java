@@ -93,7 +93,7 @@ public class HeadRequestFileResolver extends RemoteFileResolver {
         CookieManager cookieManager = new CookieManager();
         // Note that as we attach a custom cookie manager here (to support cookies during redirects),
         // we must not cache the created client here...
-        HttpClient.Builder builder = outcall.modifyClient(null);
+        HttpClient.Builder builder = outcall.modifyClient(Outcall.CLIENT_SELECTOR_NO_CACHE);
         builder.cookieHandler(cookieManager);
         builder.connectTimeout(Duration.ofSeconds(10));
 

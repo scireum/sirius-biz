@@ -1449,7 +1449,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         outcall.alwaysFollowRedirects();
 
         CookieManager cookieManager = new CookieManager();
-        outcall.modifyClient(null).cookieHandler(cookieManager);
+        outcall.modifyClient(Outcall.CLIENT_SELECTOR_NO_CACHE).cookieHandler(cookieManager);
 
         if (mode != FetchFromUrlMode.ALWAYS_FETCH && exists() && lastModifiedDate() != null) {
             outcall.setIfModifiedSince(lastModifiedDate());
