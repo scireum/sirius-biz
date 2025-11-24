@@ -9,7 +9,6 @@
 package sirius.biz.web.jwt;
 
 import com.nimbusds.jwt.JWTClaimNames;
-import sirius.kernel.commons.Json;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,7 +91,9 @@ public abstract class JwtBuilder {
      * @return the builder itself for fluent method calls
      */
     public JwtBuilder withPermissions(String... permissions) {
-        return withClaim(CLAIM_PERMISSIONS, Json.createArray(Arrays.stream(permissions).toList()));
+        Arrays.stream(permissions).forEach(permission -> addClaim(CLAIM_PERMISSIONS, permission));
+
+        return this;
     }
 
     /**
