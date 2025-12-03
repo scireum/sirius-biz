@@ -37,6 +37,13 @@ public class WebData extends Composite {
     private String userAgent;
 
     /**
+     * Determines the HTTP request method (GET, POST, etc.).
+     */
+    public static final Mapping REQUEST_METHOD = Mapping.named("requestMethod");
+    @NullAllowed
+    private String requestMethod;
+
+    /**
      * Determines if the User-Agent was an iOS device.
      */
     public static final Mapping IOS = Mapping.named("ios");
@@ -94,6 +101,7 @@ public class WebData extends Composite {
             if (webContext.getTTFBMillis() > 0 && responseTime == null) {
                 responseTime = webContext.getTTFBMillis();
             }
+            requestMethod = webContext.getRequest().method().name();
         }
     }
 
@@ -149,6 +157,10 @@ public class WebData extends Composite {
 
     public String getUserAgent() {
         return userAgent;
+    }
+
+    public String getRequestMethod() {
+        return requestMethod;
     }
 
     public boolean isIos() {
