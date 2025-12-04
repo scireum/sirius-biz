@@ -84,7 +84,7 @@ public class KnowledgeBaseArticle {
      * Creates a new article.
      *
      * @param entry         the entry to wrap
-     * @param language      the language code which has been used to lookup the article
+     * @param language      the language code which has been used to look up the article
      * @param knowledgeBase the instance of the knowledge base used to perform further lookups
      */
     public KnowledgeBaseArticle(KnowledgeBaseEntry entry, String language, KnowledgeBase knowledgeBase) {
@@ -163,7 +163,7 @@ public class KnowledgeBaseArticle {
     }
 
     /**
-     * Returns a list of all cross references.
+     * Returns a list of all cross-references.
      *
      * @return a list of all articles which are either referenced by this article or which reference this article
      * by themselves.
