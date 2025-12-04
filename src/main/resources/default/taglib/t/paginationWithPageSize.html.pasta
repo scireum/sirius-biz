@@ -1,6 +1,6 @@
 <i:arg name="page" type="Page"/>
 <i:arg name="baseUrl" type="String"/>
-<i:arg name="style" type="String" default="width: fit-content"/>
+<i:arg name="style" type="String" default=""/>
 <i:arg name="class" type="String" default="mb-4"/>
 <i:arg name="displayMode"
        type="sirius.biz.tycho.ContentListLayout$DisplayMode"
@@ -9,10 +9,8 @@
 <i:pragma name="description" value="Renders a pagination box with page size buttons within a Tycho template"/>
 
 <i:if test="!page.getItems().isEmpty() || page.getStart() != 1">
-    <div class="d-flex justify-content-center">
-        <t:pagination page="@page" baseUrl="@baseUrl" style="@style" class="@class"/>
-        <t:pageSizeSwitch pageSize="@page.pageSize"
-                          class="@Strings.apply('ms-2 %s', class)"
-                          displayMode="@displayMode"/>
+    <div class="@Strings.apply('d-flex justify-content-center %s', class)" style="@style">
+        <t:pagination page="@page" baseUrl="@baseUrl" class=""/>
+        <t:pageSizeSwitch pageSize="@page.pageSize" class="ms-2" displayMode="@displayMode"/>
     </div>
 </i:if>
