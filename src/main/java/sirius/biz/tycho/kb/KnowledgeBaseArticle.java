@@ -9,12 +9,22 @@
 package sirius.biz.tycho.kb;
 
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
+import sirius.pasta.noodle.compiler.CompileException;
+import sirius.pasta.tagliatelle.Tagliatelle;
+import sirius.pasta.tagliatelle.Template;
+import sirius.web.resources.Resource;
 
+import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Represents an article or chapter in the {@link KnowledgeBase}.
@@ -29,6 +39,45 @@ public class KnowledgeBaseArticle {
     private final String language;
     private final KnowledgeBaseEntry entry;
     private final KnowledgeBase knowledgeBase;
+
+    /**
+     * Pattern which is used to extract project and path from a jar URL, as typically seen for packaged dependencies or
+     * on a server.
+     * <p>
+     * Example: {@code jar:file:/Users/jakob/.m2/repository/com/scireum/sirius-biz/DEVELOPMENT-SNAPSHOT/sirius-biz-DEVELOPMENT-SNAPSHOT.jar!/default/kb/en/system/scripting-P399F.html.pasta}
+     */
+    @SuppressWarnings("java:S5852")
+    @Explain("We only match the names of internal resources, not user input. "
+             + "A denial-of-service attack via backtracking is not possible.")
+    private static final Pattern JAR_URL_PATTERN = Pattern.compile("file:(?<jar>.+)!/(?<path>.+)");
+
+    /**
+     * Pattern which is used to extract project and path from a file URL, as typically seen during development.
+     * <p>
+     * Example: {@code file:///Users/jakob/Development/memoio/target/classes/kb/de/integration-manual/deep-integration/iam-integration-JURIH.html.pasta}
+     */
+    @SuppressWarnings("java:S5852")
+    @Explain("We only match the names of internal resources, not user input. "
+             + "A denial-of-service attack via backtracking is not possible.")
+    private static final Pattern FILE_URL_PATTERN = Pattern.compile("(?<directory>.+)/target/classes/(?<path>.+)");
+
+    /**
+     * Suffix which is used to identify development snapshot versions.
+     */
+    private static final String DEVELOPMENT_SNAPSHOT_SUFFIX = "-DEVELOPMENT-SNAPSHOT".toLowerCase();
+
+    /**
+     * Pattern which is used to strip version suffixes from jar file names.
+     * <p>
+     * Example: {@code sirius-biz-1.2.3a.jar} or {@code sirius-biz-dev-1.2.3.jar}
+     */
+    @SuppressWarnings("java:S5852")
+    @Explain("We only match the names of internal resources, not user input. "
+             + "A denial-of-service attack via backtracking is not possible.")
+    private static final Pattern VERSION_SUFFIX_PATTERN = Pattern.compile("(?<project>.+)(?:-dev)?(?:-ga)?-\\d+.*$");
+
+    @Part
+    private static Tagliatelle tagliatelle;
 
     /**
      * Creates a new article.
@@ -56,6 +105,24 @@ public class KnowledgeBaseArticle {
                + getArticleId()
                + "/"
                + computeAuthenticationSignature(true);
+    }
+
+    /**
+     * Generates an edit URL for this article, currently a deep link into GitHub.
+     *
+     * @return the edit URL for this article or <tt>null</tt> if no such URL can be generated
+     */
+    public String generateEditUrl() {
+        try {
+            return tagliatelle.resolve(entry.getTemplatePath())
+                              .map(Template::getResource)
+                              .map(Resource::getUrl)
+                              .map(KnowledgeBaseArticle::extractProjectAndPathFromResourceUrl)
+                              .map(ProjectAndPath::toGithubUrl)
+                              .orElse(null);
+        } catch (CompileException _) {
+            return null;
+        }
     }
 
     /**
@@ -162,5 +229,85 @@ public class KnowledgeBaseArticle {
 
     public int getPriority() {
         return entry.getPriority();
+    }
+
+    /**
+     * Extracts the project name and the path within the project from the given resource URL.
+     *
+     * @param url the resource URL to extract the project and path from
+     * @return the extracted project and path or <tt>null</tt> if the URL is invalid or the project/path
+     * could not be determined
+     */
+    private static ProjectAndPath extractProjectAndPathFromResourceUrl(URL url) {
+        if (url == null) {
+            return null;
+        }
+
+        return switch (url.getProtocol()) {
+            case "file" -> {
+                Matcher matcher = FILE_URL_PATTERN.matcher(url.getPath());
+                yield matcher.matches() ?
+                      new ProjectAndPath(extractProjectFromFile(matcher.group("directory")), matcher.group("path")) :
+                      null;
+            }
+            case "jar" -> {
+                Matcher matcher = JAR_URL_PATTERN.matcher(url.getPath());
+                yield matcher.matches() ?
+                      new ProjectAndPath(extractProjectFromJar(matcher.group("jar")), matcher.group("path")) :
+                      null;
+            }
+            default -> null;
+        };
+    }
+
+    /**
+     * Attempts to extract the project name from a file path, assuming that the local copy uses the name of the project
+     * for the root folder.
+     *
+     * @param path the file path to extract the project name from
+     * @return the extracted project name
+     */
+    private static String extractProjectFromFile(String path) {
+        return Files.getFilenameAndExtension(path);
+    }
+
+    /**
+     * Attempts to extract the project name from a jar file path, assuming that the jar file uses the name of the
+     * project as the base name of the jar, extended by a version string.
+     *
+     * @param path the jar file path to extract the project name from
+     * @return the extracted project name
+     */
+    private static String extractProjectFromJar(String path) {
+        if (!Strings.equalIgnoreCase(Files.getFileExtension(path), "jar")) {
+            return null;
+        }
+
+        String rawName = Files.getFilenameWithoutExtension(path);
+        if (Strings.isEmpty(rawName)) {
+            return null;
+        }
+
+        if (rawName.toLowerCase().endsWith(DEVELOPMENT_SNAPSHOT_SUFFIX)) {
+            return rawName.substring(0, rawName.length() - DEVELOPMENT_SNAPSHOT_SUFFIX.length());
+        }
+
+        Matcher matcher = VERSION_SUFFIX_PATTERN.matcher(rawName);
+        return matcher.matches() ? matcher.group("project") : null;
+    }
+
+    /**
+     * Holds the project name and the path within the project.
+     *
+     * @param project the project name
+     * @param path    the path within the project
+     */
+    private record ProjectAndPath(String project, String path) {
+        private String toGithubUrl() {
+            if (Strings.isEmpty(project) || Strings.isEmpty(path)) {
+                return null;
+            }
+            return "https://github.com/scireum/" + project + "/edit/develop/src/main/resources/" + path;
+        }
     }
 }
