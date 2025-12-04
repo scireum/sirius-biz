@@ -2,8 +2,7 @@
            lang="en"
            parent="DJELK"
            title="Scripting"
-           permissions="flag-system-tenant"
->
+           permissions="flag-system-tenant">
     <i:block name="description">Describes the scripting functionalities provided by SIRIUS.</i:block>
     <k:section>
         <p>

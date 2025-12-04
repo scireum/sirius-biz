@@ -71,8 +71,9 @@ public class KnowledgeBaseArticle {
             date = date.minusMonths(1);
         }
 
-        return Strings.limit(BizController.computeConstantSignature(getArticleId() + date.getYear() + date.getMonthValue()),
-                             5);
+        return Strings.limit(BizController.computeConstantSignature(getArticleId()
+                                                                    + date.getYear()
+                                                                    + date.getMonthValue()), 5);
     }
 
     /**
