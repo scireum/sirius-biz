@@ -1,0 +1,17 @@
+<i:arg name="pageSize" type="int" description="Sets the initial state of the page size"/>
+<i:arg name="displayMode"
+       type="sirius.biz.tycho.ContentListLayout$DisplayMode"
+       default="sirius.biz.tycho.ContentListLayout.DisplayMode.LIST"/>
+<i:arg name="class" type="String" default=""/>
+
+<div class="btn-group @class" role="group">
+    <a class="btn d-inline-flex flex-row align-items-center @if (pageSize == 25 || pageSize == 24) { btn-primary } else { btn-outline-secondary } page-size-link-25-js" href="#">
+        @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.CARDS) { 24 } else { 25 }
+    </a>
+    <a class="btn d-inline-flex flex-row align-items-center @if (pageSize == 50 || pageSize == 48) { btn-primary } else { btn-outline-secondary } page-size-link-50-js" href="#">
+        @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.CARDS) { 48 } else { 50 }
+    </a>
+    <a class="btn d-inline-flex flex-row align-items-center @if (pageSize == 100 || pageSize == 96) { btn-primary } else { btn-outline-secondary } page-size-link-100-js" href="#">
+        @if (displayMode == sirius.biz.tycho.ContentListLayout.DisplayMode.CARDS) { 96 } else { 100 }
+    </a>
+</div>
