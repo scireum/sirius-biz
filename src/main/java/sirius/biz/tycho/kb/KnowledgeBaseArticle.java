@@ -18,6 +18,7 @@ import sirius.pasta.tagliatelle.Tagliatelle;
 import sirius.pasta.tagliatelle.Template;
 import sirius.web.resources.Resource;
 
+import javax.annotation.Nonnull;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -238,11 +239,7 @@ public class KnowledgeBaseArticle {
      * @return the extracted project and path or <tt>null</tt> if the URL is invalid or the project/path
      * could not be determined
      */
-    private static ProjectAndPath extractProjectAndPathFromResourceUrl(URL url) {
-        if (url == null) {
-            return null;
-        }
-
+    private static ProjectAndPath extractProjectAndPathFromResourceUrl(@Nonnull URL url) {
         return switch (url.getProtocol()) {
             case "file" -> {
                 Matcher matcher = FILE_URL_PATTERN.matcher(url.getPath());
