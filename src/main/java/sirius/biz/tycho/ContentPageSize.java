@@ -70,7 +70,7 @@ public class ContentPageSize {
         if (webContext.hasParameter(PARAM_PAGE_SIZE)) {
             PageSize pageSize = PageSize.getPageSizeFor(webContext.get(PARAM_PAGE_SIZE).asOptionalInt());
             updateUsersPreference(user, userPreferencesKey, pageSize);
-            return getPageSizeForLayout(pageSize, displayMode);
+            return pageSize.getSize(displayMode);
         }
         return determinePageSizeByUsersPreference(user, userPreferencesKey, displayMode);
     }
@@ -90,11 +90,7 @@ public class ContentPageSize {
     private static int determinePageSizeByUsersPreference(Optional<UserAccount<?, ?>> user,
                                                           String userPreferencesKey,
                                                           ContentListLayout.DisplayMode displayMode) {
-        return getPageSizeForLayout(PageSize.getPageSizeFor(user.flatMap(userAccount -> userAccount.readPreference(
-                userPreferencesKey).asOptionalInt())), displayMode);
-    }
-
-    private static Integer getPageSizeForLayout(PageSize pageSize, ContentListLayout.DisplayMode displayMode) {
-        return pageSize.getSize(displayMode);
+        return PageSize.getPageSizeFor(user.flatMap(userAccount -> userAccount.readPreference(userPreferencesKey)
+                                                                              .asOptionalInt())).getSize(displayMode);
     }
 }
