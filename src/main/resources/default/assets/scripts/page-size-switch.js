@@ -16,14 +16,12 @@
     }
 
     sirius.ready(function () {
-        document.querySelectorAll("a.page-size-link-25-js").forEach(function (_link) {
-            _link.href = extendUrlWithPageSize(window.location.href, "25");
-        });
-        document.querySelectorAll("a.page-size-link-50-js").forEach(function (_link) {
-            _link.href = extendUrlWithPageSize(window.location.href, "50");
-        });
-        document.querySelectorAll("a.page-size-link-100-js").forEach(function (_link) {
-            _link.href = extendUrlWithPageSize(window.location.href, "100");
+        document.querySelectorAll("a.page-size-link-js").forEach(function (_link) {
+            _link.classList.forEach(function (_className) {
+                if (_className.startsWith("page-size-link-")) {
+                    _link.href = extendUrlWithPageSize(window.location.href, _className.replace("page-size-link-", ""));
+                }
+            });
         });
     });
 })();
