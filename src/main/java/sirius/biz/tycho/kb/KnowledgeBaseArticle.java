@@ -12,6 +12,7 @@ import sirius.biz.web.BizController;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.pasta.noodle.compiler.CompileException;
 import sirius.pasta.tagliatelle.Tagliatelle;
@@ -79,6 +80,9 @@ public class KnowledgeBaseArticle {
 
     @Part
     private static Tagliatelle tagliatelle;
+
+    @ConfigValue("product.name")
+    private static String productName;
 
     /**
      * Creates a new article.
@@ -265,7 +269,14 @@ public class KnowledgeBaseArticle {
      * @return the extracted project name
      */
     private static String extractProjectFromFile(String path) {
-        return Files.getFilenameAndExtension(path);
+        String project = Files.getFilenameAndExtension(path);
+
+        // on the servers, the main application is called "app", but in the repository we use the product name
+        if (Strings.equalIgnoreCase(project, "app")) {
+            return productName.toLowerCase();
+        }
+
+        return project;
     }
 
     /**
