@@ -23,8 +23,15 @@ public class ContentPageSize {
     private ContentPageSize() {
     }
 
-    private static final int DEFAULT_PAGE_SIZE = 25;
-    private static final String PARAM_PAGE_SIZE = "page-size";
+    /**
+     * The default page size used if no preference is set.
+     */
+    public static final PageSize DEFAULT_PAGE_SIZE = PageSize.SIZE_25;
+
+    /**
+     * The request parameter used to change the page size.
+     */
+    public static final String PARAM_PAGE_SIZE = "page-size";
 
     /**
      * Determines the page size to use for the given user.
@@ -38,24 +45,7 @@ public class ContentPageSize {
      * @return the page size to use
      */
     public static int determinePageSize(WebContext webContext, String userPreferencesKey) {
-        return determinePageSize(webContext, userPreferencesKey, DEFAULT_PAGE_SIZE, ContentListLayout.DisplayMode.LIST);
-    }
-
-    /**
-     * Determines the page size to use for the given user.
-     * <p>
-     * The page size is either controlled by a <tt>page-size</tt> parameter (if the user actively changed the page size)
-     * or by the given user preference (<tt>userPreferencesKey</tt>) to keep the page size consistent across sessions.
-     * If no preference is set, the default value is used.
-     *
-     * @param webContext         the current request
-     * @param userPreferencesKey the user preference key to read
-     * @return the page size to use
-     */
-    public static int determinePageSize(WebContext webContext,
-                                        String userPreferencesKey,
-                                        ContentListLayout.DisplayMode displayMode) {
-        return determinePageSize(webContext, userPreferencesKey, DEFAULT_PAGE_SIZE, displayMode);
+        return determinePageSize(webContext, userPreferencesKey, ContentListLayout.DisplayMode.LIST);
     }
 
     /**
@@ -63,11 +53,10 @@ public class ContentPageSize {
      * <p>
      * The mode is either controlled by a <tt>page-size</tt> parameter (if the user actively changed the page size)
      * or by the given user preference (<tt>userPreferencesKey</tt>) to keep the page size consistent across sessions.
-     * If no preference is set, the provided default value is used.
+     * If no preference is set, the default value is used and the display mode list is used.
      *
      * @param webContext         the current request
      * @param userPreferencesKey the user preference key to read
-     * @param defaultPageSize    the default page size if no preference is set
      * @param displayMode        the display mode which is used to show the content
      * @return the page size to use
      */
@@ -75,17 +64,12 @@ public class ContentPageSize {
     @Explain("tryAs raises a generics cast error in this case.")
     public static int determinePageSize(WebContext webContext,
                                         String userPreferencesKey,
-                                        int defaultPageSize,
                                         ContentListLayout.DisplayMode displayMode) {
         Optional<UserAccount<?, ?>> user =
                 UserContext.getCurrentUser().tryAs((Class<UserAccount<?, ?>>) (Class<?>) UserAccount.class);
         if (webContext.hasParameter(PARAM_PAGE_SIZE)) {
-            int pageSize = webContext.get(PARAM_PAGE_SIZE).asInt(defaultPageSize);
-            if (pageSize != 25 && pageSize != 50 && pageSize != 100) {
-                // Fallback to default if the provided page size is invalid
-                pageSize = defaultPageSize;
-            }
-            updateUsersPreference(user, userPreferencesKey, pageSize, defaultPageSize);
+            PageSize pageSize = PageSize.getPageSizeFor(webContext.get(PARAM_PAGE_SIZE).asOptionalInt());
+            updateUsersPreference(user, userPreferencesKey, pageSize);
             return getPageSizeForLayout(pageSize, displayMode);
         }
         return determinePageSizeByUsersPreference(user, userPreferencesKey, displayMode);
@@ -93,13 +77,12 @@ public class ContentPageSize {
 
     private static void updateUsersPreference(Optional<UserAccount<?, ?>> user,
                                               String userPreferencesKey,
-                                              int pageSize,
-                                              int defaultPageSize) {
+                                              PageSize pageSize) {
         user.ifPresent(userAccount -> {
-            if (pageSize == defaultPageSize) {
+            if (pageSize == DEFAULT_PAGE_SIZE) {
                 userAccount.updatePreference(userPreferencesKey, null);
             } else {
-                userAccount.updatePreference(userPreferencesKey, pageSize);
+                userAccount.updatePreference(userPreferencesKey, pageSize.getSizeTable());
             }
         });
     }
@@ -107,19 +90,11 @@ public class ContentPageSize {
     private static int determinePageSizeByUsersPreference(Optional<UserAccount<?, ?>> user,
                                                           String userPreferencesKey,
                                                           ContentListLayout.DisplayMode displayMode) {
-        return getPageSizeForLayout(user.flatMap(userAccount -> userAccount.readPreference(userPreferencesKey)
-                                                                           .asOptionalInt()).orElse(DEFAULT_PAGE_SIZE),
-                                    displayMode);
+        return getPageSizeForLayout(PageSize.getPageSizeFor(user.flatMap(userAccount -> userAccount.readPreference(
+                userPreferencesKey).asOptionalInt())), displayMode);
     }
 
-    private static Integer getPageSizeForLayout(int pageSize, ContentListLayout.DisplayMode displayMode) {
-        if (ContentListLayout.DisplayMode.CARDS == displayMode) {
-            return switch (pageSize) {
-                case 50 -> 48;
-                case 100 -> 96;
-                default -> 24;
-            };
-        }
-        return pageSize;
+    private static Integer getPageSizeForLayout(PageSize pageSize, ContentListLayout.DisplayMode displayMode) {
+        return pageSize.getSize(displayMode);
     }
 }
