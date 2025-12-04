@@ -11,6 +11,6 @@
 <i:if test="!page.getItems().isEmpty() || page.getStart() != 1">
     <div class="d-flex justify-content-center">
         <t:pagination page="@page" baseUrl="@baseUrl" style="@style" margin="@margin"/>
-        <t:pageSizeSwitch pageSize="@page.pageSize" class="ms-2 @margin" displayMode="@displayMode"/>
+        <t:pageSizeSwitch pageSize="@page.pageSize" class="@Strings.apply('ms-2 %s', margin)" displayMode="@displayMode"/>
     </div>
 </i:if>
