@@ -315,7 +315,7 @@ public class KnowledgeBaseArticle {
             if (Strings.isEmpty(project) || Strings.isEmpty(path)) {
                 return null;
             }
-            return "https://github.com/scireum/" + project + "/edit/develop/src/main/resources/" + path;
+            return "https://github.com/scireum/" + project + "/blob/-/src/main/resources/" + path;
         }
     }
 }
