@@ -31,6 +31,7 @@
                     </div>
                 </div>
             </div>
+            <div id="categories"></div>
         </div>
     </div>
 
@@ -45,6 +46,7 @@
         });
 
         function submitQuery() {
+            document.querySelector('#categories').innerHTML = '';
             document.querySelector('#results').innerHTML = '';
 
             const query = document.querySelector('#queryField').value;
@@ -75,7 +77,7 @@
                         if (!_category) {
                             _auxiliary.innerHTML = Mustache.render('' +
                                 '<div class="category" data-category="{{category}}" data-priority="{{priority}}">' +
-                                '   <div><h4>{{category}} <a href="{{categoryUrl}}"><i class="fa-solid fa-external-link-alt"></i></a></h4></div>' +
+                                '   <div><h4 id="category-{{category}}" style="scroll-margin-top: 80px;">{{category}} <a href="{{categoryUrl}}"><i class="fa-solid fa-external-link-alt"></i></a></h4></div>' +
                                 '   <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 items"></div>'
                                 , node);
                             _category = _auxiliary.childNodes[0];
@@ -84,6 +86,16 @@
                             document.querySelectorAll('#results .category').forEach(_otherCategory => {
                                 if (!inserted && _otherCategory.dataset.priority > node.priority) {
                                     _otherCategory.before(_category);
+
+                                    // Also insert category jump button
+                                    const _categoryHolder = document.createElement("div");
+                                    _categoryHolder.innerHTML = Mustache.render(
+                                        '<a href="#category-{{category}}" class="btn btn-sm btn-outline-primary rounded-pill mt-2 me-2">' +
+                                        '   {{category}} <i class="fa-solid fa-arrow-turn-down"></i>' +
+                                        '</a>',
+                                        node);
+                                    document.querySelector('#categories').appendChild(_categoryHolder.childNodes[0]);
+
                                     inserted = true;
                                 }
                             });
