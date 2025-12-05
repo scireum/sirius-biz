@@ -47,6 +47,11 @@ public abstract class TenantSearchProvider<I extends Serializable, T extends Bas
     }
 
     @Override
+    public String getIcon() {
+        return "fa-industry";
+    }
+
+    @Override
     public boolean ensureAccess() {
         UserInfo currentUser = UserContext.getCurrentUser();
         return currentUser.hasPermission(TenantController.PERMISSION_MANAGE_TENANTS);

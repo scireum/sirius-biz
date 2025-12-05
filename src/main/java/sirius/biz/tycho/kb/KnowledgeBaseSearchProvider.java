@@ -41,6 +41,11 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
     }
 
     @Override
+    public String getIcon() {
+        return "fa-file-lines";
+    }
+
+    @Override
     public boolean ensureAccess() {
         return true;
     }

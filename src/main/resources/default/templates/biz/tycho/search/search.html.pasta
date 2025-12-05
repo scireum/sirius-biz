@@ -75,7 +75,7 @@
                         if (!_category) {
                             _auxiliary.innerHTML = Mustache.render('' +
                                 '<div class="category" data-category="{{category}}" data-priority="{{priority}}">' +
-                                '   <div><h4>{{category}} <a href="{{categoryUrl}}"><i class="fa-solid fa-external-link-alt"></i></a></h4></div>' +
+                                '   <div><h4 id="category-{{category}}"><i class="fa-solid fa-xs {{icon}}"></i> {{category}} <a href="{{categoryUrl}}"><i class="fa-solid fa-external-link-alt"></i></a></h4></div>' +
                                 '   <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 items"></div>'
                                 , node);
                             _category = _auxiliary.childNodes[0];

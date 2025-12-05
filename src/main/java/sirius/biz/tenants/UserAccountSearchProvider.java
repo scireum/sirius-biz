@@ -43,6 +43,11 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
         return NLS.get("UserAccount.plural");
     }
 
+    @Override
+    public String getIcon() {
+        return "fa-user";
+    }
+
     @Nullable
     @Override
     public String getUrl() {
