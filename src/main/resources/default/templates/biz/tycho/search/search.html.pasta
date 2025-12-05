@@ -31,6 +31,7 @@
                     </div>
                 </div>
             </div>
+            <div id="categories"></div>
         </div>
     </div>
 
@@ -44,7 +45,32 @@
             submitQuery();
         });
 
+        function insertCategoryJumpButton(node) {
+            let _jumpButton = document.querySelector('#categories *[data-category="' + node.category + '"]');
+            if (!_jumpButton) {
+                const _categoryHolder = document.createElement("div");
+                _categoryHolder.innerHTML = Mustache.render(
+                    '<a href="#category-{{category}}" data-category="{{category}}" data-priority="{{priority}}" class="category btn btn-sm btn-outline-primary rounded-pill mt-2 me-2">' +
+                    '   <i class="fa-solid {{icon}}"></i> {{category}}' +
+                    '</a>',
+                    node);
+                _jumpButton = _categoryHolder.childNodes[0];
+
+                let inserted = false;
+                document.querySelectorAll('#categories .category').forEach(_otherCategory => {
+                    if (!inserted && _otherCategory.dataset.priority > node.priority) {
+                        _otherCategory.before(_jumpButton);
+                        inserted = true;
+                    }
+                });
+                if (!inserted) {
+                    document.querySelector('#categories').appendChild(_jumpButton);
+                }
+            }
+        }
+
         function submitQuery() {
+            document.querySelector('#categories').innerHTML = '';
             document.querySelector('#results').innerHTML = '';
 
             const query = document.querySelector('#queryField').value;
@@ -103,6 +129,8 @@
                             '    </div>' +
                             '</div>', node);
                         _category.querySelector('.items').appendChild(_auxiliary.childNodes[0]);
+
+                        insertCategoryJumpButton(node);
                     } catch (e) {
                         console.error(e);
                     }
