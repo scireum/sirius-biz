@@ -15,7 +15,7 @@ import java.util.Optional;
  */
 public enum PageSize {
 
-    SIZE_25(25, 24), SIZE_50(50, 48), SIZE_100(100, 96);
+    S(25, 24), M(50, 48), L(100, 96);
 
     private final int sizeTable;
     private final int sizeCard;

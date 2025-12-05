@@ -26,7 +26,7 @@ public class ContentPageSize {
     /**
      * The default page size used if no preference is set.
      */
-    public static final PageSize DEFAULT_PAGE_SIZE = PageSize.SIZE_25;
+    public static final PageSize DEFAULT_PAGE_SIZE = PageSize.S;
 
     /**
      * The request parameter used to change the page size.
