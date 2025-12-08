@@ -41,6 +41,11 @@ public class VFSSearchProvider implements OpenSearchProvider {
     }
 
     @Override
+    public String getIcon() {
+        return "fa-folder-open";
+    }
+
+    @Override
     public boolean ensureAccess() {
         return true;
     }

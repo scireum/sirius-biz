@@ -38,6 +38,11 @@ public class JobsSearchProvider implements OpenSearchProvider {
     }
 
     @Override
+    public String getIcon() {
+        return "fa-gears";
+    }
+
+    @Override
     public boolean ensureAccess() {
         return true;
     }

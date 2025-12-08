@@ -41,6 +41,15 @@ public interface OpenSearchProvider extends Priorized {
     String getUrl();
 
     /**
+     * Returns the icon to be shown for this provider.
+     *
+     * @return the icon to be used for this provider
+     */
+    default String getIcon() {
+        return "fa-search";
+    }
+
+    /**
      * Ensures that this provider yields results for the current user.
      * <p>
      * This should most probably check if the user has appropriate permissions.
