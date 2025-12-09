@@ -61,7 +61,7 @@ public class KnowledgeBaseArticle {
     @SuppressWarnings("java:S5852")
     @Explain("We only match the names of internal resources, not user input. "
              + "A denial-of-service attack via backtracking is not possible.")
-    private static final Pattern FILE_URL_PATTERN = Pattern.compile("(?<directory>.+)/target/classes/(?<path>.+)");
+    private static final Pattern FILE_URL_PATTERN = Pattern.compile("(?<directory>.+?)/target/classes/(?<path>.+)");
 
     /**
      * Suffix which is used to identify development snapshot versions.
@@ -76,7 +76,7 @@ public class KnowledgeBaseArticle {
     @SuppressWarnings("java:S5852")
     @Explain("We only match the names of internal resources, not user input. "
              + "A denial-of-service attack via backtracking is not possible.")
-    private static final Pattern VERSION_SUFFIX_PATTERN = Pattern.compile("(?<project>.+)(?:-dev)?(?:-ga)?-\\d+.*$");
+    private static final Pattern VERSION_SUFFIX_PATTERN = Pattern.compile("(?<project>.+?)(?:-dev)?(?:-ga)?-\\d+.*$");
 
     @Part
     private static Tagliatelle tagliatelle;
