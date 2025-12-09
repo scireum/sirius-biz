@@ -253,7 +253,7 @@ public class KnowledgeBaseArticle {
      * @return the extracted project and path or <tt>null</tt> if the URL is invalid or the project/path
      * could not be determined
      */
-    private static ProjectAndPath extractProjectAndPathFromResourceUrl(@Nonnull URL url) {
+    public static ProjectAndPath extractProjectAndPathFromResourceUrl(@Nonnull URL url) {
         return switch (url.getProtocol()) {
             case "file" -> {
                 if (url.getPath().startsWith(DEPLOYED_SIRIUS_PREFIX)) {
@@ -321,8 +321,14 @@ public class KnowledgeBaseArticle {
      * @param project the project name
      * @param path    the path within the project
      */
-    private record ProjectAndPath(String project, String path) {
-        private String toGithubUrl() {
+    public record ProjectAndPath(String project, String path) {
+
+        /**
+         * Generates the GitHub URL for the given project and path.
+         *
+         * @return the GitHub URL or <tt>null</tt> if either the project or path is empty
+         */
+        public String toGithubUrl() {
             if (Strings.isEmpty(project) || Strings.isEmpty(path)) {
                 return null;
             }
