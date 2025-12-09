@@ -83,6 +83,11 @@ public class KnowledgeBaseArticle {
              + "A denial-of-service attack via backtracking is not possible.")
     private static final Pattern VERSION_SUFFIX_PATTERN = Pattern.compile("(?<project>.+?)(?:-dev)?(?:-ga)?-\\d+.*$");
 
+    /**
+     * Fallback project name used if no product name is configured.
+     */
+    private static final String FALLBACK_PROJECT = "sirius-biz";
+
     @Part
     private static Tagliatelle tagliatelle;
 
@@ -252,7 +257,10 @@ public class KnowledgeBaseArticle {
         return switch (url.getProtocol()) {
             case "file" -> {
                 if (url.getPath().startsWith(DEPLOYED_SIRIUS_PREFIX)) {
-                    yield new ProjectAndPath(productName.toLowerCase(),
+                    yield new ProjectAndPath(Optional.ofNullable(productName)
+                                                     .filter(Strings::isFilled)
+                                                     .map(String::toLowerCase)
+                                                     .orElse(FALLBACK_PROJECT),
                                              url.getPath().substring(DEPLOYED_SIRIUS_PREFIX.length()));
                 }
 
