@@ -54,6 +54,11 @@ public class KnowledgeBaseArticle {
     private static final Pattern JAR_URL_PATTERN = Pattern.compile("file:(?<jar>.+)!/(?<path>.+)");
 
     /**
+     * Prefix which is used to identify deployed Sirius applications.
+     */
+    private static final String DEPLOYED_SIRIUS_PREFIX = "/home/sirius/app/";
+
+    /**
      * Pattern which is used to extract project and path from a file URL, as typically seen during development.
      * <p>
      * Example: {@code file:///Users/jakob/Development/memoio/target/classes/kb/de/integration-manual/deep-integration/iam-integration-JURIH.html.pasta}
@@ -246,6 +251,11 @@ public class KnowledgeBaseArticle {
     private static ProjectAndPath extractProjectAndPathFromResourceUrl(@Nonnull URL url) {
         return switch (url.getProtocol()) {
             case "file" -> {
+                if (url.getPath().startsWith(DEPLOYED_SIRIUS_PREFIX)) {
+                    yield new ProjectAndPath(productName.toLowerCase(),
+                                             url.getPath().substring(DEPLOYED_SIRIUS_PREFIX.length()));
+                }
+
                 Matcher matcher = FILE_URL_PATTERN.matcher(url.getPath());
                 yield matcher.matches() ?
                       new ProjectAndPath(extractProjectFromFile(matcher.group("directory")), matcher.group("path")) :
@@ -269,14 +279,7 @@ public class KnowledgeBaseArticle {
      * @return the extracted project name
      */
     private static String extractProjectFromFile(String path) {
-        String project = Files.getFilenameAndExtension(path);
-
-        // on the servers, the main application is called "app", but in the repository we use the product name
-        if (Strings.equalIgnoreCase(project, "app")) {
-            return productName.toLowerCase();
-        }
-
-        return project;
+        return Files.getFilenameAndExtension(path);
     }
 
     /**
