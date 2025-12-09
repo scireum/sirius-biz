@@ -54,6 +54,11 @@ public class KnowledgeBaseArticle {
     private static final Pattern JAR_URL_PATTERN = Pattern.compile("file:(?<jar>.+)!/(?<path>.+)");
 
     /**
+     * Prefix which is used to identify deployed Sirius applications.
+     */
+    private static final String DEPLOYED_SIRIUS_PREFIX = "/home/sirius/app/";
+
+    /**
      * Pattern which is used to extract project and path from a file URL, as typically seen during development.
      * <p>
      * Example: {@code file:///Users/jakob/Development/memoio/target/classes/kb/de/integration-manual/deep-integration/iam-integration-JURIH.html.pasta}
@@ -61,7 +66,7 @@ public class KnowledgeBaseArticle {
     @SuppressWarnings("java:S5852")
     @Explain("We only match the names of internal resources, not user input. "
              + "A denial-of-service attack via backtracking is not possible.")
-    private static final Pattern FILE_URL_PATTERN = Pattern.compile("(?<directory>.+)/target/classes/(?<path>.+)");
+    private static final Pattern FILE_URL_PATTERN = Pattern.compile("(?<directory>.+?)/target/classes/(?<path>.+)");
 
     /**
      * Suffix which is used to identify development snapshot versions.
@@ -76,7 +81,12 @@ public class KnowledgeBaseArticle {
     @SuppressWarnings("java:S5852")
     @Explain("We only match the names of internal resources, not user input. "
              + "A denial-of-service attack via backtracking is not possible.")
-    private static final Pattern VERSION_SUFFIX_PATTERN = Pattern.compile("(?<project>.+)(?:-dev)?(?:-ga)?-\\d+.*$");
+    private static final Pattern VERSION_SUFFIX_PATTERN = Pattern.compile("(?<project>.+?)(?:-dev)?(?:-ga)?-\\d+.*$");
+
+    /**
+     * Fallback project name used if no product name is configured.
+     */
+    private static final String FALLBACK_PROJECT = "sirius-biz";
 
     @Part
     private static Tagliatelle tagliatelle;
@@ -243,9 +253,17 @@ public class KnowledgeBaseArticle {
      * @return the extracted project and path or <tt>null</tt> if the URL is invalid or the project/path
      * could not be determined
      */
-    private static ProjectAndPath extractProjectAndPathFromResourceUrl(@Nonnull URL url) {
+    public static ProjectAndPath extractProjectAndPathFromResourceUrl(@Nonnull URL url) {
         return switch (url.getProtocol()) {
             case "file" -> {
+                if (url.getPath().startsWith(DEPLOYED_SIRIUS_PREFIX)) {
+                    yield new ProjectAndPath(Optional.ofNullable(productName)
+                                                     .filter(Strings::isFilled)
+                                                     .map(String::toLowerCase)
+                                                     .orElse(FALLBACK_PROJECT),
+                                             url.getPath().substring(DEPLOYED_SIRIUS_PREFIX.length()));
+                }
+
                 Matcher matcher = FILE_URL_PATTERN.matcher(url.getPath());
                 yield matcher.matches() ?
                       new ProjectAndPath(extractProjectFromFile(matcher.group("directory")), matcher.group("path")) :
@@ -269,14 +287,7 @@ public class KnowledgeBaseArticle {
      * @return the extracted project name
      */
     private static String extractProjectFromFile(String path) {
-        String project = Files.getFilenameAndExtension(path);
-
-        // on the servers, the main application is called "app", but in the repository we use the product name
-        if (Strings.equalIgnoreCase(project, "app")) {
-            return productName.toLowerCase();
-        }
-
-        return project;
+        return Files.getFilenameAndExtension(path);
     }
 
     /**
@@ -310,8 +321,14 @@ public class KnowledgeBaseArticle {
      * @param project the project name
      * @param path    the path within the project
      */
-    private record ProjectAndPath(String project, String path) {
-        private String toGithubUrl() {
+    public record ProjectAndPath(String project, String path) {
+
+        /**
+         * Generates the GitHub URL for the given project and path.
+         *
+         * @return the GitHub URL or <tt>null</tt> if either the project or path is empty
+         */
+        public String toGithubUrl() {
             if (Strings.isEmpty(project) || Strings.isEmpty(path)) {
                 return null;
             }
