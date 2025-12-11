@@ -204,6 +204,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
      */
     public static final Mapping CHECKSUM = Mapping.named("checksum");
     @NullAllowed
+    @Length(255)
     private String checksum;
 
     /**
