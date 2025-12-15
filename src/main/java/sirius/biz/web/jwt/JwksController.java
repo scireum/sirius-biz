@@ -8,6 +8,7 @@
 
 package sirius.biz.web.jwt;
 
+import com.nimbusds.jose.HeaderParameterNames;
 import com.nimbusds.jose.jwk.JWK;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -39,9 +40,11 @@ public class JwksController extends BasicController {
         JSONStructuredOutput json = context.respondWith().json();
         json.beginResult();
         {
-            json.beginArray("jwk");
+            json.beginArray("keys");
             for (JWK key : jwts.getPublicKeys()) {
                 json.beginObject("key");
+                jwts.determineAlgorithm(key)
+                    .ifPresent(algorithm -> json.property(HeaderParameterNames.ALGORITHM, algorithm.getName()));
                 key.toJSONObject().forEach(json::property);
                 json.endObject();
             }

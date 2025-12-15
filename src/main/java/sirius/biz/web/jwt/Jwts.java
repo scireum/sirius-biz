@@ -43,6 +43,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -143,6 +145,14 @@ public class Jwts {
         return keys.stream().map(JWK::toPublicJWK).filter(Objects::nonNull).toList();
     }
 
+    protected Optional<JWSAlgorithm> determineAlgorithm(JWK signingKey) {
+        return switch (signingKey) {
+            case RSAKey _ -> RSASSASigner.SUPPORTED_ALGORITHMS.stream().filter(isRecommendedAlgorithm()).findFirst();
+            case ECKey _ -> ECDSASigner.SUPPORTED_ALGORITHMS.stream().filter(isRecommendedAlgorithm()).findFirst();
+            default -> Optional.empty();
+        };
+    }
+
     /**
      * Generated s builder which can be used to build and sign a JWT using the current system configuration.
      *
@@ -184,7 +194,7 @@ public class Jwts {
         JWSSigner signer = determineSigner(signingKey);
         JWSAlgorithm algorithm = signer.supportedJWSAlgorithms()
                                        .stream()
-                                       .filter(alg -> alg.getRequirement() == Requirement.RECOMMENDED)
+                                       .filter(isRecommendedAlgorithm())
                                        .findFirst()
                                        .orElseThrow(() -> Exceptions.handle()
                                                                     .to(Log.SYSTEM)
@@ -239,6 +249,10 @@ public class Jwts {
                             .withSystemErrorMessage("Failed to sign JWT using key shared secret: %s (%s)")
                             .handle();
         }
+    }
+
+    private Predicate<JWSAlgorithm> isRecommendedAlgorithm() {
+        return alg -> alg.getRequirement() == Requirement.RECOMMENDED;
     }
 
     private JWSSigner determineSigner(JWK signingKey) {
