@@ -107,6 +107,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      */
     public static final Mapping CHECKSUM = Mapping.named("checksum");
     @NullAllowed
+    @Length(255)
     private String checksum;
 
     /**
