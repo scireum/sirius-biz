@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -142,6 +143,14 @@ public class Jwts {
         }
 
         return keys.stream().map(JWK::toPublicJWK).filter(Objects::nonNull).toList();
+    }
+
+    protected Optional<JWSAlgorithm> determineAlgorithm(JWK signingKey) {
+        return switch (signingKey) {
+            case RSAKey _ -> RSASSASigner.SUPPORTED_ALGORITHMS.stream().filter(isRecommendedAlgorithm()).findFirst();
+            case ECKey _ -> ECDSASigner.SUPPORTED_ALGORITHMS.stream().filter(isRecommendedAlgorithm()).findFirst();
+            default -> Optional.empty();
+        };
     }
 
     /**
