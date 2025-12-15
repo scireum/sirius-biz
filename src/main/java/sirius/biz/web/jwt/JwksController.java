@@ -39,7 +39,7 @@ public class JwksController extends BasicController {
         JSONStructuredOutput json = context.respondWith().json();
         json.beginResult();
         {
-            json.beginArray("jwk");
+            json.beginArray("keys");
             for (JWK key : jwts.getPublicKeys()) {
                 json.beginObject("key");
                 key.toJSONObject().forEach(json::property);
