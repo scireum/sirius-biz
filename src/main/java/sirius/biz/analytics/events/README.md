@@ -5,7 +5,7 @@ as its only purpose is to record and stored recorded events into the
 timeseries database [Clickhouse](https://clickhouse.yandex).
 
 The recorded events are available by accessing the **analytics** database
-using the [Databases](https://github.com/scireum/sirius-db/blob/master/src/main/java/sirius/db/jdbc/) helper.
+using the [Databases](https://github.com/scireum/sirius-db/blob/main/src/main/java/sirius/db/jdbc/) helper.
 
 Most probably these recorded events will be used by two other frameworks.
 These are either [Metrics](../metrics/) or [Jobs](../../jobs/).

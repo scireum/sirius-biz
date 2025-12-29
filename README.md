@@ -1,5 +1,6 @@
-![sirius](https://raw.githubusercontent.com/scireum/sirius-kernel/master/docs/sirius.jpg)
-[![Build Status](https://drone.scireum.com/api/badges/scireum/sirius-biz/status.svg?ref=refs/heads/develop)](https://drone.scireum.com/scireum/sirius-biz)
+# sirius-biz
+![sirius](https://raw.githubusercontent.com/scireum/sirius-kernel/main/docs/sirius.jpg)
+[![Build Status](https://drone.scireum.com/api/badges/scireum/sirius-biz/status.svg?ref=refs/heads/main)](https://drone.scireum.com/scireum/sirius-biz)
 
 Welcome to the **business module** of the SIRIUS OpenSource framework created by [scireum GmbH](https://www.scireum.de). 
 To learn more about what SIRIUS is please refer to documentation of the [kernel module](https://github.com/scireum/sirius-kernel).
@@ -12,7 +13,7 @@ data objects and frameworks (multi tenancy, code lists, background jobs, storage
 
 ## Important files of this module: 
 
-* [Default configuration](src/main/resources/component-biz.conf)
+* [Default configuration](src/main/resources/component-070-biz.conf)
 * [Maven setup](pom.xml)
 * [Development Settings](develop.conf)
 * [Docker Setup](docker-compose.yml)
