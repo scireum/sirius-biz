@@ -87,6 +87,13 @@ public class BlobPdfReplaceHandler extends PdfReplaceHandler {
         return null;
     }
 
+    @Override
+    public boolean logErrors() {
+        // Suppress logging errors for blob:// URIs. Conversion errors are logged by their conversion pipelines but a
+        // long-running conversions also fills the log unnecessarily.
+        return false;
+    }
+
     private Optional<String> tryResolveVariant(String variantOrPhysicalKey) {
         if (URLBuilder.VARIANT_RAW.equals(variantOrPhysicalKey)
             || conversionEngine.isKnownVariant(variantOrPhysicalKey)) {

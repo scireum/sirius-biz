@@ -11,7 +11,7 @@ package sirius.biz.storage.layer3;
 import sirius.biz.tycho.search.OpenSearchProvider;
 import sirius.biz.tycho.search.OpenSearchResult;
 import sirius.kernel.commons.Limit;
-import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
@@ -41,6 +41,11 @@ public class VFSSearchProvider implements OpenSearchProvider {
     }
 
     @Override
+    public String getIcon() {
+        return "fa-folder-open";
+    }
+
+    @Override
     public boolean ensureAccess() {
         return true;
     }
@@ -57,7 +62,7 @@ public class VFSSearchProvider implements OpenSearchProvider {
                OpenSearchResult result = new OpenSearchResult();
                result.withLabel(file.name());
                result.withDescription(file.path());
-               result.withURL("/fs?path=" + Strings.urlEncode(file.path()));
+               result.withURL("/fs?path=" + Urls.encode(file.path()));
                if (limit.nextRow()) {
                    resultCollector.accept(result);
                }

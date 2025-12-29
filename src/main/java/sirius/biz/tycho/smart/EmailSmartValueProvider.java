@@ -9,6 +9,7 @@
 package sirius.biz.tycho.smart;
 
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.std.Register;
 
 import java.util.function.BiConsumer;
@@ -29,7 +30,7 @@ public class EmailSmartValueProvider implements SmartValueProvider {
     public void collectValues(String type, Object payload, Consumer<SmartValue> valueCollector) {
         if (Strings.isFilled(payload) && VALUE_TYPE_EMAIL.equals(type)) {
             String email = payload.toString();
-            valueCollector.accept(new SmartValue("fa-solid fa-envelope", email, "mailto:" + Strings.urlEncode(email), email));
+            valueCollector.accept(new SmartValue("fa-solid fa-envelope", email, "mailto:" + Urls.encode(email), email));
         }
     }
 

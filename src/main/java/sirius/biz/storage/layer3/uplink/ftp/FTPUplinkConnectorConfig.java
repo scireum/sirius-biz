@@ -12,6 +12,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 
@@ -46,6 +47,8 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
     }
 
     @Override
+    @SuppressWarnings("java:S5332")
+    @Explain("A FTP uplink of course uses insecure FTP, which is not an issue with this code.")
     protected FTPClient create() {
         try {
             FTPClient client = new FTPClient();

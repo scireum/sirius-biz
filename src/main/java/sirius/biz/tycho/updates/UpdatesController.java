@@ -11,6 +11,7 @@ package sirius.biz.tycho.updates;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -40,7 +41,7 @@ public class UpdatesController extends BizController {
     @Routed("/tycho/updates/markAsSeen")
     public void markUpdatesAsSeen(WebContext webContext, JSONStructuredOutput output) {
         String updateId = webContext.require("updateId").asString();
-        if (Strings.isHttpUrl(updateId)) {
+        if (Urls.isHttpUrl(updateId)) {
             eventRecorder.record(new UpdateClickEvent().forUpdateGuid(updateId));
         } else {
             throw Exceptions.createHandled()

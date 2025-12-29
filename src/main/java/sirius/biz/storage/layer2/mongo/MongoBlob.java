@@ -23,6 +23,7 @@ import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.LowerCase;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.SkipDefaultValue;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.annotations.Unique;
@@ -80,6 +81,7 @@ import java.util.Optional;
 @Index(name = "blob_delete_temporary_loop",
         columns = {"spaceName", "temporary", "deleted", "lastModified"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "physical_object_lookup", columns = "physicalObjectKey", columnSettings = Mango.INDEX_ASCENDING)
 @TranslationSource(Blob.class)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
@@ -137,7 +139,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     /**
      * Contains the file extension if a filename was provided.
      * <p>
-     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercase file extension without the ".".
+     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercase file extension without the {@code .}.
      */
     public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
     @NullAllowed
@@ -204,6 +206,14 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     public static final Mapping LAST_TOUCHED = Mapping.named("lastTouched");
     @NullAllowed
     private LocalDateTime lastTouched;
+
+    /**
+     * Stores the checksum of the file.
+     */
+    public static final Mapping CHECKSUM = Mapping.named("checksum");
+    @NullAllowed
+    @SkipDefaultValue
+    private String checksum;
 
     /**
      * Stores if a blob has been fully initialized.
@@ -494,6 +504,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     @Override
     public LocalDateTime getLastModified() {
         return lastModified;
+    }
+
+    @Nullable
+    @Override
+    public String getChecksum() {
+        return checksum;
     }
 
     @Override

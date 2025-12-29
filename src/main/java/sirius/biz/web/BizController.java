@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
 /**
  * Base class for all controllers which operate on entities.
  * <p>
- * Provides glue logic for filling entities from {@link WebContext web contexts} and for resolving entities for a given id.
+ * Provides glue logic for filling entities from {@link WebContext web contexts} and for resolving entities for a given ID.
  */
 public class BizController extends BasicController {
 
@@ -135,13 +135,13 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Ensures that the tenant of the current user matches the given tenant id.
+     * Ensures that the tenant of the current user matches the given tenant ID.
      * <p>
      * Note that this check is also provided by {@link Tenants#assertTenant(String)}. However,
      * we use an implementation here which works independently of the tenants framework as some
      * products do not use it.
      *
-     * @param tenantId the id to check
+     * @param tenantId the ID to check
      * @throws sirius.kernel.health.HandledException if the tenants do no match
      * @see Tenants#assertTenant(String)
      */
@@ -168,7 +168,7 @@ public class BizController extends BasicController {
      * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
      * @param target the target the reference must point to
      * @param <E>    the generic type the parent being referenced
-     * @param <I>    the type of the id column of E
+     * @param <I>    the type of the ID column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
      * @see BaseEntityRef#hasWriteOnceSemantics
      */
@@ -207,7 +207,7 @@ public class BizController extends BasicController {
      * @param ref                the reference which is to be verified that it points to <tt>referencedEntityId</tt>
      * @param referencedEntityId the target the reference must point to
      * @param <E>                the generic type the parent being referenced
-     * @param <I>                the type of the id column of E
+     * @param <I>                the type of the ID column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
      */
     protected <I extends Serializable, E extends BaseEntity<I>> void verify(BaseEntity<?> owner,
@@ -229,7 +229,7 @@ public class BizController extends BasicController {
      * @param referencedEntityId the target the reference must point to
      * @param cache              the cache to use when resolving the referenced entity
      * @param <E>                the generic type the parent being referenced
-     * @param <I>                the type of the id column of E
+     * @param <I>                the type of the ID column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
      */
     protected <I extends Serializable, E extends BaseEntity<I>> void verifyAndFill(BaseEntity<?> owner,
@@ -411,7 +411,7 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Deletes the entity with the given type and id.
+     * Deletes the entity with the given type and ID.
      * <p>
      * If the entity is {@link TenantAware} a matching tenant will be ensured. If the entity
      * does no longer exist, this call will be ignored. If no valid POST with CSRF token is present,
@@ -419,14 +419,14 @@ public class BizController extends BasicController {
      *
      * @param webContext the current request
      * @param type       the type of entity to delete
-     * @param id         the id of the entity to delete
+     * @param id         the ID of the entity to delete
      */
     public void deleteEntity(WebContext webContext, Class<? extends BaseEntity<?>> type, String id) {
         deleteEntity(webContext, tryFind(type, id));
     }
 
     /**
-     * Deletes the entity with the given type and id.
+     * Deletes the entity with the given type and ID.
      * <p>
      * If the entity is {@link TenantAware} a matching tenant will be ensured. If the entity
      * does no longer exist, this call will be ignored. If no valid POST with CSRF token is present,
@@ -478,7 +478,7 @@ public class BizController extends BasicController {
     /**
      * Performs a validation and reports the first warnings via the {@link UserContext}.
      * <p>
-     * Note that this is only done, if no error messages are present which might otherwise confuse the user.
+     * Note that this is only done if no error messages are present which might otherwise confuse the user.
      *
      * @param entity the entity to validate
      */
@@ -487,23 +487,21 @@ public class BizController extends BasicController {
         if (userCtx.getMessages().stream().noneMatch(message -> MessageLevel.PROBLEM == message.getType())) {
             entity.getMapper()
                   .validate(entity)
-                  .stream()
-                  .findFirst()
-                  .ifPresent(message -> userCtx.addMessage(Message.warn().withTextMessage(message)));
+                  .forEach(message -> userCtx.addMessage(Message.warn().withHTMLMessage(message)));
         }
     }
 
     /**
-     * Tries to find an entity of the given type with the given id.
+     * Tries to find an entity of the given type with the given ID.
      * <p>
-     * Note, if <tt>new</tt> is given as id, a new entity is created. This permits many editors to create a
+     * Note, if <tt>new</tt> is given as ID, a new entity is created. This permits many editors to create a
      * new entity simply by calling /editor-uri/new
      *
      * @param type the type of the entity to find
-     * @param id   the id to lookup
+     * @param id   the ID to look up
      * @param <E>  the generic type of the entity class
-     * @return the requested entity or a new one, if id was <tt>new</tt>
-     * @throws sirius.kernel.health.HandledException if either the id is unknown or a new instance cannot be created
+     * @return the requested entity or a new one, if ID was <tt>new</tt>
+     * @throws sirius.kernel.health.HandledException if either the ID is unknown or a new instance cannot be created
      */
     protected <E extends BaseEntity<?>> E find(Class<E> type, String id) {
         if (BaseEntity.NEW.equals(id) && BaseEntity.class.isAssignableFrom(type)) {
@@ -530,7 +528,7 @@ public class BizController extends BasicController {
      * If the entity is new, {@link #entityNotNewException(Class)} is provided.
      *
      * @param type the type of entity that was not found
-     * @param id   the id of the entity that was not found
+     * @param id   the ID of the entity that was not found
      * @return a HandledException which can be thrown
      */
     protected <E extends BaseEntity<?>> HandledException entityNotFoundException(@Nonnull Class<E> type,
@@ -546,14 +544,13 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Tries to find an existing entity with the given id.
+     * Tries to find an existing entity with the given ID.
      *
      * @param type the type of the entity to find
-     * @param id   the id of the entity to find
+     * @param id   the ID of the entity to find
      * @param <E>  the generic type of the entity class
-     * @return the requested entity wrapped as <tt>Optional</tt> or an empty optional, if no entity with the given id
-     * was found
-     * or if the id was <tt>new</tt>
+     * @return the requested entity wrapped as <tt>Optional</tt> or an empty optional, if no entity with the given ID
+     * was found or if the ID was <tt>new</tt>
      */
     protected <E extends BaseEntity<?>> Optional<E> tryFind(Class<E> type, String id) {
         if (BaseEntity.NEW.equals(id)) {
@@ -563,27 +560,27 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Tries to find an existing entity with the given id, or fails otherwise.
+     * Tries to find an existing entity with the given ID, or fails otherwise.
      *
      * @param type the type of the entity to find
-     * @param id   the id of the entity to find
+     * @param id   the ID of the entity to find
      * @param <E>  the generic type of the entity class
      * @return the requested entity wrapped
-     * @throws HandledException if no entity with the given id was found or if the id was <tt>new</tt>
+     * @throws HandledException if no entity with the given ID was found or if the ID was <tt>new</tt>
      */
     protected <E extends BaseEntity<?>> E findExisting(Class<E> type, String id) {
         return tryFind(type, id).orElseThrow(() -> entityNotFoundException(type, id));
     }
 
     /**
-     * Tries to find an entity for the given id, which belongs to the current tenant.
+     * Tries to find an entity for the given ID, which belongs to the current tenant.
      * <p>
      * This behaves just like {@link #find(Class, String)} but once an existing entity was found, which also extends
      * {@link TenantAware}, it is ensured (using {@link #assertTenant(TenantAware)}) that it belongs to the current
      * tenant. If the entity is new, the tenant is filled with the current tenant.
      *
      * @param type the type of the entity to find
-     * @param id   the id of the entity to find
+     * @param id   the ID of the entity to find
      * @param <E>  the generic type of the entity class
      * @return the requested entity, which is either new or belongs to the current tenant
      */
@@ -594,14 +591,14 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Tries to find an entity for the given id, which belongs to the current tenant.
+     * Tries to find an entity for the given ID, which belongs to the current tenant.
      * <p>
      * This behaves just like {@link #tryFind(Class, String)} but once an existing entity was found, which also extends
      * {@link TenantAware}, it is ensured (using {@link #assertTenant(TenantAware)}) that it belongs to the current
      * tenant.
      *
      * @param type the type of the entity to find
-     * @param id   the id of the entity to find
+     * @param id   the ID of the entity to find
      * @param <E>  the generic type of the entity class
      * @return the requested entity, which belongs to the current tenant, wrapped as <tt>Optional</tt> or an empty
      * optional.
@@ -614,16 +611,16 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Tries to find an entity for the given id, which belongs to the current tenant or fails otherwise.
+     * Tries to find an entity for the given ID, which belongs to the current tenant or fails otherwise.
      * <p>
      * This behaves just like {@link #findExisting(Class, String)} but once an existing entity was found,
      * it is ensured (using {@link #assertTenant(TenantAware)}) that it belongs to the current tenant.
      *
      * @param type the type of the entity to find
-     * @param id   the id of the entity to find
+     * @param id   the ID of the entity to find
      * @param <E>  the generic type of the entity class
      * @return the requested entity, which belongs to the current tenant
-     * @throws HandledException if no entity with the given id was found or if the id was <tt>new</tt>
+     * @throws HandledException if no entity with the given ID was found or if the ID was <tt>new</tt>
      */
     protected <E extends BaseEntity<?> & TenantAware> E findExistingForTenant(Class<E> type, String id) {
         E result = findExisting(type, id);

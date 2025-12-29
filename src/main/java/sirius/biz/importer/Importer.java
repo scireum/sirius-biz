@@ -141,7 +141,7 @@ public class Importer implements Closeable {
      * @param type the type of entity to find
      * @param data the data used to describe the entity to search
      * @param <E>  the generic type of the entity to find
-     * @return the matching entity wrapped as optional or an emty optional if none was found
+     * @return the matching entity wrapped as optional or an empty optional if none was found
      */
     public <E extends BaseEntity<?>> Optional<E> tryFind(Class<E> type, Context data) {
         return context.findHandler(type).tryFind(data);
@@ -153,20 +153,20 @@ public class Importer implements Closeable {
      * If a lookup is successful and the utilized {@link ImportHandler} permits its usage, the result is placed in a
      * cache and used for the next lookup.
      * <p>
-     * Note that the cache is never flushed and is maintained along with the {@link Importer}. Therefore this should
+     * Note that the cache is never flushed and is maintained along with the {@link Importer}. Therefore, this should
      * only be used, if the entities resolved by this method are not changed using this importer.
      *
      * @param type the type of entity to find
      * @param data the data used to describe the entity to search
      * @param <E>  the generic type of the entity to find
-     * @return the matching entity wrapped as optional or an emty optional if none was found
+     * @return the matching entity wrapped as optional or an empty optional if none was found
      */
     public <E extends BaseEntity<?>> Optional<E> tryFindInCache(Class<E> type, Context data) {
         return context.findHandler(type).tryFindInCache(data);
     }
 
     /**
-     * Tries to find an instace of the given type based on the given data. Fails if no entity matches.
+     * Tries to find an instance of the given type based on the given data. Fails if no entity matches.
      * <p>
      * This is a convenience method which utilizes {@link #tryFind(Class, Context)} but throws an exception instead of
      * returning an empty optional when no matching entity was found.
@@ -183,7 +183,7 @@ public class Importer implements Closeable {
 
     /**
      * Tries to find an instance of the given type based on the given data. Uses {@link #load(Class, Context)} to
-     * update the entity afterwards. Note that a new entity is created if no matching one was found.
+     * update the entity afterward. Note that a new entity is created if no matching one was found.
      *
      * @param type the type of entity to find
      * @param data the data used to describe the entity to search
@@ -237,7 +237,7 @@ public class Importer implements Closeable {
      * <p>
      * Using a batch update will most probably yield substantial performance benefits with the downside, that the updated
      * entity cannot be returned by this method. Also note that some databases (e.g. MariaDB) easily run into deadlocks
-     * while performing concurrent batch updates as overlapping regions of the primary key index get locked. Therefore
+     * while performing concurrent batch updates as overlapping regions of the primary key index get locked. Therefore,
      * a batch update should only be used when it is known that no concurrent batch update occurs.
      *
      * @param entity the entity to update or create
@@ -261,7 +261,7 @@ public class Importer implements Closeable {
      * <p>
      * Using a batch update will most probably yield substantial performance benefits with the downside, that the updated
      * entity cannot be returned by this method. Also note that some databases (e.g. MariaDB) easily run into deadlocks
-     * while performing concurrent batch updates as overlapping regions of the primary key index get locked. Therefore
+     * while performing concurrent batch updates as overlapping regions of the primary key index get locked. Therefore,
      * a batch update should only be used when it is known that no concurrent batch update occurs.
      *
      * @param entity the entity to update or create

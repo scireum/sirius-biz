@@ -129,7 +129,8 @@ flowchart TD
     invokeConversionPipelineAsync --> awaitConversionResultAndRetryToFindVariant
     awaitConversionResultAndRetryToFindVariant -->|retries - 1| attemptToFindOrCreateVariant
     tryFetchVariant -->|variant still converting| awaitConversionResultAndRetryToFindVariant
-    tryFetchVariant -->|exhausted conversion attempts| error[/ERROR/]
+    tryFetchVariant -->|exhausted conversion attempts| failedConversionHandlers[Invoke instances of FailedVariantConversionHandler]
+    failedConversionHandlers --> error[/ERROR/]
     invokeConversionPipelineAsync --> startConversion[convert]
     startConversion -->|conversion successful| success(set key and duration)
     startConversion -->|conversion failed| failure[no key set]

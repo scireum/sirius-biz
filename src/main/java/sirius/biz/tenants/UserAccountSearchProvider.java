@@ -13,7 +13,7 @@ import sirius.biz.tycho.search.OpenSearchProvider;
 import sirius.biz.tycho.search.OpenSearchResult;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.Query;
-import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
@@ -41,6 +41,11 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
     @Override
     public String getLabel() {
         return NLS.get("UserAccount.plural");
+    }
+
+    @Override
+    public String getIcon() {
+        return "fa-user";
     }
 
     @Nullable
@@ -85,14 +90,13 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                 openSearchResult.withDescription(userAccount.toString())
                                 .withURL("/user-account/" + userAccount.getIdAsString());
             } else {
-                openSearchResult.withDescription(userAccount
-                                                 + " ("
-                                                 + userAccount.getTenant().fetchCachedValue().toString()
-                                                 + ")")
+                openSearchResult.withDescription(userAccount + " (" + userAccount.getTenant()
+                                                                                 .fetchCachedValue()
+                                                                                 .toString() + ")")
                                 .withURL("/tenants/select/"
                                          + userAccount.getTenant().getIdAsString()
                                          + "?goto="
-                                         + Strings.urlEncode("/user-account/" + userAccount.getIdAsString()));
+                                         + Urls.encode("/user-account/" + userAccount.getIdAsString()));
             }
 
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)) {

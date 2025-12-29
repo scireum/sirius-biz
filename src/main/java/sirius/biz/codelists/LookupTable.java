@@ -56,6 +56,11 @@ import java.util.stream.Stream;
  */
 public abstract class LookupTable {
 
+    /**
+     * Defines the code used to represent texts valid in all languages.
+     */
+    public static final String FALLBACK_LANGUAGE_CODE = "xx";
+
     private static final int MAX_SUGGESTIONS = 25;
     private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
@@ -620,10 +625,10 @@ public abstract class LookupTable {
                                    .stream()
                                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
             } else {
-                return Collections.singletonMap("xx", translations.asText());
+                return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, translations.asText());
             }
         }).orElseGet(() -> {
-            return Collections.singletonMap("xx", "");
+            return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, "");
         });
     }
 
@@ -643,7 +648,7 @@ public abstract class LookupTable {
             return Optional.of(result);
         }
 
-        return Optional.ofNullable(table.get("xx"));
+        return Optional.ofNullable(table.get(FALLBACK_LANGUAGE_CODE));
     }
 
     /**
@@ -671,7 +676,7 @@ public abstract class LookupTable {
     }
 
     private static List<String> transformArrayToStringList(ArrayNode array) {
-        return Json.streamEntries(array).map(JsonNode::asText).filter(Strings::isFilled).toList();
+        return array.valueStream().map(JsonNode::asText).filter(Strings::isFilled).toList();
     }
 
     /**

@@ -9,6 +9,7 @@
 package sirius.biz.jobs.batch;
 
 import sirius.biz.process.ProcessContext;
+import sirius.biz.scripting.ScriptableEventHandler;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Streams;
@@ -27,6 +28,7 @@ import java.io.OutputStream;
 public abstract class BatchJob implements Closeable {
 
     protected ProcessContext process;
+    protected ScriptableEventHandler eventHandler = new ScriptableEventHandler();
 
     /**
      * Creates a new batch job for the given batch process.
@@ -68,6 +70,21 @@ public abstract class BatchJob implements Closeable {
             Streams.transfer(in, out);
         } catch (IOException exception) {
             process.handle(exception);
+        }
+    }
+
+    /**
+     * Initializes the event dispatchers for this job.
+     * <p>
+     * This information is provided by {@link BatchProcessJobFactory#enableScriptableEvents()}.
+     * <p>
+     * Note that this method is always invoked, so jobs can override it to perform custom actions upon initialization.
+     *
+     * @param enabled indicates whether event dispatchers should be initialized at all.
+     */
+    protected void initializeEventDispatchers(boolean enabled) {
+        if (enabled) {
+            eventHandler.initializeEventDispatchers();
         }
     }
 

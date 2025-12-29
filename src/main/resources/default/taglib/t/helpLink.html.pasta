@@ -1,0 +1,8 @@
+<i:arg name="url" type="String"/>
+
+<a class="btn btn-info ms-2 text-decoration-none"
+   target="_blank"
+   href="@url">
+    <i class="fa-solid fa-lightbulb"></i>
+    <span class="d-none d-xl-inline ps-2">@i18n('help')</span>
+</a>

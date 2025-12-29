@@ -1,0 +1,61 @@
+<k:article code="V7FGJ"
+           lang="en"
+           parent="DJELK"
+           title="Cluster Overview"
+           permissions="flag-system-tenant"
+           crossReferences="SHJEK">
+    <i:block name="description">Describes the functionality which comes with the cluster view.</i:block>
+
+    <i:block name="sidebar">
+        <k:toc>
+            <k:tocLink link="#common">Common</k:tocLink>
+            <k:tocLink link="#nodes">Nodes</k:tocLink>
+            <k:tocLink link="#background-jobs">Background Jobs</k:tocLink>
+            <k:tocLink link="#locks">Locks</k:tocLink>
+        </k:toc>
+    </i:block>
+
+    <k:section heading="Common" anchor="common">
+        The <a href="/system/cluster" target="_blank">Cluster View</a> can be used to view all nodes which are visible
+        to the cluster. It also shows all background tasks and their state/configuration on an individual node. Finally
+        a list of cluster-wide locks is shown.
+    </k:section>
+    <k:section heading="Nodes" anchor="nodes">
+        <p>
+            The node list shows the software version and uptime of each node. This also permits to remove a stale node from
+            the cluster (Note: If the node is still physically present, it will re-appear quickly). It also permits to
+            start "bleeding" of a node. <b>Bleeding</b> means, that the node is still continuing to operate but it will
+            signal to a loadbalancer that it will shutdown soon and won't take any new requests. The same goes for
+            background tasks - running tasks will be finished, but the node will not pickup any new work.
+        </p>
+        <p>
+            Bleeding as well as the node state can also be started and observed via the
+            <a href="/system/api/cluster" target="_blank">Cluster Health API</a>.
+        </p>
+    </k:section>
+    <k:section heading="Background Jobs" anchor="background-jobs">
+        Lists all jobs which can run in the background. These are:
+        <ul>
+            <li><b>Background Loops</b>, which more or less run constantly in back background.</li>
+            <li><b>Queues / Distributed Tasks</b>, which are job queues that are executed on specific nodes.</li>
+            <li><b>Daily Tasks</b>, which run once a day.</li>
+        </ul>
+        <p>
+            Each Job can be globally (cluster-wide) enabled and disabled. Additionally, it can be disabled on a
+            "per-node" level. Also, the synchronization pattern in general can be chosen. <b>CLUSTER</b> means,
+            that the job ins only executed on one node at the same time. <b>LOCAL</b> indicates, that the job
+            can run on multiple nodes in parallel. <b>DISABLED</b> selects, that the job is disabled, either on
+            this node, or in general.
+        </p>
+        <p>
+            While the first two settings enabling/disabling a job globally or locally
+            are intended for system maintenance and ad-hoc management tasks, the synchronization pattern should
+            be setup permanently. Either via a global config or by using a local <b>instance.conf</b> per node.
+            This can be used to setup the cluster topology so that specific jobs only run on chosen nodes.
+        </p>
+    </k:section>
+    <k:section heading="Locks" anchor="locks">
+        Show all system-wide obtained locks. Note that the <a href="/system/console" target="_blank">console</a> command
+        <k:inlineCode>locks</k:inlineCode> shows an equivalent output and also permits to kill a lock forcefully.
+    </k:section>
+</k:article>

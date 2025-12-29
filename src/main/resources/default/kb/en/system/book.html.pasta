@@ -1,5 +1,0 @@
-<k:chapter code="HDJEK" lang="en" priority="900" title="System Manual" permissions="flag-system-tenant" parent="00000">
-    <i:block name="description">
-        Provides infos for system administrators and developers.
-    </i:block>
-</k:chapter>

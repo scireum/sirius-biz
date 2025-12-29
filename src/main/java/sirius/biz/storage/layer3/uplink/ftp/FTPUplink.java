@@ -158,9 +158,9 @@ public class FTPUplink extends ConfigBasedUplink {
             throws IOException {
         if (checkForMLSD(client)) {
             if (ftpFileFilter != null) {
-                return client.mlistDir(relativeParent.getPath(), ftpFileFilter);
+                return fixMlsdPermissions(client.mlistDir(relativeParent.getPath(), ftpFileFilter));
             } else {
-                return client.mlistDir(relativeParent.getPath());
+                return fixMlsdPermissions(client.mlistDir(relativeParent.getPath()));
             }
         } else {
             if (ftpFileFilter != null) {
@@ -172,8 +172,35 @@ public class FTPUplink extends ConfigBasedUplink {
     }
 
     /**
-     * Without MLSD support, we have to fix the permissions manually as depending on the used FTP server, the
-     * permission information might not be provided which gets interpreted as "no permissions".
+     * Fix the permissions manually for servers with MLSD support, as depending on the used FTP server, the
+     * permission information might not be provided in the response which gets interpreted as "no permissions".
+     * <p>
+     * This checks the original listing to figure out whether the permissions are really missing, or if the user has no
+     * permission.
+     *
+     * @param files the input files
+     * @return the files with fixed permissions
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc3659">MLSD spec</a> for details
+     */
+    private FTPFile[] fixMlsdPermissions(FTPFile[] files) {
+        for (FTPFile file : files) {
+            String facts = Strings.split(Value.of(file.getRawListing()).toLowerCase(), " ").getFirst();
+
+            if (hasNoPermissionsForFile(file) && !facts.contains("unix.mode=") && !facts.contains("perm=")) {
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION, true);
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION, true);
+                file.setPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION, true);
+            }
+        }
+        return files;
+    }
+
+    /**
+     * Fix the permissions manually for servers without MLSD support, as depending on the used FTP server, the
+     * permission information might not be provided in the LIST response which gets interpreted as "no permissions".
+     * <p>
+     * Due to the variety of different formats, there is no simple check to find out whether the permissions are really
+     * missing, or if the user has no permission.
      *
      * @param files the input files
      * @return the files with fixed permissions
@@ -181,15 +208,19 @@ public class FTPUplink extends ConfigBasedUplink {
      */
     private FTPFile[] fixNonMlsdPermissions(FTPFile[] files) {
         for (FTPFile file : files) {
-            if (!file.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-                && !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
-                && !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)) {
+            if (hasNoPermissionsForFile(file)) {
                 file.setPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION, true);
                 file.setPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION, true);
                 file.setPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION, true);
             }
         }
         return files;
+    }
+
+    private boolean hasNoPermissionsForFile(FTPFile file) {
+        return !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
+               && !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
+               && !file.hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION);
     }
 
     private boolean isUsable(FTPFile entry) {

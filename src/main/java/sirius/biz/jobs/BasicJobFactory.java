@@ -21,11 +21,13 @@ import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
+import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
 import sirius.web.http.QueryString;
@@ -213,7 +215,7 @@ public abstract class BasicJobFactory implements JobFactory {
             sb.append(mf.firstCall() ? "?" : "&");
             sb.append(setting.getKey());
             sb.append("=");
-            sb.append(Strings.urlEncode(NLS.toMachineString(setting.getValue())));
+            sb.append(Urls.encode(NLS.toMachineString(setting.getValue())));
         }
         return sb.toString();
     }
@@ -278,11 +280,35 @@ public abstract class BasicJobFactory implements JobFactory {
     public String startInBackground(Function<String, Value> parameterProvider) {
         enforceAccessibility();
         setupTaskContext();
-        Map<String, String> context = buildAndVerifyContext(parameterProvider, true, (param, error) -> {
-            throw error;
-        });
 
-        return executeInBackground(context);
+        return executeInBackground(buildAndVerifyContext(parameterProvider));
+    }
+
+    /**
+     * Builds and verifies the context for this job execution based on the given parameter provider.
+     *
+     * @param parameterProvider provides the values for the parameters of this job
+     * @return a map containing the parameter names as keys and the transformed values as values
+     * @throws HandledException if any provided parameter value is invalid or required but missing.
+     * @implNote exceptions are logged extra as they are most likely unlogged handled exceptions which would otherwise
+     * lead to silent failures of job presets and scheduled jobs .
+     */
+    private Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider) {
+        return buildAndVerifyContext(parameterProvider, true, (parameter, handledException) -> {
+            Exceptions.handle().to(Log.BACKGROUND).withSystemErrorMessage("""
+                                                                                  Starting background job failed for erroneous parameter:
+                                                                                   - Tenant: %s
+                                                                                   - Job: %s
+                                                                                   - Parameter: %s
+                                                                                   - Message: %s
+                                                                                  """,
+                                                                          UserContext.getCurrentUser().getTenantId(),
+                                                                          getName(),
+                                                                          parameter.getName(),
+                                                                          handledException.getMessage()).handle();
+
+            throw handledException;
+        });
     }
 
     /**

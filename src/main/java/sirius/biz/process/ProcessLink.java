@@ -9,6 +9,7 @@
 package sirius.biz.process;
 
 import sirius.db.mixing.Nested;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
 
 /**
@@ -48,5 +49,21 @@ public class ProcessLink extends Nested {
 
     public String getUri() {
         return uri;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof ProcessLink otherLink) {
+            return Strings.areEqual(label, otherLink.label) && Strings.areEqual(uri, otherLink.uri);
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int labelHash = label != null ? label.hashCode() : "".hashCode();
+        int uriHash = uri != null ? uri.hashCode() : "".hashCode();
+        return labelHash ^ uriHash;
     }
 }

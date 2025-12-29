@@ -20,6 +20,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
@@ -131,7 +132,7 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
         return Optional.ofNullable(tableNameToType.get(tableName))
                        .map(typeName -> Strings.apply("/job/%s?type=%s",
                                                       ClickhouseSizeChartJobFactory.JOB_NAME,
-                                                      Strings.urlEncode(typeName)))
+                                                      Urls.encode(typeName)))
                        .orElse(null);
     }
 

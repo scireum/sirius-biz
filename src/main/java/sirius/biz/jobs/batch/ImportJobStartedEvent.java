@@ -15,10 +15,8 @@ import sirius.biz.scripting.ScriptableEvent;
  * Signals that an {@link ImportJob} has been started.
  * <p>
  * This might be used to perform some preparation steps like downloading the file to import into the work directory.
- *
- * @param <T> the import job type being started
  */
-public class ImportJobStartedEvent<T> extends ScriptableEvent {
+public class ImportJobStartedEvent extends ScriptableEvent {
 
     private final ImportJob job;
     private final ProcessContext process;
@@ -42,8 +40,6 @@ public class ImportJobStartedEvent<T> extends ScriptableEvent {
     public ProcessContext getProcess() {
         return process;
     }
-
-    @SuppressWarnings("unchecked")
 
     @Override
     public String toString() {

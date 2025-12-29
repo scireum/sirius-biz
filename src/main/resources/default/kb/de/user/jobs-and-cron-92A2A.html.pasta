@@ -1,0 +1,251 @@
+<k:article code="92A2A" lang="de" parent="SLEOK"
+           title="Jobs und ihre geplante Ausführung"
+           permissions="">
+    <i:block name="description">
+        Erklärt wie Jobs über die Nutzerschnittstelle gestartet werden können, und wie ihre Ausführung für einen
+        späteren Zeitpunkt oder Wiederholung vorgemerkt werden kann.
+    </i:block>
+
+    <i:block name="sidebar">
+        <k:toc>
+            <k:tocLink link="#setup">Einrichtung einer geplanten Ausführung</k:tocLink>
+            <k:tocLink link="#scheduling">Zeitliche Planung</k:tocLink>
+            <k:tocLink link="#examples">Beispiele</k:tocLink>
+        </k:toc>
+    </i:block>
+
+    <k:section>
+        <p>
+            Manche Aktivitäten – etwa der Import größerer Datenmengen – können nicht sofort erledigt werden, da sie zu
+            viel Zeit benötigen.
+            In solchen Fällen stehen sogenannte <em>„Jobs“</em> zur Verfügung, die die Aktion im Hintergrund ausführen
+            und protokollieren.
+            Die Einrichtung eines solchen Jobs erfolgt gewöhnlich entweder über die
+            <k:link link="/jobs" target="_blank">Übersichtsseite aller Jobs</k:link> oder über den Menüpunkt „Passende
+            Jobs“, der sich an diversen Stellen im System findet.
+        </p>
+        <p>
+            Nach der Auswahl eines Jobs fragt Sie das System nach Werten für etwaige Parameter und bietet einen Button
+            zum eigentlichen Starten des Jobs an.
+            Wird dieser betätigt, dann wird für den Job ein sogenannter Prozess erzeugt, der den Fortschritt und die
+            Resultate der Ausführung wiedergibt.
+            Auch nach Abschluss der Arbeiten bleibt der Prozess – im Rahmen der eingestellten Aufbewahrungsfrist – über
+            die <k:link link="/ps" target="_blank">Übersichtsseite aller Prozesse</k:link> verfügbar.
+        </p>
+        <p>
+            Normalerweise werden Jobs erstellt und direkt ausgeführt.
+            Bisweilen bietet es sich jedoch auch an, einen Job wiederkehrend oder für die zukünftige Ausführung
+            einzurichten.
+            Hierfür sieht das System <em>„Geplante Ausführungen“</em> vor, die über ihre
+            <k:link link="/jobs/scheduler" target="_blank">eigene Übersichtsseite</k:link> zugänglich sind.
+            Diese Übersicht erreichen Sie auch über die Schaltfläche „Geplante Ausführungen“ oberhalb der Job-Übersicht.
+        </p>
+    </k:section>
+
+    <k:section heading="Einrichtung einer geplanten Ausführung" anchor="setup">
+        <p>
+            Wenn Sie eine geplante Ausführung <k:link link="/jobs/scheduler/entry/new" target="_blank">neu
+            einrichten</k:link>, dann gelangen Sie nach der Auswahl des Jobs zu den eigentlichen Einstellungen.
+            Auf die gleiche Seite gelangen Sie, wenn Sie eine bestehende geplante Ausführung bearbeiten, indem Sie auf
+            die entsprechende Karte auf der <k:link link="/jobs/scheduler" target="_blank">Übersichtsseite</k:link>
+            klicken.
+            Diese Einrichtungsseite gliedert sich in bis zu drei Abschnitte.
+        </p>
+        <p>
+            Zuerst finden sich in einem ersten Abschnitt allgemeine Einstellungen, darunter das ausführende Nutzerkonto,
+            ein genereller An/Aus-Schalter, sowie ein Zähler für verbleibende Ausführungen – sollte die Ausführung nach
+            einer gewissen Anzahl an Wiederholung automatisch wieder deaktiviert werden.
+        </p>
+
+        <k:previewImage url="/kb/de/user/images/jobs-general.png"
+                        title="Allgemeine Einstellungen einer geplanten Job-Ausführung"/>
+
+        <p>
+            Dann folgen in einem zweiten Abschnitt die Einstellungen zur Terminierung der Ausführung.
+            Die Logik wird im <k:link link="#scheduling">nachfolgenden Abschnitt</k:link> genau beschrieben.
+        </p>
+        <p>
+            Schließlich finden sich in einem dritten Abschnitt die eigentlichen Job-Parameter.
+            Sollte der Job keine Parameter haben, wird dieser Abschnitt nicht angezeigt.
+        </p>
+    </k:section>
+
+    <k:section heading="Zeitliche Planung" anchor="scheduling">
+        <p>
+            Das System verwendet für die Terminierung eine Logik, die dem bekannten UNIX-Dienst <code>cron</code>
+            ähnelt, in Details davon jedoch abweicht.
+        </p>
+        <p>
+            Grundsätzlich überprüft das System jede Minute bei jeder geplanten Ausführung, ob der Job gestartet werden
+            soll.
+            Ist dies der Fall, wird der Job eingeplant und&nbsp;– sobald Ressourcen zur Verfügung stehen&nbsp;–
+            ausgeführt.
+            Ab diesem Zeitpunkt steht der neue Prozess über die <k:link link="/ps" target="_blank">entsprechende
+            Übersichtsseite</k:link> zur Verfügung.
+        </p>
+        <p>
+            Um zu entscheiden, ob der Job gestartet werden soll, definiert jede geplante Ausführung sechs Muster für
+            Jahreszahl, Monat, Tag, Wochentag, Stunde und Minute, die mit der aktuellen Zeit verglichen werden.
+            Stimmen <em>gleichzeitig alle</em> sechs Muster mit der aktuellen Zeit überein, wird die Ausführung
+            gestartet.
+            Die sechs Muster sind insofern <code>UND</code>-verknüpft.
+        </p>
+
+        <k:previewImage url="/kb/de/user/images/jobs-scheduling.png"
+                        title="Zeiteinstellungen für eine geplante Job-Ausführung"/>
+
+
+        <p>
+            Jedes der Muster kann verschiedene Formen annehmen:
+        </p>
+
+        <ul>
+            <li>
+                Ein Asterisk <code>*</code> oder ein leerer String passt immer.
+                Geben Sie etwa <code>*</code> für das Jahr an, dann definieren Sie keine Einschränkung für das Jahr.
+            </li>
+            <li>
+                Ein fester Wert erfordert genaue Übereinstimmung.
+                Geben Sie etwa <code>5</code> für den Monat an, dann müssen wir uns im <em>Mai</em> befinden.
+            </li>
+            <li>
+                Ein Zeitraum, also zwei Werte getrennt durch einen Bindestrich, erweitert dies auf mehrere aufeinander
+                folgende Werte.
+                Geben Sie etwa <code>5-7</code> für den Tag an, dann müssen wir uns <em>am 5., 6. oder 7. Tag des
+                Monats</em> befinden.
+            </li>
+            <li>
+                Eine Moduloangabe, also ein Schrägstrich gefolgt von einem Wert, erzwingt Teilbarkeit ohne Rest.
+                Geben Sie etwa <code>/3</code> für die Stunde an, so wird eingeschränkt auf die <em>Stunden 0, 3, 6, 9,
+                und jede weitere genau durch drei teilbare Stunde</em>.
+            </li>
+            <li>
+                Diese Angaben können, durch Kommata getrennt, kombiniert werden.
+                In diesem Fall genügt es, wenn eine der Angaben der Liste zutrifft.
+                Es handelt sich also um eine <code>ODER</code>-Verknüpfung.
+                Geben Sie etwa <code>2,9-11,/10</code> für die Minute an, so müssen wir uns in <em>Minute 0 (wegen der
+                Moduloangabe), 2 (wegen des festen Wertes), 9 (wegen des Zeitraums), 10 (wegen der Moduloangabe bzw.
+                des Zeitraumes), 11 (wegen des Zeitraumes), 20, 30, 40 oder 50 (jeweils wegen der Moduloangabe)</em>
+                befinden.
+            </li>
+        </ul>
+
+        <p>
+            Die in den entsprechenden Mustern zu verwendenden Werte beziehen sich auf die jeweilige Zeiteinheit:
+        </p>
+
+        <ul>
+            <li>
+                Jahresangaben sind nicht eingeschränkt.
+                Eine Ausführung ist jedoch nur dann möglich, wenn das aktuelle oder ein zukünftiges Jahr verwendet wird.
+            </li>
+            <li>
+                Monatsangaben müssen zwischen 1 für Januar und 12 für Dezember liegen.
+            </li>
+            <li>
+                Tagesangaben müssen zwischen 1 und 31 liegen, wobei in Kombination mit Monatsangaben die entsprechende
+                Monatslänge bedacht werden muss.
+            </li>
+            <li>
+                Angaben des Wochentages müssen zwischen 1 für Montag und 7 für Sonntag liegen.
+            </li>
+            <li>
+                Stundenangaben müssen zwischen 0 und 23 liegen.
+                Nachmittagsstunden werden ab 12 Uhr fortlaufend hochgezählt.
+            </li>
+            <li>
+                Minutenangaben müssen zwischen 0 und 59 liegen.
+            </li>
+        </ul>
+
+        <k:warnSection heading="Hinweis">
+            <p>
+                Bitte planen Sie Jobs vernünftig und nicht zu oft ein, sodass das System nicht überlastet wird.
+                Nutzen Sie bevorzugt Nachtzeiten.
+                Im Konfliktfall werden geplante Ausführungen ohne weitere Rücksprache zurückgestellt oder ausgedünnt,
+                sodass das System für alle Nutzer verfügbar bleibt.
+            </p>
+        </k:warnSection>
+    </k:section>
+
+    <k:section heading="Beispiele" anchor="examples">
+        <table class="table table-striped table-small-text">
+            <thead>
+            <tr>
+                <th>Jahr</th>
+                <th>Monat</th>
+                <th>Tag</th>
+                <th>Wochentag</th>
+                <th>Stunde</th>
+                <th>Minute</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>15</code></td>
+                <td><code>*</code></td>
+                <td><code>1</code></td>
+                <td><code>30</code></td>
+                <td>am 15. jeden Monats um 01:30 Uhr früh</td>
+            </tr>
+            <tr>
+                <td><code>/2</code></td>
+                <td><code>1</code></td>
+                <td><code>1</code></td>
+                <td><code>*</code></td>
+                <td><code>12</code></td>
+                <td><code>0</code></td>
+                <td>am 1. Januar jeden geraden Jahres um 12:00 Uhr mittags</td>
+            </tr>
+            <tr>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>3</code></td>
+                <td><code>9</code></td>
+                <td><code>0</code></td>
+                <td>an jedem Mittwoch um 09:00 Uhr früh</td>
+            </tr>
+            <tr>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>1</code></td>
+                <td><code>1</code></td>
+                <td><code>18</code></td>
+                <td><code>0</code></td>
+                <td>am 1. jeden Monats, wenn dieser gleichzeitig ein Montag ist, um 18:00 Uhr abends</td>
+            </tr>
+            <tr>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>/30</code></td>
+                <td>alle 30 Minuten</td>
+            </tr>
+            <tr>
+                <td><code>*</code></td>
+                <td><code>12</code></td>
+                <td><code>31</code></td>
+                <td><code>*</code></td>
+                <td><code>23</code></td>
+                <td><code>*</code></td>
+                <td>am 31. Dezember jeden Jahres, jede Minute zwischen 23:00 und 23:59 Uhr nachts</td>
+            </tr>
+            <tr>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td><code>*</code></td>
+                <td>jede Minute</td>
+            </tr>
+            </tbody>
+        </table>
+    </k:section>
+</k:article>

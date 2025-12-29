@@ -1,0 +1,31 @@
+<k:article code="VFLEO" lang="de" parent="DJELK" title="Knowledge Base" permissions="flag-system-tenant">
+    <i:block name="description">Administration and Maintenance of the Knowledge Base</i:block>
+
+    <i:block name="sidebar">
+        <k:toc>
+            <k:tocLink link="#authoring-new-articles">Authoring new Articles</k:tocLink>
+            <k:tocLink link="#maintenance">Maintenance</k:tocLink>
+        </k:toc>
+    </i:block>
+
+    <k:section heading="Authoring new Articles" anchor="authoring-new-articles">
+        <p>
+            The Knowledge Base finds and loads all Tagliatelle files provided in sub-directories of
+            <k:inlineCode>kb</k:inlineCode>.
+        </p>
+        <p>
+            Knowledge Base Articles (<b>KBA</b>) should use the <k:inlineCode>k:article</k:inlineCode> tag to create a
+            proper template. Each template gets assigned a unique five letter or code to reference to it. In case a code
+            is needed <k:inlineCode>@Strings.generateCode(5).toUpperCase()</k:inlineCode> can be used.
+        </p>
+        <p>
+            In order to put a KBA into the hierarchy, a proper parent chapter as to be selected or can be created by
+            providing another template which uses the <k:inlineCode>k:chapter</k:inlineCode> tag.
+        </p>
+    </k:section>
+    <k:section heading="Maintenance" anchor="maintenance">
+        Articles will be loaded into Elasticsearch automatically by an "end of day" task. In order to view or test
+        a template immediately, the <a href="/system/console" target="_blank">Console</a> can be used to emit
+        <k:inlineCode>eod synchronize-knowledgebase</k:inlineCode> which forces a synchronization of all articles.
+    </k:section>
+</k:article>

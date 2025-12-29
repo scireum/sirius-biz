@@ -8,11 +8,13 @@
 
 package sirius.biz.scripting.mongo;
 
+import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.scripting.ScriptableEventRegistry;
 import sirius.biz.scripting.ScriptingController;
 import sirius.biz.web.BizController;
 import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.tokenizer.Position;
 import sirius.pasta.noodle.compiler.CompilationContext;
@@ -25,6 +27,8 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
+
+import java.util.Optional;
 
 /**
  * Provides the management UI for {@link MongoCustomScript custom scripts}.
@@ -46,8 +50,7 @@ public class MongoCustomScriptController extends BizController {
                 MongoPageHelper.withQuery(tenants.forCurrentTenant(mango.select(MongoCustomScript.class)
                                                                         .orderAsc(MongoCustomScript.CODE)))
                                .withContext(webContext);
-
-        pageHelper.withSearchFields(QueryField.startsWith(MongoCustomScript.SEARCH_PREFIXES));
+        pageHelper.withSearchFields(QueryField.startsWith(PrefixSearchableEntity.SEARCH_PREFIXES));
         webContext.respondWith().template("/templates/biz/scripting/mongo-scripts.html.pasta", pageHelper.asPage());
     }
 
@@ -68,15 +71,25 @@ public class MongoCustomScriptController extends BizController {
     }
 
     /**
-     * Deletes the given script.
+     * Handles deletion, enabling and disabling of scripts.
      *
      * @param webContext the request to handle
-     * @param id         the ID of the script to delete
+     * @param id         the ID of the script to handle
+     * @param action     the action to perform, which can be either <tt>delete</tt>, <tt>enable</tt>, or <tt>disable</tt>
      */
-    @Routed("/scripting/scripts/:1/delete")
+    @Routed("/scripting/scripts/:1/:2")
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
-    public void deleteScript(WebContext webContext, String id) {
-        deleteEntity(webContext, tryFindForTenant(MongoCustomScript.class, id));
+    public void handleScriptAction(WebContext webContext, String id, String action) {
+        MongoCustomScript script = findForTenant(MongoCustomScript.class, id);
+        if (Strings.isFilled(action) && webContext.isSafePOST()) {
+            if ("delete".equals(action)) {
+                deleteEntity(webContext, Optional.of(script));
+            }
+            if ("enable".equals(action) || "disable".equals(action)) {
+                script.setDisabled("disable".equals(action));
+                mango.update(script);
+            }
+        }
         webContext.respondWith().redirectToGet("/scripting/scripts");
     }
 

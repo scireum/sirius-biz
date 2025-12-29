@@ -156,9 +156,9 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
             return null;
         }
 
-        if (context.getEventDispatcher().isActive()) {
+        if (context.getEventHandler().isActive()) {
             BeforeLoadEvent<E> beforeLoadEvent = new BeforeLoadEvent<>(entity, data, context);
-            context.getEventDispatcher().handleEvent(beforeLoadEvent);
+            context.getEventHandler().handleEvent(beforeLoadEvent);
             if (beforeLoadEvent.isAborted()) {
                 data.put(SCRIPT_ABORTED, true);
                 return null;
@@ -167,9 +167,9 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
         E result = load(data, entity, mappingsToLoad);
 
-        if (context.getEventDispatcher().isActive()) {
+        if (context.getEventHandler().isActive()) {
             AfterLoadEvent<E> afterLoadEvent = new AfterLoadEvent<>(result, data, context);
-            context.getEventDispatcher().handleEvent(afterLoadEvent);
+            context.getEventHandler().handleEvent(afterLoadEvent);
             if (afterLoadEvent.isAborted()) {
                 data.put(SCRIPT_ABORTED, true);
                 return null;
@@ -182,9 +182,9 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     @SuppressWarnings("unchecked")
     @Override
     public Optional<E> tryFind(Context data) {
-        if (context.getEventDispatcher().isActive()) {
+        if (context.getEventHandler().isActive()) {
             BeforeFindEvent<E> beforeFindEvent = new BeforeFindEvent<>((Class<E>) descriptor.getType(), data, context);
-            context.getEventDispatcher().handleEvent(beforeFindEvent);
+            context.getEventHandler().handleEvent(beforeFindEvent);
             if (beforeFindEvent.isAborted()) {
                 data.put(SCRIPT_ABORTED, true);
                 return Optional.empty();
@@ -270,10 +270,10 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         }
 
         try {
-            if (context.getEventDispatcher().isActive()) {
+            if (context.getEventHandler().isActive()) {
                 BeforeCreateOrUpdateEvent<E> beforeCreateOrUpdateEvent =
                         new BeforeCreateOrUpdateEvent<>(entity, context);
-                context.getEventDispatcher().handleEvent(beforeCreateOrUpdateEvent);
+                context.getEventHandler().handleEvent(beforeCreateOrUpdateEvent);
                 if (beforeCreateOrUpdateEvent.isAborted()) {
                     return null;
                 }
@@ -309,6 +309,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected E createIfChanged(E entity, boolean batch) {
         if (isChanged(entity)) {
             getInsertQuery().insert(entity, true, batch);
+            invokeAfterSaveEvent(entity);
         }
 
         return entity;
@@ -337,6 +338,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected E updateIfChanged(E entity, boolean batch) {
         if (isChanged(entity)) {
             getUpdateQuery().update(entity, true, batch);
+            invokeAfterSaveEvent(entity);
         }
 
         return entity;
@@ -423,6 +425,13 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
         if (deleteQuery != null) {
             deleteQuery.commit();
+        }
+    }
+
+    private void invokeAfterSaveEvent(E entity) {
+        if (context.getEventHandler().isActive()) {
+            AfterCreateOrUpdateEvent<E> afterCreateOrUpdateEvent = new AfterCreateOrUpdateEvent<>(entity, context);
+            context.getEventHandler().handleEvent(afterCreateOrUpdateEvent);
         }
     }
 }

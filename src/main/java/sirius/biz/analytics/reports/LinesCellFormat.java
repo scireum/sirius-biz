@@ -9,6 +9,7 @@
 package sirius.biz.analytics.reports;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Json;
 import sirius.kernel.di.std.Register;
@@ -38,7 +39,7 @@ public class LinesCellFormat implements CellFormat {
 
     private String format(ObjectNode data, String delimiter) {
         return Json.tryGetArray(data, KEY_VALUES)
-                   .map(Json::streamEntries)
+                   .map(ArrayNode::valueStream)
                    .orElseGet(Stream::empty)
                    .map(JsonNode::asText)
                    .collect(Collectors.joining(delimiter));

@@ -14,6 +14,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -378,24 +379,7 @@ public class URLBuilder {
      * virtual, physical, the fallback URL or empty.
      */
     public UrlResult buildUrlResult() {
-        if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
-            if (Strings.isFilled(fallbackUri)) {
-                return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
-            }
-            return new UrlResult(null, UrlType.EMPTY);
-        }
-
-        if (suppressCache) {
-            // Manual cache control is only supported in virtual calls, not physical...
-            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
-        }
-        if (delayResolve && !isPhysicalKeyReadilyAvailable()) {
-            // The caller specifically requested, that we do not forcefully compute the physical URL (which might
-            // require a lookup), but to rather use the virtual URL...
-            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
-        }
-
-        return createPhysicalDeliveryUrlResult();
+        return buildUrlResult(null);
     }
 
     /**
@@ -421,18 +405,11 @@ public class URLBuilder {
      * @see #safeBuildURL(String)
      */
     public String buildImageURL() {
-        try {
-            UrlResult urlResult = buildUrlResult();
-            if (urlResult.urlType() == UrlType.EMPTY) {
-                return createBaseURL().append(IMAGE_FALLBACK_URI).toString();
-            } else {
-                return urlResult.url();
-            }
-        } catch (HandledException exception) {
-            // A handled exception here means we've exceeded the maximum number of attempts to convert the variant.
-            Exceptions.ignore(exception);
-            return createBaseURL().append(IMAGE_FAILED_URI).toString();
+        UrlResult urlResult = buildUrlResult(IMAGE_FAILED_URI);
+        if (urlResult.urlType() == UrlType.EMPTY && Strings.isEmpty(urlResult.url())) {
+            return createBaseURL().append(IMAGE_FALLBACK_URI).toString();
         }
+        return urlResult.url();
     }
 
     /**
@@ -475,10 +452,45 @@ public class URLBuilder {
         return Strings.areEqual(variant, VARIANT_RAW) && blob != null;
     }
 
-    private UrlResult createPhysicalDeliveryUrlResult() {
+    private UrlResult buildUrlResult(String alternativeFailedUri) {
+        if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
+            if (Strings.isFilled(fallbackUri)) {
+                return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
+            }
+            return new UrlResult(null, UrlType.EMPTY);
+        }
+
+        if (suppressCache) {
+            // Manual cache control is only supported in virtual calls, not physical...
+            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
+        }
+        if (delayResolve && !isPhysicalKeyReadilyAvailable()) {
+            // The caller specifically requested, that we do not forcefully compute the physical URL (which might
+            // require a lookup), but to rather use the virtual URL...
+            return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
+        }
+
+        return createPhysicalDeliveryUrlResult(alternativeFailedUri);
+    }
+
+    private UrlResult createPhysicalDeliveryUrlResult(String alternativeFailedUri) {
         StringBuilder result = createBaseURL();
 
-        String physicalKey = determinePhysicalKey();
+        String physicalKey = null;
+        try {
+            physicalKey = determinePhysicalKey();
+        } catch (Exception exception) {
+            // The conversion ultimately failed. Return the fallback URL if specified, otherwise an empty result.
+            Exceptions.ignore(exception);
+            if (Strings.isFilled(alternativeFailedUri)) {
+                return new UrlResult(createBaseURL().append(alternativeFailedUri).toString(), UrlType.EMPTY);
+            } else if (Strings.isFilled(fallbackUri)) {
+                return new UrlResult(createBaseURL().append(fallbackUri).toString(), UrlType.FALLBACK);
+            } else {
+                return new UrlResult(null, UrlType.EMPTY);
+            }
+        }
+
         if (Strings.isEmpty(physicalKey)) {
             return new UrlResult(createVirtualDeliveryUrl(), UrlType.VIRTUAL);
         }
@@ -518,8 +530,7 @@ public class URLBuilder {
         result.append(physicalKey);
         result.append("/");
         appendAddonText(result);
-        result.append(Strings.urlEncode(Files.toSaneFileName(filename)
-                                             .orElse(physicalKey + fetchUrlEncodedFileExtension())));
+        result.append(Urls.encode(Files.toSaneFileName(filename).orElse(physicalKey + fetchUrlEncodedFileExtension())));
     }
 
     private String createVirtualDeliveryUrl() {
@@ -546,7 +557,7 @@ public class URLBuilder {
             result.append(blobKey);
             result.append("/");
             appendAddonText(result);
-            result.append(Strings.urlEncode(determineEffectiveFilename()));
+            result.append(Urls.encode(determineEffectiveFilename()));
         } else {
             result.append("/");
             appendAddonText(result);
@@ -575,10 +586,10 @@ public class URLBuilder {
     private boolean appendHook(StringBuilder urlBuilder) {
         if (Strings.isFilled(hook)) {
             urlBuilder.append("?hook=");
-            urlBuilder.append(Strings.urlEncode(hook));
+            urlBuilder.append(Urls.encode(hook));
             if (Strings.isFilled(payload)) {
                 urlBuilder.append("&payload=");
-                urlBuilder.append(Strings.urlEncode(payload));
+                urlBuilder.append(Urls.encode(payload));
             }
             return true;
         }
@@ -666,7 +677,7 @@ public class URLBuilder {
         String result = determineVariantFileExtension().orElseGet(() -> Files.getFileExtension(determineFilename()));
 
         if (Strings.isFilled(result)) {
-            return "." + Strings.urlEncode(result);
+            return "." + Urls.encode(result);
         } else {
             return "";
         }

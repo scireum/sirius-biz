@@ -480,7 +480,7 @@ public class Processes {
 
                 process2ndLevelCache.put(processId, process);
                 return true;
-            } catch (OptimisticLockException exception) {
+            } catch (OptimisticLockException _) {
                 Wait.randomMillis(250, 500);
                 process = elastic.find(Process.class, processId).orElse(null);
             } catch (IntegrityConstraintFailedException exception) {
@@ -501,7 +501,7 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean updateState(String processId, ProcessState newState) {
-        return modify(processId, null, process -> process.setState(newState));
+        return modify(processId, process -> true, process -> process.setState(newState));
     }
 
     /**
@@ -533,6 +533,7 @@ public class Processes {
             process.setErrorneous(true);
             process.setCanceled(LocalDateTime.now());
             process.setState(ProcessState.CANCELED);
+            process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
         });
     }
 
@@ -542,7 +543,7 @@ public class Processes {
      * @param processId the process to update
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean markErrorneous(String processId) {
+    protected boolean markErroneous(String processId) {
         return modify(processId,
                       process -> !process.isErrorneous() && process.getState() == ProcessState.RUNNING,
                       process -> {
@@ -693,6 +694,41 @@ public class Processes {
     }
 
     /**
+     * Adds the given link to the given process if it is not already present, based on the link's
+     * {@link ProcessLink#equals(Object) equals(Object)} method.
+     * <p>
+     * When running inside a process the preferred way to add a link is using
+     * {@link ProcessContext#addUniqueLink(ProcessLink)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
+     *
+     * @param processId the process to update
+     * @param link      the link to add
+     * @return <tt>true</tt> if the process was successfully modified or if the link was present before, <tt>false</tt>
+     * otherwise
+     */
+    public boolean addUniqueLink(String processId, ProcessLink link) {
+        return modify(processId, process -> true, process -> {
+            if (!process.getLinks().contains(link)) {
+                process.getLinks().add(link);
+            }
+        });
+    }
+
+    /**
+     * Clears all links from the given process.
+     * <p>
+     * When running inside a process the preferred way to add a link is using
+     * {@link ProcessContext#clearLinks()}. This method is only made public so that outside helper classes
+     * can contribute to the process.
+     *
+     * @param processId the process to update
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    public boolean clearLinks(String processId) {
+        return modify(processId, process -> true, process -> process.getLinks().clear());
+    }
+
+    /**
      * Adds the given reference to the given process.
      * <p>
      * When running inside a process the preferred way to add a reference is using
@@ -798,7 +834,7 @@ public class Processes {
     public void log(String processId, ProcessLog logEntry) {
         try {
             if (logEntry.getType() == ProcessLogType.ERROR) {
-                markErrorneous(processId);
+                markErroneous(processId);
             } else if (logEntry.getType() == ProcessLogType.WARNING) {
                 markWarnings(processId);
             }

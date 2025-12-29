@@ -22,6 +22,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -32,6 +33,7 @@ import java.util.Optional;
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @Index(name = "physical_key_lookup", columns = {"sourceBlob", "variantName"})
+@Index(name = "physical_object_lookup", columns = "physicalObjectKey")
 public class SQLVariant extends SQLEntity implements BlobVariant {
 
     /**
@@ -99,6 +101,14 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      */
     public static final Mapping TRANSFER_DURATION = Mapping.named("transferDuration");
     private long transferDuration;
+
+    /**
+     * Stores the checksum of the variant.
+     */
+    public static final Mapping CHECKSUM = Mapping.named("checksum");
+    @NullAllowed
+    @Length(255)
+    private String checksum;
 
     /**
      * Stores the node name on which the last conversion was attempted.
@@ -225,5 +235,15 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     public void setTransferDuration(long transferDuration) {
         this.transferDuration = transferDuration;
+    }
+
+    @Nullable
+    @Override
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
     }
 }

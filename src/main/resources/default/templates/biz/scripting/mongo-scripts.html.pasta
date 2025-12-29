@@ -27,6 +27,21 @@
                             </i:else>
                         </i:if>
                     </i:block>
+                    <i:block name="actions">
+                        <i:if test="script.isDisabled()">
+                            <t:dropdownItem icon="fa-solid fa-circle-check"
+                                            labelKey="MongoCustomScript.action.enableScript"
+                                            sendPostRequest="true"
+                                            url="@apply('/scripting/scripts/%s/enable', script.getIdAsString())"/>
+                            <i:else>
+                                <t:dropdownItem icon="fa-solid fa-ban"
+                                                labelKey="MongoCustomScript.action.disableScript"
+                                                sendPostRequest="true"
+                                                url="@apply('/scripting/scripts/%s/disable', script.getIdAsString())"/>
+                            </i:else>
+                        </i:if>
+                        <t:dropdownDeleteItem url="@apply('/scripting/scripts/%s/delete', script.getIdAsString())"/>
+                    </i:block>
                 </t:datacard>
             </i:for>
         </t:datacards>

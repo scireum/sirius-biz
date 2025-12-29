@@ -53,7 +53,7 @@ public abstract class AutoExtractRoot extends JobStartingRoot {
 
         result.withOutputStreamSupplier(uploadFile -> uploadAndTrigger(extractArchiveJob,
                                                                        asParameterProvider(preset),
-                                                                       uploadFile.name()));
+                                                                       uploadFile));
         return result;
     }
 

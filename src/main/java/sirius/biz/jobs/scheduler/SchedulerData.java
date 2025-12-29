@@ -20,6 +20,7 @@ import sirius.kernel.nls.NLS;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,6 +123,13 @@ public class SchedulerData extends Composite {
     @Length(150)
     private String userName;
 
+    /**
+     * Contains the number of years to check for the next scheduled execution.
+     *
+     * @see #estimateNextExecution(LocalDateTime)
+     */
+    public static final int NUMBER_OF_YEARS_TO_CHECK_FOR_NEXT_EXECUTION = 10;
+
     private static final Pattern ALL_EXPRESSION = Pattern.compile(" *\\* *");
     private static final Pattern RANGE_EXPRESSION = Pattern.compile(" *(\\d+) *- *(\\d+) *");
     private static final Pattern MODULO_EXPRESSION = Pattern.compile(" */(\\d+) *");
@@ -166,38 +174,32 @@ public class SchedulerData extends Composite {
      * @return <tt>true</tt> if the task should be executed / scheduled, <tt>false</tt> otherwise
      */
     public boolean shouldRun(LocalDateTime checkpoint) {
-        if (!enabled) {
-            return false;
-        }
-        if (runs != null && runs <= 0) {
-            return false;
-        }
+        return shouldRunBasedOnGeneralSettings() && shouldRunBasedOnLastExecution(checkpoint) && shouldRunBasedOnDate(
+                checkpoint) && shouldRunBasedOnTime(checkpoint);
+    }
 
+    private boolean shouldRunBasedOnGeneralSettings() {
+        return enabled && (runs == null || runs > 0);
+    }
+
+    private boolean shouldRunBasedOnLastExecution(LocalDateTime checkpoint) {
         // Since the scheduler runs about every 50s, we might fire twice in the same minute - in this case,
         // we abort here. If however, an entry is to be executed in two consecutive minutes, we have to execute it
         // even if the execution interval isn't exactly 60s - otherwise we might miss an execution.
-        if (lastExecution != null
-            && Duration.between(lastExecution, checkpoint).getSeconds() <= 60
-            && lastExecution.getMinute() == checkpoint.getMinute()) {
-            return false;
-        }
-        if (!matches(checkpoint.getYear(), year)) {
-            return false;
-        }
-        if (!matches(checkpoint.getMonthValue(), month)) {
-            return false;
-        }
-        if (!matches(checkpoint.getDayOfMonth(), dayOfMonth)) {
-            return false;
-        }
-        if (!matches(checkpoint.getDayOfWeek().getValue(), dayOfWeek)) {
-            return false;
-        }
-        if (!matches(checkpoint.getHour(), hourOfDay)) {
-            return false;
-        }
+        return lastExecution == null
+               || Duration.between(lastExecution, checkpoint).getSeconds() > 60
+               || lastExecution.getMinute() != checkpoint.getMinute();
+    }
 
-        return matches(checkpoint.getMinute(), minute);
+    private boolean shouldRunBasedOnDate(LocalDateTime checkpoint) {
+        return matches(checkpoint.getYear(), year)
+               && matches(checkpoint.getMonthValue(), month)
+               && matches(checkpoint.getDayOfMonth(), dayOfMonth)
+               && matches(checkpoint.getDayOfWeek().getValue(), dayOfWeek);
+    }
+
+    private boolean shouldRunBasedOnTime(LocalDateTime checkpoint) {
+        return matches(checkpoint.getHour(), hourOfDay) && matches(checkpoint.getMinute(), minute);
     }
 
     private boolean matches(int value, String expression) {
@@ -251,6 +253,74 @@ public class SchedulerData extends Composite {
         if (this.runs != null) {
             this.runs -= 1;
         }
+    }
+
+    /**
+     * Estimates the next execution time of this task.
+     * <p>
+     * This is a convenience method which forwards to {@link #estimateNextExecution(LocalDateTime)} with the current
+     * time.
+     *
+     * @return an {@link Optional} containing the next execution time, or an empty {@link Optional} if no execution is
+     * planned in the foreseeable future
+     */
+    public Optional<LocalDateTime> estimateNextExecution() {
+        return estimateNextExecution(LocalDateTime.now());
+    }
+
+    /**
+     * Estimates the next execution time of this task after the given point in time.
+     * <p>
+     * Note that due to possibly complex interactions between the different fields, this method uses brute force to
+     * find the next execution time. This means that it will check every minute for the rest of this day, then every day
+     * for the next {@value #NUMBER_OF_YEARS_TO_CHECK_FOR_NEXT_EXECUTION} years, and then every minute of that
+     * respective day.
+     *
+     * @param checkpoint a point in time to start the estimation from; inclusive
+     * @return an {@link Optional} containing the next execution time after the given checkpoint, or an empty
+     * {@link Optional} if no execution is planned in the foreseeable future
+     */
+    public Optional<LocalDateTime> estimateNextExecution(LocalDateTime checkpoint) {
+        if (!shouldRunBasedOnGeneralSettings()) {
+            return Optional.empty();
+        }
+
+        // first, try to find an execution time today, i.e. before midnight; we check every remaining minute, hence
+        // performing at most 1440 iterations
+        LocalDateTime nextExecution = checkpoint.withSecond(0).withNano(0);
+        LocalDateTime midnightAfterCheckpoint = nextExecution.plusDays(1).withHour(0).withMinute(0);
+        while (nextExecution.isBefore(midnightAfterCheckpoint)) {
+            if (shouldRun(nextExecution)) {
+                return Optional.of(nextExecution);
+            }
+            nextExecution = nextExecution.plusMinutes(1);
+        }
+
+        // having had no success, we now try to find an execution date in the next couple of years, disregarding the
+        // time of day; this loop performs at most 365 * NUMBER_OF_YEARS_TO_CHECK_FOR_NEXT_EXECUTION iterations (plus
+        // an additional iteration per leap year), as we check every day
+        nextExecution = midnightAfterCheckpoint;
+        LocalDateTime cutoffDate = nextExecution.plusYears(NUMBER_OF_YEARS_TO_CHECK_FOR_NEXT_EXECUTION);
+        while (!shouldRunBasedOnDate(nextExecution)) {
+            nextExecution = nextExecution.plusDays(1);
+            if (!nextExecution.isBefore(cutoffDate)) {
+                return Optional.empty();
+            }
+        }
+
+        // now we have a date, but we still need to find the time of day; this loop performs at most 1440 iterations for
+        // checking every minute of the day
+        cutoffDate = nextExecution.plusDays(1);
+        while (nextExecution.isBefore(cutoffDate) && !shouldRunBasedOnTime(nextExecution)) {
+            nextExecution = nextExecution.plusMinutes(1);
+        }
+
+        // finally, we run a full check to ensure that the next execution is valid
+        if (!shouldRun(nextExecution)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(nextExecution);
     }
 
     public boolean isEnabled() {

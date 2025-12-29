@@ -449,6 +449,8 @@
         function exportCharts() {
             const searchParams = new URLSearchParams();
             searchParams.set("range", range);
+            searchParams.set("month", selectedMonth);
+            searchParams.set("year", selectedYear);
             searchParams.set("comparisonPeriod", comparisonPeriod);
             document.querySelectorAll('.chart-js').forEach(function (_chart) {
                 searchParams.append('identifier', _chart.dataset.identifier);
@@ -494,6 +496,11 @@
             performForEach(0, params.getAll('chart'), function (identifier) {
                 return addChart(identifier, true)
             });
+            
+            // Update URL after initial charts are loaded to show export button if charts exist
+            if (params.getAll('chart').length > 0) {
+                updateUrl(true);
+            }
 
             window.addEventListener('popstate', function (event) {
                 let state = history.state;

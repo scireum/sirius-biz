@@ -16,7 +16,9 @@ import sirius.kernel.xml.SOAPClient;
 import sirius.kernel.xml.StructuredNode;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.net.URL;
+import java.net.http.HttpClient;
 
 /**
  * Provides a SOAP client which logs all activities as {@link SOAPCallEvent soap call events}.
@@ -34,10 +36,12 @@ public class MonitoredSOAPClient extends SOAPClient {
      * Note that if the actual endpoint depends on the <tt>action</tt> of the call, use
      * {@link #withCustomEndpoint(String, URL)}.
      *
-     * @param endpoint the default endpoint to talk to
+     * @param clientSelector the selector used to cache the underlying {@link HttpClient} to facilitate connection pooling
+     *                       See {@link sirius.kernel.commons.Outcall#modifyClient(String)}.
+     * @param endpoint       the default endpoint to talk to
      */
-    public MonitoredSOAPClient(@Nonnull URL endpoint) {
-        super(endpoint);
+    public MonitoredSOAPClient(@Nullable String clientSelector, @Nonnull URL endpoint) {
+        super(clientSelector, endpoint);
     }
 
     @Override

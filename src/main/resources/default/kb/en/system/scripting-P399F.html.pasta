@@ -1,0 +1,37 @@
+<k:article code="P399F"
+           lang="en"
+           parent="DJELK"
+           title="Scripting"
+           permissions="flag-system-tenant">
+    <i:block name="description">Describes the scripting functionalities provided by SIRIUS.</i:block>
+    <k:section>
+        <p>
+            The <a href="/system/scripting" target="_blank">Scripting IDE</a> can be used to run administrative scripts
+            on any selected node of the system. Scripts are authored using the <k:ref code="HP9RC"/> language.
+        </p>
+        <p>
+            Once a script is executed, it is assigned with a unique identifier, which used when logging into the
+            transcript. Note that all log messages are visible on each node, independent of the actual node which
+            executes the script.
+        </p>
+        <p>
+            If a script mis-behaves, it can be killed via another script using the thread ID which is logged when
+            the execution starts. Note however, that this script has to run on the same node as the offending one.
+            <k:code>
+                sirius.kernel.async.CallContext.getContext(THREAD_ID).get().get(sirius.kernel.async.TaskContext.class).cancel()
+            </k:code>
+        </p>
+        <p>
+            Note, if the <b>tenants</b> and the <b>processes</b> framework are both enabled, the script can be run
+            as process, which permits communicating with the outside world via <b>/ps</b>:
+            <k:code>
+                part(Tenants.class).runAsAdminProcess('My Process', | ps | {
+                    log('Hello From the Other Side');
+                });
+            </k:code>
+        </p>
+        <p>
+            Also note, that these scripts can be stopped via the processes UI (just like any other process).
+        </p>
+    </k:section>
+</k:article>

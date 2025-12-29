@@ -456,7 +456,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     protected Optional<String> updateBlob(@Nonnull MongoBlob blob,
                                           @Nonnull String nextPhysicalId,
                                           long size,
-                                          @Nullable String filename) throws Exception {
+                                          @Nullable String filename,
+                                          @Nullable String checksum) throws Exception {
         int retries = UPDATE_BLOB_RETRIES;
         while (retries-- > 0) {
             Updater updater = mongo.update()
@@ -468,6 +469,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                 updater.set(MongoBlob.FILENAME, filename)
                        .set(MongoBlob.NORMALIZED_FILENAME, filename.toLowerCase())
                        .set(MongoBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
+            }
+            if (Strings.isFilled(checksum)) {
+                updater.set(MongoBlob.CHECKSUM, checksum);
+            } else {
+                updater.unset(MongoBlob.CHECKSUM);
             }
 
             String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
@@ -796,7 +802,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected MongoVariant createVariant(MongoBlob blob, String variantName, String physicalObjectKey, long size) {
+    protected MongoVariant createVariant(MongoBlob blob,
+                                         String variantName,
+                                         String physicalObjectKey,
+                                         long size,
+                                         @Nullable String checksum) {
         MongoVariant variant = new MongoVariant();
         variant.getBlob().setValue(blob);
         variant.setVariantName(variantName);
@@ -809,6 +819,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         variant.setNode(CallContext.getNodeName());
         variant.setLastConversionAttempt(LocalDateTime.now());
         variant.setNumAttempts(1);
+        variant.setChecksum(checksum);
         mango.update(variant);
         return variant;
     }
@@ -856,15 +867,22 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     protected void markConversionSuccess(MongoVariant variant,
                                          String physicalKey,
                                          ConversionProcess conversionProcess) {
-        mongo.update()
-             .set(MongoVariant.PHYSICAL_OBJECT_KEY, physicalKey)
-             .set(MongoVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
-             .set(MongoVariant.QUEUED_FOR_CONVERSION, false)
-             .set(MongoVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
-             .set(MongoVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
-             .set(MongoVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
-             .where(MongoVariant.ID, variant.getId())
-             .executeForOne(MongoVariant.class);
+        Updater updater = mongo.update()
+                               .set(MongoVariant.PHYSICAL_OBJECT_KEY, physicalKey)
+                               .set(MongoVariant.SIZE, conversionProcess.getResultFileHandle().getFile().length())
+                               .set(MongoVariant.QUEUED_FOR_CONVERSION, false)
+                               .set(MongoVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
+                               .set(MongoVariant.QUEUE_DURATION, conversionProcess.getQueueDuration())
+                               .set(MongoVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
+                               .where(MongoVariant.ID, variant.getId());
+
+        String checksum = computeConversionCheckSum(conversionProcess);
+        if (Strings.isFilled(checksum)) {
+            updater.set(MongoVariant.CHECKSUM, checksum);
+        } else {
+            updater.unset(MongoVariant.CHECKSUM);
+        }
+        updater.executeForOne(MongoVariant.class);
     }
 
     @Override

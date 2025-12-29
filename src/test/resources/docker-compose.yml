@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:7.4.2-alpine
+    image: redis:8.2.2-alpine
     ports:
       - "6379"
     hostname: redis
@@ -12,26 +12,31 @@ services:
     hostname: redis-jupiter
 
   mongo:
-    image: mongo:7.0.16
+    image: mongo:8.0.8
     ports:
       - "27017"
     hostname: mongo
 
   mariadb:
-    image: mariadb:11.4.5-noble
+    image: mariadb:11.8.3-noble
     ports:
       - "3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
     hostname: mariadb
+
   clickhouse:
-    image: clickhouse/clickhouse-server:24.5.1-alpine
+    image: clickhouse/clickhouse-server:25.8.2.29-alpine
     ports:
       - "8123"
       - "9000"
     hostname: clickhouse
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: secret
+
   elasticsearch:
-    image: elasticsearch:8.15.3
+    image: elasticsearch:8.19.3
     ports:
       - "9200"
     environment:

@@ -18,11 +18,13 @@ import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Urls;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
+import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
@@ -137,7 +139,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         executeInBelongingProvider(entry);
         String entryProcessesUrl = Strings.apply("/ps?reference=%s&reference-label=%s",
                                                  entry.getUniqueName(),
-                                                 Strings.urlEncode(entry.toString()));
+                                                 Urls.encode(entry.toString()));
         webContext.respondWith().redirectToGet(entryProcessesUrl);
     }
 
@@ -180,12 +182,24 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     }
 
     private boolean handleJobSelection(J entry, WebContext webContext) {
-        if (entry.isNew() && webContext.isSafePOST()) {
+        if (entry.isNew()) {
             if (webContext.hasParameter("selectedJob")) {
-                entry.getJobConfigData().setJob(webContext.get("selectedJob").asString());
-                webContext.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
+                String jobName = webContext.get("selectedJob").asString();
+
+                if (jobs.tryFindFactory(jobName).filter(JobFactory::isAccessibleToCurrentUser).isPresent()) {
+                    entry.getJobConfigData().setJob(jobName);
+                    webContext.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
+                    return true;
+                }
+
+                UserContext.get()
+                           .addMessage(Message.error()
+                                              .withTextMessage(NLS.fmtr("JobsController.unknownJob")
+                                                                  .set("jobType", jobName)
+                                                                  .format()));
+                webContext.respondWith().redirectToGet("/jobs/scheduler");
                 return true;
-            } else if (webContext.hasParameter("job")) {
+            } else if (webContext.hasParameter("job") && webContext.isSafePOST()) {
                 entry.getJobConfigData().setJob(webContext.get("job").asString());
             }
         }

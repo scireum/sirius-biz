@@ -56,27 +56,16 @@ public class MongoCustomEventDispatcherRepository implements ScriptableEventDisp
     private MongoTenants tenants;
 
     @Override
-    public List<String> fetchAvailableDispatchers(@Nonnull String tenantId) {
+    public List<ScriptableEventDispatcher> fetchDispatchers(@Nonnull String tenantId) {
         return mango.select(MongoCustomScript.class)
                     .where(QueryBuilder.FILTERS.oneInField(MongoCustomScript.TENANT,
                                                            tenants.fetchAllParentIds(tenantId)).build())
                     .eq(MongoCustomScript.DISABLED, false)
-                    .orderAsc(MongoCustomScript.CODE)
                     .queryList()
                     .stream()
-                    .map(MongoCustomScript::getCode)
+                    .map(this::compileAndLoad)
+                    .flatMap(Optional::stream)
                     .toList();
-    }
-
-    @Override
-    public Optional<ScriptableEventDispatcher> fetchDispatcher(@Nonnull String tenantId, @Nonnull String name) {
-        return mango.select(MongoCustomScript.class)
-                    .where(QueryBuilder.FILTERS.oneInField(MongoCustomScript.TENANT,
-                                                           tenants.fetchAllParentIds(tenantId)).build())
-                    .eq(MongoCustomScript.CODE, name)
-                    .eq(MongoCustomScript.DISABLED, false)
-                    .first()
-                    .flatMap(this::compileAndLoad);
     }
 
     private Optional<ScriptableEventDispatcher> compileAndLoad(MongoCustomScript script) {

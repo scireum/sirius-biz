@@ -18,7 +18,7 @@ function loadImageLazily(_img) {
         fetch(mainUrl).then(function (response) {
             if (response.ok) {
                 return response.blob()
-            } else if (response.status === 500) {
+            } else if (response.status === 404 || response.status === 500) {
                 _container.innerHTML = '';
                 _img.src = failed;
                 _container.appendChild(_img);

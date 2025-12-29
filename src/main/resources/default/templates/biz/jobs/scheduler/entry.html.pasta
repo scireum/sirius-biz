@@ -15,6 +15,9 @@
 
     <i:block name="page-header">
         <t:pageHeader title="@entry.toString()">
+            <i:block name="actions">
+                <t:helpLink url="/kba/92A2A"/>
+            </i:block>
             <i:block name="additionalActions">
                 <i:if test="!entry.isNew()">
                     <t:dropdownDeleteItem url="@apply('/jobs/scheduler/entry/%s/delete', entry.getIdAsString())"/>
@@ -78,6 +81,30 @@
         </div>
 
         <t:heading labelKey="SchedulerController.planning"/>
+        <t:helpbox>
+            <i:local name="now" value="@java.time.LocalDateTime.now().withSecond(0).withNano(0)"/>
+            <i:local name="nextExecution" value="@entry.getSchedulerData().estimateNextExecution(now)"/>
+
+            <i:if test="nextExecution.isEmpty()">
+                @NLS.get("SchedulerData.nextExecutionEstimate.nonePlanned", sirius.biz.jobs.scheduler.SchedulerData.NUMBER_OF_YEARS_TO_CHECK_FOR_NEXT_EXECUTION)
+
+                <i:else>
+                    <i:local name="waitingPeriod" value="java.time.Period.between(now.toLocalDate(), nextExecution.get().toLocalDate())"/>
+                    <i:local name="waitingDays" value="java.time.Duration.ofDays(java.time.temporal.ChronoUnit.DAYS.between(now, nextExecution.get()))"/>
+                    <i:local name="waitingDuration" value="java.time.Duration.between(now, nextExecution.get()).minus(waitingDays)"/>
+
+                    <i:local name="years" value="@NLS.get('SchedulerData.nextExecutionEstimate.plannedFor.duration.years', waitingPeriod.getYears())"/>
+                    <i:local name="months" value="@NLS.get('SchedulerData.nextExecutionEstimate.plannedFor.duration.months', waitingPeriod.getMonths())"/>
+                    <i:local name="days" value="@NLS.get('SchedulerData.nextExecutionEstimate.plannedFor.duration.days', waitingPeriod.getDays())"/>
+                    <i:local name="hours" value="@NLS.get('SchedulerData.nextExecutionEstimate.plannedFor.duration.hours', java.lang.Long.valueOf(waitingDuration.toHoursPart()).intValue())"/>
+                    <i:local name="minutes" value="@NLS.get('SchedulerData.nextExecutionEstimate.plannedFor.duration.minutes', java.lang.Long.valueOf(waitingDuration.toMinutesPart()).intValue())"/>
+
+                    @format(i18n("SchedulerData.nextExecutionEstimate.plannedFor")).set("years", years).set("months", months).set("days", days).set("hours", hours).set("minutes", minutes).set("date", nextExecution.get().toLocalDate()).set("time", nextExecution.get().toLocalTime()).smartFormat()
+                </i:else>
+            </i:if>
+
+            @format(i18n("SchedulerData.nextExecutionEstimate.asOf")).set("date", now).format()
+        </t:helpbox>
         <div class="row">
             <t:textfield class="col-md"
                          name="schedulerData_year"
@@ -112,16 +139,19 @@
                          helpKey="SchedulerData.minute.help"
                          value="@entry.getSchedulerData().getMinute()"/>
         </div>
-        <t:heading labelKey="SchedulerController.parameters"/>
-        <div class="row">
-            <i:for type="sirius.biz.jobs.params.Parameter"
-                   var="param"
-                   items="entry.getJobConfigData().getJobFactory().getParameters()">
-                <i:dynamicInvoke template="@param.getTemplateName()"
-                                 param="@param"
-                                 context="@entry.getJobConfigData().asParameterContext()"/>
-            </i:for>
-        </div>
+
+        <i:if test="!entry.getJobConfigData().getJobFactory().getParameters().isEmpty()">
+            <t:heading labelKey="SchedulerController.parameters"/>
+            <div class="row">
+                <i:for type="sirius.biz.jobs.params.Parameter"
+                       var="param"
+                       items="entry.getJobConfigData().getJobFactory().getParameters()">
+                    <i:dynamicInvoke template="@param.getTemplateName()"
+                                     param="@param"
+                                     context="@entry.getJobConfigData().asParameterContext()"/>
+                </i:for>
+            </div>
+        </i:if>
 
         <t:formBar/>
     </t:editForm>

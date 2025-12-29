@@ -8,7 +8,6 @@
 
 package sirius.biz.scripting;
 
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.ScopeInfo;
@@ -29,59 +28,20 @@ import java.util.List;
 @Register(classes = ScriptableEvents.class)
 public class ScriptableEvents {
 
-    /**
-     * Provides a NOOP (do nothing) dispatcher which can be used if no dispatcher is available.
-     */
-    public static final ScriptableEventDispatcher NOOP_DISPATCHER = new ScriptableEventDispatcher() {
-
-        @Override
-        public boolean isActive() {
-            return false;
-        }
-
-        @Override
-        public void handleEvent(ScriptableEvent event) {
-            // do nothing
-        }
-    };
-
     @Part
     @Nullable
     private ScriptableEventDispatcherRepository dispatcherRepository;
 
     /**
-     * Fetches the dispatcher for the current tenant.
+     * Fetches the dispatchers for the current tenant.
      *
-     * @param name the name of the dispatcher to fetch
-     * @return the dispatcher for the current tenant with the given name or a NOOP dispatcher if no such dispatcher
-     * exists.
+     * @return the dispatchers for the current tenant or an empty list if no dispatchers are available
      */
-    public ScriptableEventDispatcher fetchDispatcherForCurrentTenant(String name) {
-        if (dispatcherRepository == null || Strings.isEmpty(name)) {
-            return NOOP_DISPATCHER;
-        }
-
-        if (!ScopeInfo.DEFAULT_SCOPE.getScopeType().equals(UserContext.getCurrentScope().getScopeType())) {
-            return NOOP_DISPATCHER;
-        }
-
-        UserInfo currentUser = UserContext.getCurrentUser();
-        if (!currentUser.isLoggedIn()) {
-            return NOOP_DISPATCHER;
-        }
-
-        return dispatcherRepository.fetchDispatcher(currentUser.getTenantId(), name).orElse(NOOP_DISPATCHER);
-    }
-
-    /**
-     * Fetches all available dispatchers for the current tenant.
-     *
-     * @return a list of all available dispatchers for the current tenant
-     */
-    public List<String> fetchDispatchersForCurrentTenant() {
+    public List<ScriptableEventDispatcher> fetchDispatcherForCurrentTenant() {
         if (dispatcherRepository == null) {
             return Collections.emptyList();
         }
+
         if (!ScopeInfo.DEFAULT_SCOPE.getScopeType().equals(UserContext.getCurrentScope().getScopeType())) {
             return Collections.emptyList();
         }
@@ -91,6 +51,6 @@ public class ScriptableEvents {
             return Collections.emptyList();
         }
 
-        return dispatcherRepository.fetchAvailableDispatchers(currentUser.getTenantId());
+        return dispatcherRepository.fetchDispatchers(currentUser.getTenantId());
     }
 }

@@ -5,6 +5,7 @@
        description="Determines the additional style to apply to the img object."/>
 <i:arg type="String" name="imgClass" default="" description="Contains additional classes to apply to the img."/>
 <i:arg type="String" name="class" default="" description="Contains additional classes to apply."/>
+<i:arg type="String" name="alt" default="" description="Contains the alt text for the image."/>
 <i:arg type="boolean" name="skipEmpty" default="false"
        description="If set to true, an empty blob will be skipped entirely, instead of rendering the fallback image."/>
 <i:arg type="String" name="fallbackUri" default="@sirius.biz.storage.layer2.URLBuilder.IMAGE_FALLBACK_URI"
@@ -21,12 +22,14 @@
         <i:if test="urlBuilder.isConversionExpected()">
             <img class="lazy-image-js @imgClass"
                  style="@imgStyle"
+                 @if (isFilled(alt)) { alt="@alt" }
                  src="@urlBuilder.createBaseURL().append(fallbackUri)"
                  data-src="@urlBuilder.buildImageURL()"
                  data-failed="@urlBuilder.createBaseURL().append(sirius.biz.storage.layer2.URLBuilder.IMAGE_FAILED_URI)"/>
             <i:else>
                 <img class="safe-image-js @imgClass"
                      style="@imgStyle"
+                     @if (isFilled(alt)) { alt="@alt" }
                      data-fallback="@urlBuilder.createBaseURL().append(fallbackUri)"
                      src="@urlBuilder.buildImageURL()"
                      data-failed="@urlBuilder.createBaseURL().append(sirius.biz.storage.layer2.URLBuilder.IMAGE_FAILED_URI)"/>

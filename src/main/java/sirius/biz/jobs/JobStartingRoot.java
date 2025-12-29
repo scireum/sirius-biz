@@ -12,12 +12,14 @@ import sirius.biz.jobs.params.FileParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
+import sirius.biz.process.logs.OpenProcessLogHandler;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.biz.storage.layer3.SingularVFSRoot;
 import sirius.biz.storage.layer3.TmpRoot;
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -46,41 +48,47 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
     @Part
     protected Processes processes;
 
+    @Part
+    protected OpenProcessLogHandler openProcessLogHandler;
+
     /**
      * Creates an <tt>OutputStream</tt> which triggers the given job with the given parameters once the stream is closed.
      *
      * @param jobToRun          the job to actually run
      * @param parameterProvider permits to control the parameter values for the job (the file is automatically used as
      *                          first {@link FileParameter} of the job)
-     * @param filename          the actual filename of the file being processed
+     * @param virtualFile       the actual file being processed
      * @return an output stream which triggers the job once the stream is closed
      */
     protected OutputStream uploadAndTrigger(JobFactory jobToRun,
                                             Function<String, Value> parameterProvider,
-                                            String filename) {
+                                            VirtualFile virtualFile) {
         try {
             BlobStorageSpace temporaryStorageSpace = blobStorage.getSpace(TmpRoot.TMP_SPACE);
             Blob buffer = temporaryStorageSpace.createTemporaryBlob(UserContext.getCurrentUser().getTenantId());
             return buffer.createOutputStream(() -> {
                 if (buffer.getSize() > 0) {
                     temporaryStorageSpace.markAsUsed(buffer);
-                    trigger(jobToRun, parameterProvider, buffer, filename);
+                    trigger(jobToRun, parameterProvider, buffer, virtualFile);
                 } else {
                     buffer.delete();
                 }
-            }, filename);
+            }, virtualFile.name());
         } catch (Exception exception) {
             throw Exceptions.handle(exception);
         }
     }
 
-    private void trigger(JobFactory jobToRun, Function<String, Value> parameterProvider, Blob buffer, String filename) {
+    private void trigger(JobFactory jobToRun,
+                         Function<String, Value> parameterProvider,
+                         Blob buffer,
+                         VirtualFile virtualFile) {
         processes.executeInStandbyProcessForCurrentTenant(getStandbyProcessType(),
                                                           this::getStandbyProcessDescription,
                                                           ctx -> triggerInProcess(jobToRun,
                                                                                   parameterProvider,
                                                                                   buffer,
-                                                                                  filename,
+                                                                                  virtualFile,
                                                                                   ctx));
     }
 
@@ -107,37 +115,50 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
     private void triggerInProcess(JobFactory jobToRun,
                                   Function<String, Value> parameterProvider,
                                   Blob buffer,
-                                  String filename,
+                                  VirtualFile virtualFile,
                                   ProcessContext processContext) {
-        if (processContext.isDebugging()) {
-            processContext.debug(ProcessLog.info()
-                                           .withFormattedMessage(
-                                                   "Starting job '%s' for user '%s' using the uploaded file '%s' (%s')",
-                                                   jobToRun.getLabel(),
-                                                   UserContext.getCurrentUser().getUserName(),
-                                                   buffer.getFilename(),
-                                                   NLS.formatSize(buffer.getSize())));
-        }
+        processContext.log(ProcessLog.info()
+                                     .withFormattedMessage(
+                                             "Starting job '%s' for user '%s' using the uploaded file '%s' (%s)",
+                                             jobToRun.getLabel(),
+                                             UserContext.getCurrentUser().getUserName(),
+                                             virtualFile.path(),
+                                             NLS.formatSize(buffer.getSize())));
 
         String parameterName = findFileParameter(jobToRun);
 
+        String effectiveFilePath =
+                virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), virtualFile.name());
         try {
-            jobToRun.startInBackground(param -> {
+            String processId = jobToRun.startInBackground(param -> {
                 if (Strings.areEqual(param, parameterName)) {
-                    return Value.of(virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), filename));
+                    return Value.of(effectiveFilePath);
                 } else {
                     return parameterProvider.apply(param);
                 }
             });
+            processContext.log(ProcessLog.success()
+                                         .withFormattedMessage(
+                                                 "Job '%s' for the uploaded file '%s' submitted successfully.",
+                                                 jobToRun.getLabel(),
+                                                 virtualFile.path())
+                                         .withMessageHandler(openProcessLogHandler)
+                                         .withContext(OpenProcessLogHandler.PARAM_TARGET_PROCESS_ID, processId));
         } catch (HandledException exception) {
             processContext.log(ProcessLog.error()
                                          .withFormattedMessage(
-                                                 "Failed to start job '%s' for user '%s' using the uploaded file '%s' (%s'): %s",
+                                                 "Failed to start job '%s' for user '%s' using the uploaded file '%s' (%s): %s",
                                                  jobToRun.getLabel(),
                                                  UserContext.getCurrentUser().getUserName(),
-                                                 buffer.getFilename(),
+                                                 effectiveFilePath,
                                                  NLS.formatSize(buffer.getSize()),
                                                  exception.getMessage()));
+            throw Exceptions.createHandled()
+                            .withNLSKey("JobStartingRoot.failedJobSubmission")
+                            .set("job", NLS.quote(jobToRun.getLabel()))
+                            .set("file", NLS.quote(virtualFile.path()))
+                            .set("cause", exception.getMessage())
+                            .handle();
         }
     }
 

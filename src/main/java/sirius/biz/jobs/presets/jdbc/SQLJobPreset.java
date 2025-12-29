@@ -10,6 +10,7 @@ package sirius.biz.jobs.presets.jdbc;
 
 import sirius.biz.jobs.presets.JobPreset;
 import sirius.biz.jobs.JobConfigData;
+import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
@@ -22,9 +23,15 @@ import sirius.kernel.di.std.Framework;
 public class SQLJobPreset extends SQLTenantAware implements JobPreset {
 
     private final JobConfigData jobConfigData = new JobConfigData();
+    private final JournalData journal = new JournalData(this);
 
     @Override
     public JobConfigData getJobConfigData() {
         return jobConfigData;
+    }
+
+    @Override
+    public JournalData getJournal() {
+        return journal;
     }
 }

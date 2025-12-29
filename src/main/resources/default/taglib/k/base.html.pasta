@@ -73,6 +73,18 @@
                     </t:inlineInfo>
 
                     <i:block name="actions">
+                        <t:permission permission="flag-system-tenant">
+                            <i:local name="editUrl" value="article.generateEditUrl()"/>
+                            <i:if test="isFilled(editUrl)">
+                                <div class="d-none d-md-inline me-2">
+                                    <a class="btn btn-link text-decoration-none"
+                                       href="@editUrl"
+                                       target="_blank">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                </div>
+                            </i:if>
+                        </t:permission>
                         <div class="dropdown d-none d-md-inline" id="urlDropdown">
                             <a class="btn btn-link dropdown-toggle text-decoration-none"
                                data-bs-toggle="dropdown">

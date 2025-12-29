@@ -27,6 +27,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Streams;
@@ -178,6 +179,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_SORT_BY_LAST_MODIFIED = "sortByLastModified";
 
     /**
+     * Contains the name of the algorith used to compute the checksum of uploaded files.
+     */
+    private static final String CONFIG_KEY_CHECKSUM_ALGORITHM = "checksumAlgorithm";
+
+    /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
      * a separator one is used.
@@ -303,6 +309,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected int urlValidityDays;
     protected boolean touchTracking;
     protected boolean sortByLastModified;
+    protected String checksumAlgorithm;
     protected ObjectStorageSpace objectStorageSpace;
 
     /**
@@ -323,6 +330,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.urlValidityDays = config.get(CONFIG_KEY_URL_VALIDITY_DAYS).asInt(StorageUtils.DEFAULT_URL_VALIDITY_DAYS);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
         this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
+        this.checksumAlgorithm = config.get(CONFIG_KEY_CHECKSUM_ALGORITHM).asString();
     }
 
     @Override
@@ -385,6 +393,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Override
     public int getUrlValidityDays() {
         return urlValidityDays;
+    }
+
+    @Override
+    public Hasher getHasher() {
+        return switch (checksumAlgorithm) {
+            case "MD5" -> Hasher.md5();
+            case "SHA-1" -> Hasher.sha1();
+            case "SHA-256" -> Hasher.sha256();
+            case "SHA-512" -> Hasher.sha512();
+            default -> null;
+        };
     }
 
     /**
@@ -1050,11 +1069,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
      * Do this ideally with a {@code try-with-resources} block:
      * <pre>
+     * {@code
      * space.download(blob).ifPresent(handle -> {
      *     try (handle) {
      *         // Read from the handle here...
      *     }
      * });
+     * }
      * </pre>
      *
      * @param blob the blob to fetch the data for
@@ -1105,9 +1126,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
 
             return getPhysicalSpace().download(physicalKey.getFirst());
-        } catch (Exception exception) {
-            handleFailedConversion(blobKey, variant, exception);
-
+        } catch (Exception _) {
             return Optional.empty();
         }
     }
@@ -1168,17 +1187,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
     }
 
-    private void handleFailedConversion(String blobKey, String variant, Exception exception) {
-        failedVariantHandlers.forEach(handler -> handler.handle(exception, blobKey, variant));
-        Exceptions.handle()
-                  .error(exception)
-                  .to(StorageUtils.LOG)
-                  .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
-                                          blobKey,
-                                          variant)
-                  .handle();
-    }
-
     /**
      * Provides read access via an {@link InputStream}.
      *
@@ -1213,7 +1221,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
             getPhysicalSpace().upload(nextPhysicalId, file);
             blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
-            Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
+            Hasher hasher = getHasher();
+            String checksum = hasher != null ? hasher.hashFile(file).toHexString() : null;
+            Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename, checksum);
             if (previousPhysicalId.isPresent()) {
                 deleteBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
@@ -1244,6 +1254,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param nextPhysicalId the physical id to store which contains the new contents
      * @param size           the size of the data
      * @param filename       the new filename to use (if set)
+     * @param checksum       the checksum of the data (if set)
      * @return the previous physical id which can now be deleted or an empty optional if there was no previous content
      * @throws Exception in case of an error while updating the metadata
      */
@@ -1251,7 +1262,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract Optional<String> updateBlob(@Nonnull B blob,
                                                    @Nonnull String nextPhysicalId,
                                                    long size,
-                                                   @Nullable String filename) throws Exception;
+                                                   @Nullable String filename,
+                                                   @Nullable String checksum) throws Exception;
 
     /**
      * Updates the contents of the given blob with the given stream data and optional filename.
@@ -1267,9 +1279,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (Strings.isFilled(filename)) {
                 blobByPathCache.removeAll(REMOVE_BY_FILENAME, blob.getFilename());
             }
-            getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
+            Hasher hasher = getHasher();
+            HashingInputStream hashingInputStream = new HashingInputStream(data, hasher);
+            getPhysicalSpace().upload(nextPhysicalId, hashingInputStream, contentLength);
             blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
-            Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
+            String checksum = hasher != null ? hasher.toHexString() : null;
+            Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename, checksum);
             if (previousPhysicalId.isPresent()) {
                 deleteBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
@@ -1372,9 +1387,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
         } catch (IllegalArgumentException exception) {
             response.notCached().error(HttpResponseStatus.BAD_REQUEST, exception.getMessage());
-        } catch (Exception exception) {
-            handleFailedConversion(blobKey, variant, exception);
-            response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception _) {
+            response.notCached().error(HttpResponseStatus.NOT_FOUND);
         }
     }
 
@@ -1560,9 +1574,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     private void throwExhaustedConversionAttemptsException(String blobKey, String variantName) {
         throw Exceptions.createHandled()
-                        .withSystemErrorMessage("Exhausted conversion attempts for variant '%s' and blobKey '%s'",
-                                                variantName,
-                                                blobKey)
+                        .to(StorageUtils.LOG)
+                        .withSystemErrorMessage(
+                                "Layer2: Exhausted conversion attempts for variant '%s' and blobKey '%s'",
+                                variantName,
+                                blobKey)
                         .handle();
     }
 
@@ -1581,7 +1597,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private V attemptToFindOrCreateVariant(B blob, String variantName, int retries) throws Exception {
         // Always try to fetch the variant first, which could be present due to a previous conversion attempt
         // or a conversion has been created from another thread or node...
-        V variant = tryFetchVariant(blob, variantName);
+        V variant = null;
+        try {
+            variant = tryFetchVariant(blob, variantName);
+        } catch (HandledException exception) {
+            // The conversion ultimately failed. Invoke the handlers and re-throw the exception...
+            failedVariantHandlers.forEach(handler -> handler.handle(exception, blob.getBlobKey(), variantName));
+            throw exception;
+        }
 
         if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
             // We hit the nail on the head - we found a variant which has successfully been converted already.
@@ -1758,6 +1781,21 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract void markConversionFailure(V variant, ConversionProcess conversionProcess);
 
     /**
+     * Computes the checksum of the converted file in the given conversion process.
+     *
+     * @param conversionProcess the conversion process which created a variant
+     * @return the checksum of the converted file or <tt>null</tt> if no hasher is configured or the file doesn't exist
+     */
+    protected String computeConversionCheckSum(ConversionProcess conversionProcess) {
+        Hasher hasher = getHasher();
+        FileHandle fileHandle = conversionProcess.getResultFileHandle();
+        if (hasher != null && fileHandle.exists()) {
+            return hasher.hashFile(fileHandle.getFile()).toHexString();
+        }
+        return null;
+    }
+
+    /**
      * Determines if another conversion of the variant should be attempted.
      * <p>
      * We do want to start a conversion if no conversion is currently queued, or is killed but has been stuck
@@ -1892,9 +1930,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param blob              the blob for which the variant is to be created
      * @param variantName       the variant to generate
      * @param physicalObjectKey the physical object to set
+     * @param checksum          the checksum of the variant
      * @return the newly created database object
      */
-    protected abstract V createVariant(B blob, String variantName, String physicalObjectKey, long size);
+    protected abstract V createVariant(B blob,
+                                       String variantName,
+                                       String physicalObjectKey,
+                                       long size,
+                                       @Nullable String checksum);
 
     /**
      * Detects if the variant is still unique.
@@ -1938,9 +1981,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                             Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
                          getPhysicalSpace().deliver(response, physicalKey.getFirst(), false);
                      }
-                 } catch (Exception exception) {
-                     handleFailedConversion(blobKey, variant, exception);
-                     response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                 } catch (Exception _) {
+                     response.notCached().error(HttpResponseStatus.NOT_FOUND);
                  }
              });
     }

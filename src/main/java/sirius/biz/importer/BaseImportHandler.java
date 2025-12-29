@@ -127,6 +127,15 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @return a newly created and not yet persisted entity with values loaded from <tt>data</tt>
      */
     protected E load(Context data, E entity, Mapping... mappings) {
+        if (context.getEventHandler().isActive()) {
+            BeforeLoadEvent<E> beforeLoadEvent = new BeforeLoadEvent<>(entity, data, context);
+            context.getEventHandler().handleEvent(beforeLoadEvent);
+            if (beforeLoadEvent.isAborted()) {
+                data.put(SCRIPT_ABORTED, true);
+                return null;
+            }
+        }
+
         Arrays.stream(mappings).forEach(mapping -> loadMapping(entity, mapping, data));
         enforcePostLoadConstraints(entity);
 

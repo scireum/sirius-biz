@@ -79,6 +79,16 @@ public class ErrorContext implements SubContext {
     }
 
     /**
+     * Retrieves the value with the given label from the context.
+     *
+     * @param label the label of the value to retrieve
+     * @return the value stored in the context or <tt>null</tt> if no value is stored
+     */
+    public String getContextValue(String label) {
+        return context.get(label);
+    }
+
+    /**
      * Adds the given value to the context, performs the given task and then removes the value again.
      *
      * @param label the name of the value (this will be {@link NLS#smartGet(String) auto translated}).

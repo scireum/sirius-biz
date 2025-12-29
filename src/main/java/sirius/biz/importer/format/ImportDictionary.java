@@ -544,17 +544,17 @@ public class ImportDictionary {
                 problemConsumer.accept(fieldName,
                                        NLS.fmtr("ImportDictionary.fieldError")
                                           .set(PARAM_FIELD, fieldName)
-                                          .set(PARAM_LABEL, field.getLabel())
+                                          .set(PARAM_LABEL, field.getRawLabel())
                                           .set(PARAM_MESSAGE, exception.getMessage())
-                                          .format());
+                                          .smartFormat());
             } catch (Exception exception) {
                 problemDetected.toggle();
                 problemConsumer.accept(fieldName,
                                        NLS.fmtr("ImportDictionary.severeFieldError")
                                           .set(PARAM_FIELD, fieldName)
-                                          .set(PARAM_LABEL, field.getLabel())
+                                          .set(PARAM_LABEL, field.getRawLabel())
                                           .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, exception).getMessage())
-                                          .format());
+                                          .smartFormat());
             }
         }
 

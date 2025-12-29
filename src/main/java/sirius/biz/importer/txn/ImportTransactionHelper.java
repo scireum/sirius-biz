@@ -8,6 +8,7 @@
 
 package sirius.biz.importer.txn;
 
+import sirius.biz.importer.BeforeDeleteEvent;
 import sirius.biz.importer.ImportHelper;
 import sirius.biz.importer.Importer;
 import sirius.biz.importer.ImporterContext;
@@ -161,7 +162,22 @@ public class ImportTransactionHelper extends ImportHelper {
             query.where(query.filters().eqOrEmpty(sourceMapping, source));
         }
 
-        query.delete(entityCallback);
+        if (context.getEventHandler().isActive()) {
+            query.streamBlockwise().forEach(entity -> {
+                BeforeDeleteEvent<E> beforeDeleteEvent = new BeforeDeleteEvent<>(entity, context);
+                context.getEventHandler().handleEvent(beforeDeleteEvent);
+                if (beforeDeleteEvent.isAborted()) {
+                    return;
+                }
+
+                if (entityCallback != null) {
+                    entityCallback.accept(entity);
+                }
+                query.getDescriptor().getMapper().delete(entity);
+            });
+        } else {
+            query.delete(entityCallback);
+        }
     }
 
     /**

@@ -209,7 +209,7 @@ public class ConversionEngine {
 
                 throw Exceptions.createHandled()
                                 .withSystemErrorMessage(Strings.apply(
-                                        "The conversion engine created an empty result for variant %s of %s (%s)",
+                                        "The conversion engine created an empty result for variant '%s' of '%s' (blobKey: %s)",
                                         conversionProcess.getVariantName(),
                                         conversionProcess.getBlobToConvert().getFilename(),
                                         conversionProcess.getBlobToConvert().getBlobKey()))
@@ -220,6 +220,8 @@ public class ConversionEngine {
             result.success();
         } catch (Exception exception) {
             recordErrorInStandbyProcess(conversionProcess, exception);
+            // Already logged as standby process log entry. Fail the promise without additional log to the system protocol.
+            result.doNotLogErrors();
             result.fail(exception);
         }
     }
@@ -242,8 +244,9 @@ public class ConversionEngine {
                                               String message) {
         processContext.log(ProcessLog.error()
                                      .withNLSKey("ConversionEngine.conversionError")
-                                     .withContext("variantName", conversionProcess.getVariantName())
-                                     .withContext("filename", conversionProcess.getBlobToConvert().getFilename())
+                                     .withContext("variantName", NLS.quote(conversionProcess.getVariantName()))
+                                     .withContext("filename",
+                                                  NLS.quote(conversionProcess.getBlobToConvert().getFilename()))
                                      .withContext("message", message));
     }
 

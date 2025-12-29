@@ -88,6 +88,7 @@ public class JobsRoot extends JobStartingRoot {
         jobs.getAvailableJobs(null)
             .filter(JobFactory::canStartInBackground)
             .filter(this::isFileJob)
+            .filter(fileJobFactory -> !presets.fetchPresets(fileJobFactory).isEmpty())
             .forEach(fileJobFactory -> {
                 MutableVirtualFile jobDirectory =
                         MutableVirtualFile.checkedCreate(jobsDirectory, fileJobFactory.getName());
@@ -126,7 +127,7 @@ public class JobsRoot extends JobStartingRoot {
         MutableVirtualFile result = MutableVirtualFile.checkedCreate(parent, name);
         result.withOutputStreamSupplier(uploadFile -> {
             JobConfigData jobConfigData = preset.getJobConfigData();
-            return uploadAndTrigger(jobConfigData.getJobFactory(), jobConfigData::fetchParameter, uploadFile.name());
+            return uploadAndTrigger(jobConfigData.getJobFactory(), jobConfigData::fetchParameter, uploadFile);
         });
 
         return result;
