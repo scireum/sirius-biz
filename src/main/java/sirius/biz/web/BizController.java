@@ -368,10 +368,16 @@ public class BizController extends BasicController {
     }
 
     private void ensureTenantMatch(BaseEntity<?> entity, Property property) {
-        if ((entity instanceof TenantAware tenantAwareEntity) && property instanceof BaseEntityRefProperty) {
-            Object loadedEntity = property.getValue(entity);
+        if ((entity instanceof TenantAware tenantAwareEntity)
+            && property instanceof BaseEntityRefProperty<?, ?, ?> refProperty) {
+            Object loadedEntity = refProperty.getValue(entity);
             if (loadedEntity instanceof TenantAware tenantAwareLoadedEntity) {
                 tenantAwareEntity.assertSameTenant(property::getLabel, tenantAwareLoadedEntity);
+            } else if (loadedEntity != null && TenantAware.class.isAssignableFrom(refProperty.getReferencedType())) {
+                // We most likely have loaded an ID only - we need to fetch the entity to verify the tenant
+                tenantAwareEntity.assertSameTenant(property::getLabel,
+                                                   (TenantAware) refProperty.getEntityRef(tenantAwareEntity)
+                                                                            .fetchCachedValueFromSecondary());
             }
         }
     }
