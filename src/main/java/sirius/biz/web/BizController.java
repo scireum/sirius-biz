@@ -20,7 +20,6 @@ import sirius.db.mixing.InvalidFieldException;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
-import sirius.db.mixing.properties.BaseEntityRefProperty;
 import sirius.db.mixing.properties.BooleanProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
@@ -356,7 +355,6 @@ public class BizController extends BasicController {
                 property.parseValues(entity,
                                      Values.of(parameterValue.get(List.class,
                                                                   Collections.singletonList(parameterValue.get()))));
-                ensureTenantMatch(entity, property);
             } catch (HandledException exception) {
                 UserContext.setFieldError(propertyName, parameterValue);
                 UserContext.setErrorMessage(propertyName, exception.getMessage());
@@ -364,15 +362,6 @@ public class BizController extends BasicController {
             }
 
             return true;
-        }
-    }
-
-    private void ensureTenantMatch(BaseEntity<?> entity, Property property) {
-        if ((entity instanceof TenantAware tenantAwareEntity) && property instanceof BaseEntityRefProperty) {
-            Object loadedEntity = property.getValue(entity);
-            if (loadedEntity instanceof TenantAware tenantAwareLoadedEntity) {
-                tenantAwareEntity.assertSameTenant(property::getLabel, tenantAwareLoadedEntity);
-            }
         }
     }
 
