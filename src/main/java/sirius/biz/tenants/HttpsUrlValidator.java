@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.InvalidFieldException;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyValidator;
@@ -27,14 +28,14 @@ import java.util.function.Consumer;
 public class HttpsUrlValidator implements PropertyValidator {
 
     @Override
-    public void validate(Property property, Object value, Consumer<String> validationConsumer) {
+    public void validate(BaseEntity<?> entity, Property property, Object value, Consumer<String> validationConsumer) {
         if (value instanceof String url && Strings.isFilled(url) && !Urls.isHttpsUrl(url)) {
             validationConsumer.accept(createInvalidHttpsUrlException(property, url).getMessage());
         }
     }
 
     @Override
-    public void beforeSave(Property property, Object value) {
+    public void beforeSave(BaseEntity<?> entity, Property property, Object value) {
         if (value instanceof String url && Strings.isFilled(url) && !Urls.isHttpsUrl(url)) {
             throw createInvalidHttpsUrlException(property, url);
         }

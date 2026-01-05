@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.InvalidFieldException;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyValidator;
@@ -30,12 +31,12 @@ public class EmailAddressValidator implements PropertyValidator {
     private static Mails mails;
 
     @Override
-    public void validate(Property property, Object value, Consumer<String> validationConsumer) {
+    public void validate(BaseEntity<?> entity, Property property, Object value, Consumer<String> validationConsumer) {
         // Nothing to do here ...
     }
 
     @Override
-    public void beforeSave(Property property, Object value) {
+    public void beforeSave(BaseEntity<?> entity, Property property, Object value) {
         if (value instanceof String email && Strings.isFilled(email) && !mails.isValidMailAddress(email, null)) {
             throw Exceptions.createHandled()
                             .error(new InvalidFieldException(property.getName()))
