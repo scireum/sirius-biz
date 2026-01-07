@@ -73,6 +73,11 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
     }
 
     @Override
+    public boolean belongsToCurrentTenant() {
+        return getTenant().getId().equals(tenants.getRequiredTenant().getId());
+    }
+
+    @Override
     public void skipTenantCheck() {
         this.skipTenantCheck = true;
     }
@@ -105,7 +110,7 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
     }
 
     /**
-     * Fetches the tenant from cache wrapped in a Optional.
+     * Fetches the tenant from cache wrapped in an Optional.
      *
      * @return the optional tenant which this object belongs to
      */
