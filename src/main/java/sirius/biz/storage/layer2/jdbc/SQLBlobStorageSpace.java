@@ -596,19 +596,9 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                        String childName,
                                        Directory exemptedDirectory,
                                        Blob exemptedBlob) {
-        SmartQuery<SQLDirectory> childDirectoryQuery = childDirectoryQuery(parent, childName);
-        if (exemptedDirectory != null) {
-            childDirectoryQuery.ne(SQLDirectory.ID, ((SQLDirectory) exemptedDirectory).getId());
-        }
-        if (childDirectoryQuery.exists()) {
-            return true;
-        }
-
-        SmartQuery<SQLBlob> childBlobQuery = childBlobQuery(parent, childName);
-        if (exemptedBlob != null) {
-            childBlobQuery.ne(SQLBlob.BLOB_KEY, exemptedBlob.getBlobKey());
-        }
-        return childBlobQuery.exists();
+        return hasExistingChildDirectory(parent, childName, exemptedDirectory) || hasExistingChildBlob(parent,
+                                                                                                       childName,
+                                                                                                       exemptedBlob);
     }
 
     private SmartQuery<SQLDirectory> childDirectoryQuery(SQLDirectory parent, String childName) {
@@ -1063,5 +1053,21 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Override
     protected void purgeVariantFromCache(SQLBlob blob, String variantName) {
         blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), variantName));
+    }
+
+    private boolean hasExistingChildDirectory(SQLDirectory parent, String childName, Directory exemptedDirectory) {
+        SmartQuery<SQLDirectory> childDirectoryQuery = childDirectoryQuery(parent, childName);
+        if (exemptedDirectory != null) {
+            childDirectoryQuery.ne(SQLDirectory.ID, ((SQLDirectory) exemptedDirectory).getId());
+        }
+        return childDirectoryQuery.exists();
+    }
+
+    private boolean hasExistingChildBlob(SQLDirectory parent, String childName, Blob exemptedBlob) {
+        SmartQuery<SQLBlob> childBlobQuery = childBlobQuery(parent, childName);
+        if (exemptedBlob != null) {
+            childBlobQuery.ne(SQLBlob.BLOB_KEY, exemptedBlob.getBlobKey());
+        }
+        return childBlobQuery.exists();
     }
 }

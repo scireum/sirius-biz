@@ -511,20 +511,9 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                        String childName,
                                        Directory exemptedDirectory,
                                        Blob exemptedBlob) {
-        MongoQuery<MongoDirectory> childDirectoryQuery = childDirectoryQuery(parent, childName);
-        if (exemptedDirectory != null) {
-            childDirectoryQuery.ne(MongoDirectory.ID, ((MongoDirectory) exemptedDirectory).getId());
-        }
-        if (childDirectoryQuery.exists()) {
-            return true;
-        }
-
-        MongoQuery<MongoBlob> childBlobQuery = childBlobQuery(parent, childName);
-        if (exemptedBlob != null) {
-            childBlobQuery.ne(MongoBlob.BLOB_KEY, exemptedBlob.getBlobKey());
-        }
-
-        return childBlobQuery.exists();
+        return hasExistingChildDirectory(parent, childName, exemptedDirectory) || hasExistingChildBlob(parent,
+                                                                                                       childName,
+                                                                                                       exemptedBlob);
     }
 
     private MongoQuery<MongoDirectory> childDirectoryQuery(MongoDirectory parent, String childName) {
@@ -951,5 +940,22 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     @Override
     protected void purgeVariantFromCache(MongoBlob blob, String variantName) {
         blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), variantName));
+    }
+
+    private boolean hasExistingChildDirectory(MongoDirectory parent, String childName, Directory exemptedDirectory) {
+        MongoQuery<MongoDirectory> childDirectoryQuery = childDirectoryQuery(parent, childName);
+        if (exemptedDirectory != null) {
+            childDirectoryQuery.ne(MongoDirectory.ID, ((MongoDirectory) exemptedDirectory).getId());
+        }
+        return childDirectoryQuery.exists();
+    }
+
+    private boolean hasExistingChildBlob(MongoDirectory parent, String childName, Blob exemptedBlob) {
+        MongoQuery<MongoBlob> childBlobQuery = childBlobQuery(parent, childName);
+        if (exemptedBlob != null) {
+            childBlobQuery.ne(MongoBlob.BLOB_KEY, exemptedBlob.getBlobKey());
+        }
+
+        return childBlobQuery.exists();
     }
 }
