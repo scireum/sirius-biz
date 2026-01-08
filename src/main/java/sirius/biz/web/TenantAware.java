@@ -55,9 +55,9 @@ public interface TenantAware extends Entity {
     void assertSameTenant(Supplier<String> fieldLabel, TenantAware other);
 
     /**
-     * Checks if the given id is the id of the current tenant.
+     * Checks if this entity belongs to the current tenant.
      *
-     * @return <tt>true</tt> if the given id is the id of the current tenant, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if the entity's id is the id of the current tenant, <tt>false</tt> otherwise
      */
     boolean belongsToCurrentTenant();
 
