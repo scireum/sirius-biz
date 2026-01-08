@@ -516,19 +516,6 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                                                                                        exemptedBlob);
     }
 
-    private MongoQuery<MongoDirectory> childDirectoryQuery(MongoDirectory parent, String childName) {
-        return mango.select(MongoDirectory.class)
-                    .eq(MongoDirectory.SPACE_NAME, spaceName)
-                    .eq(MongoDirectory.PARENT, parent)
-                    .eq(effectiveDirectoryNameMapping(), effectiveFilename(childName))
-                    .eq(MongoDirectory.COMMITTED, true)
-                    .eq(MongoDirectory.DELETED, false);
-    }
-
-    private Mapping effectiveDirectoryNameMapping() {
-        return useNormalizedNames ? MongoDirectory.NORMALIZED_DIRECTORY_NAME : MongoDirectory.DIRECTORY_NAME;
-    }
-
     protected Optional<MongoDirectory> findExistingChildDirectory(MongoDirectory parent, String childName) {
         return childDirectoryQuery(parent, childName).first();
     }
@@ -583,15 +570,6 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
     protected Optional<MongoBlob> findExistingChildBlob(MongoDirectory parent, String childName) {
         return childBlobQuery(parent, childName).first();
-    }
-
-    private MongoQuery<MongoBlob> childBlobQuery(MongoDirectory parent, String childName) {
-        return mango.select(MongoBlob.class)
-                    .eq(MongoBlob.SPACE_NAME, spaceName)
-                    .eq(MongoBlob.PARENT, parent)
-                    .eq(effectiveFilenameMapping(), effectiveFilename(childName))
-                    .eq(MongoBlob.COMMITTED, true)
-                    .eq(MongoBlob.DELETED, false);
     }
 
     @Override
@@ -957,5 +935,27 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         }
 
         return childBlobQuery.exists();
+    }
+
+    private MongoQuery<MongoDirectory> childDirectoryQuery(MongoDirectory parent, String childName) {
+        return mango.select(MongoDirectory.class)
+                    .eq(MongoDirectory.SPACE_NAME, spaceName)
+                    .eq(MongoDirectory.PARENT, parent)
+                    .eq(effectiveDirectoryNameMapping(), effectiveFilename(childName))
+                    .eq(MongoDirectory.COMMITTED, true)
+                    .eq(MongoDirectory.DELETED, false);
+    }
+
+    private MongoQuery<MongoBlob> childBlobQuery(MongoDirectory parent, String childName) {
+        return mango.select(MongoBlob.class)
+                    .eq(MongoBlob.SPACE_NAME, spaceName)
+                    .eq(MongoBlob.PARENT, parent)
+                    .eq(effectiveFilenameMapping(), effectiveFilename(childName))
+                    .eq(MongoBlob.COMMITTED, true)
+                    .eq(MongoBlob.DELETED, false);
+    }
+
+    private Mapping effectiveDirectoryNameMapping() {
+        return useNormalizedNames ? MongoDirectory.NORMALIZED_DIRECTORY_NAME : MongoDirectory.DIRECTORY_NAME;
     }
 }
