@@ -959,7 +959,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         if (parent == null) {
             throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotRenameRoot").handle();
         }
-        if (parent.hasChildNamed(newName)) {
+        if (parent.hasChildNamed(newName, directory)) {
             throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotRenameDuplicateName").handle();
         }
 

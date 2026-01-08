@@ -507,8 +507,15 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                                       UPDATE_BLOB_RETRIES));
     }
 
-    protected boolean hasExistingChild(MongoDirectory parent, String childName, Blob exemptedBlob) {
-        if (childDirectoryQuery(parent, childName).exists()) {
+    protected boolean hasExistingChild(MongoDirectory parent,
+                                       String childName,
+                                       Directory exemptedDirectory,
+                                       Blob exemptedBlob) {
+        MongoQuery<MongoDirectory> childDirectoryQuery = childDirectoryQuery(parent, childName);
+        if (exemptedDirectory != null) {
+            childDirectoryQuery.ne(MongoDirectory.ID, ((MongoDirectory) exemptedDirectory).getId());
+        }
+        if (childDirectoryQuery.exists()) {
             return true;
         }
 

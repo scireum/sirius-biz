@@ -592,8 +592,15 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                                       UPDATE_BLOB_RETRIES));
     }
 
-    protected boolean hasExistingChild(SQLDirectory parent, String childName, Blob exemptedBlob) {
-        if (childDirectoryQuery(parent, childName).exists()) {
+    protected boolean hasExistingChild(SQLDirectory parent,
+                                       String childName,
+                                       Directory exemptedDirectory,
+                                       Blob exemptedBlob) {
+        SmartQuery<SQLDirectory> childDirectoryQuery = childDirectoryQuery(parent, childName);
+        if (exemptedDirectory != null) {
+            childDirectoryQuery.ne(SQLDirectory.ID, ((SQLDirectory) exemptedDirectory).getId());
+        }
+        if (childDirectoryQuery.exists()) {
             return true;
         }
 
