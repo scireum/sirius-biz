@@ -592,29 +592,13 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                                       UPDATE_BLOB_RETRIES));
     }
 
-    protected boolean hasExistingChild(SQLDirectory parent, String childName, Blob exemptedBlob) {
-        if (childDirectoryQuery(parent, childName).exists()) {
-            return true;
-        }
-
-        SmartQuery<SQLBlob> childBlobQuery = childBlobQuery(parent, childName);
-        if (exemptedBlob != null) {
-            childBlobQuery.ne(SQLBlob.BLOB_KEY, exemptedBlob.getBlobKey());
-        }
-        return childBlobQuery.exists();
-    }
-
-    private SmartQuery<SQLDirectory> childDirectoryQuery(SQLDirectory parent, String childName) {
-        return oma.select(SQLDirectory.class)
-                  .eq(SQLDirectory.SPACE_NAME, spaceName)
-                  .eq(SQLDirectory.PARENT, parent)
-                  .eq(effectiveDirectoryNameMapping(), effectiveFilename(childName))
-                  .eq(SQLDirectory.COMMITTED, true)
-                  .eq(SQLDirectory.DELETED, false);
-    }
-
-    private Mapping effectiveDirectoryNameMapping() {
-        return useNormalizedNames ? SQLDirectory.NORMALIZED_DIRECTORY_NAME : SQLDirectory.DIRECTORY_NAME;
+    protected boolean hasExistingChild(SQLDirectory parent,
+                                       String childName,
+                                       Directory exemptedDirectory,
+                                       Blob exemptedBlob) {
+        return hasExistingChildDirectory(parent, childName, exemptedDirectory) || hasExistingChildBlob(parent,
+                                                                                                       childName,
+                                                                                                       exemptedBlob);
     }
 
     protected Optional<SQLDirectory> findExistingChildDirectory(SQLDirectory parent, String childName) {
@@ -674,15 +658,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
     protected Optional<SQLBlob> findExistingChildBlob(SQLDirectory parent, String childName) {
         return childBlobQuery(parent, childName).first();
-    }
-
-    private SmartQuery<SQLBlob> childBlobQuery(SQLDirectory parent, String childName) {
-        return oma.select(SQLBlob.class)
-                  .eq(SQLBlob.SPACE_NAME, spaceName)
-                  .eq(SQLBlob.PARENT, parent)
-                  .eq(effectiveFilenameMapping(), effectiveFilename(childName))
-                  .eq(SQLBlob.COMMITTED, true)
-                  .eq(SQLBlob.DELETED, false);
     }
 
     @Override
@@ -1056,5 +1031,43 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Override
     protected void purgeVariantFromCache(SQLBlob blob, String variantName) {
         blobKeyToPhysicalCache.remove(buildCacheLookupKey(blob.getBlobKey(), variantName));
+    }
+
+    private boolean hasExistingChildDirectory(SQLDirectory parent, String childName, Directory exemptedDirectory) {
+        SmartQuery<SQLDirectory> childDirectoryQuery = childDirectoryQuery(parent, childName);
+        if (exemptedDirectory != null) {
+            childDirectoryQuery.ne(SQLDirectory.ID, ((SQLDirectory) exemptedDirectory).getId());
+        }
+        return childDirectoryQuery.exists();
+    }
+
+    private boolean hasExistingChildBlob(SQLDirectory parent, String childName, Blob exemptedBlob) {
+        SmartQuery<SQLBlob> childBlobQuery = childBlobQuery(parent, childName);
+        if (exemptedBlob != null) {
+            childBlobQuery.ne(SQLBlob.BLOB_KEY, exemptedBlob.getBlobKey());
+        }
+        return childBlobQuery.exists();
+    }
+
+    private SmartQuery<SQLDirectory> childDirectoryQuery(SQLDirectory parent, String childName) {
+        return oma.select(SQLDirectory.class)
+                  .eq(SQLDirectory.SPACE_NAME, spaceName)
+                  .eq(SQLDirectory.PARENT, parent)
+                  .eq(effectiveDirectoryNameMapping(), effectiveFilename(childName))
+                  .eq(SQLDirectory.COMMITTED, true)
+                  .eq(SQLDirectory.DELETED, false);
+    }
+
+    private SmartQuery<SQLBlob> childBlobQuery(SQLDirectory parent, String childName) {
+        return oma.select(SQLBlob.class)
+                  .eq(SQLBlob.SPACE_NAME, spaceName)
+                  .eq(SQLBlob.PARENT, parent)
+                  .eq(effectiveFilenameMapping(), effectiveFilename(childName))
+                  .eq(SQLBlob.COMMITTED, true)
+                  .eq(SQLBlob.DELETED, false);
+    }
+
+    private Mapping effectiveDirectoryNameMapping() {
+        return useNormalizedNames ? SQLDirectory.NORMALIZED_DIRECTORY_NAME : SQLDirectory.DIRECTORY_NAME;
     }
 }
