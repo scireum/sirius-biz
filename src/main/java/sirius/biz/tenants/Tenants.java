@@ -16,6 +16,7 @@ import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
+import sirius.db.mixing.query.constraints.Constraint;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -247,6 +248,27 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
      */
     public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q query) {
         return query.eq(TenantAware.TENANT, getRequiredTenant());
+    }
+
+    /**
+     * Applies an appropriate filter to the given query to only return entities which belong to the current tenant
+     * and the parent tenant if present.
+     *
+     * @param query the query to extend
+     * @param <E>   the type of entities processed by the query
+     * @param <Q>   the type of the query which is being extended
+     * @return the query with an additional constraint filtering on the current tenant and parent tenant if present
+     * @throws HandledException if there is currently no user / tenant available
+     */
+    public <E extends BaseEntity<?> & TenantAware, C extends Constraint, Q extends Query<Q, E, C>> Q forCurrentOrParentTenant(
+            Q query) {
+        if (getRequiredTenant().getParent().isFilled()) {
+            return query.where(query.filters()
+                                    .or(query.filters().eq(TenantAware.TENANT, getRequiredTenant()),
+                                        query.filters().eq(TenantAware.TENANT, getRequiredTenant().getParent())));
+        } else {
+            return query.eq(TenantAware.TENANT, getRequiredTenant());
+        }
     }
 
     /**

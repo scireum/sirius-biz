@@ -55,6 +55,13 @@ public interface TenantAware extends Entity {
     void assertSameTenant(Supplier<String> fieldLabel, TenantAware other);
 
     /**
+     * Checks if this entity belongs to the current tenant.
+     *
+     * @return <tt>true</tt> if the entity's id is the id of the current tenant, <tt>false</tt> otherwise
+     */
+    boolean belongsToCurrentTenant();
+
+    /**
      * Installs the currently present tenant (in the {@link sirius.web.security.UserContext}) into this entity.
      */
     void fillWithCurrentTenant();

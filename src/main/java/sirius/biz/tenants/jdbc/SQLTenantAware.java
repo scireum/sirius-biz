@@ -65,6 +65,11 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     }
 
     @Override
+    public boolean belongsToCurrentTenant() {
+        return getTenant().getId().equals(tenants.getRequiredTenant().getId());
+    }
+
+    @Override
     public void skipTenantCheck() {
         this.skipTenantCheck = true;
     }
@@ -97,7 +102,7 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     }
 
     /**
-     * Fetches the tenant from cache wrapped in a Optional.
+     * Fetches the tenant from cache wrapped in an Optional.
      *
      * @return the optional tenant which this object belongs to
      */
