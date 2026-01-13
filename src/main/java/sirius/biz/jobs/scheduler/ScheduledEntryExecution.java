@@ -12,6 +12,7 @@ import sirius.biz.jobs.Jobs;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
 import sirius.biz.process.Processes;
+import sirius.biz.process.logs.OpenProcessLogHandler;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -31,6 +32,9 @@ public class ScheduledEntryExecution {
 
     @Part
     private Processes processes;
+
+    @Part
+    private OpenProcessLogHandler openProcessLogHandler;
 
     /**
      * Executes the provided scheduled entry immediately using the given provider.
@@ -89,16 +93,29 @@ public class ScheduledEntryExecution {
                                   new ProcessLink().withLabel("$JobSchedulerLoop.jobLink")
                                                    .withUri("/jobs/scheduler/entry/" + entry.getIdAsString()));
                 processes.addReference(processId, entry.getUniqueName());
+
+                // Log to standby process with link to started job
+                ctx.log(ProcessLog.success()
+                                  .withNLSKey("JobSchedulerLoop.jobSubmitted")
+                                  .withContext("entry", entry.toString())
+                                  .withContext("jobName", entry.getJobConfigData().getJobName())
+                                  .withMessageHandler(openProcessLogHandler)
+                                  .withContext(OpenProcessLogHandler.PARAM_TARGET_PROCESS_ID, processId));
+            } else {
+                // Job started without creating a process - still log the submission
+                ctx.log(ProcessLog.success()
+                                  .withNLSKey("JobSchedulerLoop.jobSubmitted")
+                                  .withContext("entry", entry.toString())
+                                  .withContext("jobName", entry.getJobConfigData().getJobName()));
             }
 
             provider.markExecuted(entry, now);
         } catch (HandledException exception) {
             ctx.log(ProcessLog.error()
-                              .withFormattedMessage("Failed to start scheduled job %s (%s) for user %s: %s",
-                                                    entry,
-                                                    entry.getJobConfigData().getJobName(),
-                                                    UserContext.getCurrentUser().getUserName(),
-                                                    exception.getMessage()));
+                              .withNLSKey("JobSchedulerLoop.jobSubmissionFailed")
+                              .withContext("entry", entry.toString())
+                              .withContext("jobName", entry.getJobConfigData().getJobName())
+                              .withContext("error", exception.getMessage()));
         }
     }
 }
