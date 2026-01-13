@@ -36,6 +36,9 @@ public class ScheduledEntryExecution {
     @Part
     private OpenProcessLogHandler openProcessLogHandler;
 
+    private static final String ENTRY_CONTEXT_KEY = "entry";
+    private static final String JOB_NAME_CONTEXT_KEY = "jobName";
+
     /**
      * Executes the provided scheduled entry immediately using the given provider.
      *
@@ -70,9 +73,9 @@ public class ScheduledEntryExecution {
     private <J extends SchedulerEntry> void executeJobInProcess(SchedulerEntryProvider<J> provider,
                                                                 J entry,
                                                                 LocalDateTime now,
-                                                                ProcessContext ctx) {
-        if (ctx.isDebugging()) {
-            ctx.debug(ProcessLog.info()
+                                                                ProcessContext processContext) {
+        if (processContext.isDebugging()) {
+            processContext.debug(ProcessLog.info()
                                 .withFormattedMessage("Starting scheduled job %s (%s) for user %s.",
                                                       entry,
                                                       entry.getJobConfigData().getJobName(),
@@ -88,33 +91,33 @@ public class ScheduledEntryExecution {
                 processes.log(processId,
                               ProcessLog.info()
                                         .withNLSKey("JobSchedulerLoop.scheduledExecutionInfo")
-                                        .withContext("entry", entry.toString()));
+                                        .withContext(ENTRY_CONTEXT_KEY, entry.toString()));
                 processes.addLink(processId,
                                   new ProcessLink().withLabel("$JobSchedulerLoop.jobLink")
                                                    .withUri("/jobs/scheduler/entry/" + entry.getIdAsString()));
                 processes.addReference(processId, entry.getUniqueName());
 
                 // Log to standby process with link to started job
-                ctx.log(ProcessLog.success()
+                processContext.log(ProcessLog.success()
                                   .withNLSKey("JobSchedulerLoop.jobSubmitted")
-                                  .withContext("entry", entry.toString())
-                                  .withContext("jobName", entry.getJobConfigData().getJobName())
+                                  .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                                  .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName())
                                   .withMessageHandler(openProcessLogHandler)
                                   .withContext(OpenProcessLogHandler.PARAM_TARGET_PROCESS_ID, processId));
             } else {
                 // Job started without creating a process - still log the submission
-                ctx.log(ProcessLog.success()
+                processContext.log(ProcessLog.success()
                                   .withNLSKey("JobSchedulerLoop.jobSubmitted")
-                                  .withContext("entry", entry.toString())
-                                  .withContext("jobName", entry.getJobConfigData().getJobName()));
+                                  .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                                  .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName()));
             }
 
             provider.markExecuted(entry, now);
         } catch (HandledException exception) {
-            ctx.log(ProcessLog.error()
+            processContext.log(ProcessLog.error()
                               .withNLSKey("JobSchedulerLoop.jobSubmissionFailed")
-                              .withContext("entry", entry.toString())
-                              .withContext("jobName", entry.getJobConfigData().getJobName())
+                              .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                              .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName())
                               .withContext("error", exception.getMessage()));
         }
     }
