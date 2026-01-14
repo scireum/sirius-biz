@@ -540,10 +540,7 @@ public class ProcessLog extends SearchableEntity {
                 }
             });
 
-            return NLS.fmtr(message.substring(1))
-                      .set(modifiedContext)
-                      .ignoreMissingParameters()
-                      .format();
+            return NLS.fmtr(message.substring(1)).set(modifiedContext).ignoreMissingParameters().format();
         }
 
         return message;
