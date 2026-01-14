@@ -114,6 +114,12 @@ public class ProcessLog extends SearchableEntity {
     private static final int MODIFIER_QUOTE_PRIMARY = 0x1;
 
     /**
+     * Modifier flag indicating that the context value should be wrapped into {@linkplain NLS#quoteSecondary(String)
+     * secondary quotation marks} when rendering.
+     */
+    private static final int MODIFIER_QUOTE_SECONDARY = 0x2;
+
+    /**
      * Contains the process for which this log entry was created.
      */
     public static final Mapping PROCESS = Mapping.named("process");
@@ -431,6 +437,22 @@ public class ProcessLog extends SearchableEntity {
         return withContext(key, value, MODIFIER_QUOTE_PRIMARY);
     }
 
+    /**
+     * Provides a name/value pair which is either supplied to the {@link ProcessLogHandler} or
+     * {@link ProcessOutput} / {@link ProcessOutputType}. The value will be wrapped into {@linkplain NLS#quoteSecondary(String)
+     * secondary quotation marks} when rendering.
+     * <p>
+     * Note that values which key start with an underscore are not added to the search index, everything else is
+     * searchable.
+     *
+     * @param key   the key to add to the context
+     * @param value the value to add to the context
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withSecondaryQuotedContext(String key, Object value) {
+        return withContext(key, value, MODIFIER_QUOTE_SECONDARY);
+    }
+
     private ProcessLog withContext(String key, Object value, int modifiers) {
         this.context.modify().put(key, NLS.toUserString(value));
         if (modifiers != 0) {
@@ -539,6 +561,9 @@ public class ProcessLog extends SearchableEntity {
                 String rawString = modifiedContext.get(key).toString();
                 if ((modifiers & MODIFIER_QUOTE_PRIMARY) == MODIFIER_QUOTE_PRIMARY) {
                     modifiedContext.put(key, NLS.quote(rawString));
+                }
+                if ((modifiers & MODIFIER_QUOTE_SECONDARY) == MODIFIER_QUOTE_SECONDARY) {
+                    modifiedContext.put(key, NLS.quoteSecondary(rawString));
                 }
             });
 
