@@ -160,7 +160,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     public B addFacet(Facet facet, BiConsumer<Facet, Q> filter, BiConsumer<Facet, Q> itemsComputer) {
         Objects.requireNonNull(baseQuery);
 
-        facet.withValue(getParameterValue(facet.getName()).getString());
+        facet.withValues(getParameterValue(facet.getName()).asStringList());
         filter.accept(facet, baseQuery);
         facets.add(Tuple.create(facet, itemsComputer));
 
