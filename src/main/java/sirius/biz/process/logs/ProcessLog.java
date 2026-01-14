@@ -111,7 +111,7 @@ public class ProcessLog extends SearchableEntity {
      * Modifier flag indicating that the context value should be wrapped into {@linkplain NLS#quote(String) primary
      * quotation marks} when rendering.
      */
-    private static final int MODIFIER_QUOTE = 0x1;
+    private static final int MODIFIER_QUOTE_PRIMARY = 0x1;
 
     /**
      * Contains the process for which this log entry was created.
@@ -428,7 +428,7 @@ public class ProcessLog extends SearchableEntity {
      * @return the log entry itself for fluent method calls
      */
     public ProcessLog withQuotedContext(String key, Object value) {
-        return withContext(key, value, MODIFIER_QUOTE);
+        return withContext(key, value, MODIFIER_QUOTE_PRIMARY);
     }
 
     private ProcessLog withContext(String key, Object value, int modifiers) {
@@ -537,7 +537,7 @@ public class ProcessLog extends SearchableEntity {
                 }
 
                 String rawString = modifiedContext.get(key).toString();
-                if ((modifiers & MODIFIER_QUOTE) == MODIFIER_QUOTE) {
+                if ((modifiers & MODIFIER_QUOTE_PRIMARY) == MODIFIER_QUOTE_PRIMARY) {
                     modifiedContext.put(key, NLS.quote(rawString));
                 }
             });
