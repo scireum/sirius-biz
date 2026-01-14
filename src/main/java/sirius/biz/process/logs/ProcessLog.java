@@ -21,6 +21,7 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.db.mixing.types.StringIntMap;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
@@ -33,6 +34,7 @@ import sirius.kernel.nls.NLS;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -106,6 +108,11 @@ public class ProcessLog extends SearchableEntity {
     public static final String ACTION_MARK_IGNORED = "markIgnored";
 
     /**
+     * Modifier flag indicating that the context value should be quoted when rendering.
+     */
+    private static final int MODIFIER_QUOTE = 0x1;
+
+    /**
      * Contains the process for which this log entry was created.
      */
     public static final Mapping PROCESS = Mapping.named("process");
@@ -171,6 +178,13 @@ public class ProcessLog extends SearchableEntity {
      */
     public static final Mapping CONTEXT = Mapping.named("context");
     private final StringMap context = new StringMap();
+
+    /**
+     * Contains modifier flags that determine whether certain context values are modified before rendering, for instance
+     * by adding quotes.
+     */
+    public static final Mapping CONTEXT_MODIFIERS = Mapping.named("contextModifiers");
+    private final StringIntMap contextModifiers = new StringIntMap();
 
     /**
      * Determines if this is a system message which is not shown to "normal" users (ones which don't have
@@ -397,6 +411,29 @@ public class ProcessLog extends SearchableEntity {
      */
     public ProcessLog withContext(String key, Object value) {
         this.context.modify().put(key, NLS.toUserString(value));
+        return withContext(key, value, 0);
+    }
+
+    /**
+     * Provides a name/value pair which is either supplied to the {@link ProcessLogHandler} or
+     * {@link ProcessOutput} / {@link ProcessOutputType}.
+     * <p>
+     * Note that values which key start with an underscore are not added to the search index, everything else is
+     * searchable.
+     *
+     * @param key   the key to add to the context
+     * @param value the value to add to the context
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withQuotedContext(String key, Object value) {
+        return withContext(key, value, MODIFIER_QUOTE);
+    }
+
+    private ProcessLog withContext(String key, Object value, int modifiers) {
+        this.context.modify().put(key, NLS.toUserString(value));
+        if (modifiers != 0) {
+            this.contextModifiers.modify().put(key, modifiers);
+        }
         return this;
     }
 
@@ -491,8 +528,20 @@ public class ProcessLog extends SearchableEntity {
         }
 
         if (message.startsWith("$")) {
+            Map<String, Object> modifiedContext = new LinkedHashMap<>((Map<String, Object>) (Object) context.data());
+            contextModifiers.data().forEach((key, modifiers) -> {
+                if (!modifiedContext.containsKey(key)) {
+                    return;
+                }
+
+                String rawString = modifiedContext.get(key).toString();
+                if ((modifiers & MODIFIER_QUOTE) == MODIFIER_QUOTE) {
+                    modifiedContext.put(key, NLS.quote(rawString));
+                }
+            });
+
             return NLS.fmtr(message.substring(1))
-                      .set((Map<String, Object>) (Object) context.data())
+                      .set(modifiedContext)
                       .ignoreMissingParameters()
                       .format();
         }
