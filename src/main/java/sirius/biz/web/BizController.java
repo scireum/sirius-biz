@@ -444,7 +444,8 @@ public class BizController extends BasicController {
     protected void deleteComplexEntity(BaseEntity<?> entity) {
         String processId = processes.createProcessForCurrentUser("delete-entity",
                                                                  NLS.fmtr("BizController.deleteProcessTitle")
-                                                                    .set("entity", Strings.limit(entity, 60))
+                                                                    .set("type", entity.getDescriptor().getLabel())
+                                                                    .set("entity", NLS.quote(Strings.limit(entity, 60)))
                                                                     .format(),
                                                                  "fa-trash",
                                                                  PersistencePeriod.THREE_MONTHS,
