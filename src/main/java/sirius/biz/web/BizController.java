@@ -445,7 +445,7 @@ public class BizController extends BasicController {
         String processId = processes.createProcessForCurrentUser("delete-entity",
                                                                  NLS.fmtr("BizController.deleteProcessTitle")
                                                                     .set("type", entity.getDescriptor().getLabel())
-                                                                    .set("entity", Strings.limit(entity, 60))
+                                                                    .set("entity", NLS.quote(Strings.limit(entity, 60)))
                                                                     .format(),
                                                                  "fa-trash",
                                                                  PersistencePeriod.THREE_MONTHS,
