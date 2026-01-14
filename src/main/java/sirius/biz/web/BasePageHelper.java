@@ -129,10 +129,10 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      */
     public B addFilterFacet(Facet facet) {
         return addFacet(facet, (f, query) -> {
-            if (facet.isMultiSelect()) {
-                query.where(query.filters().oneInField(Mapping.named(facet.getName()), facet.getValues()).build());
+            if (f.isMultiSelect()) {
+                query.where(query.filters().oneInField(Mapping.named(f.getName()), f.getValues()).build());
             } else {
-                query.eqIgnoreNull(Mapping.named(facet.getName()), facet.getValue());
+                query.eqIgnoreNull(Mapping.named(f.getName()), f.getValue());
             }
         });
     }
