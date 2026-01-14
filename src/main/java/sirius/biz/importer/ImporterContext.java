@@ -145,7 +145,7 @@ public class ImporterContext {
     private ImportHelper instantiateHelper(Class<?> aClass) {
         try {
             return (ImportHelper) aClass.getConstructor(ImporterContext.class).newInstance(this);
-        } catch (Exception exception) {
+        } catch (Exception _) {
             throw Exceptions.handle()
                             .withSystemErrorMessage("Cannot find or create the import helper of type: %s", aClass)
                             .handle();
