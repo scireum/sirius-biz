@@ -579,6 +579,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                     blob.setFilename(filename);
                 }
                 blob.updateFilenameFields();
+                blob.setChecksum(checksum);
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
 

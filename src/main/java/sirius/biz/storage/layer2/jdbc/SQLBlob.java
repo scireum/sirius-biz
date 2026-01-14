@@ -508,6 +508,10 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
         return checksum;
     }
 
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
+    }
+
     @Override
     public boolean isCommitted() {
         return committed;
