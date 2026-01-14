@@ -8,8 +8,8 @@
 
 package sirius.biz.importer;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import sirius.biz.jobs.batch.ImportJob;
 import sirius.biz.scripting.ScriptableEventHandler;
 import sirius.db.jdbc.batch.BatchContext;
@@ -46,8 +46,7 @@ public class ImporterContext {
     private final Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
     private final Map<Class<?>, ImportHelper> helpers = new HashMap<>();
 
-    private final Cache<Tuple<Class<?>, String>, Object> localCache =
-            CacheBuilder.newBuilder().maximumSize(256).build();
+    private final Cache<Tuple<Class<?>, String>, Object> localCache = Caffeine.newBuilder().maximumSize(256).build();
 
     private final List<Runnable> postCommitCallbacks = new ArrayList<>();
 
@@ -145,7 +144,7 @@ public class ImporterContext {
     private ImportHelper instantiateHelper(Class<?> aClass) {
         try {
             return (ImportHelper) aClass.getConstructor(ImporterContext.class).newInstance(this);
-        } catch (Exception exception) {
+        } catch (Exception _) {
             throw Exceptions.handle()
                             .withSystemErrorMessage("Cannot find or create the import helper of type: %s", aClass)
                             .handle();
