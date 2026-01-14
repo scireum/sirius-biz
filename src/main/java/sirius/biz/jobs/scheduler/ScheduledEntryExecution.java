@@ -91,7 +91,7 @@ public class ScheduledEntryExecution {
                 processes.log(processId,
                               ProcessLog.info()
                                         .withNLSKey("JobSchedulerLoop.scheduledExecutionInfo")
-                                        .withContext(ENTRY_CONTEXT_KEY, entry.toString()));
+                                        .withQuotedContext(ENTRY_CONTEXT_KEY, entry.toString()));
                 processes.addLink(processId,
                                   new ProcessLink().withLabel("$JobSchedulerLoop.jobLink")
                                                    .withUri("/jobs/scheduler/entry/" + entry.getIdAsString()));
@@ -100,7 +100,7 @@ public class ScheduledEntryExecution {
                 // Log to standby process with link to started job
                 processContext.log(ProcessLog.success()
                                              .withNLSKey("JobSchedulerLoop.jobSubmitted")
-                                             .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                                             .withQuotedContext(ENTRY_CONTEXT_KEY, entry.toString())
                                              .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName())
                                              .withMessageHandler(openProcessLogHandler)
                                              .withContext(OpenProcessLogHandler.PARAM_TARGET_PROCESS_ID, processId));
@@ -108,7 +108,7 @@ public class ScheduledEntryExecution {
                 // Job started without creating a process - still log the submission
                 processContext.log(ProcessLog.success()
                                              .withNLSKey("JobSchedulerLoop.jobSubmitted")
-                                             .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                                             .withQuotedContext(ENTRY_CONTEXT_KEY, entry.toString())
                                              .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName()));
             }
 
@@ -116,7 +116,7 @@ public class ScheduledEntryExecution {
         } catch (HandledException exception) {
             processContext.log(ProcessLog.error()
                                          .withNLSKey("JobSchedulerLoop.jobSubmissionFailed")
-                                         .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                                         .withQuotedContext(ENTRY_CONTEXT_KEY, entry.toString())
                                          .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName())
                                          .withContext("error", exception.getMessage()));
         }
