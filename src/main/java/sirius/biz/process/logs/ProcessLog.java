@@ -108,7 +108,8 @@ public class ProcessLog extends SearchableEntity {
     public static final String ACTION_MARK_IGNORED = "markIgnored";
 
     /**
-     * Modifier flag indicating that the context value should be quoted when rendering.
+     * Modifier flag indicating that the context value should be wrapped into {@linkplain NLS#quote(String) primary
+     * quotation marks} when rendering.
      */
     private static final int MODIFIER_QUOTE = 0x1;
 
@@ -416,7 +417,8 @@ public class ProcessLog extends SearchableEntity {
 
     /**
      * Provides a name/value pair which is either supplied to the {@link ProcessLogHandler} or
-     * {@link ProcessOutput} / {@link ProcessOutputType}.
+     * {@link ProcessOutput} / {@link ProcessOutputType}. The value will be wrapped into {@linkplain NLS#quote(String)
+     * primary quotation marks} when rendering.
      * <p>
      * Note that values which key start with an underscore are not added to the search index, everything else is
      * searchable.
