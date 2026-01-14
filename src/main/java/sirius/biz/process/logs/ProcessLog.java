@@ -11,6 +11,8 @@ package sirius.biz.process.logs;
 import sirius.biz.elastic.SearchableEntity;
 import sirius.biz.process.Process;
 import sirius.biz.process.Processes;
+import sirius.biz.process.output.ProcessOutput;
+import sirius.biz.process.output.ProcessOutputType;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.es.types.ElasticRef;
@@ -38,7 +40,7 @@ import java.util.Optional;
 /**
  * Represents a log entry recorded for a {@link Process}.
  * <p>
- * This can be either a "plain" log entry or an element of a {@link sirius.biz.process.output.ProcessOutput}
+ * This can be either a "plain" log entry or an element of a {@link ProcessOutput}
  * defined by the process.
  * <p>
  * Note that even a "plain" log message provides quite some functionality as it can specify a {@link ProcessLogHandler}
@@ -134,7 +136,7 @@ public class ProcessLog extends SearchableEntity {
     private String node;
 
     /**
-     * Contains the name of the {@link sirius.biz.process.output.ProcessOutput}
+     * Contains the name of the {@link ProcessOutput}
      * this entry belongs to.
      */
     public static final Mapping OUTPUT = Mapping.named("output");
@@ -165,7 +167,7 @@ public class ProcessLog extends SearchableEntity {
     private ProcessLogState state;
 
     /**
-     * Contains the context passed to the {@link ProcessLogHandler} or {@link sirius.biz.process.output.ProcessOutput}
+     * Contains the context passed to the {@link ProcessLogHandler} or {@link ProcessOutput}
      */
     public static final Mapping CONTEXT = Mapping.named("context");
     private final StringMap context = new StringMap();
@@ -179,7 +181,7 @@ public class ProcessLog extends SearchableEntity {
 
     /**
      * Contains the log message to show. Can be <tt>null</tt> if either a {@link ProcessLogHandler} is
-     * present to generate one or if the entry belongs to a {@link sirius.biz.process.output.ProcessOutput}
+     * present to generate one or if the entry belongs to a {@link ProcessOutput}
      * which might only be interested in the {@link #context}.
      */
     public static final Mapping MESSAGE = Mapping.named("message");
@@ -316,7 +318,7 @@ public class ProcessLog extends SearchableEntity {
     }
 
     /**
-     * Specifies the {@link sirius.biz.process.output.ProcessOutput} to which this log entry belogs.
+     * Specifies the {@link ProcessOutput} to which this log entry belogs.
      *
      * @param output the name of the output this entry belongs to
      * @return the log entry itself for fluent method calls
@@ -369,7 +371,7 @@ public class ProcessLog extends SearchableEntity {
 
     /**
      * Provides a context which is either supplied to the {@link ProcessLogHandler} or
-     * {@link sirius.biz.process.output.ProcessOutput} / {@link sirius.biz.process.output.ProcessOutputType}.
+     * {@link ProcessOutput} / {@link ProcessOutputType}.
      * <p>
      * Note that values which key start with an underscore are not added to the search index, everything else is
      * searchable.
@@ -384,7 +386,7 @@ public class ProcessLog extends SearchableEntity {
 
     /**
      * Provides a name/value pair which is either supplied to the {@link ProcessLogHandler} or
-     * {@link sirius.biz.process.output.ProcessOutput} / {@link sirius.biz.process.output.ProcessOutputType}.
+     * {@link ProcessOutput} / {@link ProcessOutputType}.
      * <p>
      * Note that values which key start with an underscore are not added to the search index, everything else is
      * searchable.
