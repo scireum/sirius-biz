@@ -76,10 +76,10 @@ public class ScheduledEntryExecution {
                                                                 ProcessContext processContext) {
         if (processContext.isDebugging()) {
             processContext.debug(ProcessLog.info()
-                                .withFormattedMessage("Starting scheduled job %s (%s) for user %s.",
-                                                      entry,
-                                                      entry.getJobConfigData().getJobName(),
-                                                      UserContext.getCurrentUser().getUserName()));
+                                           .withFormattedMessage("Starting scheduled job %s (%s) for user %s.",
+                                                                 entry,
+                                                                 entry.getJobConfigData().getJobName(),
+                                                                 UserContext.getCurrentUser().getUserName()));
         }
 
         try {
@@ -99,26 +99,26 @@ public class ScheduledEntryExecution {
 
                 // Log to standby process with link to started job
                 processContext.log(ProcessLog.success()
-                                  .withNLSKey("JobSchedulerLoop.jobSubmitted")
-                                  .withContext(ENTRY_CONTEXT_KEY, entry.toString())
-                                  .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName())
-                                  .withMessageHandler(openProcessLogHandler)
-                                  .withContext(OpenProcessLogHandler.PARAM_TARGET_PROCESS_ID, processId));
+                                             .withNLSKey("JobSchedulerLoop.jobSubmitted")
+                                             .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                                             .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName())
+                                             .withMessageHandler(openProcessLogHandler)
+                                             .withContext(OpenProcessLogHandler.PARAM_TARGET_PROCESS_ID, processId));
             } else {
                 // Job started without creating a process - still log the submission
                 processContext.log(ProcessLog.success()
-                                  .withNLSKey("JobSchedulerLoop.jobSubmitted")
-                                  .withContext(ENTRY_CONTEXT_KEY, entry.toString())
-                                  .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName()));
+                                             .withNLSKey("JobSchedulerLoop.jobSubmitted")
+                                             .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                                             .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName()));
             }
 
             provider.markExecuted(entry, now);
         } catch (HandledException exception) {
             processContext.log(ProcessLog.error()
-                              .withNLSKey("JobSchedulerLoop.jobSubmissionFailed")
-                              .withContext(ENTRY_CONTEXT_KEY, entry.toString())
-                              .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName())
-                              .withContext("error", exception.getMessage()));
+                                         .withNLSKey("JobSchedulerLoop.jobSubmissionFailed")
+                                         .withContext(ENTRY_CONTEXT_KEY, entry.toString())
+                                         .withContext(JOB_NAME_CONTEXT_KEY, entry.getJobConfigData().getJobName())
+                                         .withContext("error", exception.getMessage()));
         }
     }
 }
