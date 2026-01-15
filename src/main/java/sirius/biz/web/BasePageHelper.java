@@ -129,6 +129,9 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      */
     public B addFilterFacet(Facet facet) {
         return addFacet(facet, (filterFacet, query) -> {
+            if (filterFacet.getValues().isEmpty()) {
+                return;
+            }
             if (filterFacet.isMultiSelect()) {
                 query.where(query.filters().oneInField(Mapping.named(filterFacet.getName()), filterFacet.getValues()).build());
             } else {
