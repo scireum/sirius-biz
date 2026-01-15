@@ -11,6 +11,8 @@ package sirius.biz.process.logs;
 import sirius.biz.elastic.SearchableEntity;
 import sirius.biz.process.Process;
 import sirius.biz.process.Processes;
+import sirius.biz.process.output.ProcessOutput;
+import sirius.biz.process.output.ProcessOutputType;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.es.types.ElasticRef;
@@ -19,6 +21,7 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.db.mixing.types.StringIntMap;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
@@ -31,6 +34,7 @@ import sirius.kernel.nls.NLS;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,7 +42,7 @@ import java.util.Optional;
 /**
  * Represents a log entry recorded for a {@link Process}.
  * <p>
- * This can be either a "plain" log entry or an element of a {@link sirius.biz.process.output.ProcessOutput}
+ * This can be either a "plain" log entry or an element of a {@link ProcessOutput}
  * defined by the process.
  * <p>
  * Note that even a "plain" log message provides quite some functionality as it can specify a {@link ProcessLogHandler}
@@ -104,6 +108,18 @@ public class ProcessLog extends SearchableEntity {
     public static final String ACTION_MARK_IGNORED = "markIgnored";
 
     /**
+     * Modifier flag indicating that the context value should be wrapped into {@linkplain NLS#quote(String) primary
+     * quotation marks} when rendering.
+     */
+    private static final int MODIFIER_QUOTE_PRIMARY = 0x1;
+
+    /**
+     * Modifier flag indicating that the context value should be wrapped into {@linkplain NLS#quoteSecondary(String)
+     * secondary quotation marks} when rendering.
+     */
+    private static final int MODIFIER_QUOTE_SECONDARY = 0x2;
+
+    /**
      * Contains the process for which this log entry was created.
      */
     public static final Mapping PROCESS = Mapping.named("process");
@@ -134,7 +150,7 @@ public class ProcessLog extends SearchableEntity {
     private String node;
 
     /**
-     * Contains the name of the {@link sirius.biz.process.output.ProcessOutput}
+     * Contains the name of the {@link ProcessOutput}
      * this entry belongs to.
      */
     public static final Mapping OUTPUT = Mapping.named("output");
@@ -165,10 +181,17 @@ public class ProcessLog extends SearchableEntity {
     private ProcessLogState state;
 
     /**
-     * Contains the context passed to the {@link ProcessLogHandler} or {@link sirius.biz.process.output.ProcessOutput}
+     * Contains the context passed to the {@link ProcessLogHandler} or {@link ProcessOutput}
      */
     public static final Mapping CONTEXT = Mapping.named("context");
     private final StringMap context = new StringMap();
+
+    /**
+     * Contains modifier flags that determine whether certain context values are modified before rendering, for instance
+     * by adding quotes.
+     */
+    public static final Mapping CONTEXT_MODIFIERS = Mapping.named("contextModifiers");
+    private final StringIntMap contextModifiers = new StringIntMap();
 
     /**
      * Determines if this is a system message which is not shown to "normal" users (ones which don't have
@@ -179,7 +202,7 @@ public class ProcessLog extends SearchableEntity {
 
     /**
      * Contains the log message to show. Can be <tt>null</tt> if either a {@link ProcessLogHandler} is
-     * present to generate one or if the entry belongs to a {@link sirius.biz.process.output.ProcessOutput}
+     * present to generate one or if the entry belongs to a {@link ProcessOutput}
      * which might only be interested in the {@link #context}.
      */
     public static final Mapping MESSAGE = Mapping.named("message");
@@ -316,7 +339,7 @@ public class ProcessLog extends SearchableEntity {
     }
 
     /**
-     * Specifies the {@link sirius.biz.process.output.ProcessOutput} to which this log entry belogs.
+     * Specifies the {@link ProcessOutput} to which this log entry belogs.
      *
      * @param output the name of the output this entry belongs to
      * @return the log entry itself for fluent method calls
@@ -369,7 +392,7 @@ public class ProcessLog extends SearchableEntity {
 
     /**
      * Provides a context which is either supplied to the {@link ProcessLogHandler} or
-     * {@link sirius.biz.process.output.ProcessOutput} / {@link sirius.biz.process.output.ProcessOutputType}.
+     * {@link ProcessOutput} / {@link ProcessOutputType}.
      * <p>
      * Note that values which key start with an underscore are not added to the search index, everything else is
      * searchable.
@@ -384,7 +407,7 @@ public class ProcessLog extends SearchableEntity {
 
     /**
      * Provides a name/value pair which is either supplied to the {@link ProcessLogHandler} or
-     * {@link sirius.biz.process.output.ProcessOutput} / {@link sirius.biz.process.output.ProcessOutputType}.
+     * {@link ProcessOutput} / {@link ProcessOutputType}.
      * <p>
      * Note that values which key start with an underscore are not added to the search index, everything else is
      * searchable.
@@ -395,6 +418,46 @@ public class ProcessLog extends SearchableEntity {
      */
     public ProcessLog withContext(String key, Object value) {
         this.context.modify().put(key, NLS.toUserString(value));
+        return withContext(key, value, 0);
+    }
+
+    /**
+     * Provides a name/value pair which is either supplied to the {@link ProcessLogHandler} or
+     * {@link ProcessOutput} / {@link ProcessOutputType}. The value will be wrapped into {@linkplain NLS#quote(String)
+     * primary quotation marks} when rendering.
+     * <p>
+     * Note that values which key start with an underscore are not added to the search index, everything else is
+     * searchable.
+     *
+     * @param key   the key to add to the context
+     * @param value the value to add to the context
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withQuotedContext(String key, Object value) {
+        return withContext(key, value, MODIFIER_QUOTE_PRIMARY);
+    }
+
+    /**
+     * Provides a name/value pair which is either supplied to the {@link ProcessLogHandler} or
+     * {@link ProcessOutput} / {@link ProcessOutputType}. The value will be wrapped into {@linkplain NLS#quoteSecondary(String)
+     * secondary quotation marks} when rendering.
+     * <p>
+     * Note that values which key start with an underscore are not added to the search index, everything else is
+     * searchable.
+     *
+     * @param key   the key to add to the context
+     * @param value the value to add to the context
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withSecondaryQuotedContext(String key, Object value) {
+        return withContext(key, value, MODIFIER_QUOTE_SECONDARY);
+    }
+
+    private ProcessLog withContext(String key, Object value, int modifiers) {
+        this.context.modify().put(key, NLS.toUserString(value));
+        if (modifiers != 0) {
+            this.contextModifiers.modify().put(key, modifiers);
+        }
         return this;
     }
 
@@ -489,10 +552,22 @@ public class ProcessLog extends SearchableEntity {
         }
 
         if (message.startsWith("$")) {
-            return NLS.fmtr(message.substring(1))
-                      .set((Map<String, Object>) (Object) context.data())
-                      .ignoreMissingParameters()
-                      .format();
+            Map<String, Object> modifiedContext = new LinkedHashMap<>((Map<String, Object>) (Object) context.data());
+            contextModifiers.data().forEach((key, modifiers) -> {
+                if (!modifiedContext.containsKey(key)) {
+                    return;
+                }
+
+                String rawString = modifiedContext.get(key).toString();
+                if ((modifiers & MODIFIER_QUOTE_PRIMARY) == MODIFIER_QUOTE_PRIMARY) {
+                    modifiedContext.put(key, NLS.quote(rawString));
+                }
+                if ((modifiers & MODIFIER_QUOTE_SECONDARY) == MODIFIER_QUOTE_SECONDARY) {
+                    modifiedContext.put(key, NLS.quoteSecondary(rawString));
+                }
+            });
+
+            return NLS.fmtr(message.substring(1)).set(modifiedContext).ignoreMissingParameters().format();
         }
 
         return message;
