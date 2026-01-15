@@ -135,7 +135,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             if (filterFacet.isMultiSelect()) {
                 query.where(query.filters().oneInField(Mapping.named(filterFacet.getName()), filterFacet.getValues()).build());
             } else {
-                query.eqIgnoreNull(Mapping.named(filterFacet.getName()), filterFacet.getValue());
+                query.eq(Mapping.named(filterFacet.getName()), filterFacet.getValue());
             }
         });
     }
