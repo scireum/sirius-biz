@@ -128,7 +128,16 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      * @return the helper itself for fluent method calls
      */
     public B addFilterFacet(Facet facet) {
-        return addFacet(facet, (f, q) -> q.eqIgnoreNull(Mapping.named(f.getName()), f.getValue()));
+        return addFacet(facet, (filterFacet, query) -> {
+            if (filterFacet.getValues().isEmpty()) {
+                return;
+            }
+            if (filterFacet.isMultiSelect()) {
+                query.where(query.filters().oneInField(Mapping.named(filterFacet.getName()), filterFacet.getValues()).build());
+            } else {
+                query.eq(Mapping.named(filterFacet.getName()), filterFacet.getValue());
+            }
+        });
     }
 
     /**
@@ -154,7 +163,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     public B addFacet(Facet facet, BiConsumer<Facet, Q> filter, BiConsumer<Facet, Q> itemsComputer) {
         Objects.requireNonNull(baseQuery);
 
-        facet.withValue(getParameterValue(facet.getName()).getString());
+        facet.withValues(getParameterValue(facet.getName()).asStringList());
         filter.accept(facet, baseQuery);
         facets.add(Tuple.create(facet, itemsComputer));
 
