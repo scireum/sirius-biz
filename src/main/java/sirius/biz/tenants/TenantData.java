@@ -322,7 +322,7 @@ public class TenantData extends Composite implements Journaled {
     }
 
     @BeforeSave
-    protected void normalizedSamlFingerprint() {
+    protected void normalizeSamlFingerprint() {
         if (Strings.isFilled(samlFingerprint)) {
             samlFingerprint = samlFingerprint.replace(" ", "").toLowerCase();
         }
