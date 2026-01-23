@@ -42,27 +42,28 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
 
     @Override
     public void clear(Cache<String, ?> cache) {
+        CacheManager.clearCoherentCacheLocally(cache.getName());
         interconnect.dispatch(getName(),
                               Json.createObject()
                                   .put(MESSAGE_TYPE, TYPE_CLEAR)
                                   .put(MESSAGE_CACHE, cache.getName())
                                   .put(MESSAGE_NODE, CallContext.getNodeName()));
-        CacheManager.clearCoherentCacheLocally(cache.getName());
     }
 
     @Override
     public void removeKey(Cache<String, ?> cache, String key) {
+        CacheManager.removeCoherentCacheKeyLocally(cache.getName(), key);
         interconnect.dispatch(getName(),
                               Json.createObject()
                                   .put(MESSAGE_TYPE, TYPE_REMOVE)
                                   .put(MESSAGE_CACHE, cache.getName())
                                   .put(MESSAGE_KEY, key)
                                   .put(MESSAGE_NODE, CallContext.getNodeName()));
-        CacheManager.removeCoherentCacheKeyLocally(cache.getName(), key);
     }
 
     @Override
     public void removeAll(Cache<String, ?> cache, String discriminator, String testInput) {
+        CacheManager.coherentCacheRemoveAllLocally(cache.getName(), discriminator, testInput);
         interconnect.dispatch(getName(),
                               Json.createObject()
                                   .put(MESSAGE_TYPE, TYPE_REMOVE_ALL)
@@ -70,7 +71,6 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
                                   .put(MESSAGE_DISCRIMINATOR, discriminator)
                                   .put(MESSAGE_TEST_VALUE, testInput)
                                   .put(MESSAGE_NODE, CallContext.getNodeName()));
-        CacheManager.coherentCacheRemoveAllLocally(cache.getName(), discriminator, testInput);
     }
 
     @Override
