@@ -26,6 +26,7 @@ import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -321,14 +322,17 @@ public class TenantData extends Composite implements Journaled {
     }
 
     @BeforeSave
-    protected void onModify() {
-        if (journal.hasJournaledChanges()) {
-            TenantUserManager.flushCacheForTenant((Tenant<?>) tenantObject);
-            tenants.flushTenantChildrenCache();
-        }
-
+    protected void normalizeSamlFingerprint() {
         if (Strings.isFilled(samlFingerprint)) {
             samlFingerprint = samlFingerprint.replace(" ", "").toLowerCase();
+        }
+    }
+
+    @AfterSave
+    protected void flushCaches() {
+        if (tenantObject.isAnyMappingChanged()) {
+            TenantUserManager.flushCacheForTenant((Tenant<?>) tenantObject);
+            tenants.flushTenantChildrenCache();
         }
     }
 
