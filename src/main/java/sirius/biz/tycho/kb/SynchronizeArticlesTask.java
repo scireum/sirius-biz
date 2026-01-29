@@ -260,7 +260,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             });
 
             if (performCheck.get()) {
-                elastic.getLowLevelClient().refresh(mixing.getDescriptor(KnowledgeBaseEntry.class).getRelationName());
+                elastic.refresh(KnowledgeBaseEntry.class);
             }
         }
     }
