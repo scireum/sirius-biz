@@ -29,7 +29,7 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-            delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
         number
         1234
         '1234'
@@ -46,7 +46,7 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-            delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
         number
         0.123
         '0.123'
@@ -61,7 +61,7 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-            delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
         precision | scale | number
         10        | 0     | 1234512345
         10        | 0     | '1234512345'
@@ -82,9 +82,9 @@ class ValueCheckTest {
     )
     @ParameterizedTest
     fun `numbers matching the provided scale and precision are correctly marked as valid`(
-            precision: Int,
-            scale: Int,
-            number: String
+        precision: Int,
+        scale: Int,
+        number: String
     ) {
         AmountScaleCheck(precision, scale).perform(Value.of(number))
     }
