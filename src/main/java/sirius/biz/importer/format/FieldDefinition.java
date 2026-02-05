@@ -131,29 +131,39 @@ public class FieldDefinition {
      * @param precision the precision of the field
      * @param scale     the scale of the field
      * @return the newly created field
-     * @deprecated use {@link #numericField(String, int, int, boolean)} instead
+     * @deprecated use one of {@link #fixedPrecisionNumericField(String, int, int)} or {@link #fixedPrecisionNumericField(String, int, int)} instead
      */
     @Deprecated
     public static FieldDefinition numericField(String name, int precision, int scale) {
+        return fixedPrecisionNumericField(name, precision, scale);
+    }
+
+    /**
+     * Boilerplate to create a new numeric field with the given <tt>precision</tt> and <tt>scale</tt>} using
+     * fixed point arithmetics for the precision check.
+     *
+     * @param name      the name of the field
+     * @param precision the precision of the field according to fixed point arithmetics
+     * @param scale     the scale of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition fixedPrecisionNumericField(String name, int precision, int scale) {
         return new FieldDefinition(name, typeNumber(precision, scale)).withCheck(new AmountScaleCheck(precision,
                                                                                                       scale));
     }
 
     /**
-     * Boilerplate to create a new numeric field with the given <tt>precision</tt> and <tt>scale</tt>}.
+     * Boilerplate to create a new numeric field with the given <tt>precision</tt> and <tt>scale</tt>} using
+     * arbitrary precision check.
      *
-     * @param name                  the name of the field
-     * @param precision             the precision of the field
-     * @param scale                 the scale of the field
-     * @param useArbitraryPrecision if <tt>true</tt>, arbitrary precision is used instead of fixed point arithmetics
+     * @param name      the name of the field
+     * @param precision the precision of the field using arbitrary precision
+     * @param scale     the scale of the field
      * @return the newly created field
      */
-    public static FieldDefinition numericField(String name, int precision, int scale, boolean useArbitraryPrecision) {
-        AmountScaleCheck check = new AmountScaleCheck(precision, scale);
-        if (useArbitraryPrecision) {
-            check.useArbitraryPrecision();
-        }
-        return new FieldDefinition(name, typeNumber(precision, scale)).withCheck(check);
+    public static FieldDefinition arbitraryPrecisionNumericField(String name, int precision, int scale) {
+        return new FieldDefinition(name, typeNumber(precision, scale)).withCheck(new AmountScaleCheck(precision,
+                                                                                                      scale).useArbitraryPrecision());
     }
 
     /**
