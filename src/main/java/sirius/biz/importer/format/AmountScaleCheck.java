@@ -19,7 +19,7 @@ import java.math.RoundingMode;
 /**
  * Enforces a given numeric scale and precision.
  * <p>
- * This check marks the given value as invalid if its non-numeric, it consists of more decimal places than the provided scale
+ * This check marks the given value as invalid if it's non-numeric, it consists of more decimal places than the provided scale
  * or the number of total digits exceeds the provided precision.
  * <p>
  * By default, the precision check follows the specifications of fixed point arithmetics.
