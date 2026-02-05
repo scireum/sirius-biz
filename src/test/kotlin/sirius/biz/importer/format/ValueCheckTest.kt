@@ -29,7 +29,7 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-            delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
         number
         1234
         '1234'
@@ -39,14 +39,29 @@ class ValueCheckTest {
         '1234.56'"""
     )
     @ParameterizedTest
-    fun `numbers exceeding the provided precision are correctly marked as invalid`(number: String) {
+    fun `numbers exceeding the provided fixed point precision are correctly marked as invalid`(number: String) {
         assertThrows<IllegalArgumentException> {
             AmountScaleCheck(5, 2).perform(Value.of(number))
         }
     }
 
     @CsvSource(
-            delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        number
+        123456
+        '123456'
+        1234.50
+        '1234.50'"""
+    )
+    @ParameterizedTest
+    fun `numbers exceeding the provided arbitrary precision are correctly marked as invalid`(number: String) {
+        assertThrows<IllegalArgumentException> {
+            AmountScaleCheck(5, 2).useArbitraryPrecision().perform(Value.of(number))
+        }
+    }
+
+    @CsvSource(
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
         number
         0.123
         '0.123'
@@ -61,7 +76,7 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-            delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
         precision | scale | number
         10        | 0     | 1234512345
         10        | 0     | '1234512345'
@@ -81,12 +96,35 @@ class ValueCheckTest {
         5         | 2     | '123'"""
     )
     @ParameterizedTest
-    fun `numbers matching the provided scale and precision are correctly marked as valid`(
-            precision: Int,
-            scale: Int,
-            number: String
+    fun `numbers matching the provided scale and fixed-point precision are correctly marked as valid`(
+        precision: Int,
+        scale: Int,
+        number: String
     ) {
         AmountScaleCheck(precision, scale).perform(Value.of(number))
+    }
+
+    @CsvSource(
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
+        precision | scale | number
+        10        | 0     | 1234512345
+        10        | 0     | '1234512345'
+        3         | 2     | 0.12
+        3         | 2     | '0.12'
+        3         | 2     | 1.20
+        3         | 2     | '1.20'
+        3         | 2     | 12.3
+        3         | 2     | '12.3'
+        3         | 2     | 123
+        3         | 2     | '123'"""
+    )
+    @ParameterizedTest
+    fun `numbers matching the provided scale and arbitrary precision are correctly marked as valid`(
+        precision: Int,
+        scale: Int,
+        number: String
+    ) {
+        AmountScaleCheck(precision, scale).useArbitraryPrecision().perform(Value.of(number))
     }
 
     @Test
