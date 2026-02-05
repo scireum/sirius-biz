@@ -124,16 +124,36 @@ public class FieldDefinition {
     }
 
     /**
-     * Boilerplate to create a new numeric field with the given <tt>precision</tt> and <tt>scale</tt>}.
+     * Boilerplate to create a new numeric field with the given <tt>precision</tt> and <tt>scale</tt>} using fixed point
+     * arithmetics for the precision check.
      *
      * @param name      the name of the field
      * @param precision the precision of the field
      * @param scale     the scale of the field
      * @return the newly created field
+     * @deprecated use {@link #numericField(String, int, int, boolean)} instead
      */
+    @Deprecated
     public static FieldDefinition numericField(String name, int precision, int scale) {
         return new FieldDefinition(name, typeNumber(precision, scale)).withCheck(new AmountScaleCheck(precision,
                                                                                                       scale));
+    }
+
+    /**
+     * Boilerplate to create a new numeric field with the given <tt>precision</tt> and <tt>scale</tt>}.
+     *
+     * @param name                  the name of the field
+     * @param precision             the precision of the field
+     * @param scale                 the scale of the field
+     * @param useArbitraryPrecision if <tt>true</tt>, arbitrary precision is used instead of fixed point arithmetics
+     * @return the newly created field
+     */
+    public static FieldDefinition numericField(String name, int precision, int scale, boolean useArbitraryPrecision) {
+        AmountScaleCheck check = new AmountScaleCheck(precision, scale);
+        if (useArbitraryPrecision) {
+            check.useArbitraryPrecision();
+        }
+        return new FieldDefinition(name, typeNumber(precision, scale)).withCheck(check);
     }
 
     /**
