@@ -24,7 +24,7 @@ import java.math.RoundingMode;
  * <p>
  * By default, the precision check follows the specifications of fixed point arithmetics.
  * This means that the overall number of digits is subtracted from the scale. E.g. a precision of 5 and scale of 2
- * will not permit 9999 as a value, even if only occupies 4 digits in total, the scale is inhered to the value as in 999900 which totalizes 6 digits.
+ * will not permit 9999 as a value, even if it only occupies 4 digits in total, the scale is inherent to the value as in 999900 which totalizes 6 digits.
  * <p>
  * This behavior can be overridden where arbitrary precision is used.
  * Here the decimal digits can float, so with a precision of 5 and scale 2, all these numbers are valid: 99999, 9999.9 and 999.99.
