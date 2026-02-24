@@ -235,7 +235,7 @@ public class Isenguard {
                 return false;
             }
 
-            return registerCallAndCheckLimit(scope, realm, limit.maxCalls, limit.intervalSeconds, () -> {
+            return registerCallAndCheckLimit(scope, realm, limit.intervalSeconds, limit.maxCalls, () -> {
                 handleLimitReached(scope, realm, limit, infoSupplier.get());
 
                 if (limitReachedOnce != null) {
