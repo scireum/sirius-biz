@@ -13,7 +13,6 @@ import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.protocol.AuditLog;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -78,7 +77,7 @@ public class Isenguard {
      */
     public static final String REALM_TYPE_USER = "user";
 
-    private final Map<String, Tuple<Integer, Integer>> limits = new ConcurrentHashMap<>();
+    private final Map<String, Limit> limits = new ConcurrentHashMap<>();
 
     @Part(configPath = "isenguard.limiter")
     private Limiter limiter;
@@ -181,7 +180,7 @@ public class Isenguard {
         return Exceptions.createHandled()
                          .withSystemErrorMessage("Rate Limit reached: %s (%s)",
                                                  realm,
-                                                 formatLimit(fetchLimit(realm, explicitLimit)))
+                                                 fetchLimit(realm, explicitLimit).format())
                          .hint(Controller.HTTP_STATUS, HttpResponseStatus.TOO_MANY_REQUESTS.code())
                          .handle();
     }
@@ -231,12 +230,12 @@ public class Isenguard {
                                                         Runnable limitReachedOnce,
                                                         Supplier<RateLimitingInfo> infoSupplier) {
         try {
-            Tuple<Integer, Integer> limit = fetchLimit(realm, explicitLimit);
-            if (limit.getFirst() == 0 || limit.getSecond() == 0) {
+            Limit limit = fetchLimit(realm, explicitLimit);
+            if (!limit.isValid()) {
                 return false;
             }
 
-            return registerCallAndCheckLimit(scope, realm, limit.getSecond(), limit.getFirst(), () -> {
+            return registerCallAndCheckLimit(scope, realm, limit.maxCalls, limit.intervalSeconds, () -> {
                 handleLimitReached(scope, realm, limit, infoSupplier.get());
 
                 if (limitReachedOnce != null) {
@@ -279,12 +278,12 @@ public class Isenguard {
      */
     public boolean checkRateLimitReached(String scope, String realm, int explicitLimit) {
         try {
-            Tuple<Integer, Integer> limit = fetchLimit(realm, explicitLimit);
-            if (limit.getFirst() == 0 || limit.getSecond() == 0) {
+            Limit limit = fetchLimit(realm, explicitLimit);
+            if (!limit.isValid()) {
                 return false;
             }
 
-            return checkLimit(scope, realm, limit.getSecond(), limit.getFirst());
+            return checkLimit(scope, realm, limit.intervalSeconds, limit.maxCalls);
         } catch (Exception exception) {
             // In case of an error e.g. Redis might not be available,
             // we resort to ignoring any limits and let the application run.
@@ -295,22 +294,22 @@ public class Isenguard {
         }
     }
 
-    private Tuple<Integer, Integer> fetchLimit(String realm, int explicitLimit) {
-        Tuple<Integer, Integer> limitSetting = limits.computeIfAbsent(realm, this::loadLimit);
+    private Limit fetchLimit(String realm, int explicitLimit) {
+        Limit limitSetting = limits.computeIfAbsent(realm, this::loadLimit);
         return explicitLimit == USE_LIMIT_FROM_CONFIG ?
                limitSetting :
-               Tuple.create(explicitLimit, limitSetting.getSecond());
+               new Limit(explicitLimit, limitSetting.intervalSeconds);
     }
 
-    private Tuple<Integer, Integer> loadLimit(String realm) {
+    private Limit loadLimit(String realm) {
         Extension setting = Sirius.getSettings().getExtension("isenguard.limit", realm);
-        return Tuple.create(setting.getInt("limit"), (int) (setting.getMilliseconds("interval") / 1000));
+        return new Limit(setting.getInt("limit"), (int) (setting.getMilliseconds("interval") / 1000));
     }
 
-    private void handleLimitReached(String scope, String realm, Tuple<Integer, Integer> limit, RateLimitingInfo info) {
+    private void handleLimitReached(String scope, String realm, Limit limit, RateLimitingInfo info) {
         LOG.WARN("Scope %s reached its rate-limit (%s) for realm '%s'. IP: %s, Tenant: %s, Location: %s",
                  scope,
-                 formatLimit(limit),
+                 limit.format(),
                  realm,
                  Value.of(info.getIp()).asString("-"),
                  Value.of(info.getTenantId()).asString("-"),
@@ -320,15 +319,11 @@ public class Isenguard {
 
         events.record(new RateLimitingTriggeredEvent().withRealm(realm)
                                                       .withScope(scope)
-                                                      .withLimit(limit.getFirst())
-                                                      .withInterval(limit.getSecond())
+                                                      .withLimit(limit.maxCalls)
+                                                      .withInterval(limit.intervalSeconds)
                                                       .withIp(info.getIp())
                                                       .withTenant(info.getTenantId())
                                                       .withLocation(Strings.limit(info.getLocation(), 255)));
-    }
-
-    private String formatLimit(Tuple<Integer, Integer> limit) {
-        return Strings.apply("%s calls within %ss", limit.getFirst(), limit.getSecond());
     }
 
     private boolean checkLimit(String scope, String realm, int intervalInSeconds, int limit) {
@@ -364,15 +359,14 @@ public class Isenguard {
      */
     @Nullable
     public String getRateLimitInfo(String scope, String realm, Integer explicitLimit) {
-        Tuple<Integer, Integer> limit =
-                fetchLimit(realm, explicitLimit == null ? USE_LIMIT_FROM_CONFIG : explicitLimit);
-        if (limit.getFirst() == 0 || limit.getSecond() == 0) {
+        Limit limit = fetchLimit(realm, explicitLimit == null ? USE_LIMIT_FROM_CONFIG : explicitLimit);
+        if (!limit.isValid()) {
             return null;
         }
 
-        String key = computeRateLimitingKey(scope, realm, limit.getSecond());
+        String key = computeRateLimitingKey(scope, realm, limit.intervalSeconds);
         int currentValue = limiter.readCallCount(key);
-        return Strings.apply("%s / %s (per %ss)", currentValue, limit.getFirst(), limit.getSecond());
+        return limit.format(currentValue);
     }
 
     /**
@@ -409,5 +403,25 @@ public class Isenguard {
      */
     public Set<String> getBlockedIPs() {
         return limiter.getBlockedIPs();
+    }
+
+    /**
+     * Represents the limit for a specific realm, containing the maximum number of calls and the check interval in seconds.
+     *
+     * @param maxCalls        the maximum number of calls within the interval period
+     * @param intervalSeconds the check interval in seconds during which the max calls are counted
+     */
+    private record Limit(int maxCalls, int intervalSeconds) {
+        private boolean isValid() {
+            return maxCalls > 0 && intervalSeconds > 0;
+        }
+
+        private String format() {
+            return Strings.apply("%s calls within %ss", maxCalls, intervalSeconds);
+        }
+
+        private String format(int currentValue) {
+            return Strings.apply("%s / %s (per %ss)", currentValue, maxCalls, intervalSeconds);
+        }
     }
 }
