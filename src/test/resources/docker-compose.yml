@@ -12,7 +12,7 @@ services:
     hostname: redis-jupiter
 
   mongo:
-    image: mongo:8.0.8
+    image: mongo:8.0.10
     ports:
       - "27017"
     hostname: mongo
@@ -45,8 +45,9 @@ services:
       - xpack.security.enabled=false
       - ingest.geoip.downloader.enabled=false
     hostname: es
+
   s3-system:
-    image: scireum/s3-ninja:8.4.0
+    image: scireum/s3-ninja:8.6.0
     ports:
       - "9000"
     hostname: s3ninja
