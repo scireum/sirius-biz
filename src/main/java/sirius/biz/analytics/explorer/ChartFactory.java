@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -45,6 +46,7 @@ public abstract class ChartFactory<O> implements Named, Priorized {
     private static final String OUTPUT_LABEL = "label";
     private static final String OUTPUT_SUB_LABEL = "subLabel";
     private static final String OUTPUT_DESCRIPTION = "description";
+    private static final String OUTPUT_WARNING = "warning";
     private static final String OUTPUT_HINTS = "hints";
     private static final String OUTPUT_HINT = "hint";
     private static final String OUTPUT_REFERENCES = "references";
@@ -208,6 +210,24 @@ public abstract class ChartFactory<O> implements Named, Priorized {
     }
 
     /**
+     * Allows computing an optional warning to show below the chart description.
+     * <p>
+     * Subclasses can override this to emit contextual warnings based on the selected object and date range.
+     *
+     * @param object           the currently selected object for the chart
+     * @param start            the start of the selected period
+     * @param end              the end of the selected period
+     * @param comparisonPeriod the selected comparison period
+     * @return the warning to show or an empty optional if none should be displayed
+     */
+    protected Optional<String> getChartWarning(@Nullable O object,
+                                               LocalDate start,
+                                               LocalDate end,
+                                               ComparisonPeriod comparisonPeriod) {
+        return Optional.empty();
+    }
+
+    /**
      * Collects a list of similar / matching charts to recommend.
      *
      * @param referenceChartConsumer a consumer to be supplied with chart classes to suggest to the user
@@ -258,6 +278,9 @@ public abstract class ChartFactory<O> implements Named, Priorized {
         output.property(OUTPUT_LABEL, getChartLabel(object));
         output.property(OUTPUT_SUB_LABEL, getChartSubLabel(object));
         output.property(OUTPUT_DESCRIPTION, getChartDescription(object));
+        getChartWarning(object, start, end, comparisonPeriod).ifPresent(warning -> {
+            output.property(OUTPUT_WARNING, warning);
+        });
         outputReferences(object, output);
 
         computeData(object, start, end, granularity, comparisonPeriod, hints::add, output);
