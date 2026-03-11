@@ -1858,36 +1858,43 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return future;
         }
 
-        V variant = tryFetchVariant(blob, variantName);
+        try {
+            V variant;
+            variant = tryFetchVariant(blob, variantName);
 
-        if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
-            return new Future().success();
-        }
-
-        if (conversionEnabled) {
-            if (variant == null) {
-                variant = createVariant(blob, variantName);
+            if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
+                return new Future().success();
             }
 
-            if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
-                // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
-                // wait a short and random amount of time and retry...
-                Wait.randomMillis(0, 150);
-                // A collision was detected and the given variant was removed, therefore we need to create the variant again.
-                return tryCreateVariant(blob, inputFile, variantName, retries - 1);
+            if (conversionEnabled) {
+                if (variant == null) {
+                    variant = createVariant(blob, variantName);
+                }
+
+                if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
+                    // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
+                    // wait a short and random amount of time and retry...
+                    Wait.randomMillis(0, 150);
+                    // A collision was detected and the given variant was removed, therefore we need to create the variant again.
+                    return tryCreateVariant(blob, inputFile, variantName, retries - 1);
+                } else {
+                    return invokeConversionPipelineAsync(blob, inputFile, variant);
+                }
             } else {
-                return invokeConversionPipelineAsync(blob, inputFile, variant);
+                // No variant is present and no conversion is possible -> give up
+                Future future = new Future();
+                future.fail(Exceptions.handle()
+                                      .to(StorageUtils.LOG)
+                                      .withSystemErrorMessage(
+                                              "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
+                                              blob.getBlobKey(),
+                                              variantName)
+                                      .handle());
+                return future;
             }
-        } else {
-            // No variant is present and no conversion is possible -> give up
+        } catch (Exception exception) {
             Future future = new Future();
-            future.fail(Exceptions.handle()
-                                  .to(StorageUtils.LOG)
-                                  .withSystemErrorMessage(
-                                          "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
-                                          blob.getBlobKey(),
-                                          variantName)
-                                  .handle());
+            future.fail(exception);
             return future;
         }
     }
