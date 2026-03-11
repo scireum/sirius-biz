@@ -1597,14 +1597,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private V attemptToFindOrCreateVariant(B blob, String variantName, int retries) throws Exception {
         // Always try to fetch the variant first, which could be present due to a previous conversion attempt
         // or a conversion has been created from another thread or node...
-        V variant = null;
-        try {
-            variant = tryFetchVariant(blob, variantName);
-        } catch (HandledException exception) {
-            // The conversion ultimately failed. Invoke the handlers and re-throw the exception...
-            failedVariantHandlers.forEach(handler -> handler.handle(exception, blob.getBlobKey(), variantName));
-            throw exception;
-        }
+        V variant = tryFetchVariant(blob, variantName);
 
         if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
             // We hit the nail on the head - we found a variant which has successfully been converted already.
@@ -1757,7 +1750,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                               .withOutputFile(automaticHandle));
             }
         }).onFailure(conversionException -> {
-            markConversionFailure(variant, conversionProcess);
+            V updatedVariant = markConversionFailure(variant, conversionProcess);
+            if (retryLimitReached(updatedVariant)) {
+                failedVariantHandlers.forEach(handler -> handler.handle(conversionException,
+                                                                        blob.getBlobKey(),
+                                                                        variant.getVariantName()));
+            }
             eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                           .withConversionError(conversionException));
         });
