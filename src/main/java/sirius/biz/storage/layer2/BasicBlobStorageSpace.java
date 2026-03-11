@@ -1877,8 +1877,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                     Wait.randomMillis(0, 150);
                     // A collision was detected and the given variant was removed, therefore we need to create the variant again.
                     return tryCreateVariant(blob, inputFile, variantName, retries - 1);
-                } else {
+                }
+
+                if (markConversionAttempt(variant)) {
+                    // We successfully marked this as "in conversion" -> fork a conversion task in parallel
                     return invokeConversionPipelineAsync(blob, inputFile, variant);
+                } else {
+                    Wait.randomMillis(0, 150);
+                    return tryCreateVariant(blob, inputFile, variantName, retries - 1);
                 }
             } else {
                 // No variant is present and no conversion is possible -> give up
