@@ -1739,7 +1739,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             conversionProcess.withInputFile(inputFile.getFile());
         }
 
-        Future future = conversionEngine.performConversion(conversionProcess);
+        Future future = new Future();
         future.onSuccess(ignored -> {
             try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
                 String physicalKey = keyGenerator.generateId();
@@ -1759,6 +1759,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                           .withConversionError(conversionException));
         });
+        conversionEngine.performConversion(future, conversionProcess);
         return future;
     }
 
