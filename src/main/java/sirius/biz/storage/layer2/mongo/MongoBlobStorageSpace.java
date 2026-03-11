@@ -828,7 +828,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected void markConversionFailure(MongoVariant variant, ConversionProcess conversionProcess) {
+    protected MongoVariant markConversionFailure(MongoVariant variant, ConversionProcess conversionProcess) {
         mongo.update()
              .set(MongoVariant.QUEUED_FOR_CONVERSION, false)
              .set(MongoVariant.CONVERSION_DURATION, conversionProcess.getConversionDuration())
@@ -836,6 +836,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .set(MongoVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
              .where(MongoVariant.ID, variant.getId())
              .executeForOne(MongoVariant.class);
+        return mango.tryRefresh(variant);
     }
 
     @Override

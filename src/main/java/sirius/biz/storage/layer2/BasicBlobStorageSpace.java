@@ -1777,8 +1777,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Records a failed conversion attempt for the given variant.
      *
      * @param variant the variant to record the failed attempt for
+     * @return the updated variant
      */
-    protected abstract void markConversionFailure(V variant, ConversionProcess conversionProcess);
+    protected abstract V markConversionFailure(V variant, ConversionProcess conversionProcess);
 
     /**
      * Computes the checksum of the converted file in the given conversion process.
