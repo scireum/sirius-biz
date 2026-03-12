@@ -1663,7 +1663,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
-        if (conversionEnabled && variant.isRetryLimitReached()) {
+        if (conversionEnabled && !variant.isRetryLimitReached()) {
             // A variant exists, and we should re-try to create it...
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
