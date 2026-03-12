@@ -136,7 +136,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     @Override
     public Optional<FileHandle> download() {
-        return Optional.empty();
+        return sourceBlob.fetchCachedValue().getStorageSpace().download(this);
     }
 
     @Override

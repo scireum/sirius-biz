@@ -1091,6 +1091,35 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
+     * Performs a download / fetch of the given variant to make its data locally accessible.
+     * <p>
+     * Downloading direct from variants is not encouraged but may be necessary in certain scenarios where a complete
+     * variant might already be at hand, avoiding further lookups.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * {@code
+     * space.download(blob).ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * }
+     * </pre>
+     *
+     * @param variant the variant to fetch the data for
+     * @return a {@linkplain java.io.Closeable closeable} file handle which makes the blob data accessible, or an empty optional if no data was present
+     */
+    public Optional<FileHandle> download(V variant) {
+        if (Strings.isEmpty(variant.getPhysicalObjectKey())) {
+            return Optional.empty();
+        }
+
+        return getPhysicalSpace().download(variant.getPhysicalObjectKey());
+    }
+
+    /**
      * Downloads and provides the contents of the requested blob with the given variant.
      * <p>
      * Note: This method will not be able to return a file if the blob doesn't yet exist in the requested variant and
