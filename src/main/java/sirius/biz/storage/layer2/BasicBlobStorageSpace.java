@@ -1078,7 +1078,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * }
      * </pre>
      *
-     *
      * @param blob the blob to fetch the data for
      * @return a {@linkplain java.io.Closeable closeable} file handle which makes the blob data accessible, or an empty optional if no data was present
      */
@@ -1591,10 +1590,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private V tryFetchVariant(B blob, String variantName) {
         V variant = findAnyVariant(blob, variantName);
-        if (variant != null
-            && !variant.isQueuedForConversion()
-            && variant.isRetryLimitReached()
-            && Strings.isEmpty(variant.getPhysicalObjectKey())) {
+        if (variant != null && !variant.isQueuedForConversion() && variant.isRetryLimitReached() && Strings.isEmpty(
+                variant.getPhysicalObjectKey())) {
             // The conversion has failed - signal that to the client. We use a handled exception here, as the problem
             // has already been logged...
             throwExhaustedConversionAttemptsException(blob.getBlobKey(), variantName);
@@ -1906,16 +1903,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                     return tryCreateVariant(blob, inputFile, variantName, retries - 1);
                 }
             } else {
-                // No variant is present and no conversion is possible -> give up
-                Future future = new Future();
-                future.fail(Exceptions.handle()
-                                      .to(StorageUtils.LOG)
-                                      .withSystemErrorMessage(
-                                              "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
-                                              blob.getBlobKey(),
-                                              variantName)
-                                      .handle());
-                return future;
+                // No variant is present, and no conversion is possible -> give up
+                throw Exceptions.handle()
+                                .withSystemErrorMessage(
+                                        "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
+                                        blob.getBlobKey(),
+                                        variantName)
+                                .handle();
             }
         } catch (Exception exception) {
             Future future = new Future();
