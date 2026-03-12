@@ -1590,8 +1590,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private V tryFetchVariant(B blob, String variantName) {
         V variant = findAnyVariant(blob, variantName);
-        if (variant != null && !variant.isQueuedForConversion() && variant.isRetryLimitReached() && Strings.isEmpty(
-                variant.getPhysicalObjectKey())) {
+        if (variant != null
+            && !variant.isQueuedForConversion()
+            && variant.isFailed()
+            && Strings.isEmpty(variant.getPhysicalObjectKey())) {
             // The conversion has failed - signal that to the client. We use a handled exception here, as the problem
             // has already been logged...
             throwExhaustedConversionAttemptsException(blob.getBlobKey(), variantName);
@@ -1661,7 +1663,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
-        if (conversionEnabled && !variant.isRetryLimitReached()) {
+        if (conversionEnabled && !variant.isFailed()) {
             // A variant exists, and we should re-try to create it...
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
@@ -1778,7 +1780,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
         }).onFailure(conversionException -> {
             V updatedVariant = markConversionFailure(variant, conversionProcess);
-            if (updatedVariant.isRetryLimitReached()) {
+            if (updatedVariant.isFailed()) {
                 failedVariantHandlers.forEach(handler -> handler.handle(conversionException,
                                                                         blob.getBlobKey(),
                                                                         variant.getVariantName()));
