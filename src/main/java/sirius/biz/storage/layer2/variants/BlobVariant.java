@@ -24,6 +24,11 @@ import java.util.Optional;
 public interface BlobVariant {
 
     /**
+     * Specifies the maximal number of attempts to generate a variant.
+     */
+    int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
+
+    /**
      * Returns the unique ID of this revision.
      *
      * @return the id of this revision

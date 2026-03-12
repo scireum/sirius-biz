@@ -111,11 +111,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static Duration hangingConversionRetryInterval;
 
     /**
-     * Specifies the maximal number of attempts to generate a variant.
-     */
-    public static final int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
-
-    /**
      * Used to cache the fact, that a blob variant cannot be created/converted.
      */
     private static final String CACHED_FAILURE_MARKER = "-";

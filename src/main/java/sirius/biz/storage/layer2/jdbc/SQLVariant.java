@@ -141,7 +141,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     @Override
     public boolean isFailed() {
-        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
+        return getNumAttempts() >= VARIANT_MAX_CONVERSION_ATTEMPTS;
     }
 
     @Override

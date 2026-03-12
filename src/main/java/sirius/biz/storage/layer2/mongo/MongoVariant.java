@@ -140,7 +140,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     @Override
     public boolean isFailed() {
-        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
+        return getNumAttempts() >= VARIANT_MAX_CONVERSION_ATTEMPTS;
     }
 
     @Override
