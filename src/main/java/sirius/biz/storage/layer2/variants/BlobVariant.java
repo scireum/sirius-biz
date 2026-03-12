@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 
 import javax.annotation.Nullable;
@@ -118,4 +119,14 @@ public interface BlobVariant {
      */
     @Nullable
     String getChecksum();
+
+    /**
+     * Checks if the maximum number of conversion attempts has been reached.
+     *
+     * @return <tt>true</tt> if the conversion has finally failed and no further conversions should be attempted,
+     * <tt>false</tt> otherwise
+     */
+    default boolean isRetryLimitReached() {
+        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
+    }
 }

@@ -1592,7 +1592,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         V variant = findAnyVariant(blob, variantName);
         if (variant != null
             && !variant.isQueuedForConversion()
-            && retryLimitReached(variant)
+            && variant.isRetryLimitReached()
             && Strings.isEmpty(variant.getPhysicalObjectKey())) {
             // The conversion has failed - signal that to the client. We use a handled exception here, as the problem
             // has already been logged...
@@ -1663,7 +1663,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
-        if (conversionEnabled && !retryLimitReached(variant)) {
+        if (conversionEnabled && variant.isRetryLimitReached()) {
             // A variant exists, and we should re-try to create it...
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
@@ -1780,7 +1780,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
         }).onFailure(conversionException -> {
             V updatedVariant = markConversionFailure(variant, conversionProcess);
-            if (retryLimitReached(updatedVariant)) {
+            if (updatedVariant.isRetryLimitReached()) {
                 failedVariantHandlers.forEach(handler -> handler.handle(conversionException,
                                                                         blob.getBlobKey(),
                                                                         variant.getVariantName()));
@@ -1837,17 +1837,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         return !variant.isQueuedForConversion()
                || Duration.between(variant.getLastConversionAttempt(), LocalDateTime.now())
                           .compareTo(hangingConversionRetryInterval) > 0;
-    }
-
-    /**
-     * Determines if the conversion of a variant has finally failed.
-     *
-     * @param variant the variant to check
-     * @return <tt>true</tt> if the conversion has finally failed and no further conversions should be attempted,
-     * <tt>false</tt> otherwise
-     */
-    private boolean retryLimitReached(V variant) {
-        return variant.getNumAttempts() >= VARIANT_MAX_CONVERSION_ATTEMPTS;
     }
 
     /**
