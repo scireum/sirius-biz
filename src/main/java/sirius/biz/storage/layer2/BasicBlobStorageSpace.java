@@ -1872,8 +1872,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         try {
-            V variant;
-            variant = tryFetchVariant(blob, variantName);
+            V variant = tryFetchVariant(blob, variantName);
 
             if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
                 return new Future().success();
