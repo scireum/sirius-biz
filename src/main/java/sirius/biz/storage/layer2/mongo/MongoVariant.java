@@ -135,12 +135,12 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     @Override
     public Optional<FileHandle> download() {
-        return Optional.empty();
+        return blob.fetchCachedValue().getStorageSpace().download(this);
     }
 
     @Override
     public boolean isFailed() {
-        return getNumAttempts() >= BasicBlobStorageSpace.VARIANT_MAX_CONVERSION_ATTEMPTS;
+        return getNumAttempts() >= VARIANT_MAX_CONVERSION_ATTEMPTS;
     }
 
     @Override

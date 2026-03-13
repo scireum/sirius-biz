@@ -914,7 +914,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected void markConversionFailure(SQLVariant variant, ConversionProcess conversionProcess) {
+    protected SQLVariant markConversionFailure(SQLVariant variant, ConversionProcess conversionProcess) {
         try {
             oma.updateStatement(SQLVariant.class)
                .set(SQLVariant.QUEUED_FOR_CONVERSION, false)
@@ -923,6 +923,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .set(SQLVariant.TRANSFER_DURATION, conversionProcess.getTransferDuration())
                .where(SQLVariant.ID, variant.getId())
                .executeUpdate();
+            return oma.tryRefresh(variant);
         } catch (SQLException exception) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
@@ -932,6 +933,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                               variant.getIdAsString(),
                               variant.getSourceBlob().getIdAsString())
                       .handle();
+            return variant;
         }
     }
 

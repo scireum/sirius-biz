@@ -111,11 +111,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static Duration hangingConversionRetryInterval;
 
     /**
-     * Specifies the maximal number of attempts to generate a variant.
-     */
-    public static final int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
-
-    /**
      * Used to cache the fact, that a blob variant cannot be created/converted.
      */
     private static final String CACHED_FAILURE_MARKER = "-";
@@ -1070,7 +1065,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Do this ideally with a {@code try-with-resources} block:
      * <pre>
      * {@code
-     * space.download(blob).ifPresent(handle -> {
+     * blob.download().ifPresent(handle -> {
      *     try (handle) {
      *         // Read from the handle here...
      *     }
@@ -1088,6 +1083,35 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
         touch(blob.getBlobKey());
         return getPhysicalSpace().download(blob.getPhysicalObjectKey());
+    }
+
+    /**
+     * Performs a download / fetch of the given variant to make its data locally accessible.
+     * <p>
+     * Downloading directly from variants is not encouraged but may be necessary in certain scenarios where a complete
+     * variant might already be at hand, avoiding further lookups.
+     * <p>
+     * Note that the returned {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
+     * Do this ideally with a {@code try-with-resources} block:
+     * <pre>
+     * {@code
+     * variant.download().ifPresent(handle -> {
+     *     try (handle) {
+     *         // Read from the handle here...
+     *     }
+     * });
+     * }
+     * </pre>
+     *
+     * @param variant the variant to fetch the data for
+     * @return a {@linkplain java.io.Closeable closeable} file handle which makes the blob data accessible, or an empty optional if no data was present
+     */
+    public Optional<FileHandle> download(V variant) {
+        if (Strings.isEmpty(variant.getPhysicalObjectKey())) {
+            return Optional.empty();
+        }
+
+        return getPhysicalSpace().download(variant.getPhysicalObjectKey());
     }
 
     /**
@@ -1563,7 +1587,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         V variant = findAnyVariant(blob, variantName);
         if (variant != null
             && !variant.isQueuedForConversion()
-            && retryLimitReached(variant)
+            && variant.isFailed()
             && Strings.isEmpty(variant.getPhysicalObjectKey())) {
             // The conversion has failed - signal that to the client. We use a handled exception here, as the problem
             // has already been logged...
@@ -1597,14 +1621,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private V attemptToFindOrCreateVariant(B blob, String variantName, int retries) throws Exception {
         // Always try to fetch the variant first, which could be present due to a previous conversion attempt
         // or a conversion has been created from another thread or node...
-        V variant = null;
-        try {
-            variant = tryFetchVariant(blob, variantName);
-        } catch (HandledException exception) {
-            // The conversion ultimately failed. Invoke the handlers and re-throw the exception...
-            failedVariantHandlers.forEach(handler -> handler.handle(exception, blob.getBlobKey(), variantName));
-            throw exception;
-        }
+        V variant = tryFetchVariant(blob, variantName);
 
         if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
             // We hit the nail on the head - we found a variant which has successfully been converted already.
@@ -1641,7 +1658,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
-        if (conversionEnabled && !retryLimitReached(variant)) {
+        if (conversionEnabled && !variant.isFailed()) {
             // A variant exists, and we should re-try to create it...
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
@@ -1746,7 +1763,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             conversionProcess.withInputFile(inputFile.getFile());
         }
 
-        Future future = conversionEngine.performConversion(conversionProcess);
+        Future future = new Future();
         future.onSuccess(ignored -> {
             try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
                 String physicalKey = keyGenerator.generateId();
@@ -1757,10 +1774,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                               .withOutputFile(automaticHandle));
             }
         }).onFailure(conversionException -> {
-            markConversionFailure(variant, conversionProcess);
+            V updatedVariant = markConversionFailure(variant, conversionProcess);
+            if (updatedVariant.isFailed()) {
+                failedVariantHandlers.forEach(handler -> handler.handle(conversionException,
+                                                                        blob.getBlobKey(),
+                                                                        variant.getVariantName()));
+            }
             eventRecorder.record(new BlobConversionEvent().withConversionProcess(conversionProcess)
                                                           .withConversionError(conversionException));
         });
+        conversionEngine.performConversion(future, conversionProcess);
         return future;
     }
 
@@ -1777,8 +1800,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Records a failed conversion attempt for the given variant.
      *
      * @param variant the variant to record the failed attempt for
+     * @return the updated variant
      */
-    protected abstract void markConversionFailure(V variant, ConversionProcess conversionProcess);
+    protected abstract V markConversionFailure(V variant, ConversionProcess conversionProcess);
 
     /**
      * Computes the checksum of the converted file in the given conversion process.
@@ -1808,17 +1832,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         return !variant.isQueuedForConversion()
                || Duration.between(variant.getLastConversionAttempt(), LocalDateTime.now())
                           .compareTo(hangingConversionRetryInterval) > 0;
-    }
-
-    /**
-     * Determines if the conversion of a variant has finally failed.
-     *
-     * @param variant the variant to check
-     * @return <tt>true</tt> if the conversion has finally failed and no further conversions should be attempted,
-     * <tt>false</tt> otherwise
-     */
-    private boolean retryLimitReached(V variant) {
-        return variant.getNumAttempts() >= VARIANT_MAX_CONVERSION_ATTEMPTS;
     }
 
     /**
@@ -1858,36 +1871,45 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return future;
         }
 
-        V variant = tryFetchVariant(blob, variantName);
+        try {
+            V variant = tryFetchVariant(blob, variantName);
 
-        if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
-            return new Future().success();
-        }
-
-        if (conversionEnabled) {
-            if (variant == null) {
-                variant = createVariant(blob, variantName);
+            if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
+                return new Future().success();
             }
 
-            if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
-                // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
-                // wait a short and random amount of time and retry...
-                Wait.randomMillis(0, 150);
-                // A collision was detected and the given variant was removed, therefore we need to create the variant again.
-                return tryCreateVariant(blob, inputFile, variantName, retries - 1);
+            if (conversionEnabled) {
+                if (variant == null) {
+                    variant = createVariant(blob, variantName);
+                }
+
+                if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
+                    // An optimistic lock error occurred (another thread or node attempted the same). So we back up,
+                    // wait a short and random amount of time and retry...
+                    Wait.randomMillis(0, 150);
+                    // A collision was detected and the given variant was removed, therefore we need to create the variant again.
+                    return tryCreateVariant(blob, inputFile, variantName, retries - 1);
+                }
+
+                if (markConversionAttempt(variant)) {
+                    // We successfully marked this as "in conversion" -> fork a conversion task in parallel
+                    return invokeConversionPipelineAsync(blob, inputFile, variant);
+                } else {
+                    Wait.randomMillis(0, 150);
+                    return tryCreateVariant(blob, inputFile, variantName, retries - 1);
+                }
             } else {
-                return invokeConversionPipelineAsync(blob, inputFile, variant);
+                // No variant is present, and no conversion is possible -> give up
+                throw Exceptions.handle()
+                                .withSystemErrorMessage(
+                                        "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
+                                        blob.getBlobKey(),
+                                        variantName)
+                                .handle();
             }
-        } else {
-            // No variant is present and no conversion is possible -> give up
+        } catch (Exception exception) {
             Future future = new Future();
-            future.fail(Exceptions.handle()
-                                  .to(StorageUtils.LOG)
-                                  .withSystemErrorMessage(
-                                          "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
-                                          blob.getBlobKey(),
-                                          variantName)
-                                  .handle());
+            future.fail(exception);
             return future;
         }
     }

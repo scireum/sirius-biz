@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 
 import javax.annotation.Nullable;
@@ -21,6 +22,11 @@ import java.util.Optional;
  * This could be a resized JPG derived from a given EPS file.
  */
 public interface BlobVariant {
+
+    /**
+     * Specifies the maximal number of attempts to generate a variant.
+     */
+    int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
 
     /**
      * Returns the unique ID of this revision.

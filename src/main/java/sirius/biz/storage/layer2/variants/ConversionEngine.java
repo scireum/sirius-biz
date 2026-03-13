@@ -172,18 +172,14 @@ public class ConversionEngine {
     /**
      * Invokes the {@link Converter} which has been configured for the given variant to perform the actual conversion.
      *
+     * @param result            a future which is fulfilled once the conversion is completed
      * @param conversionProcess the conversion to perform
-     * @return a future which is fulfilled once the conversion is completed
      */
-    public Future performConversion(ConversionProcess conversionProcess) {
-        Future result = new Future();
-
+    public void performConversion(Future result, ConversionProcess conversionProcess) {
         Watch queueWatch = Watch.start();
         tasks.executor(EXECUTOR_STORAGE_CONVERSION)
              .dropOnOverload(() -> result.fail(new IllegalStateException("Conversion subsystem overloaded!")))
              .fork(() -> doConversion(conversionProcess, result, queueWatch));
-
-        return result;
     }
 
     private void doConversion(ConversionProcess conversionProcess, Future result, Watch queueWatch) {
