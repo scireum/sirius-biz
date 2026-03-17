@@ -31,6 +31,7 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
     private final Map<String, String> entries = new LinkedHashMap<>();
 
     private Supplier<Map<String, String>> entriesProvider;
+    private Supplier<List<String>> defaultValueProvider;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -75,6 +76,20 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
         return self();
     }
 
+    /**
+     * Sets a provider that generates the default value for this parameter.
+     * <p>
+     * A <tt>Supplier</tt> is used instead of a constant value to support dynamic default values.
+     * A {@link CachingSupplier} can be used to cache the supplier result (the default values).
+     *
+     * @param defaultValueProvider a supplier which returns the default values to use
+     * @return the parameter itself for fluent method calls
+     */
+    public MultiSelectStringParameter withDefaultProvider(Supplier<List<String>> defaultValueProvider) {
+        this.defaultValueProvider = defaultValueProvider;
+        return this;
+    }
+
     private Map<String, String> fetchEntriesMap() {
         if (entriesProvider != null) {
             return entriesProvider.get();
@@ -100,6 +115,9 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
 
     @Override
     protected String checkAndTransformValue(Value input) {
+        if (input.isNull() && defaultValueProvider != null) {
+            return String.join(DELIMITER, defaultValueProvider.get());
+        }
         if (!(input.get() instanceof List<?> list)) {
             return checkAndTransformSingleValue(input);
         }
