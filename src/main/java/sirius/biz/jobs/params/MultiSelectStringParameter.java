@@ -80,7 +80,7 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
      * Sets a provider that generates the default value for this parameter.
      * <p>
      * A <tt>Supplier</tt> is used instead of a constant value to support dynamic default values.
-     * A {@link CachingSupplier} can be used to cache the entries.
+     * A {@link CachingSupplier} can be used to cache the supplier result (the default values).
      *
      * @param defaultValueProvider a supplier which returns the default values to use
      * @return the parameter itself for fluent method calls
