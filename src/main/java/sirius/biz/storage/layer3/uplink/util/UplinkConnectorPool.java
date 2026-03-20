@@ -50,7 +50,7 @@ public class UplinkConnectorPool {
     public <C> UplinkConnector<C> obtain(UplinkConnectorConfig<C> config) {
         try {
             return (UplinkConnector<C>) fetchPools().computeIfAbsent(config, this::createPool)
-                                                    .borrowObject(config.maxWaitMillis);
+                                                    .borrowObject(Duration.ofMillis(config.maxWaitMillis));
         } catch (Exception exception) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
