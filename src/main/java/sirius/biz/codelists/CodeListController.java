@@ -181,7 +181,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
             showDeletedMessage();
         }
 
-        renderCodeList(webContext, cl);
+        webContext.respondWith().redirectToGet("/code-list/" + codeListId);
     }
 
     /**
