@@ -226,7 +226,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     @Routed("/jobs/scheduler/entry/:1/delete")
     public void deleteEntry(WebContext webContext, String entryId) {
         deleteEntity(webContext, getEntryType(), entryId);
-        schedulerEntries(webContext);
+        webContext.respondWith().redirectToGet("/jobs/scheduler");
     }
 
     /**
