@@ -78,7 +78,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Provides an editor for a code list.
      *
-     * @param webContext        the current request
+     * @param webContext the current request
      * @param codeListId the id of the code list
      */
     @LoginRequired
@@ -107,7 +107,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
         pageHelper.withContext(webContext);
         applyCodeListEntrySearchFields(pageHelper);
         webContext.respondWith()
-           .template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
+                  .template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
     }
 
     protected abstract BasePageHelper<E, ?, ?, ?> getEntriesAsPage(L codeList);
@@ -145,7 +145,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Deletes a code list.
      *
-     * @param webContext        the current request
+     * @param webContext the current request
      * @param codeListId the code list to delete
      */
     @LoginRequired
@@ -164,7 +164,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Deletes a code list entry.
      *
-     * @param webContext        the current request
+     * @param webContext the current request
      * @param codeListId the code list of the entry
      * @param entryId    the entry to delete
      */
