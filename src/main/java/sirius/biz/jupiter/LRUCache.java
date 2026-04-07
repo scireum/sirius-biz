@@ -13,7 +13,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Part;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
 
