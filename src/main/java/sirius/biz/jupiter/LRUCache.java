@@ -246,7 +246,7 @@ public class LRUCache {
      */
     public void flush() {
         connection.exec(() -> Strings.apply("LRU.FLUSH %s", cache), jupiter -> {
-            jupiter.sendCommand(CMD_FLUSH);
+            jupiter.sendCommand(CMD_FLUSH, cache);
             jupiter.getStatusCodeReply();
         });
     }

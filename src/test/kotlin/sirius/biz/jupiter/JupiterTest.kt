@@ -40,6 +40,76 @@ class JupiterTest {
     }
 
     @Test
+    fun `LRU get returns empty optional for missing key`() {
+        val cache = jupiter.getDefault().lru("test")
+        assertFalse { cache.get("nonexistent-key").isPresent }
+    }
+
+    @Test
+    fun `LRU computeIfAbsent computes value when absent`() {
+        val cache = jupiter.getDefault().lru("test")
+        cache.remove("compute-key")
+        val result = cache.computeIfAbsent("compute-key") { "computed" }
+        assertEquals("computed", result)
+        assertEquals("computed", cache.get("compute-key").get())
+    }
+
+    @Test
+    fun `LRU computeIfAbsent returns cached value when present`() {
+        val cache = jupiter.getDefault().lru("test")
+        cache.put("compute-existing", "existing-value")
+        val result = cache.computeIfAbsent("compute-existing") { "new-value" }
+        assertEquals("existing-value", result)
+    }
+
+    @Test
+    fun `LRU put overwrites existing value`() {
+        val cache = jupiter.getDefault().lru("test")
+        cache.put("overwrite-key", "first")
+        assertEquals("first", cache.get("overwrite-key").get())
+        cache.put("overwrite-key", "second")
+        assertEquals("second", cache.get("overwrite-key").get())
+    }
+
+    @Test
+    fun `LRU put with secondary keys and removeBySecondary works`() {
+        val cache = jupiter.getDefault().lru("test")
+        cache.put("sec-key-1", "val1", "group-a")
+        cache.put("sec-key-2", "val2", "group-a")
+        assertEquals("val1", cache.get("sec-key-1").get())
+        assertEquals("val2", cache.get("sec-key-2").get())
+
+        cache.removeBySecondary("group-a")
+        assertFalse { cache.get("sec-key-1").isPresent }
+        assertFalse { cache.get("sec-key-2").isPresent }
+    }
+
+    @Test
+    fun `LRU flush removes all entries`() {
+        val cache = jupiter.getDefault().lru("test")
+        cache.put("flush-1", "a")
+        cache.put("flush-2", "b")
+        assertEquals("a", cache.get("flush-1").get())
+        assertEquals("b", cache.get("flush-2").get())
+
+        cache.flush()
+        assertFalse { cache.get("flush-1").isPresent }
+        assertFalse { cache.get("flush-2").isPresent }
+    }
+
+    @Test
+    fun `LRU extendedGet with secondary keys works`() {
+        val cache = jupiter.getDefault().lru("test")
+        cache.remove("ext-key")
+        val result = cache.extendedGet("ext-key", { "ext-value" }, "ext-secondary")
+        assertEquals("ext-value", result)
+        assertEquals("ext-value", cache.get("ext-key").get())
+
+        cache.removeBySecondary("ext-secondary")
+        assertFalse { cache.get("ext-key").isPresent }
+    }
+
+    @Test
     fun `IDB show_tables works`() {
         val list = jupiter.getDefault().idb().showTables()
         assertEquals(1, list.size)
