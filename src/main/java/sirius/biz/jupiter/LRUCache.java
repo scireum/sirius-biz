@@ -169,7 +169,7 @@ public class LRUCache {
      * Fetches or computes a value to be used.
      * <p>
      * However, in contrast to {@link #computeIfAbsent(String, Supplier)} this will deliver a stale result from the
-     * cache and use the <tt>valueComputer</tt> to asynchronically compute a new value for the cache.
+     * cache and use the <tt>valueComputer</tt> to asynchronously compute a new value for the cache.
      * <p>
      * For situations in which using a stale cache value is acceptable, this provides a super low latency solution
      * to cache data.
