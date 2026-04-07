@@ -13,6 +13,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Part;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -112,10 +113,11 @@ public class LRUCache {
      *
      * @param key           the key used to perform the lookup
      * @param valueComputer the computer used to provide a value if none is in the cache
+     * @param secondaryKeys optional secondary keys to invalidate cache entries via {@link #removeBySecondary(String)}
      * @return the cached value or the newly computed value if none was in the cache. Note that this value might
      * be stale if its <tt>softTTL</tt> has been reached but not its <tt>hardTTL</tt>
      */
-    public String extendedGet(String key, Supplier<String> valueComputer) {
+    public String extendedGet(String key, Supplier<String> valueComputer, String... secondaryKeys) {
         CacheResult cacheResult = connection.query(() -> Strings.apply("LRU.XGET %s", cache), jupiter -> {
             jupiter.sendCommand(CMD_EXTENDED_GET, cache, key);
             Values reply = Values.of(jupiter.getObjectMultiBulkReply());
@@ -132,7 +134,11 @@ public class LRUCache {
                 Jupiter.LOG.FINE("LRU.EXTENDED_GET in %s for %s returned no value - computing now!", cache, key);
             }
             String value = valueComputer.get();
-            put(key, value);
+            if (secondaryKeys == null) {
+                put(key, value);
+            } else {
+                put(key, value, secondaryKeys);
+            }
 
             return value;
         }
@@ -147,13 +153,35 @@ public class LRUCache {
                 Jupiter.LOG.INFO("Dropping computation of %s in cache %s", key, cache);
             }).fork(() -> {
                 String value = valueComputer.get();
-                put(key, value);
+                if (secondaryKeys == null) {
+                    put(key, value);
+                } else {
+                    put(key, value, secondaryKeys);
+                }
             });
         } else if (Jupiter.LOG.isFINE()) {
             Jupiter.LOG.FINE("LRU.EXTENDED_GET in %s for %s returned a valid value!", cache, key);
         }
 
         return cacheResult.getValue();
+    }
+
+    /**
+     * Fetches or computes a value to be used.
+     * <p>
+     * However, in contrast to {@link #computeIfAbsent(String, Supplier)} this will deliver a stale result from the
+     * cache and use the <tt>valueComputer</tt> to asynchronically compute a new value for the cache.
+     * <p>
+     * For situations in which using a stale cache value is acceptable, this provides a super low latency solution
+     * to cache data.
+     *
+     * @param key           the key used to perform the lookup
+     * @param valueComputer the computer used to provide a value if none is in the cache
+     * @return the cached value or the newly computed value if none was in the cache. Note that this value might
+     * be stale if its <tt>softTTL</tt> has been reached but not its <tt>hardTTL</tt>
+     */
+    public String extendedGet(String key, Supplier<String> valueComputer) {
+        return extendedGet(key, valueComputer, (String[]) null);
     }
 
     /**
