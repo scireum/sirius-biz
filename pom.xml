@@ -148,6 +148,12 @@
             <artifactId>snakeyaml</artifactId>
             <version>2.5</version>
         </dependency>
+        <!-- Changelog: https://github.com/commonmark/commonmark-java/releases -->
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>0.27.1</version>
+        </dependency>
 
         <!-- Changelog: https://github.com/borisbrodski/sevenzipjbinding/blob/master/ChangeLog -->
         <dependency>

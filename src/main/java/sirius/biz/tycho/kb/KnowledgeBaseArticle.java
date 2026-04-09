@@ -18,6 +18,7 @@ import sirius.pasta.noodle.compiler.CompileException;
 import sirius.pasta.tagliatelle.Tagliatelle;
 import sirius.pasta.tagliatelle.Template;
 import sirius.web.resources.Resource;
+import sirius.web.resources.Resources;
 
 import javax.annotation.Nonnull;
 import java.net.URL;
@@ -91,6 +92,9 @@ public class KnowledgeBaseArticle {
     @Part
     private static Tagliatelle tagliatelle;
 
+    @Part
+    private static Resources resources;
+
     @ConfigValue("product.name")
     private static String productName;
 
@@ -129,15 +133,21 @@ public class KnowledgeBaseArticle {
      */
     public String generateEditUrl() {
         try {
-            return tagliatelle.resolve(entry.getTemplatePath())
-                              .map(Template::getResource)
-                              .map(Resource::getUrl)
-                              .map(KnowledgeBaseArticle::extractProjectAndPathFromResourceUrl)
-                              .map(ProjectAndPath::toGithubUrl)
-                              .orElse(null);
+            return resolveResource().map(Resource::getUrl)
+                                    .map(KnowledgeBaseArticle::extractProjectAndPathFromResourceUrl)
+                                    .map(ProjectAndPath::toGithubUrl)
+                                    .orElse(null);
         } catch (CompileException _) {
             return null;
         }
+    }
+
+    private Optional<Resource> resolveResource() throws CompileException {
+        if (getSourceType() == EntrySourceType.MARKDOWN) {
+            return resources.resolve(entry.getTemplatePath());
+        }
+
+        return tagliatelle.resolve(entry.getTemplatePath()).map(Template::getResource);
     }
 
     /**
@@ -228,6 +238,22 @@ public class KnowledgeBaseArticle {
 
     public String getTemplatePath() {
         return entry.getTemplatePath();
+    }
+
+    public String getParentId() {
+        return entry.getParentId();
+    }
+
+    public String getRequiredPermissions() {
+        return entry.getRequiredPermissions();
+    }
+
+    public String getCrossReferences() {
+        return String.join(", ", entry.getRelatesTo().data());
+    }
+
+    public EntrySourceType getSourceType() {
+        return entry.getSourceType();
     }
 
     public String getLanguage() {

@@ -105,6 +105,12 @@ public class KnowledgeBaseEntry extends SearchableEntity {
     private String templatePath;
 
     /**
+     * Contains the type of source used to build and render this article.
+     */
+    public static final Mapping SOURCE_TYPE = Mapping.named("sourceType");
+    private EntrySourceType sourceType;
+
+    /**
      * Contains a random synchronization id used by {@link SynchronizeArticlesTask} to detect outdated articles.
      */
     public static final Mapping SYNC_ID = Mapping.named("syncId");
@@ -184,6 +190,14 @@ public class KnowledgeBaseEntry extends SearchableEntity {
 
     public void setTemplatePath(String templatePath) {
         this.templatePath = templatePath;
+    }
+
+    public EntrySourceType getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(EntrySourceType sourceType) {
+        this.sourceType = sourceType;
     }
 
     public String getSyncId() {
