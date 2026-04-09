@@ -8,10 +8,14 @@
 
 package sirius.biz.tycho.kb;
 
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TableBlock;
+import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.node.Heading;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.commonmark.renderer.text.TextContentRenderer;
 import org.yaml.snakeyaml.Yaml;
@@ -45,12 +49,19 @@ public class KnowledgeBaseMarkdownRenderer {
     private static final Pattern FENCED_CODE_WITH_LANGUAGE =
             Pattern.compile("<pre><code class=\"language-([^\"]+)\">(.*?)</code></pre>", Pattern.DOTALL);
     private static final Pattern FENCED_CODE = Pattern.compile("<pre><code>(.*?)</code></pre>", Pattern.DOTALL);
+    private static final String KB_TABLE_CLASSES = "table table-striped table-small-text";
 
     @Part
     private Resources resources;
 
-    private final Parser parser = Parser.builder().build();
-    private final HtmlRenderer htmlRenderer = HtmlRenderer.builder().escapeHtml(true).sanitizeUrls(true).build();
+    private final List<Extension> markdownExtensions = List.of(TablesExtension.create());
+    private final Parser parser = Parser.builder().extensions(markdownExtensions).build();
+    private final HtmlRenderer htmlRenderer = HtmlRenderer.builder()
+                                                          .escapeHtml(true)
+                                                          .sanitizeUrls(true)
+                                                          .extensions(markdownExtensions)
+                                                          .attributeProviderFactory(context -> new KbAttributeProvider())
+                                                          .build();
     private final TextContentRenderer textRenderer = TextContentRenderer.builder().build();
     private final Yaml yaml = new Yaml();
 
@@ -226,5 +237,15 @@ public class KnowledgeBaseMarkdownRenderer {
     }
 
     record Frontmatter(Map<String, Object> metadata, String body) {
+    }
+
+    private static final class KbAttributeProvider implements AttributeProvider {
+
+        @Override
+        public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+            if (node instanceof TableBlock) {
+                attributes.put("class", KB_TABLE_CLASSES);
+            }
+        }
     }
 }

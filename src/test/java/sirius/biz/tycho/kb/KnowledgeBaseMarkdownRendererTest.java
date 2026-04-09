@@ -109,13 +109,13 @@ public class KnowledgeBaseMarkdownRendererTest {
                 List.of(),
                 """
                         Intro paragraph.
-
+                        
                         ## Overview
-
+                        
                         First section.
-
+                        
                         ## Details
-
+                        
                         Second section.
                         """));
 
@@ -124,5 +124,36 @@ public class KnowledgeBaseMarkdownRendererTest {
         assertEquals("overview", document.tableOfContentsSections().get(0).anchor());
         assertEquals("Details", document.tableOfContentsSections().get(1).heading());
         assertEquals("details", document.tableOfContentsSections().get(1).anchor());
+    }
+
+    @Test
+    public void renderDocumentTurnsMarkdownTablesIntoKbStyledTables() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
+                "/kb/en/admin/markdown-QMDKB.md",
+                "QMDKB",
+                "en",
+                "Markdown Article",
+                "Short summary",
+                "SKAME",
+                100,
+                "",
+                false,
+                List.of(),
+                """
+                        ## Response Codes
+                        
+                        | Code | Description |
+                        | --- | --- |
+                        | 200 | Everything works as expected. |
+                        | 404 | Resource not found. |
+                        """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("<table class=\"table table-striped table-small-text\">"));
+        assertTrue(html.contains("<thead>"));
+        assertTrue(html.contains("<tbody>"));
+        assertTrue(html.contains("<th>Code</th>"));
+        assertTrue(html.contains("<td>404</td>"));
+        assertTrue(html.contains("Resource not found."));
     }
 }
