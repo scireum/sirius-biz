@@ -1,11 +1,3 @@
-<!--
-  ~ Made with all the love in the world
-  ~ by scireum in Stuttgart, Germany
-  ~
-  ~ Copyright by scireum GmbH
-  ~ https://www.scireum.de - info@scireum.de
-  -->
-
 <i:arg type="sirius.biz.tycho.kb.KnowledgeBaseMarkdownDocument" name="document"/>
 
 <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
@@ -21,19 +13,16 @@
 
     <i:block name="description">@article.getDescription()</i:block>
 
-    <i:if test="document.hasTableOfContents()">
-        <i:block name="sidebar">
-            <k:toc>
-                <i:for type="sirius.biz.tycho.kb.KnowledgeBaseMarkdownSection"
-                       var="section"
-                       items="document.sections()">
-                    <i:if test="isFilled(section.heading()) && isFilled(section.anchor())">
-                        <k:tocLink link="#@section.anchor()">@section.heading()</k:tocLink>
-                    </i:if>
-                </i:for>
-            </k:toc>
-        </i:block>
-    </i:if>
+    <i:block name="sidebar">
+        <k:toc>
+            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseMarkdownSection"
+                   var="section"
+                   items="document.tableOfContentsSections()">
+                <i:local name="anchor" value="@apply('#%s', section.anchor())"/>
+                <k:tocLink link="@anchor">@section.heading()</k:tocLink>
+            </i:for>
+        </k:toc>
+    </i:block>
 
     <i:for type="sirius.biz.tycho.kb.KnowledgeBaseMarkdownSection"
            var="section"

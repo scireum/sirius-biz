@@ -33,6 +33,18 @@ public record KnowledgeBaseMarkdownDocument(List<KnowledgeBaseMarkdownSection> s
      * @return <tt>true</tt> if the document contains more than one headed section, <tt>false</tt> otherwise
      */
     public boolean hasTableOfContents() {
-        return sections.stream().filter(section -> Strings.isFilled(section.heading())).count() > 1;
+        return tableOfContentsSections().size() > 1;
+    }
+
+    /**
+     * Returns the sections which should appear in the generated table of contents.
+     *
+     * @return all sections which provide both a heading and anchor
+     */
+    public List<KnowledgeBaseMarkdownSection> tableOfContentsSections() {
+        return sections.stream()
+                       .filter(section -> Strings.isFilled(section.heading()))
+                       .filter(section -> Strings.isFilled(section.anchor()))
+                       .toList();
     }
 }

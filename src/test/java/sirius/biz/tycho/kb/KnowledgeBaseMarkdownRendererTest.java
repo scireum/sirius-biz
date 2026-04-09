@@ -93,4 +93,36 @@ public class KnowledgeBaseMarkdownRendererTest {
         assertEquals("section-2", document.sections().get(2).anchor());
         assertTrue(document.hasTableOfContents());
     }
+
+    @Test
+    public void documentExposesOnlyHeadedSectionsForTableOfContents() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
+                "/kb/en/admin/markdown-QMDKB.md",
+                "QMDKB",
+                "en",
+                "Markdown Article",
+                "Short summary",
+                "SKAME",
+                100,
+                "",
+                false,
+                List.of(),
+                """
+                        Intro paragraph.
+
+                        ## Overview
+
+                        First section.
+
+                        ## Details
+
+                        Second section.
+                        """));
+
+        assertEquals(2, document.tableOfContentsSections().size());
+        assertEquals("Overview", document.tableOfContentsSections().get(0).heading());
+        assertEquals("overview", document.tableOfContentsSections().get(0).anchor());
+        assertEquals("Details", document.tableOfContentsSections().get(1).heading());
+        assertEquals("details", document.tableOfContentsSections().get(1).anchor());
+    }
 }
