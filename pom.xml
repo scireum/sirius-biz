@@ -164,6 +164,11 @@
             <artifactId>commonmark-ext-gfm-alerts</artifactId>
             <version>0.28.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-yaml-front-matter</artifactId>
+            <version>0.28.0</version>
+        </dependency>
 
         <!-- Changelog: https://github.com/borisbrodski/sevenzipjbinding/blob/master/ChangeLog -->
         <dependency>

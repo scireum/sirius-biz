@@ -9,6 +9,8 @@
 package sirius.biz.tycho.kb;
 
 import org.commonmark.Extension;
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
+import org.commonmark.ext.front.matter.YamlFrontMatterVisitor;
 import org.commonmark.ext.gfm.alerts.AlertsExtension;
 import org.commonmark.ext.gfm.tables.TableBlock;
 import org.commonmark.ext.gfm.tables.TablesExtension;
@@ -19,7 +21,6 @@ import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.commonmark.renderer.text.TextContentRenderer;
-import org.yaml.snakeyaml.Yaml;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -45,8 +46,6 @@ import java.util.regex.Pattern;
 @Register(classes = KnowledgeBaseMarkdownRenderer.class)
 public class KnowledgeBaseMarkdownRenderer {
 
-    static final String FRONTMATTER_SEPARATOR = "---";
-
     private static final Pattern FENCED_CODE_WITH_LANGUAGE =
             Pattern.compile("<pre><code class=\"language-([^\"]+)\">(.*?)</code></pre>", Pattern.DOTALL);
     private static final Pattern FENCED_CODE = Pattern.compile("<pre><code>(.*?)</code></pre>", Pattern.DOTALL);
@@ -56,7 +55,7 @@ public class KnowledgeBaseMarkdownRenderer {
     private Resources resources;
 
     private static final List<Extension> PARSER_EXTENSIONS =
-            List.of(TablesExtension.create(), AlertsExtension.create());
+            List.of(TablesExtension.create(), AlertsExtension.create(), YamlFrontMatterExtension.create());
     private static final List<Extension> HTML_EXTENSIONS = List.of(TablesExtension.create());
     private final Parser parser = Parser.builder().extensions(PARSER_EXTENSIONS).build();
     private final HtmlRenderer htmlRenderer = HtmlRenderer.builder()
@@ -67,7 +66,6 @@ public class KnowledgeBaseMarkdownRenderer {
                                                           .nodeRendererFactory(TychoAlertNodeRenderer::new)
                                                           .build();
     private final TextContentRenderer textRenderer = TextContentRenderer.builder().build();
-    private final Yaml yaml = new Yaml();
 
     /**
      * Loads and parses a Markdown knowledge base article from the given resource path.
@@ -95,26 +93,28 @@ public class KnowledgeBaseMarkdownRenderer {
     }
 
     KnowledgeBaseMarkdownArticle parseArticle(String resourcePath, String content) {
-        Frontmatter frontmatter = extractFrontmatter(content);
-        Map<String, Object> metadata = frontmatter.metadata();
+        String normalizedContent = content.replace("\r\n", "\n");
+        Node document = parser.parse(normalizedContent);
+
+        // Extract front matter
+        YamlFrontMatterVisitor visitor = new YamlFrontMatterVisitor();
+        document.accept(visitor);
+        Map<String, List<String>> metadata = visitor.getData();
 
         return new KnowledgeBaseMarkdownArticle(resourcePath,
                                                 requireString(metadata, "code").toUpperCase(Locale.ENGLISH),
                                                 requireString(metadata, "lang"),
                                                 requireString(metadata, "title"),
-                                                Value.of(metadata.get("description")).asString(""),
-                                                Value.of(metadata.get("parent"))
-                                                     .asString("")
-                                                     .toUpperCase(Locale.ENGLISH),
-                                                Value.of(metadata.get("priority")).asInt(100),
-                                                Value.of(metadata.get("permissions")).asString(""),
-                                                Value.of(metadata.get("chapter")).asBoolean(),
+                                                firstValue(metadata, "description"),
+                                                firstValue(metadata, "parent").toUpperCase(Locale.ENGLISH),
+                                                Value.of(firstValue(metadata, "priority")).asInt(100),
+                                                firstValue(metadata, "permissions"),
+                                                Value.of(firstValue(metadata, "chapter")).asBoolean(),
                                                 resolveStringList(metadata.get("crossReferences")),
-                                                frontmatter.body().strip());
+                                                document);
     }
 
     KnowledgeBaseMarkdownDocument renderDocument(KnowledgeBaseMarkdownArticle article) {
-        Node document = parser.parse(article.markdownBody());
         List<KnowledgeBaseMarkdownSection> sections = new ArrayList<>();
         Map<String, Integer> anchors = new LinkedHashMap<>();
 
@@ -122,7 +122,7 @@ public class KnowledgeBaseMarkdownRenderer {
         String currentAnchor = "";
         StringBuilder currentHtml = new StringBuilder();
 
-        for (Node node = document.getFirstChild(); node != null; node = node.getNext()) {
+        for (Node node = article.markdown().getFirstChild(); node != null; node = node.getNext()) {
             if (isSectionHeading(node)) {
                 appendSection(sections, currentHeading, currentAnchor, currentHtml);
 
@@ -180,30 +180,6 @@ public class KnowledgeBaseMarkdownRenderer {
         return count == 1 ? normalized : normalized + "-" + count;
     }
 
-    private Frontmatter extractFrontmatter(String content) {
-        String normalizedContent = content.replace("\r\n", "\n");
-        if (!normalizedContent.startsWith(FRONTMATTER_SEPARATOR + "\n")) {
-            throw new IllegalArgumentException("Markdown KBAs require YAML frontmatter.");
-        }
-
-        int closingIndex =
-                normalizedContent.indexOf("\n" + FRONTMATTER_SEPARATOR + "\n", FRONTMATTER_SEPARATOR.length());
-        if (closingIndex < 0) {
-            throw new IllegalArgumentException("Markdown KBA frontmatter is not properly terminated.");
-        }
-
-        String metadataBlock = normalizedContent.substring(FRONTMATTER_SEPARATOR.length() + 1, closingIndex);
-        String body = normalizedContent.substring(closingIndex + FRONTMATTER_SEPARATOR.length() + 2);
-        Object loadedMetadata = yaml.load(metadataBlock);
-        if (!(loadedMetadata instanceof Map<?, ?> rawMap)) {
-            throw new IllegalArgumentException("Markdown KBA frontmatter must contain a YAML object.");
-        }
-
-        Map<String, Object> metadata = new LinkedHashMap<>();
-        rawMap.forEach((key, value) -> metadata.put(String.valueOf(key), value));
-        return new Frontmatter(metadata, body);
-    }
-
     private String readResource(Resource resource) {
         try (InputStreamReader reader = new InputStreamReader(resource.openStream(), StandardCharsets.UTF_8)) {
             return Streams.readToString(reader);
@@ -212,35 +188,29 @@ public class KnowledgeBaseMarkdownRenderer {
         }
     }
 
-    private String requireString(Map<String, Object> metadata, String key) {
-        String value = Value.of(metadata.get(key)).asString("").trim();
+    private String requireString(Map<String, List<String>> metadata, String key) {
+        String value = firstValue(metadata, key);
         if (Strings.isEmpty(value)) {
             throw new IllegalArgumentException("Markdown KBA frontmatter is missing '" + key + "'.");
         }
         return value;
     }
 
-    private List<String> resolveStringList(Object raw) {
-        if (raw instanceof List<?> list) {
-            return list.stream()
-                       .map(item -> String.valueOf(item).trim().toUpperCase(Locale.ENGLISH))
-                       .filter(Strings::isFilled)
-                       .toList();
-        }
+    private String firstValue(Map<String, List<String>> metadata, String key) {
+        return Value.of(metadata.getOrDefault(key, List.of()).stream().findFirst().orElse("")).trim();
+    }
 
-        String rawValue = Value.of(raw).asString("");
-        if (Strings.isEmpty(rawValue)) {
+    private List<String> resolveStringList(List<String> rawValues) {
+        if (rawValues == null || rawValues.isEmpty()) {
             return List.of();
         }
 
-        return Arrays.stream(rawValue.split(","))
-                     .map(String::trim)
-                     .map(s -> s.toUpperCase(Locale.ENGLISH))
-                     .filter(Strings::isFilled)
-                     .toList();
-    }
-
-    record Frontmatter(Map<String, Object> metadata, String body) {
+        return rawValues.stream()
+                        .flatMap(value -> Arrays.stream(value.split(",")))
+                        .map(String::trim)
+                        .map(s -> s.toUpperCase(Locale.ENGLISH))
+                        .filter(Strings::isFilled)
+                        .toList();
     }
 
     private static final class KbAttributeProvider implements AttributeProvider {

@@ -18,25 +18,11 @@ import static org.junit.Assert.*;
 public class KnowledgeBaseMarkdownRendererTest {
 
     private final KnowledgeBaseMarkdownRenderer renderer = new KnowledgeBaseMarkdownRenderer();
+    private static final String ARTICLE_PATH = "/kb/en/admin/markdown-QMDKB.md";
 
     @Test
     public void parseArticleMapsFrontmatterToKbMetadata() {
-        KnowledgeBaseMarkdownArticle article = renderer.parseArticle("/kb/en/admin/markdown-QMDKB.md", """
-                ---
-                code: qmdkb
-                lang: en
-                title: Markdown Article
-                description: Short summary
-                parent: skame
-                priority: 250
-                permissions: flag-system-tenant
-                chapter: true
-                crossReferences:
-                  - vfleo
-                  - djelk
-                ---
-                Intro
-                """);
+        KnowledgeBaseMarkdownArticle article = createArticle("Intro");
 
         assertEquals("QMDKB", article.articleId());
         assertEquals("en", article.language());
@@ -45,39 +31,28 @@ public class KnowledgeBaseMarkdownRendererTest {
         assertEquals("SKAME", article.parentId());
         assertEquals(250, article.priority());
         assertEquals("flag-system-tenant", article.permissions());
-        assertTrue(article.chapter());
+        assertFalse(article.chapter());
         assertEquals(List.of("VFLEO", "DJELK"), article.crossReferences());
-        assertEquals("Intro", article.markdownBody());
+        assertTrue(renderer.renderDocument(article).sections().getFirst().html().contains("<p>Intro</p>"));
     }
 
     @Test
     public void renderDocumentBuildsSectionsAnchorsAndHtml() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
-                "/kb/en/admin/markdown-QMDKB.md",
-                "QMDKB",
-                "en",
-                "Markdown Article",
-                "Short summary",
-                "SKAME",
-                100,
-                "",
-                false,
-                List.of(),
-                """
-                        Intro paragraph with a [link](https://example.com).
-                        
-                        ## Section
-                        
-                        ![Diagram](/kb/assets/example.svg)
-                        
-                        ```java
-                        String value = "test";
-                        ```
-                        
-                        ## Section
-                        
-                        Closing paragraph.
-                        """));
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               Intro paragraph with a [link](https://example.com).
+                                                                                               
+                                                                                               ## Section
+                                                                                               
+                                                                                               ![Diagram](/kb/assets/example.svg)
+                                                                                               
+                                                                                               ```java
+                                                                                               String value = "test";
+                                                                                               ```
+                                                                                               
+                                                                                               ## Section
+                                                                                               
+                                                                                               Closing paragraph.
+                                                                                               """));
 
         assertEquals(3, document.sections().size());
         assertFalse(document.sections().getFirst().html().isEmpty());
@@ -96,28 +71,17 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void documentExposesOnlyHeadedSectionsForTableOfContents() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
-                "/kb/en/admin/markdown-QMDKB.md",
-                "QMDKB",
-                "en",
-                "Markdown Article",
-                "Short summary",
-                "SKAME",
-                100,
-                "",
-                false,
-                List.of(),
-                """
-                        Intro paragraph.
-                        
-                        ## Overview
-                        
-                        First section.
-                        
-                        ## Details
-                        
-                        Second section.
-                        """));
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               Intro paragraph.
+                                                                                               
+                                                                                               ## Overview
+                                                                                               
+                                                                                               First section.
+                                                                                               
+                                                                                               ## Details
+                                                                                               
+                                                                                               Second section.
+                                                                                               """));
 
         assertEquals(2, document.tableOfContentsSections().size());
         assertEquals("Overview", document.tableOfContentsSections().get(0).heading());
@@ -128,25 +92,14 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentTurnsMarkdownTablesIntoKbStyledTables() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
-                "/kb/en/admin/markdown-QMDKB.md",
-                "QMDKB",
-                "en",
-                "Markdown Article",
-                "Short summary",
-                "SKAME",
-                100,
-                "",
-                false,
-                List.of(),
-                """
-                        ## Response Codes
-                        
-                        | Code | Description |
-                        | --- | --- |
-                        | 200 | Everything works as expected. |
-                        | 404 | Resource not found. |
-                        """));
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Response Codes
+                                                                                               
+                                                                                               | Code | Description |
+                                                                                               | --- | --- |
+                                                                                               | 200 | Everything works as expected. |
+                                                                                               | 404 | Resource not found. |
+                                                                                               """));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("<table class=\"table table-striped table-small-text\">"));
@@ -159,23 +112,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentTurnsNoteAlertsIntoInfoStyledSections() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
-                "/kb/en/admin/markdown-QMDKB.md",
-                "QMDKB",
-                "en",
-                "Markdown Article",
-                "Short summary",
-                "SKAME",
-                100,
-                "",
-                false,
-                List.of(),
-                """
-                        ## Alerts
-                        
-                        > [!NOTE]
-                        > Markdown KB articles can now render hint boxes.
-                        """));
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Alerts
+                                                                                               
+                                                                                               > [!NOTE]
+                                                                                               > Markdown KB articles can now render hint boxes.
+                                                                                               """));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("card mb-4 full-border border-sirius-blue-light"));
@@ -187,23 +129,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentTurnsWarningAlertsIntoWarnStyledSections() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
-                "/kb/en/admin/markdown-QMDKB.md",
-                "QMDKB",
-                "en",
-                "Markdown Article",
-                "Short summary",
-                "SKAME",
-                100,
-                "",
-                false,
-                List.of(),
-                """
-                        ## Alerts
-                        
-                        > [!WARNING]
-                        > Please plan expensive jobs carefully.
-                        """));
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Alerts
+                                                                                               
+                                                                                               > [!WARNING]
+                                                                                               > Please plan expensive jobs carefully.
+                                                                                               """));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("card mb-4 full-border border-sirius-yellow-dark"));
@@ -215,22 +146,11 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentLeavesNormalBlockquotesUntouched() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
-                "/kb/en/admin/markdown-QMDKB.md",
-                "QMDKB",
-                "en",
-                "Markdown Article",
-                "Short summary",
-                "SKAME",
-                100,
-                "",
-                false,
-                List.of(),
-                """
-                        ## Quotes
-                        
-                        > This is a normal blockquote.
-                        """));
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Quotes
+                                                                                               
+                                                                                               > This is a normal blockquote.
+                                                                                               """));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("<blockquote>"));
@@ -240,31 +160,38 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentKeepsNestedMarkdownInsideAlerts() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
-                "/kb/en/admin/markdown-QMDKB.md",
-                "QMDKB",
-                "en",
-                "Markdown Article",
-                "Short summary",
-                "SKAME",
-                100,
-                "",
-                false,
-                List.of(),
-                """
-                        ## Alerts
-                        
-                        > [!TIP]
-                        > Prefer background processing for long-running work.
-                        >
-                        > - Use queues
-                        > - Monitor cluster load
-                        """));
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Alerts
+                                                                                               
+                                                                                               > [!TIP]
+                                                                                               > Prefer background processing for long-running work.
+                                                                                               >
+                                                                                               > - Use queues
+                                                                                               > - Monitor cluster load
+                                                                                               """));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains(">TychoAlertNodeRenderer.type.TIP</h5>"));
         assertTrue(html.contains("<ul>"));
         assertTrue(html.contains("<li>Use queues</li>"));
         assertTrue(html.contains("<li>Monitor cluster load</li>"));
+    }
+
+    private KnowledgeBaseMarkdownArticle createArticle(String markdown) {
+        return renderer.parseArticle(ARTICLE_PATH, """
+                                                           ---
+                                                           code: qmdkb
+                                                           lang: en
+                                                           title: Markdown Article
+                                                           description: Short summary
+                                                           parent: skame
+                                                           priority: 250
+                                                           permissions: flag-system-tenant
+                                                           chapter: false
+                                                           crossReferences:
+                                                             - vfleo
+                                                             - djelk
+                                                           ---
+                                                           """ + markdown);
     }
 }

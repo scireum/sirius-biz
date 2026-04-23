@@ -8,6 +8,8 @@
 
 package sirius.biz.tycho.kb;
 
+import org.commonmark.node.Node;
+
 import java.util.List;
 
 /**
@@ -15,7 +17,7 @@ import java.util.List;
  */
 public record KnowledgeBaseMarkdownArticle(String resourcePath, String articleId, String language, String title,
                                            String description, String parentId, int priority, String permissions,
-                                           boolean chapter, List<String> crossReferences, String markdownBody) {
+                                           boolean chapter, List<String> crossReferences, Node markdown) {
 
     /**
      * Constructs a new {@code KnowledgeBaseMarkdownArticle} instance and ensures that the list of cross-references
@@ -31,7 +33,7 @@ public record KnowledgeBaseMarkdownArticle(String resourcePath, String articleId
      * @param permissions     required permissions (may be empty)
      * @param chapter         whether this article is a chapter
      * @param crossReferences list of related article codes (uppercase)
-     * @param markdownBody    the raw Markdown body after the frontmatter
+     * @param markdown        the parsed Markdown content
      */
     public KnowledgeBaseMarkdownArticle {
         crossReferences = List.copyOf(crossReferences);
