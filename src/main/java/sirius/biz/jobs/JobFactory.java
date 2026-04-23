@@ -202,4 +202,14 @@ public interface JobFactory extends Named, Priorized {
      * @return a JsonNode that can be handled by the JavaScript
      */
     JsonNode computeRequiredParameterUpdates(Map<String, String> ctx);
+
+    /**
+     * Generates a download URL or Data-URI for a template file (e.g. for imports).
+     *
+     * @return the URL/Data-URI of the template or null if no template is available
+     */
+    @Nullable
+    default String generateTemplateUrl() {
+        return null;
+    }
 }

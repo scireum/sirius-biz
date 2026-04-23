@@ -108,6 +108,26 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     @Override
+    public String generateTemplateUrl() {
+        try {
+            String headers = getDictionary().getFields().stream()
+                                            .filter(field -> !field.isHidden())
+                                            .map(sirius.biz.importer.format.FieldDefinition::getLabel)
+                                            .collect(java.util.stream.Collectors.joining(";"));
+
+            byte[] bom = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+            byte[] csvBytes = headers.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            byte[] fullContent = new byte[bom.length + csvBytes.length];
+            System.arraycopy(bom, 0, fullContent, 0, bom.length);
+            System.arraycopy(csvBytes, 0, fullContent, bom.length, csvBytes.length);
+            return "data:text/csv;base64," + java.util.Base64.getEncoder().encodeToString(fullContent);
+        } catch (Exception e) {
+            sirius.kernel.health.Exceptions.handle(sirius.kernel.health.Log.BACKGROUND, e);
+            return null;
+        }
+    }
+
+    @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
         parameterCollector.accept(createImportModeParameter());

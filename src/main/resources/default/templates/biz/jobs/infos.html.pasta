@@ -10,7 +10,15 @@
         </li>
     </i:block>
 
-    <t:pageHeader title="@job.getLabel()"/>
+    <t:pageHeader title="@job.getLabel()">
+        <i:block name="actions">
+            <i:if test="isFilled(job.generateTemplateUrl())">
+                <a href="@job.generateTemplateUrl()" download="import_template.csv" class="btn btn-primary">
+                    <i class="fa-solid fa-download"></i> @i18n("EntityImportJobFactory.downloadTemplate")
+                </a>
+            </i:if>
+        </i:block>
+    </t:pageHeader>
     <i:for type="sirius.biz.jobs.infos.JobInfo" var="info" items="job.getJobInfos()">
         <i:dynamicInvoke template="@info.getTemplateName()" job="job" info="info"/>
     </i:for>
