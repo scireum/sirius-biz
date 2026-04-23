@@ -156,4 +156,115 @@ public class KnowledgeBaseMarkdownRendererTest {
         assertTrue(html.contains("<td>404</td>"));
         assertTrue(html.contains("Resource not found."));
     }
+
+    @Test
+    public void renderDocumentTurnsNoteAlertsIntoInfoStyledSections() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
+                "/kb/en/admin/markdown-QMDKB.md",
+                "QMDKB",
+                "en",
+                "Markdown Article",
+                "Short summary",
+                "SKAME",
+                100,
+                "",
+                false,
+                List.of(),
+                """
+                        ## Alerts
+                        
+                        > [!NOTE]
+                        > Markdown KB articles can now render hint boxes.
+                        """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("card mb-4 full-border border-sirius-blue-light"));
+        assertTrue(html.contains("card-title text-sirius-blue-light"));
+        assertTrue(html.contains("fa-solid fa-info-circle"));
+        assertTrue(html.contains(">TychoAlertNodeRenderer.type.NOTE</h5>"));
+        assertTrue(html.contains("Markdown KB articles can now render hint boxes."));
+    }
+
+    @Test
+    public void renderDocumentTurnsWarningAlertsIntoWarnStyledSections() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
+                "/kb/en/admin/markdown-QMDKB.md",
+                "QMDKB",
+                "en",
+                "Markdown Article",
+                "Short summary",
+                "SKAME",
+                100,
+                "",
+                false,
+                List.of(),
+                """
+                        ## Alerts
+                        
+                        > [!WARNING]
+                        > Please plan expensive jobs carefully.
+                        """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("card mb-4 full-border border-sirius-yellow-dark"));
+        assertTrue(html.contains("card-title text-sirius-yellow-dark"));
+        assertTrue(html.contains("fa-solid fa-exclamation-triangle"));
+        assertTrue(html.contains(">TychoAlertNodeRenderer.type.WARNING</h5>"));
+        assertTrue(html.contains("Please plan expensive jobs carefully."));
+    }
+
+    @Test
+    public void renderDocumentLeavesNormalBlockquotesUntouched() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
+                "/kb/en/admin/markdown-QMDKB.md",
+                "QMDKB",
+                "en",
+                "Markdown Article",
+                "Short summary",
+                "SKAME",
+                100,
+                "",
+                false,
+                List.of(),
+                """
+                        ## Quotes
+                        
+                        > This is a normal blockquote.
+                        """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("<blockquote>"));
+        assertFalse(html.contains("border-sirius-blue-light"));
+        assertFalse(html.contains("border-sirius-yellow-dark"));
+    }
+
+    @Test
+    public void renderDocumentKeepsNestedMarkdownInsideAlerts() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(new KnowledgeBaseMarkdownArticle(
+                "/kb/en/admin/markdown-QMDKB.md",
+                "QMDKB",
+                "en",
+                "Markdown Article",
+                "Short summary",
+                "SKAME",
+                100,
+                "",
+                false,
+                List.of(),
+                """
+                        ## Alerts
+                        
+                        > [!TIP]
+                        > Prefer background processing for long-running work.
+                        >
+                        > - Use queues
+                        > - Monitor cluster load
+                        """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains(">TychoAlertNodeRenderer.type.TIP</h5>"));
+        assertTrue(html.contains("<ul>"));
+        assertTrue(html.contains("<li>Use queues</li>"));
+        assertTrue(html.contains("<li>Monitor cluster load</li>"));
+    }
 }

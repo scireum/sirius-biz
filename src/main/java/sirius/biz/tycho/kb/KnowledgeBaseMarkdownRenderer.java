@@ -9,6 +9,7 @@
 package sirius.biz.tycho.kb;
 
 import org.commonmark.Extension;
+import org.commonmark.ext.gfm.alerts.AlertsExtension;
 import org.commonmark.ext.gfm.tables.TableBlock;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.FencedCodeBlock;
@@ -54,13 +55,16 @@ public class KnowledgeBaseMarkdownRenderer {
     @Part
     private Resources resources;
 
-    private final List<Extension> markdownExtensions = List.of(TablesExtension.create());
-    private final Parser parser = Parser.builder().extensions(markdownExtensions).build();
+    private static final List<Extension> PARSER_EXTENSIONS =
+            List.of(TablesExtension.create(), AlertsExtension.create());
+    private static final List<Extension> HTML_EXTENSIONS = List.of(TablesExtension.create());
+    private final Parser parser = Parser.builder().extensions(PARSER_EXTENSIONS).build();
     private final HtmlRenderer htmlRenderer = HtmlRenderer.builder()
                                                           .escapeHtml(true)
                                                           .sanitizeUrls(true)
-                                                          .extensions(markdownExtensions)
+                                                          .extensions(HTML_EXTENSIONS)
                                                           .attributeProviderFactory(context -> new KbAttributeProvider())
+                                                          .nodeRendererFactory(TychoAlertNodeRenderer::new)
                                                           .build();
     private final TextContentRenderer textRenderer = TextContentRenderer.builder().build();
     private final Yaml yaml = new Yaml();
