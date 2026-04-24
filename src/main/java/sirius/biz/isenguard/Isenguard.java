@@ -35,6 +35,19 @@ import java.util.function.Supplier;
  * <p>
  * Most probably this will be based on {@link RedisLimiter redis} but other approaches can be taken by providing a
  * custom {@link Limiter} via the system config value <tt>isenguard.limiter</tt>.
+ * <p>
+ * Rate limiting is implemented as a fixed-window counter per {@code scope + realm + interval bucket}.
+ * This means the active bucket is computed from the current unix time in seconds and the configured interval
+ * ({@code epochSeconds / intervalSeconds}). Therefore, windows are globally aligned to wall clock time and not
+ * "sliding" per caller.
+ * <p>
+ * Caveats:
+ * <ul>
+ *     <li>Boundary bursts are possible: calls right before and right after a bucket switch are counted in separate windows.</li>
+ *     <li>Intervals are loaded from milliseconds and converted to whole seconds (fractional seconds are truncated).</li>
+ *     <li>Invalid limits ({@code limit <= 0} or {@code intervalSeconds <= 0}) disable limiting for the realm.</li>
+ *     <li>The limiter is fail-open on backend errors (calls are permitted if the limiter cannot be queried).</li>
+ * </ul>
  */
 @Register(classes = Isenguard.class)
 public class Isenguard {
