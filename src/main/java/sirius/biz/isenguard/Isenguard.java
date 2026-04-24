@@ -190,10 +190,12 @@ public class Isenguard {
      * @return an exception which indicates that the rate limit for the given realm is reached
      */
     public HandledException createException(String realm, int explicitLimit) {
+        Limit limit = fetchLimit(realm, explicitLimit);
+
         return Exceptions.createHandled()
-                         .withSystemErrorMessage("Rate Limit reached: %s (%s)",
-                                                 realm,
-                                                 fetchLimit(realm, explicitLimit).format())
+                         .withNLSKey("Isenguard.error.rateLimitReached")
+                         .set("maxCalls", limit.maxCalls())
+                         .set("intervalSeconds", limit.intervalSeconds())
                          .hint(Controller.HTTP_STATUS, HttpResponseStatus.TOO_MANY_REQUESTS.code())
                          .handle();
     }
