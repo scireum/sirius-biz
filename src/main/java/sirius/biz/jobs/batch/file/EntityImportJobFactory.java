@@ -18,7 +18,11 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
-
+import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.stream.Collectors;
+import sirius.biz.importer.format.FieldDefinition;
 import java.util.function.Consumer;
 
 /**
@@ -108,21 +112,27 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     @Override
+    @Nullable
     public String generateTemplateUrl() {
         try {
+            // Collect all visible field labels from the dictionary and join them with a semicolon
             String headers = getDictionary().getFields().stream()
                                             .filter(field -> !field.isHidden())
-                                            .map(sirius.biz.importer.format.FieldDefinition::getLabel)
-                                            .collect(java.util.stream.Collectors.joining(";"));
+                                            .map(FieldDefinition::getLabel)
+                                            .collect(Collectors.joining(";"));
 
+            // Prepare the CSV content and add the UTF-8 Byte Order Mark (BOM) for Excel compatibility
             byte[] bom = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
-            byte[] csvBytes = headers.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            byte[] csvBytes = headers.getBytes(StandardCharsets.UTF_8);
             byte[] fullContent = new byte[bom.length + csvBytes.length];
+
             System.arraycopy(bom, 0, fullContent, 0, bom.length);
             System.arraycopy(csvBytes, 0, fullContent, bom.length, csvBytes.length);
-            return "data:text/csv;base64," + java.util.Base64.getEncoder().encodeToString(fullContent);
+
+            // Convert the combined byte array to a Base64 string and return it as a Data-URI
+            return "data:text/csv;base64," + Base64.getEncoder().encodeToString(fullContent);
         } catch (Exception e) {
-            sirius.kernel.health.Exceptions.handle(sirius.kernel.health.Log.BACKGROUND, e);
+            Exceptions.handle(Log.BACKGROUND, e);
             return null;
         }
     }
