@@ -38,7 +38,10 @@ import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -56,12 +59,10 @@ public class DatabaseController extends BasicController {
     private static final String PARAM_QUERY = "query";
     private static final String PARAM_EXPORT_QUERY = "exportQuery";
     private static final String PARAM_EXPORT_DATABASE = "exportDatabase";
-    private static final String KEYWORD_UPDATE = "update";
-    private static final String KEYWORD_INSERT = "insert";
-    private static final String KEYWORD_ALTER = "alter";
-    private static final String KEYWORD_DROP = "drop";
-    private static final String KEYWORD_CREATE = "create";
-    private static final String KEYWORD_DELETE = "delete";
+    private static final Set<String> DDL_KEYWORDS = Set.of("alter", "drop", "create", "truncate", "rename");
+    private static final Set<String> MODIFYING_KEYWORDS =
+            Set.of("update", "insert", "delete", "merge", "replace", "upsert");
+    private static final Set<String> READ_ONLY_KEYWORDS = Set.of("select", "show", "describe", "desc", "explain");
 
     @Part
     private Schema schema;
@@ -112,35 +113,42 @@ public class DatabaseController extends BasicController {
         try {
             String database = webContext.get(PARAM_DATABASE).asString(defaultDatabase);
             Database db = determineDatabase(database);
-            String sqlStatement = webContext.get(PARAM_QUERY).asString();
+            String sqlStatement = requireSingleStatement(webContext.get(PARAM_QUERY).asString());
             SQLQuery query = db.createQuery(sqlStatement).markAsLongRunning();
 
             OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s):%n%n%s",
                          UserContext.getCurrentUser().getUserName(),
                          sqlStatement);
 
-            if (isDDLStatement(sqlStatement)) {
-                // To prevent accidental damage, we try to filter DDL queries (modifying the database structure) and
-                // only permit them against our system database.
-                if (!Strings.areEqual(database, defaultDatabase)) {
-                    throw Exceptions.createHandled()
-                                    .withSystemErrorMessage(
-                                            "Cannot execute a DDL statement against this database. This can be only done for '%s'",
-                                            defaultDatabase)
-                                    .handle();
-                }
+            StatementType statementType = determineStatementType(sqlStatement);
+            switch (statementType) {
+                case StatementType.DDL -> {
+                    // To prevent accidental damage, we try to filter DDL queries (modifying the database structure) and
+                    // only permit them against our system database.
+                    if (!Strings.areEqual(database, defaultDatabase)) {
+                        throw Exceptions.createHandled()
+                                        .withSystemErrorMessage(
+                                                "Cannot execute a DDL statement against this database. This can be only done for '%s'",
+                                                defaultDatabase)
+                                        .handle();
+                    }
 
-                output.property("rowModified", query.executeUpdate());
-            } else if (isModifyStatement(sqlStatement)) {
-                output.property("rowModified", query.executeUpdate());
-            } else {
-                int effectiveLimit = webContext.get("limit").asInt(DEFAULT_LIMIT);
-                output.property("effectiveLimit", effectiveLimit);
-                Monoflop rowPrinted = Monoflop.create();
-                query.iterateAll(row -> outputRow(output, rowPrinted, row), new Limit(0, effectiveLimit));
-                if (rowPrinted.successiveCall()) {
-                    output.endArray();
+                    output.property("rowModified", query.executeUpdate());
                 }
+                case StatementType.MODIFYING -> output.property("rowModified", query.executeUpdate());
+                case StatementType.READ_ONLY -> {
+                    int effectiveLimit = webContext.get("limit").asInt(DEFAULT_LIMIT);
+                    output.property("effectiveLimit", effectiveLimit);
+                    Monoflop rowPrinted = Monoflop.create();
+                    query.iterateAll(row -> outputRow(output, rowPrinted, row), new Limit(0, effectiveLimit));
+                    if (rowPrinted.successiveCall()) {
+                        output.endArray();
+                    }
+                }
+                default -> throw Exceptions.createHandled()
+                                           .withDirectMessage(
+                                                   "Unsupported SQL statement. Please submit exactly one read, modifying or DDL statement.")
+                                           .handle();
             }
             output.property("duration", watch.duration());
         } catch (SQLException exception) {
@@ -163,18 +171,14 @@ public class DatabaseController extends BasicController {
         }
 
         String database = webContext.get(PARAM_EXPORT_DATABASE).asString(defaultDatabase);
-        String sqlStatement = webContext.get(PARAM_EXPORT_QUERY).asString();
+        determineDatabase(database);
+        String sqlStatement = requireSingleStatement(webContext.get(PARAM_EXPORT_QUERY).asString());
+        rejectNonReadOnlyExport(sqlStatement);
 
-        if (isDDLStatement(sqlStatement)) {
-            throw Exceptions.createHandled().withDirectMessage("A DDL statement cannot be exported.").handle();
-        } else if (isModifyStatement(sqlStatement)) {
-            throw Exceptions.createHandled().withDirectMessage("A modifying statement cannot be exported.").handle();
-        } else {
-            ExportQueryResultJobFactory jobFactory =
-                    jobs.findFactory(ExportQueryResultJobFactory.FACTORY_NAME, ExportQueryResultJobFactory.class);
-            String processId = jobFactory.startInBackground(createJobParameterSupplier(database, sqlStatement));
-            webContext.respondWith().redirectToGet("/ps/" + processId);
-        }
+        ExportQueryResultJobFactory jobFactory =
+                jobs.findFactory(ExportQueryResultJobFactory.FACTORY_NAME, ExportQueryResultJobFactory.class);
+        String processId = jobFactory.startInBackground(createJobParameterSupplier(database, sqlStatement));
+        webContext.respondWith().redirectToGet("/ps/" + processId);
     }
 
     /**
@@ -185,34 +189,222 @@ public class DatabaseController extends BasicController {
      * @return a parameter supplier as expected by the job factory
      */
     private Function<String, Value> createJobParameterSupplier(String database, String sqlStatement) {
-        return parameterName -> {
-            return switch (parameterName) {
-                case PARAM_DATABASE -> Value.of(database);
-                case PARAM_QUERY -> Value.of(sqlStatement);
-                default -> Value.EMPTY;
-            };
+        return parameterName -> switch (parameterName) {
+            case PARAM_DATABASE -> Value.of(database);
+            case PARAM_QUERY -> Value.of(sqlStatement);
+            default -> Value.EMPTY;
         };
     }
 
     protected Database determineDatabase(String database) {
-        if (!selectableDatabases.contains(database)) {
+        if (!selectableDatabases.contains(database) || !databases.getDatabases().contains(database)) {
             throw Exceptions.createHandled().withSystemErrorMessage("Unknown database: %s", database).handle();
         }
         return databases.get(database);
     }
 
-    private boolean isModifyStatement(String query) {
-        String lowerCaseQuery = query.toLowerCase().trim();
-        return lowerCaseQuery.startsWith(KEYWORD_UPDATE)
-               || lowerCaseQuery.startsWith(KEYWORD_INSERT)
-               || lowerCaseQuery.startsWith(KEYWORD_DELETE);
+    private void rejectNonReadOnlyExport(String sqlStatement) {
+        StatementType statementType = determineStatementType(sqlStatement);
+        if (statementType == StatementType.READ_ONLY) {
+            return;
+        }
+
+        switch (statementType) {
+            case DDL ->
+                    throw Exceptions.createHandled().withDirectMessage("A DDL statement cannot be exported.").handle();
+            case MODIFYING -> throw Exceptions.createHandled()
+                                              .withDirectMessage("A modifying statement cannot be exported.")
+                                              .handle();
+            default -> throw Exceptions.createHandled()
+                                       .withDirectMessage("Only read-only statements can be exported.")
+                                       .handle();
+        }
     }
 
-    private boolean isDDLStatement(String query) {
-        String lowerCaseQuery = query.toLowerCase().trim();
-        return lowerCaseQuery.startsWith(KEYWORD_ALTER)
-               || lowerCaseQuery.startsWith(KEYWORD_DROP)
-               || lowerCaseQuery.startsWith(KEYWORD_CREATE);
+    private String requireSingleStatement(String query) {
+        List<String> statements = splitStatements(query);
+        if (statements.isEmpty()) {
+            throw Exceptions.createHandled().withDirectMessage("No SQL statement provided.").handle();
+        }
+        if (statements.size() > 1) {
+            throw Exceptions.createHandled().withDirectMessage("Only one SQL statement at a time is allowed.").handle();
+        }
+
+        return statements.getFirst();
+    }
+
+    private StatementType determineStatementType(String statement) {
+        String firstKeyword = extractFirstKeyword(statement);
+        if (firstKeyword.isEmpty()) {
+            return StatementType.OTHER;
+        }
+
+        if (DDL_KEYWORDS.contains(firstKeyword)) {
+            return StatementType.DDL;
+        }
+
+        if (MODIFYING_KEYWORDS.contains(firstKeyword)) {
+            return StatementType.MODIFYING;
+        }
+
+        if (READ_ONLY_KEYWORDS.contains(firstKeyword)) {
+            return StatementType.READ_ONLY;
+        }
+
+        return StatementType.OTHER;
+    }
+
+    private String extractFirstKeyword(String statement) {
+        if (Strings.isEmpty(statement)) {
+            return "";
+        }
+
+        String trimmedStatement = statement.trim();
+        int index = 0;
+        while (index < trimmedStatement.length() && Character.isLetter(trimmedStatement.charAt(index))) {
+            index++;
+        }
+
+        if (index == 0) {
+            return "";
+        }
+
+        return trimmedStatement.substring(0, index).toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Splits a raw SQL query string into individual statements separated by semicolons.
+     * <p>
+     * Correctly handles:
+     * <ul>
+     *     <li>Single-quoted, double-quoted, and backtick-quoted strings (including escaped quotes)</li>
+     *     <li>Line comments ({@code --})</li>
+     *     <li>Block comments ({@code /* ... *&#47;})</li>
+     * </ul>
+     * Blank statements (e.g. trailing semicolons) are ignored.
+     *
+     * @param query the raw query string to split
+     * @return a list of individual SQL statement strings, trimmed of surrounding whitespace
+     */
+    private List<String> splitStatements(String query) {
+        List<String> statements = new ArrayList<>();
+        StringBuilder currentStatement = new StringBuilder();
+
+        int index = 0;
+        while (index < query.length()) {
+            char currentChar = query.charAt(index);
+
+            if (currentChar == '\'' || currentChar == '"' || currentChar == '`') {
+                index = consumeQuotedString(query, currentStatement, currentChar, index);
+            } else if (query.startsWith("--", index)) {
+                index = skipLineComment(query, index + 2);
+                currentStatement.append(' ');
+            } else {
+                if (query.startsWith("/*", index)) {
+                    index = skipBlockComment(query, index + 2);
+                    currentStatement.append(' ');
+                } else if (currentChar == ';') {
+                    appendIfNotBlank(statements, currentStatement);
+                    currentStatement.setLength(0);
+                    index++;
+                } else {
+                    currentStatement.append(currentChar);
+                    index++;
+                }
+            }
+        }
+
+        appendIfNotBlank(statements, currentStatement);
+
+        return statements;
+    }
+
+    /**
+     * Consumes a quoted string starting at the given index and appends it to the current statement builder.
+     * <p>
+     * Handles both backslash-escaped characters ({@code \'}, {@code \"}) and doubled-quote escaping
+     * ({@code ''}, {@code ""}, ` `` `).
+     *
+     * @param query            the full query string
+     * @param currentStatement the statement builder to append to
+     * @param quoteChar        the opening (and closing) quote character ({@code '}, {@code "} or {@code `})
+     * @param index            the index of the opening quote character
+     * @return the index immediately after the closing quote character
+     */
+    private int consumeQuotedString(String query, StringBuilder currentStatement, char quoteChar, int index) {
+        while (index < query.length()) {
+            char currentChar = query.charAt(index);
+            char nextChar = index + 1 < query.length() ? query.charAt(index + 1) : '\0';
+            boolean isEscapedCharacter = currentChar == '\\' && nextChar != '\0';
+            boolean isEscapedQuote = currentChar == quoteChar && nextChar == quoteChar;
+
+            currentStatement.append(currentChar);
+            if (isEscapedCharacter || isEscapedQuote) {
+                currentStatement.append(nextChar);
+                index += 2;
+            } else {
+                index++;
+                if (currentChar == quoteChar) {
+                    return index;
+                }
+            }
+        }
+
+        return index;
+    }
+
+    /**
+     * Skips an SQL line comment and all directly following line break characters.
+     * <p>
+     * Example: for {@code "-- comment\nSELECT 1"} with index {@code 2}, this returns the index of {@code SELECT}.
+     *
+     * @param query the query to inspect
+     * @param index the offset after the opening {@code --}
+     * @return the first index after the comment and following line breaks
+     */
+    private int skipLineComment(String query, int index) {
+        while (index < query.length() && query.charAt(index) != '\n' && query.charAt(index) != '\r') {
+            index++;
+        }
+
+        while (index < query.length() && (query.charAt(index) == '\n' || query.charAt(index) == '\r')) {
+            index++;
+        }
+
+        return index;
+    }
+
+    /**
+     * Skips an SQL block comment.
+     * <p>
+     * Example: for {@code "/* comment *&#47; SELECT 1"} with index {@code 2}, this returns the index of {@code SELECT}.
+     *
+     * @param query the query to inspect
+     * @param index the offset after the opening {@code /*}
+     * @return the first index after the closing {@code *&#47;} or the query length if the comment is unterminated
+     */
+    private int skipBlockComment(String query, int index) {
+        int commentEnd = query.indexOf("*/", index);
+        return commentEnd >= 0 ? commentEnd + 2 : query.length();
+    }
+
+    /**
+     * Appends the current statement if it contains non-whitespace content.
+     * <p>
+     * Example: {@code " SELECT 1 "} is appended as {@code "SELECT 1"}, while {@code "   "} is ignored.
+     *
+     * @param statements       the collected statements
+     * @param currentStatement the statement being built
+     */
+    private void appendIfNotBlank(List<String> statements, StringBuilder currentStatement) {
+        String statement = currentStatement.toString().trim();
+        if (Strings.isFilled(statement)) {
+            statements.add(statement);
+        }
+    }
+
+    private enum StatementType {
+        READ_ONLY, MODIFYING, DDL, OTHER
     }
 
     private void outputRow(JSONStructuredOutput output, Monoflop rowPrinted, Row row) {
