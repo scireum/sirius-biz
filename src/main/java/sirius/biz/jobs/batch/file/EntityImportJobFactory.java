@@ -127,8 +127,8 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
             csvWriter.writeArray(headers);
             writer.flush();
             return "data:text/csv;base64," + Base64.getEncoder().encodeToString(out.toByteArray());
-        } catch (Exception e) {
-            Exceptions.handle(Log.BACKGROUND, e);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.BACKGROUND, exception);
             return null;
         }
     }
