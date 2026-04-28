@@ -12,12 +12,11 @@ import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Provides the selection of an enum constant as parameter.
@@ -28,7 +27,7 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
 
     private final Class<E> type;
     private E defaultValue;
-    private List<E> values;
+    private Supplier<EnumSet<E>> valuesSupplier;
 
     /**
      * Creates a new parameter with the given name, label and enum type.
@@ -40,7 +39,7 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
     public EnumParameter(String name, String label, Class<E> type) {
         super(name, label);
         this.type = type;
-        this.values = Arrays.asList(type.getEnumConstants());
+        this.valuesSupplier = () -> EnumSet.allOf(type);
     }
 
     /**
@@ -63,17 +62,30 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
      * @return the parameter itself for fluent method calls
      */
     public EnumParameter<E> withCustomValues(List<E> values) {
-        this.values = new ArrayList<>(values);
+        this.valuesSupplier = () -> values.isEmpty() ? EnumSet.noneOf(type) : EnumSet.copyOf(values);
         return this;
     }
 
     /**
-     * Enumerates all values provided by the enum.
+     * Sets a supplier that provides the set of selectable enum constants.
+     * <p>
+     * Use this to lazily or dynamically determine the values.
      *
-     * @return the list of value defined by the enum type
+     * @param valuesSupplier the supplier that returns the set of allowed values
+     * @return the parameter itself for fluent method calls
+     */
+    public EnumParameter<E> withValuesProvider(Supplier<List<E>> valuesSupplier) {
+        this.valuesSupplier = () -> EnumSet.copyOf(valuesSupplier.get());
+        return this;
+    }
+
+    /**
+     * Enumerates all values offered for this parameter.
+     *
+     * @return the list of selectable enum constants (declaration order of the enum type)
      */
     public List<E> getValues() {
-        return Collections.unmodifiableList(values);
+        return List.copyOf(valuesSupplier.get());
     }
 
     @Override
@@ -87,7 +99,10 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
             return defaultValue != null ? defaultValue.name() : null;
         }
 
-        return input.getEnum(type).map(E::name).orElse(null);
+        return input.getEnum(type)
+                    .filter(enumValue -> valuesSupplier.get().contains(enumValue))
+                    .map(E::name)
+                    .orElse(null);
     }
 
     @Override
@@ -98,6 +113,6 @@ public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumPa
 
     @Override
     protected Optional<E> resolveFromString(Value input) {
-        return input.getEnum(type);
+        return input.getEnum(type).filter(enumValue -> valuesSupplier.get().contains(enumValue));
     }
 }
