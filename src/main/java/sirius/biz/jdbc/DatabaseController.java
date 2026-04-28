@@ -122,7 +122,7 @@ public class DatabaseController extends BasicController {
 
             StatementType statementType = determineStatementType(sqlStatement);
             switch (statementType) {
-                case StatementType.DDL -> {
+                case DDL -> {
                     // To prevent accidental damage, we try to filter DDL queries (modifying the database structure) and
                     // only permit them against our system database.
                     if (!Strings.areEqual(database, defaultDatabase)) {
@@ -135,8 +135,8 @@ public class DatabaseController extends BasicController {
 
                     output.property("rowModified", query.executeUpdate());
                 }
-                case StatementType.MODIFYING -> output.property("rowModified", query.executeUpdate());
-                case StatementType.READ_ONLY -> {
+                case MODIFYING -> output.property("rowModified", query.executeUpdate());
+                case READ_ONLY -> {
                     int effectiveLimit = webContext.get("limit").asInt(DEFAULT_LIMIT);
                     output.property("effectiveLimit", effectiveLimit);
                     Monoflop rowPrinted = Monoflop.create();
