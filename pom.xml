@@ -20,6 +20,7 @@
         <sirius.kernel>50.1.0</sirius.kernel>
         <sirius.web>97.0.0</sirius.web>
         <sirius.db>66.0.0</sirius.db>
+        <aws.sdk>2.42.41</aws.sdk>
     </properties>
 
     <repositories>
@@ -113,19 +114,24 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.787</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>${aws.sdk}</version>
         </dependency>
-        <!--
-         required by aws-java-sdk-s3, can't switch to jakarta.xml.bind-api as
-         aws sdk checks for the existence of javax.xml.bind.DatatypeConverter
-         https://github.com/aws/aws-sdk-java/blob/master/aws-java-sdk-core/src/main/java/com/amazonaws/util/Base64.java#L42
-          -->
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3-transfer-manager</artifactId>
+            <version>${aws.sdk}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>apache-client</artifactId>
+            <version>${aws.sdk}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>netty-nio-client</artifactId>
+            <version>${aws.sdk}</version>
         </dependency>
 
         <!-- Changelog: https://commons.apache.org/proper/commons-net/changes-report.html -->
