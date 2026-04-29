@@ -69,7 +69,7 @@ public class ObjectStores {
     private static final String PROTOCOL_HTTPS = "https";
     private static final String SERVICE_PREFIX_S3 = "s3-";
     private static final String NAME_SYSTEM_STORE = "system";
-    private static final Region DEFAULT_REGION = Region.US_EAST_1;
+    private static final Region DEFAULT_REGION = Region.EU_CENTRAL_1;
 
     private ObjectStore store;
     private final ConcurrentHashMap<String, ObjectStore> stores = new ConcurrentHashMap<>();
