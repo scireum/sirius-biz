@@ -40,7 +40,6 @@ import sirius.web.services.JSONStructuredOutput;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -269,7 +268,7 @@ public class DatabaseController extends BasicController {
             return "";
         }
 
-        return trimmedStatement.substring(0, index).toLowerCase(Locale.ROOT);
+        return trimmedStatement.substring(0, index).toLowerCase();
     }
 
     /**
@@ -332,6 +331,9 @@ public class DatabaseController extends BasicController {
      * @return the index immediately after the closing quote character
      */
     private int consumeQuotedString(String query, StringBuilder currentStatement, char quoteChar, int index) {
+        currentStatement.append(quoteChar);
+        index++;
+
         while (index < query.length()) {
             char currentChar = query.charAt(index);
             char nextChar = index + 1 < query.length() ? query.charAt(index + 1) : '\0';
