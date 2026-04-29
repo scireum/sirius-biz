@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.legacy;
 
-import com.amazonaws.internal.ResettableInputStream;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import sirius.biz.protocol.TraceData;
@@ -38,6 +37,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -405,7 +405,7 @@ public class Storage {
      */
     public void updateFile(@Nonnull StoredObject file, @Nonnull File data, @Nullable String filename) {
         try {
-            try (InputStream in = new ResettableInputStream(data)) {
+            try (InputStream in = new FileInputStream(data)) {
                 String md5 = calculateMd5(data);
                 updateFile(file, in, filename, md5, data.length());
             }

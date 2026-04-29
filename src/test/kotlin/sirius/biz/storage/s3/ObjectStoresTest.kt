@@ -56,7 +56,7 @@ class ObjectStoresTest {
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
         val download = stores.store().download(stores.store().getBucketName("test"), "test")
         val c = URI(
-                stores.store().objectUrl(stores.store().getBucketName("test"), "test")
+            stores.store().objectUrl(stores.store().getBucketName("test"), "test")
         ).toURL().openConnection()
 
         val expectedContents = files_.readString(file.toPath(), StandardCharsets.UTF_8)
@@ -74,19 +74,19 @@ class ObjectStoresTest {
         stores.store().ensureBucketExists(stores.store().getBucketName("exists"))
         stores.store().doesBucketExist(stores.store().getBucketName("exists"))
         stores.bucketCache.get(
-                Tuple.create(
-                        stores.store().name,
-                        stores.store().getBucketName("exists").getName()
-                )
+            Tuple.create(
+                stores.store().name,
+                stores.store().getBucketName("exists").getName()
+            )
         )
         !stores.store().doesBucketExist(stores.store().getBucketName("not-exists"))
         assertEquals(
-                null, stores.bucketCache.get(
+            null, stores.bucketCache.get(
                 Tuple.create(
-                        stores.store().name,
-                        stores.store().getBucketName("not-exists").getName()
+                    stores.store().name,
+                    stores.store().getBucketName("not-exists").getName()
                 )
-        )
+            )
         )
     }
 
@@ -97,12 +97,12 @@ class ObjectStoresTest {
         stores.store().deleteBucket(stores.store().getBucketName("deleted"))
         assertFalse { stores.store().doesBucketExist(stores.store().getBucketName("deleted")) }
         assertEquals(
-                null, stores.bucketCache.get(
+            null, stores.bucketCache.get(
                 Tuple.create(
-                        stores.store().name,
-                        stores.store().getBucketName("deleted").getName()
+                    stores.store().name,
+                    stores.store().getBucketName("deleted").name
                 )
-        )
+            )
         )
     }
 

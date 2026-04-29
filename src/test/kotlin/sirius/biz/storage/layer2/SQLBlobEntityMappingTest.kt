@@ -1,17 +1,16 @@
 package sirius.biz.storage.layer2
 
 
-import org.junit.jupiter.api.extension.ExtendWith
-import sirius.kernel.SiriusExtension
 import org.junit.jupiter.api.Test
-
-
+import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.extension.ExtendWith
+import sirius.biz.storage.layer2.jdbc.SQLBlob
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
+import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import java.nio.file.Paths
-import org.junit.jupiter.api.assertDoesNotThrow
-import sirius.biz.storage.layer2.jdbc.SQLBlob
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @ExtendWith(SiriusExtension::class)
@@ -21,17 +20,17 @@ class SQLBlobEntityMappingTest {
         val blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
         var testEntity = BlobRefEntity()
         assertTrue { blob.isTemporary() }
-        testEntity.getBlobHardRef().setBlob(blob)
+        testEntity.blobHardRef.setBlob(blob)
         oma.update(testEntity)
         testEntity = oma.refreshOrFail(testEntity)
-        assertTrue { !testEntity.getBlobHardRef().getBlob()!!.isTemporary() }
+        assertTrue { !testEntity.blobHardRef.getBlob()!!.isTemporary() }
     }
 
     @Test
     fun `store entity with unchanged blob hard ref must not fail`() {
         val testEntity = BlobRefEntity()
         val blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
-        testEntity.getBlobHardRef().setBlob(blob)
+        testEntity.blobHardRef.setBlob(blob)
         oma.update(testEntity)
         val loadedEntity = oma.findOrFail(BlobRefEntity::class.java, testEntity.getId())
         assertDoesNotThrow { oma.update(loadedEntity) }
@@ -43,7 +42,7 @@ class SQLBlobEntityMappingTest {
         val testEntity = BlobRefEntity()
         val testFilePath = Paths.get("src/test/resources/test-data/test4blob.txt")
         val blob = blobStorage.getSpace("blob-files").findOrCreateByPath(testFilePath.toString())
-        testEntity.getBlobSoftRef().setBlob(blob)
+        testEntity.blobSoftRef.setBlob(blob)
         oma.update(testEntity)
         val loadedEntity = oma.findOrFail(BlobRefEntity::class.java, testEntity.getId())
         assertDoesNotThrow { oma.update(loadedEntity) }
@@ -53,15 +52,15 @@ class SQLBlobEntityMappingTest {
     fun `delete entity with blob hard ref must mark the blob for deletion`() {
         val testEntity = BlobRefEntity()
         val blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
-        testEntity.getBlobHardRef().setBlob(blob)
+        testEntity.blobHardRef.setBlob(blob)
         oma.update(testEntity)
-        val Blob: SQLBlob? = blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).get() as? SQLBlob
-        if (Blob != null) {
-            assertTrue { !Blob.isDeleted() }
+        val sqlBlob: SQLBlob? = blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).get() as? SQLBlob
+        if (sqlBlob != null) {
+            assertFalse { sqlBlob.isDeleted }
         }
-        assertTrue { Blob != null }
+        assertTrue { sqlBlob != null }
         oma.delete(testEntity)
-        assertTrue { !blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).isPresent() }
+        assertFalse { blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).isPresent }
     }
 
     companion object {
