@@ -184,7 +184,7 @@ public class ObjectStores {
                                                 .httpClientBuilder(httpClientBuilder);
 
         try {
-            URI endpoint = URI.create(extension.get(KEY_END_POINT).asString());
+            URI endpoint = new URI(extension.get(KEY_END_POINT).asString());
             int defaultPort =
                     PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getScheme()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
             clientBuilder.endpointOverride(mapEndpoint(name, endpoint, defaultPort))
@@ -223,7 +223,7 @@ public class ObjectStores {
                                                           .credentialsProvider(credentialsProvider)
                                                           .httpClientBuilder(httpClientBuilder);
         try {
-            URI endpoint = URI.create(extension.get(KEY_END_POINT).asString());
+            URI endpoint = new URI(extension.get(KEY_END_POINT).asString());
             int defaultPort =
                     PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getScheme()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
             clientBuilder.endpointOverride(mapEndpoint(name, endpoint, defaultPort))
@@ -249,7 +249,7 @@ public class ObjectStores {
                                               .serviceConfiguration(serviceConfiguration)
                                               .credentialsProvider(credentialsProvider);
         try {
-            URI endpoint = URI.create(extension.get(KEY_END_POINT).asString());
+            URI endpoint = new URI(extension.get(KEY_END_POINT).asString());
             int defaultPort =
                     PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getScheme()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
             presignerBuilder.endpointOverride(mapEndpoint(name, endpoint, defaultPort))
