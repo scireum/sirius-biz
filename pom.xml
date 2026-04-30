@@ -20,7 +20,7 @@
         <sirius.kernel>50.1.0</sirius.kernel>
         <sirius.web>97.0.0</sirius.web>
         <sirius.db>66.0.0</sirius.db>
-        <aws.sdk>2.42.41</aws.sdk>
+        <aws.sdk>2.43.0</aws.sdk>
     </properties>
 
     <repositories>
