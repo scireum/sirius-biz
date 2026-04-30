@@ -11,6 +11,7 @@ package sirius.biz.jobs.batch.file;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import sirius.biz.importer.ImportContext;
 import sirius.biz.importer.Importer;
+import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
@@ -24,7 +25,6 @@ import javax.annotation.Nullable;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import sirius.biz.importer.format.FieldDefinition;
 import java.util.function.Consumer;
 
 /**
