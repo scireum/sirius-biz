@@ -23,6 +23,8 @@ import sirius.kernel.settings.PortMapper;
 import sirius.kernel.settings.Settings;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
@@ -181,6 +183,8 @@ public class ObjectStores {
         S3ClientBuilder clientBuilder = S3Client.builder()
                                                 .serviceConfiguration(serviceConfiguration)
                                                 .credentialsProvider(credentialsProvider)
+                                                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                                                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                                                 .httpClientBuilder(httpClientBuilder);
 
         try {
@@ -221,6 +225,8 @@ public class ObjectStores {
         S3AsyncClientBuilder clientBuilder = S3AsyncClient.builder()
                                                           .serviceConfiguration(serviceConfiguration)
                                                           .credentialsProvider(credentialsProvider)
+                                                          .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                                                          .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                                                           .httpClientBuilder(httpClientBuilder);
         try {
             URI endpoint = new URI(extension.get(KEY_END_POINT).asString());
