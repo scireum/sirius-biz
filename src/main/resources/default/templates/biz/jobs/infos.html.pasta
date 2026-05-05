@@ -14,7 +14,8 @@
         <i:block name="actions">
             <i:local name="templateUrl" value="job.generateTemplateUrl()" />
             <i:if test="isFilled(templateUrl)">
-                <a href="@templateUrl" download="@(job.getLabel()).csv" class="btn btn-primary">
+                <i:local name="fileName" value="@apply('job-template-%s.csv', job.getName())" />
+                <a href="@templateUrl" download="@fileName" class="btn btn-primary">
                     <i class="fa-solid fa-download"></i> @i18n("EntityImportJobFactory.downloadTemplate")
                 </a>
             </i:if>
