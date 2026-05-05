@@ -8,7 +8,10 @@
 
 package sirius.biz.storage.util;
 
+import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
+import sirius.biz.storage.layer2.mongo.MongoBlobStorage;
 import sirius.kernel.Sirius;
+import sirius.kernel.Startable;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
@@ -40,8 +43,8 @@ import java.util.regex.Pattern;
  * <p>
  * This provides access to the configuration for all layers and some authentication utilities.
  */
-@Register(classes = StorageUtils.class)
-public class StorageUtils {
+@Register(classes = {StorageUtils.class, Startable.class})
+public class StorageUtils implements Startable {
 
     /**
      * Defines the default url validity time in days.
@@ -80,6 +83,20 @@ public class StorageUtils {
     @Nullable
     private String sharedSecret;
     private String safeSharedSecret;
+
+    /**
+     * Ensures that a non-empty shared secret is present when a storage framework is enabled.
+     */
+    @Override
+    public void started() {
+        if (!Sirius.isFrameworkEnabled(FRAMEWORK_STORAGE)
+            && !Sirius.isFrameworkEnabled(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
+            && !Sirius.isFrameworkEnabled(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)) {
+            // Neither the old nor the new storage frameworks are enabled
+            return;
+        }
+        requireSharedSecret(sharedSecret);
+    }
 
     /**
      * Returns all configured extensions / storage spaces for the given scope.
@@ -163,20 +180,30 @@ public class StorageUtils {
     /**
      * Determines the shared secret to use.
      *
-     * @return the shared secret to use. Which is either taken from <tt>storage.sharedSecret</tt> in the system config
-     * or a random value if the system is not configured properly
+     * @return the shared secret to use, taken from <tt>storage.sharedSecret</tt> in the system config
      */
     private String getSharedSecret() {
         if (safeSharedSecret == null) {
-            if (Strings.isFilled(sharedSecret)) {
-                safeSharedSecret = sharedSecret;
-            } else {
-                LOG.WARN("Please specify a secure and random value for 'storage.sharedSecret' in the 'instance.conf'!");
-                safeSharedSecret = String.valueOf(System.currentTimeMillis());
-            }
+            safeSharedSecret = requireSharedSecret(sharedSecret);
         }
-
         return safeSharedSecret;
+    }
+
+    /**
+     * Ensures that a non-empty shared secret is present.
+     *
+     * @param sharedSecret the configured shared secret to verify
+     * @return the verified shared secret
+     */
+    public static String requireSharedSecret(@Nullable String sharedSecret) {
+        if (Strings.isFilled(sharedSecret)) {
+            return sharedSecret;
+        }
+        throw Exceptions.handle()
+                        .to(LOG)
+                        .withSystemErrorMessage("Missing required configuration 'storage.sharedSecret'."
+                                                + " Please specify a secure and random value in 'instance.conf'.")
+                        .handle();
     }
 
     /**

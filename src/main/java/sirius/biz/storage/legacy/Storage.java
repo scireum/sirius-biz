@@ -11,6 +11,7 @@ package sirius.biz.storage.legacy;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import sirius.biz.protocol.TraceData;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.OMA;
@@ -683,17 +684,11 @@ public class Storage {
     /**
      * Determines the shared secret to use.
      *
-     * @return the shared secret to use. Which is either taken from <tt>storage.sharedSecret</tt> in the system config
-     * or a random value if the system is not configured properly
+     * @return the shared secret to use, taken from <tt>storage.sharedSecret</tt> in the system config
      */
     private String getSharedSecret() {
         if (safeSharedSecret == null) {
-            if (Strings.isFilled(sharedSecret)) {
-                safeSharedSecret = sharedSecret;
-            } else {
-                LOG.WARN("Please specify a secure and random value for 'storage.sharedSecret' in the 'instance.conf'!");
-                return String.valueOf(System.currentTimeMillis());
-            }
+            safeSharedSecret = StorageUtils.requireSharedSecret(sharedSecret);
         }
 
         return safeSharedSecret;
