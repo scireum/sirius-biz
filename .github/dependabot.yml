@@ -16,6 +16,16 @@ updates:
   labels:
     - "⬆️ Dependencies"
     - "🛠️ Maintenance"
+- package-ecosystem: "maven"
+  directory: "/"
+  schedule:
+    interval: daily
+  allow:
+    - dependency-name: "com.scireum:sirius-*"
+  groups:
+    sirius:
+      patterns:
+        - "com.scireum:sirius-*"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
