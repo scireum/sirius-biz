@@ -8,7 +8,7 @@
 
 package sirius.biz.charts;
 
-import com.lowagie.text.xml.XmlDomWriter;
+import org.openpdf.text.xml.XmlDomWriter;
 import org.w3c.dom.Element;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.pdf.TagliatellePDFContentHandler;
