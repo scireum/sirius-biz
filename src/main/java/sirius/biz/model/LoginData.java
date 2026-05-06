@@ -123,15 +123,6 @@ public class LoginData extends Composite {
     private String generatedPassword;
 
     /**
-     * Provides an API TOKEN which is cryptographically created and can be used as password for technical integrations
-     */
-    public static final Mapping API_TOKEN = Mapping.named("apiToken");
-    @Trim
-    @Length(50)
-    @NullAllowed
-    private String apiToken;
-
-    /**
      * Records the number of logins.
      */
     public static final Mapping NUMBER_OF_LOGINS = Mapping.named("numberOfLogins");
@@ -195,7 +186,7 @@ public class LoginData extends Composite {
      * Skips the creation of {@link #generatedPassword} on save which is normally used to fill in {@link #passwordHash} with a generated {@link #salt}.
      * <p>
      * If set to true, this will allow for users without a valid password login to exist in the database.
-     * This is useful for user objects with other means to login, like {@link #API_TOKEN} or custom auth methods.
+     * This is useful for user objects with other means to login, like custom auth methods.
      */
     @Transient
     private boolean skipPasswordCreation;
@@ -254,9 +245,6 @@ public class LoginData extends Composite {
             }
         }
 
-        if (Strings.isEmpty(apiToken)) {
-            this.apiToken = Strings.generateCode(32);
-        }
         if (Strings.isEmpty(fingerprint)) {
             this.fingerprint = Strings.generateCode(12);
         }
@@ -428,14 +416,6 @@ public class LoginData extends Composite {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getApiToken() {
-        return apiToken;
-    }
-
-    public void setApiToken(String apiToken) {
-        this.apiToken = apiToken;
     }
 
     public String getFingerprint() {

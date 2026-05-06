@@ -20,7 +20,6 @@ import sirius.db.mixing.Mixing;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
-import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
@@ -54,7 +53,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -168,8 +166,6 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     public static final String ROLE_PREFIX_PERFORMANCE_FLAG = "performance-flag-";
 
     protected final String systemTenant;
-    protected final boolean acceptApiTokens;
-    protected final boolean acceptHashedApiTokens;
     protected final List<String> availableLanguages;
 
     @Part
@@ -209,8 +205,6 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
-        this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(false);
-        this.acceptHashedApiTokens = config.get("accept-hashed-api-tokens").asBoolean(false);
         this.availableLanguages = scope.getDisplayLanguages().stream().toList();
     }
 
@@ -666,53 +660,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return result;
         }
 
-        if (checkApiToken(loginData, password)) {
-            completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
-            recordLogin(result, false);
-            return result;
-        }
-
         auditLog.negative("AuditLog.loginRejected")
                 .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                 .forTenant(tenant.getIdAsString(), tenant.getTenantData().getName())
                 .log();
 
         return null;
-    }
-
-    protected boolean checkApiToken(LoginData loginData, String givenApiToken) {
-        if (Strings.isEmpty(loginData.getApiToken())) {
-            return false;
-        }
-
-        if (acceptApiTokens && Strings.areEqual(givenApiToken, loginData.getApiToken())) {
-            return true;
-        }
-
-        if (acceptHashedApiTokens) {
-            long currentTimestampInDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis());
-            // Timestamps of tomorrow and yesterday should be valid too, to be more graceful with nightly scripts utilizing
-            // the apiToken. If midnight passes while execution, the hashed apiToken would be suddenly invalid.
-            for (int i = -1; i <= 1; i++) {
-                long timestampToCheck = currentTimestampInDays + i;
-                if (Strings.areEqual(getHashedApiToken(loginData.getApiToken(), timestampToCheck), givenApiToken)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Creates a md5 hash, using the given apiToken and the timestampInDays.
-     *
-     * @param apiToken        the apiToken
-     * @param timestampInDays the timestampInDays
-     * @return the md5 hash of the apiToken and timestampInDays
-     */
-    protected String getHashedApiToken(String apiToken, long timestampInDays) {
-        return Hasher.md5().hash(apiToken).hash(String.valueOf(timestampInDays)).toHexString();
     }
 
     protected void completeAuditLogForUser(AuditLog.AuditLogBuilder builder, U account) {
@@ -1042,7 +995,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return NLS.getDefaultLanguage();
         }
         return Strings.firstFilled(userAccount.getUserAccountData().getLanguage().getValue(),
-                                   fetchTenant(userAccount.getTenant().getIdAsString()).getTenantData().getLanguage().getValue(),
+                                   fetchTenant(userAccount.getTenant().getIdAsString()).getTenantData()
+                                                                                       .getLanguage()
+                                                                                       .getValue(),
                                    NLS.getDefaultLanguage());
     }
 }
