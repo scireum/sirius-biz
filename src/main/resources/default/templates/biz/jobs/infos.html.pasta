@@ -9,13 +9,10 @@
             <a href="/job/@job.getName()">@job.getLabel()</a>
         </li>
     </i:block>
-
     <t:pageHeader title="@job.getLabel()">
         <i:block name="actions">
-            <i:local name="templateUrl" value="job.generateTemplateUrl()" />
-            <i:if test="isFilled(templateUrl)">
-                <i:local name="fileName" value="@apply('job-template-%s.csv', job.getName())" />
-                <a href="@templateUrl" download="@fileName" class="btn btn-primary">
+            <i:if test="job.canDownloadTemplate()">
+                <a href="/job/@job.getName()/download-template" class="btn btn-primary">
                     <i class="fa-solid fa-download"></i> @i18n("EntityImportJobFactory.downloadTemplate")
                 </a>
             </i:if>

@@ -70,6 +70,27 @@ public class JobsController extends BizController {
     }
 
     /**
+     * Downloads the template for the given job.
+     *
+     * @param webContext the current request
+     * @param jobType    the name of the job to fetch the template for
+     */
+    @Routed("/job/:1/download-template")
+    @LoginRequired
+    public void downloadTemplate(WebContext webContext, String jobType) {
+        JobFactory job = jobs.findFactory(jobType, JobFactory.class);
+        if (job != null && job.canDownloadTemplate()) {
+            java.io.OutputStream out = webContext.respondWith()
+                                                 .download("template-" + jobType + ".csv")
+                                                 .outputStream(HttpResponseStatus.OK, null);
+
+            job.generateTemplate(out);
+        } else {
+            webContext.respondWith().direct(HttpResponseStatus.NOT_FOUND, "No template available");
+        }
+    }
+
+    /**
      * Launches the job with the given name.
      *
      * @param webContext the current request

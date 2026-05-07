@@ -204,12 +204,20 @@ public interface JobFactory extends Named, Priorized {
     JsonNode computeRequiredParameterUpdates(Map<String, String> ctx);
 
     /**
-     * Generates a download URL or Data-URI for a template file (e.g. for imports).
+     * Determines if a template can be downloaded for this job.
      *
-     * @return the URL/Data-URI of the template or null if no template is available
+     * @return true if a template can be downloaded, false otherwise.
      */
-    @Nullable
-    default String generateTemplateUrl() {
-        return null;
+    default boolean canDownloadTemplate() {
+        return false;
+    }
+
+    /**
+     * Generates a template file and writes it to the given output stream.
+     *
+     * @param outputStream the stream to write the template to
+     */
+    default void generateTemplate(java.io.OutputStream outputStream) {
+        throw new UnsupportedOperationException("This job does not provide a template.");
     }
 }
