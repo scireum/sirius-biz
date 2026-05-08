@@ -11,7 +11,9 @@ package sirius.biz.storage.legacy
 import io.mockk.every
 import io.mockk.spyk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.storage.util.StorageUtils
+import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Hasher
 import sirius.kernel.di.std.Part
 import kotlin.test.assertFalse
@@ -24,6 +26,7 @@ import kotlin.test.assertTrue
  * existing MD5-signed URLs as fallback.
  */
 @Suppress("DEPRECATION")
+@ExtendWith(SiriusExtension::class)
 class StorageSigningTest {
 
     @Test

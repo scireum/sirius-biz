@@ -9,6 +9,8 @@
 package sirius.biz.storage.util
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Hasher
 import sirius.kernel.di.std.Part
 import java.time.Instant
@@ -24,6 +26,7 @@ import kotlin.test.assertTrue
  * Covers Base64URL HMAC token generation and verification, eternally valid HMAC tokens, malformed token rejection,
  * and legacy MD5 fallback verification for already issued URLs.
  */
+@ExtendWith(SiriusExtension::class)
 class StorageUtilsTest {
 
     @Test
