@@ -213,11 +213,11 @@ public interface JobFactory extends Named, Priorized {
     }
 
     /**
-     * Generates a template file and writes it to the given output stream.
+     * Generates a template file and responds to the given web context.
      *
-     * @param outputStream the stream to write the template to
+     * @param webContext the web context to respond to
      */
-    default void generateTemplate(java.io.OutputStream outputStream) {
+    default void respondWithTemplate(WebContext webContext) {
         throw new UnsupportedOperationException("This job does not provide a template.");
     }
 }
