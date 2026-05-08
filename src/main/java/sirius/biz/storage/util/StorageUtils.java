@@ -23,16 +23,22 @@ import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -60,6 +66,31 @@ public class StorageUtils implements Startable {
      * Represents the central logger for the whole storage framework.
      */
     public static final Log LOG = Log.get("storage");
+
+    /**
+     * Names the JCA algorithm used to sign storage URLs.
+     */
+    private static final String HMAC_SHA_256 = "HmacSHA256";
+
+    /**
+     * Domain separator for storage URL signatures to prevent reusing tokens in a different signing context.
+     */
+    private static final String HMAC_PAYLOAD_PREFIX = "sirius-biz-storage-url";
+
+    /**
+     * Marks a signature payload bound to a concrete day.
+     */
+    private static final String HMAC_PAYLOAD_MODE_DAY = "day";
+
+    /**
+     * Marks a signature payload that deliberately has no date component.
+     */
+    private static final String HMAC_PAYLOAD_MODE_ETERNAL = "eternal";
+
+    /**
+     * Stable placeholder used as the timestamp field for eternally valid signature payloads.
+     */
+    private static final String HMAC_PAYLOAD_ETERNAL_TIMESTAMP = HMAC_PAYLOAD_MODE_ETERNAL;
 
     /**
      * Pattern for cleaning up consecutive slashes and removing backslashes.
@@ -120,24 +151,59 @@ public class StorageUtils implements Startable {
      */
     public Optional<Integer> verifyHash(String key, String hash, int validityDays) {
         // Check for a hash for today...
-        if (Strings.areEqual(hash, computeHash(key, 0))) {
+        if (constantTimeEquals(hash, computeHash(key, 0))) {
             return Optional.of(0);
         }
 
         // Check for an eternally valid hash...
-        if (Strings.areEqual(hash, computeEternallyValidHash(key))) {
+        if (constantTimeEquals(hash, computeEternallyValidHash(key))) {
             return Optional.of(Integer.MAX_VALUE);
         }
 
         // Check for hashes up to X days into the past...
         for (int i = 1; i <= validityDays; i++) {
-            if (Strings.areEqual(hash, computeHash(key, -i))) {
+            if (constantTimeEquals(hash, computeHash(key, -i))) {
                 return Optional.of(-i);
             }
         }
         // Check for hashes up to two days into the future...
         for (int i = 1; i <= DEFAULT_URL_VALIDITY_DAYS; i++) {
-            if (Strings.areEqual(hash, computeHash(key, i))) {
+            if (constantTimeEquals(hash, computeHash(key, i))) {
+                return Optional.of(i);
+            }
+        }
+
+        return verifyLegacyMd5Hash(key, hash, validityDays);
+    }
+
+    /**
+     * Verifies a token using the legacy MD5 scheme for already issued URLs.
+     *
+     * @param key          the storage key to authenticate
+     * @param hash         the legacy hash to verify
+     * @param validityDays the number of days the hash should be valid into the past
+     * @return the matching day offset or an empty optional if the hash is invalid
+     */
+    private Optional<Integer> verifyLegacyMd5Hash(String key, String hash, int validityDays) {
+        // Check for a hash for today...
+        if (constantTimeEquals(hash, computeLegacyMd5Hash(key, 0))) {
+            return Optional.of(0);
+        }
+
+        // Check for an eternally valid hash...
+        if (constantTimeEquals(hash, computeLegacyMd5EternallyValidHash(key))) {
+            return Optional.of(Integer.MAX_VALUE);
+        }
+
+        // Check for hashes up to X days into the past...
+        for (int i = 1; i <= validityDays; i++) {
+            if (constantTimeEquals(hash, computeLegacyMd5Hash(key, -i))) {
+                return Optional.of(-i);
+            }
+        }
+        // Check for hashes up to two days into the future...
+        for (int i = 1; i <= DEFAULT_URL_VALIDITY_DAYS; i++) {
+            if (constantTimeEquals(hash, computeLegacyMd5Hash(key, i))) {
                 return Optional.of(i);
             }
         }
@@ -153,7 +219,7 @@ public class StorageUtils implements Startable {
      * @return a hash valid for the given day and key
      */
     public String computeHash(String key, int offsetDays) {
-        return Hasher.md5().hash(key + getTimestampOfDay(offsetDays) + getSharedSecret()).toHexString();
+        return computeHmac(HMAC_PAYLOAD_MODE_DAY, key, getTimestampOfDay(offsetDays));
     }
 
     /**
@@ -163,7 +229,76 @@ public class StorageUtils implements Startable {
      * @return a hash valid forever
      */
     public String computeEternallyValidHash(String key) {
+        return computeHmac(HMAC_PAYLOAD_MODE_ETERNAL, key, HMAC_PAYLOAD_ETERNAL_TIMESTAMP);
+    }
+
+    /**
+     * Computes the Base64URL encoded HMAC for a canonical storage URL payload.
+     *
+     * @param mode      the signature mode, e.g. day-bound or eternal
+     * @param key       the storage key to authenticate
+     * @param timestamp the day timestamp or eternal placeholder included in the signed payload
+     * @return the URL-safe HMAC token without padding
+     */
+    private String computeHmac(String mode, String key, String timestamp) {
+        try {
+            Mac mac = Mac.getInstance(HMAC_SHA_256);
+            mac.init(new SecretKeySpec(getSharedSecret().getBytes(StandardCharsets.UTF_8), HMAC_SHA_256));
+
+            byte[] digest = mac.doFinal(createHmacPayload(mode, key, timestamp).getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+        } catch (GeneralSecurityException exception) {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .error(exception)
+                            .withSystemErrorMessage("Cannot compute storage URL HMAC.")
+                            .handle();
+        }
+    }
+
+    /**
+     * Builds the canonical payload that is authenticated by the HMAC.
+     *
+     * @param mode      the signature mode, e.g. day-bound or eternal
+     * @param key       the storage key to authenticate
+     * @param timestamp the day timestamp or eternal placeholder included in the signed payload
+     * @return the canonical storage URL signature payload
+     */
+    private String createHmacPayload(String mode, String key, String timestamp) {
+        return HMAC_PAYLOAD_PREFIX + ":" + mode + ":" + key + ":" + timestamp;
+    }
+
+    /**
+     * Computes a legacy day-bound MD5 hash for fallback verification.
+     *
+     * @param key        the storage key to authenticate
+     * @param offsetDays the offset from the current day
+     * @return the legacy MD5 token for the given day
+     */
+    private String computeLegacyMd5Hash(String key, int offsetDays) {
+        return Hasher.md5().hash(key + getTimestampOfDay(offsetDays) + getSharedSecret()).toHexString();
+    }
+
+    /**
+     * Computes a legacy eternally valid MD5 hash for fallback verification.
+     *
+     * @param key the storage key to authenticate
+     * @return the legacy MD5 token without a day component
+     */
+    private String computeLegacyMd5EternallyValidHash(String key) {
         return Hasher.md5().hash(key + getSharedSecret()).toHexString();
+    }
+
+    /**
+     * Compares two token strings without short-circuiting on the first mismatching character.
+     *
+     * @param left  the provided token
+     * @param right the expected token
+     * @return <tt>true</tt> if both tokens are equal, <tt>false</tt> otherwise
+     */
+    private boolean constantTimeEquals(String left, String right) {
+        return left != null && right != null && MessageDigest.isEqual(left.getBytes(StandardCharsets.UTF_8),
+                                                                      right.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -182,6 +317,7 @@ public class StorageUtils implements Startable {
      *
      * @return the shared secret to use, taken from <tt>storage.sharedSecret</tt> in the system config
      */
+    @Nonnull
     private String getSharedSecret() {
         if (safeSharedSecret == null) {
             safeSharedSecret = requireSharedSecret(sharedSecret);

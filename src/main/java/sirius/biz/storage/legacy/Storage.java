@@ -21,12 +21,10 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
-import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Urls;
 import sirius.kernel.di.GlobalContext;
-import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -43,9 +41,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -109,10 +104,8 @@ public class Storage {
     @Part
     private GlobalContext context;
 
-    @ConfigValue("storage.sharedSecret")
-    @Nullable
-    private String sharedSecret;
-    private String safeSharedSecret;
+    @Part
+    private StorageUtils utils;
 
     private Map<String, BucketInfo> buckets;
 
@@ -518,24 +511,7 @@ public class Storage {
      * @return <tt>true</tt> if the hash verifies the given object key, <tt>false</tt> otherwise
      */
     protected boolean verifyHash(String key, String hash) {
-        // Check for a hash for today...
-        if (Strings.areEqual(hash, computeHash(key, 0))) {
-            return true;
-        }
-
-        // Check for an eternally valid hash...
-        if (Strings.areEqual(hash, computeEternallyValidHash(key))) {
-            return true;
-        }
-
-        // Check for hashes up to two days of age...
-        for (int i = 1; i < 3; i++) {
-            if (Strings.areEqual(hash, computeHash(key, -i)) || Strings.areEqual(hash, computeHash(key, i))) {
-                return true;
-            }
-        }
-
-        return false;
+        return utils.verifyHash(key, hash, StorageUtils.DEFAULT_URL_VALIDITY_DAYS).isPresent();
     }
 
     /**
@@ -626,9 +602,9 @@ public class Storage {
         result.append(downloadBuilder.getBucket());
         result.append("/");
         if (downloadBuilder.isEternallyValid()) {
-            result.append(computeEternallyValidHash(downloadBuilder.getPhysicalKey()));
+            result.append(utils.computeEternallyValidHash(downloadBuilder.getPhysicalKey()));
         } else {
-            result.append(computeHash(downloadBuilder.getPhysicalKey(), 0));
+            result.append(utils.computeHash(downloadBuilder.getPhysicalKey(), 0));
         }
         result.append("/");
         String addonText = downloadBuilder.getAddonText();
@@ -647,50 +623,5 @@ public class Storage {
         }
 
         return result.toString();
-    }
-
-    /**
-     * Computes an authentication hash for the given physical storage key and the offset in days (from the current).
-     *
-     * @param physicalKey the key to authenticate
-     * @param offsetDays  the offset from the current day
-     * @return a hash valid for the given day and key
-     */
-    private String computeHash(String physicalKey, int offsetDays) {
-        return Hasher.md5().hash(physicalKey + getTimestampOfDay(offsetDays) + getSharedSecret()).toHexString();
-    }
-
-    /**
-     * Computes an authentication hash which is eternally valid.
-     *
-     * @param physicalKey the key to authenticate
-     * @return a hash valid forever
-     */
-    private String computeEternallyValidHash(String physicalKey) {
-        return Hasher.md5().hash(physicalKey + getSharedSecret()).toHexString();
-    }
-
-    /**
-     * Generates a timestamp for the day plus the provided day offset.
-     *
-     * @param day the offset from the current day
-     * @return the effective timestamp (number of days since 01.01.1970) in days
-     */
-    private String getTimestampOfDay(int day) {
-        Instant midnight = LocalDate.now().plusDays(day).atStartOfDay(ZoneId.systemDefault()).toInstant();
-        return String.valueOf(midnight.toEpochMilli());
-    }
-
-    /**
-     * Determines the shared secret to use.
-     *
-     * @return the shared secret to use, taken from <tt>storage.sharedSecret</tt> in the system config
-     */
-    private String getSharedSecret() {
-        if (safeSharedSecret == null) {
-            safeSharedSecret = StorageUtils.requireSharedSecret(sharedSecret);
-        }
-
-        return safeSharedSecret;
     }
 }

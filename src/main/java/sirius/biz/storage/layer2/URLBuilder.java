@@ -628,7 +628,7 @@ public class URLBuilder {
         return cachedPhysicalKey;
     }
 
-    private String computeAccessToken(String authToken) {
+    String computeAccessToken(String authToken) {
         if (eternallyValid) {
             return utils.computeEternallyValidHash(authToken);
         } else {
