@@ -37,11 +37,21 @@ public abstract class DictionaryBasedImportJobFactory extends LineBasedImportJob
      */
     protected abstract ImportDictionary getDictionary();
 
+    /**
+     * Indicates whether a template download is supported for this job.
+     *
+     * @return true if a template can be downloaded, false otherwise
+     */
     @Override
     public boolean canDownloadTemplate() {
         return true;
     }
 
+    /**
+     * Responds with a template for this import job.
+     *
+     * @param webContext the web context for the response
+     */
     @Override
     public void respondWithTemplate(WebContext webContext) {
         try {
