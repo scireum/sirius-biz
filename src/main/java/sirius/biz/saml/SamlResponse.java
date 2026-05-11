@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.web.security;
+package sirius.biz.saml;
 
 import sirius.kernel.commons.MultiMap;
 
@@ -17,7 +17,7 @@ import java.util.Collection;
 /**
  * Represents the parsed payload of a SAML response.
  */
-public class SAMLResponse {
+public class SamlResponse {
 
     private final String issuer;
     private final String fingerprint;
@@ -61,7 +61,7 @@ public class SAMLResponse {
      * @param nameId      the name of the user
      * @param attributes  the attributes within the <tt>Assertion</tt>
      */
-    public SAMLResponse(String issuer, String fingerprint, String nameId, MultiMap<String, String> attributes) {
+    public SamlResponse(String issuer, String fingerprint, String nameId, MultiMap<String, String> attributes) {
         this.issuer = issuer;
         this.fingerprint = fingerprint;
         this.nameId = nameId;

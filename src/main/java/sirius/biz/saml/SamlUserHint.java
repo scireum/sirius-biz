@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.web.security.saml;
+package sirius.biz.saml;
 
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;

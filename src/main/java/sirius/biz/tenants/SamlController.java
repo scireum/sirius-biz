@@ -9,6 +9,8 @@
 package sirius.biz.tenants;
 
 import com.google.common.collect.Streams;
+import sirius.biz.saml.SamlHelper;
+import sirius.biz.saml.SamlResponse;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
@@ -18,8 +20,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
-import sirius.web.security.SAMLHelper;
-import sirius.web.security.SAMLResponse;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
@@ -36,7 +36,7 @@ import java.util.UUID;
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
-public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public class SamlController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     /**
@@ -45,7 +45,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
     public static final String SAML_URI_PREFIX = "/saml";
 
     @Part
-    private SAMLHelper saml;
+    private SamlHelper saml;
 
     @ConfigValue("security.roles")
     private List<String> roles;
@@ -83,7 +83,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
             return;
         }
 
-        SAMLResponse response = saml.parseSAMLResponse(webContext);
+        SamlResponse response = saml.parseSamlResponse(webContext);
 
         if (Strings.isEmpty(response.getNameId())) {
             throw Exceptions.createHandled()
@@ -111,7 +111,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         webContext.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
     }
 
-    private UserInfo tryCreateUser(WebContext webContext, SAMLResponse response) {
+    private UserInfo tryCreateUser(WebContext webContext, SamlResponse response) {
         if (Strings.isEmpty(response.getIssuer())) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: No issuer in request!").handle();
         }
@@ -155,7 +155,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         return (Class<U>) tenants.getUserClass();
     }
 
-    private T findTenant(SAMLResponse response) {
+    private T findTenant(SamlResponse response) {
         for (T tenant : querySAMLTenants()) {
             if (checkIssuer(tenant, response)) {
                 return tenant;
@@ -179,7 +179,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
                                         .queryList();
     }
 
-    private void verifyUser(SAMLResponse response, UserInfo user) {
+    private void verifyUser(SamlResponse response, UserInfo user) {
         U account = user.getUserObject(getUserClass());
         T tenant = account.getTenant().forceFetchValue();
 
@@ -198,11 +198,11 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         });
     }
 
-    private boolean checkFingerprint(T tenant, SAMLResponse response) {
+    private boolean checkFingerprint(T tenant, SamlResponse response) {
         return isInList(tenant.getTenantData().getSamlFingerprint(), response.getFingerprint());
     }
 
-    private boolean checkIssuer(T tenant, SAMLResponse response) {
+    private boolean checkIssuer(T tenant, SamlResponse response) {
         return isInList(tenant.getTenantData().getSamlIssuerName(), response.getIssuer());
     }
 
@@ -220,11 +220,11 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         return false;
     }
 
-    private void updateAccount(SAMLResponse response, U account) {
+    private void updateAccount(SamlResponse response, U account) {
         account.getUserAccountData().getPermissions().getPermissions().clear();
         List<String> mutablePermissions = account.getUserAccountData().getPermissions().getPermissions().modify();
-        Streams.concat(response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP).stream(),
-                       response.getAttribute(SAMLResponse.ATTRIBUTE_ROLE).stream())
+        Streams.concat(response.getAttribute(SamlResponse.ATTRIBUTE_GROUP).stream(),
+                       response.getAttribute(SamlResponse.ATTRIBUTE_ROLE).stream())
                .filter(Strings::isFilled)
                .flatMap(value -> Arrays.stream(value.split(",")))
                .map(String::trim)
@@ -232,18 +232,18 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
                .filter(role -> roles.contains(role))
                .forEach(mutablePermissions::add);
 
-        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
+        if (Strings.isFilled(response.getAttributeValue(SamlResponse.ATTRIBUTE_GIVEN_NAME))) {
             account.getUserAccountData()
                    .getPerson()
-                   .setFirstname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME));
+                   .setFirstname(response.getAttributeValue(SamlResponse.ATTRIBUTE_GIVEN_NAME));
         }
-        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME))) {
+        if (Strings.isFilled(response.getAttributeValue(SamlResponse.ATTRIBUTE_SURNAME))) {
             account.getUserAccountData()
                    .getPerson()
-                   .setLastname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME));
+                   .setLastname(response.getAttributeValue(SamlResponse.ATTRIBUTE_SURNAME));
         }
-        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
-            account.getUserAccountData().setEmail(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS));
+        if (Strings.isFilled(response.getAttributeValue(SamlResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
+            account.getUserAccountData().setEmail(response.getAttributeValue(SamlResponse.ATTRIBUTE_EMAIL_ADDRESS));
         }
 
         // If a generated password was previously set, force a random password so that the

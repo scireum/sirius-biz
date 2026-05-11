@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.web.security;
+package sirius.biz.saml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -24,7 +24,6 @@ import sirius.kernel.xml.Attribute;
 import sirius.kernel.xml.StructuredNode;
 import sirius.kernel.xml.XMLStructuredOutput;
 import sirius.web.http.WebContext;
-import sirius.web.security.saml.SamlUserHint;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -67,8 +66,8 @@ import java.util.zip.DeflaterOutputStream;
  * This implementation provides all the tools required to become an identity consumer, which can call an identity
  * provider to authenticate a user.
  */
-@Register(classes = SAMLHelper.class)
-public class SAMLHelper {
+@Register(classes = SamlHelper.class)
+public class SamlHelper {
 
     /**
      * Used to log all events related to SAML.
@@ -227,7 +226,7 @@ public class SAMLHelper {
      * @param webContext the http request to read the response from
      * @return the parsed response which has been verified
      */
-    public SAMLResponse parseSAMLResponse(WebContext webContext) {
+    public SamlResponse parseSamlResponse(WebContext webContext) {
         if (!webContext.isUnsafePOST()) {
             throw Exceptions.createHandled().withSystemErrorMessage("Invalid SAML Response: POST expected!").handle();
         }
@@ -239,7 +238,7 @@ public class SAMLHelper {
         }
 
         try (InputStream input = new ByteArrayInputStream(response)) {
-            return parseSAMLResponse(input, true);
+            return parseSamlResponse(input, true);
         } catch (HandledException exception) {
             throw exception;
         } catch (Exception exception) {
@@ -261,7 +260,7 @@ public class SAMLHelper {
      * @param checkTime   a flag indicating whether to check for expired timestamps
      * @return the parsed response which has been verified
      */
-    public SAMLResponse parseSAMLResponse(InputStream inputStream, boolean checkTime) {
+    public SamlResponse parseSamlResponse(InputStream inputStream, boolean checkTime) {
         try {
             Document document = getResponseDocument(inputStream);
 
@@ -332,7 +331,7 @@ public class SAMLHelper {
      * @param fingerprint the fingerprint of the X509 certificate which was used to sign the assertion
      * @return the response which represents the payload of the <tt>Assertion</tt>
      */
-    private SAMLResponse parseAssertion(Element assertion, String fingerprint) {
+    private SamlResponse parseAssertion(Element assertion, String fingerprint) {
         StructuredNode node = StructuredNode.of(assertion);
         MultiMap<String, String> attributes = MultiMap.create();
 
@@ -343,7 +342,7 @@ public class SAMLHelper {
             }
         }
 
-        return new SAMLResponse(node.queryString("*[local-name()='Issuer']"),
+        return new SamlResponse(node.queryString("*[local-name()='Issuer']"),
                                 fingerprint,
                                 node.queryString("*[local-name()='Subject']/*[local-name()='NameID']"),
                                 attributes);
@@ -452,7 +451,7 @@ public class SAMLHelper {
     }
 
     /**
-     * Represents teh inlined X509 certificate from within the signature.
+     * Represents the inlined X509 certificate from within the signature.
      */
     private static class X509CertificateResult implements KeySelectorResult {
 
