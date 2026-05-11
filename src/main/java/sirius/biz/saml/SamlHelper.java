@@ -285,7 +285,7 @@ public class SamlHelper {
     /**
      * Selects the element with the given node name.
      * <p>
-     * This method ensures, that there is only one element, as we want to ensure that there is only on <tt>Assertion</tt> and
+     * This method ensures, that there is only one element, as we want to ensure that there is only one <tt>Assertion</tt> and
      * one <tt>Signature</tt> for it.
      *
      * @param document  the XML document
