@@ -156,6 +156,32 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
+    fun `SAML response with multiple assertions is rejected`() {
+        assertInvalidSamlResponse(
+            """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion-1" IssueInstant="2026-05-09T19:00:00Z" />
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion-2" IssueInstant="2026-05-09T19:00:00Z" />
+</samlp:Response>""",
+            "Invalid SAML Response: Expected exactly one Assertion!",
+            false
+        )
+    }
+
+    @Test
+    fun `SAML response with multiple signatures is rejected`() {
+        assertInvalidSamlResponse(
+            """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="2026-05-09T19:00:00Z">
+        <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" />
+        <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" />
+    </Assertion>
+</samlp:Response>""",
+            "Invalid SAML Response: Expected exactly one Signature!",
+            false
+        )
+    }
+
+    @Test
     fun `SAML response without IssueInstant is rejected`() {
         assertInvalidSamlResponse(
             unsignedSamlResponse(""),
