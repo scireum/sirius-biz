@@ -244,8 +244,8 @@ public class SamlHelper {
     /**
      * Parses a SAML 2 response from the given request.
      * <p>
-     * Note that the fingerprint <b>must</b> be verified in some way or another, as this method only checks if
-     * the signature is valid, not <b>who</b> created it.
+     * Note that the fingerprint <b>must</b> be verified against an externally configured trust source, as this method
+     * only checks if the signature is valid for the embedded certificate, not <b>who</b> created it.
      *
      * @param webContext the http request to read the response from
      * @return the parsed response which has been verified
@@ -297,8 +297,8 @@ public class SamlHelper {
     /**
      * Parses a SAML 2 response from the given input string, optionally checking timestamps.
      * <p>
-     * Note that the fingerprint <b>must</b> be verified in some way or another, as this method only checks if
-     * the signature is valid, not <b>who</b> created it.
+     * Note that the fingerprint <b>must</b> be verified against an externally configured trust source, as this method
+     * only checks if the signature is valid for the embedded certificate, not <b>who</b> created it.
      *
      * @param inputStream a stream containing the SAML XML response to parse
      * @param checkTime   a flag indicating whether to check for expired timestamps

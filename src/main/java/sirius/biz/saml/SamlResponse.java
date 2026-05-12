@@ -9,10 +9,12 @@
 package sirius.biz.saml;
 
 import sirius.kernel.commons.MultiMap;
+import sirius.kernel.commons.Strings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Locale;
 
 /**
  * Represents the parsed payload of a SAML response.
@@ -79,11 +81,41 @@ public class SamlResponse {
 
     /**
      * Returns the fingerprint of the certificate which was used to sign the response.
+     * <p>
+     * This fingerprint has to be compared against an externally configured trust source. The certificate embedded in
+     * the SAML response must not be treated as trusted by itself.
      *
      * @return the fingerprint of the X509 certificate
      */
     public String getFingerprint() {
         return fingerprint;
+    }
+
+    /**
+     * Determines if the response was signed with the expected certificate fingerprint.
+     * <p>
+     * This accepts common fingerprint formatting differences such as upper-case hex or colon separators.
+     *
+     * @param expectedFingerprint the externally configured trusted fingerprint
+     * @return <tt>true</tt> if the fingerprint matches, <tt>false</tt> otherwise
+     */
+    public boolean hasFingerprint(@Nullable String expectedFingerprint) {
+        return Strings.areEqual(fingerprint, normalizeFingerprint(expectedFingerprint));
+    }
+
+    /**
+     * Normalizes a certificate fingerprint for comparisons.
+     *
+     * @param fingerprint the fingerprint to normalize
+     * @return the normalized fingerprint
+     */
+    @Nonnull
+    public static String normalizeFingerprint(@Nullable String fingerprint) {
+        if (Strings.isEmpty(fingerprint)) {
+            return "";
+        }
+
+        return fingerprint.replace(":", "").replace(" ", "").toLowerCase(Locale.ROOT);
     }
 
     /**

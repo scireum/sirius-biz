@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.kernel.SiriusExtension
+import sirius.kernel.commons.MultiMap
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
 import sirius.web.http.TestRequest
@@ -295,6 +296,20 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
         assertTrue(replayProtector.reserve(responseId, assertionId, Instant.now().plusSeconds(1)))
         Thread.sleep(1_250)
         assertTrue(replayProtector.reserve(responseId, assertionId, Instant.now().plus(Duration.ofMinutes(5))))
+    }
+
+    @Test
+    fun `SAML response fingerprint comparison normalizes configured trust source`() {
+        val response = SamlResponse(
+            "issuer",
+            "c5fbeb487860c8e3cbe56409617021d01be371ff",
+            "name-id",
+            MultiMap.create()
+        )
+
+        assertTrue(response.hasFingerprint("C5:FB:EB:48:78:60:C8:E3:CB:E5:64:09:61:70:21:D0:1B:E3:71:FF"))
+        assertTrue(response.hasFingerprint("C5 FB EB 48 78 60 C8 E3 CB E5 64 09 61 70 21 D0 1B E3 71 FF"))
+        assertFalse(response.hasFingerprint("71038506714cb316a8cb6500b26551b1c29375ce"))
     }
 
     @Test
