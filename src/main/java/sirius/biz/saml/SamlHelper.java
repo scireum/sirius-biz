@@ -16,6 +16,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.MultiMap;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
@@ -82,6 +83,17 @@ public class SamlHelper {
      * in daylight saving time settings.
      */
     public static final int MAX_TIMESTAMP_DELTA_IN_HOURS = 3;
+
+    /**
+     * Limits the Base64 encoded SAMLResponse before decoding or XML parsing. The configured value can adapt this to
+     * product-specific IdP payloads, but the effective limit is always capped at 1 MB.
+     */
+    private static final int ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE = 1_000_000;
+
+    private static final int DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE = 256_000;
+
+    @ConfigValue("security.saml.maxEncodedResponseSize")
+    private static int maxEncodedSamlResponseSize = DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE;
 
     private static final String SAML_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:assertion";
 
@@ -243,7 +255,17 @@ public class SamlHelper {
             throw Exceptions.createHandled().withSystemErrorMessage("Invalid SAML Response: POST expected!").handle();
         }
 
-        byte[] response = Base64.getDecoder().decode(webContext.get("SAMLResponse").asString());
+        String encodedResponse = webContext.get("SAMLResponse").asString();
+        int maxEncodedResponseSize = determineEffectiveMaxEncodedSamlResponseSize(maxEncodedSamlResponseSize);
+        if (encodedResponse.length() > maxEncodedResponseSize) {
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage(
+                                    "Invalid SAML Response: SAMLResponse exceeds maximum size of %s bytes.",
+                                    maxEncodedResponseSize)
+                            .handle();
+        }
+
+        byte[] response = Base64.getDecoder().decode(encodedResponse);
 
         if (LOG.isFINE()) {
             LOG.FINE("Received SAML response: %s", new String(response, StandardCharsets.UTF_8));
@@ -260,6 +282,10 @@ public class SamlHelper {
                             .withSystemErrorMessage("An error occurred while parsing a SAML Response: %s (%s)")
                             .handle();
         }
+    }
+
+    static int determineEffectiveMaxEncodedSamlResponseSize(int configuredMaxEncodedSamlResponseSize) {
+        return Math.min(configuredMaxEncodedSamlResponseSize, ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE);
     }
 
     /**

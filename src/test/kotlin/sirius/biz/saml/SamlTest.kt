@@ -13,6 +13,8 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.kernel.SiriusExtension
 import sirius.kernel.health.HandledException
+import sirius.web.http.TestRequest
+import sirius.web.http.WebContext
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -20,6 +22,9 @@ import kotlin.test.assertTrue
 class SamlTest {
 
     companion object {
+        private const val DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE = 256_000
+        private const val ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE = 1_000_000
+
         private val saml = SamlHelper()
         fun parseSamlResponse(response: String, checkTime: Boolean): SamlResponse {
             response.byteInputStream().use {
@@ -27,9 +32,21 @@ class SamlTest {
             }
         }
 
+        fun parseSamlResponse(webContext: WebContext): SamlResponse {
+            return saml.parseSamlResponse(webContext)
+        }
+
         fun assertInvalidSamlResponse(response: String, expectedMessagePart: String, checkTime: Boolean = true) {
             val exception = assertThrows<HandledException> {
                 parseSamlResponse(response, checkTime)
+            }
+
+            assertTrue(exception.message!!.contains(expectedMessagePart))
+        }
+
+        fun assertInvalidSamlResponse(webContext: WebContext, expectedMessagePart: String) {
+            val exception = assertThrows<HandledException> {
+                parseSamlResponse(webContext)
             }
 
             assertTrue(exception.message!!.contains(expectedMessagePart))
@@ -166,6 +183,25 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 </samlp:Response>""",
             "An error occurred while parsing a SAML Response",
             false
+        )
+    }
+
+    @Test
+    fun `oversized encoded SAML response is rejected before decoding`() {
+        val request = TestRequest.POST("/saml")
+        request.setAttribute("SAMLResponse", "A".repeat(DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE + 1))
+
+        assertInvalidSamlResponse(
+            request,
+            "Invalid SAML Response: SAMLResponse exceeds maximum size of $DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE bytes."
+        )
+    }
+
+    @Test
+    fun `configured SAML response size limit is capped by absolute maximum`() {
+        assertEquals(
+            ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE,
+            SamlHelper.determineEffectiveMaxEncodedSamlResponseSize(ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE + 1)
         )
     }
 
