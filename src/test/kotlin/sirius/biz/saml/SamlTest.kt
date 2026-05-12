@@ -137,6 +137,23 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
+    fun `SAML response with external general entity is rejected`() {
+        assertInvalidSamlResponse(
+            """<?xml version="1.0"?>
+<!DOCTYPE samlp:Response [
+    <!ENTITY xxe SYSTEM "file:///tmp/saml-secret.txt">
+]>
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="2026-05-09T19:00:00Z">
+        <Issuer>&xxe;</Issuer>
+    </Assertion>
+</samlp:Response>""",
+            "An error occurred while parsing a SAML Response",
+            false
+        )
+    }
+
+    @Test
     fun `SAML response with external parameter entity is rejected`() {
         assertInvalidSamlResponse(
             """<?xml version="1.0"?>
