@@ -94,10 +94,8 @@ public class SamlHelper {
      */
     private static final int ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE = 1_000_000;
 
-    private static final int DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE = 256_000;
-
     @ConfigValue("security.saml.maxEncodedResponseSize")
-    private static int maxEncodedSamlResponseSize = DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE;
+    private int maxEncodedSamlResponseSize;
 
     private static final String SAML_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:assertion";
 

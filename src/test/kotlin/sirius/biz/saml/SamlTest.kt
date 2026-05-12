@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.kernel.SiriusExtension
+import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
 import sirius.web.http.TestRequest
 import sirius.web.http.WebContext
@@ -27,7 +28,9 @@ class SamlTest {
         private const val DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE = 256_000
         private const val ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE = 1_000_000
 
-        private val saml = SamlHelper()
+        @Part
+        private lateinit var saml: SamlHelper
+
         fun parseSamlResponse(response: String, checkTime: Boolean): SamlResponse {
             response.byteInputStream().use {
                 return saml.parseSamlResponse(it, checkTime)
