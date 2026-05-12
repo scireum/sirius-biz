@@ -297,8 +297,8 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 
     @Test
     fun `oversized encoded SAML response is rejected before decoding`() {
-        val request = TestRequest.POST("/saml")
-        request.setAttribute("SAMLResponse", "A".repeat(DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE + 1))
+        val oversizedResponse = "A".repeat(DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE + 1)
+        val request = TestRequest.POST("/saml?SAMLResponse=$oversizedResponse")
 
         assertInvalidSamlResponse(
             request,
