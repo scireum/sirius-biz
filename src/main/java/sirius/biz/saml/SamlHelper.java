@@ -79,11 +79,14 @@ public class SamlHelper {
     public static final Log LOG = Log.get("saml");
 
     /**
-     * A response as a timestamp called <tt>IssueInstant</tt>. We enforce that a received response isn't older than
-     * <tt>MAX_TIMESTAMP_DELTA_IN_HOURS</tt> hours. The value should be chosen to accept clock drift and differences
-     * in daylight saving time settings.
+     * The clock skew accepted when validating SAML time conditions.
      */
-    public static final int MAX_TIMESTAMP_DELTA_IN_HOURS = 3;
+    public static final Duration SAML_CLOCK_SKEW = Duration.ofMinutes(2);
+
+    /**
+     * The maximum accepted validity window for a SAML assertion.
+     */
+    public static final Duration MAX_ASSERTION_VALIDITY = Duration.ofMinutes(5);
 
     /**
      * Limits the Base64 encoded SAMLResponse before decoding or XML parsing. The configured value can adapt this to
@@ -333,30 +336,122 @@ public class SamlHelper {
     }
 
     /**
-     * Verifies the <tt>IssueInstant</tt> within the <tt>Assertion</tt>.
+     * Verifies the time constraints within the <tt>Assertion</tt>.
      *
      * @param assertion the assertion to verify
-     * @see #MAX_TIMESTAMP_DELTA_IN_HOURS
      */
     private void verifyTimestamp(Element assertion) {
-        String issueInstant = assertion.getAttribute("IssueInstant");
-        Instant parsedIssueInstant;
-        try {
-            parsedIssueInstant = Instant.from(DateTimeFormatter.ISO_INSTANT.parse(issueInstant));
-        } catch (DateTimeParseException exception) {
-            throw invalidIssueInstant(issueInstant);
+        Instant now = Instant.now();
+        Instant issueInstant = parseRequiredInstant(assertion, "IssueInstant");
+
+        if (issueInstant.isAfter(now.plus(SAML_CLOCK_SKEW))) {
+            throw invalidTimestamp("IssueInstant", assertion.getAttribute("IssueInstant"));
         }
 
-        Instant now = Instant.now();
-        if (parsedIssueInstant.isAfter(now)
-            || Duration.between(parsedIssueInstant, now).toHours() >= MAX_TIMESTAMP_DELTA_IN_HOURS) {
-            throw invalidIssueInstant(issueInstant);
+        Optional<Instant> notBefore = extractConditionsTimestamp(assertion, "NotBefore");
+        if (notBefore.isPresent() && notBefore.get().isAfter(now.plus(SAML_CLOCK_SKEW))) {
+            throw invalidTimestamp("NotBefore", DateTimeFormatter.ISO_INSTANT.format(notBefore.get()));
+        }
+
+        Instant notOnOrAfter = extractEffectiveNotOnOrAfter(assertion);
+        Instant validFrom = notBefore.orElse(issueInstant);
+        if (Duration.between(validFrom, notOnOrAfter).compareTo(MAX_ASSERTION_VALIDITY) > 0) {
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage(
+                                    "Invalid SAML Response: Assertion validity exceeds maximum duration of %s.",
+                                    MAX_ASSERTION_VALIDITY)
+                            .handle();
+        }
+
+        Instant deadline = notOnOrAfter.plus(SAML_CLOCK_SKEW);
+        if (!now.isBefore(deadline)) {
+            throw invalidTimestamp("NotOnOrAfter", DateTimeFormatter.ISO_INSTANT.format(notOnOrAfter));
         }
     }
 
-    private HandledException invalidIssueInstant(String issueInstant) {
+    private Instant parseRequiredInstant(Element element, String attributeName) {
+        String value = element.getAttribute(attributeName);
+        if (Strings.isEmpty(value)) {
+            if ("IssueInstant".equals(attributeName)) {
+                throw invalidTimestamp(attributeName, value);
+            }
+
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("Invalid SAML Response: Missing %s.", attributeName)
+                            .handle();
+        }
+
+        try {
+            return Instant.from(DateTimeFormatter.ISO_INSTANT.parse(value));
+        } catch (DateTimeParseException exception) {
+            throw invalidTimestamp(attributeName, value);
+        }
+    }
+
+    private Optional<Instant> extractConditionsTimestamp(Element assertion, String attributeName) {
+        NodeList conditionsElements = assertion.getElementsByTagNameNS(SAML_NAMESPACE, "Conditions");
+        if (conditionsElements.getLength() > 1) {
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("Invalid SAML Response: Expected at most one Conditions element.")
+                            .handle();
+        }
+
+        if (conditionsElements.getLength() == 0) {
+            return Optional.empty();
+        }
+
+        Element conditions = (Element) conditionsElements.item(0);
+        if (Strings.isEmpty(conditions.getAttribute(attributeName))) {
+            return Optional.empty();
+        }
+
+        return Optional.of(parseRequiredInstant(conditions, attributeName));
+    }
+
+    private Instant extractEffectiveNotOnOrAfter(Element assertion) {
+        Optional<Instant> conditionsNotOnOrAfter = extractConditionsTimestamp(assertion, "NotOnOrAfter");
+        Optional<Instant> subjectConfirmationNotOnOrAfter = extractEarliestSubjectConfirmationNotOnOrAfter(assertion);
+
+        if (conditionsNotOnOrAfter.isEmpty() && subjectConfirmationNotOnOrAfter.isEmpty()) {
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("Invalid SAML Response: Missing NotOnOrAfter.")
+                            .handle();
+        }
+
+        if (conditionsNotOnOrAfter.isEmpty()) {
+            return subjectConfirmationNotOnOrAfter.get();
+        }
+
+        if (subjectConfirmationNotOnOrAfter.isEmpty()) {
+            return conditionsNotOnOrAfter.get();
+        }
+
+        return conditionsNotOnOrAfter.get().isBefore(subjectConfirmationNotOnOrAfter.get()) ?
+               conditionsNotOnOrAfter.get() :
+               subjectConfirmationNotOnOrAfter.get();
+    }
+
+    private Optional<Instant> extractEarliestSubjectConfirmationNotOnOrAfter(Element assertion) {
+        NodeList subjectConfirmationDataElements =
+                assertion.getElementsByTagNameNS(SAML_NAMESPACE, "SubjectConfirmationData");
+        Optional<Instant> earliestTimestamp = Optional.empty();
+
+        for (int i = 0; i < subjectConfirmationDataElements.getLength(); i++) {
+            Element subjectConfirmationData = (Element) subjectConfirmationDataElements.item(i);
+            if (Strings.isFilled(subjectConfirmationData.getAttribute("NotOnOrAfter"))) {
+                Instant timestamp = parseRequiredInstant(subjectConfirmationData, "NotOnOrAfter");
+                if (earliestTimestamp.isEmpty() || timestamp.isBefore(earliestTimestamp.get())) {
+                    earliestTimestamp = Optional.of(timestamp);
+                }
+            }
+        }
+
+        return earliestTimestamp;
+    }
+
+    private HandledException invalidTimestamp(String attributeName, String value) {
         return Exceptions.createHandled()
-                         .withSystemErrorMessage("Invalid SAML Response: Invalid IssueInstant: %s", issueInstant)
+                         .withSystemErrorMessage("Invalid SAML Response: Invalid %s: %s", attributeName, value)
                          .handle();
     }
 
