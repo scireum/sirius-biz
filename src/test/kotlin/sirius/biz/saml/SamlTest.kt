@@ -347,6 +347,7 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 
         assertTrue(response.hasFingerprint("C5:FB:EB:48:78:60:C8:E3:CB:E5:64:09:61:70:21:D0:1B:E3:71:FF"))
         assertTrue(response.hasFingerprint("C5 FB EB 48 78 60 C8 E3 CB E5 64 09 61 70 21 D0 1B E3 71 FF"))
+        assertTrue(response.hasFingerprint("C5\tFB\nEB\r48 78 60 C8 E3 CB E5 64 09 61 70 21 D0 1B E3 71 FF"))
         assertFalse(response.hasFingerprint("71038506714cb316a8cb6500b26551b1c29375ce"))
     }
 

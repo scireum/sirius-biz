@@ -94,7 +94,7 @@ public class SamlResponse {
     /**
      * Determines if the response was signed with the expected certificate fingerprint.
      * <p>
-     * This accepts common fingerprint formatting differences such as upper-case hex or colon separators.
+     * This accepts common fingerprint formatting differences such as upper-case hex, colon separators or whitespace.
      *
      * @param expectedFingerprint the externally configured trusted fingerprint
      * @return <tt>true</tt> if the fingerprint matches, <tt>false</tt> otherwise
@@ -115,7 +115,7 @@ public class SamlResponse {
             return "";
         }
 
-        return fingerprint.replace(":", "").replace(" ", "").toLowerCase(Locale.ROOT);
+        return fingerprint.replace(":", "").replaceAll("\\s", "").toLowerCase(Locale.ROOT);
     }
 
     /**
