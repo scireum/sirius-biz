@@ -117,7 +117,7 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         }
 
         T tenant = findTenant(response);
-        checkFingerprint(tenant, response);
+        verifyFingerprint(tenant, response);
 
         try {
             U account = getUserClass().getDeclaredConstructor().newInstance();
@@ -186,9 +186,7 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         if (!checkIssuer(tenant, response)) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Issuer mismatch!").handle();
         }
-        if (!checkFingerprint(tenant, response)) {
-            throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
-        }
+        verifyFingerprint(tenant, response);
 
         UserContext userContext = UserContext.get();
         userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
@@ -198,8 +196,31 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         });
     }
 
-    private boolean checkFingerprint(T tenant, SamlResponse response) {
-        return isInList(tenant.getTenantData().getSamlFingerprint(), response.getFingerprint());
+    private void verifyFingerprint(T tenant, SamlResponse response) {
+        if (!isTrustedFingerprint(tenant.getTenantData().getSamlFingerprint(), response)) {
+            throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
+        }
+    }
+
+    /**
+     * Determines if the SAML response fingerprint matches one of the configured trusted fingerprints.
+     *
+     * @param configuredFingerprints a comma-separated list of trusted fingerprints
+     * @param response               the response to verify
+     * @return <tt>true</tt> if the response fingerprint is trusted, <tt>false</tt> otherwise
+     */
+    static boolean isTrustedFingerprint(String configuredFingerprints, SamlResponse response) {
+        if (Strings.isEmpty(configuredFingerprints)) {
+            return false;
+        }
+
+        for (String fingerprint : configuredFingerprints.split(",")) {
+            if (Strings.isFilled(fingerprint) && response.hasFingerprint(fingerprint)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean checkIssuer(T tenant, SamlResponse response) {
