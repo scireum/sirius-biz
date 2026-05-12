@@ -111,6 +111,13 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         webContext.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
     }
 
+    /**
+     * Creates a new user account for the given trusted SAML response.
+     *
+     * @param webContext the current request
+     * @param response   the trusted SAML response
+     * @return the newly created user
+     */
     private UserInfo tryCreateUser(WebContext webContext, SamlResponse response) {
         if (Strings.isEmpty(response.getIssuer())) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: No issuer in request!").handle();
@@ -166,6 +173,12 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         return tenant;
     }
 
+    /**
+     * Finds the tenant whose configured SAML issuer matches the response issuer.
+     *
+     * @param response the SAML response to inspect
+     * @return the tenant matching the response issuer
+     */
     private T findTenant(SamlResponse response) {
         for (T tenant : querySAMLTenants()) {
             if (checkIssuer(tenant, response)) {
@@ -190,6 +203,12 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
                                         .queryList();
     }
 
+    /**
+     * Verifies an existing user account against the given SAML response and updates its mapped account data.
+     *
+     * @param response the trusted SAML response
+     * @param user     the existing user to verify and update
+     */
     private void verifyUser(SamlResponse response, UserInfo user) {
         U account = user.getUserObject(getUserClass());
         T tenant = account.getTenant().forceFetchValue();
@@ -207,6 +226,12 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         });
     }
 
+    /**
+     * Verifies that the response fingerprint is trusted for the given tenant.
+     *
+     * @param tenant   the tenant whose SAML configuration is used
+     * @param response the response to verify
+     */
     private void verifyFingerprint(T tenant, SamlResponse response) {
         if (!isTrustedFingerprint(tenant.getTenantData().getSamlFingerprint(), response)) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
@@ -234,10 +259,24 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         return false;
     }
 
+    /**
+     * Determines if the response issuer matches one of the tenant's configured issuers.
+     *
+     * @param tenant   the tenant whose SAML configuration is used
+     * @param response the response to verify
+     * @return <tt>true</tt> if the issuer is trusted, <tt>false</tt> otherwise
+     */
     private boolean checkIssuer(T tenant, SamlResponse response) {
         return isInList(tenant.getTenantData().getSamlIssuerName(), response.getIssuer());
     }
 
+    /**
+     * Determines if a value occurs in a comma-separated, case-insensitive list.
+     *
+     * @param values       the comma-separated list to inspect
+     * @param valueToCheck the value to search for
+     * @return <tt>true</tt> if the value is contained in the list, <tt>false</tt> otherwise
+     */
     private boolean isInList(String values, String valueToCheck) {
         if (Strings.isEmpty(values)) {
             return false;
@@ -252,6 +291,12 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         return false;
     }
 
+    /**
+     * Updates account fields and permissions from the attributes contained in the SAML response.
+     *
+     * @param response the trusted SAML response
+     * @param account  the account to update
+     */
     private void updateAccount(SamlResponse response, U account) {
         account.getUserAccountData().getPermissions().getPermissions().clear();
         List<String> mutablePermissions = account.getUserAccountData().getPermissions().getPermissions().modify();
