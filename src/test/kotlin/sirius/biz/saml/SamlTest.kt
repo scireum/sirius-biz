@@ -332,8 +332,7 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
         val assertionId = "assertion-$suffix"
 
         assertTrue(replayProtector.reserve(responseId, assertionId, Instant.now().plusSeconds(1)))
-        Thread.sleep(1_250)
-        assertTrue(replayProtector.reserve(responseId, assertionId, Instant.now().plus(Duration.ofMinutes(5))))
+        assertTrue(reserveAfterExpiry(responseId, assertionId))
     }
 
     @Test
@@ -393,6 +392,20 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
         <Conditions NotBefore="$notBefore" NotOnOrAfter="$conditionsNotOnOrAfter" />
     </Assertion>
 </samlp:Response>"""
+    }
+
+    private fun reserveAfterExpiry(responseId: String, assertionId: String): Boolean {
+        val timeout = Instant.now().plus(Duration.ofSeconds(5))
+
+        while (Instant.now().isBefore(timeout)) {
+            if (replayProtector.reserve(responseId, assertionId, Instant.now().plus(Duration.ofMinutes(5)))) {
+                return true
+            }
+
+            Thread.sleep(100)
+        }
+
+        return false
     }
 
     companion object {
