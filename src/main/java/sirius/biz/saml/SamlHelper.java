@@ -291,6 +291,10 @@ public class SamlHelper {
      * @return the configured limit capped by {@link #ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE}
      */
     static int determineEffectiveMaxEncodedSamlResponseSize(int configuredMaxEncodedSamlResponseSize) {
+        if (configuredMaxEncodedSamlResponseSize <= 0) {
+            return ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE;
+        }
+
         return Math.min(configuredMaxEncodedSamlResponseSize, ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE);
     }
 

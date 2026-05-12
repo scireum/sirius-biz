@@ -302,6 +302,18 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
+    fun `non-positive SAML response size limit falls back to absolute maximum`() {
+        assertEquals(
+            SamlHelper.ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE,
+            SamlHelper.determineEffectiveMaxEncodedSamlResponseSize(0)
+        )
+        assertEquals(
+            SamlHelper.ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE,
+            SamlHelper.determineEffectiveMaxEncodedSamlResponseSize(-1)
+        )
+    }
+
+    @Test
     fun `replay protection rejects reused response or assertion ids`() {
         val suffix = UUID.randomUUID().toString()
         val responseId = "response-$suffix"
