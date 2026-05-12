@@ -24,52 +24,6 @@ import kotlin.test.assertTrue
 @ExtendWith(SiriusExtension::class)
 class SamlTest {
 
-    companion object {
-        private const val TEST_MAX_ENCODED_SAML_RESPONSE_SIZE = 64
-
-        @Part
-        private lateinit var saml: SamlHelper
-
-        fun parseSamlResponse(response: String, checkTime: Boolean): SamlResponse {
-            response.byteInputStream().use {
-                return saml.parseSamlResponse(it, checkTime)
-            }
-        }
-
-        fun parseSamlResponse(webContext: WebContext): SamlResponse {
-            return saml.parseSamlResponse(webContext)
-        }
-
-        fun assertInvalidSamlResponse(response: String, expectedMessagePart: String, checkTime: Boolean = true) {
-            val exception = assertThrows<HandledException> {
-                parseSamlResponse(response, checkTime)
-            }
-
-            assertTrue(exception.message!!.contains(expectedMessagePart))
-        }
-
-        fun assertInvalidSamlResponse(webContext: WebContext, expectedMessagePart: String) {
-            val exception = assertThrows<HandledException> {
-                parseSamlResponse(webContext)
-            }
-
-            assertTrue(exception.message!!.contains(expectedMessagePart))
-        }
-
-        fun assertHint(expectedFormat: String, expectedValue: String, actual: SamlUserHint) {
-            assertEquals(expectedFormat, actual.format)
-            assertEquals(expectedValue, actual.value)
-        }
-
-        fun unsignedSamlResponse(assertionAttributes: String): String {
-            return """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
-    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" $assertionAttributes>
-        <Issuer>https://sso.example.test</Issuer>
-    </Assertion>
-</samlp:Response>"""
-        }
-    }
-
     @Test
     fun `ADFS SAML response parses correctly when ignoring time`() {
         val response = parseSamlResponse(
@@ -360,5 +314,51 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
         <Conditions NotBefore="$notBefore" NotOnOrAfter="$conditionsNotOnOrAfter" />
     </Assertion>
 </samlp:Response>"""
+    }
+
+    companion object {
+        private const val TEST_MAX_ENCODED_SAML_RESPONSE_SIZE = 64
+
+        @Part
+        private lateinit var saml: SamlHelper
+
+        fun parseSamlResponse(response: String, checkTime: Boolean): SamlResponse {
+            response.byteInputStream().use {
+                return saml.parseSamlResponse(it, checkTime)
+            }
+        }
+
+        fun parseSamlResponse(webContext: WebContext): SamlResponse {
+            return saml.parseSamlResponse(webContext)
+        }
+
+        fun assertInvalidSamlResponse(response: String, expectedMessagePart: String, checkTime: Boolean = true) {
+            val exception = assertThrows<HandledException> {
+                parseSamlResponse(response, checkTime)
+            }
+
+            assertTrue(exception.message!!.contains(expectedMessagePart))
+        }
+
+        fun assertInvalidSamlResponse(webContext: WebContext, expectedMessagePart: String) {
+            val exception = assertThrows<HandledException> {
+                parseSamlResponse(webContext)
+            }
+
+            assertTrue(exception.message!!.contains(expectedMessagePart))
+        }
+
+        fun assertHint(expectedFormat: String, expectedValue: String, actual: SamlUserHint) {
+            assertEquals(expectedFormat, actual.format)
+            assertEquals(expectedValue, actual.value)
+        }
+
+        fun unsignedSamlResponse(assertionAttributes: String): String {
+            return """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" $assertionAttributes>
+        <Issuer>https://sso.example.test</Issuer>
+    </Assertion>
+</samlp:Response>"""
+        }
     }
 }
