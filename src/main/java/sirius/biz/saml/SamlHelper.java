@@ -344,7 +344,7 @@ public class SamlHelper {
         Instant issueInstant = parseRequiredInstant(assertion, "IssueInstant");
 
         if (issueInstant.isAfter(now.plus(SAML_CLOCK_SKEW))) {
-            throw invalidTimestamp("IssueInstant", assertion.getAttribute("IssueInstant"));
+            throw invalidTimestamp("IssueInstant", DateTimeFormatter.ISO_INSTANT.format(issueInstant));
         }
 
         Optional<Instant> notBefore = extractConditionsTimestamp(assertion, "NotBefore");
