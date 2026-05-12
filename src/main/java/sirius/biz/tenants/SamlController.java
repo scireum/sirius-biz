@@ -116,8 +116,7 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: No issuer in request!").handle();
         }
 
-        T tenant = findTenant(response);
-        verifyFingerprint(tenant, response);
+        T tenant = findTrustedTenant(response);
 
         try {
             U account = getUserClass().getDeclaredConstructor().newInstance();
@@ -153,6 +152,18 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
     @SuppressWarnings("unchecked")
     protected Class<U> getUserClass() {
         return (Class<U>) tenants.getUserClass();
+    }
+
+    /**
+     * Finds the matching SAML tenant and verifies that the signing fingerprint is trusted for it.
+     *
+     * @param response the SAML response to verify
+     * @return the trusted tenant matching the response
+     */
+    T findTrustedTenant(SamlResponse response) {
+        T tenant = findTenant(response);
+        verifyFingerprint(tenant, response);
+        return tenant;
     }
 
     private T findTenant(SamlResponse response) {
