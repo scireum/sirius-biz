@@ -103,8 +103,7 @@ public class SamlHelper {
 
     private static final String SAMLP_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:protocol";
 
-    private static final String FEATURE_DISALLOW_DOCTYPE_DECL =
-            "http://apache.org/xml/features/disallow-doctype-decl";
+    private static final String FEATURE_DISALLOW_DOCTYPE_DECL = "http://apache.org/xml/features/disallow-doctype-decl";
 
     private static final String FEATURE_LOAD_EXTERNAL_DTD =
             "http://apache.org/xml/features/nonvalidating/load-external-dtd";
