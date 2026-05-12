@@ -18,7 +18,9 @@ import sirius.web.http.TestRequest
 import sirius.web.http.WebContext
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @ExtendWith(SiriusExtension::class)
@@ -273,6 +275,29 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
+    fun `replay protection rejects reused response or assertion ids`() {
+        val suffix = UUID.randomUUID().toString()
+        val responseId = "response-$suffix"
+        val assertionId = "assertion-$suffix"
+        val deadline = Instant.now().plus(Duration.ofMinutes(5))
+
+        assertTrue(replayProtector.reserve(responseId, assertionId, deadline))
+        assertFalse(replayProtector.reserve(responseId, "other-$assertionId", deadline))
+        assertFalse(replayProtector.reserve("other-$responseId", assertionId, deadline))
+    }
+
+    @Test
+    fun `replay protection releases ids after deadline`() {
+        val suffix = UUID.randomUUID().toString()
+        val responseId = "response-$suffix"
+        val assertionId = "assertion-$suffix"
+
+        assertTrue(replayProtector.reserve(responseId, assertionId, Instant.now().plusSeconds(1)))
+        Thread.sleep(1_250)
+        assertTrue(replayProtector.reserve(responseId, assertionId, Instant.now().plus(Duration.ofMinutes(5))))
+    }
+
+    @Test
     fun `SamlUserHints initialise correctly`() {
         assertHint(SamlUserHint.FORMAT_UNSPECIFIED, "lalala", SamlUserHint.withUnspecifiedFormat("lalala"))
         assertHint(SamlUserHint.FORMAT_EMAIL, "lalala@blubb", SamlUserHint.withEmailAddress("lalala@blubb"))
@@ -321,6 +346,9 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 
         @Part
         private lateinit var saml: SamlHelper
+
+        @Part
+        private lateinit var replayProtector: SamlReplayProtector
 
         fun parseSamlResponse(response: String, checkTime: Boolean): SamlResponse {
             response.byteInputStream().use {

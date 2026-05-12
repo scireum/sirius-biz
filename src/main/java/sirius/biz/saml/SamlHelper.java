@@ -17,6 +17,7 @@ import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.MultiMap;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
@@ -96,6 +97,9 @@ public class SamlHelper {
 
     @ConfigValue("security.saml.maxEncodedResponseSize")
     private int maxEncodedSamlResponseSize;
+
+    @Part
+    private SamlReplayProtector replayProtector;
 
     private static final String SAML_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:assertion";
 
@@ -291,10 +295,18 @@ public class SamlHelper {
             Document document = getResponseDocument(inputStream);
 
             Element assertion = selectSingleElement(document, SAML_NAMESPACE, "Assertion");
-            if (checkTime) {
-                verifyTimestamp(assertion);
-            }
+            TimestampValidationResult timestampValidationResult = checkTime ? verifyTimestamp(assertion) : null;
             String fingerprint = validateXMLSignature(document, assertion);
+            if (timestampValidationResult != null) {
+                boolean reserved = replayProtector.reserve(document.getDocumentElement().getAttribute("ID"),
+                                                          assertion.getAttribute("ID"),
+                                                          timestampValidationResult.replayCacheDeadline());
+                if (!reserved) {
+                    throw Exceptions.createHandled()
+                                    .withSystemErrorMessage("Invalid SAML Response: Response has already been processed.")
+                                    .handle();
+                }
+            }
 
             return parseAssertion(assertion, fingerprint);
         } catch (HandledException exception) {
@@ -339,7 +351,7 @@ public class SamlHelper {
      *
      * @param assertion the assertion to verify
      */
-    private void verifyTimestamp(Element assertion) {
+    private TimestampValidationResult verifyTimestamp(Element assertion) {
         Instant now = Instant.now();
         String issueInstantValue = assertion.getAttribute("IssueInstant");
         if (Strings.isEmpty(issueInstantValue)) {
@@ -371,6 +383,11 @@ public class SamlHelper {
         if (!now.isBefore(deadline)) {
             throw invalidTimestamp("NotOnOrAfter", DateTimeFormatter.ISO_INSTANT.format(notOnOrAfter));
         }
+
+        return new TimestampValidationResult(deadline);
+    }
+
+    private record TimestampValidationResult(Instant replayCacheDeadline) {
     }
 
     private Instant parseRequiredInstant(String attributeName, String value) {
