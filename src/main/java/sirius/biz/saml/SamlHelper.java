@@ -341,7 +341,12 @@ public class SamlHelper {
      */
     private void verifyTimestamp(Element assertion) {
         Instant now = Instant.now();
-        Instant issueInstant = parseRequiredInstant(assertion, "IssueInstant");
+        String issueInstantValue = assertion.getAttribute("IssueInstant");
+        if (Strings.isEmpty(issueInstantValue)) {
+            throw invalidTimestamp("IssueInstant", "<missing>");
+        }
+
+        Instant issueInstant = parseRequiredInstant("IssueInstant", issueInstantValue);
 
         if (issueInstant.isAfter(now.plus(SAML_CLOCK_SKEW))) {
             throw invalidTimestamp("IssueInstant", DateTimeFormatter.ISO_INSTANT.format(issueInstant));
@@ -368,13 +373,8 @@ public class SamlHelper {
         }
     }
 
-    private Instant parseRequiredInstant(Element element, String attributeName) {
-        String value = element.getAttribute(attributeName);
+    private Instant parseRequiredInstant(String attributeName, String value) {
         if (Strings.isEmpty(value)) {
-            if ("IssueInstant".equals(attributeName)) {
-                throw invalidTimestamp(attributeName, value);
-            }
-
             throw Exceptions.createHandled()
                             .withSystemErrorMessage("Invalid SAML Response: Missing %s.", attributeName)
                             .handle();
@@ -400,11 +400,12 @@ public class SamlHelper {
         }
 
         Element conditions = (Element) conditionsElements.item(0);
-        if (Strings.isEmpty(conditions.getAttribute(attributeName))) {
+        String value = conditions.getAttribute(attributeName);
+        if (Strings.isEmpty(value)) {
             return Optional.empty();
         }
 
-        return Optional.of(parseRequiredInstant(conditions, attributeName));
+        return Optional.of(parseRequiredInstant(attributeName, value));
     }
 
     private Instant extractEffectiveNotOnOrAfter(Element assertion) {
@@ -437,8 +438,9 @@ public class SamlHelper {
 
         for (int i = 0; i < subjectConfirmationDataElements.getLength(); i++) {
             Element subjectConfirmationData = (Element) subjectConfirmationDataElements.item(i);
-            if (Strings.isFilled(subjectConfirmationData.getAttribute("NotOnOrAfter"))) {
-                Instant timestamp = parseRequiredInstant(subjectConfirmationData, "NotOnOrAfter");
+            String notOnOrAfter = subjectConfirmationData.getAttribute("NotOnOrAfter");
+            if (Strings.isFilled(notOnOrAfter)) {
+                Instant timestamp = parseRequiredInstant("NotOnOrAfter", notOnOrAfter);
                 if (earliestTimestamp.isEmpty() || timestamp.isBefore(earliestTimestamp.get())) {
                     earliestTimestamp = Optional.of(timestamp);
                 }
