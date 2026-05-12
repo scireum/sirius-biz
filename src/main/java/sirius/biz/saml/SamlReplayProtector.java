@@ -33,6 +33,14 @@ public class SamlReplayProtector {
     @Part
     private Redis redis;
 
+    /**
+     * Reserves the given response and assertion IDs until the given replay deadline.
+     *
+     * @param responseId          the ID of the SAML response to reserve
+     * @param assertionId         the ID of the SAML assertion to reserve
+     * @param replayCacheDeadline the timestamp until which the IDs must remain blocked
+     * @return <tt>true</tt> if all given IDs were reserved, <tt>false</tt> if any ID was already known
+     */
     boolean reserve(@Nullable String responseId, @Nullable String assertionId, Instant replayCacheDeadline) {
         if (!redis.isConfigured()) {
             throw Exceptions.createHandled()
@@ -68,15 +76,36 @@ public class SamlReplayProtector {
         });
     }
 
+    /**
+     * Attempts to reserve a single Redis key atomically with its TTL.
+     *
+     * @param db         the Redis connection to use
+     * @param key        the key to reserve
+     * @param ttlSeconds the number of seconds until the reservation expires
+     * @return <tt>true</tt> if the key was created, <tt>false</tt> if it already existed
+     */
     private boolean reserveKey(Jedis db, String key, long ttlSeconds) {
         String result = db.set(key, VALUE, SetParams.setParams().nx().ex(ttlSeconds));
         return REDIS_RESPONSE_SUCCESS.equals(result);
     }
 
+    /**
+     * Builds the Redis key for the given replay reservation.
+     *
+     * @param type the reservation type, for example <tt>response</tt> or <tt>assertion</tt>
+     * @param id   the SAML ID to reserve
+     * @return the Redis key used for the reservation
+     */
     private String buildKey(String type, String id) {
         return KEY_PREFIX + type + ":" + id;
     }
 
+    /**
+     * Determines the Redis TTL to use for a replay reservation.
+     *
+     * @param replayCacheDeadline the timestamp until which the reservation must be retained
+     * @return the reservation TTL in seconds, never less than one second
+     */
     private long determineTTLSeconds(Instant replayCacheDeadline) {
         return Math.max(1, Duration.between(Instant.now(), replayCacheDeadline).getSeconds());
     }

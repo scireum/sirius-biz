@@ -198,6 +198,14 @@ public class SamlHelper {
         return Base64.getEncoder().encodeToString(compressedRequest);
     }
 
+    /**
+     * Creates the XML payload for a SAML authentication request.
+     *
+     * @param issuer           the issuer to place into the request
+     * @param issuerIndex      the assertion consumer service index to request
+     * @param optionalUserHint an optional hint for the user to authenticate
+     * @return the serialized XML request
+     */
     private byte[] createAuthenticationRequestXML(String issuer,
                                                   String issuerIndex,
                                                   Optional<SamlUserHint> optionalUserHint) {
@@ -276,6 +284,12 @@ public class SamlHelper {
         }
     }
 
+    /**
+     * Determines the effective encoded SAML response size limit from the configured value.
+     *
+     * @param configuredMaxEncodedSamlResponseSize the configured maximum encoded response size in bytes
+     * @return the configured limit capped by {@link #ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE}
+     */
     static int determineEffectiveMaxEncodedSamlResponseSize(int configuredMaxEncodedSamlResponseSize) {
         return Math.min(configuredMaxEncodedSamlResponseSize, ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE);
     }
@@ -350,6 +364,7 @@ public class SamlHelper {
      * Verifies the time constraints within the <tt>Assertion</tt>.
      *
      * @param assertion the assertion to verify
+     * @return the effective deadline until which the assertion is considered replayable
      */
     private TimestampValidationResult verifyTimestamp(Element assertion) {
         Instant now = Instant.now();
@@ -387,9 +402,21 @@ public class SamlHelper {
         return new TimestampValidationResult(deadline);
     }
 
+    /**
+     * Represents the result of SAML timestamp validation.
+     *
+     * @param replayCacheDeadline the timestamp until which the response and assertion IDs must remain blocked
+     */
     private record TimestampValidationResult(Instant replayCacheDeadline) {
     }
 
+    /**
+     * Parses an ISO timestamp from a required SAML attribute value.
+     *
+     * @param attributeName the name of the SAML attribute being parsed
+     * @param value         the raw attribute value
+     * @return the parsed timestamp
+     */
     private Instant parseRequiredInstant(String attributeName, String value) {
         if (Strings.isEmpty(value)) {
             throw Exceptions.createHandled()
@@ -404,6 +431,13 @@ public class SamlHelper {
         }
     }
 
+    /**
+     * Extracts a timestamp attribute from the optional <tt>Conditions</tt> element.
+     *
+     * @param assertion     the assertion to inspect
+     * @param attributeName the timestamp attribute to extract
+     * @return the parsed timestamp or an empty optional if the attribute is absent
+     */
     private Optional<Instant> extractConditionsTimestamp(Element assertion, String attributeName) {
         NodeList conditionsElements = assertion.getElementsByTagNameNS(SAML_NAMESPACE, "Conditions");
         if (conditionsElements.getLength() > 1) {
@@ -425,6 +459,12 @@ public class SamlHelper {
         return Optional.of(parseRequiredInstant(attributeName, value));
     }
 
+    /**
+     * Extracts the earliest effective <tt>NotOnOrAfter</tt> deadline from assertion conditions.
+     *
+     * @param assertion the assertion to inspect
+     * @return the effective deadline after which the assertion is no longer valid
+     */
     private Instant extractEffectiveNotOnOrAfter(Element assertion) {
         Optional<Instant> conditionsNotOnOrAfter = extractConditionsTimestamp(assertion, "NotOnOrAfter");
         Optional<Instant> subjectConfirmationNotOnOrAfter = extractEarliestSubjectConfirmationNotOnOrAfter(assertion);
@@ -448,6 +488,12 @@ public class SamlHelper {
                subjectConfirmationNotOnOrAfter.get();
     }
 
+    /**
+     * Extracts the earliest <tt>NotOnOrAfter</tt> timestamp from all <tt>SubjectConfirmationData</tt> elements.
+     *
+     * @param assertion the assertion to inspect
+     * @return the earliest timestamp or an empty optional if no subject confirmation deadline is present
+     */
     private Optional<Instant> extractEarliestSubjectConfirmationNotOnOrAfter(Element assertion) {
         NodeList subjectConfirmationDataElements =
                 assertion.getElementsByTagNameNS(SAML_NAMESPACE, "SubjectConfirmationData");
@@ -467,6 +513,13 @@ public class SamlHelper {
         return earliestTimestamp;
     }
 
+    /**
+     * Creates a handled exception for an invalid SAML timestamp.
+     *
+     * @param attributeName the timestamp attribute that failed validation
+     * @param value         the invalid value to report
+     * @return the handled exception to throw
+     */
     private HandledException invalidTimestamp(String attributeName, String value) {
         return Exceptions.createHandled()
                          .withSystemErrorMessage("Invalid SAML Response: Invalid %s: %s", attributeName, value)
@@ -497,6 +550,15 @@ public class SamlHelper {
                                 attributes);
     }
 
+    /**
+     * Parses the given SAML response XML into a hardened DOM document.
+     *
+     * @param inputStream the XML stream to parse
+     * @return the parsed DOM document
+     * @throws SAXException                 in case the XML cannot be parsed
+     * @throws IOException                  in case the stream cannot be read
+     * @throws ParserConfigurationException in case the XML parser cannot be configured securely
+     */
     private Document getResponseDocument(InputStream inputStream)
             throws SAXException, IOException, ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -577,6 +639,9 @@ public class SamlHelper {
      */
     private static class KeyValueKeySelector extends KeySelector {
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public KeySelectorResult select(KeyInfo keyInfo,
                                         KeySelector.Purpose purpose,
@@ -615,6 +680,11 @@ public class SamlHelper {
 
         private final X509Certificate certificate;
 
+        /**
+         * Creates a new key selector result for the given X509 certificate.
+         *
+         * @param cert the certificate extracted from the signature
+         */
         X509CertificateResult(X509Certificate cert) {
             this.certificate = cert;
         }
