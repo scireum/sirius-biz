@@ -119,7 +119,7 @@ public class SamlResponse {
     }
 
     /**
-     * Returns the username or id which has been authenticated.
+     * Returns the username or ID which has been authenticated.
      *
      * @return the username
      */

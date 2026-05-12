@@ -119,21 +119,21 @@ public class SamlHelper {
     private static final String XML_SIGNATURE_SECURE_VALIDATION = "org.jcp.xml.dsig.secureValidation";
 
     /**
-     * Generates a base64 encoded XML request which can be sent via a POST request to a SAML 2 identity provider / SAML responder.
+     * Generates a Base64 encoded XML request which can be sent via a POST request to a SAML 2 identity provider / SAML responder.
      * This is used for the HTTP POST Binding: <a href="https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf">SAML Bindings</a> (section 3.5).
      *
      * @param issuer      the name of the issuer. This tells the identity provider "who" is asking to perform an authentication.
      * @param issuerIndex the index of the issuer. As the identity provider might manage several endpoints for a
      *                    single issuer configuration, different indices can be passed in. The default value would
      *                    be "0"
-     * @return a base64 encoded SAML2 request which can be sent via a POST request to a SAML 2 identity provider / SAML responder
+     * @return a Base64 encoded SAML2 request which can be sent via a POST request to a SAML 2 identity provider / SAML responder
      */
     public String generateAuthenticationRequestForPostBinding(String issuer, String issuerIndex) {
         return generateAuthenticationRequestForPostBinding(issuer, issuerIndex, Optional.empty());
     }
 
     /**
-     * Generates a base64 encoded XML request which can be sent via a POST request to a SAML 2 identity provider / SAML responder.
+     * Generates a Base64 encoded XML request which can be sent via a POST request to a SAML 2 identity provider / SAML responder.
      * This is used for the HTTP POST Binding: <a href="https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf">SAML Bindings</a> (section 3.5).
      *
      * @param issuer      the name of the issuer. This tells the identity provider "who" is asking to perform an authentication.
@@ -141,7 +141,7 @@ public class SamlHelper {
      *                    single issuer configuration, different indices can be passed in. The default value would
      *                    be "0"
      * @param userHint    an optional user hint to pre-fill the NameID in the request. Be aware that some identity providers might reject requests with pre-filled NameIDs.
-     * @return a base64 encoded SAML2 request which can be sent via a POST request to a SAML 2 identity provider / SAML responder
+     * @return a Base64 encoded SAML2 request which can be sent via a POST request to a SAML 2 identity provider / SAML responder
      */
     public String generateAuthenticationRequestForPostBinding(String issuer,
                                                               String issuerIndex,
@@ -150,21 +150,21 @@ public class SamlHelper {
     }
 
     /**
-     * Generates a deflated and base64 encoded XML request which can be sent via a GET request to a SAML 2 identity provider / SAML responder
+     * Generates a deflated and Base64 encoded XML request which can be sent via a GET request to a SAML 2 identity provider / SAML responder
      * This is used for the HTTP Redirect Binding: <a href="https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf">SAML Bindings</a> (section 3.4).
      *
      * @param issuer      the name of the issuer. This tells the identity provider "who" is asking to perform an authentication.
      * @param issuerIndex the index of the issuer. As the identity provider might manage several endpoints for a
      *                    single issuer configuration, different indices can be passed in. The default value would
      *                    be "0"
-     * @return a deflated and base64 encoded SAML2 request which can be sent via a GET request to a SAML 2 identity provider / SAML responder
+     * @return a deflated and Base64 encoded SAML2 request which can be sent via a GET request to a SAML 2 identity provider / SAML responder
      */
     public String generateAuthenticationRequestForRedirectBinding(String issuer, String issuerIndex) {
         return generateAuthenticationRequestForRedirectBinding(issuer, issuerIndex, Optional.empty());
     }
 
     /**
-     * Generates a deflated and base64 encoded XML request which can be sent via a GET request to a SAML 2 identity provider / SAML responder
+     * Generates a deflated and Base64 encoded XML request which can be sent via a GET request to a SAML 2 identity provider / SAML responder
      * This is used for the HTTP Redirect Binding: <a href="https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf">SAML Bindings</a> (section 3.4).
      *
      * @param issuer      the name of the issuer. This tells the identity provider "who" is asking to perform an authentication.
@@ -172,7 +172,7 @@ public class SamlHelper {
      *                    single issuer configuration, different indices can be passed in. The default value would
      *                    be "0"
      * @param userHint    an optional user hint to pre-fill the NameID in the request. Be aware that some identity providers might reject requests with pre-filled NameIDs.
-     * @return a deflated and base64 encoded SAML2 request which can be sent via a GET request to a SAML 2 identity provider / SAML responder
+     * @return a deflated and Base64 encoded SAML2 request which can be sent via a GET request to a SAML 2 identity provider / SAML responder
      */
     public String generateAuthenticationRequestForRedirectBinding(String issuer,
                                                                   String issuerIndex,
@@ -247,7 +247,7 @@ public class SamlHelper {
      * Note that the fingerprint <b>must</b> be verified against an externally configured trust source, as this method
      * only checks if the signature is valid for the embedded certificate, not <b>who</b> created it.
      *
-     * @param webContext the http request to read the response from
+     * @param webContext the HTTP request to read the response from
      * @return the parsed response which has been verified
      */
     public SamlResponse parseSamlResponse(WebContext webContext) {

@@ -93,7 +93,7 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
-    fun `SAML response with doctype declaration is rejected`() {
+    fun `SAML response with DOCTYPE declaration is rejected`() {
         assertInvalidSamlResponse(
             """<?xml version="1.0"?>
 <!DOCTYPE samlp:Response [
@@ -314,7 +314,7 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
-    fun `replay protection rejects reused response or assertion ids`() {
+    fun `replay protection rejects reused response or assertion IDs`() {
         val suffix = UUID.randomUUID().toString()
         val responseId = "response-$suffix"
         val assertionId = "assertion-$suffix"
@@ -326,7 +326,7 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
-    fun `replay protection releases ids after deadline`() {
+    fun `replay protection releases IDs after deadline`() {
         val suffix = UUID.randomUUID().toString()
         val responseId = "response-$suffix"
         val assertionId = "assertion-$suffix"
