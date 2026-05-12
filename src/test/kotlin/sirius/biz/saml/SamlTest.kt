@@ -56,6 +56,14 @@ class SamlTest {
             assertEquals(expectedFormat, actual.format)
             assertEquals(expectedValue, actual.value)
         }
+
+        fun unsignedSamlResponse(assertionAttributes: String): String {
+            return """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" $assertionAttributes>
+        <Issuer>https://sso.example.test</Issuer>
+    </Assertion>
+</samlp:Response>"""
+        }
     }
 
     @Test
@@ -183,6 +191,30 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 </samlp:Response>""",
             "An error occurred while parsing a SAML Response",
             false
+        )
+    }
+
+    @Test
+    fun `SAML response without IssueInstant is rejected`() {
+        assertInvalidSamlResponse(
+            unsignedSamlResponse(""),
+            "Invalid SAML Response: Invalid IssueInstant:"
+        )
+    }
+
+    @Test
+    fun `SAML response with malformed IssueInstant is rejected`() {
+        assertInvalidSamlResponse(
+            unsignedSamlResponse("""IssueInstant="tomorrow""""),
+            "Invalid SAML Response: Invalid IssueInstant: tomorrow"
+        )
+    }
+
+    @Test
+    fun `SAML response with future IssueInstant is rejected`() {
+        assertInvalidSamlResponse(
+            unsignedSamlResponse("""IssueInstant="2999-01-01T00:00:00Z""""),
+            "Invalid SAML Response: Invalid IssueInstant: 2999-01-01T00:00:00Z"
         )
     }
 
