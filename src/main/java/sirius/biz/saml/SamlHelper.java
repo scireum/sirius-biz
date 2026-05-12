@@ -313,11 +313,12 @@ public class SamlHelper {
             String fingerprint = validateXMLSignature(document, assertion);
             if (timestampValidationResult != null) {
                 boolean reserved = replayProtector.reserve(document.getDocumentElement().getAttribute("ID"),
-                                                          assertion.getAttribute("ID"),
-                                                          timestampValidationResult.replayCacheDeadline());
+                                                           assertion.getAttribute("ID"),
+                                                           timestampValidationResult.replayCacheDeadline());
                 if (!reserved) {
                     throw Exceptions.createHandled()
-                                    .withSystemErrorMessage("Invalid SAML Response: Response has already been processed.")
+                                    .withSystemErrorMessage(
+                                            "Invalid SAML Response: Response has already been processed.")
                                     .handle();
                 }
             }
