@@ -25,8 +25,7 @@ import kotlin.test.assertTrue
 class SamlTest {
 
     companion object {
-        private const val DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE = 256_000
-        private const val ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE = 1_000_000
+        private const val TEST_MAX_ENCODED_SAML_RESPONSE_SIZE = 64
 
         @Part
         private lateinit var saml: SamlHelper
@@ -300,20 +299,22 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 
     @Test
     fun `oversized encoded SAML response is rejected before decoding`() {
-        val oversizedResponse = "A".repeat(DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE + 1)
+        val oversizedResponse = "A".repeat(TEST_MAX_ENCODED_SAML_RESPONSE_SIZE + 1)
         val request = TestRequest.POST("/saml?SAMLResponse=$oversizedResponse")
 
         assertInvalidSamlResponse(
             request,
-            "Invalid SAML Response: SAMLResponse exceeds maximum size of $DEFAULT_MAX_ENCODED_SAML_RESPONSE_SIZE bytes."
+            "Invalid SAML Response: SAMLResponse exceeds maximum size of $TEST_MAX_ENCODED_SAML_RESPONSE_SIZE bytes."
         )
     }
 
     @Test
     fun `configured SAML response size limit is capped by absolute maximum`() {
         assertEquals(
-            ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE,
-            SamlHelper.determineEffectiveMaxEncodedSamlResponseSize(ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE + 1)
+            SamlHelper.ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE,
+            SamlHelper.determineEffectiveMaxEncodedSamlResponseSize(
+                SamlHelper.ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE + 1
+            )
         )
     }
 

@@ -92,7 +92,7 @@ public class SamlHelper {
      * Limits the Base64 encoded SAMLResponse before decoding or XML parsing. The configured value can adapt this to
      * product-specific IdP payloads, but the effective limit is always capped at 1 MB.
      */
-    private static final int ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE = 1_000_000;
+    static final int ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE = 1_000_000;
 
     @ConfigValue("security.saml.maxEncodedResponseSize")
     private int maxEncodedSamlResponseSize;
