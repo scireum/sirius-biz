@@ -112,21 +112,6 @@ public class SamlHelper {
             "http://xml.org/sax/features/external-parameter-entities";
 
     /**
-     * Generates a base64 encoded XML request which can be POSTed to a SAML 2 identity provider.
-     *
-     * @param issuer      the name of the issuer. This tells the identity provider "who" is asking to perform an authentication.
-     * @param issuerIndex the index of the issuer. As the identity provider might manage several endpoints for a
-     *                    single issuer configuration, different indices can be passed in. The default value would
-     *                    be "0"
-     * @return a base64 encoded SAML2 request which can be posted to an identity provider
-     * @deprecated use {@link #generateAuthenticationRequestForPostBinding(String, String)} instead
-     */
-    @Deprecated
-    public String generateAuthenticationRequest(String issuer, String issuerIndex) {
-        return generateAuthenticationRequestForPostBinding(issuer, issuerIndex);
-    }
-
-    /**
      * Generates a base64 encoded XML request which can be sent via a POST request to a SAML 2 identity provider / SAML responder.
      * This is used for the HTTP POST Binding: <a href="https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf">SAML Bindings</a> (section 3.5).
      *
