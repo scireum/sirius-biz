@@ -115,6 +115,8 @@ public class SamlHelper {
     private static final String FEATURE_EXTERNAL_PARAMETER_ENTITIES =
             "http://xml.org/sax/features/external-parameter-entities";
 
+    private static final String XML_SIGNATURE_SECURE_VALIDATION = "org.jcp.xml.dsig.secureValidation";
+
     /**
      * Generates a base64 encoded XML request which can be sent via a POST request to a SAML 2 identity provider / SAML responder.
      * This is used for the HTTP POST Binding: <a href="https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf">SAML Bindings</a> (section 3.5).
@@ -514,6 +516,7 @@ public class SamlHelper {
 
         XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM");
         DOMValidateContext valContext = new DOMValidateContext(new KeyValueKeySelector(), signatureElement);
+        valContext.setProperty(XML_SIGNATURE_SECURE_VALIDATION, Boolean.TRUE);
         XMLSignature signature = factory.unmarshalXMLSignature(valContext);
 
         if (!Strings.areEqual(getReferenceBeingSigned(signature), "#" + idToVerify)) {
