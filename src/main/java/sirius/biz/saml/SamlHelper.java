@@ -87,6 +87,18 @@ public class SamlHelper {
 
     private static final String SAMLP_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:protocol";
 
+    private static final String FEATURE_DISALLOW_DOCTYPE_DECL =
+            "http://apache.org/xml/features/disallow-doctype-decl";
+
+    private static final String FEATURE_LOAD_EXTERNAL_DTD =
+            "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+
+    private static final String FEATURE_EXTERNAL_GENERAL_ENTITIES =
+            "http://xml.org/sax/features/external-general-entities";
+
+    private static final String FEATURE_EXTERNAL_PARAMETER_ENTITIES =
+            "http://xml.org/sax/features/external-parameter-entities";
+
     /**
      * Generates a base64 encoded XML request which can be POSTed to a SAML 2 identity provider.
      *
@@ -352,7 +364,15 @@ public class SamlHelper {
             throws SAXException, IOException, ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature(FEATURE_DISALLOW_DOCTYPE_DECL, true);
+        factory.setFeature(FEATURE_LOAD_EXTERNAL_DTD, false);
+        factory.setFeature(FEATURE_EXTERNAL_GENERAL_ENTITIES, false);
+        factory.setFeature(FEATURE_EXTERNAL_PARAMETER_ENTITIES, false);
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
         factory.setNamespaceAware(true);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
         return factory.newDocumentBuilder().parse(inputStream);
     }
 

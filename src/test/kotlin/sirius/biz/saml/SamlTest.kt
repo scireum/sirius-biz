@@ -107,6 +107,52 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
+    fun `SAML response with doctype declaration is rejected`() {
+        assertInvalidSamlResponse(
+            """<?xml version="1.0"?>
+<!DOCTYPE samlp:Response [
+    <!ENTITY issuer "https://sso.example.test">
+]>
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="2026-05-09T19:00:00Z">
+        <Issuer>&issuer;</Issuer>
+    </Assertion>
+</samlp:Response>""",
+            "An error occurred while parsing a SAML Response",
+            false
+        )
+    }
+
+    @Test
+    fun `SAML response with external DTD is rejected`() {
+        assertInvalidSamlResponse(
+            """<?xml version="1.0"?>
+<!DOCTYPE samlp:Response SYSTEM "file:///tmp/saml-external.dtd">
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="2026-05-09T19:00:00Z" />
+</samlp:Response>""",
+            "An error occurred while parsing a SAML Response",
+            false
+        )
+    }
+
+    @Test
+    fun `SAML response with external parameter entity is rejected`() {
+        assertInvalidSamlResponse(
+            """<?xml version="1.0"?>
+<!DOCTYPE samlp:Response [
+    <!ENTITY % xxe SYSTEM "file:///tmp/saml-parameter.dtd">
+    %xxe;
+]>
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="2026-05-09T19:00:00Z" />
+</samlp:Response>""",
+            "An error occurred while parsing a SAML Response",
+            false
+        )
+    }
+
+    @Test
     fun `SamlUserHints initialise correctly`() {
         assertHint(SamlUserHint.FORMAT_UNSPECIFIED, "lalala", SamlUserHint.withUnspecifiedFormat("lalala"))
         assertHint(SamlUserHint.FORMAT_EMAIL, "lalala@blubb", SamlUserHint.withEmailAddress("lalala@blubb"))
