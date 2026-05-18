@@ -24,6 +24,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+/**
+ * Tests the [SamlHelper] and related SAML value objects.
+ */
 @ExtendWith(SiriusExtension::class)
 class SamlTest {
 

@@ -19,6 +19,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
+/**
+ * Tests the [SamlController].
+ */
 class SamlControllerTest {
 
     @Test
