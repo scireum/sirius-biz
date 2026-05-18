@@ -8,7 +8,7 @@
 
 package sirius.biz.web;
 
-import sirius.biz.tenants.SAMLController;
+import sirius.biz.tenants.SamlController;
 import sirius.db.redis.Redis;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.cache.InlineCache;
@@ -220,7 +220,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
     private boolean isWhitelistedURI(String uri) {
         return DisasterController.URI_DISASTER.equals(uri)
                || DisasterController.URI_SYSTEM_DISASTER.equals(uri)
-               || uri.startsWith(SAMLController.SAML_URI_PREFIX);
+               || uri.startsWith(SamlController.SAML_URI_PREFIX);
     }
 
     /**
