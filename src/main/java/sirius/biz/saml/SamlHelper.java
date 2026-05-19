@@ -633,9 +633,6 @@ public class SamlHelper {
      */
     private static class KeyValueKeySelector extends KeySelector {
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public KeySelectorResult select(KeyInfo keyInfo,
                                         KeySelector.Purpose purpose,
