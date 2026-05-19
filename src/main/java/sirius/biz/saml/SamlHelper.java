@@ -100,6 +100,14 @@ public class SamlHelper {
 
     private static final String SAMLP_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:protocol";
 
+    private static final String ATTRIBUTE_ID = "ID";
+
+    private static final String ATTRIBUTE_ISSUE_INSTANT = "IssueInstant";
+
+    private static final String ATTRIBUTE_NOT_BEFORE = "NotBefore";
+
+    private static final String ATTRIBUTE_NOT_ON_OR_AFTER = "NotOnOrAfter";
+
     private static final String FEATURE_DISALLOW_DOCTYPE_DECL = "http://apache.org/xml/features/disallow-doctype-decl";
 
     private static final String FEATURE_LOAD_EXTERNAL_DTD =
@@ -209,9 +217,9 @@ public class SamlHelper {
         output.beginOutput("samlp:AuthnRequest",
                            Attribute.set("xmlns:samlp", SAMLP_NAMESPACE),
                            Attribute.set("xmlns:saml", SAML_NAMESPACE),
-                           Attribute.set("ID", "identifier_" + System.currentTimeMillis()),
+                           Attribute.set(ATTRIBUTE_ID, "identifier_" + System.currentTimeMillis()),
                            Attribute.set("Version", "2.0"),
-                           Attribute.set("IssueInstant",
+                           Attribute.set(ATTRIBUTE_ISSUE_INSTANT,
                                          DateTimeFormatter.ISO_INSTANT.format(Instant.now()
                                                                                      .truncatedTo(ChronoUnit.SECONDS))),
                            Attribute.set("AssertionConsumerServiceIndex", issuerIndex));
@@ -311,8 +319,8 @@ public class SamlHelper {
             TimestampValidationResult timestampValidationResult = checkTime ? verifyTimestamp(assertion) : null;
             String fingerprint = validateXMLSignature(document, assertion);
             if (timestampValidationResult != null) {
-                boolean reserved = replayProtector.reserve(document.getDocumentElement().getAttribute("ID"),
-                                                           assertion.getAttribute("ID"),
+                boolean reserved = replayProtector.reserve(document.getDocumentElement().getAttribute(ATTRIBUTE_ID),
+                                                           assertion.getAttribute(ATTRIBUTE_ID),
                                                            timestampValidationResult.replayCacheDeadline());
                 if (!reserved) {
                     throw Exceptions.createHandled()
@@ -337,7 +345,7 @@ public class SamlHelper {
     /**
      * Selects the element with the given node name.
      * <p>
-     * This method ensures, that there is only one element, as we want to ensure that there is only one <tt>Assertion</tt> and
+     * This method ensures that there is only one element, as we want to ensure that there is only one <tt>Assertion</tt> and
      * one <tt>Signature</tt> for it.
      *
      * @param document  the XML document
@@ -368,26 +376,26 @@ public class SamlHelper {
      */
     private TimestampValidationResult verifyTimestamp(Element assertion) {
         Instant now = Instant.now();
-        String issueInstantValue = assertion.getAttribute("IssueInstant");
+        String issueInstantValue = assertion.getAttribute(ATTRIBUTE_ISSUE_INSTANT);
         if (Strings.isEmpty(issueInstantValue)) {
-            throw invalidTimestamp("IssueInstant", "<missing>");
+            throw invalidTimestamp(ATTRIBUTE_ISSUE_INSTANT, "<missing>");
         }
 
-        Instant issueInstant = parseRequiredInstant("IssueInstant", issueInstantValue);
+        Instant issueInstant = parseRequiredInstant(ATTRIBUTE_ISSUE_INSTANT, issueInstantValue);
 
         if (issueInstant.isAfter(now.plus(SAML_CLOCK_SKEW))) {
-            throw invalidTimestamp("IssueInstant", DateTimeFormatter.ISO_INSTANT.format(issueInstant));
+            throw invalidTimestamp(ATTRIBUTE_ISSUE_INSTANT, DateTimeFormatter.ISO_INSTANT.format(issueInstant));
         }
 
-        Optional<Instant> notBefore = extractConditionsTimestamp(assertion, "NotBefore");
+        Optional<Instant> notBefore = extractConditionsTimestamp(assertion, ATTRIBUTE_NOT_BEFORE);
         if (notBefore.isPresent() && notBefore.get().isAfter(now.plus(SAML_CLOCK_SKEW))) {
-            throw invalidTimestamp("NotBefore", DateTimeFormatter.ISO_INSTANT.format(notBefore.get()));
+            throw invalidTimestamp(ATTRIBUTE_NOT_BEFORE, DateTimeFormatter.ISO_INSTANT.format(notBefore.get()));
         }
 
         Instant notOnOrAfter = extractEffectiveNotOnOrAfter(assertion);
         Instant deadline = notOnOrAfter.plus(SAML_CLOCK_SKEW);
         if (!now.isBefore(deadline)) {
-            throw invalidTimestamp("NotOnOrAfter", DateTimeFormatter.ISO_INSTANT.format(notOnOrAfter));
+            throw invalidTimestamp(ATTRIBUTE_NOT_ON_OR_AFTER, DateTimeFormatter.ISO_INSTANT.format(notOnOrAfter));
         }
 
         return new TimestampValidationResult(deadline);
@@ -457,12 +465,12 @@ public class SamlHelper {
      * @return the effective deadline after which the assertion is no longer valid
      */
     private Instant extractEffectiveNotOnOrAfter(Element assertion) {
-        Optional<Instant> conditionsNotOnOrAfter = extractConditionsTimestamp(assertion, "NotOnOrAfter");
+        Optional<Instant> conditionsNotOnOrAfter = extractConditionsTimestamp(assertion, ATTRIBUTE_NOT_ON_OR_AFTER);
         Optional<Instant> subjectConfirmationNotOnOrAfter = extractEarliestSubjectConfirmationNotOnOrAfter(assertion);
 
         if (conditionsNotOnOrAfter.isEmpty() && subjectConfirmationNotOnOrAfter.isEmpty()) {
             throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Invalid SAML Response: Missing NotOnOrAfter.")
+                            .withSystemErrorMessage("Invalid SAML Response: Missing %s.", ATTRIBUTE_NOT_ON_OR_AFTER)
                             .handle();
         }
 
@@ -492,9 +500,9 @@ public class SamlHelper {
 
         for (int i = 0; i < subjectConfirmationDataElements.getLength(); i++) {
             Element subjectConfirmationData = (Element) subjectConfirmationDataElements.item(i);
-            String notOnOrAfter = subjectConfirmationData.getAttribute("NotOnOrAfter");
+            String notOnOrAfter = subjectConfirmationData.getAttribute(ATTRIBUTE_NOT_ON_OR_AFTER);
             if (Strings.isFilled(notOnOrAfter)) {
-                Instant timestamp = parseRequiredInstant("NotOnOrAfter", notOnOrAfter);
+                Instant timestamp = parseRequiredInstant(ATTRIBUTE_NOT_ON_OR_AFTER, notOnOrAfter);
                 if (earliestTimestamp.isEmpty() || timestamp.isBefore(earliestTimestamp.get())) {
                     earliestTimestamp = Optional.of(timestamp);
                 }
@@ -578,8 +586,8 @@ public class SamlHelper {
      * @throws Exception in case an XML or signing error occurs
      */
     private String validateXMLSignature(Document document, Element assertion) throws Exception {
-        assertion.setIdAttribute("ID", true);
-        String idToVerify = assertion.getAttribute("ID");
+        assertion.setIdAttribute(ATTRIBUTE_ID, true);
+        String idToVerify = assertion.getAttribute(ATTRIBUTE_ID);
 
         Element signatureElement = selectSingleElement(document, XMLSignature.XMLNS, "Signature");
 
