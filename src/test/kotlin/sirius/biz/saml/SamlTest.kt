@@ -242,14 +242,13 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     fun `SAML response without NotBefore reaches signature validation`() {
         val now = Instant.now()
 
-        assertInvalidSamlResponse(
+        assertSamlTimestampValidationPasses(
             samlResponseWithConditions(
                 issueInstant = now,
                 notBefore = null,
                 conditionsNotOnOrAfter = now.plus(Duration.ofMinutes(5)),
                 subjectNotOnOrAfter = now.plus(Duration.ofMinutes(5))
-            ),
-            "Invalid SAML Response: Expected exactly one Signature!"
+            )
         )
     }
 
@@ -257,14 +256,13 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     fun `SubjectConfirmationData NotOnOrAfter without conditions reaches signature validation`() {
         val now = Instant.now()
 
-        assertInvalidSamlResponse(
+        assertSamlTimestampValidationPasses(
             samlResponseWithConditions(
                 issueInstant = now,
                 notBefore = null,
                 conditionsNotOnOrAfter = null,
                 subjectNotOnOrAfter = now.plus(Duration.ofMinutes(5))
-            ),
-            "Invalid SAML Response: Expected exactly one Signature!"
+            )
         )
     }
 
@@ -272,14 +270,13 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     fun `Conditions NotOnOrAfter without SubjectConfirmationData deadline reaches signature validation`() {
         val now = Instant.now()
 
-        assertInvalidSamlResponse(
+        assertSamlTimestampValidationPasses(
             samlResponseWithConditions(
                 issueInstant = now,
                 notBefore = now.minus(Duration.ofSeconds(30)),
                 conditionsNotOnOrAfter = now.plus(Duration.ofMinutes(5)),
                 subjectNotOnOrAfter = null
-            ),
-            "Invalid SAML Response: Expected exactly one Signature!"
+            )
         )
     }
 
@@ -287,14 +284,13 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     fun `broad assertion validity window reaches signature validation`() {
         val now = Instant.now()
 
-        assertInvalidSamlResponse(
+        assertSamlTimestampValidationPasses(
             samlResponseWithConditions(
                 issueInstant = now.minus(Duration.ofMinutes(2)),
                 notBefore = now.minus(Duration.ofHours(2)),
                 conditionsNotOnOrAfter = now.plus(Duration.ofHours(2)),
                 subjectNotOnOrAfter = now.plus(Duration.ofHours(2))
-            ),
-            "Invalid SAML Response: Expected exactly one Signature!"
+            )
         )
     }
 
@@ -431,14 +427,13 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     fun `valid SAML time conditions reach signature validation`() {
         val now = Instant.now()
 
-        assertInvalidSamlResponse(
+        assertSamlTimestampValidationPasses(
             samlResponseWithConditions(
                 issueInstant = now,
                 notBefore = now.minus(Duration.ofSeconds(30)),
                 conditionsNotOnOrAfter = now.plus(Duration.ofMinutes(5)),
                 subjectNotOnOrAfter = now.plus(Duration.ofMinutes(4)).plusSeconds(30)
-            ),
-            "Invalid SAML Response: Expected exactly one Signature!"
+            )
         )
     }
 
@@ -649,6 +644,12 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
             }
 
             assertTrue(exception.message!!.contains(expectedMessagePart))
+        }
+
+        fun assertSamlTimestampValidationPasses(response: String) {
+            // These fixtures intentionally omit the XML signature. Reaching the signature check proves that timestamp
+            // validation accepted the response before the parser rejected the incomplete test document.
+            assertInvalidSamlResponse(response, "Invalid SAML Response: Expected exactly one Signature!")
         }
 
         fun assertHint(expectedFormat: String, expectedValue: String, actual: SamlUserHint) {
