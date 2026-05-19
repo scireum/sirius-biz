@@ -430,7 +430,11 @@ public class SamlHelper {
                 throw invalidTimestamp(ATTRIBUTE_NOT_ON_OR_AFTER, DateTimeFormatter.ISO_INSTANT.format(notOnOrAfter));
             }
 
-            throw invalidTimestamp(ATTRIBUTE_ISSUE_INSTANT, DateTimeFormatter.ISO_INSTANT.format(issueInstant));
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage(
+                                    "Invalid SAML Response: Assertion is older than the maximum acceptance duration of %s.",
+                                    effectiveMaxResponseAcceptanceDuration)
+                            .handle();
         }
 
         return new TimestampValidationResult(deadline);

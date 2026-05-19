@@ -305,7 +305,7 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
                 conditionsNotOnOrAfter = now.plus(Duration.ofHours(2)),
                 subjectNotOnOrAfter = now.plus(Duration.ofHours(2))
             ),
-            "Invalid SAML Response: Invalid IssueInstant:"
+            "Invalid SAML Response: Assertion is older than the maximum acceptance duration of PT5M."
         )
     }
 
