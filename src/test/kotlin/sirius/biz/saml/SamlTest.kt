@@ -239,17 +239,32 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
-    fun `assertion validity longer than five minutes is rejected`() {
+    fun `broad assertion validity window reaches signature validation`() {
+        val now = Instant.now()
+
+        assertInvalidSamlResponse(
+            samlResponseWithConditions(
+                issueInstant = now.minus(Duration.ofMinutes(10)),
+                notBefore = now.minus(Duration.ofHours(2)),
+                conditionsNotOnOrAfter = now.plus(Duration.ofHours(2)),
+                subjectNotOnOrAfter = now.plus(Duration.ofHours(2))
+            ),
+            "Invalid SAML Response: Expected exactly one Signature!"
+        )
+    }
+
+    @Test
+    fun `missing effective NotOnOrAfter is rejected`() {
         val now = Instant.now()
 
         assertInvalidSamlResponse(
             samlResponseWithConditions(
                 issueInstant = now,
-                notBefore = now,
-                conditionsNotOnOrAfter = now.plus(Duration.ofMinutes(6)),
-                subjectNotOnOrAfter = now.plus(Duration.ofMinutes(6))
+                notBefore = now.minus(Duration.ofSeconds(30)),
+                conditionsNotOnOrAfter = null,
+                subjectNotOnOrAfter = null
             ),
-            "Invalid SAML Response: Assertion validity exceeds maximum duration"
+            "Invalid SAML Response: Missing NotOnOrAfter."
         )
     }
 
@@ -381,18 +396,27 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     private fun samlResponseWithConditions(
         issueInstant: Instant,
         notBefore: Instant,
-        conditionsNotOnOrAfter: Instant,
-        subjectNotOnOrAfter: Instant
+        conditionsNotOnOrAfter: Instant?,
+        subjectNotOnOrAfter: Instant?
     ): String {
+        val subjectConfirmationData = if (subjectNotOnOrAfter == null) {
+            "<SubjectConfirmationData />"
+        } else {
+            """<SubjectConfirmationData NotOnOrAfter="$subjectNotOnOrAfter" />"""
+        }
+        val conditionsNotOnOrAfterAttribute = conditionsNotOnOrAfter?.let {
+            " NotOnOrAfter=\"$it\""
+        } ?: ""
+
         return """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
     <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="$issueInstant">
         <Issuer>https://sso.example.test</Issuer>
         <Subject>
             <SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-                <SubjectConfirmationData NotOnOrAfter="$subjectNotOnOrAfter" />
+                $subjectConfirmationData
             </SubjectConfirmation>
         </Subject>
-        <Conditions NotBefore="$notBefore" NotOnOrAfter="$conditionsNotOnOrAfter" />
+        <Conditions NotBefore="$notBefore"$conditionsNotOnOrAfterAttribute />
     </Assertion>
 </samlp:Response>"""
     }

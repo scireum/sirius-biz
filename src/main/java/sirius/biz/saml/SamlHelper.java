@@ -85,11 +85,6 @@ public class SamlHelper {
     public static final Duration SAML_CLOCK_SKEW = Duration.ofMinutes(2);
 
     /**
-     * The maximum accepted validity window for a SAML assertion.
-     */
-    public static final Duration MAX_ASSERTION_VALIDITY = Duration.ofMinutes(5);
-
-    /**
      * Limits the Base64 encoded SAMLResponse before decoding or XML parsing. The configured value can adapt this to
      * product-specific IdP payloads, but the effective limit is always capped at 1 MB.
      */
@@ -390,15 +385,6 @@ public class SamlHelper {
         }
 
         Instant notOnOrAfter = extractEffectiveNotOnOrAfter(assertion);
-        Instant validFrom = notBefore.orElse(issueInstant);
-        if (Duration.between(validFrom, notOnOrAfter).compareTo(MAX_ASSERTION_VALIDITY) > 0) {
-            throw Exceptions.createHandled()
-                            .withSystemErrorMessage(
-                                    "Invalid SAML Response: Assertion validity exceeds maximum duration of %s.",
-                                    MAX_ASSERTION_VALIDITY)
-                            .handle();
-        }
-
         Instant deadline = notOnOrAfter.plus(SAML_CLOCK_SKEW);
         if (!now.isBefore(deadline)) {
             throw invalidTimestamp("NotOnOrAfter", DateTimeFormatter.ISO_INSTANT.format(notOnOrAfter));
@@ -431,7 +417,7 @@ public class SamlHelper {
 
         try {
             return Instant.from(DateTimeFormatter.ISO_INSTANT.parse(value));
-        } catch (DateTimeParseException exception) {
+        } catch (DateTimeParseException _) {
             throw invalidTimestamp(attributeName, value);
         }
     }
