@@ -478,13 +478,8 @@ public class SamlHelper {
             return subjectConfirmationNotOnOrAfter.get();
         }
 
-        if (subjectConfirmationNotOnOrAfter.isEmpty()) {
-            return conditionsNotOnOrAfter.get();
-        }
-
-        return conditionsNotOnOrAfter.get().isBefore(subjectConfirmationNotOnOrAfter.get()) ?
-               conditionsNotOnOrAfter.get() :
-               subjectConfirmationNotOnOrAfter.get();
+        return subjectConfirmationNotOnOrAfter.filter(instant -> !conditionsNotOnOrAfter.get().isBefore(instant))
+                                              .orElseGet(conditionsNotOnOrAfter::get);
     }
 
     /**
