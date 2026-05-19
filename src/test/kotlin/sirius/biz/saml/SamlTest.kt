@@ -239,17 +239,172 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
-    fun `assertion validity longer than five minutes is rejected`() {
+    fun `SAML response without NotBefore reaches signature validation`() {
+        val now = Instant.now()
+
+        assertSamlTimestampValidationPasses(
+            samlResponseWithConditions(
+                issueInstant = now,
+                notBefore = null,
+                conditionsNotOnOrAfter = now.plus(Duration.ofMinutes(5)),
+                subjectNotOnOrAfter = now.plus(Duration.ofMinutes(5))
+            )
+        )
+    }
+
+    @Test
+    fun `SubjectConfirmationData NotOnOrAfter without conditions reaches signature validation`() {
+        val now = Instant.now()
+
+        assertSamlTimestampValidationPasses(
+            samlResponseWithConditions(
+                issueInstant = now,
+                notBefore = null,
+                conditionsNotOnOrAfter = null,
+                subjectNotOnOrAfter = now.plus(Duration.ofMinutes(5))
+            )
+        )
+    }
+
+    @Test
+    fun `Conditions NotOnOrAfter without SubjectConfirmationData deadline reaches signature validation`() {
+        val now = Instant.now()
+
+        assertSamlTimestampValidationPasses(
+            samlResponseWithConditions(
+                issueInstant = now,
+                notBefore = now.minus(Duration.ofSeconds(30)),
+                conditionsNotOnOrAfter = now.plus(Duration.ofMinutes(5)),
+                subjectNotOnOrAfter = null
+            )
+        )
+    }
+
+    @Test
+    fun `broad assertion validity window reaches signature validation`() {
+        val now = Instant.now()
+
+        assertSamlTimestampValidationPasses(
+            samlResponseWithConditions(
+                issueInstant = now.minus(Duration.ofMinutes(2)),
+                notBefore = now.minus(Duration.ofHours(2)),
+                conditionsNotOnOrAfter = now.plus(Duration.ofHours(2)),
+                subjectNotOnOrAfter = now.plus(Duration.ofHours(2))
+            )
+        )
+    }
+
+    @Test
+    fun `SAML response older than local acceptance duration is rejected`() {
+        val now = Instant.now()
+
+        assertInvalidSamlResponse(
+            samlResponseWithConditions(
+                issueInstant = now.minus(Duration.ofMinutes(8)),
+                notBefore = now.minus(Duration.ofHours(2)),
+                conditionsNotOnOrAfter = now.plus(Duration.ofHours(2)),
+                subjectNotOnOrAfter = now.plus(Duration.ofHours(2))
+            ),
+            "Invalid SAML Response: Assertion is older than the maximum acceptance duration of PT5M."
+        )
+    }
+
+    @Test
+    fun `missing effective NotOnOrAfter is rejected`() {
         val now = Instant.now()
 
         assertInvalidSamlResponse(
             samlResponseWithConditions(
                 issueInstant = now,
-                notBefore = now,
-                conditionsNotOnOrAfter = now.plus(Duration.ofMinutes(6)),
-                subjectNotOnOrAfter = now.plus(Duration.ofMinutes(6))
+                notBefore = now.minus(Duration.ofSeconds(30)),
+                conditionsNotOnOrAfter = null,
+                subjectNotOnOrAfter = null
             ),
-            "Invalid SAML Response: Assertion validity exceeds maximum duration"
+            "Invalid SAML Response: Missing NotOnOrAfter."
+        )
+    }
+
+    @Test
+    fun `multiple Conditions elements are rejected`() {
+        val now = Instant.now()
+
+        assertInvalidSamlResponse(
+            """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="$now">
+        <Issuer>https://sso.example.test</Issuer>
+        <Subject>
+            <SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                <SubjectConfirmationData NotOnOrAfter="${now.plus(Duration.ofMinutes(5))}" />
+            </SubjectConfirmation>
+        </Subject>
+        <Conditions NotBefore="${now.minus(Duration.ofSeconds(30))}" NotOnOrAfter="${now.plus(Duration.ofMinutes(5))}" />
+        <Conditions NotBefore="${now.minus(Duration.ofSeconds(30))}" NotOnOrAfter="${now.plus(Duration.ofMinutes(5))}" />
+    </Assertion>
+</samlp:Response>""",
+            "Invalid SAML Response: Expected at most one Conditions element."
+        )
+    }
+
+    @Test
+    fun `malformed NotBefore is rejected`() {
+        val now = Instant.now()
+
+        assertInvalidSamlResponse(
+            """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="$now">
+        <Issuer>https://sso.example.test</Issuer>
+        <Subject>
+            <SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                <SubjectConfirmationData NotOnOrAfter="${now.plus(Duration.ofMinutes(5))}" />
+            </SubjectConfirmation>
+        </Subject>
+        <Conditions NotBefore="tomorrow" NotOnOrAfter="${now.plus(Duration.ofMinutes(5))}" />
+    </Assertion>
+</samlp:Response>""",
+            "Invalid SAML Response: Invalid NotBefore: tomorrow"
+        )
+    }
+
+    @Test
+    fun `malformed NotOnOrAfter is rejected`() {
+        val now = Instant.now()
+
+        assertInvalidSamlResponse(
+            """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="$now">
+        <Issuer>https://sso.example.test</Issuer>
+        <Subject>
+            <SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                <SubjectConfirmationData NotOnOrAfter="${now.plus(Duration.ofMinutes(5))}" />
+            </SubjectConfirmation>
+        </Subject>
+        <Conditions NotBefore="${now.minus(Duration.ofSeconds(30))}" NotOnOrAfter="later" />
+    </Assertion>
+</samlp:Response>""",
+            "Invalid SAML Response: Invalid NotOnOrAfter: later"
+        )
+    }
+
+    @Test
+    fun `earliest SubjectConfirmationData NotOnOrAfter is used as effective deadline`() {
+        val now = Instant.now()
+
+        assertInvalidSamlResponse(
+            """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
+    <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="${now.minus(Duration.ofMinutes(4))}">
+        <Issuer>https://sso.example.test</Issuer>
+        <Subject>
+            <SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                <SubjectConfirmationData NotOnOrAfter="${now.plus(Duration.ofMinutes(5))}" />
+            </SubjectConfirmation>
+            <SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                <SubjectConfirmationData NotOnOrAfter="${now.minus(Duration.ofMinutes(3))}" />
+            </SubjectConfirmation>
+        </Subject>
+        <Conditions NotBefore="${now.minus(Duration.ofMinutes(4))}" NotOnOrAfter="${now.plus(Duration.ofMinutes(10))}" />
+    </Assertion>
+</samlp:Response>""",
+            "Invalid SAML Response: Invalid NotOnOrAfter:"
         )
     }
 
@@ -272,14 +427,13 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     fun `valid SAML time conditions reach signature validation`() {
         val now = Instant.now()
 
-        assertInvalidSamlResponse(
+        assertSamlTimestampValidationPasses(
             samlResponseWithConditions(
                 issueInstant = now,
                 notBefore = now.minus(Duration.ofSeconds(30)),
                 conditionsNotOnOrAfter = now.plus(Duration.ofMinutes(5)),
                 subjectNotOnOrAfter = now.plus(Duration.ofMinutes(4)).plusSeconds(30)
-            ),
-            "Invalid SAML Response: Expected exactly one Signature!"
+            )
         )
     }
 
@@ -317,6 +471,28 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     }
 
     @Test
+    fun `configured SAML response acceptance duration is capped by absolute maximum`() {
+        assertEquals(
+            SamlHelper.ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION,
+            SamlHelper.determineEffectiveMaxResponseAcceptanceDuration(
+                SamlHelper.ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION.plus(Duration.ofMinutes(1))
+            )
+        )
+    }
+
+    @Test
+    fun `non-positive SAML response acceptance duration falls back to absolute maximum`() {
+        assertEquals(
+            SamlHelper.ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION,
+            SamlHelper.determineEffectiveMaxResponseAcceptanceDuration(Duration.ZERO)
+        )
+        assertEquals(
+            SamlHelper.ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION,
+            SamlHelper.determineEffectiveMaxResponseAcceptanceDuration(Duration.ofSeconds(-1))
+        )
+    }
+
+    @Test
     fun `replay protection rejects reused response or assertion IDs`() {
         val suffix = UUID.randomUUID().toString()
         val responseId = "response-$suffix"
@@ -336,6 +512,12 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 
         assertTrue(replayProtector.reserve(responseId, assertionId, Instant.now().plusSeconds(1)))
         assertTrue(reserveAfterExpiry(responseId, assertionId))
+    }
+
+    @Test
+    fun `replay protection ignores absent response and assertion IDs`() {
+        assertTrue(replayProtector.reserve(null, null, Instant.now().plus(Duration.ofMinutes(5))))
+        assertTrue(replayProtector.reserve("", " ", Instant.now().plus(Duration.ofMinutes(5))))
     }
 
     @Test
@@ -380,19 +562,37 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 
     private fun samlResponseWithConditions(
         issueInstant: Instant,
-        notBefore: Instant,
-        conditionsNotOnOrAfter: Instant,
-        subjectNotOnOrAfter: Instant
+        notBefore: Instant?,
+        conditionsNotOnOrAfter: Instant?,
+        subjectNotOnOrAfter: Instant?
     ): String {
+        val subjectConfirmationData = if (subjectNotOnOrAfter == null) {
+            "<SubjectConfirmationData />"
+        } else {
+            """<SubjectConfirmationData NotOnOrAfter="$subjectNotOnOrAfter" />"""
+        }
+        val conditionsNotOnOrAfterAttribute = conditionsNotOnOrAfter?.let {
+            " NotOnOrAfter=\"$it\""
+        } ?: ""
+        val conditions = if (notBefore == null && conditionsNotOnOrAfter == null) {
+            ""
+        } else {
+            val notBeforeAttribute = notBefore?.let {
+                " NotBefore=\"$it\""
+            } ?: ""
+
+            "<Conditions$notBeforeAttribute$conditionsNotOnOrAfterAttribute />"
+        }
+
         return """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
     <Assertion xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion" IssueInstant="$issueInstant">
         <Issuer>https://sso.example.test</Issuer>
         <Subject>
             <SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-                <SubjectConfirmationData NotOnOrAfter="$subjectNotOnOrAfter" />
+                $subjectConfirmationData
             </SubjectConfirmation>
         </Subject>
-        <Conditions NotBefore="$notBefore" NotOnOrAfter="$conditionsNotOnOrAfter" />
+        $conditions
     </Assertion>
 </samlp:Response>"""
     }
@@ -444,6 +644,12 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
             }
 
             assertTrue(exception.message!!.contains(expectedMessagePart))
+        }
+
+        fun assertSamlTimestampValidationPasses(response: String) {
+            // These fixtures intentionally omit the XML signature. Reaching the signature check proves that timestamp
+            // validation accepted the response before the parser rejected the incomplete test document.
+            assertInvalidSamlResponse(response, "Invalid SAML Response: Expected exactly one Signature!")
         }
 
         fun assertHint(expectedFormat: String, expectedValue: String, actual: SamlUserHint) {
