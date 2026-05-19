@@ -289,12 +289,27 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
 
         assertInvalidSamlResponse(
             samlResponseWithConditions(
-                issueInstant = now.minus(Duration.ofMinutes(10)),
+                issueInstant = now.minus(Duration.ofMinutes(2)),
                 notBefore = now.minus(Duration.ofHours(2)),
                 conditionsNotOnOrAfter = now.plus(Duration.ofHours(2)),
                 subjectNotOnOrAfter = now.plus(Duration.ofHours(2))
             ),
             "Invalid SAML Response: Expected exactly one Signature!"
+        )
+    }
+
+    @Test
+    fun `SAML response older than local acceptance duration is rejected`() {
+        val now = Instant.now()
+
+        assertInvalidSamlResponse(
+            samlResponseWithConditions(
+                issueInstant = now.minus(Duration.ofMinutes(8)),
+                notBefore = now.minus(Duration.ofHours(2)),
+                conditionsNotOnOrAfter = now.plus(Duration.ofHours(2)),
+                subjectNotOnOrAfter = now.plus(Duration.ofHours(2))
+            ),
+            "Invalid SAML Response: Invalid IssueInstant:"
         )
     }
 
@@ -457,6 +472,28 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
         assertEquals(
             SamlHelper.ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE,
             SamlHelper.determineEffectiveMaxEncodedSamlResponseSize(-1)
+        )
+    }
+
+    @Test
+    fun `configured SAML response acceptance duration is capped by absolute maximum`() {
+        assertEquals(
+            SamlHelper.ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION,
+            SamlHelper.determineEffectiveMaxResponseAcceptanceDuration(
+                SamlHelper.ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION.plus(Duration.ofMinutes(1))
+            )
+        )
+    }
+
+    @Test
+    fun `non-positive SAML response acceptance duration falls back to absolute maximum`() {
+        assertEquals(
+            SamlHelper.ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION,
+            SamlHelper.determineEffectiveMaxResponseAcceptanceDuration(Duration.ZERO)
+        )
+        assertEquals(
+            SamlHelper.ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION,
+            SamlHelper.determineEffectiveMaxResponseAcceptanceDuration(Duration.ofSeconds(-1))
         )
     }
 

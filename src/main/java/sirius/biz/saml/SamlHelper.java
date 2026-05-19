@@ -85,10 +85,21 @@ public class SamlHelper {
     public static final Duration SAML_CLOCK_SKEW = Duration.ofMinutes(2);
 
     /**
+     * The absolute upper bound for accepting a SAML assertion after its <tt>IssueInstant</tt>.
+     */
+    static final Duration ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION = Duration.ofMinutes(30);
+
+    /**
      * Limits the Base64 encoded SAMLResponse before decoding or XML parsing. The configured value can adapt this to
      * product-specific IdP payloads, but the effective limit is always capped at 1 MB.
      */
     static final int ABSOLUTE_MAX_ENCODED_SAML_RESPONSE_SIZE = 1_000_000;
+
+    /**
+     * Defines how long a SAML assertion is accepted after its <tt>IssueInstant</tt>.
+     */
+    @ConfigValue("security.saml.maxResponseAcceptanceDuration")
+    private Duration maxResponseAcceptanceDuration;
 
     @ConfigValue("security.saml.maxEncodedResponseSize")
     private int maxEncodedSamlResponseSize;
@@ -302,6 +313,23 @@ public class SamlHelper {
     }
 
     /**
+     * Determines the effective maximum response acceptance duration from the configured value.
+     *
+     * @param configuredMaxResponseAcceptanceDuration the configured maximum duration after the assertion issue instant
+     * @return the configured duration capped by {@link #ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION}
+     */
+    static Duration determineEffectiveMaxResponseAcceptanceDuration(Duration configuredMaxResponseAcceptanceDuration) {
+        if (configuredMaxResponseAcceptanceDuration == null || configuredMaxResponseAcceptanceDuration.isZero()
+            || configuredMaxResponseAcceptanceDuration.isNegative()) {
+            return ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION;
+        }
+
+        return configuredMaxResponseAcceptanceDuration.compareTo(ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION) > 0 ?
+               ABSOLUTE_MAX_RESPONSE_ACCEPTANCE_DURATION :
+               configuredMaxResponseAcceptanceDuration;
+    }
+
+    /**
      * Parses a SAML 2 response from the given input string, optionally checking timestamps.
      * <p>
      * Note that the fingerprint <b>must</b> be verified against an externally configured trust source, as this method
@@ -393,12 +421,30 @@ public class SamlHelper {
         }
 
         Instant notOnOrAfter = extractEffectiveNotOnOrAfter(assertion);
-        Instant deadline = notOnOrAfter.plus(SAML_CLOCK_SKEW);
+        Duration effectiveMaxResponseAcceptanceDuration =
+                determineEffectiveMaxResponseAcceptanceDuration(maxResponseAcceptanceDuration);
+        Instant cappedNotOnOrAfter = min(notOnOrAfter, issueInstant.plus(effectiveMaxResponseAcceptanceDuration));
+        Instant deadline = cappedNotOnOrAfter.plus(SAML_CLOCK_SKEW);
         if (!now.isBefore(deadline)) {
-            throw invalidTimestamp(ATTRIBUTE_NOT_ON_OR_AFTER, DateTimeFormatter.ISO_INSTANT.format(notOnOrAfter));
+            if (cappedNotOnOrAfter.equals(notOnOrAfter)) {
+                throw invalidTimestamp(ATTRIBUTE_NOT_ON_OR_AFTER, DateTimeFormatter.ISO_INSTANT.format(notOnOrAfter));
+            }
+
+            throw invalidTimestamp(ATTRIBUTE_ISSUE_INSTANT, DateTimeFormatter.ISO_INSTANT.format(issueInstant));
         }
 
         return new TimestampValidationResult(deadline);
+    }
+
+    /**
+     * Returns the earlier of the given instants.
+     *
+     * @param first  the first instant to compare
+     * @param second the second instant to compare
+     * @return the earlier instant
+     */
+    private Instant min(Instant first, Instant second) {
+        return first.isBefore(second) ? first : second;
     }
 
     /**
