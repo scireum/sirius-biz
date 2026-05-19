@@ -608,7 +608,7 @@ public class SamlHelper {
                             .handle();
         }
 
-        X509Certificate certificate = ((X509CertificateResult) signature.getKeySelectorResult()).getCertificate();
+        X509Certificate certificate = ((X509CertificateResult) signature.getKeySelectorResult()).certificate();
         return Hasher.sha1().hashBytes(certificate.getEncoded()).toHexString().toLowerCase();
     }
 
@@ -667,26 +667,11 @@ public class SamlHelper {
     /**
      * Represents the inlined X509 certificate from within the signature.
      */
-    private static class X509CertificateResult implements KeySelectorResult {
-
-        private final X509Certificate certificate;
-
-        /**
-         * Creates a new key selector result for the given X509 certificate.
-         *
-         * @param cert the certificate extracted from the signature
-         */
-        X509CertificateResult(X509Certificate cert) {
-            this.certificate = cert;
-        }
+    private record X509CertificateResult(X509Certificate certificate) implements KeySelectorResult {
 
         @Override
         public Key getKey() {
             return certificate.getPublicKey();
-        }
-
-        public X509Certificate getCertificate() {
-            return certificate;
         }
     }
 }
