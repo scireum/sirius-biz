@@ -202,4 +202,22 @@ public interface JobFactory extends Named, Priorized {
      * @return a JsonNode that can be handled by the JavaScript
      */
     JsonNode computeRequiredParameterUpdates(Map<String, String> ctx);
+
+    /**
+     * Determines if a template can be downloaded for this job.
+     *
+     * @return true if a template can be downloaded, false otherwise.
+     */
+    default boolean canDownloadTemplate() {
+        return false;
+    }
+
+    /**
+     * Generates a template file and responds to the given web context.
+     *
+     * @param webContext the web context to respond to
+     */
+    default void respondWithTemplate(WebContext webContext) {
+        throw new UnsupportedOperationException("This job does not provide a template.");
+    }
 }

@@ -91,6 +91,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
      *
      * @return the dictionary being used
      */
+    @Override
     protected ImportDictionary getDictionary() {
         try (Importer importer = new Importer("getDictionary")) {
             ImportDictionary dictionary = importer.getImportDictionary(getImportType());
