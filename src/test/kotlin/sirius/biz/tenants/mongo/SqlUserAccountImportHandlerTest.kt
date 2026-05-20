@@ -22,7 +22,7 @@ import sirius.kernel.SiriusExtension
 import kotlin.test.assertContains
 
 /**
- * Tests the [MongoUserAccountImportHandler].
+ * Tests the [SqlUserAccountImportHandler].
  */
 @ExtendWith(SiriusExtension::class)
 class SqlUserAccountImportHandlerTest {
