@@ -249,7 +249,8 @@ class IDBLookupTable extends LookupTable {
         try {
             return table.query()
                         .lookupPaths(codeField)
-                        .searchValue(code).singleRow(SOURCE.columnName())
+                        .searchValue(code)
+                        .singleRow(SOURCE.columnName())
                         .map(row -> makeObject(type, Json.parseObject(row.at(0).asString())));
         } catch (Exception exception) {
             Exceptions.createHandled()
@@ -357,7 +358,7 @@ class IDBLookupTable extends LookupTable {
                                  DEPRECATED.columnName(),
                                  PERMISSION.columnName(),
                                  SOURCE.columnName())
-                        .filter(row -> filterRequiredPermission(row))
+                        .filter(this::filterRequiredPermission)
                         .map(this::processSearchOrScanRow)
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
         } catch (Exception exception) {

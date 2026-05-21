@@ -144,16 +144,6 @@ public class KnowledgeBaseEntry extends SearchableEntity {
         this.chapter = chapter;
     }
 
-    @Deprecated
-    public String getLang() {
-        return language;
-    }
-
-    @Deprecated
-    public void setLang(String lang) {
-        this.language = lang;
-    }
-
     public String getLanguage() {
         return language;
     }

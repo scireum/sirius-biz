@@ -175,7 +175,7 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
         }
 
         if (!Strings.areEqual(newPassword, confirmation)) {
-            UserContext.setFieldError("confirmation", null);
+            UserContext.setFieldError(PARAM_CONFIRMATION, null);
             throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
         }
 
@@ -205,4 +205,3 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
         }
     }
 }
-

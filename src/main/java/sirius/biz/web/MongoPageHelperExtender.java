@@ -28,7 +28,7 @@ public interface MongoPageHelperExtender<E extends MongoEntity> extends Priorize
     void extend(MongoPageHelper<E> pageHelper);
 
     /**
-     * Returns the target entity type addresed by this extender.
+     * Returns the target entity type addressed by this extender.
      *
      * @return the target entity for which the page helper is to be extended
      */

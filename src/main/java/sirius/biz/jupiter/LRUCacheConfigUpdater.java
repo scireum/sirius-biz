@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * Updates the config for all known LRU caches.
  * <p>
- * This essentailly reads the settings from the <tt>caches</tt> block.
+ * This essentially reads the settings from the <tt>caches</tt> block.
  */
 @Register
 public class LRUCacheConfigUpdater implements JupiterConfigUpdater {

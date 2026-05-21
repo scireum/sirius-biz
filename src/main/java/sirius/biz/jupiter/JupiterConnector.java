@@ -70,7 +70,7 @@ public class JupiterConnector {
     /**
      * Returns the instance (config) name of this Jupiter instance.
      *
-     * @return the name of the config instace being used
+     * @return the name of the config instance being used
      */
     public String getName() {
         return instanceName;
@@ -133,10 +133,9 @@ public class JupiterConnector {
                                       RedisDB main,
                                       RedisDB fallback,
                                       Runnable executeOnFailover) {
-        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
-             Jedis jedis = main.getConnection()) {
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = main.getConnection()) {
             return perform(description, jedis, task);
-        } catch (JedisConnectionException ignored) {
+        } catch (JedisConnectionException _) {
             executeOnFailover.run();
             return performWithoutFailover(description, task, fallback);
         } catch (Exception exception) {
@@ -145,7 +144,7 @@ public class JupiterConnector {
     }
 
     private <T> T performWithoutFailover(Supplier<String> description, Function<Connection, T> task, RedisDB redis) {
-        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
         } catch (Exception exception) {
@@ -172,7 +171,7 @@ public class JupiterConnector {
     /**
      * Executes one or more commands and returns a value of the given type without attempting a failover.
      * <p>
-     * If the main connection pool isn't available, this will not perform a failover but abort immediatelly.
+     * If the main connection pool isn't available, this will not perform a failover but abort immediately.
      * This can be used to execute administrative commands, which have to be executed on the target instance.
      *
      * @param description a description of the actions performed used for debugging and tracing
@@ -181,7 +180,7 @@ public class JupiterConnector {
      * @return a result computed by <tt>task</tt>
      */
     public <T> T queryDirect(Supplier<String> description, Function<Connection, T> task) {
-        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
              Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
         } catch (Exception error) {

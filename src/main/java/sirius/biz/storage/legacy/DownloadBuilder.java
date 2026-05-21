@@ -102,7 +102,7 @@ public class DownloadBuilder {
     }
 
     /**
-     * Make the URL a downlod url using the given filename.
+     * Make the URL a download url using the given filename.
      *
      * @param filename the filename to send to the browser
      * @return the builder itself for fluent method calls

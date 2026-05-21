@@ -30,7 +30,7 @@ public class DeflateTransformer implements ByteBlockTransformer {
     private final byte[] deflateBuffer = new byte[TransformingInputStream.DEFAULT_BUFFER_SIZE];
 
     /**
-     * Creates a new trasformer using the given compression level.
+     * Creates a new transformer using the given compression level.
      *
      * @param level the compression level to use
      */

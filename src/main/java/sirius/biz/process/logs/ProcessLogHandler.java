@@ -52,7 +52,7 @@ public interface ProcessLogHandler extends Named {
      * @param action    the name of the action to execute
      * @param returnUrl the url to eventually redirect to, once the action is fully completed
      * @return <tt>true</tt> if the action was executed (or its execution was started) and the request has been
-     * respondedm <tt>false</tt> if the system should generate a response
+     * responded, <tt>false</tt> if the system should generate a response
      */
     boolean executeAction(WebContext request, Process process, ProcessLog log, String action, String returnUrl);
 }

@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 /**
  * Wraps an {@link OutputStream} and provides a {@link Future completion future}.
  * <p>
- * The future is fullfilled once the stream is closed.
+ * The future is fulfilled once the stream is closed.
  */
 public class WatchableOutputStream extends OutputStream {
 

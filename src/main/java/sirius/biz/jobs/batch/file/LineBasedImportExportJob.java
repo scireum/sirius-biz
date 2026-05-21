@@ -11,7 +11,6 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.process.ProcessContext;
 import sirius.kernel.commons.Values;
 
-import java.io.Closeable;
 import java.io.IOException;
 
 /**
@@ -79,7 +78,7 @@ public abstract class LineBasedImportExportJob extends LineBasedImportJob {
 
     @Override
     public void close() throws IOException {
-        try (Closeable c = exportJob) {
+        try (var _ = exportJob) {
             super.close();
         }
     }

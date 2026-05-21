@@ -91,7 +91,7 @@ class BridgeUserManager implements UserManager {
                                            .getUserManager()
                                            .findUserByCredentials(null, effectiveUserName, auth.getPassword());
             if (authUser == null) {
-                StorageUtils.LOG.FINE("Layer 3/FTP: Invalid credentails...");
+                StorageUtils.LOG.FINE("Layer 3/FTP: Invalid credentials...");
                 throw new AuthenticationFailedException("Invalid credentials.");
             }
 

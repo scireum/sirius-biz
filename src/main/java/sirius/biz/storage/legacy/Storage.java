@@ -159,7 +159,7 @@ public class Storage {
      * Tries to find the object with the given id, for the given tenant and bucket.
      * <p>
      * Uses a cache for the {@link VirtualObject virtual objects}. When fetching an object from the cache, the buckets
-     * and tennants are compared to ensure integrity. Only non-temporary objects are cached.
+     * and tenants are compared to ensure integrity. Only non-temporary objects are cached.
      *
      * @param tenant the tenant to filter on
      * @param bucket the bucket to search in
@@ -458,7 +458,7 @@ public class Storage {
     /**
      * Creates a new output stream which updates the contents of the given file.
      * <p>
-     * Note that most probably, the file will be updated once the stream is closed and not immediatelly on a write.
+     * Note that most probably, the file will be updated once the stream is closed and not immediately on a write.
      * Also note that it is essential to close the stream to release underlying resources.
      *
      * @param file the file to update.
@@ -515,7 +515,7 @@ public class Storage {
     }
 
     /**
-     * Delivers a pyhsical file or object.
+     * Delivers a physical file or object.
      *
      * @param webContext    the request to respond to
      * @param bucket        the bucket to deliver from

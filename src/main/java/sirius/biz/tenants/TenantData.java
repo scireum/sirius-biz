@@ -604,11 +604,6 @@ public class TenantData extends Composite implements Journaled {
         return journal;
     }
 
-    @Deprecated
-    public LookupValue getLang() {
-        return language;
-    }
-
     public LookupValue getLanguage() {
         return language;
     }

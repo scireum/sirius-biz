@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Provides a database independent API to store and retrieve metrics.
  * <p>
- * Metrics in this case are numerical values (integers) which are stored for an object in serveral time intervals.
+ * Metrics in this case are numerical values (integers) which are stored for an object in several time intervals.
  * <p>
  * Most metrics are most probably computed using a {@link DailyMetricComputer} or {@link MonthlyMetricComputer}.
  * However this API can also be used outside of such computers.

@@ -16,7 +16,7 @@ import sirius.kernel.settings.Extension;
  * <p>
  * The effective factory is selected by the {@link ObjectStorage#CONFIG_KEY_LAYER1_ENGINE} setting.
  */
-public interface ObjectStoraceSpaceFactory extends Named {
+public interface ObjectStorageSpaceFactory extends Named {
 
     /**
      * Creates a {@link ObjectStorageSpace} for the given Layer 1 storage space.

@@ -46,7 +46,7 @@ public abstract class ArchiveExportJob extends FileExportJob {
      *
      * @param fileName the name of the archived file
      * @return a new output stream that points to the created entry
-     * @throws IOException in case the output stream couln't be created
+     * @throws IOException in case the output stream couldn't be created
      */
     @Nonnull
     protected OutputStream createEntry(String fileName) throws IOException {

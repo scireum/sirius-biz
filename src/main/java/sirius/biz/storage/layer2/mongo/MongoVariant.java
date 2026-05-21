@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer2.mongo;
 
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;

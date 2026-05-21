@@ -72,7 +72,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
      * <p>
      * After the repository contents have been synced (or more exactly, their sync has been requested) we ask jupiter
      * to increment the epochs (basically a simple counter) for the frontend and backend actors. As the frontend
-     * actor will immediatelly incement its value but the background actor will put this task into its internal queue,
+     * actor will immediately increment its value but the background actor will put this task into its internal queue,
      * we know that once the values are the same again, all background tasks which were previously scheduled, are
      * completed.
      * <p>

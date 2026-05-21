@@ -180,7 +180,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     /**
      * Creates or updates the given entity.
      * <p>
-     * This can be overwritten to use a custom way of persisting data. Also this can be used to perfrom
+     * This can be overwritten to use a custom way of persisting data. Also this can be used to perform
      * post-save activities.
      * <p>
      * By default we instantly create or update the entity. Note that if this is set to batch updates,
