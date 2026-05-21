@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 /**
  * Gets invoked once the {@link BlobDispatcher} completely delivered a {@link Blob}.
  * <p>
- * This can be triggered by invoking {@link URLBuilder#withHook(String, String)}. The paylod
+ * This can be triggered by invoking {@link URLBuilder#withHook(String, String)}. The payload
  * should be short an concise (e.g. a database id). Also note that the payload is by default
  * not protected by any signature or other cryptographic framework as this is mostly used
  * by statistic / logging tasks. If such a protection is required, it has to be enforced

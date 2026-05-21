@@ -18,7 +18,7 @@ import javax.annotation.Nonnull;
  * Creates an instance of {@link FSObjectStorageSpace} for each Layer 1 storage space which specified <b>fs</b> as engine.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
-public class FSObjectStorageSpaceFactory implements ObjectStoraceSpaceFactory {
+public class FSObjectStorageSpaceFactory implements ObjectStorageSpaceFactory {
 
     @Override
     public ObjectStorageSpace create(String name, Extension extension) throws Exception{

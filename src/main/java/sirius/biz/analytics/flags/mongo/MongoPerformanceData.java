@@ -32,7 +32,7 @@ public class MongoPerformanceData extends PerformanceData {
     protected final StringList flags = new StringList();
 
     /**
-     * Creeates a new instance for the given entity.
+     * Creates a new instance for the given entity.
      *
      * @param owner the entity in which this composite is embedded
      */

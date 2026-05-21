@@ -87,7 +87,7 @@ public class PackageData extends Composite {
      * Creates a new instance for the given owner.
      *
      * @param owner the owner entity which contains this composite.
-     * @param scope the scope used to determine which packages and updgrades to consider
+     * @param scope the scope used to determine which packages and upgrades to consider
      */
     public PackageData(BaseEntity<?> owner, String scope) {
         this.owner = owner;

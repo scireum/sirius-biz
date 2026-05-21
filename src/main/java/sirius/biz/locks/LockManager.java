@@ -24,7 +24,7 @@ public interface LockManager extends Named {
      * Tries to acquire the lock with the given name within the given interval.
      *
      * @param lockName       the name of the lock to acquire.
-     * @param acquireTimeout the max time to wait for a lock. Used <tt>null</tt> to immediatelly return if a lock
+     * @param acquireTimeout the max time to wait for a lock. Used <tt>null</tt> to immediately return if a lock
      *                       cannot be obtained.
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
@@ -34,7 +34,7 @@ public interface LockManager extends Named {
      * Tries to acquire the lock with the given name within the given interval.
      *
      * @param lockName       the name of the lock to acquire.
-     * @param acquireTimeout the max time to wait for a lock. Used <tt>null</tt> to immediatelly return if a lock
+     * @param acquireTimeout the max time to wait for a lock. Used <tt>null</tt> to immediately return if a lock
      *                       cannot be obtained.
      * @param lockTimeout    the max duration for which the lock will be kept before auto-releasing it.
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise

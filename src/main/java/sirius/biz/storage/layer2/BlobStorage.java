@@ -47,7 +47,7 @@ public abstract class BlobStorage {
     }
 
     /**
-     * Creates the storage spaceusing the given config.
+     * Creates the storage space using the given config.
      *
      * @param config the settings to use when creating the space
      * @return a wrapper which is used to access the objects stored in the storage space

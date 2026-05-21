@@ -16,6 +16,6 @@ applications.
 
 To create an article, use the **k:article** tag, for chapters use **k:chapter**.
 
-Note that articles are not imediatelly available after a system restart as the end of day task
+Note that articles are not immediately available after a system restart as the end of day task
 **synchronize-knowledgebase** has to run. This can be forced by running `eod synchronize-knowledgebase`
 in the console.

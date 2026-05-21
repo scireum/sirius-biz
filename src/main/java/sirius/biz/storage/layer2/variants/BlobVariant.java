@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 
 import javax.annotation.Nullable;

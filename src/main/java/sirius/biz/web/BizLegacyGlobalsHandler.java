@@ -12,7 +12,7 @@ import sirius.kernel.di.std.Register;
 import sirius.pasta.noodle.compiler.LegacyGlobalsHandler;
 
 /**
- * Replaces magic constants which were proviously automatically available in Tagliatelle.
+ * Replaces magic constants which were previously automatically available in Tagliatelle.
  */
 @Register
 public class BizLegacyGlobalsHandler extends LegacyGlobalsHandler {

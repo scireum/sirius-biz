@@ -28,7 +28,7 @@ public interface SQLPageHelperExtender<E extends SQLEntity> extends Priorized {
     void extend(SQLPageHelper<E> pageHelper);
 
     /**
-     * Returns the target entity type addresed by this extender.
+     * Returns the target entity type addressed by this extender.
      *
      * @return the target entity for which the page helper is to be extended
      */

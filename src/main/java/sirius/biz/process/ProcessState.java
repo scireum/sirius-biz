@@ -33,7 +33,7 @@ public enum ProcessState {
     RUNNING,
 
     /**
-     * Represents a prcoess which is running but the user already tried to cancel it.
+     * Represents a process which is running but the user already tried to cancel it.
      */
     CANCELED,
 

@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
  * scheduled. Additionally, prioritized queues are supported. For these queues a <tt>penalty token</tt>
  * per task is supplied (e.g. a user or tenant id). The system then counts the number of already queued
  * tasks for this token and computes a penalty time. Now if now other tasks are queued, a task with a
- * penalty time applied will still be immediatelly executed. However, as soon as other tasks are scheduled
+ * penalty time applied will still be immediately executed. However, as soon as other tasks are scheduled
  * a task might be delayed up until its penalty time is over. Currently, the penalty time is a static
  * value set in the system configuration and multiplied by the number of already queued tasks. Therefore, this
  * should be roughly equal to the estimated execution time.
@@ -115,7 +115,7 @@ public class DistributedTasks implements MetricProvider {
     /**
      * Contains the index of the queue in {@link #sortedTaskQueues} to pull work from.
      * <p>
-     * Work is pulled in a round-robin fasion and this index contains the next queue to try to poll.
+     * Work is pulled in a round-robin fashion, and this index contains the next queue to try to poll.
      */
     private final AtomicInteger nextQueueToFetchWorkFrom = new AtomicInteger(0);
 
@@ -303,7 +303,7 @@ public class DistributedTasks implements MetricProvider {
     }
 
     /**
-     * Feteches the config for the given queue.
+     * Fetches the config for the given queue.
      *
      * @param queueName the name of the queue to fetch the config for
      * @return the config of the given queue

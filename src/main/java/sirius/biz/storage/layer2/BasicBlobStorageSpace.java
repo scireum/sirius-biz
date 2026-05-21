@@ -174,7 +174,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_SORT_BY_LAST_MODIFIED = "sortByLastModified";
 
     /**
-     * Contains the name of the algorith used to compute the checksum of uploaded files.
+     * Contains the name of the algorithm used to compute the checksum of uploaded files.
      */
     private static final String CONFIG_KEY_CHECKSUM_ALGORITHM = "checksumAlgorithm";
 

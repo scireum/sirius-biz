@@ -15,7 +15,7 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
 /**
- * Represents a provider which uses a {@link SecretKey} to create an appropriate encryption and decrpytion {@link Cipher}.
+ * Represents a provider which uses a {@link SecretKey} to create an appropriate encryption and decryption {@link Cipher}.
  */
 public class SecretKeyCipherProvider implements CipherProvider {
 

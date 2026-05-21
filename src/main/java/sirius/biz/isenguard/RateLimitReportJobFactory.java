@@ -13,7 +13,6 @@ import sirius.biz.analytics.reports.Report;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.WebContext;

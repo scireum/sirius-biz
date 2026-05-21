@@ -437,7 +437,7 @@ public class ObjectStore {
         try {
             client.headBucket(HeadBucketRequest.builder().bucket(bucket.getName()).build());
             return true;
-        } catch (NoSuchBucketException exception) {
+        } catch (NoSuchBucketException _) {
             return false;
         } catch (S3Exception exception) {
             if (exception.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
@@ -508,23 +508,23 @@ public class ObjectStore {
      * @throws FileNotFoundException if the requested object does not exist
      */
     public File download(BucketName bucket, String objectId) throws FileNotFoundException {
-        File dest = null;
+        File destination = null;
         try (var _ = new Operation(() -> Strings.apply("S3: Downloading object %s from %s", objectId, bucket),
                                    Duration.ofHours(4))) {
-            dest = File.createTempFile("AMZS3", null);
+            destination = File.createTempFile("AMZS3", null);
             ensureBucketExists(bucket);
             transferManager.downloadFile(DownloadFileRequest.builder()
                                                             .getObjectRequest(GetObjectRequest.builder()
                                                                                               .bucket(bucket.getName())
                                                                                               .key(objectId)
                                                                                               .build())
-                                                            .destination(dest)
+                                                            .destination(destination)
                                                             .addTransferListener(new MonitoringProgressListener(false))
                                                             .build()).completionFuture().get();
-            return dest;
+            return destination;
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
-            Files.delete(dest);
+            Files.delete(destination);
 
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
@@ -534,22 +534,15 @@ public class ObjectStore {
                                     bucket,
                                     objectId)
                             .handle();
-        } catch (S3Exception exception) {
-            Files.delete(dest);
-            if (isNotFound(exception)) {
-                throw new FileNotFoundException(objectId);
-            } else {
-                throw handleDownloadError(bucket, objectId, exception);
-            }
-        } catch (ExecutionException exception) {
-            Files.delete(dest);
+        } catch (S3Exception | ExecutionException exception) {
+            Files.delete(destination);
             if (isNotFound(exception)) {
                 throw new FileNotFoundException(objectId);
             } else {
                 throw handleDownloadError(bucket, objectId, exception);
             }
         } catch (Exception exception) {
-            Files.delete(dest);
+            Files.delete(destination);
             throw handleDownloadError(bucket, objectId, exception);
         }
     }
@@ -669,7 +662,10 @@ public class ObjectStore {
      * @param metadata the metadata for the object
      * @return kind of a promise used to monitor the upload progress
      */
-    public FileUpload uploadAsync(BucketName bucket, String objectId, File data, @Nullable Map<String, String> metadata) {
+    public FileUpload uploadAsync(BucketName bucket,
+                                  String objectId,
+                                  File data,
+                                  @Nullable Map<String, String> metadata) {
         try {
             ensureBucketExists(bucket);
             return transferManager.uploadFile(UploadFileRequest.builder()
@@ -981,8 +977,8 @@ public class ObjectStore {
                                                      .partNumber(partNumber)
                                                      .build();
         String eTag = getClient().uploadPart(request,
-                                            RequestBody.fromInputStream(new ByteBufInputStream(buffer),
-                                                                        buffer.readableBytes())).eTag();
+                                             RequestBody.fromInputStream(new ByteBufInputStream(buffer),
+                                                                         buffer.readableBytes())).eTag();
         return CompletedPart.builder().partNumber(partNumber).eTag(eTag).build();
     }
 

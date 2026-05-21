@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Provides an interface between NIO and the <tt>FileSystem</tt> API torwards {@link VirtualFile#children(FileSearch)}.
+ * Provides an interface between NIO and the <tt>FileSystem</tt> API towards {@link VirtualFile#children(FileSearch)}.
  */
 public class BridgeDirectoryStream implements DirectoryStream<Path> {
 

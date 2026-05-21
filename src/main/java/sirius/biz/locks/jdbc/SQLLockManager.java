@@ -106,7 +106,7 @@ public class SQLLockManager extends BasicLockManager {
             }
 
             deleteStatement.executeUpdate();
-        } catch (SQLException exception) {
+        } catch (SQLException _) {
             throw Exceptions.handle()
                             .to(OMA.LOG)
                             .withSystemErrorMessage("An error occurred while unlocking %s: %s - %s", lock)

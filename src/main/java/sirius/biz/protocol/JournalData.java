@@ -69,7 +69,7 @@ public class JournalData extends Composite {
         try {
             String changes = buildChangeJournal();
 
-            if (changes.length() > 0) {
+            if (Strings.isFilled(changes)) {
                 addJournalEntry(owner, changes, batchLog);
             }
         } catch (Exception exception) {

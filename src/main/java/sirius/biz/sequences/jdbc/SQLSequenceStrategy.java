@@ -60,7 +60,7 @@ public class SQLSequenceStrategy implements SequenceStrategy {
                                 .where(SequenceCounter.NEXT_VALUE, result.getNextValue())
                                 .executeUpdate();
         if (numRowsChanged == 1) {
-            // Nobody else changed the counter, so we can savely return the determined value...
+            // Nobody else changed the counter, so we can safely return the determined value...
             return result.getNextValue();
         }
 

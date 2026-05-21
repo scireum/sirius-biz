@@ -47,7 +47,7 @@ public abstract class BasicLockManager implements LockManager {
     }
 
     /**
-     * If the lock is already aquired, this returns the initial amount of milliseconds to wait.
+     * If the lock is already acquired, this returns the initial amount of milliseconds to wait.
      *
      * @return the duration of the first interval until a new attempt is made to acquire a lock
      */
@@ -69,7 +69,7 @@ public abstract class BasicLockManager implements LockManager {
     protected abstract int getMaxWait();
 
     /**
-     * Actually obtains a lock and returns immediatelly.
+     * Actually obtains a lock and returns immediately.
      *
      * @param lockName the name of the lock to acquire.
      * @return <tt>true</tt> if the lock was obtained, <tt>false</tt> otherwise

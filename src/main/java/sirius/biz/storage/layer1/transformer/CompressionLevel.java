@@ -21,7 +21,7 @@ public enum CompressionLevel {
     OFF(Deflater.NO_COMPRESSION),
 
     /**
-     * Fast compession ({@link Deflater#BEST_SPEED}).
+     * Fast compression ({@link Deflater#BEST_SPEED}).
      */
     FAST(Deflater.BEST_SPEED),
 

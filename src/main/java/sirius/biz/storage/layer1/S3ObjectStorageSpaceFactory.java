@@ -18,7 +18,7 @@ import javax.annotation.Nonnull;
  * Creates an instance of {@link S3ObjectStorageSpace} for each Layer 1 storage space which specified <b>s3</b> as engine.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
-public class S3ObjectStorageSpaceFactory implements ObjectStoraceSpaceFactory {
+public class S3ObjectStorageSpaceFactory implements ObjectStorageSpaceFactory {
 
     @Override
     public ObjectStorageSpace create(String name, Extension extension) throws Exception {

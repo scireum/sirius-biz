@@ -156,7 +156,7 @@ public abstract class ChartFactory<O> implements Named, Priorized {
             String identifier = resolver().fetchIdentifier((O) targetObject);
             try {
                 return resolver().resolve(identifier).map(ignored -> getName() + ":" + identifier).orElse(null);
-            } catch (Exception ignored) {
+            } catch (Exception _) {
                 // missing access to the target object may also be signaled by throwing an exception
                 return null;
             }

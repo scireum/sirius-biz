@@ -16,7 +16,7 @@ import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
 
 /**
- * Provices the entity to store a {@link JobPreset} in a JDBC database.
+ * Provides the entity to store a {@link JobPreset} in a JDBC database.
  */
 @TranslationSource(JobPreset.class)
 @Framework(SQLJobPresets.FRAMEWORK_PRESETS_JDBC)

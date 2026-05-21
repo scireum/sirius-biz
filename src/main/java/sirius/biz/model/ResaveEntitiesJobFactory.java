@@ -116,13 +116,13 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
                     descriptor.getMapper().update(entity);
                 }
                 if (performValidation) {
-                    List<String> validationgErrors = descriptor.getMapper().validate(entity);
-                    if (!validationgErrors.isEmpty()) {
+                    List<String> validationErrors = descriptor.getMapper().validate(entity);
+                    if (!validationErrors.isEmpty()) {
                         process.log(ProcessLog.warn()
                                               .withFormattedMessage("Entity %s with id: %s has validation warnings:\n%s",
                                                                     entity.toString(),
                                                                     entity.getIdAsString(),
-                                                                    String.join("\n", validationgErrors)));
+                                                                    String.join("\n", validationErrors)));
 
                         process.addTiming("Validation-Error", watch.elapsedMillis());
                     }

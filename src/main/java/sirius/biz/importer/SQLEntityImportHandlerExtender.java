@@ -35,7 +35,7 @@ public abstract class SQLEntityImportHandlerExtender<E extends SQLEntity> implem
      * @param handler       the handler which can be extended
      * @param descriptor    the descriptor determining what kind of entities are processed by the given handler
      * @param context       the surrounding importer context
-     * @param queryConsumer the collector which consumes additiona find queries
+     * @param queryConsumer the collector which consumes additional find queries
      */
     public void collectFindQueries(SQLEntityImportHandler<E> handler,
                                    EntityDescriptor descriptor,

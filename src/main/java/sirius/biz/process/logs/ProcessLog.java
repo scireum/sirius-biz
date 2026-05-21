@@ -339,7 +339,7 @@ public class ProcessLog extends SearchableEntity {
     }
 
     /**
-     * Specifies the {@link ProcessOutput} to which this log entry belogs.
+     * Specifies the {@link ProcessOutput} to which this log entry belongs.
      *
      * @param output the name of the output this entry belongs to
      * @return the log entry itself for fluent method calls

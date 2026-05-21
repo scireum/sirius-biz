@@ -16,7 +16,7 @@ import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
 
 /**
- * Provices the entity to store a {@link JobPreset} in a MongoDB database.
+ * Provides the entity to store a {@link JobPreset} in a MongoDB database.
  */
 @TranslationSource(JobPreset.class)
 @Framework(MongoJobPresets.FRAMEWORK_PRESETS_MONGO)
