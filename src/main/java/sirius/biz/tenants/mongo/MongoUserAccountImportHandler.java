@@ -17,6 +17,7 @@ import sirius.biz.importer.MongoEntityImportHandler;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.protocol.TraceData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantUserManager;
@@ -148,6 +149,7 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
 
     @Override
     protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        collector.accept(90, MongoUserAccount.TRACE.inner(TraceData.CREATED_AT));
         collector.accept(100,
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME));
         collector.accept(110, MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL));

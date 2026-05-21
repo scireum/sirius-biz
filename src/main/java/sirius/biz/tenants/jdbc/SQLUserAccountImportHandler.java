@@ -17,6 +17,7 @@ import sirius.biz.importer.SQLEntityImportHandler;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.protocol.TraceData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantUserManager;
@@ -87,6 +88,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
 
     @Override
     protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        collector.accept(90, SQLUserAccount.TRACE.inner(TraceData.CREATED_AT));
         collector.accept(100, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME));
         collector.accept(110, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL));
         collector.accept(120,
