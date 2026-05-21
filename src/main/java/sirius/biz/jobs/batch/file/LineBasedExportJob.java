@@ -118,9 +118,9 @@ public abstract class LineBasedExportJob extends FileExportJob {
     protected void createExport() {
         ExportFileType type = determineEffectiveFileType();
         export = switch (type) {
-            case ExportFileType.CSV -> new ExportCSV(new OutputStreamWriter(createOutputStream()));
-            case ExportFileType.XLS -> new ExportXLS(this::createOutputStream);
-            case ExportFileType.XLSX -> new ExportXLSX(this::createOutputStream);
+            case CSV -> new ExportCSV(new OutputStreamWriter(createOutputStream()));
+            case XLS -> new ExportXLS(this::createOutputStream);
+            case XLSX -> new ExportXLSX(this::createOutputStream);
             case null -> throw Exceptions.createHandled()
                                          .withSystemErrorMessage("Unknown export file format: %s", type)
                                          .handle();
