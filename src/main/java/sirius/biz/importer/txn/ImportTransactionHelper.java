@@ -225,12 +225,12 @@ public class ImportTransactionHelper extends ImportHelper {
 
     /**
      * Sets a new value for the source.
+     * <p>
+     * IMPORTANT: Only use this method if you are sure that you want to change the source in one and the same transaction.
      * This is useful e.g. in migration scenarios where the source in one transaction could be different.
      *
      * @param source the new source
-     * @deprecated Only use this method if you are sure that you want to change the source in one and the same transaction.
      */
-    @Deprecated
     public void setSource(String source) {
         this.source = source;
     }
