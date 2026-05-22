@@ -12,7 +12,6 @@ import org.codelibs.jcifs.smb.impl.SmbFile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.storage.layer3.VirtualFileSystem
@@ -47,9 +46,7 @@ class CIFSUplinkTest {
 
         assertEquals("share", root.name())
         assertEquals("/share", root.path())
-        assertTrue(root.exists())
-        assertTrue(root.isDirectory())
-        assertTrue(root.tryAs(SmbFile::class.java).isPresent)
+        assertEquals("smb://example.invalid/share/", root.`as`(SmbFile::class.java).canonicalPath)
     }
 
     @Test
@@ -67,7 +64,7 @@ class CIFSUplinkTest {
         val root = uplink.getFile(vfs!!.root())
 
         assertEquals("secure-share", root.name())
-        assertTrue(root.tryAs(SmbFile::class.java).isPresent)
+        assertEquals("smb://example.invalid/secure-share/", root.`as`(SmbFile::class.java).canonicalPath)
     }
 
     @Test
