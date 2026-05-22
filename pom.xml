@@ -173,4 +173,18 @@
             <version>10.9</version>
         </dependency>
     </dependencies>
+
+    <!-- Inherit the dependency management from sirius-web to ensure consistent versions across all modules -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.scireum</groupId>
+                <artifactId>sirius-web</artifactId>
+                <version>${sirius.web}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 </project>
