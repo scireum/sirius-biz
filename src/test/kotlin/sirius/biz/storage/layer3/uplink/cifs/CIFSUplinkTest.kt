@@ -26,11 +26,6 @@ import sirius.kernel.di.std.Part
 @ExtendWith(SiriusExtension::class)
 class CIFSUplinkTest {
 
-    companion object {
-        @Part
-        private var vfs: VirtualFileSystem? = null
-    }
-
     @Test
     fun `factory is registered under the cifs type`() {
         assertEquals("cifs", CIFSUplink.Factory().name)
@@ -92,5 +87,10 @@ class CIFSUplinkTest {
     private fun mapConfig(vararg entries: Pair<String, String>): (String) -> Value {
         val values = mapOf(*entries)
         return { key -> Value.of(values[key]) }
+    }
+
+    companion object {
+        @Part
+        private var vfs: VirtualFileSystem? = null
     }
 }
