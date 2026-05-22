@@ -11,6 +11,7 @@ package sirius.biz.storage.layer3.uplink.cifs
 import org.codelibs.jcifs.smb.impl.SmbFile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -31,6 +32,11 @@ class CIFSUplinkTest {
     }
 
     @Test
+    fun `factory is registered under the cifs type`() {
+        assertEquals("cifs", CIFSUplink.Factory().name)
+    }
+
+    @Test
     fun `factory creates anonymous virtual root backed by smb file`() {
         val uplink = CIFSUplink.Factory().make(
                 "share",
@@ -41,7 +47,6 @@ class CIFSUplinkTest {
         )
 
         assertInstanceOf(CIFSUplink::class.java, uplink)
-        assertEquals("cifs", CIFSUplink.Factory().name)
 
         val root = uplink.getFile(vfs!!.root())
 
@@ -68,6 +73,20 @@ class CIFSUplinkTest {
 
         assertEquals("secure-share", root.name())
         assertTrue(root.tryAs(SmbFile::class.java).isPresent)
+    }
+
+    @Test
+    fun `factory rejects credentials without a domain`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            CIFSUplink.Factory().make(
+                    "share",
+                    mapConfig(
+                            "url" to "smb://example.invalid/share/",
+                            "user" to "user",
+                            "password" to "secret"
+                    )
+            )
+        }
     }
 
     private fun mapConfig(vararg entries: Pair<String, String>): (String) -> Value {
