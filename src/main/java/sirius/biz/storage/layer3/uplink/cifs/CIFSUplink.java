@@ -8,13 +8,13 @@
 
 package sirius.biz.storage.layer3.uplink.cifs;
 
-import jcifs.CIFSContext;
-import jcifs.CIFSException;
-import jcifs.config.BaseConfiguration;
-import jcifs.context.BaseContext;
-import jcifs.smb.NtlmPasswordAuthenticator;
-import jcifs.smb.SmbException;
-import jcifs.smb.SmbFile;
+import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.CIFSException;
+import org.codelibs.jcifs.smb.config.BaseConfiguration;
+import org.codelibs.jcifs.smb.context.BaseContext;
+import org.codelibs.jcifs.smb.impl.NtlmPasswordAuthenticator;
+import org.codelibs.jcifs.smb.impl.SmbException;
+import org.codelibs.jcifs.smb.impl.SmbFile;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
