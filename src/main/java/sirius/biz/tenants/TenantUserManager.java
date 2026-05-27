@@ -33,6 +33,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
 import sirius.web.security.Permissions;
@@ -41,6 +42,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.security.UserManager;
 import sirius.web.security.UserSettings;
+import sirius.web.util.CaptchaController;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -159,6 +161,11 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     public static final String SECURITY_RATE_LIMIT_REALM = "security";
 
     /**
+     * Contains the number of failed password login attempts after which the next attempt requires a CAPTCHA.
+     */
+    private static final int FAILED_PASSWORD_LOGIN_ATTEMPTS_BEFORE_CAPTCHA = 4;
+
+    /**
      * Contains the prefix added to the account number which is added as artificial role.
      * <p>
      * Therefore, each user of a tenant has the following additional role (if filled):
@@ -188,6 +195,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Part
     protected static Isenguard isenguard;
+
+    @Part
+    protected static CaptchaController captchaController;
 
     @Part
     protected static EventRecorder eventRecorder;
@@ -639,6 +649,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         verifyLoginRateLimitNotReached(webContext);
+        verifyPasswordLoginCaptchaIfRequired(webContext);
 
         UserInfo result = findUserByNameForPasswordLogin(webContext, user);
         if (result == null) {
@@ -680,6 +691,30 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         registerFailedLoginAttempt(webContext);
         return null;
+    }
+
+    /**
+     * Determines if the next password login attempt requires a CAPTCHA for the current caller.
+     *
+     * @param webContext the current web request to inspect
+     * @return <tt>true</tt> if a CAPTCHA has to be solved, <tt>false</tt> otherwise
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public static boolean isPasswordLoginCaptchaRequired(@Nullable WebContext webContext) {
+        if (webContext == null) {
+            return false;
+        }
+
+        String ip = webContext.getRemoteIP().getHostAddress();
+        return isenguard.checkRateLimitReached(ip,
+                                               SECURITY_RATE_LIMIT_REALM,
+                                               FAILED_PASSWORD_LOGIN_ATTEMPTS_BEFORE_CAPTCHA);
+    }
+
+    private void verifyPasswordLoginCaptchaIfRequired(@Nullable WebContext webContext) {
+        if (isPasswordLoginCaptchaRequired(webContext)) {
+            captchaController.verifyCaptcha(webContext);
+        }
     }
 
     private UserInfo findUserByNameForPasswordLogin(@Nullable WebContext webContext, String user) {
