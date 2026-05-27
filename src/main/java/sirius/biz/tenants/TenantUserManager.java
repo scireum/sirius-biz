@@ -714,12 +714,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         String ip = webContext.getRemoteIP().getHostAddress();
-        boolean rateLimitReached =
-                isenguard.registerCallAndCheckRateLimitReached(ip,
-                                                               SECURITY_RATE_LIMIT_REALM,
-                                                               Isenguard.USE_LIMIT_FROM_CONFIG,
-                                                               () -> RateLimitingInfo.fromWebContext(webContext,
-                                                                                                     null));
+        boolean rateLimitReached = isenguard.registerCallAndCheckRateLimitReached(ip,
+                                                                                  SECURITY_RATE_LIMIT_REALM,
+                                                                                  Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                                                  () -> RateLimitingInfo.fromWebContext(
+                                                                                          webContext,
+                                                                                          null));
         if (rateLimitReached) {
             throw isenguard.createException(SECURITY_RATE_LIMIT_REALM);
         }
