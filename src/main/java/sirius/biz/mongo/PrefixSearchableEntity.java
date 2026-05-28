@@ -84,7 +84,7 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
     /**
      * Creates the tokenizer to use.
      *
-     * @return a new tokenier used to fill the search prefix list
+     * @return a new tokenizer used to fill the search prefix list
      */
     protected Tokenizer createPrefixTokenizer() {
         return new PrefixTokenizer();

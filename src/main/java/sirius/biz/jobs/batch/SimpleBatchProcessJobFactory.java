@@ -20,7 +20,7 @@ import sirius.biz.process.ProcessContext;
  * factory itself.
  * <p>
  * For more complex jobs which need to keep their parameters in fields and which also might want to split their
- * logic into several methods, subclass {@link BatchProcessJobFactory} (or its pre-defined sublcasses) and provide
+ * logic into several methods, subclass {@link BatchProcessJobFactory} (or its pre-defined subclasses) and provide
  * a custom {@link BatchJob}.
  */
 public abstract class SimpleBatchProcessJobFactory extends BatchProcessJobFactory {

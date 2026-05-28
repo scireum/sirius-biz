@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.util;
 
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.file.ArchiveExportJob;
 import sirius.biz.jobs.params.IntParameter;
@@ -19,7 +18,6 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.s3.BucketName;
 import sirius.biz.storage.s3.ObjectStores;
-import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.async.ParallelTaskExecutor;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.CSVWriter;
@@ -27,7 +25,7 @@ import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
-import sirius.web.security.UserContext;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -93,7 +91,7 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
             writeLine("bucketName", "physicalObjectId", "date", "size");
             // Creates a BucketName object. The suffix is already listed in the parameter.
             BucketName bucketName = new BucketName(getBucketName(), "");
-            Queue<S3ObjectSummary> queue = new LinkedList<>();
+            Queue<S3Object> queue = new LinkedList<>();
             objectStores.store().listObjects(bucketName, null, object -> {
                 process.tryUpdateState("Total: " + total.getAndIncrement());
                 queue.add(object);
@@ -118,10 +116,10 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
         }
     }
 
-    private void drainQueue(Queue<S3ObjectSummary> queue, int parallelTasks) {
+    private void drainQueue(Queue<S3Object> queue, int parallelTasks) {
         ParallelTaskExecutor executor = new ParallelTaskExecutor(parallelTasks);
         while (!queue.isEmpty()) {
-            S3ObjectSummary object = queue.poll();
+            S3Object object = queue.poll();
             executor.submitTask(() -> checkObject(object));
         }
         executor.shutdownWhenDone();
@@ -131,20 +129,20 @@ public abstract class SearchOrphanS3ObjectsJob extends ArchiveExportJob {
 
     protected abstract boolean variantExists(String physicalObjectKey);
 
-    private void checkObject(S3ObjectSummary object) {
-        String physicalObjectKey = object.getKey();
+    private void checkObject(S3Object object) {
+        String physicalObjectKey = object.key();
         if (blobExists(physicalObjectKey) || variantExists(physicalObjectKey)) {
             return;
         }
 
         try {
             missingCount.incrementAndGet();
-            missingSize.addAndGet(object.getSize());
+            missingSize.addAndGet(object.size());
             writeLine(getBucketName(),
                       physicalObjectKey,
-                      LocalDateTime.ofInstant(object.getLastModified().toInstant(), ZoneId.systemDefault())
+                      LocalDateTime.ofInstant(object.lastModified(), ZoneId.systemDefault())
                                    .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                      object.getSize());
+                      object.size());
         } catch (IOException exception) {
             process.handle(exception);
         }

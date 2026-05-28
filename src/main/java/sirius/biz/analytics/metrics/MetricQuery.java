@@ -112,7 +112,7 @@ public class MetricQuery {
     }
 
     /**
-     * Speficies the object to query metrics for.
+     * Specifies the object to query metrics for.
      *
      * @param targetType the type of the entity to query metrics for
      * @param targetId   the id of the entity to query metrics for

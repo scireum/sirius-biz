@@ -34,7 +34,7 @@ public interface DeleteTenantTask extends Priorized {
     void beforeExecution(ProcessContext process, Tenant<?> tenant, boolean simulate);
 
     /**
-     * Called to actually perfrom the delete.
+     * Called to actually perform the delete.
      * <p>
      * This will <b>not</b> be called in a simulation run.
      * <p>

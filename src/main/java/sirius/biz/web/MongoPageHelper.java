@@ -75,20 +75,6 @@ public class MongoPageHelper<E extends MongoEntity>
      * @param field    the field to aggregate on
      * @param enumType the type of enums in this field used for proper translation
      * @return the helper itself for fluent method calls
-     *
-     * @deprecated Use {@link #addEnumTermAggregation(Mapping, Class)} instead
-     */
-    @Deprecated(since = "2024/11/04", forRemoval = true)
-    public MongoPageHelper<E> addTermAggregation(Mapping field, Class<? extends Enum<?>> enumType) {
-        return addEnumTermAggregation(field, enumType);
-    }
-
-    /**
-     * Adds an automatic facet for values in the given field.
-     *
-     * @param field    the field to aggregate on
-     * @param enumType the type of enums in this field used for proper translation
-     * @return the helper itself for fluent method calls
      */
     public MongoPageHelper<E> addEnumTermAggregation(Mapping field, Class<? extends Enum<?>> enumType) {
         return addEnumTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),

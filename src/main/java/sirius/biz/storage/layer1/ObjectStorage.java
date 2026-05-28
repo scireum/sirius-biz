@@ -44,7 +44,7 @@ public class ObjectStorage {
      */
     public static final String CONFIG_KEY_LAYER1_ENGINE = "engine";
     /**
-     * Contains the config attribute which determines which {@link ObjectStoraceSpaceFactory} to use for a space.
+     * Contains the config attribute which determines which {@link ObjectStorageSpaceFactory} to use for a space.
      */
     public static final String CONFIG_KEY_LAYER1_COMPRESSION = "compression";
     /**
@@ -91,9 +91,9 @@ public class ObjectStorage {
 
     private ObjectStorageSpace createSpace(Extension extension) {
         try {
-            ObjectStoraceSpaceFactory factory =
+            ObjectStorageSpaceFactory factory =
                     globalContext.findPart(extension.get(CONFIG_KEY_LAYER1_ENGINE).asString(),
-                                           ObjectStoraceSpaceFactory.class);
+                                           ObjectStorageSpaceFactory.class);
 
             return factory.create(extension.getId(), extension);
         } catch (Exception exception) {

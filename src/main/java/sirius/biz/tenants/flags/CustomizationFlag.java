@@ -31,6 +31,7 @@ public class CustomizationFlag {
      *
      * @param name         the name of the flag to use
      * @param defaultValue the default value to use if no config is present
+     * @return the created flag
      */
     public static CustomizationFlag create(String name, boolean defaultValue) {
         CustomizationFlag flag = new CustomizationFlag(name, defaultValue);

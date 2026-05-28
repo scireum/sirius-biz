@@ -97,7 +97,7 @@ public class AutoBatchLoop extends BackgroundLoop {
         signalLock.lock();
         try {
             return loopExecuted.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
-        } catch (InterruptedException interruptedException) {
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
             return false;
         } finally {

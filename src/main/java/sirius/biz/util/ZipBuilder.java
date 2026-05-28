@@ -67,7 +67,7 @@ public class ZipBuilder implements Closeable {
      *
      * @param path      the path to use when creating the ZIP entry
      * @param fileToAdd the file to add to the archive
-     * @throws IOException in case of an IO error while reading or writing data. Note that once an IO error ocurrend,
+     * @throws IOException in case of an IO error while reading or writing data. Note that once an IO error occurred,
      *                     all subsequently emitted ZIP archives might be broken and should not be used. Still,
      *                     {@link FileHandle#close()} and {@link #close()} must be invoked to release all temporary
      *                     data.
@@ -108,9 +108,9 @@ public class ZipBuilder implements Closeable {
         }
     }
 
-
     /**
      * Provides a boilerplate method to directly add a <tt>FileHandle</tt> to the ZIP archive.
+     *
      * @param path      the path to use when creating the ZIP entry
      * @param fileToAdd the file to add. Note that {@link FileHandle#close()} will not be invoked for the given
      *                  handle.

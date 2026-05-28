@@ -31,7 +31,6 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.ValidatedBy;
 import sirius.db.mixing.types.StringList;
-import sirius.kernel.Sirius;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -369,7 +368,8 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return <tt>true</tt> if this user belongs to the current user's tenant, <tt>false</tt> otherwise
      */
     public boolean isOwnTenant() {
-        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().getIdAsString(), getTenant().getIdAsString());
+        return Objects.equals(UserContext.getCurrentUser().as(UserAccount.class).getTenant().getIdAsString(),
+                              getTenant().getIdAsString());
     }
 
     /**
@@ -449,11 +449,6 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     public void setExternalLoginRequired(boolean externalLoginRequired) {
         this.externalLoginRequired = externalLoginRequired;
-    }
-
-    @Deprecated
-    public LookupValue getLang() {
-        return language;
     }
 
     public LookupValue getLanguage() {

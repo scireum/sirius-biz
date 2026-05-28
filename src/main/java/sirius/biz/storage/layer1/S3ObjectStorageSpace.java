@@ -8,10 +8,6 @@
 
 package sirius.biz.storage.layer1;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
@@ -29,6 +25,13 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -101,7 +104,17 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
     @Override
     public boolean exists(String objectKey) throws IOException {
-        return store.getClient().doesObjectExist(bucketName().getName(), objectKey);
+        try {
+            store.getClient()
+                 .headObject(HeadObjectRequest.builder().bucket(bucketName().getName()).key(objectKey).build());
+            return true;
+        } catch (S3Exception exception) {
+            if (exception.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+                return false;
+            }
+
+            throw new IOException(exception);
+        }
     }
 
     @Override
@@ -229,25 +242,24 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey) throws IOException {
-        return getS3Object(objectKey).getObjectContent();
+        return getS3Object(objectKey);
     }
 
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey, ByteBlockTransformer transformer) throws IOException {
-        S3ObjectInputStream rawStream = getS3Object(objectKey).getObjectContent();
+        InputStream rawStream = getS3Object(objectKey);
         return new TransformingInputStream(rawStream, transformer);
     }
 
     @Override
     public void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException {
         store.listObjects(bucketName(), null, s3Object -> {
-            return objectHandler.test(new ObjectMetadata(s3Object.getKey(),
-                                                         s3Object.getLastModified()
-                                                                 .toInstant()
+            return objectHandler.test(new ObjectMetadata(s3Object.key(),
+                                                         s3Object.lastModified()
                                                                  .atZone(ZoneId.systemDefault())
                                                                  .toLocalDateTime(),
-                                                         s3Object.getSize()));
+                                                         s3Object.size()));
         });
     }
 
@@ -257,11 +269,18 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         if (targetSpace instanceof S3ObjectStorageSpace s3ObjectStorageSpace && canCopyObject(s3ObjectStorageSpace)) {
             // We want to copy from S3 to S3 and the source and target buckets permits a server-side copy.
             store.getClient()
-                 .copyObject(bucketName().getName(),
-                             sourceObjectKey,
-                             s3ObjectStorageSpace.bucketName().getName(),
-                             targetObjectKey);
-            long size = store.getClient().getObjectMetadata(bucketName().getName(), sourceObjectKey).getContentLength();
+                 .copyObject(CopyObjectRequest.builder()
+                                              .sourceBucket(bucketName().getName())
+                                              .sourceKey(sourceObjectKey)
+                                              .destinationBucket(s3ObjectStorageSpace.bucketName().getName())
+                                              .destinationKey(targetObjectKey)
+                                              .build());
+            long size = store.getClient()
+                             .headObject(HeadObjectRequest.builder()
+                                                          .bucket(bucketName().getName())
+                                                          .key(sourceObjectKey)
+                                                          .build())
+                             .contentLength();
             replicationManager.notifyAboutUpdate(s3ObjectStorageSpace, targetObjectKey, size);
         } else {
             super.duplicatePhysicalObject(sourceObjectKey, targetObjectKey, targetStorageSpace);
@@ -283,12 +302,13 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         return !hasTransformer() && !s3ObjectStorageSpace.hasTransformer();
     }
 
-    private S3Object getS3Object(String objectKey) throws IOException {
+    private ResponseInputStream<GetObjectResponse> getS3Object(String objectKey) throws IOException {
         try {
-            return store.getClient().getObject(bucketName().getName(), objectKey);
-        } catch (AmazonClientException exception) {
-            if (exception instanceof AmazonS3Exception s3Exception
-                && s3Exception.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+            return store.getClient().getObject(GetObjectRequest.builder().bucket(bucketName().getName()).key(objectKey)
+                            .build());
+        } catch (SdkException exception) {
+            if (exception instanceof S3Exception s3Exception
+                && s3Exception.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(Strings.apply("Layer 1: No object found for key '%s' in bucket '%s'",
                                                               objectKey,
                                                               bucketName()));

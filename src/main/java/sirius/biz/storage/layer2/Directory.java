@@ -33,7 +33,7 @@ public interface Directory {
     /**
      * Returns the name of the {@link #getStorageSpace() storage space}.
      *
-     * @return the name of the stroage space in which this directory resides.
+     * @return the name of the storage space in which this directory resides.
      */
     String getSpaceName();
 

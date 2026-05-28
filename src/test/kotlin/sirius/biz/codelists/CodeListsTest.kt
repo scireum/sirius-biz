@@ -55,7 +55,7 @@ class CodeListsTest {
     @Test
     fun `tryGetValue auto-creates if possible and reports correctly otherwise`() {
         TenantsHelper.installTestTenant()
-        assertTrue(codeLists.tryGetValue("test", "unknownCode").isPresent())
-        assertTrue(codeLists.tryGetValue("hard-test", "unknownCode").isEmpty())
+        assertTrue(codeLists.tryGetValue("test", "unknownCode").isPresent)
+        assertTrue(codeLists.tryGetValue("hard-test", "unknownCode").isEmpty)
     }
 }

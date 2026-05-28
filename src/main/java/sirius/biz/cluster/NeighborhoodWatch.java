@@ -413,7 +413,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         Value setting = Sirius.getSettings().get("orchestration." + key);
         try {
             targetMap.put(key, SynchronizeType.valueOf(setting.toUpperCase()));
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             Cluster.LOG.WARN("Invalid configuration found for orchestration." + key + ": " + setting);
             targetMap.put(key, SynchronizeType.LOCAL);
         }

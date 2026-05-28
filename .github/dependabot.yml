@@ -1,0 +1,41 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+registries:
+  scireum-mvn:
+    type: maven-repository
+    url: https://mvn.scireum.com
+updates:
+- package-ecosystem: maven
+  directory: "/"
+  registries:
+    - scireum-mvn
+  schedule:
+    interval: daily
+  cooldown:
+    default-days: 2
+    semver-major-days: 14
+    semver-minor-days: 5
+    semver-patch-days: 2
+    exclude:
+      - "com.scireum:sirius-*"
+  ignore:
+    # ignore Maven APIs/SPIs
+    - dependency-name: org.apache.maven:*
+  labels:
+    - "⬆️ Dependencies"
+    - "🛠️ Maintenance"
+  groups:
+    sirius:
+      patterns:
+        - "com.scireum:sirius-*"
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  cooldown:
+    default-days: 2
+  labels:
+    - "🛠️ Maintenance"

@@ -17,7 +17,7 @@ import sirius.kernel.di.std.Part;
 import javax.annotation.Nullable;
 
 /**
- * Responsible to transfering batches of replication tasks back to
+ * Responsible to transferring batches of replication tasks back to
  * {@link ReplicationTaskStorage#executeBatch(ObjectNode)}.
  *
  * @see ReplicationTaskStorage

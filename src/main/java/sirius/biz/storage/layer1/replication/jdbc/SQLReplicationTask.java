@@ -88,7 +88,7 @@ public class SQLReplicationTask extends SQLEntity {
     private boolean performDelete;
 
     /**
-     * Stores if this task has ultimatively failed.
+     * Stores if this task has ultimately failed.
      */
     public static final Mapping FAILED = Mapping.named("failed");
     private boolean failed;

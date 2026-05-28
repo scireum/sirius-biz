@@ -70,6 +70,23 @@ public class JobsController extends BizController {
     }
 
     /**
+     * Downloads the template for the given job.
+     *
+     * @param webContext the current request
+     * @param jobType    the name of the job to download the template for
+     */
+    @Routed("/job/:1/download-template")
+    @LoginRequired
+    public void downloadTemplate(WebContext webContext, String jobType) {
+        JobFactory job = jobs.findFactory(jobType, JobFactory.class);
+        if (job != null && job.canDownloadTemplate()) {
+            job.respondWithTemplate(webContext);
+        } else {
+            webContext.respondWith().direct(HttpResponseStatus.NOT_FOUND, "No template available");
+        }
+    }
+
+    /**
      * Launches the job with the given name.
      *
      * @param webContext the current request
@@ -80,7 +97,7 @@ public class JobsController extends BizController {
     public void job(WebContext webContext, String jobType) {
         try {
             jobs.findFactory(jobType, JobFactory.class).startInteractively(webContext);
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             UserContext.get()
                        .addMessage(Message.error()
                                           .withTextMessage(NLS.fmtr("JobsController.unknownJob")
@@ -155,7 +172,7 @@ public class JobsController extends BizController {
         try {
             JobFactory factory = jobs.findFactory(jobType, JobFactory.class);
             output.property("process", factory.startInBackground(webContext::get));
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             throw Exceptions.createHandled()
                             .withDirectMessage(Strings.apply("Unknown factory: %s", jobType))
                             .hint(Controller.HTTP_STATUS, HttpResponseStatus.NOT_FOUND.code())

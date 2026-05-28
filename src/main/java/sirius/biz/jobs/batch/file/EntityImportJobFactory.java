@@ -61,6 +61,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
      *
      * @return the dictionary being used
      */
+    @Override
     protected ImportDictionary getDictionary() {
         try (Importer importer = new Importer("getDictionary")) {
             ImportDictionary dictionary = importer.getImportDictionary(getImportType());

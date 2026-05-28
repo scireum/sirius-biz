@@ -16,8 +16,6 @@ import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.process.ErrorContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Journaled;
-import sirius.biz.protocol.TraceData;
-import sirius.biz.protocol.Traced;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;

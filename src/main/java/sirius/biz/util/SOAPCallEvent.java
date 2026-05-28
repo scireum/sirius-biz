@@ -64,7 +64,7 @@ public class SOAPCallEvent extends Event<SOAPCallEvent> implements UserEvent {
 
     /**
      * Contains the fault message (if the corresponding soap response contained a fault element)
-     * or the root cause message (if there was an exception whilse sending/receiving the request/response).
+     * or the root cause message (if there was an exception while sending/receiving the request/response).
      */
     public static final Mapping ERROR_MESSAGE = Mapping.named("errorMessage");
     @Trim

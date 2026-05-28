@@ -53,7 +53,7 @@ class RedisNamedCounters implements NamedCounters {
         } else {
             try {
                 return Optional.of(Long.parseLong(value));
-            } catch (NumberFormatException exception) {
+            } catch (NumberFormatException _) {
                 Exceptions.handle()
                           .to(Log.BACKGROUND)
                           .withSystemErrorMessage("Failed to parse counter value '%s' in counter '%s' of '%s'",
@@ -98,14 +98,14 @@ class RedisNamedCounters implements NamedCounters {
         }
 
         long nextCounterValue = Math.max(0, counterValue.get() - 1);
-        Transaction txn = db.multi();
+        Transaction transaction = db.multi();
         if (nextCounterValue == 0) {
-            txn.hdel(name, counter);
+            transaction.hdel(name, counter);
         } else {
-            txn.hset(name, counter, String.valueOf(nextCounterValue));
+            transaction.hset(name, counter, String.valueOf(nextCounterValue));
         }
 
-        List<?> response = txn.exec();
+        List<?> response = transaction.exec();
         if (response == null || response.isEmpty()) {
             return null;
         } else {

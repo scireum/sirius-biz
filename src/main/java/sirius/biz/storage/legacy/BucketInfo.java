@@ -105,7 +105,7 @@ public class BucketInfo {
     /**
      * Determines if a user can create new objects in this bucket.
      *
-     * @return <tt>true</tt> if a user can create net objects, fale<tt>false</tt> otherwise
+     * @return <tt>true</tt> if a user can create new objects, <tt>false</tt> otherwise
      */
     public boolean isCanCreate() {
         return canCreate;

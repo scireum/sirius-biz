@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Provides a test importer used for SQL tenants and alsi in {@link ImporterSpec}.
+ * Provides a test importer used for SQL tenants and also in {@link ImporterTest}.
  */
 public class SQLTenantImportHandler extends SQLEntityImportHandler<SQLTenant> {
 

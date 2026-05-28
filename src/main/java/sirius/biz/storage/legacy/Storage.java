@@ -8,10 +8,10 @@
 
 package sirius.biz.storage.legacy;
 
-import com.amazonaws.internal.ResettableInputStream;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import sirius.biz.protocol.TraceData;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.OMA;
@@ -21,12 +21,10 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
-import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Urls;
 import sirius.kernel.di.GlobalContext;
-import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -38,13 +36,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -108,10 +104,8 @@ public class Storage {
     @Part
     private GlobalContext context;
 
-    @ConfigValue("storage.sharedSecret")
-    @Nullable
-    private String sharedSecret;
-    private String safeSharedSecret;
+    @Part
+    private StorageUtils utils;
 
     private Map<String, BucketInfo> buckets;
 
@@ -165,7 +159,7 @@ public class Storage {
      * Tries to find the object with the given id, for the given tenant and bucket.
      * <p>
      * Uses a cache for the {@link VirtualObject virtual objects}. When fetching an object from the cache, the buckets
-     * and tennants are compared to ensure integrity. Only non-temporary objects are cached.
+     * and tenants are compared to ensure integrity. Only non-temporary objects are cached.
      *
      * @param tenant the tenant to filter on
      * @param bucket the bucket to search in
@@ -405,7 +399,7 @@ public class Storage {
      */
     public void updateFile(@Nonnull StoredObject file, @Nonnull File data, @Nullable String filename) {
         try {
-            try (InputStream in = new ResettableInputStream(data)) {
+            try (InputStream in = new FileInputStream(data)) {
                 String md5 = calculateMd5(data);
                 updateFile(file, in, filename, md5, data.length());
             }
@@ -464,7 +458,7 @@ public class Storage {
     /**
      * Creates a new output stream which updates the contents of the given file.
      * <p>
-     * Note that most probably, the file will be updated once the stream is closed and not immediatelly on a write.
+     * Note that most probably, the file will be updated once the stream is closed and not immediately on a write.
      * Also note that it is essential to close the stream to release underlying resources.
      *
      * @param file the file to update.
@@ -517,28 +511,11 @@ public class Storage {
      * @return <tt>true</tt> if the hash verifies the given object key, <tt>false</tt> otherwise
      */
     protected boolean verifyHash(String key, String hash) {
-        // Check for a hash for today...
-        if (Strings.areEqual(hash, computeHash(key, 0))) {
-            return true;
-        }
-
-        // Check for an eternally valid hash...
-        if (Strings.areEqual(hash, computeEternallyValidHash(key))) {
-            return true;
-        }
-
-        // Check for hashes up to two days of age...
-        for (int i = 1; i < 3; i++) {
-            if (Strings.areEqual(hash, computeHash(key, -i)) || Strings.areEqual(hash, computeHash(key, i))) {
-                return true;
-            }
-        }
-
-        return false;
+        return utils.verifyHash(key, hash, StorageUtils.DEFAULT_URL_VALIDITY_DAYS).isPresent();
     }
 
     /**
-     * Delivers a pyhsical file or object.
+     * Delivers a physical file or object.
      *
      * @param webContext    the request to respond to
      * @param bucket        the bucket to deliver from
@@ -625,9 +602,9 @@ public class Storage {
         result.append(downloadBuilder.getBucket());
         result.append("/");
         if (downloadBuilder.isEternallyValid()) {
-            result.append(computeEternallyValidHash(downloadBuilder.getPhysicalKey()));
+            result.append(utils.computeEternallyValidHash(downloadBuilder.getPhysicalKey()));
         } else {
-            result.append(computeHash(downloadBuilder.getPhysicalKey(), 0));
+            result.append(utils.computeHash(downloadBuilder.getPhysicalKey(), 0));
         }
         result.append("/");
         String addonText = downloadBuilder.getAddonText();
@@ -646,56 +623,5 @@ public class Storage {
         }
 
         return result.toString();
-    }
-
-    /**
-     * Computes an authentication hash for the given physical storage key and the offset in days (from the current).
-     *
-     * @param physicalKey the key to authenticate
-     * @param offsetDays  the offset from the current day
-     * @return a hash valid for the given day and key
-     */
-    private String computeHash(String physicalKey, int offsetDays) {
-        return Hasher.md5().hash(physicalKey + getTimestampOfDay(offsetDays) + getSharedSecret()).toHexString();
-    }
-
-    /**
-     * Computes an authentication hash which is eternally valid.
-     *
-     * @param physicalKey the key to authenticate
-     * @return a hash valid forever
-     */
-    private String computeEternallyValidHash(String physicalKey) {
-        return Hasher.md5().hash(physicalKey + getSharedSecret()).toHexString();
-    }
-
-    /**
-     * Generates a timestamp for the day plus the provided day offset.
-     *
-     * @param day the offset from the current day
-     * @return the effective timestamp (number of days since 01.01.1970) in days
-     */
-    private String getTimestampOfDay(int day) {
-        Instant midnight = LocalDate.now().plusDays(day).atStartOfDay(ZoneId.systemDefault()).toInstant();
-        return String.valueOf(midnight.toEpochMilli());
-    }
-
-    /**
-     * Determines the shared secret to use.
-     *
-     * @return the shared secret to use. Which is either taken from <tt>storage.sharedSecret</tt> in the system config
-     * or a random value if the system is not configured properly
-     */
-    private String getSharedSecret() {
-        if (safeSharedSecret == null) {
-            if (Strings.isFilled(sharedSecret)) {
-                safeSharedSecret = sharedSecret;
-            } else {
-                LOG.WARN("Please specify a secure and random value for 'storage.sharedSecret' in the 'instance.conf'!");
-                return String.valueOf(System.currentTimeMillis());
-            }
-        }
-
-        return safeSharedSecret;
     }
 }

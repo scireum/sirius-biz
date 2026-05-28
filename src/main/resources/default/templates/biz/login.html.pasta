@@ -130,7 +130,7 @@
             });
 
             try {
-                window.localStorage.setItem('samlPostLoginUri', '<i:raw>@originalUrl</i:raw>');
+                window.localStorage.setItem('samlPostLoginUri', '@raw {@escapeJS(originalUrl)}');
             } catch (e) {
                 console.log(e);
             }

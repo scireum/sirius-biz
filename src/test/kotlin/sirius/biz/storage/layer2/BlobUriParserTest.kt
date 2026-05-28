@@ -29,7 +29,7 @@ class BlobUriParserTest {
             download: Boolean,
             filename: String
     ) {
-        val blobUri = BlobUriParser.parseBlobUri(uri).orElse(null)
+        val blobUri = BlobUriParser.parseBlobUri(uri).orElse(null)!!
 
         Assertions.assertEquals(blobUri.isLargeFileExpected, largeFileExpected)
         Assertions.assertEquals(blobUri.isPhysical, true)
@@ -60,7 +60,7 @@ class BlobUriParserTest {
             cacheable: Boolean,
             filename: String
     ) {
-        val blobUri = BlobUriParser.parseBlobUri(uri).orElse(null)
+        val blobUri = BlobUriParser.parseBlobUri(uri).orElse(null)!!
 
         Assertions.assertEquals(blobUri.isLargeFileExpected, largeFileExpected)
         Assertions.assertEquals(blobUri.isPhysical, false)

@@ -30,7 +30,7 @@ public class SQLPerformanceData extends PerformanceData {
     protected long flags;
 
     /**
-     * Creeates a new instance for the given entity.
+     * Creates a new instance for the given entity.
      *
      * @param owner the entity in which this composite is embedded
      */

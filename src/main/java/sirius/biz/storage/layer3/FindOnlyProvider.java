@@ -12,9 +12,9 @@ import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
 /**
- * Represents a {@link ChildProvider} which can only resolve files / direcoties but never enumerate them.
+ * Represents a {@link ChildProvider} which can only resolve files / directories but never enumerate them.
  * <p>
- * This is useful for virtual folders which accept (non-exisiting) child files, which are then processed elsewhere.
+ * This is useful for virtual folders which accept (non-existing) child files, which are then processed elsewhere.
  */
 public class FindOnlyProvider implements ChildProvider {
 

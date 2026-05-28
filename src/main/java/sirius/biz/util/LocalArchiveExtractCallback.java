@@ -117,7 +117,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
         }
         for (int i = 0; i < filePathBytes.length - 1; i++) {
             // Windows saves zip entry file paths in IBM437 Codepage,
-            // the 7z lib interpretates them as Unicode code points and we retrieve them in UTF-8.
+            // the 7z lib interprets them as Unicode code points and we retrieve them in UTF-8.
             //
             // This way
             // ... special characters in IBM437 (80..bf) become Control Characters (c2 80..9f)
@@ -151,7 +151,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
     private String attemptToFixEncodingErrors(@Nonnull String filePath) {
         byte[] filePathBytes = filePath.getBytes(StandardCharsets.UTF_8);
         for (int i = 0; i < filePathBytes.length - 3; i++) {
-            // The bug interpretates UTF-8 as ISO-8859-1 (which doubles the number of characters)
+            // The bug interprets UTF-8 as ISO-8859-1 (which doubles the number of characters)
             // and converts them back to UTF-8.
             // This way all possible 2-byte UTF-8 bytes (c0..df 80..bf) become 4 bytes: (c3 80..9f c2 80..bf)
             if (filePathBytes[i] == (byte) 0xc3

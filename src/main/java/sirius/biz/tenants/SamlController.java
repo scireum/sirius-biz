@@ -9,6 +9,8 @@
 package sirius.biz.tenants;
 
 import com.google.common.collect.Streams;
+import sirius.biz.saml.SamlHelper;
+import sirius.biz.saml.SamlResponse;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
@@ -18,8 +20,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
-import sirius.web.security.SAMLHelper;
-import sirius.web.security.SAMLResponse;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
@@ -36,7 +36,7 @@ import java.util.UUID;
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
-public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public class SamlController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     /**
@@ -45,7 +45,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
     public static final String SAML_URI_PREFIX = "/saml";
 
     @Part
-    private SAMLHelper saml;
+    private SamlHelper saml;
 
     @ConfigValue("security.roles")
     private List<String> roles;
@@ -83,7 +83,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
             return;
         }
 
-        SAMLResponse response = saml.parseSAMLResponse(webContext);
+        SamlResponse response = saml.parseSamlResponse(webContext);
 
         if (Strings.isEmpty(response.getNameId())) {
             throw Exceptions.createHandled()
@@ -111,13 +111,19 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         webContext.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
     }
 
-    private UserInfo tryCreateUser(WebContext webContext, SAMLResponse response) {
+    /**
+     * Creates a new user account for the given trusted SAML response.
+     *
+     * @param webContext the current request
+     * @param response   the trusted SAML response
+     * @return the newly created user
+     */
+    private UserInfo tryCreateUser(WebContext webContext, SamlResponse response) {
         if (Strings.isEmpty(response.getIssuer())) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: No issuer in request!").handle();
         }
 
-        T tenant = findTenant(response);
-        checkFingerprint(tenant, response);
+        T tenant = findTrustedTenant(response);
 
         try {
             U account = getUserClass().getDeclaredConstructor().newInstance();
@@ -155,7 +161,25 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         return (Class<U>) tenants.getUserClass();
     }
 
-    private T findTenant(SAMLResponse response) {
+    /**
+     * Finds the matching SAML tenant and verifies that the signing fingerprint is trusted for it.
+     *
+     * @param response the SAML response to verify
+     * @return the trusted tenant matching the response
+     */
+    T findTrustedTenant(SamlResponse response) {
+        T tenant = findTenant(response);
+        verifyFingerprint(tenant, response);
+        return tenant;
+    }
+
+    /**
+     * Finds the tenant whose configured SAML issuer matches the response issuer.
+     *
+     * @param response the SAML response to inspect
+     * @return the tenant matching the response issuer
+     */
+    private T findTenant(SamlResponse response) {
         for (T tenant : querySAMLTenants()) {
             if (checkIssuer(tenant, response)) {
                 return tenant;
@@ -179,16 +203,20 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
                                         .queryList();
     }
 
-    private void verifyUser(SAMLResponse response, UserInfo user) {
+    /**
+     * Verifies an existing user account against the given SAML response and updates its mapped account data.
+     *
+     * @param response the trusted SAML response
+     * @param user     the existing user to verify and update
+     */
+    private void verifyUser(SamlResponse response, UserInfo user) {
         U account = user.getUserObject(getUserClass());
         T tenant = account.getTenant().forceFetchValue();
 
         if (!checkIssuer(tenant, response)) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Issuer mismatch!").handle();
         }
-        if (!checkFingerprint(tenant, response)) {
-            throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
-        }
+        verifyFingerprint(tenant, response);
 
         UserContext userContext = UserContext.get();
         userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
@@ -198,14 +226,57 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         });
     }
 
-    private boolean checkFingerprint(T tenant, SAMLResponse response) {
-        return isInList(tenant.getTenantData().getSamlFingerprint(), response.getFingerprint());
+    /**
+     * Verifies that the response fingerprint is trusted for the given tenant.
+     *
+     * @param tenant   the tenant whose SAML configuration is used
+     * @param response the response to verify
+     */
+    private void verifyFingerprint(T tenant, SamlResponse response) {
+        if (!isTrustedFingerprint(tenant.getTenantData().getSamlFingerprint(), response)) {
+            throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
+        }
     }
 
-    private boolean checkIssuer(T tenant, SAMLResponse response) {
+    /**
+     * Determines if the SAML response fingerprint matches one of the configured trusted fingerprints.
+     *
+     * @param configuredFingerprints a comma-separated list of trusted fingerprints
+     * @param response               the response to verify
+     * @return <tt>true</tt> if the response fingerprint is trusted, <tt>false</tt> otherwise
+     */
+    static boolean isTrustedFingerprint(String configuredFingerprints, SamlResponse response) {
+        if (Strings.isEmpty(configuredFingerprints)) {
+            return false;
+        }
+
+        for (String fingerprint : configuredFingerprints.split(",")) {
+            if (Strings.isFilled(fingerprint) && response.hasFingerprint(fingerprint)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determines if the response issuer matches one of the tenant's configured issuers.
+     *
+     * @param tenant   the tenant whose SAML configuration is used
+     * @param response the response to verify
+     * @return <tt>true</tt> if the issuer is trusted, <tt>false</tt> otherwise
+     */
+    private boolean checkIssuer(T tenant, SamlResponse response) {
         return isInList(tenant.getTenantData().getSamlIssuerName(), response.getIssuer());
     }
 
+    /**
+     * Determines if a value occurs in a comma-separated, case-insensitive list.
+     *
+     * @param values       the comma-separated list to inspect
+     * @param valueToCheck the value to search for
+     * @return <tt>true</tt> if the value is contained in the list, <tt>false</tt> otherwise
+     */
     private boolean isInList(String values, String valueToCheck) {
         if (Strings.isEmpty(values)) {
             return false;
@@ -220,11 +291,17 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         return false;
     }
 
-    private void updateAccount(SAMLResponse response, U account) {
+    /**
+     * Updates account fields and permissions from the attributes contained in the SAML response.
+     *
+     * @param response the trusted SAML response
+     * @param account  the account to update
+     */
+    private void updateAccount(SamlResponse response, U account) {
         account.getUserAccountData().getPermissions().getPermissions().clear();
         List<String> mutablePermissions = account.getUserAccountData().getPermissions().getPermissions().modify();
-        Streams.concat(response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP).stream(),
-                       response.getAttribute(SAMLResponse.ATTRIBUTE_ROLE).stream())
+        Streams.concat(response.getAttribute(SamlResponse.ATTRIBUTE_GROUP).stream(),
+                       response.getAttribute(SamlResponse.ATTRIBUTE_ROLE).stream())
                .filter(Strings::isFilled)
                .flatMap(value -> Arrays.stream(value.split(",")))
                .map(String::trim)
@@ -232,18 +309,18 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
                .filter(role -> roles.contains(role))
                .forEach(mutablePermissions::add);
 
-        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
+        if (Strings.isFilled(response.getAttributeValue(SamlResponse.ATTRIBUTE_GIVEN_NAME))) {
             account.getUserAccountData()
                    .getPerson()
-                   .setFirstname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME));
+                   .setFirstname(response.getAttributeValue(SamlResponse.ATTRIBUTE_GIVEN_NAME));
         }
-        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME))) {
+        if (Strings.isFilled(response.getAttributeValue(SamlResponse.ATTRIBUTE_SURNAME))) {
             account.getUserAccountData()
                    .getPerson()
-                   .setLastname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME));
+                   .setLastname(response.getAttributeValue(SamlResponse.ATTRIBUTE_SURNAME));
         }
-        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
-            account.getUserAccountData().setEmail(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS));
+        if (Strings.isFilled(response.getAttributeValue(SamlResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
+            account.getUserAccountData().setEmail(response.getAttributeValue(SamlResponse.ATTRIBUTE_EMAIL_ADDRESS));
         }
 
         // If a generated password was previously set, force a random password so that the

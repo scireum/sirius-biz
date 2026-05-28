@@ -70,7 +70,7 @@ public class MongoSequenceStrategy implements SequenceStrategy {
                                    .getModifiedCount();
 
         if (numRowsChanged == 1) {
-            // Nobody else changed the counter, so we can savely return the determined value...
+            // Nobody else changed the counter, so we can safely return the determined value...
             return result;
         }
 

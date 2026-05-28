@@ -1,4 +1,4 @@
-<i:arg type="sirius.web.security.SAMLResponse" name="response"/>
+<i:arg type="sirius.biz.saml.SamlResponse" name="response"/>
 
 <t:page titleKey="SAMLController.loginViaSAML" ignoreDisasterMode="true">
     <i:block name="breadcrumbs">

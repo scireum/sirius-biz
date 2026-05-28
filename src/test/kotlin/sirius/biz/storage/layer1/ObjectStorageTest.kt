@@ -76,15 +76,15 @@ class ObjectStorageTest {
     fun `storing and fetching data works as expected`(length: Int, space: String) {
 
         val testData = generateRandomData(length)
-        val objectName = "test-data-" + length
+        val objectName = "test-data-$length"
         val objectSpace = storage.getSpace(space)
 
         objectSpace.upload(objectName, ByteArrayInputStream(testData), testData.size.toLong())
 
         val downloaded = objectSpace.download(objectName)
 
-        assertTrue { downloaded.isPresent() }
-        assertTrue { testData.contentEquals(Files.readAllBytes(downloaded.get().getFile().toPath())) }
+        assertTrue { downloaded.isPresent }
+        assertTrue { testData.contentEquals(Files.readAllBytes(downloaded.get().file.toPath())) }
         assertTrue { testData.contentEquals(Streams.toByteArray(objectSpace.getInputStream(objectName).get())) }
     }
 
@@ -102,8 +102,8 @@ class ObjectStorageTest {
 
         val downloadedAfterDelete = objectSpace.download("delete-test")
 
-        assertTrue { downloadedBeforeDelete.isPresent() }
-        assertFalse { downloadedAfterDelete.isPresent() }
+        assertTrue { downloadedBeforeDelete.isPresent }
+        assertFalse { downloadedAfterDelete.isPresent }
 
     }
 
@@ -113,9 +113,9 @@ class ObjectStorageTest {
         private lateinit var storage: ObjectStorage
 
         private fun generateRandomData(length: Int): ByteArray {
-            val rnd = Random()
+            val random = Random()
             val result = ByteArray(length)
-            rnd.nextBytes(result)
+            random.nextBytes(result)
             return result
         }
     }

@@ -155,8 +155,13 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             // The first element of the causal chain is always the throwable followed by its cause hierarchy.
             // Therefore, the first element is skipped.
             Throwables.getCausalChain(throwable).stream().skip(1).forEach(cause -> {
-                stringBuilder.append("\n").append("Caused by: ").append(cause.getClass().getName()).append(":").append("\n");
-                stringBuilder.append(truncateErrorMessage(determineErrorMessage(cause), numberOfCharactersPerMessage)).append("\n\n");
+                stringBuilder.append("\n")
+                             .append("Caused by: ")
+                             .append(cause.getClass().getName())
+                             .append(":")
+                             .append("\n");
+                stringBuilder.append(truncateErrorMessage(determineErrorMessage(cause), numberOfCharactersPerMessage))
+                             .append("\n\n");
             });
         } catch (IllegalArgumentException exception) {
             // This happens if the causal chain has a circular reference.
@@ -179,13 +184,15 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
     private String truncateErrorMessage(String errorMessage, int length) {
         int charsToPreserveFromStart = Math.max(0, length - NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE);
-        return Strings.truncateMiddle(errorMessage, charsToPreserveFromStart, NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE);
+        return Strings.truncateMiddle(errorMessage,
+                                      charsToPreserveFromStart,
+                                      NUMBER_OF_CHARS_TO_PRESERVE_AT_THE_END_OF_AN_ERROR_MESSAGE);
     }
 
     private int calcCharactersPerMessage(Throwable throwable) {
         try {
             return maxMessageLength / Throwables.getCausalChain(throwable).size();
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException _) {
             return maxMessageLength;
         }
     }

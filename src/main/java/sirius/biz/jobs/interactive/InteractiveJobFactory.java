@@ -39,7 +39,7 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
     private Tasks tasks;
 
     /**
-     * Provides the <tt>Cells</tt> helper for all sub classses which is used to populate a <tt>Report</tt>.
+     * Provides the <tt>Cells</tt> helper for all sub classes which is used to populate a <tt>Report</tt>.
      */
     @Part
     protected Cells cells;

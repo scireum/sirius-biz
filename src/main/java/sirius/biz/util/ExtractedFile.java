@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 
 /**
- * Represents a file which has been extraced from an archive by the {@link ArchiveExtractor}.
+ * Represents a file which has been extracted from an archive by the {@link ArchiveExtractor}.
  */
 public interface ExtractedFile {
 

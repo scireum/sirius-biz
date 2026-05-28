@@ -21,7 +21,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
 /**
- * Provides a pusblish / subscribe model to broadcast messages across all nodes of the cluster.
+ * Provides a publish / subscribe model to broadcast messages across all nodes of the cluster.
  */
 @Register(classes = {Interconnect.class, Subscriber.class})
 public class Interconnect implements Subscriber {
@@ -40,7 +40,7 @@ public class Interconnect implements Subscriber {
 
     /**
      * Contains the name of the key which is used to extract the handler class for handling an
-     * incoming mesage.
+     * incoming message.
      */
     public static final String HANDLER = "_handler";
 

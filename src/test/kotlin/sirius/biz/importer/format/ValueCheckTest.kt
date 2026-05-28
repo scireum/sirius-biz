@@ -29,14 +29,14 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
-        number
-        1234
-        '1234'
-        123456
-        '123456'
-        1234.56
-        '1234.56'"""
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = // language=CSV
+            """number
+            1234
+            '1234'
+            123456
+            '123456'
+            1234.56
+            '1234.56'"""
     )
     @ParameterizedTest
     fun `numbers exceeding the provided fixed point precision are correctly marked as invalid`(number: String) {
@@ -46,12 +46,12 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
-        number
-        123456
-        '123456'
-        1234.50
-        '1234.50'"""
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = // language=CSV
+            """number
+            123456
+            '123456'
+            1234.50
+            '1234.50'"""
     )
     @ParameterizedTest
     fun `numbers exceeding the provided arbitrary precision are correctly marked as invalid`(number: String) {
@@ -61,12 +61,12 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
-        number
-        0.123
-        '0.123'
-        12.345
-        '12.345'"""
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = // language=CSV
+            """number
+            0.123
+            '0.123'
+            12.345
+            '12.345'"""
     )
     @ParameterizedTest
     fun `numbers exceeding the provided scale are correctly marked as invalid`(number: String) {
@@ -76,24 +76,24 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
-        precision | scale | number
-        10        | 0     | 1234512345
-        10        | 0     | '1234512345'
-        5         | 2     | 0.12
-        5         | 2     | '0.12'
-        5         | 2     | 1.23
-        5         | 2     | '1.23'
-        5         | 2     | 12.34
-        5         | 2     | '12.34'
-        5         | 2     | 123.45
-        5         | 2     | '123.45'
-        5         | 2     | 1
-        5         | 2     | '1'
-        5         | 2     | 12
-        5         | 2     | '12'
-        5         | 2     | 123
-        5         | 2     | '123'"""
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = // language=CSV
+            """precision | scale | number
+            10        | 0     | 1234512345
+            10        | 0     | '1234512345'
+            5         | 2     | 0.12
+            5         | 2     | '0.12'
+            5         | 2     | 1.23
+            5         | 2     | '1.23'
+            5         | 2     | 12.34
+            5         | 2     | '12.34'
+            5         | 2     | 123.45
+            5         | 2     | '123.45'
+            5         | 2     | 1
+            5         | 2     | '1'
+            5         | 2     | 12
+            5         | 2     | '12'
+            5         | 2     | 123
+            5         | 2     | '123'"""
     )
     @ParameterizedTest
     fun `numbers matching the provided scale and fixed-point precision are correctly marked as valid`(
@@ -105,18 +105,18 @@ class ValueCheckTest {
     }
 
     @CsvSource(
-        delimiter = '|', useHeadersInDisplayName = true, textBlock = """
-        precision | scale | number
-        10        | 0     | 1234512345
-        10        | 0     | '1234512345'
-        3         | 2     | 0.12
-        3         | 2     | '0.12'
-        3         | 2     | 1.20
-        3         | 2     | '1.20'
-        3         | 2     | 12.3
-        3         | 2     | '12.3'
-        3         | 2     | 123
-        3         | 2     | '123'"""
+        delimiter = '|', useHeadersInDisplayName = true, textBlock = // language=CSV
+            """precision | scale | number
+            10        | 0     | 1234512345
+            10        | 0     | '1234512345'
+            3         | 2     | 0.12
+            3         | 2     | '0.12'
+            3         | 2     | 1.20
+            3         | 2     | '1.20'
+            3         | 2     | 12.3
+            3         | 2     | '12.3'
+            3         | 2     | 123
+            3         | 2     | '123'"""
     )
     @ParameterizedTest
     fun `numbers matching the provided scale and arbitrary precision are correctly marked as valid`(

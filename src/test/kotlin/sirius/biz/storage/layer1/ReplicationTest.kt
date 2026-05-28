@@ -35,12 +35,12 @@ class ReplicationTest {
     fun `Updates are replicated correctly`() {
         val testData = "test".toByteArray(StandardCharsets.UTF_8)
         storage.getSpace("repl-primary")
-                .upload("repl-update-test", ByteArrayInputStream(testData), testData.size.toLong())
+            .upload("repl-update-test", ByteArrayInputStream(testData), testData.size.toLong())
         awaitReplication()
         val downloaded = storage.getSpace("reply-secondary").download("repl-update-test")
-        assertTrue { downloaded.isPresent() }
+        assertTrue { downloaded.isPresent }
 
-        assertEquals("test", InputStreamReader(downloaded.get().getInputStream(), StandardCharsets.UTF_8).readText())
+        assertEquals("test", InputStreamReader(downloaded.get().inputStream, StandardCharsets.UTF_8).readText())
     }
 
     @Test
@@ -48,13 +48,13 @@ class ReplicationTest {
 
         val testData = "test".toByteArray(StandardCharsets.UTF_8)
         storage.getSpace("repl-primary")
-                .upload("repl-delete-test", ByteArrayInputStream(testData), testData.size.toLong())
+            .upload("repl-delete-test", ByteArrayInputStream(testData), testData.size.toLong())
 
         awaitReplication()
         storage.getSpace("repl-primary").delete("repl-delete-test")
         awaitReplication()
         val downloaded = storage.getSpace("reply-secondary").download("repl-delete-test")
-        assertFalse { downloaded.isPresent() }
+        assertFalse { downloaded.isPresent }
     }
 
     companion object {
@@ -64,7 +64,7 @@ class ReplicationTest {
 
         fun awaitReplication() {
             BackgroundLoop.nextExecution(
-                    ReplicationBackgroundLoop::class.java
+                ReplicationBackgroundLoop::class.java
             ).await(Duration.ofMinutes(1))
             // Give the sync some time to actually complete its tasks...
             Wait.seconds(10.0)
