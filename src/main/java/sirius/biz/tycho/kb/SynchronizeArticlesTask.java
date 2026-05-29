@@ -19,7 +19,6 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.info.Product;
 import sirius.kernel.timer.EndOfDayTask;
 import sirius.pasta.tagliatelle.Tagliatelle;
@@ -55,8 +54,6 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     private static final String BLOCK_REQUIRED_PERMISSIONS = "requiredPermissions";
     private static final String BLOCK_CROSS_REFERENCES = "crossReferences";
 
-    private boolean executed = false;
-
     @Part
     private Locks locks;
 
@@ -82,15 +79,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
 
     @Override
     public void execute() throws Exception {
-        if (executed) {
-            return;
-        }
-
         synchronizeArticles();
-
-        if (!Sirius.isDev()) {
-            executed = true;
-        }
     }
 
     private void synchronizeArticles() {
@@ -209,14 +198,12 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             entry.setLanguage(language);
             entry.setTemplatePath(templatePath);
         } else if (!Strings.areEqual(templatePath, entry.getTemplatePath())) {
-            throw Exceptions.handle()
-                            .withSystemErrorMessage(
-                                    "KnowledgeBase detected an article id collision for id %s: %s vs %s (Language: %s)",
-                                    articleId,
-                                    templatePath,
-                                    entry.getTemplatePath(),
-                                    language)
-                            .handle();
+            KnowledgeBase.LOG.INFO("Updating template path for article %s from %s to %s (Language: %s)",
+                                   articleId,
+                                   entry.getTemplatePath(),
+                                   templatePath,
+                                   language);
+            entry.setTemplatePath(templatePath);
         }
 
         return entry;
