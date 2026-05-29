@@ -19,6 +19,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Controller;
+import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -137,7 +138,7 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
      * @param webContext the current request
      */
     @LoginRequired
-    @Routed("/profile/changeFingerprint")
+    @Routed(value = "/profile/changeFingerprint", methods = HttpMethod.POST)
     public void profileChangeFingerprint(WebContext webContext) {
         U userAccount = getUser().getUserObject(getUserClass());
         userAccount = userAccount.getMapper().refreshOrFail(userAccount);
