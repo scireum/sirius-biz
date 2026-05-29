@@ -15,6 +15,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
+import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -44,7 +45,7 @@ public class MetricsApiController extends BizController {
      */
     @InternalService
     @LoginRequired
-    @Routed("/tycho/metrics/api")
+    @Routed(value = "/tycho/metrics/api", methods = HttpMethod.POST)
     public void fetchMetrics(WebContext webContext, JSONStructuredOutput output) {
         ObjectNode jsonContent = webContext.getJSONContent();
         output.beginArray("tasks");
