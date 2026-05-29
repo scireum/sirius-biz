@@ -174,7 +174,11 @@
                             if (config.allowUpload && json.canCreateChildren) {
                                 const _uploadBox = _modal.querySelector('.upload-box-js');
                                 fileUpload('/fs/upload?path=' + encodeURIComponent(config.path),
-                                    _uploadBox, undefined, [], 3, function (response) {
+                                    _uploadBox,
+                                    {CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'},
+                                    [],
+                                    3,
+                                    function (response) {
                                         $(_modal).modal('hide');
                                         if (response.error) {
                                             clearMessages();
