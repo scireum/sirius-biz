@@ -56,12 +56,14 @@
                                 <t:dropdownItem
                                         labelKey="LoginData.unlock"
                                         icon="fa-solid fa-unlock"
-                                        url="@apply('/user-account/%s/unlock', account.getIdAsString())"/>
+                                        url="@apply('/user-account/%s/unlock', account.getIdAsString())"
+                                        sendPostRequest="true"/>
                                 <i:else>
                                     <t:dropdownItem
                                             labelKey="LoginData.lock"
                                             icon="fa-solid fa-lock"
-                                            url="@apply('/user-account/%s/lock', account.getIdAsString())"/>
+                                            url="@apply('/user-account/%s/lock', account.getIdAsString())"
+                                            sendPostRequest="true"/>
                                 </i:else>
                             </i:if>
                         </t:dropdownSection>
