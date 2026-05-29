@@ -79,7 +79,8 @@
             sirius.postJSON('/system/sql/api/execute',
                 {
                     query: document.getElementById("query").value,
-                    database: document.getElementById("db").tokenAutocomplete.val()[0]
+                    database: document.getElementById("db").tokenAutocomplete.val()[0],
+                    CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
                 })
                 .then(function (data) {
                     _columns.innerHTML = '';
