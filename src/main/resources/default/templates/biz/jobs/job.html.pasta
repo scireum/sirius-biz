@@ -180,7 +180,7 @@
         function deletePreset(id) {
             sirius.postJSON('/jobs/preset/delete', {
                 preset: id,
-                csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+                CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
             }).then(function (response) {
                 sirius.querySelector('#updateOnly').value = true;
                 sirius.querySelector('.edit-form').submit();
