@@ -54,6 +54,8 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     private static final String BLOCK_REQUIRED_PERMISSIONS = "requiredPermissions";
     private static final String BLOCK_CROSS_REFERENCES = "crossReferences";
 
+    private boolean executed = false;
+
     @Part
     private Locks locks;
 
@@ -79,7 +81,15 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
 
     @Override
     public void execute() throws Exception {
+        if (executed) {
+            return;
+        }
+
         synchronizeArticles();
+
+        if (!Sirius.isDev()) {
+            executed = true;
+        }
     }
 
     private void synchronizeArticles() {
