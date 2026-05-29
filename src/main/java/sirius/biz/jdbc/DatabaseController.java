@@ -165,7 +165,7 @@ public class DatabaseController extends BasicController {
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/sql/export")
     public void exportQuery(WebContext webContext) {
-        if (!webContext.isSafePOST()) {
+        if (!webContext.isPostRequest()) {
             throw Exceptions.createHandled().withSystemErrorMessage("Unsafe or missing POST detected!").handle();
         }
 

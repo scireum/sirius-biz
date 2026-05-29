@@ -96,7 +96,7 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
             mode = "user";
         }
 
-        if (webContext.ensureSafePOST()) {
+        if (webContext.isPostRequest()) {
             try {
                 String oldPassword = webContext.get(PARAM_OLD_PASSWORD).asString();
                 String newPassword = webContext.get(PARAM_NEW_PASSWORD).asString();

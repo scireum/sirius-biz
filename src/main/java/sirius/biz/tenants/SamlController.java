@@ -78,7 +78,7 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
      */
     @Routed(value = SAML_URI_PREFIX + "/login", skipCsrfValidation = true)
     public void samlLogin(WebContext webContext) {
-        if (!webContext.isUnsafePOST()) {
+        if (!webContext.isPostRequest()) {
             webContext.respondWith().redirectToGet(SAML_URI_PREFIX);
             return;
         }

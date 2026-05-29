@@ -118,7 +118,7 @@ public class ScriptingController extends BizController {
     @Permission(PERMISSION_SCRIPTING)
     public void submit(WebContext webContext, JSONStructuredOutput output) throws Exception {
         try {
-            if (webContext.isSafePOST()) {
+            if (webContext.isPostRequest()) {
                 String script = webContext.get(PARAM_SCRIPT).asString();
                 String targetNode = webContext.get(PARAM_NODE).asString();
 
@@ -147,7 +147,7 @@ public class ScriptingController extends BizController {
     @InternalService
     @Permission(PERMISSION_SCRIPTING)
     public void compile(WebContext webContext, JSONStructuredOutput output) {
-        if (webContext.isSafePOST()) {
+        if (webContext.isPostRequest()) {
             String script = webContext.get(PARAM_SCRIPT).asString();
             CompilationContext compilationContext =
                     new CompilationContext(SourceCodeInfo.forInlineCode(script, SandboxMode.DISABLED));

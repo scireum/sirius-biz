@@ -202,7 +202,7 @@ public class StorageController extends BizController {
         assertTenant(virtualObject);
 
         BucketInfo bucket = storage.getBucket(virtualObject.getBucket()).orElse(null);
-        if (isBucketUnaccessible(bucket) || (webContext.isUnsafePOST() && !bucket.isCanEdit())) {
+        if (isBucketUnaccessible(bucket) || (webContext.isPostRequest() && !bucket.isCanEdit())) {
             throw cannotAccessBucketException(virtualObject.getBucket());
         }
 

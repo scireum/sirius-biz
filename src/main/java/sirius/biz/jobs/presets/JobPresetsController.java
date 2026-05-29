@@ -136,7 +136,7 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     @Routed("/jobs/preset/delete")
     @InternalService
     public void delete(WebContext webContext, JSONStructuredOutput output) {
-        if (webContext.isSafePOST()) {
+        if (webContext.isPostRequest()) {
             P preset = mixing.getDescriptor(getPresetType())
                              .getMapper()
                              .find(getPresetType(), webContext.get(PARAM_PRESET).asString())

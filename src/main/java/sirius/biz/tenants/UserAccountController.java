@@ -350,7 +350,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         assertProperUserManagementPermission();
 
-        if (webContext.ensureSafePOST()) {
+        if (webContext.isPostRequest()) {
             try {
                 String newPassword = webContext.get(ProfileController.PARAM_NEW_PASSWORD).asString();
                 String confirmation = webContext.get(ProfileController.PARAM_CONFIRMATION).asString();

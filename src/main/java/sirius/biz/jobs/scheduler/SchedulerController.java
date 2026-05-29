@@ -199,7 +199,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
                                                                   .format()));
                 webContext.respondWith().redirectToGet("/jobs/scheduler");
                 return true;
-            } else if (webContext.hasParameter("job") && webContext.isSafePOST()) {
+            } else if (webContext.hasParameter("job") && webContext.isPostRequest()) {
                 entry.getJobConfigData().setJob(webContext.get("job").asString());
             }
         }
