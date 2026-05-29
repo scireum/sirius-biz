@@ -27,6 +27,7 @@ import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Message;
+import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -143,7 +144,7 @@ public class JobsController extends BizController {
      * @param output     the output to write the JSON response to
      * @param jobType    the name of the job to launch
      */
-    @Routed(value = "/jobs/api/:1", skipCsrfValidation = true)
+    @Routed(value = "/jobs/api/:1", methods = HttpMethod.POST, skipCsrfValidation = true)
     @PublicService(apiName = "jobs-processes", path = "/jobs/api/{job}")
     @Operation(summary = "Start Job", method = "POST", description = """
             Starts the given job. Note that the expected job parameters have to be passed in as additional HTTP
@@ -167,8 +168,6 @@ public class JobsController extends BizController {
             example = "jupiter-sync")
     @LoginRequired
     public void jsonApi(WebContext webContext, JSONStructuredOutput output, String jobType) {
-        enforceMethodPost(webContext);
-
         try {
             JobFactory factory = jobs.findFactory(jobType, JobFactory.class);
             output.property("process", factory.startInBackground(webContext::get));
