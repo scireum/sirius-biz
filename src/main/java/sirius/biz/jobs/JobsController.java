@@ -143,7 +143,7 @@ public class JobsController extends BizController {
      * @param output     the output to write the JSON response to
      * @param jobType    the name of the job to launch
      */
-    @Routed("/jobs/api/:1")
+    @Routed(value = "/jobs/api/:1", skipCsrfValidation = true)
     @PublicService(apiName = "jobs-processes", path = "/jobs/api/{job}")
     @Operation(summary = "Start Job", method = "POST", description = """
             Starts the given job. Note that the expected job parameters have to be passed in as additional HTTP
