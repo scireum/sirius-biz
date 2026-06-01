@@ -57,8 +57,11 @@ public class JobsController extends BizController {
     @DefaultRoute
     @LoginRequired
     public void jobs(WebContext webContext) {
-        List<Action> actions =
-                jobs.getAvailableJobs(null).filter(JobFactory::canStartInteractive).map(this::toAction).toList();
+        List<Action> actions = jobs.getAvailableJobs(null)
+                                   .filter(JobFactory::showInJobList)
+                                   .filter(JobFactory::canStartInteractive)
+                                   .map(this::toAction)
+                                   .toList();
         webContext.respondWith().template("/templates/biz/jobs/jobs.html.pasta", actions);
     }
 
