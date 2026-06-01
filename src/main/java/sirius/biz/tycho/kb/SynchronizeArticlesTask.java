@@ -28,7 +28,9 @@ import sirius.pasta.tagliatelle.rendering.GlobalRenderContext;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -95,13 +97,13 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     private void synchronizeArticles() {
         LocalDate syncStart = LocalDate.now();
         String syncId = keyGenerator.generateId();
+        Map<String, String> seenArticles = new HashMap<>();
         Sirius.getClasspath()
               .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
               .map(matcher -> cleanupTemplatePath(matcher.group(0)))
               .filter(templatePath -> !isTemplateInsidePartsDirectory(templatePath))
               .filter(templatePath -> !isTemplateAPartOfAnArticle(templatePath))
-              .forEach(templatePath -> updateArticle(templatePath, syncId));
-
+              .forEach(templatePath -> updateArticle(templatePath, syncId, seenArticles));
         elastic.refresh(KnowledgeBaseEntry.class);
         cleanupOldEntries(syncId);
         if (!Sirius.isDev()) {
@@ -152,7 +154,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         return "/" + templatePath;
     }
 
-    private void updateArticle(String templatePath, String syncId) {
+    private void updateArticle(String templatePath, String syncId, java.util.Map<String, String> seenArticles) {
         try {
             Template template = tagliatelle.resolve(templatePath)
                                            .orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: "
@@ -166,6 +168,19 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
 
             String articleId = Value.of(context.getExtraBlock(BLOCK_CODE)).toUpperCase();
             String language = context.getExtraBlock(BLOCK_LANG);
+
+            String uniqueKey = articleId + "_" + language;
+
+            if (seenArticles.containsKey(uniqueKey)) {
+                throw new IllegalStateException(Strings.apply(
+                        "KnowledgeBase detected a duplicate article id collision! Article '%s' (Language: %s) is defined in '%s' and '%s'.",
+                        articleId,
+                        language,
+                        seenArticles.get(uniqueKey),
+                        templatePath));
+            }
+            seenArticles.put(uniqueKey, templatePath);
+
             KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, language);
 
             entry.setSyncId(syncId);
