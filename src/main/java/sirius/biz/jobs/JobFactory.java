@@ -130,6 +130,16 @@ public interface JobFactory extends Named, Priorized {
     String generatePresetUrl(@Nonnull String uri, @Nullable Object targetObject);
 
     /**
+     * Determines if this job should be shown in generic job lists like <tt>/jobs</tt> or the open search.
+     * <p>
+     *
+     * @return <tt>true</tt> if this job should appear in generic job lists, <tt>false</tt> otherwise
+     */
+    default boolean showInJobList() {
+        return true;
+    }
+
+    /**
      * Determines if this job can be started in the UI.
      *
      * @return <tt>true</tt> if this job can be started in the ui

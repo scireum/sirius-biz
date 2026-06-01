@@ -49,7 +49,10 @@ public class JobsSearchProvider implements OpenSearchProvider {
 
     @Override
     public void query(String query, int maxResults, Consumer<OpenSearchResult> resultCollector) {
-        jobs.getAvailableJobs(query).filter(JobFactory::canStartInteractive).forEach(jobFactory -> {
+        jobs.getAvailableJobs(query)
+            .filter(JobFactory::showInJobList)
+            .filter(JobFactory::canStartInteractive)
+            .forEach(jobFactory -> {
             OpenSearchResult result = new OpenSearchResult();
             result.withLabel(jobFactory.getLabel())
                   .withHtmlDescription(jobFactory.getDescription())
