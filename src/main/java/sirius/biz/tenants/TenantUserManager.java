@@ -12,6 +12,8 @@ import com.typesafe.config.Config;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.UserActivityEvent;
 import sirius.biz.analytics.flags.PerformanceFlag;
+import sirius.biz.isenguard.Isenguard;
+import sirius.biz.isenguard.RateLimitingInfo;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.SpyUser;
@@ -27,9 +29,11 @@ import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import sirius.pasta.noodle.sandbox.NoodleSandbox;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
 import sirius.web.security.Permissions;
@@ -38,6 +42,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.security.UserManager;
 import sirius.web.security.UserSettings;
+import sirius.web.util.CaptchaController;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -151,6 +156,16 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     private static final String SUFFIX_FINGERPRINT = "-fingerprint";
 
     /**
+     * Contains the Isenguard realm used to limit negative security events like failed password login attempts.
+     */
+    public static final String SECURITY_RATE_LIMIT_REALM = "security";
+
+    /**
+     * Contains the number of failed password login attempts after which the next attempt requires a CAPTCHA.
+     */
+    private static final int FAILED_PASSWORD_LOGIN_ATTEMPTS_BEFORE_CAPTCHA = 4;
+
+    /**
      * Contains the prefix added to the account number which is added as artificial role.
      * <p>
      * Therefore, each user of a tenant has the following additional role (if filled):
@@ -177,6 +192,12 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Part
     protected static AuditLog auditLog;
+
+    @Part
+    protected static Isenguard isenguard;
+
+    @Part
+    protected static CaptchaController captchaController;
 
     @Part
     protected static EventRecorder eventRecorder;
@@ -627,9 +648,11 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return null;
         }
 
-        UserInfo result = findUserByName(webContext, user);
+        verifyLoginRateLimitNotReached(webContext);
+        verifyPasswordLoginCaptchaIfRequired(webContext);
+
+        UserInfo result = findUserByNameForPasswordLogin(webContext, user);
         if (result == null) {
-            auditLog.negative("AuditLog.lockedOrNonexistentUserTriedLogin").forUser(null, user).log();
             return null;
         }
 
@@ -641,6 +664,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                                                                                         tenant.getTenantData()
                                                                                               .getExternalLoginIntervalDays())) {
             completeAuditLogForUser(auditLog.negative("AuditLog.externalLoginRequired"), account);
+            registerFailedLoginAttempt(webContext);
             throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
         }
 
@@ -665,7 +689,75 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                 .forTenant(tenant.getIdAsString(), tenant.getTenantData().getName())
                 .log();
 
+        registerFailedLoginAttempt(webContext);
         return null;
+    }
+
+    /**
+     * Determines if the next password login attempt requires a CAPTCHA for the current caller.
+     *
+     * @param webContext the current web request to inspect
+     * @return <tt>true</tt> if a CAPTCHA has to be solved, <tt>false</tt> otherwise
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public static boolean isPasswordLoginCaptchaRequired(@Nullable WebContext webContext) {
+        if (webContext == null) {
+            return false;
+        }
+
+        String ip = webContext.getRemoteIP().getHostAddress();
+        return isenguard.checkRateLimitReached(ip,
+                                               SECURITY_RATE_LIMIT_REALM,
+                                               FAILED_PASSWORD_LOGIN_ATTEMPTS_BEFORE_CAPTCHA);
+    }
+
+    private void verifyPasswordLoginCaptchaIfRequired(@Nullable WebContext webContext) {
+        if (isPasswordLoginCaptchaRequired(webContext)) {
+            captchaController.verifyCaptcha(webContext);
+        }
+    }
+
+    private UserInfo findUserByNameForPasswordLogin(@Nullable WebContext webContext, String user) {
+        try {
+            UserInfo result = findUserByName(webContext, user);
+            if (result != null) {
+                return result;
+            }
+        } catch (HandledException _) {
+            // Locked accounts must not be distinguishable from nonexistent users during password login.
+        }
+
+        auditLog.negative("AuditLog.lockedOrNonexistentUserTriedLogin").forUser(null, user).log();
+        registerFailedLoginAttempt(webContext);
+        return null;
+    }
+
+    private void verifyLoginRateLimitNotReached(@Nullable WebContext webContext) {
+        if (webContext == null) {
+            return;
+        }
+
+        String ip = webContext.getRemoteIP().getHostAddress();
+        if (isenguard.checkRateLimitReached(ip, SECURITY_RATE_LIMIT_REALM)) {
+            throw isenguard.createException(SECURITY_RATE_LIMIT_REALM);
+        }
+    }
+
+    private void registerFailedLoginAttempt(@Nullable WebContext webContext) {
+        if (webContext == null) {
+            return;
+        }
+
+        String ip = webContext.getRemoteIP().getHostAddress();
+        boolean rateLimitReached = isenguard.registerCallAndCheckRateLimitReached(ip,
+                                                                                  SECURITY_RATE_LIMIT_REALM,
+                                                                                  Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                                                  () -> RateLimitingInfo.fromWebContext(
+                                                                                          webContext,
+                                                                                          null));
+        if (rateLimitReached) {
+            throw isenguard.createException(SECURITY_RATE_LIMIT_REALM);
+        }
     }
 
     protected void completeAuditLogForUser(AuditLog.AuditLogBuilder builder, U account) {
