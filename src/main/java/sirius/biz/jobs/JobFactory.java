@@ -131,7 +131,6 @@ public interface JobFactory extends Named, Priorized {
 
     /**
      * Determines if this job should be shown in generic job lists like <tt>/jobs</tt> or the open search.
-     * <p>
      *
      * @return <tt>true</tt> if this job should appear in generic job lists, <tt>false</tt> otherwise
      */
