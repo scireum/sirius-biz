@@ -6,7 +6,7 @@
  * https://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tycho.kb;
+package sirius.biz.tycho.kb.markdown;
 
 /**
  * Represents one rendered section of a Markdown knowledge base article.

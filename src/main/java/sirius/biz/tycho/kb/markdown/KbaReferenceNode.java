@@ -6,7 +6,7 @@
  * https://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tycho.kb;
+package sirius.biz.tycho.kb.markdown;
 
 import org.commonmark.node.CustomNode;
 import sirius.kernel.commons.Strings;

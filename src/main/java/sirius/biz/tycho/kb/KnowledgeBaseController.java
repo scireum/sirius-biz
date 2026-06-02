@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownRenderer;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;

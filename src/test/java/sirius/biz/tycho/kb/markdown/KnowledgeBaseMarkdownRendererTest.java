@@ -6,7 +6,7 @@
  * https://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tycho.kb;
+package sirius.biz.tycho.kb.markdown;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

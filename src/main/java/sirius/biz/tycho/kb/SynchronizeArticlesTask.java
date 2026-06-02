@@ -9,6 +9,8 @@
 package sirius.biz.tycho.kb;
 
 import sirius.biz.locks.Locks;
+import sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownArticle;
+import sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownRenderer;
 import sirius.db.KeyGenerator;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;

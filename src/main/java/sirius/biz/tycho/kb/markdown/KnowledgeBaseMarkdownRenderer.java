@@ -6,7 +6,7 @@
  * https://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tycho.kb;
+package sirius.biz.tycho.kb.markdown;
 
 import org.commonmark.Extension;
 import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
