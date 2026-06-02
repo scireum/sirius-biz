@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.tycho.kb.KnowledgeBaseMarkdownDocument" name="document"/>
+<i:arg type="sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownDocument" name="document"/>
 
 <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
 
@@ -15,7 +15,7 @@
 
     <i:block name="sidebar">
         <k:toc>
-            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseMarkdownSection"
+            <i:for type="sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownSection"
                    var="section"
                    items="document.tableOfContentsSections()">
                 <i:local name="anchor" value="@apply('#%s', section.anchor())"/>
@@ -24,7 +24,7 @@
         </k:toc>
     </i:block>
 
-    <i:for type="sirius.biz.tycho.kb.KnowledgeBaseMarkdownSection"
+    <i:for type="sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownSection"
            var="section"
            items="document.sections()">
         <k:section heading="@section.heading()" anchor="@section.anchor()">
