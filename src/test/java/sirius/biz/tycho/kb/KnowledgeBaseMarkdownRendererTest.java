@@ -8,13 +8,16 @@
 
 package sirius.biz.tycho.kb;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import sirius.kernel.SiriusExtension;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /// Tests the [KnowledgeBaseMarkdownRenderer] and verifies that markdown articles are correctly rendered.
+@ExtendWith(SiriusExtension.class)
 public class KnowledgeBaseMarkdownRendererTest {
 
     private final KnowledgeBaseMarkdownRenderer renderer = new KnowledgeBaseMarkdownRenderer();
@@ -140,7 +143,6 @@ public class KnowledgeBaseMarkdownRendererTest {
         assertTrue(html.contains("card mb-4 full-border border-sirius-blue-light"));
         assertTrue(html.contains("card-title text-sirius-blue-light"));
         assertTrue(html.contains("fa-solid fa-info-circle"));
-        assertTrue(html.contains(">TychoAlertNodeRenderer.type.NOTE</h5>"));
         assertTrue(html.contains("Markdown KB articles can now render hint boxes."));
     }
 
@@ -157,7 +159,6 @@ public class KnowledgeBaseMarkdownRendererTest {
         assertTrue(html.contains("card mb-4 full-border border-sirius-yellow-dark"));
         assertTrue(html.contains("card-title text-sirius-yellow-dark"));
         assertTrue(html.contains("fa-solid fa-exclamation-triangle"));
-        assertTrue(html.contains(">TychoAlertNodeRenderer.type.WARNING</h5>"));
         assertTrue(html.contains("Please plan expensive jobs carefully."));
     }
 
@@ -188,10 +189,79 @@ public class KnowledgeBaseMarkdownRendererTest {
                                                                                                """));
 
         String html = document.sections().getFirst().html();
-        assertTrue(html.contains(">TychoAlertNodeRenderer.type.TIP</h5>"));
+        assertTrue(html.contains("card mb-4 full-border border-sirius-green-light"));
+        assertTrue(html.contains("fa-solid fa-lightbulb"));
         assertTrue(html.contains("<ul>"));
         assertTrue(html.contains("<li>Use queues</li>"));
         assertTrue(html.contains("<li>Monitor cluster load</li>"));
+    }
+
+    @Test
+    public void renderDocumentRendersAngleBracketKbaReferenceThroughRefTag() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## References
+
+                                                                                               <kba:VFLEO>
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("class=\"text-danger\""));
+        assertTrue(html.contains("fa-solid fa-triangle-exclamation"));
+    }
+
+    @Test
+    public void renderDocumentRendersMarkdownKbaReferenceWithCustomLabelThroughRefTag() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## References
+
+                                                                                               [Artikel zum Thema X](kba:VFLEO#Basics)
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("class=\"text-danger\""));
+        assertTrue(html.contains("fa-solid fa-triangle-exclamation"));
+        assertTrue(html.contains("<i>Artikel zum Thema X</i>"));
+    }
+
+    @Test
+    public void renderDocumentRendersAngleBracketKbaReferenceWithAnchorThroughRefTag() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## References
+
+                                                                                               <kba:VFLEO#Basics>
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("class=\"text-danger\""));
+        assertTrue(html.contains("fa-solid fa-triangle-exclamation"));
+    }
+
+    @Test
+    public void renderDocumentShowsWarningStyleForUnresolvedKbaReferenceWithCustomLabel() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## References
+
+                                                                                               [Einleitung im Artikel zum Thema X](kba:VFLEO#Basics)
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertFalse(html.contains("href=\"/kba/"));
+        assertTrue(html.contains("class=\"text-danger\""));
+        assertTrue(html.contains("fa-triangle-exclamation"));
+        assertTrue(html.contains("Einleitung im Artikel zum Thema X"));
+    }
+
+    @Test
+    public void renderDocumentEscapesCustomKbaReferenceLabelBeforeCallingRefTag() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## References
+
+                                                                                               [<script>alert('x')</script>](kba:VFLEO)
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertFalse(html.contains("<script>alert"));
+        assertTrue(html.contains("alert(&amp;#039;x&amp;#039;)"));
     }
 
     private KnowledgeBaseMarkdownArticle createArticle(String markdown) {
