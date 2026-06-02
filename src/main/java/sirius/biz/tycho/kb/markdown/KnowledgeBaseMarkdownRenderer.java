@@ -138,10 +138,6 @@ public class KnowledgeBaseMarkdownRenderer {
         }
 
         appendSection(sections, currentHeading, currentAnchor, currentHtml);
-        if (sections.isEmpty()) {
-            sections.add(new KnowledgeBaseMarkdownSection("", "", ""));
-        }
-
         return new KnowledgeBaseMarkdownDocument(sections);
     }
 

@@ -125,6 +125,14 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentDoesNotCreateEmptySectionForFrontmatterOnlyArticles() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(""));
+
+        assertTrue(document.sections().isEmpty());
+        assertFalse(document.hasTableOfContents());
+    }
+
+    @Test
     public void documentExposesOnlyHeadedSectionsForTableOfContents() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                Intro paragraph.
