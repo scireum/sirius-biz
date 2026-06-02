@@ -70,6 +70,23 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentTurnsStandaloneMarkdownImagesIntoPreviewImages() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Images
+                                                                                               
+                                                                                               ![Markdown example image](/kb/assets/markdown-example.svg)
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertFalse(html.contains("<p><div"));
+        assertTrue(html.contains("onclick=\"openImageOverlay('/kb/assets/markdown-example.svg')\""));
+        assertTrue(html.contains("src=\"/kb/assets/markdown-example.svg\""));
+        assertTrue(html.contains("class=\"img-fluid cursor-pointer sci-kba-preview-image card card-hover-shadow card-border\""));
+        assertTrue(html.contains(">Markdown example image</p>"));
+        assertTrue(html.contains("sci-kba-image-overlay"));
+    }
+
+    @Test
     public void documentExposesOnlyHeadedSectionsForTableOfContents() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                Intro paragraph.

@@ -64,6 +64,7 @@ public class KnowledgeBaseMarkdownRenderer {
                                                           .extensions(HTML_EXTENSIONS)
                                                           .attributeProviderFactory(context -> new KbAttributeProvider())
                                                           .nodeRendererFactory(TychoAlertNodeRenderer::new)
+                                                          .nodeRendererFactory(KbaPreviewImageNodeRenderer::new)
                                                           .build();
     private final TextContentRenderer textRenderer = TextContentRenderer.builder().build();
 
