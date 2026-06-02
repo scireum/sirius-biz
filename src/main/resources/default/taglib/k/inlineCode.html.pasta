@@ -1,4 +1,9 @@
 <i:pragma name="description">
     Renders a piece of text as code (monospaced and slightly highlighted).
 </i:pragma>
-<span class="kb-inline-code"><i:render name="body" /></span>
+<i:arg type="String"
+       name="content"
+       default="@renderToString('body')"
+       description="Contains the inline code to render. Defaults to the rendered body content."/>
+
+<span class="kb-inline-code"><i:raw>@content</i:raw></span>

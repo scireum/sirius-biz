@@ -109,6 +109,22 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentRendersInlineCodeAndLinksThroughTagliatelleTags() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Inline Elements
+                                                                                               
+                                                                                               Use `a < b` and open [Tagliatelle Tag Overview](https://example.com/tags).
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("<span class=\"kb-inline-code\">a &lt; b</span>"));
+        assertFalse(html.contains("<code>"));
+        assertTrue(html.contains("href=\"https://example.com/tags\""));
+        assertTrue(html.contains("fa-solid fa-external-link-alt"));
+        assertTrue(html.contains("<span class=\"text-decoration-underline\">Tagliatelle Tag Overview</span>"));
+    }
+
+    @Test
     public void documentExposesOnlyHeadedSectionsForTableOfContents() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                Intro paragraph.

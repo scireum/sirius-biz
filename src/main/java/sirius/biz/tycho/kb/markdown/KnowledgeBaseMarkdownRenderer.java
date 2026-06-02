@@ -62,6 +62,8 @@ public class KnowledgeBaseMarkdownRenderer {
                                                           .attributeProviderFactory(context -> new KbAttributeProvider())
                                                           .nodeRendererFactory(AlertNodeRenderer::new)
                                                           .nodeRendererFactory(FencedCodeBlockNodeRenderer::new)
+                                                          .nodeRendererFactory(InlineCodeNodeRenderer::new)
+                                                          .nodeRendererFactory(LinkNodeRenderer::new)
                                                           .nodeRendererFactory(PreviewImageNodeRenderer::new)
                                                           .nodeRendererFactory(ArticleReferenceNodeRenderer::new)
                                                           .build();

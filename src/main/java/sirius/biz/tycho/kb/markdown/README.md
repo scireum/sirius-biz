@@ -41,7 +41,8 @@ The renderer uses CommonMark with these extensions:
 - Custom KB references via `ArticleReferenceParserExtension`.
 
 Normal CommonMark constructs such as paragraphs, headings, lists, links, emphasis, inline code, block quotes, and fenced
-code blocks are supported.
+code blocks are supported. Links and code constructs are rendered through the KB taglib where Tycho provides dedicated
+styling.
 
 ## Rendering Extensions
 
@@ -62,6 +63,14 @@ Fenced code blocks with the language `mermaid` are rendered through `/taglib/k/m
 ```html
 <div class="mermaid kb-diagram">...</div>
 ```
+
+### Inline Code and Links
+
+Inline code is rendered by `InlineCodeNodeRenderer` through `/taglib/k/inlineCode.html.pasta` so it uses the same
+highlighted `kb-inline-code` styling as classic Tagliatelle KB articles.
+
+Markdown links are rendered by `LinkNodeRenderer` through `/taglib/k/link.html.pasta`. This keeps the standard KB link
+icon, underline wrapper, and target behavior aligned with migrated Tagliatelle articles.
 
 ### Tables
 
@@ -109,7 +118,7 @@ Inline images inside other paragraphs are not converted to preview cards; they f
 The CommonMark renderer is configured with:
 
 - `escapeHtml(true)` to escape raw HTML from Markdown sources.
-- `sanitizeUrls(true)` to avoid unsafe URLs in standard CommonMark links and images.
+- `sanitizeUrls(true)` and `HtmlNodeRendererContext.encodeUrl(...)` in custom renderers to avoid unsafe URLs.
 
 Custom renderers that call Tagliatelle templates are responsible for passing escaped values when templates expect raw
 HTML.
