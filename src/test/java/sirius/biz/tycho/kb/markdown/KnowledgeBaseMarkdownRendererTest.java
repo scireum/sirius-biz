@@ -90,6 +90,25 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentRendersFencedCodeBlocksThroughCodeTag() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Code
+                                                                                               
+                                                                                               ```java
+                                                                                               if (left < right) {
+                                                                                                   return "ok";
+                                                                                               }
+                                                                                               ```
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("<pre class=\"prettyprint p-2 lang-java\">"));
+        assertTrue(html.contains("if (left &lt; right)"));
+        assertFalse(html.contains("<code>"));
+        assertFalse(html.contains("language-java"));
+    }
+
+    @Test
     public void documentExposesOnlyHeadedSectionsForTableOfContents() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                Intro paragraph.

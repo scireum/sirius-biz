@@ -54,13 +54,12 @@ Content before the first section heading is kept as an intro section without an 
 
 ### Code Blocks
 
-Fenced code blocks are post-processed to use Tycho's `prettyprint` classes. Language identifiers become
-`lang-<language>` classes.
+Fenced code blocks are rendered through `/taglib/k/code.html.pasta` to use Tycho's `prettyprint` classes. Language
+identifiers become `lang-<language>` classes.
 
-Fenced code blocks with the language `mermaid` are rendered as:
+Fenced code blocks with the language `mermaid` are rendered through `/taglib/k/mermaid.html.pasta` as:
 
 ```html
-
 <div class="mermaid kb-diagram">...</div>
 ```
 

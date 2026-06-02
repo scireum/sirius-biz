@@ -14,7 +14,6 @@ import org.commonmark.ext.front.matter.YamlFrontMatterVisitor;
 import org.commonmark.ext.gfm.alerts.AlertsExtension;
 import org.commonmark.ext.gfm.tables.TableBlock;
 import org.commonmark.ext.gfm.tables.TablesExtension;
-import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.node.Heading;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * Loads and renders Markdown-based KB articles.
@@ -46,9 +44,6 @@ import java.util.regex.Pattern;
 @Register(classes = KnowledgeBaseMarkdownRenderer.class)
 public class KnowledgeBaseMarkdownRenderer {
 
-    private static final Pattern FENCED_CODE_WITH_LANGUAGE =
-            Pattern.compile("<pre><code class=\"language-([^\"]+)\">(.*?)</code></pre>", Pattern.DOTALL);
-    private static final Pattern FENCED_CODE = Pattern.compile("<pre><code>(.*?)</code></pre>", Pattern.DOTALL);
     private static final String KB_TABLE_CLASSES = "table table-striped table-small-text";
 
     @Part
@@ -66,6 +61,7 @@ public class KnowledgeBaseMarkdownRenderer {
                                                           .extensions(HTML_EXTENSIONS)
                                                           .attributeProviderFactory(context -> new KbAttributeProvider())
                                                           .nodeRendererFactory(TychoAlertNodeRenderer::new)
+                                                          .nodeRendererFactory(FencedCodeBlockNodeRenderer::new)
                                                           .nodeRendererFactory(KbaPreviewImageNodeRenderer::new)
                                                           .nodeRendererFactory(KbaReferenceNodeRenderer::new)
                                                           .build();
@@ -136,7 +132,7 @@ public class KnowledgeBaseMarkdownRenderer {
                 continue;
             }
 
-            currentHtml.append(renderHtml(node));
+            currentHtml.append(htmlRenderer.render(node));
         }
 
         appendSection(sections, currentHeading, currentAnchor, currentHtml);
@@ -161,17 +157,6 @@ public class KnowledgeBaseMarkdownRenderer {
                                                           Strings.isFilled(heading) ? anchor : "",
                                                           renderedHtml));
         }
-    }
-
-    private String renderHtml(Node node) {
-        String html = htmlRenderer.render(node);
-        if (node instanceof FencedCodeBlock fencedCodeBlock && Strings.areEqual(fencedCodeBlock.getInfo(), "mermaid")) {
-            return "<div class=\"mermaid kb-diagram\">" + fencedCodeBlock.getLiteral() + "</div>";
-        }
-
-        html = FENCED_CODE_WITH_LANGUAGE.matcher(html)
-                                        .replaceAll("<pre class=\"prettyprint p-2 lang-$1\"><code>$2</code></pre>");
-        return FENCED_CODE.matcher(html).replaceAll("<pre class=\"prettyprint p-2\"><code>$1</code></pre>");
     }
 
     private String createAnchor(String heading, Map<String, Integer> knownAnchors) {
