@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * Renders standalone Markdown images as Tycho preview images.
  */
-public class KbaPreviewImageNodeRenderer implements org.commonmark.renderer.NodeRenderer {
+public class PreviewImageNodeRenderer implements org.commonmark.renderer.NodeRenderer {
 
     private static final TemplateReference PREVIEW_IMAGE_TEMPLATE =
             new TemplateReference("/taglib/k/previewImage.html.pasta");
@@ -35,11 +35,11 @@ public class KbaPreviewImageNodeRenderer implements org.commonmark.renderer.Node
     private final HtmlWriter htmlWriter;
 
     /**
-     * Creates a new KbaPreviewImageNodeRenderer.
+     * Creates a new PreviewImageNodeRenderer.
      *
      * @param context the context to use for rendering
      */
-    public KbaPreviewImageNodeRenderer(HtmlNodeRendererContext context) {
+    public PreviewImageNodeRenderer(HtmlNodeRendererContext context) {
         this.context = context;
         this.htmlWriter = context.getWriter();
     }

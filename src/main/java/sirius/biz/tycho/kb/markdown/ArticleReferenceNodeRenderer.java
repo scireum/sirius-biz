@@ -18,31 +18,31 @@ import sirius.pasta.tagliatelle.TemplateReference;
 import java.util.Set;
 
 /**
- * Renders {@link KbaReferenceNode} entries to proper KB links (or warning spans if unresolved).
+ * Renders {@link ArticleReferenceNode} entries to proper KB links (or warning spans if unresolved).
  */
-public class KbaReferenceNodeRenderer implements NodeRenderer {
+public class ArticleReferenceNodeRenderer implements NodeRenderer {
 
     private static final TemplateReference REF_TEMPLATE = new TemplateReference("/taglib/k/ref.html.pasta");
 
     private final HtmlWriter htmlWriter;
 
     /**
-     * Creates a new KbaReferenceNodeRenderer.
+     * Creates a new ArticleReferenceNodeRenderer.
      *
      * @param context the context to use for rendering
      */
-    public KbaReferenceNodeRenderer(HtmlNodeRendererContext context) {
+    public ArticleReferenceNodeRenderer(HtmlNodeRendererContext context) {
         this.htmlWriter = context.getWriter();
     }
 
     @Override
     public Set<Class<? extends Node>> getNodeTypes() {
-        return Set.of(KbaReferenceNode.class);
+        return Set.of(ArticleReferenceNode.class);
     }
 
     @Override
     public void render(Node node) {
-        KbaReferenceNode referenceNode = (KbaReferenceNode) node;
+        ArticleReferenceNode referenceNode = (ArticleReferenceNode) node;
         htmlWriter.raw(REF_TEMPLATE.render(referenceNode.getArticleCode(),
                                            referenceNode.getAnchor().orElse(""),
                                            referenceNode.getCustomLabel().map(StringCleanup::escapeXml).orElse(""),

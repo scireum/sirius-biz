@@ -28,8 +28,8 @@ import java.util.Set;
 /**
  * Recognizes knowledge-base article references in Markdown.
  * <p>
- * Parsed references are represented as {@link KbaReferenceNode} instances and rendered by
- * {@link KbaReferenceNodeRenderer}.
+ * Parsed references are represented as {@link ArticleReferenceNode} instances and rendered by
+ * {@link ArticleReferenceNodeRenderer}.
  * <p>
  * Two inline syntaxes are supported:
  * <ul>
@@ -42,17 +42,17 @@ import java.util.Set;
  * In both forms, {@code ARTICLE} is the article code (letters and digits only). An optional
  * {@code #anchor} targets a section within the article; anchor names may contain letters, digits,
  * hyphens, and underscores. Link destinations must match {@code kba:ARTICLE} or
- * {@code kba:ARTICLE#anchor} exactly (see {@link KbaReferenceNode#fromDestination(String, String)}).
+ * {@code kba:ARTICLE#anchor} exactly (see {@link ArticleReferenceNode#fromDestination(String, String)}).
  */
-public class KbaInlineExtension implements Parser.ParserExtension {
+public class ArticleReferenceParserExtension implements Parser.ParserExtension {
 
     /**
-     * Creates a new {@link KbaInlineExtension} for use with CommonMark.
+     * Creates a new {@link ArticleReferenceParserExtension} for use with CommonMark.
      *
      * @return the extension instance
      */
     public static Extension create() {
-        return new KbaInlineExtension();
+        return new ArticleReferenceParserExtension();
     }
 
     @Override
@@ -108,7 +108,7 @@ public class KbaInlineExtension implements Parser.ParserExtension {
                 return ParsedInline.none();
             }
 
-            return ParsedInline.of(new KbaReferenceNode(articleCode, anchor, null), scanner.position());
+            return ParsedInline.of(new ArticleReferenceNode(articleCode, anchor, null), scanner.position());
         }
 
         private String parsePart(Scanner scanner, CharacterPredicate predicate) {
@@ -136,8 +136,8 @@ public class KbaInlineExtension implements Parser.ParserExtension {
                 Node next = current.getNext();
                 transformLinks(current);
                 if (current instanceof Link link) {
-                    KbaReferenceNode.fromDestination(link.getDestination(), extractLabel(link))
-                                    .ifPresent(referenceNode -> {
+                    ArticleReferenceNode.fromDestination(link.getDestination(), extractLabel(link))
+                                        .ifPresent(referenceNode -> {
                                         referenceNode.setSourceSpans(link.getSourceSpans());
                                         link.insertBefore(referenceNode);
                                         link.unlink();

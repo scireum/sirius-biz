@@ -22,17 +22,17 @@ import java.util.Set;
 /**
  * Renders GitHub-style alerts as Tycho-style alerts.
  */
-public class TychoAlertNodeRenderer implements NodeRenderer {
+public class AlertNodeRenderer implements NodeRenderer {
 
     private final HtmlWriter htmlWriter;
     private final HtmlNodeRendererContext context;
 
     /**
-     * Creates a new TychoAlertNodeRenderer.
+     * Creates a new AlertNodeRenderer.
      *
      * @param context the context to use for rendering the alert
      */
-    public TychoAlertNodeRenderer(HtmlNodeRendererContext context) {
+    public AlertNodeRenderer(HtmlNodeRendererContext context) {
         this.htmlWriter = context.getWriter();
         this.context = context;
     }
@@ -106,7 +106,7 @@ public class TychoAlertNodeRenderer implements NodeRenderer {
         }
 
         private String gethHeading() {
-            return NLS.get("TychoAlertNodeRenderer.type." + name());
+            return NLS.get("AlertNodeRenderer.type." + name());
         }
     }
 }

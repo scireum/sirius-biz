@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 /**
  * Represents a knowledge-base reference found in Markdown content.
  */
-public class KbaReferenceNode extends CustomNode {
+public class ArticleReferenceNode extends CustomNode {
 
     /**
      * Used to parse {@code kba:} link destinations (article code and optional anchor).
@@ -50,7 +50,7 @@ public class KbaReferenceNode extends CustomNode {
      * @param anchor      an optional section anchor (may be empty)
      * @param customLabel an optional link label (may be empty)
      */
-    public KbaReferenceNode(String articleCode, @Nullable String anchor, @Nullable String customLabel) {
+    public ArticleReferenceNode(String articleCode, @Nullable String anchor, @Nullable String customLabel) {
         this.articleCode = articleCode;
         this.anchor = Value.of(anchor).trim();
         this.customLabel = Value.of(customLabel).trim();
@@ -63,8 +63,8 @@ public class KbaReferenceNode extends CustomNode {
      * @param customLabel an optional link label taken from the Markdown text
      * @return the parsed reference, or empty if the destination is not a KB link
      */
-    public static Optional<KbaReferenceNode> fromDestination(@Nullable String destination,
-                                                             @Nullable String customLabel) {
+    public static Optional<ArticleReferenceNode> fromDestination(@Nullable String destination,
+                                                                 @Nullable String customLabel) {
         if (Strings.isEmpty(destination)) {
             return Optional.empty();
         }
@@ -74,7 +74,7 @@ public class KbaReferenceNode extends CustomNode {
             return Optional.empty();
         }
 
-        return Optional.of(new KbaReferenceNode(matcher.group(1), matcher.group(2), customLabel));
+        return Optional.of(new ArticleReferenceNode(matcher.group(1), matcher.group(2), customLabel));
     }
 
     public String getArticleCode() {

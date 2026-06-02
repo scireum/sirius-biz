@@ -38,7 +38,7 @@ The renderer uses CommonMark with these extensions:
 - GitHub-style tables via `TablesExtension`.
 - GitHub-style alerts via `AlertsExtension`.
 - YAML frontmatter via `YamlFrontMatterExtension`.
-- Custom KB references via `KbaInlineExtension`.
+- Custom KB references via `ArticleReferenceParserExtension`.
 
 Normal CommonMark constructs such as paragraphs, headings, lists, links, emphasis, inline code, block quotes, and fenced
 code blocks are supported.
@@ -73,7 +73,7 @@ class="table table-striped table-small-text"
 
 ### Alerts
 
-`TychoAlertNodeRenderer` maps GitHub-style alerts to Tycho card markup:
+`AlertNodeRenderer` maps GitHub-style alerts to Tycho card markup:
 
 - `[!NOTE]` uses the blue info style.
 - `[!TIP]` uses the green lightbulb style.
@@ -83,12 +83,12 @@ Alert headings are resolved through NLS keys named `TychoAlertNodeRenderer.type.
 
 ### Knowledge Base References
 
-`KbaInlineExtension` supports two KB reference forms:
+`ArticleReferenceParserExtension` supports two KB reference forms:
 
 - Angle bracket syntax: `<kba:ARTICLE>` or `<kba:ARTICLE#anchor>`.
 - Markdown link syntax: `[Custom label](kba:ARTICLE)` or `[Custom label](kba:ARTICLE#anchor)`.
 
-Both syntaxes produce a `KbaReferenceNode`. `KbaReferenceNodeRenderer` renders that node through
+Both syntaxes produce a `ArticleReferenceNode`. `ArticleReferenceNodeRenderer` renders that node through
 `/taglib/k/ref.html.pasta`, so resolved links, missing-article warnings, icons, tooltips, and permission behavior stay
 aligned with classic Tagliatelle KB articles.
 
@@ -96,7 +96,7 @@ Custom Markdown labels are escaped before being passed into the tag because `k:r
 
 ### Images
 
-Standalone image paragraphs are handled by `KbaPreviewImageNodeRenderer` and rendered through
+Standalone image paragraphs are handled by `PreviewImageNodeRenderer` and rendered through
 `/taglib/k/previewImage.html.pasta`.
 
 The Markdown image destination becomes the image URL. The Markdown alt text becomes the preview title. The description

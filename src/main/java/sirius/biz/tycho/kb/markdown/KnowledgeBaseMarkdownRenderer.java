@@ -52,7 +52,7 @@ public class KnowledgeBaseMarkdownRenderer {
     private static final List<Extension> PARSER_EXTENSIONS = List.of(TablesExtension.create(),
                                                                      AlertsExtension.create(),
                                                                      YamlFrontMatterExtension.create(),
-                                                                     KbaInlineExtension.create());
+                                                                     ArticleReferenceParserExtension.create());
     private static final List<Extension> HTML_EXTENSIONS = List.of(TablesExtension.create());
     private final Parser parser = Parser.builder().extensions(PARSER_EXTENSIONS).build();
     private final HtmlRenderer htmlRenderer = HtmlRenderer.builder()
@@ -60,10 +60,10 @@ public class KnowledgeBaseMarkdownRenderer {
                                                           .sanitizeUrls(true)
                                                           .extensions(HTML_EXTENSIONS)
                                                           .attributeProviderFactory(context -> new KbAttributeProvider())
-                                                          .nodeRendererFactory(TychoAlertNodeRenderer::new)
+                                                          .nodeRendererFactory(AlertNodeRenderer::new)
                                                           .nodeRendererFactory(FencedCodeBlockNodeRenderer::new)
-                                                          .nodeRendererFactory(KbaPreviewImageNodeRenderer::new)
-                                                          .nodeRendererFactory(KbaReferenceNodeRenderer::new)
+                                                          .nodeRendererFactory(PreviewImageNodeRenderer::new)
+                                                          .nodeRendererFactory(ArticleReferenceNodeRenderer::new)
                                                           .build();
     private final TextContentRenderer textRenderer = TextContentRenderer.builder().build();
 
