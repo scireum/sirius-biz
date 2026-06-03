@@ -21,7 +21,6 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.info.Product;
 import sirius.kernel.timer.EndOfDayTask;
 import sirius.pasta.tagliatelle.Tagliatelle;
@@ -31,7 +30,9 @@ import sirius.pasta.tagliatelle.rendering.GlobalRenderContext;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -104,13 +105,13 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     private void synchronizeArticles() {
         LocalDate syncStart = LocalDate.now();
         String syncId = keyGenerator.generateId();
+        Set<String> seenArticles = new HashSet<>();
         Sirius.getClasspath()
               .find(KB_RESOURCE_PATTERN)
               .map(matcher -> cleanupTemplatePath(matcher.group(0)))
               .filter(resourcePath -> !isTemplateInsidePartsDirectory(resourcePath))
               .filter(resourcePath -> !isTemplateAPartOfAnArticle(resourcePath))
-              .forEach(resourcePath -> updateArticle(resourcePath, syncId));
-
+              .forEach(resourcePath -> updateArticle(resourcePath, syncId, seenArticles));
         elastic.refresh(KnowledgeBaseEntry.class);
         cleanupOldEntries(syncId);
         if (!Sirius.isDev()) {
@@ -161,19 +162,19 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         return "/" + templatePath;
     }
 
-    private void updateArticle(String resourcePath, String syncId) {
+    private void updateArticle(String resourcePath, String syncId, Set<String> seenArticles) {
         try {
             if (resourcePath.endsWith(".md")) {
-                updateMarkdownArticle(resourcePath, syncId);
+                updateMarkdownArticle(resourcePath, syncId, seenArticles);
             } else {
-                updateTemplateArticle(resourcePath, syncId);
+                updateTemplateArticle(resourcePath, syncId, seenArticles);
             }
         } catch (Exception exception) {
             KnowledgeBase.LOG.SEVERE("Failed to load article %s, reason: %s", resourcePath, exception.getMessage());
         }
     }
 
-    private void updateTemplateArticle(String templatePath, String syncId) throws Exception {
+    private void updateTemplateArticle(String templatePath, String syncId, Set<String> seenArticles) throws Exception {
         Template template = tagliatelle.resolve(templatePath)
                                        .orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: "
                                                                                        + templatePath));
@@ -186,6 +187,16 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
 
         String articleId = Value.of(context.getExtraBlock(BLOCK_CODE)).toUpperCase();
         String language = context.getExtraBlock(BLOCK_LANG);
+        String uniqueKey = articleId + "_" + language;
+
+        if (!seenArticles.add(uniqueKey)) {
+            throw new IllegalStateException(Strings.apply(
+                    "KnowledgeBase detected a duplicate article ID collision! Article '%s' (Language: %s) was found multiple times. One location is: '%s'.",
+                    articleId,
+                    language,
+                    templatePath));
+        }
+
         KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, language);
 
         entry.setSourceType(EntrySourceType.TAGLIATELLE);
@@ -201,10 +212,21 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         elastic.update(entry);
     }
 
-    private void updateMarkdownArticle(String resourcePath, String syncId) {
+    private void updateMarkdownArticle(String resourcePath, String syncId, Set<String> seenArticles) {
         KnowledgeBaseMarkdownArticle article = markdownService.loadArticle(resourcePath)
                                                               .orElseThrow(() -> new IllegalArgumentException(
                                                                       "Failed to load Markdown KBA: " + resourcePath));
+        String articleId = article.articleId().toUpperCase();
+        String language = article.language();
+        String uniqueKey = articleId + "_" + language;
+        if (!seenArticles.add(uniqueKey)) {
+            throw new IllegalStateException(Strings.apply(
+                    "KnowledgeBase detected a duplicate article ID collision! Article '%s' (Language: %s) was found multiple times. One location is: '%s'.",
+                    articleId,
+                    language,
+                    resourcePath));
+        }
+
         KnowledgeBaseEntry entry = findOrCreateEntry(resourcePath, article.articleId(), article.language());
 
         entry.setSourceType(EntrySourceType.MARKDOWN);
@@ -249,14 +271,12 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             entry.setLanguage(language);
             entry.setTemplatePath(templatePath);
         } else if (!Strings.areEqual(templatePath, entry.getTemplatePath())) {
-            throw Exceptions.handle()
-                            .withSystemErrorMessage(
-                                    "KnowledgeBase detected an article id collision for id %s: %s vs %s (Language: %s)",
-                                    articleId,
-                                    templatePath,
-                                    entry.getTemplatePath(),
-                                    language)
-                            .handle();
+            KnowledgeBase.LOG.INFO("Updating template path for article %s from %s to %s (Language: %s)",
+                                   articleId,
+                                   entry.getTemplatePath(),
+                                   templatePath,
+                                   language);
+            entry.setTemplatePath(templatePath);
         }
 
         return entry;
