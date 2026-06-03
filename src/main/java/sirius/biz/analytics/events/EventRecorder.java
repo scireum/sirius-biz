@@ -480,7 +480,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      *
      * @return the number of inserted events
      */
-    protected int process() {
+    public synchronized int process() {
         lastProcessed = LocalDateTime.now();
         int processedEvents = 0;
         try (BatchContext ctx = new BatchContext(() -> "Process recorded events.", Duration.ofMinutes(1))) {
