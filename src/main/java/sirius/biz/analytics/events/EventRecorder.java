@@ -89,7 +89,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     private static final String AGGREGATION_SUM = "summation";
     private static final String AGGREGATION_DISTINCT_COUNT = "distinctCount";
 
-    private LocalDateTime lastProcessed;
+    private volatile LocalDateTime lastProcessed;
     private final AtomicInteger bufferedEvents = new AtomicInteger();
     private final Queue<Event<?>> buffer = new ConcurrentLinkedQueue<>();
 
