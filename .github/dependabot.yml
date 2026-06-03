@@ -31,6 +31,9 @@ updates:
     sirius:
       patterns:
         - "com.scireum:sirius-*"
+    apache-sshd:
+      patterns:
+        - "org.apache.sshd:sshd-*"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
