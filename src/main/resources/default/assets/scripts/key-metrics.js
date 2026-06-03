@@ -13,8 +13,7 @@ sirius.ready(function () {
     });
 
     if (tasks.length > 0) {
-        const csrfToken = '@escapeJS(part(sirius.web.http.CSRFHelper.class).getCSRFToken())';
-        fetch('/tycho/metrics/api?CSRFToken=' + encodeURIComponent(csrfToken), {
+        fetch('/tycho/metrics/api', {
             method: "post",
             body: JSON.stringify({tasks: tasks})
         }).then(function (response) {

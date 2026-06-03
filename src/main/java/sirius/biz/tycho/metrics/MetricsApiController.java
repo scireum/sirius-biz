@@ -45,7 +45,7 @@ public class MetricsApiController extends BizController {
      */
     @InternalService
     @LoginRequired
-    @Routed(value = "/tycho/metrics/api", methods = HttpMethod.POST)
+    @Routed(value = "/tycho/metrics/api", methods = HttpMethod.POST, skipCsrfValidation = true)
     public void fetchMetrics(WebContext webContext, JSONStructuredOutput output) {
         ObjectNode jsonContent = webContext.getJSONContent();
         output.beginArray("tasks");
