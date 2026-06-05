@@ -57,7 +57,11 @@ class EventRecorderTest {
         recorder.record(TestEvent2())
         recorder.record(TestEvent2())
 
+        assertEquals(8, recorder.fetchBufferedEvents().toList().size)
+
         recorder.process()
+
+        assertEquals(0, recorder.fetchBufferedEvents().toList().size)
 
         assertEquals(4, dbs.get("clickhouse").createQuery("SELECT * FROM testevent1").queryList().size)
         assertEquals(4, dbs.get("clickhouse").createQuery("SELECT * FROM testevent2").queryList().size)
