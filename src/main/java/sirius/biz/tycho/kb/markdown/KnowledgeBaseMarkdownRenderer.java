@@ -195,7 +195,7 @@ public class KnowledgeBaseMarkdownRenderer {
         return rawValues.stream()
                         .flatMap(value -> Arrays.stream(value.split(",")))
                         .map(String::trim)
-                        .map(s -> s.toUpperCase(Locale.ENGLISH))
+                        .map(String::toUpperCase)
                         .filter(Strings::isFilled)
                         .toList();
     }

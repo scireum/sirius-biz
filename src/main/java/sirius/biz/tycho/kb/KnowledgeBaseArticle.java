@@ -143,11 +143,10 @@ public class KnowledgeBaseArticle {
     }
 
     private Optional<Resource> resolveResource() throws CompileException {
-        if (getSourceType() == EntrySourceType.MARKDOWN) {
-            return resources.resolve(entry.getTemplatePath());
-        }
-
-        return tagliatelle.resolve(entry.getTemplatePath()).map(Template::getResource);
+        return switch (getSourceType()) {
+            case MARKDOWN -> resources.resolve(entry.getTemplatePath());
+            case TAGLIATELLE -> tagliatelle.resolve(entry.getTemplatePath()).map(Template::getResource);
+        };
     }
 
     /**
