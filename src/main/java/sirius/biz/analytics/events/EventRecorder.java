@@ -453,6 +453,18 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
+     * Provides a stream of all events currently in the buffer. Note that this is not a synchronized view on the buffer
+     * and might contain events which are already processed or might not contain events which are added after stream initialization.
+     * <p>
+     * The events in the stream should be used solely for evaluation and shall not be modified!
+     *
+     * @return a stream of all events currently in the buffer
+     */
+    public Stream<Event<?>> fetchBufferedEvents() {
+        return buffer.stream();
+    }
+
+    /**
      * Invoked periodically by the {@link EventProcessorLoop} to process events if necessary.
      * <p>
      * An insertion run will be started if there are enough events in the buffer (more than {@link #MIN_BUFFER_SIZE})
