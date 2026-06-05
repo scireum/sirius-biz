@@ -12,6 +12,8 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import sirius.db.jdbc.Databases
 import sirius.kernel.SiriusExtension
 import sirius.kernel.async.BackgroundLoop
@@ -23,6 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 @ExtendWith(SiriusExtension::class)
+@Execution(ExecutionMode.SAME_THREAD)
 class EventRecorderTest {
 
     companion object {
