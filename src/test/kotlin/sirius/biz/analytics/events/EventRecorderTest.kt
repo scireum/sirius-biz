@@ -60,11 +60,11 @@ class EventRecorderTest {
         recorder.record(TestEvent2())
         recorder.record(TestEvent2())
 
-        assertEquals(4, recorder.fetchBufferedEvents().filter { event -> event is TestEvent1 }.count())
+        assertEquals(4L, recorder.fetchBufferedEvents().filter { event -> event is TestEvent1 }.count())
 
         recorder.process()
 
-        assertEquals(0, recorder.fetchBufferedEvents().filter { event -> event is TestEvent1 }.count())
+        assertEquals(0L, recorder.fetchBufferedEvents().filter { event -> event is TestEvent1 }.count())
 
         assertEquals(4, dbs.get("clickhouse").createQuery("SELECT * FROM testevent1").queryList().size)
         assertEquals(4, dbs.get("clickhouse").createQuery("SELECT * FROM testevent2").queryList().size)
