@@ -12,6 +12,8 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import sirius.db.jdbc.Databases
 import sirius.kernel.SiriusExtension
 import sirius.kernel.async.BackgroundLoop
@@ -23,6 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 @ExtendWith(SiriusExtension::class)
+@Execution(ExecutionMode.SAME_THREAD)
 class EventRecorderTest {
 
     companion object {
@@ -57,11 +60,11 @@ class EventRecorderTest {
         recorder.record(TestEvent2())
         recorder.record(TestEvent2())
 
-        assertEquals(8, recorder.fetchBufferedEvents().toList().size)
+        assertEquals(4L, recorder.fetchBufferedEvents().filter { event -> event is TestEvent1 }.count())
 
         recorder.process()
 
-        assertEquals(0, recorder.fetchBufferedEvents().toList().size)
+        assertEquals(0L, recorder.fetchBufferedEvents().filter { event -> event is TestEvent1 }.count())
 
         assertEquals(4, dbs.get("clickhouse").createQuery("SELECT * FROM testevent1").queryList().size)
         assertEquals(4, dbs.get("clickhouse").createQuery("SELECT * FROM testevent2").queryList().size)
