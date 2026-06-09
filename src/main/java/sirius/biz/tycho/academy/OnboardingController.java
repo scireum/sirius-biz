@@ -151,7 +151,7 @@ public class OnboardingController extends BizController {
      * @param accessToken the security token to authenticate the target
      * @param videoId     the id of the onboarding video to update
      */
-    @Routed(value = "/academy/:1/:2/update/:3", priority = 999)
+    @Routed(value = "/academy/:1/:2/update/:3", priority = 999, skipCsrfValidation = true)
     @InternalService
     public void updateVideo(WebContext webContext,
                             JSONStructuredOutput output,

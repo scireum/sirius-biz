@@ -202,7 +202,7 @@ public class StorageController extends BizController {
         assertTenant(virtualObject);
 
         BucketInfo bucket = storage.getBucket(virtualObject.getBucket()).orElse(null);
-        if (isBucketUnaccessible(bucket) || (webContext.isUnsafePOST() && !bucket.isCanEdit())) {
+        if (isBucketUnaccessible(bucket) || (webContext.isPostRequest() && !bucket.isCanEdit())) {
             throw cannotAccessBucketException(virtualObject.getBucket());
         }
 
@@ -224,7 +224,7 @@ public class StorageController extends BizController {
      * @param bucketName the name of the bucket to upload to
      * @param upload     the data being uploaded
      */
-    @Routed(value = "/storage/upload/:1", preDispatchable = true, jsonCall = true)
+    @Routed(value = "/storage/upload/:1", preDispatchable = true, jsonCall = true, skipCsrfValidation = true)
     @LoginRequired
     public void uploadObject(final WebContext webContext,
                              JSONStructuredOutput output,
@@ -274,7 +274,7 @@ public class StorageController extends BizController {
      * @param objectId   the id of the object for replace
      * @param upload     the upload to handle
      */
-    @Routed(value = "/storage/replace/:1/:2", preDispatchable = true, jsonCall = true)
+    @Routed(value = "/storage/replace/:1/:2", preDispatchable = true, jsonCall = true, skipCsrfValidation = true)
     @LoginRequired
     public void uploadObject(final WebContext webContext,
                              JSONStructuredOutput output,
@@ -318,7 +318,7 @@ public class StorageController extends BizController {
      * @param reference  the reference for which an object is uploaded
      * @param upload     the content of the upload
      */
-    @Routed(value = "/storage/upload-reference/:1/:2", preDispatchable = true, jsonCall = true)
+    @Routed(value = "/storage/upload-reference/:1/:2", preDispatchable = true, jsonCall = true, skipCsrfValidation = true)
     @LoginRequired
     public void uploadObjectForReference(final WebContext webContext,
                                          JSONStructuredOutput output,
@@ -360,7 +360,7 @@ public class StorageController extends BizController {
      * @param bucketName the bucket in which the object resides
      * @param objectKey  the unique object key
      */
-    @Routed("/storage/delete/:1/:2")
+    @Routed(value = "/storage/delete/:1/:2", skipCsrfValidation = true)
     public void deleteObject(WebContext webContext, String bucketName, String objectKey) {
         StoredObject object = findObjectByKey(bucketName, objectKey);
         VirtualObject virtualObject = (VirtualObject) object;
@@ -382,7 +382,7 @@ public class StorageController extends BizController {
      * @param bucketName the bucket in which the object resides
      * @param objectKey  the unique object key
      */
-    @Routed("/storage/unreference/:1/:2")
+    @Routed(value = "/storage/unreference/:1/:2", skipCsrfValidation = true)
     public void unreferenceObject(WebContext webContext, String bucketName, String objectKey) {
         BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
         if (isBucketUnaccessible(bucket) || !bucket.isCanDelete()) {

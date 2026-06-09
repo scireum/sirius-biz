@@ -15,6 +15,7 @@ import sirius.kernel.commons.Urls;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.InternalService;
@@ -38,7 +39,7 @@ public class UpdatesController extends BizController {
      *                   client
      */
     @InternalService
-    @Routed("/tycho/updates/markAsSeen")
+    @Routed(value = "/tycho/updates/markAsSeen", methods = HttpMethod.POST)
     public void markUpdatesAsSeen(WebContext webContext, JSONStructuredOutput output) {
         String updateId = webContext.require("updateId").asString();
         if (Urls.isHttpUrl(updateId)) {

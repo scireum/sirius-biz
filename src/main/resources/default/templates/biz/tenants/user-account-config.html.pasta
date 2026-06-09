@@ -11,7 +11,7 @@
             document.querySelector('.submit-link-js').addEventListener('click', function () {
                 sirius.postJSON('/user-account/@account.getIdAsString()/config/update',
                     {
-                        csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()',
+                        CSRFToken: '@part(CSRFHelper.class).getCSRFToken()',
                         userAccountData_permissions_configString: editor.getSession().getDocument().getValue()
                     })
                     .then(function (response) {

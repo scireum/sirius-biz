@@ -140,7 +140,7 @@ public class ClusterController extends BasicController {
      * @param output     the output to write the JSON to
      * @param token      the cluster authentication token
      */
-    @Routed("/system/cluster/state/:1")
+    @Routed(value = "/system/cluster/state/:1", skipCsrfValidation = true)
     @InternalService
     public void nodeInfo(WebContext webContext, JSONStructuredOutput output, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
@@ -173,7 +173,7 @@ public class ClusterController extends BasicController {
      * @param output     the output to write the JSON to
      * @param token      the cluster authentication token
      */
-    @Routed("/system/cluster/background/:1")
+    @Routed(value = "/system/cluster/background/:1", skipCsrfValidation = true)
     @InternalService
     public void backgroundInfo(WebContext webContext, JSONStructuredOutput output, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
@@ -352,7 +352,7 @@ public class ClusterController extends BasicController {
      * @param token      the security token (verified against {@link InterconnectClusterManager#getClusterAPIToken()})
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
-    @Routed("/system/cluster/bleed/:1/:2/:3")
+    @Routed(value = "/system/cluster/bleed/:1/:2/:3", skipCsrfValidation = true)
     @PublicService(apiName = "cluster", format = Format.RAW)
     @Operation(summary = "Node bleeding", description = """
             Starts or stops the bleeding process of a node. Use "/system/cluster/bleed/enable/my-node/security-token"

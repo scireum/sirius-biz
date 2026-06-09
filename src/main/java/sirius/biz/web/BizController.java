@@ -425,7 +425,7 @@ public class BizController extends BasicController {
      * @param optionalEntity the entity to delete (if present)
      */
     public void deleteEntity(WebContext webContext, Optional<? extends BaseEntity<?>> optionalEntity) {
-        if (webContext.isSafePOST()) {
+        if (webContext.isPostRequest()) {
             optionalEntity.ifPresent(entity -> {
                 if (entity instanceof TenantAware tenantAware) {
                     assertTenant(tenantAware);

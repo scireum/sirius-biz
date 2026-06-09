@@ -252,7 +252,7 @@ public abstract class BasicJobFactory implements JobFactory {
         enforceAccessibility();
         setupTaskContext();
 
-        AtomicBoolean submit = new AtomicBoolean(request.isSafePOST() && !request.get(PARAM_UPDATE_ONLY).asBoolean());
+        AtomicBoolean submit = new AtomicBoolean(request.isPostRequest() && !request.get(PARAM_UPDATE_ONLY).asBoolean());
         Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), (param, error) -> {
             UserContext.message(Message.error(error));
             submit.set(false);

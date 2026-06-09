@@ -14,6 +14,7 @@ import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Json;
+import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.InternalService;
@@ -133,18 +134,16 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * @param webContext the request to handle
      * @param output     the JSON response to populate (in this case no actual output is expected)
      */
-    @Routed("/jobs/preset/delete")
+    @Routed(value = "/jobs/preset/delete", methods = HttpMethod.POST)
     @InternalService
     public void delete(WebContext webContext, JSONStructuredOutput output) {
-        if (webContext.isSafePOST()) {
-            P preset = mixing.getDescriptor(getPresetType())
-                             .getMapper()
-                             .find(getPresetType(), webContext.get(PARAM_PRESET).asString())
-                             .orElse(null);
-            if (preset != null) {
-                assertTenant(preset);
-                preset.getMapper().delete(preset);
-            }
+        P preset = mixing.getDescriptor(getPresetType())
+                         .getMapper()
+                         .find(getPresetType(), webContext.get(PARAM_PRESET).asString())
+                         .orElse(null);
+        if (preset != null) {
+            assertTenant(preset);
+            preset.getMapper().delete(preset);
         }
     }
 }

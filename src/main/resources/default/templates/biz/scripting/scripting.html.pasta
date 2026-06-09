@@ -59,7 +59,7 @@
                 sirius.postJSON('/system/scripting/api/compile',
                     {
                         script: _editor.aceEditor.getSession().getDocument().getValue(),
-                        CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+                        CSRFToken: '@part(CSRFHelper.class).getCSRFToken()'
                     }).then(
                     function (data) {
                         if (data.problems != null && data.problems.length > 0) {
@@ -111,7 +111,7 @@
                 {
                     script: editor.aceEditor.getSession().getDocument().getValue(),
                     node: document.getElementById("node").tokenAutocomplete.val()[0],
-                    CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+                    CSRFToken: '@part(CSRFHelper.class).getCSRFToken()'
                 }).then(
                 function (data) {
                     clearTimeout(clearMessagesTimeout);

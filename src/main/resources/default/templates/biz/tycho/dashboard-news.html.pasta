@@ -25,7 +25,8 @@
                             document.querySelector('#@linkId').addEventListener('click', function () {
                                 sirius.postJSON('/tycho/updates/markAsSeen',
                                     {
-                                        updateId: '@info.getGuid()'
+                                        updateId: '@info.getGuid()',
+                                        CSRFToken: '@part(CSRFHelper.class).getCSRFToken()'
                                     });
                             });
                         });

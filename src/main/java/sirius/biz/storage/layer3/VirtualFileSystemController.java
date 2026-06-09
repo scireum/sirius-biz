@@ -208,7 +208,7 @@ public class VirtualFileSystemController extends BizController {
     @Permission(PERMISSION_VIEW_FILES)
     public void delete(WebContext webContext) {
         VirtualFile file = vfs.resolve(webContext.get("path").asString());
-        if (webContext.isSafePOST()) {
+        if (webContext.isPostRequest()) {
             try {
                 if (file.exists()) {
                     file.delete();
@@ -277,7 +277,7 @@ public class VirtualFileSystemController extends BizController {
     @Permission(PERMISSION_VIEW_FILES)
     public void rename(WebContext webContext) {
         VirtualFile file = vfs.resolve(webContext.get("path").asString());
-        if (webContext.isSafePOST()) {
+        if (webContext.isPostRequest()) {
             try {
                 String name = webContext.get("name").asString();
                 if (file.exists() && Strings.isFilled(name)) {
@@ -307,7 +307,7 @@ public class VirtualFileSystemController extends BizController {
                                      .filter(VirtualFile::exists)
                                      .filter(VirtualFile::isDirectory)
                                      .orElse(null);
-        if (webContext.isSafePOST()) {
+        if (webContext.isPostRequest()) {
             try {
                 String name = webContext.get("name").asString();
                 if (Strings.isEmpty(name)) {

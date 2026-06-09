@@ -59,7 +59,8 @@
             sirius.postJSON('/system/redis/api/execute',
                 {
                     query: document.getElementById("query").value,
-                    pool: document.getElementById("pool").tokenAutocomplete.val()[0]
+                    pool: document.getElementById("pool").tokenAutocomplete.val()[0],
+                    CSRFToken: '@part(CSRFHelper.class).getCSRFToken()'
                 }).then(
                 function (data) {
                     _info.textContent = data.duration;

@@ -70,7 +70,7 @@ public class DisasterController extends BizController {
                             .handle();
         }
 
-        if (webContext.isSafePOST()) {
+        if (webContext.isPostRequest()) {
             try {
                 disasterModeInfo.updateMode(webContext.get("locked").asBoolean(),
                                             parseLocalDateTime(webContext, "lockDate", "lockTime"),

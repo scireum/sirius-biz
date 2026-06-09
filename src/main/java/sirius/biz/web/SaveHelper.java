@@ -10,7 +10,6 @@ package sirius.biz.web;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.Formatter;
 import sirius.web.http.WebContext;
@@ -37,7 +36,6 @@ public class SaveHelper {
 
     private List<Mapping> mappings;
     private boolean autoload = true;
-    private boolean acceptUnsafePOST = false;
     private boolean saveMessage = true;
 
     SaveHelper(BizController bizController, WebContext webContext) {
@@ -159,16 +157,6 @@ public class SaveHelper {
     }
 
     /**
-     * Disables the CSRF-token checks when {@link #saveEntity(BaseEntity)} is called.
-     *
-     * @return the helper itself for fluent method calls
-     */
-    public SaveHelper disableSafePOST() {
-        this.acceptUnsafePOST = true;
-        return this;
-    }
-
-    /**
      * Disables the display of the {@linkplain BizController#showSavedMessage() "entity saved"} message.
      *
      * @return the helper itself for fluent method calls
@@ -184,11 +172,9 @@ public class SaveHelper {
      * @param entity the entity to update and save
      * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
      */
-    @SuppressWarnings({"java:S1541", "java:S3776"})
-    @Explain("The method is understandable and readable.")
     public boolean saveEntity(BaseEntity<?> entity) {
         try {
-            if (!((acceptUnsafePOST && webContext.isUnsafePOST()) || webContext.ensureSafePOST())) {
+            if (!webContext.isPostRequest()) {
                 return false;
             }
 

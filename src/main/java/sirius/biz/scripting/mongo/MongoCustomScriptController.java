@@ -81,7 +81,7 @@ public class MongoCustomScriptController extends BizController {
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
     public void handleScriptAction(WebContext webContext, String id, String action) {
         MongoCustomScript script = findForTenant(MongoCustomScript.class, id);
-        if (Strings.isFilled(action) && webContext.isSafePOST()) {
+        if (Strings.isFilled(action) && webContext.isPostRequest()) {
             if ("delete".equals(action)) {
                 deleteEntity(webContext, Optional.of(script));
             }
@@ -103,7 +103,7 @@ public class MongoCustomScriptController extends BizController {
     @InternalService
     @Permission(ScriptingController.PERMISSION_SCRIPTING)
     public void compile(WebContext webContext, JSONStructuredOutput output) {
-        if (webContext.isSafePOST()) {
+        if (webContext.isPostRequest()) {
             String script = webContext.get(PARAM_SCRIPT).asString();
             CompilationContext compilationContext =
                     new CompilationContext(SourceCodeInfo.forInlineCode(script, SandboxMode.DISABLED));
