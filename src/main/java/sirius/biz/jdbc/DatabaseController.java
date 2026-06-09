@@ -30,6 +30,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
 import sirius.web.controller.DefaultRoute;
+import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
@@ -104,7 +105,7 @@ public class DatabaseController extends BasicController {
      * @throws SQLException in case of a database error
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed("/system/sql/api/execute")
+    @Routed(value = "/system/sql/api/execute", methods = HttpMethod.POST)
     @InternalService
     public void executeQuery(WebContext webContext, JSONStructuredOutput output) throws SQLException {
         Watch watch = Watch.start();
@@ -165,7 +166,7 @@ public class DatabaseController extends BasicController {
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/sql/export")
     public void exportQuery(WebContext webContext) {
-        if (!webContext.isSafePOST()) {
+        if (!webContext.isPostRequest()) {
             throw Exceptions.createHandled().withSystemErrorMessage("Unsafe or missing POST detected!").handle();
         }
 

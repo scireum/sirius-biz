@@ -27,6 +27,7 @@ import sirius.kernel.info.Product;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
+import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Message;
 import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
@@ -350,7 +351,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         assertProperUserManagementPermission();
 
-        if (webContext.ensureSafePOST()) {
+        if (webContext.isPostRequest()) {
             try {
                 String newPassword = webContext.get(ProfileController.PARAM_NEW_PASSWORD).asString();
                 String confirmation = webContext.get(ProfileController.PARAM_CONFIRMATION).asString();
@@ -563,7 +564,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * @param accountId  the account to lock
      */
     @LoginRequired
-    @Routed("/user-account/:1/lock")
+    @Routed(value = "/user-account/:1/lock", methods = HttpMethod.POST)
     public void lockUser(final WebContext webContext, String accountId) {
         assertProperUserManagementPermission();
 
@@ -587,7 +588,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * @param accountId  the account to unlock
      */
     @LoginRequired
-    @Routed("/user-account/:1/unlock")
+    @Routed(value = "/user-account/:1/unlock", methods = HttpMethod.POST)
     public void unlockUser(final WebContext webContext, String accountId) {
         assertProperUserManagementPermission();
 
@@ -607,7 +608,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * @param accountId  the account to delete
      */
     @LoginRequired
-    @Routed("/user-account/:1/delete")
+    @Routed(value = "/user-account/:1/delete", methods = HttpMethod.POST)
     @Permission(PERMISSION_DELETE_USER_ACCOUNTS)
     public void deleteAdmin(final WebContext webContext, String accountId) {
         assertProperUserManagementPermission();

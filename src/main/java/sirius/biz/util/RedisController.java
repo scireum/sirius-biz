@@ -20,6 +20,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
@@ -56,7 +57,7 @@ public class RedisController extends BizController {
      * @param output     the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed("/system/redis/api/execute")
+    @Routed(value = "/system/redis/api/execute", methods = HttpMethod.POST)
     @InternalService
     public void executeQuery(WebContext webContext, JSONStructuredOutput output) {
         Watch watch = Watch.start();

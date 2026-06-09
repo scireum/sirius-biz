@@ -57,8 +57,7 @@
     </div>
 
     <form id="exportForm" action="/system/sql/export" method="post">
-        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
-               type="hidden"/>
+        <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
         <input type="hidden" id="exportDatabase" name="exportDatabase"/>
         <input type="hidden" id="exportQuery" name="exportQuery"/>
     </form>
@@ -79,7 +78,8 @@
             sirius.postJSON('/system/sql/api/execute',
                 {
                     query: document.getElementById("query").value,
-                    database: document.getElementById("db").tokenAutocomplete.val()[0]
+                    database: document.getElementById("db").tokenAutocomplete.val()[0],
+                    CSRFToken: '@part(CSRFHelper.class).getCSRFToken()'
                 })
                 .then(function (data) {
                     _columns.innerHTML = '';
@@ -91,7 +91,7 @@
                     }
                     if (data.rows !== undefined && data.columns !== undefined) {
                         if (data.rows.length > 0) {
-                            _info.textContent +=' ⋅ ' + data.rows.length + ' rows';
+                            _info.textContent += ' ⋅ ' + data.rows.length + ' rows';
                             if (data.effectiveLimit) {
                                 _info.textContent += ' (limited to ' + data.effectiveLimit + ')';
                             }
