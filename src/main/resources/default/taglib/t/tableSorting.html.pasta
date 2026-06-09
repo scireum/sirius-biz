@@ -1,0 +1,123 @@
+<i:arg name="baseUrl" type="String"/>
+<i:arg name="sortOptions" type="java.util.List"/>
+<i:arg name="id" type="String" default="@generateId('table-sort-control-%s')"/>
+<i:arg name="class" type="String" default=""/>
+<i:arg name="sortFieldClass" type="String" default="col-6"/>
+<i:arg name="sortOrderClass" type="String" default="col-6"/>
+<i:local name="tableSorting" value="part(sirius.biz.web.TableSorting.class)"/>
+<i:local name="sortKeyId" value="@Strings.apply('%s-key', id)"/>
+<i:local name="sortOrderId" value="@Strings.apply('%s-order', id)"/>
+
+<style>
+    .table-sort-control__select {
+        min-width: 0;
+        margin-bottom: 0 !important;
+    }
+
+    .table-sort-control__select
+    > .token-autocomplete-container
+    > .token-autocomplete-delete-button {
+        display: none !important;
+    }
+</style>
+
+<div id="@id"
+     data-base-url="@baseUrl"
+     class="@Strings.apply('row g-2 flex-nowrap w-100 %s', class)">
+    <div class="@sortFieldClass">
+        <t:singleSelect id="@sortKeyId"
+                        name="sort"
+                        class="table-sort-control__select w-100"
+                        optional="true"
+                        placeholderKey="TableSortControl.sortField.placeholder"
+                        label="">
+            <i:for var="option" items="sortOptions" type="sirius.biz.web.TableSortOption">
+                <option value="@option.getKey()" @selected="option.getKey().equals(tableSorting.fetchCurrentSortKey())">
+                    @i18n(option.getLabelKey())
+                </option>
+            </i:for>
+        </t:singleSelect>
+    </div>
+
+    <div class="@sortOrderClass">
+        <t:singleSelect id="@sortOrderId"
+                        name="order"
+                        class="table-sort-control__select w-100"
+                        optional="true"
+                        placeholderKey="TableSortControl.sortOrder.placeholder"
+                        label="">
+            <option value="asc" @selected="'asc'.equals(tableSorting.fetchCurrentOrderValue())">
+                @i18n("TableSortControl.sortOrder.asc")
+            </option>
+            <option value="desc" @selected="'desc'.equals(tableSorting.fetchCurrentOrderValue())">
+                @i18n("TableSortControl.sortOrder.desc")
+            </option>
+        </t:singleSelect>
+    </div>
+</div>
+
+<script>
+    sirius.ready(function () {
+        const _controls = document.getElementById("@id");
+        const _sortKey = document.getElementById("@sortKeyId");
+        const _sortOrder = document.getElementById("@sortOrderId");
+
+        if (!_controls || !_sortKey || !_sortOrder || !_sortKey.tokenAutocomplete || !_sortOrder.tokenAutocomplete) {
+            return;
+        }
+
+        function currentValue(_select) {
+            const values = _select.tokenAutocomplete.val() || [];
+            return values.length ? values[0] : "";
+        }
+
+        let _lastSubmittedState = currentValue(_sortKey) + "|" + currentValue(_sortOrder);
+
+        function buildTargetUrl(_sortKeyValue, _sortOrderValue) {
+            const _targetUrl = new URL(_controls.getAttribute("data-base-url"), window.location.origin);
+            const _currentUrl = new URL(window.location.href);
+
+            _currentUrl.searchParams.forEach(function (_value, _key) {
+                if (_key !== "sort" && _key !== "order" && _key !== "start") {
+                    _targetUrl.searchParams.append(_key, _value);
+                }
+            });
+
+            if (_sortKeyValue && _sortOrderValue) {
+                _targetUrl.searchParams.set("sort", _sortKeyValue);
+                _targetUrl.searchParams.set("order", _sortOrderValue);
+            }
+
+            return _targetUrl.toString();
+        }
+
+        function submitIfComplete() {
+            const _sortKeyValue = currentValue(_sortKey);
+            const _sortOrderValue = currentValue(_sortOrder);
+            const _state = _sortKeyValue + "|" + _sortOrderValue;
+
+            if (_state === _lastSubmittedState) {
+                return;
+            }
+
+            if (_sortKeyValue && _sortOrderValue) {
+                _lastSubmittedState = _state;
+                window.location.href = buildTargetUrl(_sortKeyValue, _sortOrderValue);
+                return;
+            }
+
+            if (!_sortKeyValue && !_sortOrderValue) {
+                _lastSubmittedState = _state;
+                window.location.href = buildTargetUrl("", "");
+                return;
+            }
+
+            if (_lastSubmittedState !== "|") {
+                window.location.href = buildTargetUrl("", "");
+            }
+        }
+
+        _sortKey.addEventListener("tokens-changed", submitIfComplete);
+        _sortOrder.addEventListener("tokens-changed", submitIfComplete);
+    });
+</script>
