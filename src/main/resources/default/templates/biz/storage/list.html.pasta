@@ -230,8 +230,7 @@
         <t:modal name="rename-modal" titleKey="VFSController.rename" submitKey="NLS.ok" cancelKey="NLS.cancel">
             <fieldset>
                 <input type="hidden" id="rename-path" name="path"/>
-                <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
-                       type="hidden"/>
+                <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
                 <t:textfield id="rename-name" name="name" value="" labelKey="Model.name" class="required"/>
             </fieldset>
         </t:modal>
@@ -239,24 +238,24 @@
     <form id="move-file-form" method="post" action="/fs/move">
         <input type="hidden" name="path" value=""/>
         <input type="hidden" name="newParent" value=""/>
-        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
+        <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
     </form>
     <form id="move-multiple-file-form" method="post" action="/fs/move/multiple">
         <input type="hidden" name="paths" value=""/>
         <input type="hidden" name="newParent" value=""/>
-        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
+        <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
     </form>
     <form id="delete-multiple-file-form" method="post" action="/fs/delete/multiple">
         <input type="hidden" name="paths" value=""/>
         <input type="hidden" name="newParent" value=""/>
-        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
+        <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
     </form>
     <form id="create-directory-form" method="post" action="/fs/createDirectory">
         <t:modal name="create-directory-modal" titleKey="VFSController.createDirectory" submitKey="NLS.ok"
                  cancelKey="NLS.cancel">
             <fieldset>
                 <input type="hidden" name="parent" value="@dir.path()"/>
-                <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
+                <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()"
                        type="hidden"/>
                 <t:textfield id="directory-name" name="name" value="" labelKey="Model.name" class="required"
                              placeholder="@i18n('VFSController.createDirectory')"/>
@@ -267,8 +266,7 @@
         <t:modal name="create-file-modal" titleKey="VFSController.createFile" submitKey="NLS.ok" cancelKey="NLS.cancel">
             <fieldset>
                 <input type="hidden" name="parent" value="@dir.path()"/>
-                <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
-                       type="hidden"/>
+                <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
                 <t:textfield id="file-name" name="name" value="" labelKey="Model.name" class="required"/>
             </fieldset>
         </t:modal>

@@ -6,7 +6,7 @@
             (function ($) {
                 $.fn.storedObjectUploader = function (options) {
                     options.params = Object.assign(
-                        {CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'},
+                        {CSRFToken: '@part(CSRFHelper.class).getCSRFToken()'},
                         options.params || {});
                     var element = this;
                     var button = $(this).find('.qq-upload-button-js').get(0);

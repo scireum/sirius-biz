@@ -15,7 +15,7 @@
                         <form class="form-inline menu-search-form" method="POST" action="/open-search">
                             <span><i class="fa fa-search"></i></span>
                             <input name="CSRFToken"
-                                   value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
+                                   value="@part(CSRFHelper.class).getCSRFToken()"
                                    type="hidden"/>
                             <input name="query"
                                    class="form-control autofocus"

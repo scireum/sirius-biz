@@ -57,8 +57,7 @@
     </div>
 
     <form id="exportForm" action="/system/sql/export" method="post">
-        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
-               type="hidden"/>
+        <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
         <input type="hidden" id="exportDatabase" name="exportDatabase"/>
         <input type="hidden" id="exportQuery" name="exportQuery"/>
     </form>
@@ -80,7 +79,7 @@
                 {
                     query: document.getElementById("query").value,
                     database: document.getElementById("db").tokenAutocomplete.val()[0],
-                    CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'
+                    CSRFToken: '@part(CSRFHelper.class).getCSRFToken()'
                 })
                 .then(function (data) {
                     _columns.innerHTML = '';

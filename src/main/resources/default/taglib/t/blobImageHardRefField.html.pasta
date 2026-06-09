@@ -89,7 +89,7 @@
 
     Dropzone.options[sirius.camelize('@id')].url = function (files) {
         const uploadUrl = '@raw {@escapeJS(uploadUrl)}';
-        const csrfToken = '@escapeJS(part(sirius.web.http.CSRFHelper.class).getCSRFToken())';
+        const csrfToken = '@escapeJS(part(CSRFHelper.class).getCSRFToken())';
         let parameterIndicator = '?';
         if (uploadUrl.indexOf('?') >= 0) {
             parameterIndicator = '&';

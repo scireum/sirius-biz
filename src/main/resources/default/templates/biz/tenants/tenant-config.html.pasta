@@ -12,7 +12,7 @@
             document.querySelector('.submit-link-js').addEventListener('click', function () {
                 sirius.postJSON('/tenant/@tenant.getIdAsString()/config/update',
                     {
-                        CSRFToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()',
+                        CSRFToken: '@part(CSRFHelper.class).getCSRFToken()',
                         tenantData_configString: editor.getSession().getDocument().getValue()
                     })
                     .then(function (response) {
