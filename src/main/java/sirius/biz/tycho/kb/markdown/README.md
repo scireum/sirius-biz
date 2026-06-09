@@ -88,7 +88,7 @@ class="table table-striped table-small-text"
 - `[!TIP]` uses the green lightbulb style.
 - `[!WARNING]` uses the yellow warning style.
 
-Alert headings are resolved through NLS keys named `TychoAlertNodeRenderer.type.<TYPE>`.
+Alert headings are resolved through NLS keys named `AlertNodeRenderer.type.<TYPE>`.
 
 ### Knowledge Base References
 
