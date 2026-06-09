@@ -52,7 +52,7 @@ public class FencedCodeBlockNodeRenderer implements NodeRenderer {
 
         htmlWriter.line();
         if (Strings.areEqual(language, "mermaid")) {
-            htmlWriter.raw(MERMAID_TEMPLATE.render("", codeBlock.getLiteral()));
+            htmlWriter.raw(MERMAID_TEMPLATE.render("", StringCleanup.escapeXml(codeBlock.getLiteral())));
         } else {
             htmlWriter.raw(CODE_TEMPLATE.render(createLanguageClass(language),
                                                 StringCleanup.escapeXml(codeBlock.getLiteral())));

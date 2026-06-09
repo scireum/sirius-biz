@@ -109,6 +109,23 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentEscapesMermaidFencedCodeBlocks() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Diagram
+                                                                                               
+                                                                                               ```mermaid
+                                                                                               flowchart TD
+                                                                                                   A["<img src=x onerror=alert(1)>"] --> B
+                                                                                               ```
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("class=\"mermaid kb-diagram"));
+        assertFalse(html.contains("<img src=x onerror=alert(1)>"));
+        assertTrue(html.contains("&lt;img src=x onerror=alert(1)&gt;"));
+    }
+
+    @Test
     public void renderDocumentRendersInlineCodeAndLinksThroughTagliatelleTags() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                ## Inline Elements

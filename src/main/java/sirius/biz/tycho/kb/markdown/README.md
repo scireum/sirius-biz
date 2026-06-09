@@ -64,6 +64,8 @@ Fenced code blocks with the language `mermaid` are rendered through `/taglib/k/m
 <div class="mermaid kb-diagram">...</div>
 ```
 
+The diagram source is XML-escaped before rendering, so browsers receive it as text content instead of executable HTML.
+
 ### Inline Code and Links
 
 Inline code is rendered by `InlineCodeNodeRenderer` through `/taglib/k/inlineCode.html.pasta` so it uses the same
