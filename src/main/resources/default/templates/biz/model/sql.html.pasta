@@ -91,7 +91,7 @@
                     }
                     if (data.rows !== undefined && data.columns !== undefined) {
                         if (data.rows.length > 0) {
-                            _info.textContent +=' ⋅ ' + data.rows.length + ' rows';
+                            _info.textContent += ' ⋅ ' + data.rows.length + ' rows';
                             if (data.effectiveLimit) {
                                 _info.textContent += ' (limited to ' + data.effectiveLimit + ')';
                             }
