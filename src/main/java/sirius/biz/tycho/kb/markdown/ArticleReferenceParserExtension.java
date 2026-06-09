@@ -9,6 +9,7 @@
 package sirius.biz.tycho.kb.markdown;
 
 import org.commonmark.Extension;
+import org.commonmark.node.Code;
 import org.commonmark.node.HardLineBreak;
 import org.commonmark.node.Link;
 import org.commonmark.node.Node;
@@ -156,6 +157,8 @@ public class ArticleReferenceParserExtension implements Parser.ParserExtension {
         private void appendText(Node node, StringBuilder label) {
             if (node instanceof Text text) {
                 label.append(text.getLiteral());
+            } else if (node instanceof Code code) {
+                label.append(code.getLiteral());
             } else if (node instanceof SoftLineBreak || node instanceof HardLineBreak) {
                 label.append(' ');
             }

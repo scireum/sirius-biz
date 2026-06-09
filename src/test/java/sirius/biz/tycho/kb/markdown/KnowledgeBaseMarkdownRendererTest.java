@@ -84,7 +84,8 @@ public class KnowledgeBaseMarkdownRendererTest {
         assertFalse(html.contains("<p><div"));
         assertTrue(html.contains("onclick=\"openImageOverlay('/kb/assets/markdown-example.svg')\""));
         assertTrue(html.contains("src=\"/kb/assets/markdown-example.svg\""));
-        assertTrue(html.contains("class=\"img-fluid cursor-pointer sci-kba-preview-image card card-hover-shadow card-border\""));
+        assertTrue(html.contains(
+                "class=\"img-fluid cursor-pointer sci-kba-preview-image card card-hover-shadow card-border\""));
         assertTrue(html.contains(">Markdown example image</p>"));
         assertTrue(html.contains("sci-kba-image-overlay"));
     }
@@ -260,7 +261,7 @@ public class KnowledgeBaseMarkdownRendererTest {
     public void renderDocumentRendersAngleBracketKbaReferenceThroughRefTag() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                ## References
-
+                                                                                               
                                                                                                <kba:VFLEO>
                                                                                                """));
 
@@ -273,7 +274,7 @@ public class KnowledgeBaseMarkdownRendererTest {
     public void renderDocumentRendersMarkdownKbaReferenceWithCustomLabelThroughRefTag() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                ## References
-
+                                                                                               
                                                                                                [Artikel zum Thema X](kba:VFLEO#Basics)
                                                                                                """));
 
@@ -284,10 +285,23 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentKeepsInlineCodeInCustomKbaReferenceLabel() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## References
+                                                                                               
+                                                                                               [`foo`](kba:VFLEO)
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("class=\"text-danger\""));
+        assertTrue(html.contains("<i>foo</i>"));
+    }
+
+    @Test
     public void renderDocumentRendersAngleBracketKbaReferenceWithAnchorThroughRefTag() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                ## References
-
+                                                                                               
                                                                                                <kba:VFLEO#Basics>
                                                                                                """));
 
@@ -300,7 +314,7 @@ public class KnowledgeBaseMarkdownRendererTest {
     public void renderDocumentShowsWarningStyleForUnresolvedKbaReferenceWithCustomLabel() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                ## References
-
+                                                                                               
                                                                                                [Einleitung im Artikel zum Thema X](kba:VFLEO#Basics)
                                                                                                """));
 
@@ -315,7 +329,7 @@ public class KnowledgeBaseMarkdownRendererTest {
     public void renderDocumentEscapesCustomKbaReferenceLabelBeforeCallingRefTag() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                ## References
-
+                                                                                               
                                                                                                [<script>alert('x')</script>](kba:VFLEO)
                                                                                                """));
 
