@@ -1,10 +1,14 @@
 <i:arg type="String" name="class" default=""
        description="Permits adding additional CSS classes which can be used to add custom styles to the diagram."/>
+<i:arg type="String"
+       name="content"
+       default="@renderToString('body')"
+       description="Contains the diagram source. Defaults to the rendered body content."/>
 
 <i:pragma name="description">
     Renders a diagram using the mermaid syntax.
 </i:pragma>
 
 <div class="mermaid kb-diagram @class">
-    <i:raw>@renderToString('body')</i:raw>
+    <i:raw>@content</i:raw>
 </div>

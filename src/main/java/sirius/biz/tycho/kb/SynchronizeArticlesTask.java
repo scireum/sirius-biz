@@ -9,6 +9,8 @@
 package sirius.biz.tycho.kb;
 
 import sirius.biz.locks.Locks;
+import sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownArticle;
+import sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownRenderer;
 import sirius.db.KeyGenerator;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
@@ -46,6 +48,9 @@ import java.util.regex.Pattern;
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 public class SynchronizeArticlesTask implements EndOfDayTask {
 
+    private static final Pattern KB_RESOURCE_PATTERN =
+            Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.(?:pasta|md)");
+
     private static final String BLOCK_CODE = "code";
     private static final String BLOCK_LANG = "lang";
     private static final String BLOCK_CHAPTER = "chapter";
@@ -76,6 +81,9 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     @Part
     private KnowledgeBase knowledgeBase;
 
+    @Part
+    private KnowledgeBaseMarkdownRenderer markdownService;
+
     @Override
     public String getName() {
         return "synchronize-knowledgebase";
@@ -99,11 +107,11 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         String syncId = keyGenerator.generateId();
         Set<String> seenArticles = new HashSet<>();
         Sirius.getClasspath()
-              .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
+              .find(KB_RESOURCE_PATTERN)
               .map(matcher -> cleanupTemplatePath(matcher.group(0)))
-              .filter(templatePath -> !isTemplateInsidePartsDirectory(templatePath))
-              .filter(templatePath -> !isTemplateAPartOfAnArticle(templatePath))
-              .forEach(templatePath -> updateArticle(templatePath, syncId, seenArticles));
+              .filter(resourcePath -> !isTemplateInsidePartsDirectory(resourcePath))
+              .filter(resourcePath -> !isTemplateAPartOfAnArticle(resourcePath))
+              .forEach(resourcePath -> updateArticle(resourcePath, syncId, seenArticles));
         elastic.refresh(KnowledgeBaseEntry.class);
         cleanupOldEntries(syncId);
         if (!Sirius.isDev()) {
@@ -154,51 +162,93 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         return "/" + templatePath;
     }
 
-    private void updateArticle(String templatePath, String syncId, Set<String> seenArticles) {
+    private void updateArticle(String resourcePath, String syncId, Set<String> seenArticles) {
         try {
-            Template template = tagliatelle.resolve(templatePath)
-                                           .orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: "
-                                                                                           + templatePath));
-            GlobalRenderContext context = tagliatelle.createRenderContext();
-            template.render(context);
-
-            if (!isArticle(context)) {
-                return;
+            if (resourcePath.endsWith(".md")) {
+                updateMarkdownArticle(resourcePath, syncId, seenArticles);
+            } else {
+                updateTemplateArticle(resourcePath, syncId, seenArticles);
             }
-
-            String articleId = Value.of(context.getExtraBlock(BLOCK_CODE)).toUpperCase();
-            String language = context.getExtraBlock(BLOCK_LANG);
-
-            String uniqueKey = articleId + "_" + language;
-
-            if (!seenArticles.add(uniqueKey)) {
-                throw new IllegalStateException(Strings.apply(
-                        "KnowledgeBase detected a duplicate article id collision! Article '%s' (Language: %s) was found multiple times. One location is: '%s'.",
-                        articleId,
-                        language,
-                        templatePath));
-            }
-
-            KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, language);
-
-            entry.setSyncId(syncId);
-            entry.setChapter(Value.of(context.getExtraBlock(BLOCK_CHAPTER)).asBoolean());
-            entry.setParentId(Value.of(context.getExtraBlock(BLOCK_PARENT)).toUpperCase());
-            entry.setPriority(Value.of(context.getExtraBlock(BLOCK_PRIORITY)).asInt(Priorized.DEFAULT_PRIORITY));
-            entry.setTitle(context.getExtraBlock(BLOCK_TITLE));
-            entry.setDescription(context.getExtraBlock(BLOCK_DESCRIPTION));
-            entry.setRequiredPermissions(context.getExtraBlock(BLOCK_REQUIRED_PERMISSIONS));
-            entry.getRelatesTo().clear();
-            Arrays.stream(context.getExtraBlock(BLOCK_CROSS_REFERENCES).split(","))
-                  .map(String::trim)
-                  .map(String::toUpperCase)
-                  .filter(Strings::isFilled)
-                  .forEach(crossReference -> entry.getRelatesTo().modify().add(crossReference));
-
-            elastic.update(entry);
         } catch (Exception exception) {
-            KnowledgeBase.LOG.SEVERE("Failed to load article %s, reason: %s", templatePath, exception.getMessage());
+            KnowledgeBase.LOG.SEVERE("Failed to load article %s, reason: %s", resourcePath, exception.getMessage());
         }
+    }
+
+    private void updateTemplateArticle(String templatePath, String syncId, Set<String> seenArticles) throws Exception {
+        Template template = tagliatelle.resolve(templatePath)
+                                       .orElseThrow(() -> new IllegalArgumentException("Failed to load KBA: "
+                                                                                       + templatePath));
+        GlobalRenderContext context = tagliatelle.createRenderContext();
+        template.render(context);
+
+        if (!isArticle(context)) {
+            return;
+        }
+
+        String articleId = Value.of(context.getExtraBlock(BLOCK_CODE)).toUpperCase();
+        String language = context.getExtraBlock(BLOCK_LANG);
+        String uniqueKey = articleId + "_" + language;
+
+        if (!seenArticles.add(uniqueKey)) {
+            throw new IllegalStateException(Strings.apply(
+                    "KnowledgeBase detected a duplicate article ID collision! Article '%s' (Language: %s) was found multiple times. One location is: '%s'.",
+                    articleId,
+                    language,
+                    templatePath));
+        }
+
+        KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, language);
+
+        entry.setSourceType(EntrySourceType.TAGLIATELLE);
+        entry.setSyncId(syncId);
+        entry.setChapter(Value.of(context.getExtraBlock(BLOCK_CHAPTER)).asBoolean());
+        entry.setParentId(Value.of(context.getExtraBlock(BLOCK_PARENT)).toUpperCase());
+        entry.setPriority(Value.of(context.getExtraBlock(BLOCK_PRIORITY)).asInt(Priorized.DEFAULT_PRIORITY));
+        entry.setTitle(context.getExtraBlock(BLOCK_TITLE));
+        entry.setDescription(context.getExtraBlock(BLOCK_DESCRIPTION));
+        entry.setRequiredPermissions(context.getExtraBlock(BLOCK_REQUIRED_PERMISSIONS));
+        updateCrossReferences(entry, context.getExtraBlock(BLOCK_CROSS_REFERENCES));
+
+        elastic.update(entry);
+    }
+
+    private void updateMarkdownArticle(String resourcePath, String syncId, Set<String> seenArticles) {
+        KnowledgeBaseMarkdownArticle article = markdownService.loadArticle(resourcePath)
+                                                              .orElseThrow(() -> new IllegalArgumentException(
+                                                                      "Failed to load Markdown KBA: " + resourcePath));
+        String articleId = article.articleId().toUpperCase();
+        String language = article.language();
+        String uniqueKey = articleId + "_" + language;
+        if (!seenArticles.add(uniqueKey)) {
+            throw new IllegalStateException(Strings.apply(
+                    "KnowledgeBase detected a duplicate article ID collision! Article '%s' (Language: %s) was found multiple times. One location is: '%s'.",
+                    articleId,
+                    language,
+                    resourcePath));
+        }
+
+        KnowledgeBaseEntry entry = findOrCreateEntry(resourcePath, article.articleId(), article.language());
+
+        entry.setSourceType(EntrySourceType.MARKDOWN);
+        entry.setSyncId(syncId);
+        entry.setChapter(article.chapter());
+        entry.setParentId(article.parentId());
+        entry.setPriority(article.priority());
+        entry.setTitle(article.title());
+        entry.setDescription(article.description());
+        entry.setRequiredPermissions(article.permissions());
+        updateCrossReferences(entry, String.join(",", article.crossReferences()));
+
+        elastic.update(entry);
+    }
+
+    private void updateCrossReferences(KnowledgeBaseEntry entry, String rawCrossReferences) {
+        entry.getRelatesTo().clear();
+        Arrays.stream(rawCrossReferences.split(","))
+              .map(String::trim)
+              .map(String::toUpperCase)
+              .filter(Strings::isFilled)
+              .forEach(crossReference -> entry.getRelatesTo().modify().add(crossReference));
     }
 
     private boolean isArticle(GlobalRenderContext context) {
