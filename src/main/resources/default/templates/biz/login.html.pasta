@@ -72,6 +72,7 @@
                                 </a>
                             </div>
                         </div>
+                        <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
                     </form>
                 </div>
             </div>
