@@ -193,7 +193,10 @@ function createDropzone(dropzoneId, config, modal, resolve) {
             '   </div>\n' +
             '</div>',
         url: function (files) {
-            return '/fs/upload?filename=' + encodeURIComponent(files[0].name) + '&path=' + path;
+            const csrfToken = '@escapeJS(part(CSRFHelper.class).getCSRFToken())';
+            return '/fs/upload?filename=' + encodeURIComponent(files[0].name)
+                + '&path=' + path
+                + '&CSRFToken=' + encodeURIComponent(csrfToken);
         },
         error: function (file, message) {
             errorHandler(file, message, config.allowedExtensions, config._input, modal);
