@@ -2,83 +2,189 @@
 <i:arg name="sortOptions" type="java.util.List"/>
 <i:arg name="id" type="String" default="@generateId('table-sort-control-%s')"/>
 <i:arg name="class" type="String" default=""/>
-<i:arg name="sortFieldClass" type="String" default="col-6"/>
-<i:arg name="sortOrderClass" type="String" default="col-6"/>
+<i:arg name="sortingPreferenceKey" type="String" default=""/>
+
 <i:local name="tableSorting" value="part(sirius.biz.web.TableSorting.class)"/>
-<i:local name="sortKeyId" value="@Strings.apply('%s-key', id)"/>
-<i:local name="sortOrderId" value="@Strings.apply('%s-order', id)"/>
-
-<style>
-    .table-sort-control__select {
-        min-width: 0;
-        margin-bottom: 0 !important;
-    }
-
-    .table-sort-control__select
-    > .token-autocomplete-container
-    > .token-autocomplete-delete-button {
-        display: none !important;
-    }
-</style>
+<i:local name="usesSortingPreference" value="Strings.isFilled(sortingPreferenceKey)"/>
+<i:local name="currentSortKey"
+         value="@usesSortingPreference ? tableSorting.fetchCurrentSortKey(sortingPreferenceKey) : tableSorting.fetchCurrentSortKey()"/>
+<i:local name="currentOrderValue"
+         value="@usesSortingPreference ? tableSorting.fetchCurrentOrderValue(sortingPreferenceKey) : tableSorting.fetchCurrentOrderValue()"/>
+<i:local name="toggleButtonId" value="@Strings.apply('%s-toggle', id)"/>
+<i:local name="menuId" value="@Strings.apply('%s-menu', id)"/>
+<i:local name="resetButtonId" value="@Strings.apply('%s-reset', id)"/>
+<i:local name="sortOptionName" value="@Strings.apply('%s-sort', id)"/>
+<i:local name="orderOptionName" value="@Strings.apply('%s-order', id)"/>
 
 <div id="@id"
      data-base-url="@baseUrl"
-     class="@Strings.apply('row g-2 flex-nowrap w-100 %s', class)">
-    <div class="@sortFieldClass">
-        <t:singleSelect id="@sortKeyId"
-                        name="sort"
-                        class="table-sort-control__select w-100"
-                        optional="true"
-                        placeholderKey="TableSortControl.sortField.placeholder"
-                        label="">
-            <i:for var="option" items="sortOptions" type="sirius.biz.web.TableSortOption">
-                <option value="@option.getKey()" @selected="option.getKey().equals(tableSorting.fetchCurrentSortKey())">
-                    @i18n(option.getLabelKey())
-                </option>
-            </i:for>
-        </t:singleSelect>
-    </div>
+     class="@Strings.apply('table-sort-control dropdown position-relative d-flex justify-content-end w-100 %s', class)">
+    <button id="@toggleButtonId"
+            type="button"
+            class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center"
+            style="width: 2.5rem; height: 2.5rem; padding: 0.375rem;"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="@menuId"
+            title="@i18n('TableSortControl.sortField.placeholder')"
+            aria-label="@i18n('TableSortControl.sortField.placeholder')">
+        <i class="fa-solid @(Strings.isFilled(currentSortKey) && Strings.isFilled(currentOrderValue) ? ('asc'.equals(currentOrderValue) ? 'fa-arrow-down-short-wide' : 'fa-arrow-down-wide-short') : 'fa-sort')"
+           aria-hidden="true"></i>
+    </button>
 
-    <div class="@sortOrderClass">
-        <t:singleSelect id="@sortOrderId"
-                        name="order"
-                        class="table-sort-control__select w-100"
-                        optional="true"
-                        placeholderKey="TableSortControl.sortOrder.placeholder"
-                        label="">
-            <option value="asc" @selected="'asc'.equals(tableSorting.fetchCurrentOrderValue())">
-                @i18n("TableSortControl.sortOrder.asc")
-            </option>
-            <option value="desc" @selected="'desc'.equals(tableSorting.fetchCurrentOrderValue())">
-                @i18n("TableSortControl.sortOrder.desc")
-            </option>
-        </t:singleSelect>
+    <div id="@menuId"
+         class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-3"
+         style="width: 300px; max-width: calc(100vw - 2rem);"
+         data-bs-popper="static"
+         role="menu"
+         aria-labelledby="@toggleButtonId"
+         hidden="hidden"
+         tabindex="-1">
+        <div class="px-2 py-1">
+            <div class="text-uppercase fw-semibold text-muted small mb-2">@i18n("TableSortControl.sortField.placeholder")</div>
+
+            <i:for var="option" items="sortOptions" type="sirius.biz.web.TableSortOption">
+                <i:local name="sortInputId" value="@Strings.apply('%s-sort-%s', id, option.getKey())"/>
+                <label class="table-sort-control-option dropdown-item d-flex align-items-center gap-2 rounded-3 mb-1 w-100"
+                       for="@sortInputId"
+                       role="menuitemradio"
+                       aria-checked="false">
+                    <input id="@sortInputId"
+                           class="form-check-input float-none m-0 flex-shrink-0"
+                           type="radio"
+                           name="@sortOptionName"
+                           data-sort-option="true"
+                           value="@option.getKey()"
+                           @checked="option.getKey().equals(currentSortKey)"
+                           tabindex="-1"/>
+                    <span class="flex-grow-1">@i18n(option.getLabelKey())</span>
+                </label>
+            </i:for>
+
+            <hr class="my-3"/>
+
+            <label class="table-sort-control-option dropdown-item d-flex align-items-center gap-2 rounded-3 mb-1 w-100"
+                   for="@Strings.apply('%s-order-asc', id)"
+                   role="menuitemradio"
+                   aria-checked="false">
+                <input id="@Strings.apply('%s-order-asc', id)"
+                       class="form-check-input float-none m-0 flex-shrink-0"
+                       type="radio"
+                       name="@orderOptionName"
+                       data-order-option="true"
+                       value="asc"
+                       @checked="'asc'.equals(currentOrderValue)"
+                       tabindex="-1"/>
+                <span class="d-flex align-items-center gap-2 flex-grow-1">
+                    <i class="fa-solid fa-arrow-down-short-wide" aria-hidden="true"></i>
+                    @i18n("TableSortControl.sortOrder.asc")
+                </span>
+            </label>
+
+            <label class="table-sort-control-option dropdown-item d-flex align-items-center gap-2 rounded-3 w-100"
+                   for="@Strings.apply('%s-order-desc', id)"
+                   role="menuitemradio"
+                   aria-checked="false">
+                <input id="@Strings.apply('%s-order-desc', id)"
+                       class="form-check-input float-none m-0 flex-shrink-0"
+                       type="radio"
+                       name="@orderOptionName"
+                       data-order-option="true"
+                       value="desc"
+                       @checked="'desc'.equals(currentOrderValue)"
+                       tabindex="-1"/>
+                <span class="d-flex align-items-center gap-2 flex-grow-1">
+                    <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i>
+                    @i18n("TableSortControl.sortOrder.desc")
+                </span>
+            </label>
+
+            <hr class="my-3"/>
+
+            <button id="@resetButtonId"
+                    type="button"
+                    class="dropdown-item d-flex align-items-center gap-2 rounded-3 w-100">
+                <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+                @i18n("StoredObject.resetBtn")
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
     sirius.ready(function () {
         const _controls = document.getElementById("@id");
-        const _sortKey = document.getElementById("@sortKeyId");
-        const _sortOrder = document.getElementById("@sortOrderId");
+        const _toggleButton = document.getElementById("@toggleButtonId");
+        const _menu = document.getElementById("@menuId");
+        const _resetButton = document.getElementById("@resetButtonId");
+        const _icon = _toggleButton ? _toggleButton.querySelector("i") : null;
+        const _usesSortingPreference = '@escapeJS(usesSortingPreference)' === 'true';
 
-        if (!_controls || !_sortKey || !_sortOrder || !_sortKey.tokenAutocomplete || !_sortOrder.tokenAutocomplete) {
+        if (!_controls || !_toggleButton || !_menu || !_resetButton || !_icon) {
             return;
         }
 
-        function currentValue(_select) {
-            const values = _select.tokenAutocomplete.val() || [];
-            return values.length ? values[0] : "";
+        const _radioItems = Array.from(_menu.querySelectorAll('[role="menuitemradio"]'));
+        const _sortOptions = Array.from(_menu.querySelectorAll('input[data-sort-option="true"]'));
+        const _orderOptions = Array.from(_menu.querySelectorAll('input[data-order-option="true"]'));
+
+        if (!_sortOptions.length || !_orderOptions.length) {
+            return;
         }
 
-        let _lastSubmittedState = currentValue(_sortKey) + "|" + currentValue(_sortOrder);
+        function currentValue(_inputs) {
+            const _selected = _inputs.find(function (_input) {
+                return _input.checked;
+            });
+
+            return _selected ? _selected.value : "";
+        }
+
+        function syncUi() {
+            const _sortKeyValue = currentValue(_sortOptions);
+            const _sortOrderValue = currentValue(_orderOptions);
+
+            _icon.classList.remove("fa-sort", "fa-arrow-down-short-wide", "fa-arrow-down-wide-short");
+
+            if (_sortKeyValue && _sortOrderValue === "asc") {
+                _icon.classList.add("fa-arrow-down-short-wide");
+            } else if (_sortKeyValue && _sortOrderValue === "desc") {
+                _icon.classList.add("fa-arrow-down-wide-short");
+            } else {
+                _icon.classList.add("fa-sort");
+            }
+
+            _radioItems.forEach(function (_item) {
+                const _input = _item.querySelector('input[type="radio"]');
+                const _isChecked = _input && _input.checked;
+
+                _item.setAttribute("aria-checked", _isChecked ? "true" : "false");
+                _item.classList.toggle("text-primary", _isChecked);
+                _item.classList.toggle("bg-light", _isChecked);
+            });
+
+            return {
+                sortKey: _sortKeyValue,
+                orderValue: _sortOrderValue
+            };
+        }
+
+        function setMenuOpen(_open) {
+            _menu.hidden = !_open;
+            _menu.classList.toggle("show", _open);
+            _toggleButton.setAttribute("aria-expanded", _open ? "true" : "false");
+
+            if (_open) {
+                syncUi();
+            }
+        }
 
         function buildTargetUrl(_sortKeyValue, _sortOrderValue) {
             const _targetUrl = new URL(_controls.getAttribute("data-base-url"), window.location.origin);
             const _currentUrl = new URL(window.location.href);
 
             _currentUrl.searchParams.forEach(function (_value, _key) {
-                if (_key !== "sort" && _key !== "order" && _key !== "start") {
+                if (_key !== "sort" && _key !== "order" && _key !== "start" && _key !== "@sirius.biz.web.TableSorting.PARAM_CLEAR_SORT") {
                     _targetUrl.searchParams.append(_key, _value);
                 }
             });
@@ -86,38 +192,42 @@
             if (_sortKeyValue && _sortOrderValue) {
                 _targetUrl.searchParams.set("sort", _sortKeyValue);
                 _targetUrl.searchParams.set("order", _sortOrderValue);
+            } else if (_usesSortingPreference) {
+                _targetUrl.searchParams.set("@sirius.biz.web.TableSorting.PARAM_CLEAR_SORT", "true");
             }
 
             return _targetUrl.toString();
         }
 
-        function submitIfComplete() {
-            const _sortKeyValue = currentValue(_sortKey);
-            const _sortOrderValue = currentValue(_sortOrder);
-            const _state = _sortKeyValue + "|" + _sortOrderValue;
-
-            if (_state === _lastSubmittedState) {
-                return;
-            }
-
-            if (_sortKeyValue && _sortOrderValue) {
-                _lastSubmittedState = _state;
+        function navigateIfComplete(_sortKeyValue, _sortOrderValue) {
+            if ((_sortKeyValue && _sortOrderValue) || (!_sortKeyValue && !_sortOrderValue)) {
                 window.location.href = buildTargetUrl(_sortKeyValue, _sortOrderValue);
-                return;
-            }
-
-            if (!_sortKeyValue && !_sortOrderValue) {
-                _lastSubmittedState = _state;
-                window.location.href = buildTargetUrl("", "");
-                return;
-            }
-
-            if (_lastSubmittedState !== "|") {
-                window.location.href = buildTargetUrl("", "");
             }
         }
 
-        _sortKey.addEventListener("tokens-changed", submitIfComplete);
-        _sortOrder.addEventListener("tokens-changed", submitIfComplete);
+        function handleSelectionChange() {
+            const _selection = syncUi();
+            navigateIfComplete(_selection.sortKey, _selection.orderValue);
+        }
+
+        _toggleButton.addEventListener("click", function () {
+            setMenuOpen(_menu.hidden);
+        });
+
+        document.addEventListener("click", function (_event) {
+            if (!_controls.contains(_event.target)) {
+                setMenuOpen(false);
+            }
+        });
+
+        _menu.querySelectorAll('input[type="radio"]').forEach(function (_input) {
+            _input.addEventListener("change", handleSelectionChange);
+        });
+
+        _resetButton.addEventListener("click", function () {
+            window.location.href = buildTargetUrl("", "");
+        });
+
+        syncUi();
     });
 </script>
