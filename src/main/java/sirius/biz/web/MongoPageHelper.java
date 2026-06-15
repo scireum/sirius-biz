@@ -218,7 +218,7 @@ public class MongoPageHelper<E extends MongoEntity>
      * @return the helper itself for fluent method calls
      */
     public MongoPageHelper<E> addSortableOptions(Iterable<TableSortOption> options) {
-        options.forEach(this::addSortableOption);
+        java.util.Objects.requireNonNull(options, "options").forEach(this::addSortableOption);
         return this;
     }
 
