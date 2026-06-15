@@ -48,7 +48,7 @@
                 <label class="table-sort-control-option dropdown-item d-flex align-items-center gap-2 rounded-3 mb-1 w-100"
                        for="@sortInputId"
                        role="menuitemradio"
-                       aria-checked="false">
+                       aria-checked="@option.getKey().equals(currentSortKey)">
                     <input id="@sortInputId"
                            class="form-check-input float-none m-0 flex-shrink-0"
                            type="radio"
@@ -66,7 +66,7 @@
             <label class="table-sort-control-option dropdown-item d-flex align-items-center gap-2 rounded-3 mb-1 w-100"
                    for="@Strings.apply('%s-order-asc', id)"
                    role="menuitemradio"
-                   aria-checked="false">
+                   aria-checked="@('asc'.equals(currentOrderValue))">
                 <input id="@Strings.apply('%s-order-asc', id)"
                        class="form-check-input float-none m-0 flex-shrink-0"
                        type="radio"
@@ -84,7 +84,7 @@
             <label class="table-sort-control-option dropdown-item d-flex align-items-center gap-2 rounded-3 w-100"
                    for="@Strings.apply('%s-order-desc', id)"
                    role="menuitemradio"
-                   aria-checked="false">
+                   aria-checked="@('desc'.equals(currentOrderValue))">
                 <input id="@Strings.apply('%s-order-desc', id)"
                        class="form-check-input float-none m-0 flex-shrink-0"
                        type="radio"
