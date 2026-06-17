@@ -396,7 +396,13 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      */
     @SuppressWarnings("unchecked")
     protected final B registerSortableField(String key, BiConsumer<Q, SortOrder> sortFunction) {
-        sortableFields.put(Objects.requireNonNull(key, "key"), Objects.requireNonNull(sortFunction, "sortFunction"));
+        Objects.requireNonNull(sortFunction, "sortFunction");
+
+        if (Strings.isEmpty(key)) {
+            return (B) this;
+        }
+
+        sortableFields.put(key, sortFunction);
         return (B) this;
     }
 
