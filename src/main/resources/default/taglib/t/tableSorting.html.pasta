@@ -112,7 +112,7 @@
 </div>
 
 <script>
-    sirius.ready(function () {
+    sirius.ready(() => {
         const _controls = document.getElementById("@id");
         const _toggleButton = document.getElementById("@toggleButtonId");
         const _menu = document.getElementById("@menuId");
@@ -132,15 +132,13 @@
             return;
         }
 
-        function currentValue(_inputs) {
-            const _selected = _inputs.find(function (_input) {
-                return _input.checked;
-            });
+        const currentValue = (_inputs) => {
+            const _selected = _inputs.find((_input) => _input.checked);
 
             return _selected ? _selected.value : "";
-        }
+        };
 
-        function syncUi() {
+        const syncUi = () => {
             const _sortKeyValue = currentValue(_sortOptions);
             const _sortOrderValue = currentValue(_orderOptions);
 
@@ -154,7 +152,7 @@
                 _icon.classList.add("fa-sort");
             }
 
-            _radioItems.forEach(function (_item) {
+            _radioItems.forEach((_item) => {
                 const _input = _item.querySelector('input[type="radio"]');
                 const _isChecked = _input && _input.checked;
 
@@ -167,9 +165,9 @@
                 sortKey: _sortKeyValue,
                 orderValue: _sortOrderValue
             };
-        }
+        };
 
-        function setMenuOpen(_open) {
+        const setMenuOpen = (_open) => {
             _menu.hidden = !_open;
             _menu.classList.toggle("show", _open);
             _toggleButton.setAttribute("aria-expanded", _open ? "true" : "false");
@@ -177,13 +175,13 @@
             if (_open) {
                 syncUi();
             }
-        }
+        };
 
-        function buildTargetUrl(_sortKeyValue, _sortOrderValue) {
+        const buildTargetUrl = (_sortKeyValue, _sortOrderValue) => {
             const _targetUrl = new URL(_controls.getAttribute("data-base-url"), window.location.origin);
             const _currentUrl = new URL(window.location.href);
 
-            _currentUrl.searchParams.forEach(function (_value, _key) {
+            _currentUrl.searchParams.forEach((_value, _key) => {
                 if (_key !== "sort" && _key !== "order" && _key !== "start" && _key !== "@sirius.biz.web.TableSorting.PARAM_CLEAR_SORT") {
                     _targetUrl.searchParams.append(_key, _value);
                 }
@@ -197,34 +195,32 @@
             }
 
             return _targetUrl.toString();
-        }
+        };
 
-        function navigateIfComplete(_sortKeyValue, _sortOrderValue) {
+        const navigateIfComplete = (_sortKeyValue, _sortOrderValue) => {
             if ((_sortKeyValue && _sortOrderValue) || (!_sortKeyValue && !_sortOrderValue)) {
                 window.location.href = buildTargetUrl(_sortKeyValue, _sortOrderValue);
             }
-        }
+        };
 
-        function handleSelectionChange() {
+        const handleSelectionChange = () => {
             const _selection = syncUi();
             navigateIfComplete(_selection.sortKey, _selection.orderValue);
-        }
+        };
 
-        _toggleButton.addEventListener("click", function () {
-            setMenuOpen(_menu.hidden);
-        });
+        _toggleButton.addEventListener("click", () => setMenuOpen(_menu.hidden));
 
-        document.addEventListener("click", function (_event) {
+        document.addEventListener("click", (_event) => {
             if (!_controls.contains(_event.target)) {
                 setMenuOpen(false);
             }
         });
 
-        _menu.querySelectorAll('input[type="radio"]').forEach(function (_input) {
+        _menu.querySelectorAll('input[type="radio"]').forEach((_input) => {
             _input.addEventListener("change", handleSelectionChange);
         });
 
-        _resetButton.addEventListener("click", function () {
+        _resetButton.addEventListener("click", () => {
             window.location.href = buildTargetUrl("", "");
         });
 
