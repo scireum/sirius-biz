@@ -208,7 +208,7 @@ public class MongoPageHelper<E extends MongoEntity>
      * @return the helper itself for fluent method calls
      */
     public MongoPageHelper<E> addSortableOption(TableSortOption option) {
-        return addSortableField(option.getKey(), option.getMapping());
+        return addSortableField(option.getMapping().getName(), option.getMapping());
     }
 
     /**

@@ -9,37 +9,32 @@
 package sirius.biz.web;
 
 import sirius.db.mixing.Mapping;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.nls.NLS;
 
 import java.util.Objects;
 
 /**
  * Describes a whitelisted field which can be used for table sorting and displayed as an option in a sorting control.
+ *
+ * @param label   the label used to display the option
+ * @param mapping the mapping to sort by
  */
-public class TableSortOption {
-
-    private final String key;
-    private final String labelKey;
-    private final Mapping mapping;
+public record TableSortOption(String label, Mapping mapping) {
 
     /**
      * Creates a new sortable table option.
-     *
-     * @param key      the technical key used in request parameters
-     * @param labelKey the translation key used to display the option
-     * @param mapping  the mapping to sort by
      */
-    public TableSortOption(String key, String labelKey, Mapping mapping) {
-        this.key = Objects.requireNonNull(key);
-        this.labelKey = Objects.requireNonNull(labelKey);
-        this.mapping = Objects.requireNonNull(mapping);
+    public TableSortOption {
+        if (Strings.isEmpty(label)) {
+            throw new IllegalArgumentException("label");
+        }
+
+        Objects.requireNonNull(mapping, "mapping");
     }
 
-    public String getKey() {
-        return key;
-    }
-
-    public String getLabelKey() {
-        return labelKey;
+    public String getLabel() {
+        return NLS.smartGet(label);
     }
 
     public Mapping getMapping() {

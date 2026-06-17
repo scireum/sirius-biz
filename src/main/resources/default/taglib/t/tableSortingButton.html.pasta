@@ -44,20 +44,20 @@
             <div class="text-uppercase fw-semibold text-muted small mb-2">@i18n("TableSortControl.sortField.placeholder")</div>
 
             <i:for var="option" items="sortOptions" type="sirius.biz.web.TableSortOption">
-                <i:local name="sortInputId" value="@Strings.apply('%s-sort-%s', id, option.getKey())"/>
+                <i:local name="sortInputId" value="@Strings.apply('%s-sort-%s', id, option.getMapping().getName())"/>
                 <label class="table-sort-control-option dropdown-item d-flex align-items-center gap-2 rounded-3 mb-1 w-100"
                        for="@sortInputId"
                        role="menuitemradio"
-                       aria-checked="@option.getKey().equals(currentSortKey)">
+                       aria-checked="@option.getMapping().getName().equals(currentSortKey)">
                     <input id="@sortInputId"
                            class="form-check-input float-none m-0 flex-shrink-0"
                            type="radio"
                            name="@sortOptionName"
                            data-sort-option="true"
-                           value="@option.getKey()"
-                           @checked="option.getKey().equals(currentSortKey)"
+                           value="@option.getMapping().getName()"
+                           @checked="option.getMapping().getName().equals(currentSortKey)"
                            tabindex="-1"/>
-                    <span class="flex-grow-1">@i18n(option.getLabelKey())</span>
+                    <span class="flex-grow-1">@option.getLabel()</span>
                 </label>
             </i:for>
 
