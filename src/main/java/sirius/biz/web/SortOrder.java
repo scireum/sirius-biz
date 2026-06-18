@@ -20,6 +20,12 @@ public enum SortOrder {
     ASC(TableSorting.ORDER_ASC),
     DESC(TableSorting.ORDER_DESC);
 
+    /**
+     * Contains the canonical request and storage parameter value for this sort direction.
+     * <p>
+     * These values are accepted by {@link #fromParameter(String)} and match the order values produced by
+     * {@link TableSorting}. They are used to translate incoming table-sorting parameters into a {@link SortOrder}.
+     */
     private final String parameterValue;
 
     SortOrder(String parameterValue) {
@@ -34,4 +40,3 @@ public enum SortOrder {
                      .orElse(null);
     }
 }
-
