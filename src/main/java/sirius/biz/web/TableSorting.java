@@ -12,9 +12,12 @@ import sirius.biz.tenants.UserAccount;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
+import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -26,6 +29,7 @@ public class TableSorting {
     public static final String PARAM_SORT = "sort";
     public static final String PARAM_ORDER = "order";
     public static final String PARAM_CLEAR_SORT = "clear-sort";
+    public static final String ATTRIBUTE_SORT_OPTIONS = "tableSortOptions";
 
     public static final String ORDER_ASC = "asc";
     public static final String ORDER_DESC = "desc";
@@ -170,6 +174,23 @@ public class TableSorting {
             user.updatePreference(sortPreferenceKey(userPreferencesKey), null);
             user.updatePreference(orderPreferenceKey(userPreferencesKey), null);
         });
+    }
+
+    /**
+     * Fetches the sortable options attached to the given page.
+     *
+     * @param page the page to fetch the options from
+     * @return the sortable options attached to the page or an empty list if none were attached
+     */
+    @SuppressWarnings("unchecked")
+    public List<TableSortOption> fetchSortOptions(Page<?> page) {
+        Object sortOptions = page.getAttribute(ATTRIBUTE_SORT_OPTIONS);
+
+        if (sortOptions instanceof List<?>) {
+            return (List<TableSortOption>) sortOptions;
+        }
+
+        return Collections.emptyList();
     }
 
     private static String sortPreferenceKey(String userPreferencesKey) {

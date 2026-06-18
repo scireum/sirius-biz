@@ -63,6 +63,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     protected List<QueryField> searchFields = Collections.emptyList();
     protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
     protected final Map<String, BiConsumer<Q, SortOrder>> sortableFields = new LinkedHashMap<>();
+    protected final List<TableSortOption> sortableOptions = new ArrayList<>();
     protected int pageSize = DEFAULT_PAGE_SIZE;
     protected int customStart = -1;
     protected boolean withTotalCount;
@@ -444,6 +445,9 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         result.bindToRequest(webContext);
         if (customStart > 0) {
             result.withStart(customStart);
+        }
+        if (!sortableOptions.isEmpty()) {
+            result.withAttribute(TableSorting.ATTRIBUTE_SORT_OPTIONS, List.copyOf(sortableOptions));
         }
 
         applyQuery(result.getQuery());

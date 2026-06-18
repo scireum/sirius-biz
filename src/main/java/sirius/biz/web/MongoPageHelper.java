@@ -30,6 +30,7 @@ import sirius.web.controller.Page;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implements a page helper for {@link MongoQuery MongoDB queries}.
@@ -208,6 +209,7 @@ public class MongoPageHelper<E extends MongoEntity>
      * @return the helper itself for fluent method calls
      */
     public MongoPageHelper<E> addSortableOption(TableSortOption option) {
+        sortableOptions.add(Objects.requireNonNull(option, "option"));
         return addSortableField(option.getMapping().getName(), option.getMapping());
     }
 
@@ -218,7 +220,7 @@ public class MongoPageHelper<E extends MongoEntity>
      * @return the helper itself for fluent method calls
      */
     public MongoPageHelper<E> addSortableOptions(Iterable<TableSortOption> options) {
-        java.util.Objects.requireNonNull(options, "options").forEach(this::addSortableOption);
+        Objects.requireNonNull(options, "options").forEach(this::addSortableOption);
         return this;
     }
 

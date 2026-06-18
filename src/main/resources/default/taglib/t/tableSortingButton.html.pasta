@@ -1,5 +1,5 @@
 <i:arg name="baseUrl" type="String"/>
-<i:arg name="sortOptions" type="java.util.List"/>
+<i:arg name="page" type="sirius.web.controller.Page"/>
 <i:arg name="id" type="String" default="@generateId('table-sort-control-%s')"/>
 <i:arg name="class" type="String" default=""/>
 <i:arg name="sortingPreferenceKey" type="String" default=""/>
@@ -15,6 +15,7 @@
 <i:local name="resetButtonId" value="@Strings.apply('%s-reset', id)"/>
 <i:local name="sortOptionName" value="@Strings.apply('%s-sort', id)"/>
 <i:local name="orderOptionName" value="@Strings.apply('%s-order', id)"/>
+<i:local name="sortOptions" value="@tableSorting.fetchSortOptions(page)"/>
 
 <div id="@id"
      data-base-url="@baseUrl"

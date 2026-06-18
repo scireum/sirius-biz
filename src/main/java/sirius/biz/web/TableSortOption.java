@@ -31,6 +31,9 @@ public record TableSortOption(String label, Mapping mapping) {
         }
 
         Objects.requireNonNull(mapping, "mapping");
+        if (Strings.isEmpty(mapping.getName())) {
+            throw new IllegalArgumentException("mapping");
+        }
     }
 
     public String getLabel() {
