@@ -31,8 +31,8 @@ public class TableSorting {
     public static final String PARAM_CLEAR_SORT = "clear-sort";
     public static final String ATTRIBUTE_SORT_OPTIONS = "tableSortOptions";
 
-    public static final String ORDER_ASC = "asc";
-    public static final String ORDER_DESC = "desc";
+    public static final String ORDER_ASC = SortOrder.ASC.getParameterValue();
+    public static final String ORDER_DESC = SortOrder.DESC.getParameterValue();
 
     private static final String SORT_PREFERENCE_SUFFIX = ".sort";
     private static final String ORDER_PREFERENCE_SUFFIX = ".order";
@@ -112,16 +112,7 @@ public class TableSorting {
      * @return the currently requested order
      */
     public String fetchCurrentOrderValue(WebContext webContext) {
-        String requestedOrder = webContext.get(PARAM_ORDER).asString();
-
-        if (Strings.areEqual(requestedOrder, ORDER_ASC)) {
-            return ORDER_ASC;
-        }
-
-        if (Strings.areEqual(requestedOrder, ORDER_DESC)) {
-            return ORDER_DESC;
-        }
-        return "";
+        return normalizeOrderValue(webContext.get(PARAM_ORDER).asString());
     }
 
     /**
@@ -161,7 +152,7 @@ public class TableSorting {
 
         fetchCurrentUserAccount().ifPresent(user -> {
             user.updatePreference(sortPreferenceKey(userPreferencesKey), sortKey);
-            user.updatePreference(orderPreferenceKey(userPreferencesKey), sortOrder == SortOrder.ASC ? ORDER_ASC : ORDER_DESC);
+            user.updatePreference(orderPreferenceKey(userPreferencesKey), sortOrder.getParameterValue());
         });
     }
 
@@ -202,15 +193,8 @@ public class TableSorting {
     }
 
     private static String normalizeOrderValue(String orderValue) {
-        if (Strings.areEqual(orderValue, ORDER_ASC)) {
-            return ORDER_ASC;
-        }
-
-        if (Strings.areEqual(orderValue, ORDER_DESC)) {
-            return ORDER_DESC;
-        }
-
-        return "";
+        SortOrder sortOrder = SortOrder.fromParameter(orderValue);
+        return sortOrder == null ? "" : sortOrder.getParameterValue();
     }
 
     private SortingState resolveCurrentSorting(WebContext webContext, String userPreferencesKey) {

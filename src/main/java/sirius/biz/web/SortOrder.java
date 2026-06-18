@@ -17,8 +17,8 @@ import java.util.Arrays;
  * Represents the supported directions for table sorting.
  */
 public enum SortOrder {
-    ASC(TableSorting.ORDER_ASC),
-    DESC(TableSorting.ORDER_DESC);
+    ASC("asc"),
+    DESC("desc");
 
     /**
      * Contains the canonical request and storage parameter value for this sort direction.
@@ -38,5 +38,9 @@ public enum SortOrder {
                      .filter(order -> Strings.areEqual(order.parameterValue, parameterValue))
                      .findFirst()
                      .orElse(null);
+    }
+
+    public String getParameterValue() {
+        return parameterValue;
     }
 }
