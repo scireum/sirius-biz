@@ -60,6 +60,13 @@
             <artifactId>ftpserver-core</artifactId>
             <version>1.2.1</version>
         </dependency>
+        <!-- Required as the version provided by org.apache.ftpserver has security issues
+             Changelog: https://mina.apache.org/mina-project/ -->
+        <dependency>
+            <groupId>org.apache.mina</groupId>
+            <artifactId>mina-core</artifactId>
+            <version>2.2.8</version>
+        </dependency>
 
         <!-- Changelog: https://github.com/apache/mina-sshd/releases -->
         <dependency>
