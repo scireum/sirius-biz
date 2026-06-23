@@ -31,8 +31,8 @@
                     if (___isFilled(originalUrl)) {
                         try {
                             window.localStorage.setItem('samlPostLoginUri', '@raw { @escapeJS(originalUrl) }');
-                        } catch (e) {
-                            console.log(e);
+                        } catch (exception) {
+                            console.log(exception);
                         }
                     }
                     document.getElementsByClassName("samlForm").item(0).submit();

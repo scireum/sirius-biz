@@ -97,10 +97,10 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
 
     private boolean isSamlLoginConfigured(T tenant) {
         TenantData tenantData = tenant.getTenantData();
-        return Strings.isFilled(tenantData.getSamlIssuerUrl())
-               && Strings.isFilled(tenantData.getSamlRequestIssuerName())
-               && Strings.isFilled(tenantData.getSamlIssuerName())
-               && Strings.isFilled(tenantData.getSamlFingerprint());
+        return Strings.areAllFilled(tenantData.getSamlIssuerUrl(),
+                                    tenantData.getSamlRequestIssuerName(),
+                                    tenantData.getSamlIssuerName(),
+                                    tenantData.getSamlFingerprint());
     }
 
     /**
