@@ -10,11 +10,14 @@ package sirius.biz.tenants
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.saml.SamlResponse
 import sirius.biz.tenants.jdbc.SQLTenant
 import sirius.biz.tenants.jdbc.SQLUserAccount
+import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.MultiMap
 import sirius.kernel.health.HandledException
+import sirius.web.http.TestRequest
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -22,6 +25,7 @@ import kotlin.test.assertTrue
 /**
  * Tests the [SamlController].
  */
+@ExtendWith(SiriusExtension::class)
 class SamlControllerTest {
 
     @Test
@@ -55,9 +59,31 @@ class SamlControllerTest {
         }
     }
 
+    @Test
+    fun `SAML controller starts login for samlTenantId parameter`() {
+        val tenant = samlTenant("C5:FB:EB:48:78:60:C8:E3:CB:E5:64:09:61:70:21:D0:1B:E3:71:FF")
+        tenant.setId(4711)
+        val controller = TestSamlController(listOf(tenant))
+
+        assertTrue(
+            controller.tryStartTenantSamlLogin(
+                TestRequest.GET("/admin?samlTenantId=4711"),
+                "/admin"
+            )
+        )
+        assertFalse(
+            controller.tryStartTenantSamlLogin(
+                TestRequest.GET("/admin?samlTenantId=4712"),
+                "/admin"
+            )
+        )
+    }
+
     private fun samlTenant(fingerprint: String): SQLTenant {
         val tenant = SQLTenant()
         tenant.tenantData.samlIssuerName = "issuer"
+        tenant.tenantData.samlIssuerUrl = "https://sso.example.test/login"
+        tenant.tenantData.samlRequestIssuerName = "request-issuer"
         tenant.tenantData.samlFingerprint = fingerprint
         return tenant
     }
