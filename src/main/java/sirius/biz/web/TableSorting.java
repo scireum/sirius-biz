@@ -130,7 +130,7 @@ public class TableSorting {
     }
 
     public static String readStoredSortKey(String userPreferencesKey) {
-        if (!Strings.isFilled(userPreferencesKey)) {
+        if (Strings.isEmpty(userPreferencesKey)) {
             return "";
         }
 
@@ -138,7 +138,7 @@ public class TableSorting {
     }
 
     public static String readStoredOrderValue(String userPreferencesKey) {
-        if (!Strings.isFilled(userPreferencesKey)) {
+        if (Strings.isEmpty(userPreferencesKey)) {
             return "";
         }
 
@@ -146,7 +146,7 @@ public class TableSorting {
     }
 
     public static void storeSortingPreference(String userPreferencesKey, String sortKey, SortOrder sortOrder) {
-        if (!Strings.isFilled(userPreferencesKey) || !Strings.isFilled(sortKey) || sortOrder == null) {
+        if (Strings.isEmpty(userPreferencesKey) || Strings.isEmpty(sortKey) || sortOrder == null) {
             return;
         }
 
@@ -157,7 +157,7 @@ public class TableSorting {
     }
 
     public static void clearSortingPreference(String userPreferencesKey) {
-        if (!Strings.isFilled(userPreferencesKey)) {
+        if (Strings.isEmpty(userPreferencesKey)) {
             return;
         }
 
@@ -209,7 +209,7 @@ public class TableSorting {
             return new SortingState(requestedSortKey, requestedOrderValue);
         }
 
-        if (!Strings.isFilled(userPreferencesKey)) {
+        if (Strings.isEmpty(userPreferencesKey)) {
             return new SortingState(requestedSortKey, requestedOrderValue);
         }
 
