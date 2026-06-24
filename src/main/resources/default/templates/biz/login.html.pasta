@@ -72,6 +72,7 @@
                                 </a>
                             </div>
                         </div>
+                        <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
                     </form>
                 </div>
             </div>
@@ -136,8 +137,8 @@
 
             try {
                 window.localStorage.setItem('samlPostLoginUri', '@raw {@escapeJS(originalUrl)}');
-            } catch (e) {
-                console.log(e);
+            } catch (exception) {
+                console.log(exception);
             }
         });
 

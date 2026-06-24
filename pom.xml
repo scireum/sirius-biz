@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>15.2.0</version>
+        <version>15.3.0</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -20,7 +20,7 @@
         <sirius.kernel>52.0.1</sirius.kernel>
         <sirius.web>104.4.0</sirius.web>
         <sirius.db>68.0.2</sirius.db>
-        <aws.sdk>2.45.1</aws.sdk>
+        <aws.sdk>2.46.15</aws.sdk>
     </properties>
 
     <repositories>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
-            <version>3.5.8</version>
+            <version>3.5.9</version>
         </dependency>
 
         <!-- Changelog: https://mina.apache.org/ftpserver-project/download_1_2.html -->
@@ -59,6 +59,13 @@
             <groupId>org.apache.ftpserver</groupId>
             <artifactId>ftpserver-core</artifactId>
             <version>1.2.1</version>
+        </dependency>
+        <!-- Required as the version provided by org.apache.ftpserver has security issues
+             Changelog: https://mina.apache.org/mina-project/ -->
+        <dependency>
+            <groupId>org.apache.mina</groupId>
+            <artifactId>mina-core</artifactId>
+            <version>2.2.9</version>
         </dependency>
 
         <!-- Changelog: https://github.com/apache/mina-sshd/releases -->
@@ -153,6 +160,27 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>2.6</version>
+        </dependency>
+        <!-- Changelog: https://github.com/commonmark/commonmark-java/releases -->
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>0.28.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-gfm-tables</artifactId>
+            <version>0.28.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-gfm-alerts</artifactId>
+            <version>0.28.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-yaml-front-matter</artifactId>
+            <version>0.28.0</version>
         </dependency>
 
         <!-- Changelog: https://github.com/borisbrodski/sevenzipjbinding/blob/master/ChangeLog -->

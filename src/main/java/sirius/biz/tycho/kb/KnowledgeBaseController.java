@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownRenderer;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
@@ -39,6 +40,8 @@ import java.util.List;
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 public class KnowledgeBaseController extends BizController {
 
+    private static final String MARKDOWN_TEMPLATE = "/templates/biz/tycho/kb/markdown-article.html.pasta";
+
     @Part
     private KnowledgeBase knowledgeBase;
 
@@ -47,6 +50,9 @@ public class KnowledgeBaseController extends BizController {
 
     @Part
     private Resources resources;
+
+    @Part
+    private KnowledgeBaseMarkdownRenderer markdownService;
 
     @ConfigValue("http.response.defaultStaticAssetTTL")
     private static Duration defaultStaticAssetTTL;
@@ -160,7 +166,12 @@ public class KnowledgeBaseController extends BizController {
 
         UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
         try {
-            webContext.respondWith().template(article.getTemplatePath());
+            if (article.getSourceType() == EntrySourceType.MARKDOWN) {
+                webContext.respondWith()
+                          .template(MARKDOWN_TEMPLATE, markdownService.renderDocument(article.getTemplatePath()));
+            } else {
+                webContext.respondWith().template(article.getTemplatePath());
+            }
             eventRecorder.record(new PageImpressionEvent().withUri("/kba/"
                                                                    + article.getLanguage()
                                                                    + "/"

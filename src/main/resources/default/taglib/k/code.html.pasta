@@ -1,6 +1,10 @@
 <i:arg type="String" name="class" default="" description="Permits adding additional CSS classes to the generated pre tag" />
+<i:arg type="String"
+       name="content"
+       default="@renderToString('body')"
+       description="Contains the code to render. Defaults to the rendered body content."/>
 <i:pragma name="description">
     Renders a chunk of code with appropriate highlighting.
 </i:pragma>
 
-<pre class="prettyprint p-2 @class"><i:raw>@renderToString('body')</i:raw></pre>
+<pre class="prettyprint p-2 @class"><i:raw>@content</i:raw></pre>

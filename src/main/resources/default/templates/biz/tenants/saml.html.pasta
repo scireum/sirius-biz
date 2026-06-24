@@ -1,4 +1,5 @@
 <i:arg type="List" name="tenants"/>
+<i:arg type="String" name="originalUrl" default=""/>
 
 <t:page titleKey="SAMLController.loginViaSAML" ignoreDisasterMode="true">
     <i:block name="breadcrumbs">
@@ -27,6 +28,13 @@
         <i:if test="tenants.size() == 1 && !user().isLoggedIn()">
             <script type="text/javascript">
                 sirius.ready(function () {
+                    if (___isFilled(originalUrl)) {
+                        try {
+                            window.localStorage.setItem('samlPostLoginUri', '@raw { @escapeJS(originalUrl) }');
+                        } catch (exception) {
+                            console.log(exception);
+                        }
+                    }
                     document.getElementsByClassName("samlForm").item(0).submit();
                 });
             </script>

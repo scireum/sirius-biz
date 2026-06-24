@@ -18,6 +18,7 @@ import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
@@ -25,6 +26,7 @@ import sirius.web.security.UserInfo;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,7 +37,7 @@ import java.util.UUID;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-@Register(framework = Tenants.FRAMEWORK_TENANTS)
+@Register(classes = {Controller.class, SamlController.class}, framework = Tenants.FRAMEWORK_TENANTS)
 public class SamlController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
@@ -43,6 +45,11 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
      * Contains the URI prefix shared by all routes related to the SAML login process.
      */
     public static final String SAML_URI_PREFIX = "/saml";
+
+    /**
+     * Contains the request parameter which can be used to directly start the SAML login for a tenant.
+     */
+    public static final String SAML_TENANT_ID_PARAMETER = "samlTenantId";
 
     @Part
     private SamlHelper saml;
@@ -59,6 +66,41 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
     public void saml(WebContext webContext) {
         List<T> tenants = querySAMLTenants();
         webContext.respondWith().template("/templates/biz/tenants/saml.html.pasta", tenants);
+    }
+
+    /**
+     * Directly starts the SAML login for the tenant given in {@link #SAML_TENANT_ID_PARAMETER}, if possible.
+     *
+     * @param webContext  the current request
+     * @param originalUrl the URL to return to after the SAML login
+     * @return <tt>true</tt> if the request has been handled, <tt>false</tt> otherwise
+     */
+    public boolean tryStartTenantSamlLogin(WebContext webContext, String originalUrl) {
+        String tenantId = webContext.get(SAML_TENANT_ID_PARAMETER).asString();
+        if (Strings.isEmpty(tenantId)) {
+            return false;
+        }
+
+        T tenant = querySAMLTenants().stream()
+                                     .filter(candidate -> Strings.areEqual(candidate.getIdAsString(), tenantId))
+                                     .filter(this::isSamlLoginConfigured)
+                                     .findFirst()
+                                     .orElse(null);
+        if (tenant == null) {
+            return false;
+        }
+
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/saml.html.pasta", Collections.singletonList(tenant), originalUrl);
+        return true;
+    }
+
+    private boolean isSamlLoginConfigured(T tenant) {
+        TenantData tenantData = tenant.getTenantData();
+        return Strings.areAllFilled(tenantData.getSamlIssuerUrl(),
+                                    tenantData.getSamlRequestIssuerName(),
+                                    tenantData.getSamlIssuerName(),
+                                    tenantData.getSamlFingerprint());
     }
 
     /**

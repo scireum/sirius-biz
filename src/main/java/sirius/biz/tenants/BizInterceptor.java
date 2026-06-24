@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Interceptor;
@@ -23,6 +24,9 @@ import sirius.web.security.UserContext;
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
 public class BizInterceptor implements Interceptor {
 
+    @Part
+    private SamlController<?, ?, ?> samlController;
+
     @Override
     public boolean before(WebContext webContext, Route route) throws Exception {
         return false;
@@ -37,6 +41,9 @@ public class BizInterceptor implements Interceptor {
             return false;
         }
         if (!UserContext.getCurrentUser().isLoggedIn()) {
+            if (samlController.tryStartTenantSamlLogin(webContext, webContext.getRequest().uri())) {
+                return true;
+            }
             webContext.respondWith().template("/templates/biz/login.html.pasta", webContext.getRequest().uri());
         } else {
             webContext.respondWith()

@@ -1,0 +1,70 @@
+<i:arg type="sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownDocument" name="document"/>
+
+<i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+
+<k:base code="@article.getArticleId()"
+        title="@article.getTitle()"
+        parent="@article.getParentId()"
+        priority="@article.getPriority()"
+        lang="@article.getLanguage()"
+        crossReferences="@article.getCrossReferences()"
+        permissions="@article.getRequiredPermissions()"
+        chapter="@article.isChapter()">
+
+    <i:block name="description">@article.getDescription()</i:block>
+
+    <i:block name="sidebar">
+        <k:toc>
+            <i:for type="sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownSection"
+                   var="section"
+                   items="document.tableOfContentsSections()">
+                <i:local name="anchor" value="@apply('#%s', section.anchor())"/>
+                <k:tocLink link="@anchor">@section.heading()</k:tocLink>
+            </i:for>
+        </k:toc>
+    </i:block>
+
+    <i:for type="sirius.biz.tycho.kb.markdown.KnowledgeBaseMarkdownSection"
+           var="section"
+           items="document.sections()">
+        <k:section heading="@section.heading()" anchor="@section.anchor()">
+            <i:raw>@section.html()</i:raw>
+        </k:section>
+    </i:for>
+
+    <i:if test="article.isChapter()">
+        <i:local name="childChapters" value="article.queryChildChapters()"/>
+        <i:if test="!childChapters.isEmpty()">
+            <k:section heading="@i18n('KnowledgeBase.chaptersLabel')">
+                <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
+                    <div class="pb-2">
+                        <div>
+                            <k:link link="@apply('/kba/%s/%s', chapter.getLanguage(), chapter.getArticleId())"
+                                    icon="fa-solid fa-book">@chapter.getTitle()</k:link>
+                        </div>
+                        <div class="text-muted">
+                            @chapter.getDescription()
+                        </div>
+                    </div>
+                </i:for>
+            </k:section>
+        </i:if>
+
+        <i:local name="children" value="article.queryChildren()"/>
+        <i:if test="!children.isEmpty()">
+            <k:section heading="@i18n('KnowledgeBase.articlesLabel')">
+                <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="child" items="children">
+                    <div class="pb-2">
+                        <div>
+                            <k:link link="@apply('/kba/%s/%s', child.getLanguage(), child.getArticleId())"
+                                    icon="fa-solid fa-file-alt">@child.getTitle()</k:link>
+                        </div>
+                        <div class="text-muted">
+                            @child.getDescription()
+                        </div>
+                    </div>
+                </i:for>
+            </k:section>
+        </i:if>
+    </i:if>
+</k:base>
