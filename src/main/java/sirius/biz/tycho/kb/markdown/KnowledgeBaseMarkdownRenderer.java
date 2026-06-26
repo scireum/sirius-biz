@@ -50,7 +50,9 @@ public class KnowledgeBaseMarkdownRenderer {
     private Resources resources;
 
     private static final List<Extension> PARSER_EXTENSIONS = List.of(TablesExtension.create(),
-                                                                     AlertsExtension.create(),
+                                                                     AlertsExtension.builder()
+                                                                                    .allowCustomTitles(true)
+                                                                                    .build(),
                                                                      YamlFrontMatterExtension.create(),
                                                                      ArticleReferenceParserExtension.create());
     private static final List<Extension> HTML_EXTENSIONS = List.of(TablesExtension.create());

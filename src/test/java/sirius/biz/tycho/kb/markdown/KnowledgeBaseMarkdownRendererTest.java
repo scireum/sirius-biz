@@ -41,21 +41,22 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentBuildsSectionsAnchorsAndHtml() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               Intro paragraph with a [link](https://example.com).
-                                                                                               
-                                                                                               ## Section
-                                                                                               
-                                                                                               ![Diagram](/kb/assets/example.svg)
-                                                                                               
-                                                                                               ```java
-                                                                                               String value = "test";
-                                                                                               ```
-                                                                                               
-                                                                                               ## Section
-                                                                                               
-                                                                                               Closing paragraph.
-                                                                                               """));
+        String articleMarkdown = """
+                Intro paragraph with a [link](https://example.com).
+                
+                ## Section
+                
+                ![Diagram](/kb/assets/example.svg)
+                
+                ```java
+                String value = "test";
+                ```
+                
+                ## Section
+                
+                Closing paragraph.
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         assertEquals(3, document.sections().size());
         assertFalse(document.sections().getFirst().html().isEmpty());
@@ -74,11 +75,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentTurnsStandaloneMarkdownImagesIntoPreviewImages() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Images
-                                                                                               
-                                                                                               ![Markdown example image](/kb/assets/markdown-example.svg)
-                                                                                               """));
+        String articleMarkdown = """
+                ## Images
+                
+                ![Markdown example image](/kb/assets/markdown-example.svg)
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertFalse(html.contains("<p><div"));
@@ -92,15 +94,16 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentRendersFencedCodeBlocksThroughCodeTag() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Code
-                                                                                               
-                                                                                               ```java
-                                                                                               if (left < right) {
-                                                                                                   return "ok";
-                                                                                               }
-                                                                                               ```
-                                                                                               """));
+        String articleMarkdown = """
+                ## Code
+                
+                ```java
+                if (left < right) {
+                    return "ok";
+                }
+                ```
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("<pre class=\"prettyprint p-2 lang-java\">"));
@@ -111,14 +114,15 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentEscapesMermaidFencedCodeBlocks() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Diagram
-                                                                                               
-                                                                                               ```mermaid
-                                                                                               flowchart TD
-                                                                                                   A["<img src=x onerror=alert(1)>"] --> B
-                                                                                               ```
-                                                                                               """));
+        String articleMarkdown = """
+                ## Diagram
+                
+                ```mermaid
+                flowchart TD
+                    A["<img src=x onerror=alert(1)>"] --> B
+                ```
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("class=\"mermaid kb-diagram"));
@@ -128,11 +132,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentRendersInlineCodeAndLinksThroughTagliatelleTags() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Inline Elements
-                                                                                               
-                                                                                               Use `a < b` and open [Tagliatelle Tag Overview](https://example.com/tags).
-                                                                                               """));
+        String articleMarkdown = """
+                ## Inline Elements
+                
+                Use `a < b` and open [Tagliatelle Tag Overview](https://example.com/tags).
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("<span class=\"kb-inline-code\">a &lt; b</span>"));
@@ -144,7 +149,8 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentDoesNotCreateEmptySectionForFrontmatterOnlyArticles() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(""));
+        String articleMarkdown = "";
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         assertTrue(document.sections().isEmpty());
         assertFalse(document.hasTableOfContents());
@@ -152,17 +158,18 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void documentExposesOnlyHeadedSectionsForTableOfContents() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               Intro paragraph.
-                                                                                               
-                                                                                               ## Overview
-                                                                                               
-                                                                                               First section.
-                                                                                               
-                                                                                               ## Details
-                                                                                               
-                                                                                               Second section.
-                                                                                               """));
+        String articleMarkdown = """
+                Intro paragraph.
+                
+                ## Overview
+                
+                First section.
+                
+                ## Details
+                
+                Second section.
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         assertEquals(2, document.tableOfContentsSections().size());
         assertEquals("Overview", document.tableOfContentsSections().get(0).heading());
@@ -173,14 +180,15 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentTurnsMarkdownTablesIntoKbStyledTables() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Response Codes
-                                                                                               
-                                                                                               | Code | Description |
-                                                                                               | --- | --- |
-                                                                                               | 200 | Everything works as expected. |
-                                                                                               | 404 | Resource not found. |
-                                                                                               """));
+        String articleMarkdown = """
+                ## Response Codes
+                
+                | Code | Description |
+                | --- | --- |
+                | 200 | Everything works as expected. |
+                | 404 | Resource not found. |
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("<table class=\"table table-striped table-small-text\">"));
@@ -193,12 +201,13 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentTurnsNoteAlertsIntoInfoStyledSections() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Alerts
-                                                                                               
-                                                                                               > [!NOTE]
-                                                                                               > Markdown KB articles can now render hint boxes.
-                                                                                               """));
+        String articleMarkdown = """
+                ## Alerts
+                
+                > [!NOTE]
+                > Markdown KB articles can now render hint boxes.
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("card mb-4 full-border border-sirius-blue-light"));
@@ -209,12 +218,13 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentTurnsWarningAlertsIntoWarnStyledSections() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Alerts
-                                                                                               
-                                                                                               > [!WARNING]
-                                                                                               > Please plan expensive jobs carefully.
-                                                                                               """));
+        String articleMarkdown = """
+                ## Alerts
+                
+                > [!WARNING]
+                > Please plan expensive jobs carefully.
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("card mb-4 full-border border-sirius-yellow-dark"));
@@ -225,11 +235,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentLeavesNormalBlockquotesUntouched() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Quotes
-                                                                                               
-                                                                                               > This is a normal blockquote.
-                                                                                               """));
+        String articleMarkdown = """
+                ## Quotes
+                
+                > This is a normal blockquote.
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("<blockquote>"));
@@ -239,15 +250,16 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentKeepsNestedMarkdownInsideAlerts() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## Alerts
-                                                                                               
-                                                                                               > [!TIP]
-                                                                                               > Prefer background processing for long-running work.
-                                                                                               >
-                                                                                               > - Use queues
-                                                                                               > - Monitor cluster load
-                                                                                               """));
+        String articleMarkdown = """
+                ## Alerts
+                
+                > [!TIP]
+                > Prefer background processing for long-running work.
+                >
+                > - Use queues
+                > - Monitor cluster load
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("card mb-4 full-border border-sirius-green-light"));
@@ -258,12 +270,34 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentUsesCustomAlertTitleWithInlineFormatting() {
+        String articleMarkdown = """
+                ## Alerts
+                
+                > [!NOTE] Keep in **mind**
+                > Custom titles override the default heading.
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("card-title text-sirius-blue-light"));
+        assertTrue(html.contains("fa-solid fa-info-circle"));
+        String titleHtml = "Keep in <strong>mind</strong>";
+        // The custom title replaces the default heading and keeps its inline formatting.
+        assertTrue(html.contains(titleHtml));
+        // Ensure the title is rendered only once (and therefore doesn't leak into the body).
+        assertEquals(html.indexOf(titleHtml), html.lastIndexOf(titleHtml));
+        assertTrue(html.contains("Custom titles override the default heading."));
+    }
+
+    @Test
     public void renderDocumentRendersAngleBracketKbaReferenceThroughRefTag() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## References
-                                                                                               
-                                                                                               <kba:VFLEO>
-                                                                                               """));
+        String articleMarkdown = """
+                ## References
+                
+                <kba:VFLEO>
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("class=\"text-danger\""));
@@ -272,11 +306,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentRendersMarkdownKbaReferenceWithCustomLabelThroughRefTag() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## References
-                                                                                               
-                                                                                               [Artikel zum Thema X](kba:VFLEO#Basics)
-                                                                                               """));
+        String articleMarkdown = """
+                ## References
+                
+                [Artikel zum Thema X](kba:VFLEO#Basics)
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("class=\"text-danger\""));
@@ -286,11 +321,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentKeepsInlineCodeInCustomKbaReferenceLabel() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## References
-                                                                                               
-                                                                                               [`foo`](kba:VFLEO)
-                                                                                               """));
+        String articleMarkdown = """
+                ## References
+                
+                [`foo`](kba:VFLEO)
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("class=\"text-danger\""));
@@ -299,11 +335,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentRendersAngleBracketKbaReferenceWithAnchorThroughRefTag() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## References
-                                                                                               
-                                                                                               <kba:VFLEO#Basics>
-                                                                                               """));
+        String articleMarkdown = """
+                ## References
+                
+                <kba:VFLEO#Basics>
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("class=\"text-danger\""));
@@ -312,11 +349,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentShowsWarningStyleForUnresolvedKbaReferenceWithCustomLabel() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## References
-                                                                                               
-                                                                                               [Einleitung im Artikel zum Thema X](kba:VFLEO#Basics)
-                                                                                               """));
+        String articleMarkdown = """
+                ## References
+                
+                [Einleitung im Artikel zum Thema X](kba:VFLEO#Basics)
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertFalse(html.contains("href=\"/kba/"));
@@ -327,11 +365,12 @@ public class KnowledgeBaseMarkdownRendererTest {
 
     @Test
     public void renderDocumentEscapesCustomKbaReferenceLabelBeforeCallingRefTag() {
-        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
-                                                                                               ## References
-                                                                                               
-                                                                                               [<script>alert('x')</script>](kba:VFLEO)
-                                                                                               """));
+        String articleMarkdown = """
+                ## References
+                
+                [<script>alert('x')</script>](kba:VFLEO)
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
         assertFalse(html.contains("<script>alert"));
@@ -339,20 +378,21 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     private KnowledgeBaseMarkdownArticle createArticle(String markdown) {
-        return renderer.parseArticle(ARTICLE_PATH, """
-                                                           ---
-                                                           code: qmdkb
-                                                           lang: en
-                                                           title: Markdown Article
-                                                           description: Short summary
-                                                           parent: skame
-                                                           priority: 250
-                                                           permissions: flag-system-tenant
-                                                           chapter: false
-                                                           crossReferences:
-                                                             - vfleo
-                                                             - djelk
-                                                           ---
-                                                           """ + markdown);
+        String articleFrontmatter = """
+                ---
+                code: qmdkb
+                lang: en
+                title: Markdown Article
+                description: Short summary
+                parent: skame
+                priority: 250
+                permissions: flag-system-tenant
+                chapter: false
+                crossReferences:
+                  - vfleo
+                  - djelk
+                ---
+                """;
+        return renderer.parseArticle(ARTICLE_PATH, articleFrontmatter + markdown);
     }
 }
