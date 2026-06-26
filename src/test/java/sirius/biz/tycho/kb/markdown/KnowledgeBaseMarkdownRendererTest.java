@@ -258,6 +258,24 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentUsesCustomAlertTitleWithInlineFormatting() {
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
+                                                                                               ## Alerts
+                                                                                               
+                                                                                               > [!NOTE] Keep in **mind**
+                                                                                               > Custom titles override the default heading.
+                                                                                               """));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("card-title text-sirius-blue-light"));
+        assertTrue(html.contains("fa-solid fa-info-circle"));
+        // The custom title replaces the default heading and keeps its inline formatting.
+        assertTrue(html.contains("Keep in <strong>mind</strong>"));
+        // The title text must not leak into the body.
+        assertTrue(html.contains("Custom titles override the default heading."));
+    }
+
+    @Test
     public void renderDocumentRendersAngleBracketKbaReferenceThroughRefTag() {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle("""
                                                                                                ## References

@@ -9,6 +9,7 @@
 package sirius.biz.tycho.kb.markdown;
 
 import org.commonmark.ext.gfm.alerts.Alert;
+import org.commonmark.ext.gfm.alerts.AlertTitle;
 import org.commonmark.node.Node;
 import org.commonmark.renderer.NodeRenderer;
 import org.commonmark.renderer.html.HtmlNodeRendererContext;
@@ -24,6 +25,8 @@ import java.util.Set;
  */
 public class AlertNodeRenderer implements NodeRenderer {
 
+    private static final String ARGUMENT_CLASS = "class";
+    private static final String TAG_DIV = "div";
     private final HtmlWriter htmlWriter;
     private final HtmlNodeRendererContext context;
 
@@ -53,20 +56,23 @@ public class AlertNodeRenderer implements NodeRenderer {
 
         htmlWriter.line();
 
-        htmlWriter.tag("div", Map.of("class", "card mb-4 full-border " + alertType.sectionClass));
+        htmlWriter.tag(TAG_DIV, Map.of(ARGUMENT_CLASS, "card mb-4 full-border " + alertType.sectionClass));
         htmlWriter.line();
 
-        htmlWriter.tag("div", Map.of("class", "card-body"));
+        htmlWriter.tag(TAG_DIV, Map.of(ARGUMENT_CLASS, "card-body"));
         htmlWriter.line();
 
         // Render alert title
-        htmlWriter.tag("div", Map.of("class", "d-flex justify-content-between"));
+        htmlWriter.tag(TAG_DIV, Map.of(ARGUMENT_CLASS, "d-flex justify-content-between"));
         htmlWriter.line();
         htmlWriter.tag("h5",
-                       Map.of("class", "card-title " + alertType.headingClass, "style", "scroll-margin-top: 100px;"));
-        htmlWriter.tag("i", Map.of("class", "fa-solid " + alertType.iconClass));
+                       Map.of(ARGUMENT_CLASS,
+                              "card-title " + alertType.headingClass,
+                              "style",
+                              "scroll-margin-top: 100px;"));
+        htmlWriter.tag("i", Map.of(ARGUMENT_CLASS, "fa-solid " + alertType.iconClass));
         htmlWriter.tag("/i");
-        htmlWriter.text(alertType.gethHeading());
+        renderTitle(alert, alertType);
         htmlWriter.tag("/h5");
         htmlWriter.tag("/div");
         htmlWriter.line();
@@ -81,11 +87,28 @@ public class AlertNodeRenderer implements NodeRenderer {
         htmlWriter.line();
     }
 
+    /**
+     * Renders the alert title, preferring an author-provided custom title (which may contain inline formatting) over
+     * the localized default heading for the alert type.
+     */
+    private void renderTitle(Alert alert, AlertType alertType) {
+        if (alert.getFirstChild() instanceof AlertTitle alertTitle) {
+            for (Node child = alertTitle.getFirstChild(); child != null; child = child.getNext()) {
+                context.render(child);
+            }
+        } else {
+            htmlWriter.text(alertType.gethHeading());
+        }
+    }
+
     private void renderChildNodes(Alert alert) {
         var node = alert.getFirstChild();
         while (node != null) {
             var next = node.getNext();
-            context.render(node);
+            // The custom title (if any) lives in an AlertTitle node and is already rendered as the heading.
+            if (!(node instanceof AlertTitle)) {
+                context.render(node);
+            }
             node = next;
         }
     }
