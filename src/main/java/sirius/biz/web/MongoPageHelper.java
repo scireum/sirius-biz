@@ -30,6 +30,7 @@ import sirius.web.controller.Page;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implements a page helper for {@link MongoQuery MongoDB queries}.
@@ -179,6 +180,48 @@ public class MongoPageHelper<E extends MongoEntity>
 
             addBooleanQueryFacet(q, facet, field);
         });
+    }
+
+    /**
+     * Adds a sortable field which can be addressed using the technical sort parameters <tt>sort</tt> and
+     * <tt>order</tt>.
+     * <p>
+     * Only explicitly registered keys are accepted. The mapping is never derived from request parameters directly.
+     *
+     * @param key     the request key used to address this sorting option
+     * @param mapping the mapping to sort by
+     * @return the helper itself for fluent method calls
+     */
+    public MongoPageHelper<E> addSortableField(String key, Mapping mapping) {
+        return registerSortableField(key, (query, sortOrder) -> {
+            if (sortOrder == SortOrder.ASC) {
+                query.orderAsc(mapping);
+            } else {
+                query.orderDesc(mapping);
+            }
+        });
+    }
+
+    /**
+     * Adds a sortable option based on a reusable technical option definition.
+     *
+     * @param option the option definition to register
+     * @return the helper itself for fluent method calls
+     */
+    public MongoPageHelper<E> addSortableOption(TableSortOption option) {
+        sortableOptions.add(Objects.requireNonNull(option, "option"));
+        return addSortableField(option.getMapping().getName(), option.getMapping());
+    }
+
+    /**
+     * Adds multiple sortable options based on reusable technical option definitions.
+     *
+     * @param options the option definitions to register
+     * @return the helper itself for fluent method calls
+     */
+    public MongoPageHelper<E> addSortableOptions(Iterable<TableSortOption> options) {
+        Objects.requireNonNull(options, "options").forEach(this::addSortableOption);
+        return this;
     }
 
     private void addBooleanQueryFacet(MongoQuery<E> query, Facet facet, Mapping field) {

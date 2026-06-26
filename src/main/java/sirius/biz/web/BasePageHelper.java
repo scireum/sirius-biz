@@ -33,7 +33,9 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -51,16 +53,24 @@ import java.util.function.Function;
 public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constraint, Q extends Query<Q, E, C>, B extends BasePageHelper<E, C, Q, B>> {
 
     protected static final int DEFAULT_PAGE_SIZE = 24;
-    protected static final String SORT_FACET = "sort";
+    protected static final String SORT_FACET = TableSorting.PARAM_SORT;
+    protected static final String ORDER_PARAMETER = TableSorting.PARAM_ORDER;
+
+
     protected WebContext webContext;
     protected Function<String, Value> parameterProvider;
     protected Q baseQuery;
     protected List<QueryField> searchFields = Collections.emptyList();
     protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
+    protected final Map<String, BiConsumer<Q, SortOrder>> sortableFields = new LinkedHashMap<>();
+    protected final List<TableSortOption> sortableOptions = new ArrayList<>();
     protected int pageSize = DEFAULT_PAGE_SIZE;
     protected int customStart = -1;
     protected boolean withTotalCount;
     protected boolean debugging;
+    protected boolean sortingApplied;
+    protected Consumer<Q> defaultSort;
+    protected String sortingPreferenceKey;
 
     protected BasePageHelper(Q query) {
         this.baseQuery = query;
@@ -118,6 +128,36 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     @SuppressWarnings("unchecked")
     public B withTotalCount() {
         this.withTotalCount = true;
+        return (B) this;
+    }
+
+    /**
+     * Defines the default sorting applied if no valid explicit sort selection is present.
+     * <p>
+     * This is only used if at least one sortable field or a default sort has been configured.
+     * Existing pages without sorting configuration remain unchanged.
+     *
+     * @param defaultSort the default sorting to apply
+     * @return the helper itself for fluent method calls
+     */
+    @SuppressWarnings("unchecked")
+    public B withDefaultSort(Consumer<Q> defaultSort) {
+        this.defaultSort = defaultSort;
+        return (B) this;
+    }
+
+    /**
+     * Enables storing and reusing the selected sort order for this page using the given user preference key.
+     * <p>
+     * This is an explicit opt-in and only affects the registered sortable field mechanism based on
+     * {@link TableSorting#PARAM_SORT} and {@link TableSorting#PARAM_ORDER}.
+     *
+     * @param sortingPreferenceKey the page-specific user preference key to use
+     * @return the helper itself for fluent method calls
+     */
+    @SuppressWarnings("unchecked")
+    public B withSortingPreferenceKey(String sortingPreferenceKey) {
+        this.sortingPreferenceKey = sortingPreferenceKey;
         return (B) this;
     }
 
@@ -348,6 +388,26 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     }
 
     /**
+     * Registers a sortable field by associating a key with a sort function.
+     *
+     * @param key the unique identifier for the sortable field
+     * @param sortFunction a BiConsumer that defines how sorting should be applied
+     *                     using the given key and sort order
+     * @return the current instance for method chaining
+     */
+    @SuppressWarnings("unchecked")
+    protected final B registerSortableField(String key, BiConsumer<Q, SortOrder> sortFunction) {
+        Objects.requireNonNull(sortFunction, "sortFunction");
+
+        if (Strings.isEmpty(key)) {
+            return (B) this;
+        }
+
+        sortableFields.put(key, sortFunction);
+        return (B) this;
+    }
+
+    /**
      * Specifies the number of items shown on the page that gets rendered using this pageHelper.
      *
      * @param pageSize the number of items shown per page
@@ -386,8 +446,12 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         if (customStart > 0) {
             result.withStart(customStart);
         }
+        if (!sortableOptions.isEmpty()) {
+            result.withAttribute(TableSorting.ATTRIBUTE_SORT_OPTIONS, List.copyOf(sortableOptions));
+        }
 
         applyQuery(result.getQuery());
+        applySorting();
 
         applyFacets(result);
 
@@ -431,7 +495,64 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     public Q buildUnderlyingQuery() {
         String query = getParameterValue("query").getString();
         applyQuery(query);
+        applySorting();
         return baseQuery;
+    }
+
+    /**
+     * Applies the requested sorting to the current query.
+     * <p>
+     * The method is executed at most once per helper lifecycle. If a valid sort field and
+     * sort order are present in the request, the corresponding registered sort function is
+     * applied. Otherwise, the configured default sorting is used if available.
+     */
+    private void applySorting() {
+        if (sortingApplied || !hasSortingConfiguration()) {
+            return;
+        }
+
+        sortingApplied = true;
+
+        if (isSortingPreferenceResetRequested()) {
+            TableSorting.clearSortingPreference(sortingPreferenceKey);
+
+            if (defaultSort != null) {
+                defaultSort.accept(baseQuery);
+            }
+            return;
+        }
+
+        SortOrder sortOrder = SortOrder.fromParameter(getParameterValue(ORDER_PARAMETER).getString());
+        BiConsumer<Q, SortOrder> sortFunction = sortableFields.get(getParameterValue(SORT_FACET).getString());
+
+        if (sortFunction != null && sortOrder != null) {
+            TableSorting.storeSortingPreference(sortingPreferenceKey, getParameterValue(SORT_FACET).getString(), sortOrder);
+            sortFunction.accept(baseQuery, sortOrder);
+            return;
+        }
+
+        if (Strings.isFilled(sortingPreferenceKey)) {
+            String storedSortKey = TableSorting.readStoredSortKey(sortingPreferenceKey);
+            SortOrder storedSortOrder = SortOrder.fromParameter(TableSorting.readStoredOrderValue(sortingPreferenceKey));
+            BiConsumer<Q, SortOrder> storedSortFunction = sortableFields.get(storedSortKey);
+
+            if (storedSortFunction != null && storedSortOrder != null) {
+                storedSortFunction.accept(baseQuery, storedSortOrder);
+                return;
+            }
+        }
+
+        if (defaultSort != null) {
+            defaultSort.accept(baseQuery);
+        }
+    }
+
+    private boolean isSortingPreferenceResetRequested() {
+        return Strings.isFilled(sortingPreferenceKey) && getParameterValue(TableSorting.PARAM_CLEAR_SORT).asBoolean();
+    }
+
+    private boolean hasSortingConfiguration() {
+        return defaultSort != null || !sortableFields.isEmpty();
     }
 
     private void applyQuery(String query) {
