@@ -97,7 +97,7 @@ public class AlertNodeRenderer implements NodeRenderer {
                 context.render(child);
             }
         } else {
-            htmlWriter.text(alertType.gethHeading());
+            htmlWriter.text(alertType.getHeading());
         }
     }
 
@@ -128,7 +128,7 @@ public class AlertNodeRenderer implements NodeRenderer {
             this.iconClass = iconClass;
         }
 
-        private String gethHeading() {
+        private String getHeading() {
             return NLS.get("AlertNodeRenderer.type." + name());
         }
     }
