@@ -282,11 +282,12 @@ public class KnowledgeBaseMarkdownRendererTest {
         String html = document.sections().getFirst().html();
         assertTrue(html.contains("card-title text-sirius-blue-light"));
         assertTrue(html.contains("fa-solid fa-info-circle"));
+        String titleHtml = "Keep in <strong>mind</strong>";
         // The custom title replaces the default heading and keeps its inline formatting.
-        assertTrue(html.contains("Keep in <strong>mind</strong>"));
-        // The title text must not leak into the body.
+        assertTrue(html.contains(titleHtml));
+        // Ensure the title is rendered only once (and therefore doesn't leak into the body).
+        assertEquals(html.indexOf(titleHtml), html.lastIndexOf(titleHtml));
         assertTrue(html.contains("Custom titles override the default heading."));
-    }
 
     @Test
     public void renderDocumentRendersAngleBracketKbaReferenceThroughRefTag() {
