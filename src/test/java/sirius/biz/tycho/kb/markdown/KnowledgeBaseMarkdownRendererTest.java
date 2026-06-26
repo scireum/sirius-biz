@@ -288,6 +288,7 @@ public class KnowledgeBaseMarkdownRendererTest {
         // Ensure the title is rendered only once (and therefore doesn't leak into the body).
         assertEquals(html.indexOf(titleHtml), html.lastIndexOf(titleHtml));
         assertTrue(html.contains("Custom titles override the default heading."));
+    }
 
     @Test
     public void renderDocumentRendersAngleBracketKbaReferenceThroughRefTag() {
