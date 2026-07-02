@@ -28,6 +28,7 @@
                             permission="permission-system-cluster"/>
             <t:dropdownItem label="Scripting" icon="fa-solid fa-terminal" url="/system/scripting"
                             permission="permission-system-scripting"/>
+            <t:dropdownItem label="Client Info" icon="fa-solid fa-circle-info" url="/system/info"/>
         </t:dropdownSection>
     </i:block>
 </i:switch>

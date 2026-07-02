@@ -28,6 +28,7 @@
                         permission="permission-system-cluster"/>
             <w:menuItem title="Scripting" icon="fa-terminal" url="/system/scripting"
                         permission="permission-system-scripting"/>
+            <w:menuItem title="Client Info" icon="fa-info-circle" url="/system/info"/>
         </w:menuSection>
     </i:block>
 </i:switch>
