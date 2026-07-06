@@ -191,7 +191,7 @@ public class QueryController extends BizController {
      * @param output     the output to write the retrieved entities to
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed("/system/query/api")
+    @Routed(value = "/system/query/api", skipCsrfValidation = true)
     @InternalService
     public void queryApi(WebContext webContext, JSONStructuredOutput output) {
         if (!queryApiEnabled) {
