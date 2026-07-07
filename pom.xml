@@ -19,7 +19,7 @@
     <properties>
         <sirius.kernel>52.1.1</sirius.kernel>
         <sirius.web>106.0.1</sirius.web>
-        <sirius.db>68.1.1</sirius.db>
+        <sirius.db>68.2.0</sirius.db>
         <aws.sdk>2.46.21</aws.sdk>
         <commonmark>0.29.0</commonmark>
     </properties>
