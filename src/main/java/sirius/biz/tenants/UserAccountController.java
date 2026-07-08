@@ -705,7 +705,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @LoginRequired
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext webContext, String accountId) {
-        String redirectTarget = webContext.get("goto").asString(wondergemRoot);
+        String redirectTarget = webContext.get("goto").asString("main".equals(accountId) ? "/user-accounts/select" : wondergemRoot);
 
         if ("main".equals(accountId)) {
             // If we try to switch back to the main user - without being different user in the first place,
