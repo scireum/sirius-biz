@@ -705,17 +705,28 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @LoginRequired
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext webContext, String accountId) {
+        String redirectTarget = webContext.get("goto").asString(wondergemRoot);
+
         if ("main".equals(accountId)) {
             // If we try to switch back to the main user - without being different user in the first place,
             // then this action was most probably triggered by the "tenant info badge" in the UI, and meant to
             // actually reset the tenant not the user - therefore we redirect to there.
             if (!isCurrentlySpying(webContext)) {
-                webContext.respondWith().redirectToGet("/tenants/select/main");
+                if (!webContext.isPostRequest()) {
+                    webContext.respondWith().redirectToGet("/tenants/select/main");
+                    return;
+                }
+
+                webContext.respondWith().redirectTemporarily(redirectTarget);
                 return;
             }
 
             String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
             UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+            if (!webContext.isPostRequest()) {
+                renderSelectUserAccountConfirmation(webContext, account, accountId, redirectTarget);
+                return;
+            }
             auditLog.neutral("AuditLog.switchedToMainUser")
                     .hideFromUser()
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
@@ -724,7 +735,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
             webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                        null);
-            webContext.respondWith().redirectTemporarily("/user-accounts/select");
+            webContext.respondWith().redirectTemporarily(redirectTarget);
             return;
         }
 
@@ -762,6 +773,11 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             assertTenant(user);
         }
 
+        if (!webContext.isPostRequest()) {
+            renderSelectUserAccountConfirmation(webContext, user, accountId, redirectTarget);
+            return;
+        }
+
         auditLog.neutral("AuditLog.selectedUser")
                 .hideFromUser()
                 .causedByCurrentUser()
@@ -772,7 +788,20 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                    user.getUniqueName());
-        webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
+        webContext.respondWith().redirectTemporarily(redirectTarget);
+    }
+
+    private void renderSelectUserAccountConfirmation(WebContext webContext,
+                                                     UserAccount<?, ?> user,
+                                                     String targetAccountId,
+                                                     String redirectTarget) {
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/select-confirmation.html.pasta",
+                            false,
+                            targetAccountId,
+                            user.getIdAsString(),
+                            user.getUserAccountData().toString(),
+                            redirectTarget);
     }
 
     /**

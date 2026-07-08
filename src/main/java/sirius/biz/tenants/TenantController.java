@@ -397,29 +397,19 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
         boolean isSwitchToMain =
                 "main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId);
         String redirectTarget = webContext.get("goto").asString(isSwitchToMain ? "/tenants/select" : wondergemRoot);
+        T currentTenant = determineCurrentTenant(webContext);
 
         if (isSwitchToMain) {
-            if (isCurrentlySpying(webContext)) {
-                String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
-                UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
-                auditLog.neutral("AuditLog.switchedToMainTenant")
-                        .hideFromUser()
-                        .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                        .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                        .forTenant(account.getTenant().getIdAsString(),
-                                   account.getTenant().forceFetchValue().getTenantData().getName())
-                        .log();
-
-                webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
-                                           + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
+            if (!webContext.isPostRequest()) {
+                renderSelectTenantConfirmation(webContext,
+                                               tenantId,
+                                               currentTenant.getIdAsString(),
+                                               currentTenant.getTenantData().getName(),
+                                               redirectTarget);
+                return;
             }
-            webContext.respondWith().redirectTemporarily(redirectTarget);
-            return;
-        }
 
-        if (Strings.areEqual(getUser().getTenantId(), tenantId)) {
-            // The tenant of the current user we are spying is the same as the one we want to switch to,
-            // so we simply navigate to the target URL.
+            switchBackToMainTenant(webContext);
             webContext.respondWith().redirectTemporarily(redirectTarget);
             return;
         }
@@ -435,6 +425,46 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
         }
 
         T effectiveTenant = tenant.get();
+        if (!webContext.isPostRequest()) {
+            renderSelectTenantConfirmation(webContext,
+                                           tenantId,
+                                           effectiveTenant.getIdAsString(),
+                                           effectiveTenant.getTenantData().getName(),
+                                           redirectTarget);
+            return;
+        }
+
+        if (Strings.areEqual(getUser().getTenantId(), tenantId)) {
+            // The tenant of the current user we are spying is the same as the one we want to switch to,
+            // so we simply navigate to the target URL.
+            webContext.respondWith().redirectTemporarily(redirectTarget);
+            return;
+        }
+
+        switchToTenant(webContext, effectiveTenant);
+        webContext.respondWith().redirectTemporarily(redirectTarget);
+    }
+
+    private void switchBackToMainTenant(WebContext webContext) {
+        if (!isCurrentlySpying(webContext)) {
+            return;
+        }
+
+        String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+        UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+        auditLog.neutral("AuditLog.switchedToMainTenant")
+                .hideFromUser()
+                .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                .forTenant(account.getTenant().getIdAsString(),
+                           account.getTenant().forceFetchValue().getTenantData().getName())
+                .log();
+
+        webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
+                                   null);
+    }
+
+    private void switchToTenant(WebContext webContext, T effectiveTenant) {
         auditLog.neutral("AuditLog.selectedTenant")
                 .hideFromUser()
                 .causedByCurrentUser()
@@ -444,7 +474,20 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
 
         webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                                    effectiveTenant.getIdAsString());
-        webContext.respondWith().redirectTemporarily(redirectTarget);
+    }
+
+    private void renderSelectTenantConfirmation(WebContext webContext,
+                                               String targetTenantId,
+                                               String displayTenantId,
+                                               String tenantName,
+                                               String redirectTarget) {
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/select-confirmation.html.pasta",
+                            true,
+                            targetTenantId,
+                            displayTenantId,
+                            tenantName,
+                            redirectTarget);
     }
 
     /**
