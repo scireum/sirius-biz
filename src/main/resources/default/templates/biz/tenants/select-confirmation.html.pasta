@@ -1,0 +1,44 @@
+<i:arg type="boolean" name="tenantSelect"/>
+<i:arg type="String" name="targetId"/>
+<i:arg type="String" name="displayId"/>
+<i:arg type="String" name="displayLabel"/>
+<i:arg type="String" name="redirectTarget" default=""/>
+
+<t:page titleKey="@(tenantSelect ? 'TenantController.select.confirmTitle' : 'UserAccountController.select.confirmTitle')">
+    <i:block name="breadcrumbs">
+        <i:if test="tenantSelect">
+            <li><a href="/tenants">@i18n("Tenant.plural")</a></li>
+            <li><a href="@apply('/tenant/%s', displayId)">@displayLabel</a></li>
+            <li><a href="@apply('/tenants/select/%s', targetId)">@i18n("TenantController.select.confirmTitle")</a></li>
+            <i:else>
+                <li><a href="/user-accounts">@i18n("UserAccount.plural")</a></li>
+                <li><a href="@apply('/user-account/%s', displayId)">@displayLabel</a></li>
+                <li><a href="@apply('/user-accounts/select/%s', targetId)">@i18n("UserAccountController.select.confirmTitle")</a></li>
+            </i:else>
+        </i:if>
+    </i:block>
+
+    <i:block name="page-header">
+        <t:pageHeader titleKey="@(tenantSelect ? 'TenantController.select.confirmTitle' : 'UserAccountController.select.confirmTitle')"/>
+    </i:block>
+
+    <t:helpbox color="red">
+        @i18n(tenantSelect ? "TenantController.select.confirmText" : "UserAccountController.select.confirmText")
+    </t:helpbox>
+
+    <t:datacard title="@displayLabel"/>
+
+    <t:editForm url="@(tenantSelect ? apply('/tenants/select/%s', targetId) : apply('/user-accounts/select/%s', targetId))">
+        <i:if test="isFilled(redirectTarget)">
+            <input type="hidden" name="goto" value="@redirectTarget"/>
+        </i:if>
+
+        <t:formBar btnLabelKey="@(tenantSelect ? 'TenantController.select.execute' : 'UserAccountController.select.execute')"
+                   icon="@(tenantSelect ? 'fa-solid fa-right-left' : 'fa-solid fa-user-secret')"
+                   backButton="false">
+            <a href="@(tenantSelect ? '/tenants/select' : '/user-accounts/select')" class="btn btn-outline-secondary">
+                @i18n("NLS.cancel")
+            </a>
+        </t:formBar>
+    </t:editForm>
+</t:page>
