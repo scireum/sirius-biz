@@ -691,6 +691,35 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     protected abstract BasePageHelper<U, ?, ?, ?> getSelectableUsersAsPage();
 
     /**
+     * Renders a confirmation page for selecting the given user.
+     */
+    @LoginRequired
+    @Routed(value = "/user-accounts/select/:1", methods = HttpMethod.GET)
+    public void selectUserAccountConfirmation(final WebContext webContext, String accountId) {
+        String redirectTarget =
+                webContext.get("goto").asString("main".equals(accountId) ? "/user-accounts/select" : wondergemRoot);
+
+        if ("main".equals(accountId)) {
+            if (!isCurrentlySpying(webContext)) {
+                webContext.respondWith().redirectToGet("/user-accounts/select");
+                return;
+            }
+
+            String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+            UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+            renderSelectUserAccountConfirmation(webContext, account, accountId, redirectTarget);
+            return;
+        }
+
+        U user = resolveSelectableUser(webContext, accountId);
+        if (user == null) {
+            return;
+        }
+
+        renderSelectUserAccountConfirmation(webContext, user, accountId, redirectTarget);
+    }
+
+    /**
      * Switches from the current user to the given user.
      * <p>
      * The current user can act on the behalf of the given user, he will appear as he is that user,
@@ -703,30 +732,19 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * @param accountId  the id of the user to switch to
      */
     @LoginRequired
-    @Routed("/user-accounts/select/:1")
+    @Routed(value = "/user-accounts/select/:1", methods = HttpMethod.POST)
     public void selectUserAccount(final WebContext webContext, String accountId) {
-        String redirectTarget = webContext.get("goto").asString("main".equals(accountId) ? "/user-accounts/select" : wondergemRoot);
+        String redirectTarget =
+                webContext.get("goto").asString("main".equals(accountId) ? "/user-accounts/select" : wondergemRoot);
 
         if ("main".equals(accountId)) {
-            // If we try to switch back to the main user - without being different user in the first place,
-            // then this action was most probably triggered by the "tenant info badge" in the UI, and meant to
-            // actually reset the tenant not the user - therefore we redirect to there.
             if (!isCurrentlySpying(webContext)) {
-                if (!webContext.isPostRequest()) {
-                    webContext.respondWith().redirectToGet("/tenants/select/main");
-                    return;
-                }
-
                 webContext.respondWith().redirectTemporarily(redirectTarget);
                 return;
             }
 
             String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
             UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
-            if (!webContext.isPostRequest()) {
-                renderSelectUserAccountConfirmation(webContext, account, accountId, redirectTarget);
-                return;
-            }
             auditLog.neutral("AuditLog.switchedToMainUser")
                     .hideFromUser()
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
@@ -739,42 +757,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             return;
         }
 
-        // Check that the user is generally permitted to "select / become" another user...
-        assertPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT);
-
-        U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId).orElse(null);
+        U user = resolveSelectableUser(webContext, accountId);
         if (user == null) {
-            UserContext.get()
-                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
-            selectUserAccounts(webContext);
-            return;
-        }
-
-        if (!user.getUserAccountData().canSelect()) {
-            UserContext.get()
-                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
-            selectUserAccounts(webContext);
-            return;
-        }
-
-        // If the target user belongs to the system tenant, our current user has to have highest user management
-        // permission as otherwise we would perform an unwanted roles delegation (giving the current user higher
-        // access rights - right up to the system management level...)
-        if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
-            && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
-            UserContext.get()
-                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
-            selectUserAccounts(webContext);
-            return;
-        }
-
-        // If we're not part of the system tenant, ensure that we can only select users from the same tenant...
-        if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
-            assertTenant(user);
-        }
-
-        if (!webContext.isPostRequest()) {
-            renderSelectUserAccountConfirmation(webContext, user, accountId, redirectTarget);
             return;
         }
 
@@ -789,6 +773,44 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                    user.getUniqueName());
         webContext.respondWith().redirectTemporarily(redirectTarget);
+    }
+
+    private U resolveSelectableUser(WebContext webContext, String accountId) {
+        // Check that the user is generally permitted to "select / become" another user...
+        assertPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT);
+
+        U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId).orElse(null);
+        if (user == null) {
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
+            selectUserAccounts(webContext);
+            return null;
+        }
+
+        if (!user.getUserAccountData().canSelect()) {
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
+            selectUserAccounts(webContext);
+            return null;
+        }
+
+        // If the target user belongs to the system tenant, our current user has to have highest user management
+        // permission as otherwise we would perform an unwanted roles delegation (giving the current user higher
+        // access rights - right up to the system management level...)
+        if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
+            && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
+            selectUserAccounts(webContext);
+            return null;
+        }
+
+        // If we're not part of the system tenant, ensure that we can only select users from the same tenant...
+        if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
+            assertTenant(user);
+        }
+
+        return user;
     }
 
     private void renderSelectUserAccountConfirmation(WebContext webContext,
