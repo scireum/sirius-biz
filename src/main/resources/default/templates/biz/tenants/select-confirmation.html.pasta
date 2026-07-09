@@ -26,7 +26,14 @@
         @i18n(tenantSelect ? "TenantController.select.confirmText" : "UserAccountController.select.confirmText")
     </t:helpbox>
 
-    <t:datacard title="@displayLabel"/>
+    <t:datacard title="@displayLabel">
+        <i:if test="isFilled(redirectTarget)">
+            <t:inlineInfo labelKey="@(tenantSelect ? 'TenantController.select.redirectTarget' : 'UserAccountController.select.redirectTarget')"
+                          class="mt-3">
+                <span class="text-break">@redirectTarget</span>
+            </t:inlineInfo>
+        </i:if>
+    </t:datacard>
 
     <t:editForm url="@(tenantSelect ? apply('/tenants/select/%s', targetId) : apply('/user-accounts/select/%s', targetId))">
         <i:if test="isFilled(redirectTarget)">
