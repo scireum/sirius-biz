@@ -711,12 +711,12 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             return;
         }
 
-        U user = resolveSelectableUser(webContext, accountId);
-        if (user == null) {
+        Optional<U> user = resolveSelectableUser(webContext, accountId);
+        if (user.isEmpty()) {
             return;
         }
 
-        renderSelectUserAccountConfirmation(webContext, user, accountId, redirectTarget);
+        renderSelectUserAccountConfirmation(webContext, user.get(), accountId, redirectTarget);
     }
 
     /**
@@ -757,57 +757,60 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             return;
         }
 
-        U user = resolveSelectableUser(webContext, accountId);
-        if (user == null) {
+        Optional<U> user = resolveSelectableUser(webContext, accountId);
+        if (user.isEmpty()) {
             return;
         }
+        U effectiveUser = user.get();
 
         auditLog.neutral("AuditLog.selectedUser")
                 .hideFromUser()
                 .causedByCurrentUser()
-                .forUser(user.getUniqueName(), user.getUserAccountData().getLogin().getUsername())
-                .forTenant(user.getTenant().getIdAsString(),
-                           matchingTenants.fetchCachedRequiredTenant(user.getTenant()).getTenantData().getName())
+                .forUser(effectiveUser.getUniqueName(), effectiveUser.getUserAccountData().getLogin().getUsername())
+                .forTenant(effectiveUser.getTenant().getIdAsString(),
+                           matchingTenants.fetchCachedRequiredTenant(effectiveUser.getTenant())
+                                          .getTenantData()
+                                          .getName())
                 .log();
 
         webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
-                                   user.getUniqueName());
+                                   effectiveUser.getUniqueName());
         webContext.respondWith().redirectTemporarily(redirectTarget);
     }
 
-    private U resolveSelectableUser(WebContext webContext, String accountId) {
+    private Optional<U> resolveSelectableUser(WebContext webContext, String accountId) {
         // Check that the user is generally permitted to "select / become" another user...
         assertPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT);
 
-        U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId).orElse(null);
-        if (user == null) {
+        Optional<U> user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId);
+        if (user.isEmpty()) {
             UserContext.get()
                        .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
-            return null;
+            return Optional.empty();
         }
 
-        if (!user.getUserAccountData().canSelect()) {
+        if (!user.get().getUserAccountData().canSelect()) {
             UserContext.get()
                        .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
-            return null;
+            return Optional.empty();
         }
 
         // If the target user belongs to the system tenant, our current user has to have highest user management
         // permission as otherwise we would perform an unwanted roles delegation (giving the current user higher
         // access rights - right up to the system management level...)
-        if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
+        if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.get().getTenant().getIdAsString())
             && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
             UserContext.get()
                        .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
-            return null;
+            return Optional.empty();
         }
 
         // If we're not part of the system tenant, ensure that we can only select users from the same tenant...
         if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
-            assertTenant(user);
+            assertTenant(user.get());
         }
 
         return user;
