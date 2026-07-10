@@ -396,7 +396,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                            currentTenant.getIdAsString(),
                                            currentTenant.getTenantData().getName(),
                                            redirectTarget,
-                                           currentTenant.getTenantData().fetchSmallUrl().buildImageURL());
+                                           currentTenant);
             return;
         }
 
@@ -417,7 +417,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                        effectiveTenant.getIdAsString(),
                                        effectiveTenant.getTenantData().getName(),
                                        redirectTarget,
-                                       effectiveTenant.getTenantData().fetchSmallUrl().buildImageURL());
+                                       effectiveTenant);
     }
 
     /**
@@ -505,7 +505,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                                 String displayTenantId,
                                                 String tenantName,
                                                 String redirectTarget,
-                                                String tenantLogoUrl) {
+                                                T tenant) {
         webContext.respondWith()
                   .template("/templates/biz/tenants/select-confirmation.html.pasta",
                             true,
@@ -513,7 +513,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                             displayTenantId,
                             tenantName,
                             redirectTarget,
-                            tenantLogoUrl);
+                            tenant);
     }
 
     /**

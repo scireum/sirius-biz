@@ -829,8 +829,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                             user.getIdAsString(),
                             user.getUserAccountData().toString(),
                             redirectTarget,
-                            tenant.getTenantData().fetchSmallUrl().buildImageURL(),
-                            tenant.getTenantData().getName());
+                            tenant);
     }
 
     /**
