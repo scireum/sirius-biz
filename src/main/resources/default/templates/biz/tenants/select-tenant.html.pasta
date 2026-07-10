@@ -19,7 +19,9 @@
 
         <t:searchHeader page="tenants" baseUrl="/tenants/select">
             <i:if test="isSpy">
-                <a class="btn btn-primary" href="/tenants/select/main">@i18n("Tenant.selectMain")</a>
+                <t:editForm url="/tenants/select/main" class="d-inline">
+                    <button class="btn btn-primary" type="submit">@i18n("Tenant.selectMain")</button>
+                </t:editForm>
             </i:if>
         </t:searchHeader>
 
