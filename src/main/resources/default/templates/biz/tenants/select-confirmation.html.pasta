@@ -3,6 +3,8 @@
 <i:arg type="String" name="displayId"/>
 <i:arg type="String" name="displayLabel"/>
 <i:arg type="String" name="redirectTarget" default=""/>
+<i:arg type="String" name="tenantLogoUrl" default=""/>
+<i:arg type="String" name="tenantLabel" default=""/>
 
 <t:page titleKey="@(tenantSelect ? 'TenantController.select.confirmTitle' : 'UserAccountController.select.confirmTitle')">
     <i:block name="breadcrumbs">
@@ -26,26 +28,48 @@
         @i18n(tenantSelect ? "TenantController.select.confirmText" : "UserAccountController.select.confirmText")
     </t:helpbox>
 
-    <t:datacard title="@displayLabel">
-        <i:if test="isFilled(redirectTarget)">
-            <t:inlineInfo labelKey="@(tenantSelect ? 'TenantController.select.redirectTarget' : 'UserAccountController.select.redirectTarget')"
-                          class="mt-3">
-                <span class="text-break">@redirectTarget</span>
-            </t:inlineInfo>
-        </i:if>
-    </t:datacard>
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+            <t:datacard>
+                <i:block name="title">
+                    <div class="d-flex align-items-center gap-2">
+                        <i:if test="tenantSelect && isFilled(tenantLogoUrl)">
+                            <img src="@tenantLogoUrl" alt="" class="border" style="width: 32px; height: 32px; object-fit: contain"/>
+                        </i:if>
+                        <span>@displayLabel</span>
+                    </div>
+                </i:block>
 
-    <t:editForm url="@(tenantSelect ? apply('/tenants/select/%s', targetId) : apply('/user-accounts/select/%s', targetId))">
-        <i:if test="isFilled(redirectTarget)">
-            <input type="hidden" name="goto" value="@redirectTarget"/>
-        </i:if>
+                <i:if test="!tenantSelect && isFilled(tenantLabel)">
+                    <div class="d-flex align-items-center gap-2 text-muted">
+                        <i:if test="isFilled(tenantLogoUrl)">
+                            <img src="@tenantLogoUrl" alt="" class="border" style="width: 24px; height: 24px; object-fit: contain"/>
+                        </i:if>
+                        <span>@tenantLabel</span>
+                    </div>
+                </i:if>
 
-        <t:formBar btnLabelKey="@(tenantSelect ? 'TenantController.select.execute' : 'UserAccountController.select.execute')"
-                   icon="@(tenantSelect ? 'fa-solid fa-right-left' : 'fa-solid fa-user-secret')"
-                   backButton="false">
-            <a href="@(tenantSelect ? '/tenants/select' : '/user-accounts/select')" class="btn btn-outline-secondary">
-                @i18n("NLS.cancel")
-            </a>
-        </t:formBar>
-    </t:editForm>
+                <i:if test="isFilled(redirectTarget)">
+                    <t:inlineInfo labelKey="@(tenantSelect ? 'TenantController.select.redirectTarget' : 'UserAccountController.select.redirectTarget')"
+                                  class="mt-3">
+                        <span class="text-break">@redirectTarget</span>
+                    </t:inlineInfo>
+                </i:if>
+            </t:datacard>
+
+            <t:editForm url="@(tenantSelect ? apply('/tenants/select/%s', targetId) : apply('/user-accounts/select/%s', targetId))">
+                <i:if test="isFilled(redirectTarget)">
+                    <input type="hidden" name="goto" value="@redirectTarget"/>
+                </i:if>
+
+                <t:formBar btnLabelKey="@(tenantSelect ? 'TenantController.select.execute' : 'UserAccountController.select.execute')"
+                           icon="@(tenantSelect ? 'fa-solid fa-right-left' : 'fa-solid fa-user-secret')"
+                           backButton="false">
+                    <a href="@(tenantSelect ? '/tenants/select' : '/user-accounts/select')" class="btn btn-outline-secondary">
+                        @i18n("NLS.cancel")
+                    </a>
+                </t:formBar>
+            </t:editForm>
+        </div>
+    </div>
 </t:page>

@@ -820,13 +820,17 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                                                      UserAccount<?, ?> user,
                                                      String targetAccountId,
                                                      String redirectTarget) {
+        Tenant<?> tenant = user.getTenant().forceFetchValue();
+
         webContext.respondWith()
                   .template("/templates/biz/tenants/select-confirmation.html.pasta",
                             false,
                             targetAccountId,
                             user.getIdAsString(),
                             user.getUserAccountData().toString(),
-                            redirectTarget);
+                            redirectTarget,
+                            tenant.getTenantData().fetchSmallUrl().buildImageURL(),
+                            tenant.getTenantData().getName());
     }
 
     /**

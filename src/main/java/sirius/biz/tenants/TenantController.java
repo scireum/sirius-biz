@@ -395,7 +395,8 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                            tenantId,
                                            currentTenant.getIdAsString(),
                                            currentTenant.getTenantData().getName(),
-                                           redirectTarget);
+                                           redirectTarget,
+                                           currentTenant.getTenantData().fetchSmallUrl().buildImageURL());
             return;
         }
 
@@ -415,7 +416,8 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                        tenantId,
                                        effectiveTenant.getIdAsString(),
                                        effectiveTenant.getTenantData().getName(),
-                                       redirectTarget);
+                                       redirectTarget,
+                                       effectiveTenant.getTenantData().fetchSmallUrl().buildImageURL());
     }
 
     /**
@@ -502,14 +504,16 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                                 String targetTenantId,
                                                 String displayTenantId,
                                                 String tenantName,
-                                                String redirectTarget) {
+                                                String redirectTarget,
+                                                String tenantLogoUrl) {
         webContext.respondWith()
                   .template("/templates/biz/tenants/select-confirmation.html.pasta",
                             true,
                             targetTenantId,
                             displayTenantId,
                             tenantName,
-                            redirectTarget);
+                            redirectTarget,
+                            tenantLogoUrl);
     }
 
     /**
