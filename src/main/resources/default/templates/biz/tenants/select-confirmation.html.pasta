@@ -34,7 +34,7 @@
                 <i:block name="title">
                     <div class="d-flex align-items-center gap-2">
                         <i:if test="tenantSelect && isFilled(tenantLogoUrl)">
-                            <img src="@tenantLogoUrl" alt="" class="border" style="width: 32px; height: 32px; object-fit: contain"/>
+                            <img src="@tenantLogoUrl" alt="" style="width: 32px; height: 32px; object-fit: contain"/>
                         </i:if>
                         <span>@displayLabel</span>
                     </div>
@@ -43,7 +43,7 @@
                 <i:if test="!tenantSelect && isFilled(tenantLabel)">
                     <div class="d-flex align-items-center gap-2 text-muted">
                         <i:if test="isFilled(tenantLogoUrl)">
-                            <img src="@tenantLogoUrl" alt="" class="border" style="width: 24px; height: 24px; object-fit: contain"/>
+                            <img src="@tenantLogoUrl" alt="" style="width: 24px; height: 24px; object-fit: contain"/>
                         </i:if>
                         <span>@tenantLabel</span>
                     </div>
