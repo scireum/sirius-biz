@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import redis.clients.jedis.Jedis;
 import sirius.db.KeyGenerator;
 import sirius.db.redis.Redis;

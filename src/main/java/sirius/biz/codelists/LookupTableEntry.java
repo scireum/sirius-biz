@@ -8,7 +8,7 @@
 
 package sirius.biz.codelists;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import sirius.kernel.commons.Json;

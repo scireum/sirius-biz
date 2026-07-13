@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer1.replication;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.di.std.AutoRegister;
 
 /**

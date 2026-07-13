@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Represents an executor which performs tasks which have been queued via {@link DistributedTasks}.

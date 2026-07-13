@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work
 
-import com.fasterxml.jackson.databind.node.ObjectNode
+import tools.jackson.databind.node.ObjectNode
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -38,7 +38,7 @@ class DistributedTasksTest {
             override fun queueName(): String = "fifo-test"
 
             override fun executeWork(context: ObjectNode) {
-                if (context.path("test").asText() == "test") {
+                if (context.path("test").asString() == "test") {
                     fifoSynchronizer.success()
                 }
             }

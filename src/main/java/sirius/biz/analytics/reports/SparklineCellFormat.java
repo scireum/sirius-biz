@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
@@ -25,8 +25,8 @@ public class SparklineCellFormat implements CellFormat {
 
     @Override
     public String format(ObjectNode data) {
-        String value = data.path(KEY_VALUE).asText();
-        String values = data.path(KEY_VALUES).asText();
+        String value = data.path(KEY_VALUE).asString();
+        String values = data.path(KEY_VALUES).asString();
 
         StringBuilder sb = new StringBuilder("<div class=\"text-end\">");
         sb.append(value);
@@ -40,7 +40,7 @@ public class SparklineCellFormat implements CellFormat {
 
     @Override
     public String rawValue(ObjectNode data) {
-        return data.path(KEY_VALUE).asText(null);
+        return data.path(KEY_VALUE).asString(null);
     }
 
     @Nonnull

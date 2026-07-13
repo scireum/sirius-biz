@@ -8,8 +8,8 @@
 
 package sirius.biz.elastic;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
 import sirius.biz.jobs.StandardCategories;
@@ -77,7 +77,7 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
     }
 
     private Cell determineClusterStatus(ObjectNode clusterHealth) {
-        String status = clusterHealth.path("status").asText();
+        String status = clusterHealth.path("status").asString();
         if (Strings.areEqual(status, "green")) {
             return cells.green(status);
         }

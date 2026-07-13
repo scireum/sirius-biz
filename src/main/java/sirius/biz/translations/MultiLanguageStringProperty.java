@@ -8,7 +8,7 @@
 
 package sirius.biz.translations;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import org.bson.Document;
 import sirius.biz.web.ComplexLoadProperty;
 import sirius.db.es.ESPropertyInfo;
@@ -268,7 +268,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         if (Strings.isFilled(fallbackAndMap.getSecond())) {
             Json.parseObject(fallbackAndMap.getSecond())
                 .properties()
-                .forEach(entry -> texts.put(entry.getKey(), entry.getValue().asText()));
+                .forEach(entry -> texts.put(entry.getKey(), entry.getValue().asString()));
         }
 
         return texts;

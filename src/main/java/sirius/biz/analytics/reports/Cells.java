@@ -8,8 +8,8 @@
 
 package sirius.biz.analytics.reports;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.NumberFormat;
@@ -347,7 +347,7 @@ public class Cells {
         try {
             ObjectNode data = Json.tryParseObject(cellValue);
             return renderJSON(data);
-        } catch (JsonProcessingException exception) {
+        } catch (JacksonException exception) {
             Exceptions.ignore(exception);
         }
 
@@ -368,7 +368,7 @@ public class Cells {
         try {
             ObjectNode data = Json.tryParseObject(cellValue);
             return renderRaw(data);
-        } catch (JsonProcessingException exception) {
+        } catch (JacksonException exception) {
             Exceptions.ignore(exception);
         }
 

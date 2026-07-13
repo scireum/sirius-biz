@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.kernel.commons.Json;
@@ -38,9 +38,9 @@ public abstract class AnalyticsSchedulerExecutor implements DistributedTaskExecu
 
     @Override
     public void executeWork(ObjectNode context) throws Exception {
-        String schedulerName = context.path(AnalyticalEngine.CONTEXT_SCHEDULER_NAME).asText();
+        String schedulerName = context.path(AnalyticalEngine.CONTEXT_SCHEDULER_NAME).asString();
         LocalDate date =
-                Value.of(NLS.parseMachineString(LocalDate.class, context.path(AnalyticalEngine.CONTEXT_DATE).asText()))
+                Value.of(NLS.parseMachineString(LocalDate.class, context.path(AnalyticalEngine.CONTEXT_DATE).asString()))
                      .asLocalDate(LocalDate.now());
         int level = context.path(AnalyticalEngine.CONTEXT_LEVEL).asInt();
         AnalyticsScheduler scheduler = globalContext.findPart(schedulerName, AnalyticsScheduler.class);

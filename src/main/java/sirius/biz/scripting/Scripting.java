@@ -8,7 +8,7 @@
 
 package sirius.biz.scripting;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.Interconnect;
 import sirius.biz.cluster.InterconnectHandler;
 import sirius.biz.tenants.Tenants;
@@ -172,19 +172,19 @@ public class Scripting implements InterconnectHandler {
 
     @Override
     public void handleEvent(ObjectNode event) {
-        if (TASK_TYPE_MSG.equals(event.path(TASK_TYPE).asText())) {
+        if (TASK_TYPE_MSG.equals(event.path(TASK_TYPE).asString())) {
             handleMessageTask(event);
-        } else if (TASK_TYPE_EXEC.equals(event.path(TASK_TYPE).asText())) {
+        } else if (TASK_TYPE_EXEC.equals(event.path(TASK_TYPE).asString())) {
             tasks.defaultExecutor().start(() -> handleExecTask(event));
         }
     }
 
     private void handleMessageTask(ObjectNode event) {
         synchronized (messages) {
-            messages.add(new TranscriptMessage(event.path(TASK_NODE).asText(null),
-                                               event.path(TASK_JOB).asText(null),
+            messages.add(new TranscriptMessage(event.path(TASK_NODE).asString(null),
+                                               event.path(TASK_JOB).asString(null),
                                                event.path(TASK_TIMESTAMP).asLong(),
-                                               event.path(TASK_MESSAGE).asText(null)));
+                                               event.path(TASK_MESSAGE).asString(null)));
             if (messages.size() > MAX_MESSAGES) {
                 messages.removeFirst();
             }
@@ -203,8 +203,8 @@ public class Scripting implements InterconnectHandler {
     }
 
     private void handleExecTask(ObjectNode event) {
-        String nodeName = event.path(TASK_NODE).asText(null);
-        String jobNumber = event.path(TASK_JOB).asText(null);
+        String nodeName = event.path(TASK_NODE).asString(null);
+        String jobNumber = event.path(TASK_JOB).asString(null);
         if (!ALL_NODES.equals(nodeName) && !Strings.areEqual(CallContext.getNodeName(), nodeName)) {
             return;
         }
@@ -249,7 +249,7 @@ public class Scripting implements InterconnectHandler {
 
     private Callable compileScript(ObjectNode event) throws CompileException {
         CompilationContext compilationContext =
-                new CompilationContext(SourceCodeInfo.forInlineCode(event.path(TASK_SCRIPT).asText(null),
+                new CompilationContext(SourceCodeInfo.forInlineCode(event.path(TASK_SCRIPT).asString(null),
                                                                     SandboxMode.DISABLED));
         NoodleCompiler compiler = new NoodleCompiler(compilationContext);
         Callable callable = compiler.compileScript();

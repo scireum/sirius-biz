@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
@@ -30,11 +30,11 @@ public class TrendCellFormat implements CellFormat {
 
     @Override
     public String format(ObjectNode data) {
-        String classes = data.path(KEY_CLASSES).asText();
-        String value = data.path(KEY_VALUE).asText();
-        String trend = data.path(KEY_TREND).asText();
-        String hint = data.path(KEY_HINT).asText();
-        String icon = data.path(KEY_ICON).asText();
+        String classes = data.path(KEY_CLASSES).asString();
+        String value = data.path(KEY_VALUE).asString();
+        String trend = data.path(KEY_TREND).asString();
+        String hint = data.path(KEY_HINT).asString();
+        String icon = data.path(KEY_ICON).asString();
 
         StringBuilder sb = new StringBuilder("<div class=\"text-end\"");
         if (Strings.isFilled(hint)) {
@@ -80,7 +80,7 @@ public class TrendCellFormat implements CellFormat {
 
     @Override
     public String rawValue(ObjectNode data) {
-        return data.path(KEY_VALUE).asText(null);
+        return data.path(KEY_VALUE).asString(null);
     }
 
     @Nonnull

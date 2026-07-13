@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer1.replication.jdbc;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.storage.layer1.replication.BaseReplicationTaskStorage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
@@ -104,7 +104,7 @@ public class SQLReplicationTaskStorage
 
     @Override
     public void executeBatch(ObjectNode batch) {
-        String txnId = batch.path(TRANSACTION_ID).asText();
+        String txnId = batch.path(TRANSACTION_ID).asString();
         if (Strings.isFilled(txnId)) {
             SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
             query.eq(SQLReplicationTask.FAILED, false);

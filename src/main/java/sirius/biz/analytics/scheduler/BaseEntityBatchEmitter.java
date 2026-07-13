@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.Mixing;
@@ -119,9 +119,9 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
     public <E extends B> void evaluateBatch(ObjectNode batchDescription,
                                             @Nullable Consumer<Q> queryExtender,
                                             Consumer<E> entityConsumer) {
-        String startId = batchDescription.path(START_ID).asText(null);
-        String endId = batchDescription.path(END_ID).asText(null);
-        String typeName = batchDescription.path(TYPE).asText(null);
+        String startId = batchDescription.path(START_ID).asString(null);
+        String endId = batchDescription.path(END_ID).asString(null);
+        String typeName = batchDescription.path(TYPE).asString(null);
 
         Class<E> type = (Class<E>) mixing.getDescriptor(typeName).getType();
         Q query = (Q) getMapper().select(type);

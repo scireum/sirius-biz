@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer1.replication.mongo;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.storage.layer1.replication.BaseReplicationTaskStorage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mongo.Mango;
@@ -110,7 +110,7 @@ public class MongoReplicationTaskStorage
 
     @Override
     public void executeBatch(ObjectNode batch) {
-        String txnId = batch.path(TRANSACTION_ID).asText();
+        String txnId = batch.path(TRANSACTION_ID).asString();
         if (Strings.isFilled(txnId)) {
             MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
             query.eq(MongoReplicationTask.FAILED, false);

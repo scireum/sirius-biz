@@ -8,8 +8,8 @@
 
 package sirius.biz.process.output;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.analytics.metrics.Dataset;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;

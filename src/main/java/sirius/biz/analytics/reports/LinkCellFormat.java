@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
@@ -30,8 +30,8 @@ public class LinkCellFormat implements CellFormat {
     @Override
     public String format(ObjectNode data) {
         boolean newTab = data.get(KEY_TARGET_BLANK).asBoolean();
-        String keyUrl = Strings.cleanup(data.path(KEY_URL).asText(), StringCleanup::escapeXml);
-        String keyValue = Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml);
+        String keyUrl = Strings.cleanup(data.path(KEY_URL).asString(), StringCleanup::escapeXml);
+        String keyValue = Strings.cleanup(data.path(KEY_VALUE).asString(), StringCleanup::escapeXml);
         String newTabLink = " <i class=\"fa-regular fa-arrow-up-right-from-square\"></i>";
         String html = """
                 <a href="%s" class="link" target="%s">%s%s</a>
@@ -42,7 +42,7 @@ public class LinkCellFormat implements CellFormat {
 
     @Override
     public String rawValue(ObjectNode data) {
-        StringBuilder linkUrl = new StringBuilder(data.path(KEY_URL).asText());
+        StringBuilder linkUrl = new StringBuilder(data.path(KEY_URL).asString());
         if (!linkUrl.toString().startsWith("http") && linkUrl.toString().startsWith("/")) {
             linkUrl.insert(0, BizController.getBaseUrl());
         }
