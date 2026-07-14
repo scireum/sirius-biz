@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 /**
  * Permits accessing a <b>Jupiter</b> instance.
  * <p>
- * This connector is in charge of taking of about the connection management. It also permits failing over to
+ * This connector is in charge of taking care of the connection management. It also permits failing over to
  * a fallback instance in case the main instance isn't reachable.
  * <p>
  * If a fail-over is performed, we will continue to use the fallback for up to 60 seconds before we attempt to switch
