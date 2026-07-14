@@ -102,7 +102,7 @@ public class RedisLimiter implements Limiter {
     @Override
     public Set<String> getBlockedIPs() {
         return getDB().query(() -> "Query blocked IPs",
-                             db -> new HashSet<>(db.zrange(BLOCKED_IPS, ZRangeParams.zrangeParams(0, 50))));
+                             db -> new HashSet<>(db.zrange(BLOCKED_IPS, ZRangeParams.zrangeParams(0, 50).rev())));
     }
 
     public boolean isConfigured() {
