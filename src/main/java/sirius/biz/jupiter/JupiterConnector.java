@@ -26,12 +26,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Permits to access a <b>Jupiter</b> instance.
+ * Permits accessing a <b>Jupiter</b> instance.
  * <p>
  * This connector is in charge of taking of about the connection management. It also permits failing over to
  * a fallback instance in case the main instance isn't reachable.
  * <p>
- * If a failover is performed, we will continue to use the fallback for up to 60s before we attempt to switch
+ * If a fail-over is performed, we will continue to use the fallback for up to 60 seconds before we attempt to switch
  * back to the main instance.
  * <p>
  * A connector is usually obtained via {@link Jupiter#getConnector(String)} or {@link Jupiter#getDefault()}.
@@ -42,9 +42,9 @@ public class JupiterConnector {
     private static final JupiterCommand CMD_PYRUN = new JupiterCommand("PY.RUN");
 
     /**
-     * If a failover is performed, we keep using the fallback instance for a certain amount of time to prevent
+     * If a fail-over is performed, we keep using the fallback instance for a certain amount of time to prevent
      * constant switching back and forth in case of network problems (etc.). This constant determines the interval
-     * before a failover back to the main instance is attempted.
+     * before a fail-over back to the main instance is attempted.
      */
     private static final int FAILOVER_TRIGGER_REARM_INTERVAL = 60_000;
 
@@ -169,9 +169,9 @@ public class JupiterConnector {
     }
 
     /**
-     * Executes one or more commands and returns a value of the given type without attempting a failover.
+     * Executes one or more commands and returns a value of the given type without attempting a fail-over.
      * <p>
-     * If the main connection pool isn't available, this will not perform a failover but abort immediately.
+     * If the main connection pool isn't available, this will not perform a fail-over but abort immediately.
      * This can be used to execute administrative commands, which have to be executed on the target instance.
      *
      * @param description a description of the actions performed used for debugging and tracing
@@ -213,7 +213,7 @@ public class JupiterConnector {
     /**
      * Executes one or more Jupiter commands without any return value.
      * <p>
-     * If the main connection pool isn't available, this will not perform a failover but abort immediately.
+     * If the main connection pool isn't available, this will not perform a fail-over but abort immediately.
      * This can be used to execute administrative commands, which have to be executed on the target instance.
      *
      * @param description a description of the actions performed used for debugging and tracing
