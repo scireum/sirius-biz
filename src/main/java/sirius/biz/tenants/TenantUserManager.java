@@ -160,6 +160,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      */
     public static final String SECURITY_RATE_LIMIT_REALM = "security";
 
+    private static final String PARAM_PASSWORD_LOGIN_FORM = "passwordLoginForm";
+
     /**
      * Contains the number of failed password login attempts after which the next attempt requires a CAPTCHA.
      */
@@ -701,7 +703,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public static boolean isPasswordLoginCaptchaRequired(@Nullable WebContext webContext) {
-        if (webContext == null) {
+        if (webContext == null || !webContext.get(PARAM_PASSWORD_LOGIN_FORM).asBoolean()) {
             return false;
         }
 
