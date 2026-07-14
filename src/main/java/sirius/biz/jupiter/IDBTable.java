@@ -8,7 +8,6 @@
 
 package sirius.biz.jupiter;
 
-import redis.clients.jedis.Connection;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.PullBasedSpliterator;
 import sirius.kernel.commons.Strings;
@@ -413,7 +412,7 @@ public class IDBTable {
         });
     }
 
-    private List<Values> parseQueryResult(Connection redis) {
+    private List<Values> parseQueryResult(JupiterConnection redis) {
         Object result = redis.getOne();
         if (result instanceof List) {
             return ((List<?>) result).stream().map(this::parseRow).toList();

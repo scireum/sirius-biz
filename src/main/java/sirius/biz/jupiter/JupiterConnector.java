@@ -9,8 +9,7 @@
 package sirius.biz.jupiter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import redis.clients.jedis.Connection;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import sirius.db.redis.RedisDB;
 import sirius.kernel.Sirius;
@@ -105,7 +104,7 @@ public class JupiterConnector {
      * @param <T>         the generic type of the result
      * @return a result computed by <tt>task</tt>
      */
-    public <T> T query(Supplier<String> description, Function<Connection, T> task) {
+    public <T> T query(Supplier<String> description, Function<JupiterConnection, T> task) {
         if (fallbackRedis == null) {
             return queryDirect(description, task);
         }
@@ -129,12 +128,12 @@ public class JupiterConnector {
     }
 
     private <T> T performWithFailover(Supplier<String> description,
-                                      Function<Connection, T> task,
+                                      Function<JupiterConnection, T> task,
                                       RedisDB main,
                                       RedisDB fallback,
                                       Runnable executeOnFailover) {
-        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = main.getConnection()) {
-            return perform(description, jedis, task);
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME)) {
+            return perform(description, main.getConnection(), task);
         } catch (JedisConnectionException _) {
             executeOnFailover.run();
             return performWithoutFailover(description, task, fallback);
@@ -143,19 +142,20 @@ public class JupiterConnector {
         }
     }
 
-    private <T> T performWithoutFailover(Supplier<String> description, Function<Connection, T> task, RedisDB redis) {
-        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
-             Jedis jedis = redis.getConnection()) {
-            return perform(description, jedis, task);
+    private <T> T performWithoutFailover(Supplier<String> description,
+                                         Function<JupiterConnection, T> task,
+                                         RedisDB redis) {
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME)) {
+            return perform(description, redis.getConnection(), task);
         } catch (Exception exception) {
             throw Exceptions.handle(Jupiter.LOG, exception);
         }
     }
 
-    private <T> T perform(Supplier<String> description, Jedis jedis, Function<Connection, T> task) {
+    private <T> T perform(Supplier<String> description, UnifiedJedis jedis, Function<JupiterConnection, T> task) {
         Watch watch = Watch.start();
         try {
-            return task.apply(jedis.getClient());
+            return task.apply(new JupiterConnection(jedis));
         } catch (JedisConnectionException exception) {
             throw exception;
         } catch (Exception exception) {
@@ -179,10 +179,9 @@ public class JupiterConnector {
      * @param <T>         the generic type of the result
      * @return a result computed by <tt>task</tt>
      */
-    public <T> T queryDirect(Supplier<String> description, Function<Connection, T> task) {
-        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
-             Jedis jedis = redis.getConnection()) {
-            return perform(description, jedis, task);
+    public <T> T queryDirect(Supplier<String> description, Function<JupiterConnection, T> task) {
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME)) {
+            return perform(description, redis.getConnection(), task);
         } catch (Exception error) {
             throw Exceptions.handle()
                             .to(Jupiter.LOG)
@@ -204,7 +203,7 @@ public class JupiterConnector {
      * @param description a description of the actions performed used for debugging and tracing
      * @param task        the actual task to perform using redis
      */
-    public void exec(Supplier<String> description, Consumer<Connection> task) {
+    public void exec(Supplier<String> description, Consumer<JupiterConnection> task) {
         query(description, client -> {
             task.accept(client);
             return null;
@@ -220,7 +219,7 @@ public class JupiterConnector {
      * @param description a description of the actions performed used for debugging and tracing
      * @param task        the actual task to perform using redis
      */
-    public void execDirect(Supplier<String> description, Consumer<Connection> task) {
+    public void execDirect(Supplier<String> description, Consumer<JupiterConnection> task) {
         queryDirect(description, client -> {
             task.accept(client);
             return null;
