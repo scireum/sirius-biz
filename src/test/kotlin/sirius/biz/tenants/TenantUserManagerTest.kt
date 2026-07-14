@@ -74,11 +74,8 @@ class TenantUserManagerTest {
             Sirius.getSettings().get("security.passwordLoginCaptcha.failedAttemptsBeforeCaptcha").asInt(4)
         val remoteIp = InetAddress.getByName("127.0.0.42")
         val loginViaParameter = TestRequest.GET("/?user=system&password=system").withRemoteIp(remoteIp)
-        val loginViaForm = TestRequest.POST("/")
-            .withParameter("user", "system")
-            .withParameter("password", "system")
-            .withParameter("passwordLoginForm", true)
-            .withRemoteIp(remoteIp)
+        val loginViaForm =
+            TestRequest.POST("/?user=system&password=system&passwordLoginForm=true").withRemoteIp(remoteIp)
 
         repeat(failedAttemptsBeforeCaptcha) {
             isenguard.registerCallAndCheckRateLimitReached(
