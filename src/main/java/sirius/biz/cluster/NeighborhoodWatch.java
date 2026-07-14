@@ -329,14 +329,10 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             return redis.query(() -> "Write last execution of " + syncName, db -> {
                 String reply = db.set(syncName + EXECUTION_TIMESTAMP_SUFFIX,
                                       String.valueOf(System.currentTimeMillis()),
-                                      SetParams.setParams().nx());
-                if ("OK".equals(reply)) {
-                    db.expire(syncName + EXECUTION_TIMESTAMP_SUFFIX,
-                              TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS));
-                    return true;
-                } else {
-                    return false;
-                }
+                                      SetParams.setParams()
+                                               .nx()
+                                               .ex(TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS)));
+                return "OK".equals(reply);
             });
         } catch (Exception exception) {
             Exceptions.handle(Cluster.LOG, exception);
