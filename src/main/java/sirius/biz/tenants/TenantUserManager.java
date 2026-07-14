@@ -19,6 +19,7 @@ import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.SpyUser;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
+import sirius.kernel.Sirius;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
@@ -165,7 +166,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     /**
      * Contains the number of failed password login attempts after which the next attempt requires a CAPTCHA.
      */
-    private static final int FAILED_PASSWORD_LOGIN_ATTEMPTS_BEFORE_CAPTCHA = 4;
+    private static final int DEFAULT_FAILED_PASSWORD_LOGIN_ATTEMPTS_BEFORE_CAPTCHA = 4;
 
     /**
      * Contains the prefix added to the account number which is added as artificial role.
@@ -710,7 +711,9 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         String ip = webContext.getRemoteIP().getHostAddress();
         return isenguard.checkRateLimitReached(ip,
                                                SECURITY_RATE_LIMIT_REALM,
-                                               FAILED_PASSWORD_LOGIN_ATTEMPTS_BEFORE_CAPTCHA);
+                                               Sirius.getSettings()
+                                                     .get("security.passwordLoginCaptcha.failedAttemptsBeforeCaptcha")
+                                                     .asInt(DEFAULT_FAILED_PASSWORD_LOGIN_ATTEMPTS_BEFORE_CAPTCHA));
     }
 
     private void verifyPasswordLoginCaptchaIfRequired(@Nullable WebContext webContext) {
