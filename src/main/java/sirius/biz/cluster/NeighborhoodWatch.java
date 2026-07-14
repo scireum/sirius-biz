@@ -9,6 +9,7 @@
 package sirius.biz.cluster;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import redis.clients.jedis.params.SetParams;
 import sirius.biz.cluster.work.DistributedQueueInfo;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.db.redis.Redis;
@@ -326,9 +327,10 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             }
 
             return redis.query(() -> "Write last execution of " + syncName, db -> {
-                long update =
-                        db.setnx(syncName + EXECUTION_TIMESTAMP_SUFFIX, String.valueOf(System.currentTimeMillis()));
-                if (update == 1L) {
+                String reply = db.set(syncName + EXECUTION_TIMESTAMP_SUFFIX,
+                                      String.valueOf(System.currentTimeMillis()),
+                                      SetParams.setParams().nx());
+                if ("OK".equals(reply)) {
                     db.expire(syncName + EXECUTION_TIMESTAMP_SUFFIX,
                               TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS));
                     return true;
