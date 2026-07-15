@@ -52,11 +52,6 @@
                                     <i class="fa fa-eye" id="passwordToggleIcon" style="cursor: pointer;"></i>
                                 </span>
                             </div>
-                            <i:if test="@sirius.biz.tenants.TenantUserManager.isPasswordLoginCaptchaRequired(WebContext.getCurrent())">
-                                <div class="form-group mb-3">
-                                    <t:captcha hideLogo="true" hideFooter="true"/>
-                                </div>
-                            </i:if>
                             <div>
                                 <input type="checkbox" tabindex="4" value="true" name="keepLogin" checked/>
                                 <span>@i18n('Model.login.keepLogin')</span>
@@ -72,7 +67,6 @@
                                 </a>
                             </div>
                         </div>
-                        <input name="passwordLoginForm" value="true" type="hidden"/>
                         <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
                     </form>
                 </div>
