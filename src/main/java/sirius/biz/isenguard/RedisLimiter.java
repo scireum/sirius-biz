@@ -8,6 +8,7 @@
 
 package sirius.biz.isenguard;
 
+import redis.clients.jedis.params.ZRangeParams;
 import sirius.db.redis.Redis;
 import sirius.db.redis.RedisDB;
 import sirius.kernel.commons.Strings;
@@ -100,7 +101,8 @@ public class RedisLimiter implements Limiter {
 
     @Override
     public Set<String> getBlockedIPs() {
-        return getDB().query(() -> "Query blocked IPs", db -> new HashSet<>(db.zrevrange(BLOCKED_IPS, 0, 50)));
+        return getDB().query(() -> "Query blocked IPs",
+                             db -> new HashSet<>(db.zrange(BLOCKED_IPS, ZRangeParams.zrangeParams(0, 50).rev())));
     }
 
     public boolean isConfigured() {

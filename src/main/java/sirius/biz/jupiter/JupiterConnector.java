@@ -9,8 +9,7 @@
 package sirius.biz.jupiter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import redis.clients.jedis.Connection;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import sirius.db.redis.RedisDB;
 import sirius.kernel.Sirius;
@@ -27,12 +26,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Permits to access a <b>Jupiter</b> instance.
+ * Permits accessing a <b>Jupiter</b> instance.
  * <p>
- * This connector is in charge of taking of about the connection management. It also permits failing over to
+ * This connector is in charge of taking care of the connection management. It also permits failing over to
  * a fallback instance in case the main instance isn't reachable.
  * <p>
- * If a failover is performed, we will continue to use the fallback for up to 60s before we attempt to switch
+ * If a fail-over is performed, we will continue to use the fallback for up to 60 seconds before we attempt to switch
  * back to the main instance.
  * <p>
  * A connector is usually obtained via {@link Jupiter#getConnector(String)} or {@link Jupiter#getDefault()}.
@@ -43,9 +42,9 @@ public class JupiterConnector {
     private static final JupiterCommand CMD_PYRUN = new JupiterCommand("PY.RUN");
 
     /**
-     * If a failover is performed, we keep using the fallback instance for a certain amount of time to prevent
+     * If a fail-over is performed, we keep using the fallback instance for a certain amount of time to prevent
      * constant switching back and forth in case of network problems (etc.). This constant determines the interval
-     * before a failover back to the main instance is attempted.
+     * before a fail-over back to the main instance is attempted.
      */
     private static final int FAILOVER_TRIGGER_REARM_INTERVAL = 60_000;
 
@@ -105,7 +104,7 @@ public class JupiterConnector {
      * @param <T>         the generic type of the result
      * @return a result computed by <tt>task</tt>
      */
-    public <T> T query(Supplier<String> description, Function<Connection, T> task) {
+    public <T> T query(Supplier<String> description, Function<JupiterConnection, T> task) {
         if (fallbackRedis == null) {
             return queryDirect(description, task);
         }
@@ -129,12 +128,12 @@ public class JupiterConnector {
     }
 
     private <T> T performWithFailover(Supplier<String> description,
-                                      Function<Connection, T> task,
+                                      Function<JupiterConnection, T> task,
                                       RedisDB main,
                                       RedisDB fallback,
                                       Runnable executeOnFailover) {
-        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = main.getConnection()) {
-            return perform(description, jedis, task);
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME)) {
+            return perform(description, main.getConnection(), task);
         } catch (JedisConnectionException _) {
             executeOnFailover.run();
             return performWithoutFailover(description, task, fallback);
@@ -143,19 +142,20 @@ public class JupiterConnector {
         }
     }
 
-    private <T> T performWithoutFailover(Supplier<String> description, Function<Connection, T> task, RedisDB redis) {
-        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
-             Jedis jedis = redis.getConnection()) {
-            return perform(description, jedis, task);
+    private <T> T performWithoutFailover(Supplier<String> description,
+                                         Function<JupiterConnection, T> task,
+                                         RedisDB redis) {
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME)) {
+            return perform(description, redis.getConnection(), task);
         } catch (Exception exception) {
             throw Exceptions.handle(Jupiter.LOG, exception);
         }
     }
 
-    private <T> T perform(Supplier<String> description, Jedis jedis, Function<Connection, T> task) {
+    private <T> T perform(Supplier<String> description, UnifiedJedis jedis, Function<JupiterConnection, T> task) {
         Watch watch = Watch.start();
         try {
-            return task.apply(jedis.getClient());
+            return task.apply(new JupiterConnection(jedis));
         } catch (JedisConnectionException exception) {
             throw exception;
         } catch (Exception exception) {
@@ -169,9 +169,9 @@ public class JupiterConnector {
     }
 
     /**
-     * Executes one or more commands and returns a value of the given type without attempting a failover.
+     * Executes one or more commands and returns a value of the given type without attempting a fail-over.
      * <p>
-     * If the main connection pool isn't available, this will not perform a failover but abort immediately.
+     * If the main connection pool isn't available, this will not perform a fail-over but abort immediately.
      * This can be used to execute administrative commands, which have to be executed on the target instance.
      *
      * @param description a description of the actions performed used for debugging and tracing
@@ -179,10 +179,9 @@ public class JupiterConnector {
      * @param <T>         the generic type of the result
      * @return a result computed by <tt>task</tt>
      */
-    public <T> T queryDirect(Supplier<String> description, Function<Connection, T> task) {
-        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
-             Jedis jedis = redis.getConnection()) {
-            return perform(description, jedis, task);
+    public <T> T queryDirect(Supplier<String> description, Function<JupiterConnection, T> task) {
+        try (var _ = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME)) {
+            return perform(description, redis.getConnection(), task);
         } catch (Exception error) {
             throw Exceptions.handle()
                             .to(Jupiter.LOG)
@@ -204,7 +203,7 @@ public class JupiterConnector {
      * @param description a description of the actions performed used for debugging and tracing
      * @param task        the actual task to perform using redis
      */
-    public void exec(Supplier<String> description, Consumer<Connection> task) {
+    public void exec(Supplier<String> description, Consumer<JupiterConnection> task) {
         query(description, client -> {
             task.accept(client);
             return null;
@@ -214,13 +213,13 @@ public class JupiterConnector {
     /**
      * Executes one or more Jupiter commands without any return value.
      * <p>
-     * If the main connection pool isn't available, this will not perform a failover but abort immediately.
+     * If the main connection pool isn't available, this will not perform a fail-over but abort immediately.
      * This can be used to execute administrative commands, which have to be executed on the target instance.
      *
      * @param description a description of the actions performed used for debugging and tracing
      * @param task        the actual task to perform using redis
      */
-    public void execDirect(Supplier<String> description, Consumer<Connection> task) {
+    public void execDirect(Supplier<String> description, Consumer<JupiterConnection> task) {
         queryDirect(description, client -> {
             task.accept(client);
             return null;

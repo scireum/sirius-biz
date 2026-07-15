@@ -8,6 +8,7 @@
 
 package sirius.biz.util;
 
+import redis.clients.jedis.CommandArguments;
 import redis.clients.jedis.util.SafeEncoder;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
@@ -69,9 +70,9 @@ public class RedisController extends BizController {
         Object result = pool.query(() -> "Executing query via /system/redis", db -> {
             try {
                 CommandParser parser = new CommandParser(query);
-                db.getClient().sendCommand(() -> SafeEncoder.encode(parser.parseCommand()), parser.getArgArray());
-
-                return db.getClient().getOne();
+                CommandArguments command =
+                        new CommandArguments(() -> SafeEncoder.encode(parser.parseCommand())).addObjects((Object[]) parser.getArgArray());
+                return db.executeCommand(command);
             } catch (Exception exception) {
                 // In case of an invalid query, we do not want to log this into the syslog but
                 // rather just directly output the message to the user....
