@@ -1,6 +1,6 @@
 /*
  * Made with all the love in the world
- * by scireum in Remshalden, Germany
+ * by scireum in Stuttgart, Germany
  *
  * Copyright by scireum GmbH
  * http://www.scireum.de - info@scireum.de
@@ -29,6 +29,18 @@ import kotlin.test.assertNull
 @ExtendWith(SiriusExtension::class)
 class TenantUserManagerTest {
 
+    companion object {
+        @Part
+        @JvmStatic
+        private lateinit var oma: OMA
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            oma.readyFuture.await(Duration.ofSeconds(60))
+        }
+    }
+
     @Test
     fun `Only failed password logins count towards rate limit`() {
         TenantsHelper.getTestUser()
@@ -42,18 +54,6 @@ class TenantUserManagerTest {
 
         assertThrows<HandledException> {
             userManager.findUserByCredentials(webContext, "test", "wrong-password-3")
-        }
-    }
-
-    companion object {
-        @Part
-        @JvmStatic
-        private lateinit var oma: OMA
-
-        @BeforeAll
-        @JvmStatic
-        fun setup() {
-            oma.readyFuture.await(Duration.ofSeconds(60))
         }
     }
 }
