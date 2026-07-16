@@ -77,7 +77,11 @@ public abstract class TenantSearchProvider<I extends Serializable, T extends Bas
                                                               <i:arg name="tenant" type="sirius.biz.tenants.Tenant"/>
                                                               @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
                                                               <br>
-                                                              <a href="/tenants/select/@tenant.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              <t:editForm url="@apply('/tenants/select/%s', tenant.getIdAsString())" class="d-inline">
+                                                                  <a href="#"
+                                                                     class="link text-decoration-underline"
+                                                                     onclick="event.preventDefault(); sirius.requestSubmitForm(this.closest('form')); return false;">@i18n("TenantController.select")</a>
+                                                              </t:editForm>
                                                               """, tenant);
             }
             resultCollector.accept(openSearchResult);

@@ -114,7 +114,11 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                                                               </i:if>
                                                               )
                                                               <br>
-                                                              <a href="/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              <t:editForm url="@apply('/user-accounts/select/%s', user.getIdAsString())" class="d-inline">
+                                                                  <a href="#"
+                                                                     class="link text-decoration-underline"
+                                                                     onclick="event.preventDefault(); sirius.requestSubmitForm(this.closest('form')); return false;">@i18n("TenantController.select")</a>
+                                                              </t:editForm>
                                                               """, userAccount);
             }
             resultCollector.accept(openSearchResult);
