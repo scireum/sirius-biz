@@ -6,7 +6,7 @@ services:
     hostname: redis
 
   redis-jupiter:
-    image: scireum/jupiter-io:4.1.4
+    image: scireum/jupiter-io:4.1.5
     ports:
       - "2410"
     hostname: redis-jupiter
