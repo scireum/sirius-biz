@@ -39,10 +39,21 @@ function openSmartValues(elementId, type, payload, signature) {
 
         const html = Mustache.render('{{#values}}' +
             '<div class="d-flex flex-row align-items-center">' +
+            '   {{#postRequest}}' +
+            '   <form method="POST" action="{{action}}" class="d-flex flex-row align-items-center overflow-hidden flex-grow-1 m-0">' +
+            '       <input type="hidden" name="CSRFToken" value="' + tycho_csrf_token + '"/>' +
+            '       <button type="submit" class="smart-value-link btn btn-link d-flex flex-row align-items-center overflow-hidden flex-grow-1">' +
+            '           <i class="{{icon}}"></i>' +
+            '           <span class="ps-2">{{label}}</span>' +
+            '       </button>' +
+            '   </form>' +
+            '   {{/postRequest}}' +
+            '   {{^postRequest}}' +
             '   <a href="{{action}}" class="smart-value-link btn btn-link d-flex flex-row align-items-center overflow-hidden flex-grow-1">' +
             '       <i class="{{icon}}"></i>' +
             '       <span class="ps-2">{{label}}</span>' +
             '   </a>' +
+            '   {{/postRequest}}' +
             '   {{#copyPayload}}' +
             '       <a href="javascript:sirius.copyToClipboard(\'{{copyPayload}}\')" class="smart-value-link btn btn-link ms-2 text-small">' +
             '          <i class="fa-regular fa-clipboard"></i>' +
@@ -57,9 +68,11 @@ function openSmartValues(elementId, type, payload, signature) {
 
 sirius.ready(() => {
     document.addEventListener('click', event => {
-        if (!event.target.classList.contains('smart-values-link-js')) {
-            hideAllSmartValues();
+        if (event.target.classList.contains('smart-values-link-js')
+            || event.target.closest('.tooltip.smart-values')) {
+            return;
         }
+        hideAllSmartValues();
     });
     document.addEventListener('keyup', event => {
         if (event.key === sirius.key.ESCAPE) {
