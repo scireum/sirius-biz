@@ -102,19 +102,26 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)) {
                 openSearchResult.withTemplateFromCode("""
                                                               <i:arg name="user" type="sirius.biz.tenants.UserAccount"/>
-                                                              @user (
-                                                              <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
-                                                                <t:smartValue type="tenant"
-                                                                    id="@generateId('smarty-useraccount-%s')"
-                                                                    payload="@user.getTenantAsString()"
-                                                                    label="@user.getTenant().fetchCachedValue().toString()"/>
-                                                                <i:else>
-                                                                    @user.getTenant().fetchCachedValue().toString()
-                                                                </i:else>
-                                                              </i:if>
-                                                              )
-                                                              <br>
-                                                              <a href="/user-accounts/select/@user.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              <div class="d-flex flex-column h-100">
+                                                                  <div>
+                                                                      @user (
+                                                                      <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
+                                                                        <t:smartValue type="tenant"
+                                                                            id="@generateId('smarty-useraccount-%s')"
+                                                                            payload="@user.getTenantAsString()"
+                                                                            label="@user.getTenant().fetchCachedValue().toString()"/>
+                                                                        <i:else>
+                                                                            @user.getTenant().fetchCachedValue().toString()
+                                                                        </i:else>
+                                                                      </i:if>
+                                                                      )
+                                                                  </div>
+                                                                  <div class="mt-auto pt-2">
+                                                                      <t:editForm url="@apply('/user-accounts/select/%s', user.getIdAsString())" class="d-inline">
+                                                                          <button type="submit" class="btn btn-outline-secondary btn-sm">@i18n("TenantController.select")</button>
+                                                                      </t:editForm>
+                                                                  </div>
+                                                              </div>
                                                               """, userAccount);
             }
             resultCollector.accept(openSearchResult);

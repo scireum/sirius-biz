@@ -16,5 +16,9 @@ package sirius.biz.tycho.smart;
  * <p>
  * This can be e.g. used to reveal the phone number or email address for a user listed in a card or table.
  */
-public record SmartValue(String icon, String label, String action, String copyPayload) {
+public record SmartValue(String icon, String label, String action, String copyPayload, boolean postRequest) {
+
+    public SmartValue(String icon, String label, String action, String copyPayload) {
+        this(icon, label, action, copyPayload, false);
+    }
 }

@@ -40,14 +40,16 @@ public class UserAccountSmartValueProvider implements SmartValueProvider {
                 valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                      tenants.fetchCachedTenantName(user.getTenantAsString()),
                                                      "/tenants/select/" + user.getTenantAsString(),
-                                                     null));
+                                                     null,
+                                                     true));
             }
             if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
                 && !Strings.areEqual(user.getUniqueName(), UserContext.getCurrentUser().getUserId())) {
                 valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                      user.getUserAccountData().getShortName(),
                                                      "/user-accounts/select/" + user.getIdAsString(),
-                                                     null));
+                                                     null,
+                                                     true));
             }
         }
     }

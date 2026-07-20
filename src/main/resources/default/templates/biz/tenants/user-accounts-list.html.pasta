@@ -44,7 +44,8 @@
                                         permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
                                     <t:dropdownItem labelKey="TenantController.select"
                                                     icon="fa-solid fa-user-secret"
-                                                    url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                                                    url="@apply('/user-accounts/select/%s', account.getIdAsString())"
+                                                    sendPostRequest="true"/>
                                 </t:dropdownSection>
                             </i:if>
                             <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">
@@ -110,7 +111,8 @@
                                     permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT">
                                 <t:dropdownItem labelKey="TenantController.select"
                                                 icon="fa-solid fa-user-secret"
-                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"/>
+                                                url="@apply('/user-accounts/select/%s', account.getIdAsString())"
+                                                sendPostRequest="true"/>
                             </t:dropdownSection>
                         </i:if>
                         <i:if test="UserContext.get().getUser().hasPermission(sirius.biz.tenants.TenantUserManager.PERMISSION_SELECT_TENANT)">

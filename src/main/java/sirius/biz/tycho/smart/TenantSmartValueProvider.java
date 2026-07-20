@@ -48,7 +48,8 @@ public class TenantSmartValueProvider implements SmartValueProvider {
             valueCollector.accept(new SmartValue("fa-solid fa-exchange-alt",
                                                  NLS.get("TenantController.select"),
                                                  "/tenants/select/" + tenant.getIdAsString(),
-                                                 null));
+                                                 null,
+                                                 true));
         }
 
         if (currentUser.hasPermission(TenantController.PERMISSION_MANAGE_TENANTS)) {

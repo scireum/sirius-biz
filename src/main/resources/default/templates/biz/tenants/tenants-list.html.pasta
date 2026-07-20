@@ -31,7 +31,8 @@
                         <t:dropdownSection>
                             <t:dropdownItem labelKey="TenantController.select"
                                             icon="fa-solid fa-building"
-                                            url="@apply('/tenants/select/%s', tenant.getIdAsString())"/>
+                                            url="@apply('/tenants/select/%s', tenant.getIdAsString())"
+                                            sendPostRequest="true"/>
                         </t:dropdownSection>
                         <t:dropdownSection>
                             <t:dropdownDeleteItem withConfirm="false"
