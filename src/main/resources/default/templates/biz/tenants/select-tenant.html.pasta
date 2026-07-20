@@ -19,9 +19,13 @@
 
         <t:searchHeader page="tenants" baseUrl="/tenants/select">
             <i:if test="isSpy">
-                <t:editForm url="/tenants/select/main" class="d-inline">
+                <form action="/tenants/select/main"
+                      method="post"
+                      id="spyTenantExitForm"
+                      class="d-inline">
                     <button class="btn btn-primary" type="submit">@i18n("Tenant.selectMain")</button>
-                </t:editForm>
+                    <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
+                </form>
             </i:if>
         </t:searchHeader>
 

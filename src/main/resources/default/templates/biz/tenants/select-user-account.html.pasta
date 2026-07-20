@@ -17,9 +17,13 @@
         </i:block>
         <t:searchHeader page="users" baseUrl="/user-accounts/select">
             <i:if test="isSpy">
-                <t:editForm url="/user-accounts/select/main" class="d-inline">
+                <form action="/user-accounts/select/main"
+                      method="post"
+                      id="spyUserExitForm"
+                      class="d-inline">
                     <button class="btn btn-primary" type="submit">@i18n("UserAccount.selectMain")</button>
-                </t:editForm>
+                    <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
+                </form>
             </i:if>
         </t:searchHeader>
 
