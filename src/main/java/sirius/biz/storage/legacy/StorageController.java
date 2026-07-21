@@ -30,6 +30,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.function.Consumer;
@@ -224,7 +225,8 @@ public class StorageController extends BizController {
      * @param bucketName the name of the bucket to upload to
      * @param upload     the data being uploaded
      */
-    @Routed(value = "/storage/upload/:1", preDispatchable = true, jsonCall = true, skipCsrfValidation = true)
+    @Routed(value = "/storage/upload/:1", preDispatchable = true, skipCsrfValidation = true)
+    @InternalService
     @LoginRequired
     public void uploadObject(final WebContext webContext,
                              JSONStructuredOutput output,
@@ -274,7 +276,8 @@ public class StorageController extends BizController {
      * @param objectId   the id of the object for replace
      * @param upload     the upload to handle
      */
-    @Routed(value = "/storage/replace/:1/:2", preDispatchable = true, jsonCall = true, skipCsrfValidation = true)
+    @Routed(value = "/storage/replace/:1/:2", preDispatchable = true, skipCsrfValidation = true)
+    @InternalService
     @LoginRequired
     public void uploadObject(final WebContext webContext,
                              JSONStructuredOutput output,
@@ -318,7 +321,8 @@ public class StorageController extends BizController {
      * @param reference  the reference for which an object is uploaded
      * @param upload     the content of the upload
      */
-    @Routed(value = "/storage/upload-reference/:1/:2", preDispatchable = true, jsonCall = true, skipCsrfValidation = true)
+    @Routed(value = "/storage/upload-reference/:1/:2", preDispatchable = true, skipCsrfValidation = true)
+    @InternalService
     @LoginRequired
     public void uploadObjectForReference(final WebContext webContext,
                                          JSONStructuredOutput output,
