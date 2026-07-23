@@ -9,7 +9,7 @@
 package sirius.biz.cluster.work;
 
 import tools.jackson.databind.node.ObjectNode;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.UnifiedJedis;
 import sirius.db.KeyGenerator;
 import sirius.db.redis.Redis;
 import sirius.kernel.commons.Json;
@@ -59,7 +59,7 @@ class RedisPrioritizedQueue implements PrioritizedQueue {
         return "distributed_prioritized_queue_" + queueName;
     }
 
-    private String storeTask(Jedis db, ObjectNode task) {
+    private String storeTask(UnifiedJedis db, ObjectNode task) {
         int retries = MAX_ATTEMPTS_TO_GENERATE_UNIQUE_TASK_ID;
         String taskMap = getRedisTaskMapKeyName();
         String taskData = Json.write(task);

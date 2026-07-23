@@ -9,6 +9,7 @@
 package sirius.biz.cluster;
 
 import tools.jackson.databind.node.ObjectNode;
+import redis.clients.jedis.params.SetParams;
 import sirius.biz.cluster.work.DistributedQueueInfo;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.db.redis.Redis;
@@ -326,15 +327,12 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             }
 
             return redis.query(() -> "Write last execution of " + syncName, db -> {
-                long update =
-                        db.setnx(syncName + EXECUTION_TIMESTAMP_SUFFIX, String.valueOf(System.currentTimeMillis()));
-                if (update == 1L) {
-                    db.expire(syncName + EXECUTION_TIMESTAMP_SUFFIX,
-                              TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS));
-                    return true;
-                } else {
-                    return false;
-                }
+                String reply = db.set(syncName + EXECUTION_TIMESTAMP_SUFFIX,
+                                      String.valueOf(System.currentTimeMillis()),
+                                      SetParams.setParams()
+                                               .nx()
+                                               .ex(TimeUnit.HOURS.toSeconds(MIN_WAIT_DAILY_TASK_HOURS)));
+                return "OK".equals(reply);
             });
         } catch (Exception exception) {
             Exceptions.handle(Cluster.LOG, exception);

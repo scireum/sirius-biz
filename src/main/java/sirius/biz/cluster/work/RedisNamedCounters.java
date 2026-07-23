@@ -8,8 +8,8 @@
 
 package sirius.biz.cluster.work;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Transaction;
+import redis.clients.jedis.AbstractTransaction;
+import redis.clients.jedis.UnifiedJedis;
 import sirius.db.redis.Redis;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Wait;
@@ -43,11 +43,10 @@ class RedisNamedCounters implements NamedCounters {
     @Override
     public long get(String counter) {
         return redis.query(() -> Strings.apply("Read counter %s for %s", counter, name),
-                           db -> readCounter(db, counter).orElse(0L));
+                           db -> parseCounter(db.hget(name, counter), counter).orElse(0L));
     }
 
-    private Optional<Long> readCounter(Jedis db, String counter) {
-        String value = db.hget(name, counter);
+    private Optional<Long> parseCounter(String value, String counter) {
         if (value == null) {
             return Optional.empty();
         } else {
@@ -89,27 +88,35 @@ class RedisNamedCounters implements NamedCounters {
                         .handle();
     }
 
-    private Long tryToDecrement(String counter, Jedis db) {
-        db.watch(name);
-        Optional<Long> counterValue = readCounter(db, counter);
-        if (counterValue.isEmpty()) {
-            db.unwatch();
-            return 0L;
-        }
+    private Long tryToDecrement(String counter, UnifiedJedis db) {
+        // We need to WATCH, read and MULTI/EXEC on the very same connection, therefore we obtain a
+        // transaction with manual control (doMulti = false) which pins a single connection instead
+        // of letting each command borrow an arbitrary connection from the pool.
+        try (AbstractTransaction transaction = db.transaction(false)) {
+            transaction.watch(name);
 
-        long nextCounterValue = Math.max(0, counterValue.get() - 1);
-        Transaction transaction = db.multi();
-        if (nextCounterValue == 0) {
-            transaction.hdel(name, counter);
-        } else {
-            transaction.hset(name, counter, String.valueOf(nextCounterValue));
-        }
+            // Commands issued before multi() are executed immediately, so we can read the current
+            // value through the very same (watched) connection.
+            Optional<Long> counterValue = parseCounter(transaction.hget(name, counter).get(), counter);
+            if (counterValue.isEmpty()) {
+                transaction.unwatch();
+                return 0L;
+            }
 
-        List<?> response = transaction.exec();
-        if (response == null || response.isEmpty()) {
-            return null;
-        } else {
-            return nextCounterValue;
+            long nextCounterValue = Math.max(0, counterValue.get() - 1);
+            transaction.multi();
+            if (nextCounterValue == 0) {
+                transaction.hdel(name, counter);
+            } else {
+                transaction.hset(name, counter, String.valueOf(nextCounterValue));
+            }
+
+            List<?> response = transaction.exec();
+            if (response == null || response.isEmpty()) {
+                return null;
+            } else {
+                return nextCounterValue;
+            }
         }
     }
 }

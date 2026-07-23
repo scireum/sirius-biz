@@ -121,9 +121,9 @@
                         _auxiliary.innerHTML = Mustache.render(
                             '<div class="col mb-4">' +
                             '   <div class="card card-border h-100">' +
-                            '       <div class="card-body">' +
+                            '       <div class="card-body d-flex flex-column h-100">' +
                             '           <h5 class="card-title">{{label}}</h5>' +
-                            '           <div>{{{htmlDescription}}}</div>' +
+                            '           <div class="flex-grow-1">{{{htmlDescription}}}</div>' +
                             '           <a href="{{url}}" class="stretched-link"></a>' +
                             '        </div>' +
                             '    </div>' +

@@ -10,23 +10,31 @@
                                       .map(|spyUser| spyUser.getRootUser().getUserId() == user().getUserId())
                                       .orElse(false)"/>
                 <i:if test="@isTenantSpy">
-                    <t:editForm url="/tenants/select/main" class="d-inline">
+                    <form action="/tenants/select/main"
+                          method="post"
+                          id="spyTenantExitForm"
+                          class="d-inline">
                         <button class="badge border-0 text-white bg-sirius-orange-light text-decoration-none"
                                 type="submit">
                             @currentUserName()
                             <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
                             <i class="ms-1 fa-solid fa-times"></i>
                         </button>
-                    </t:editForm>
+                        <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
+                    </form>
                     <i:else>
-                        <t:editForm url="/user-accounts/select/main" class="d-inline">
+                        <form action="/user-accounts/select/main"
+                              method="post"
+                              id="spyUserExitForm"
+                              class="d-inline">
                             <button class="badge border-0 text-white bg-sirius-orange-light text-decoration-none"
                                     type="submit">
                                 @currentUserName()
                                 <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
                                 <i class="ms-1 fa-solid fa-times"></i>
                             </button>
-                        </t:editForm>
+                            <input name="CSRFToken" value="@part(CSRFHelper.class).getCSRFToken()" type="hidden"/>
+                        </form>
                     </i:else>
                 </i:if>
             </t:permission>

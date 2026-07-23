@@ -11,6 +11,7 @@ package sirius.biz.cluster;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
+import redis.clients.jedis.params.SetParams;
 import sirius.db.redis.Redis;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
@@ -52,7 +53,7 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
         }
 
         redis.exec(() -> "Write to RedisUserMessageCache",
-                   jedis -> jedis.setex(CACHE_NAME + key, DEFAULT_TTL, Json.write(array)));
+                   jedis -> jedis.set(CACHE_NAME + key, Json.write(array), SetParams.setParams().ex(DEFAULT_TTL)));
     }
 
     @Override

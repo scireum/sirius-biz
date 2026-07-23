@@ -8,7 +8,7 @@
 
 package sirius.biz.saml;
 
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.params.SetParams;
 import sirius.db.redis.Redis;
 import sirius.kernel.commons.Strings;
@@ -84,7 +84,7 @@ public class SamlReplayProtector {
      * @param ttlSeconds the number of seconds until the reservation expires
      * @return <tt>true</tt> if the key was created, <tt>false</tt> if it already existed
      */
-    private boolean reserveKey(Jedis db, String key, long ttlSeconds) {
+    private boolean reserveKey(UnifiedJedis db, String key, long ttlSeconds) {
         String result = db.set(key, VALUE, SetParams.setParams().nx().ex(ttlSeconds));
         return REDIS_RESPONSE_SUCCESS.equals(result);
     }

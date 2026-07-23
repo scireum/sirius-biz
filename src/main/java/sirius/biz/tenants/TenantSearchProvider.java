@@ -75,9 +75,14 @@ public abstract class TenantSearchProvider<I extends Serializable, T extends Bas
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_TENANT)) {
                 openSearchResult.withTemplateFromCode("""
                                                               <i:arg name="tenant" type="sirius.biz.tenants.Tenant"/>
-                                                              @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
-                                                              <br>
-                                                              <a href="/tenants/select/@tenant.getIdAsString()" class="card-link">@i18n("TenantController.select")</a>
+                                                              <div class="d-flex flex-column h-100">
+                                                                  <div>@tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()</div>
+                                                                  <div class="mt-auto pt-2">
+                                                                      <t:editForm url="@apply('/tenants/select/%s', tenant.getIdAsString())" class="d-inline">
+                                                                          <button type="submit" class="btn btn-outline-secondary btn-sm">@i18n("TenantController.select")</button>
+                                                                      </t:editForm>
+                                                                  </div>
+                                                              </div>
                                                               """, tenant);
             }
             resultCollector.accept(openSearchResult);
