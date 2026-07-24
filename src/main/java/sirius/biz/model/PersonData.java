@@ -181,6 +181,20 @@ public class PersonData extends Composite {
     }
 
     /**
+     * Returns the initials (first letter of the first and last name) for use in e.g. avatar placeholders.
+     *
+     * @return up to two uppercase initials, or an empty string if no name is available
+     */
+    @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
+    public String getInitials() {
+        return (firstLetter(firstname) + firstLetter(lastname)).toUpperCase();
+    }
+
+    private static String firstLetter(String value) {
+        return Strings.isFilled(value) ? value.trim().substring(0, 1) : "";
+    }
+
+    /**
      * Generates a string representation of the full name.
      *
      * @return the full name (if filled)
