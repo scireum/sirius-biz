@@ -187,11 +187,7 @@ public class PersonData extends Composite {
      */
     @NoodleSandbox(NoodleSandbox.Accessibility.GRANTED)
     public String getInitials() {
-        return (firstLetter(firstname) + firstLetter(lastname)).toUpperCase();
-    }
-
-    private static String firstLetter(String value) {
-        return Strings.isFilled(value) ? value.trim().substring(0, 1) : "";
+        return (Strings.limit(firstname, 1) + Strings.limit(lastname, 1)).toUpperCase();
     }
 
     /**
