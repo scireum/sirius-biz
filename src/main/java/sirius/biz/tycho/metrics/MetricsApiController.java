@@ -59,7 +59,7 @@ public class MetricsApiController extends BizController {
 
     private void fetchMetric(ObjectNode obj, JSONStructuredOutput output) {
         // For now, there are only "KeyMetrics" which may be lazy-loaded, but we might add some more in the future...
-        if ("KeyMetric".equals(obj.path("type").asString())) {
+        if ("KeyMetric".equals(obj.path("type").asString(""))) {
             fetchKeyMetric(obj, output);
         } else {
             output.beginObject("task").endObject();

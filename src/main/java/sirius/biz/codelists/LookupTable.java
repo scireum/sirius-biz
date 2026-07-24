@@ -623,9 +623,9 @@ public abstract class LookupTable {
             if (translations.isObject()) {
                 return translations.properties()
                                    .stream()
-                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asString()));
+                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asString("")));
             } else {
-                return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, translations.asString());
+                return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, translations.asString(""));
             }
         }).orElseGet(() -> {
             return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, "");
@@ -668,7 +668,7 @@ public abstract class LookupTable {
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isArray()) {
             return transformArrayToStringList((ArrayNode) jsonNode);
-        } else if (jsonNode.isString() && Strings.isFilled(jsonNode.asString())) {
+        } else if (jsonNode.isString() && Strings.isFilled(jsonNode.asString(""))) {
             return Collections.singletonList(jsonNode.asString(null));
         } else {
             return Collections.emptyList();
@@ -676,7 +676,7 @@ public abstract class LookupTable {
     }
 
     private static List<String> transformArrayToStringList(ArrayNode array) {
-        return array.valueStream().map(JsonNode::asString).filter(Strings::isFilled).toList();
+        return array.valueStream().map(jsonNode -> jsonNode.asString("")).filter(Strings::isFilled).toList();
     }
 
     /**
@@ -697,8 +697,8 @@ public abstract class LookupTable {
         if (jsonNode.isObject()) {
             return jsonNode.properties()
                            .stream()
-                           .filter(entry -> Strings.isFilled(entry.getValue().asString()))
-                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asString()));
+                           .filter(entry -> Strings.isFilled(entry.getValue().asString("")))
+                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asString("")));
         } else {
             return Collections.emptyMap();
         }

@@ -28,9 +28,9 @@ public class CSSCellFormat implements CellFormat {
     @Override
     public String format(ObjectNode data) {
         return "<div class=\""
-               + Strings.cleanup(data.path(KEY_CLASSES).asString(), StringCleanup::escapeXml)
+               + Strings.cleanup(data.path(KEY_CLASSES).asString(""), StringCleanup::escapeXml)
                + "\">"
-               + Strings.cleanup(data.path(KEY_VALUE).asString(), StringCleanup::escapeXml)
+               + Strings.cleanup(data.path(KEY_VALUE).asString(""), StringCleanup::escapeXml)
                + "</div>";
     }
 

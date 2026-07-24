@@ -8,10 +8,10 @@
 
 package sirius.biz.analytics.reports;
 
-import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
+import tools.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nonnull;
 
@@ -30,52 +30,52 @@ public class TrendCellFormat implements CellFormat {
 
     @Override
     public String format(ObjectNode data) {
-        String classes = data.path(KEY_CLASSES).asString();
-        String value = data.path(KEY_VALUE).asString();
-        String trend = data.path(KEY_TREND).asString();
-        String hint = data.path(KEY_HINT).asString();
-        String icon = data.path(KEY_ICON).asString();
+        String classes = data.path(KEY_CLASSES).asString("");
+        String value = data.path(KEY_VALUE).asString("");
+        String trend = data.path(KEY_TREND).asString("");
+        String hint = data.path(KEY_HINT).asString("");
+        String icon = data.path(KEY_ICON).asString("");
 
-        StringBuilder sb = new StringBuilder("<div class=\"text-end\"");
+        StringBuilder builder = new StringBuilder("<div class=\"text-end\"");
         if (Strings.isFilled(hint)) {
-            sb.append(" title=\"");
-            sb.append(Strings.cleanup(hint, StringCleanup::escapeXml));
-            sb.append("\"");
+            builder.append(" title=\"");
+            builder.append(Strings.cleanup(hint, StringCleanup::escapeXml));
+            builder.append("\"");
         }
-        sb.append(">");
+        builder.append(">");
         if (Strings.isFilled(value)) {
             if (Strings.isFilled(trend)) {
-                sb.append("<span>");
-                sb.append(Strings.cleanup(value, StringCleanup::escapeXml));
-                sb.append("</span> (<span class=\"");
-                sb.append(Strings.cleanup(classes, StringCleanup::escapeXml));
-                sb.append("\">");
-                sb.append(Strings.cleanup(trend, StringCleanup::escapeXml));
-                sb.append("</span>)");
+                builder.append("<span>");
+                builder.append(Strings.cleanup(value, StringCleanup::escapeXml));
+                builder.append("</span> (<span class=\"");
+                builder.append(Strings.cleanup(classes, StringCleanup::escapeXml));
+                builder.append("\">");
+                builder.append(Strings.cleanup(trend, StringCleanup::escapeXml));
+                builder.append("</span>)");
             } else {
-                sb.append(Strings.cleanup(value, StringCleanup::escapeXml));
+                builder.append(Strings.cleanup(value, StringCleanup::escapeXml));
             }
         } else {
-            sb.append("<span class=\"");
-            sb.append(Strings.cleanup(classes, StringCleanup::escapeXml));
-            sb.append("\">");
-            sb.append(Strings.cleanup(trend, StringCleanup::escapeXml));
-            sb.append("</span>");
+            builder.append("<span class=\"");
+            builder.append(Strings.cleanup(classes, StringCleanup::escapeXml));
+            builder.append("\">");
+            builder.append(Strings.cleanup(trend, StringCleanup::escapeXml));
+            builder.append("</span>");
         }
         if (Strings.isFilled(icon)) {
             if (Strings.isEmpty(trend)) {
-                sb.append("<span class=\"");
-                sb.append(Strings.cleanup(classes, StringCleanup::escapeXml));
-                sb.append("\">");
+                builder.append("<span class=\"");
+                builder.append(Strings.cleanup(classes, StringCleanup::escapeXml));
+                builder.append("\">");
             }
-            sb.append(" <i class=\"" + icon + "\"></i>");
+            builder.append(" <i class=\"" + icon + "\"></i>");
             if (Strings.isEmpty(trend)) {
-                sb.append("</span>");
+                builder.append("</span>");
             }
         }
 
-        sb.append("</div>");
-        return sb.toString();
+        builder.append("</div>");
+        return builder.toString();
     }
 
     @Override

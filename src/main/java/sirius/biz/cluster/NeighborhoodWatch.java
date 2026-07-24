@@ -491,7 +491,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                                    jsonObject.path(ClusterController.RESPONSE_DETAILED_VERSION).asString(null));
         Json.getArray(jsonObject, ClusterController.RESPONSE_JOBS).forEach(job -> {
             try {
-                String name = job.required(ClusterController.RESPONSE_NAME).asString();
+                String name = job.required(ClusterController.RESPONSE_NAME).asString("");
                 result.jobs.put(name,
                                 new BackgroundJobInfo(name,
                                                       job.path(ClusterController.RESPONSE_DESCRIPTION).asString(null),

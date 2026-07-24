@@ -38,9 +38,9 @@ public abstract class AnalyticsSchedulerExecutor implements DistributedTaskExecu
 
     @Override
     public void executeWork(ObjectNode context) throws Exception {
-        String schedulerName = context.path(AnalyticalEngine.CONTEXT_SCHEDULER_NAME).asString();
+        String schedulerName = context.path(AnalyticalEngine.CONTEXT_SCHEDULER_NAME).asString("");
         LocalDate date =
-                Value.of(NLS.parseMachineString(LocalDate.class, context.path(AnalyticalEngine.CONTEXT_DATE).asString()))
+                Value.of(NLS.parseMachineString(LocalDate.class, context.path(AnalyticalEngine.CONTEXT_DATE).asString("")))
                      .asLocalDate(LocalDate.now());
         int level = context.path(AnalyticalEngine.CONTEXT_LEVEL).asInt();
         AnalyticsScheduler scheduler = globalContext.findPart(schedulerName, AnalyticsScheduler.class);

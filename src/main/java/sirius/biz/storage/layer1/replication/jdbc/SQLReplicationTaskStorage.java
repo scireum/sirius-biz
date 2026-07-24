@@ -104,7 +104,7 @@ public class SQLReplicationTaskStorage
 
     @Override
     public void executeBatch(ObjectNode batch) {
-        String txnId = batch.path(TRANSACTION_ID).asString();
+        String txnId = batch.path(TRANSACTION_ID).asString("");
         if (Strings.isFilled(txnId)) {
             SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
             query.eq(SQLReplicationTask.FAILED, false);

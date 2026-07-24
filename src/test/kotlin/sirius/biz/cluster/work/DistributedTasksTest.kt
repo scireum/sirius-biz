@@ -38,7 +38,7 @@ class DistributedTasksTest {
             override fun queueName(): String = "fifo-test"
 
             override fun executeWork(context: ObjectNode) {
-                if (context.path("test").asString() == "test") {
+                if (context.path("test").asString("") == "test") {
                     fifoSynchronizer.success()
                 }
             }

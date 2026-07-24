@@ -8,8 +8,8 @@
 
 package sirius.biz.analytics.reports;
 
-import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.di.std.Register;
+import tools.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nonnull;
 
@@ -25,17 +25,17 @@ public class SparklineCellFormat implements CellFormat {
 
     @Override
     public String format(ObjectNode data) {
-        String value = data.path(KEY_VALUE).asString();
-        String values = data.path(KEY_VALUES).asString();
+        String value = data.path(KEY_VALUE).asString("");
+        String values = data.path(KEY_VALUES).asString("");
 
-        StringBuilder sb = new StringBuilder("<div class=\"text-end\">");
-        sb.append(value);
-        sb.append(" ");
-        sb.append("<canvas width=\"40\" height=\"20\" class=\"sparkline-js\" data-sparkline=\"");
-        sb.append(values);
-        sb.append("\"></canvas>");
-        sb.append("</div>");
-        return sb.toString();
+        StringBuilder builder = new StringBuilder("<div class=\"text-end\">");
+        builder.append(value);
+        builder.append(" ");
+        builder.append("<canvas width=\"40\" height=\"20\" class=\"sparkline-js\" data-sparkline=\"");
+        builder.append(values);
+        builder.append("\"></canvas>");
+        builder.append("</div>");
+        return builder.toString();
     }
 
     @Override

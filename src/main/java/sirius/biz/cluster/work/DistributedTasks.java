@@ -160,7 +160,7 @@ public class DistributedTasks implements MetricProvider {
         protected void execute() {
             try {
                 DistributedTaskExecutor exec =
-                        ctx.getPart(task.required(KEY_EXECUTOR).asString(), DistributedTaskExecutor.class);
+                        ctx.getPart(task.required(KEY_EXECUTOR).asString(""), DistributedTaskExecutor.class);
                 tryExecute(exec);
             } catch (Exception exception) {
                 Exceptions.handle()

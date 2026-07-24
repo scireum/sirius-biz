@@ -172,9 +172,9 @@ public class Scripting implements InterconnectHandler {
 
     @Override
     public void handleEvent(ObjectNode event) {
-        if (TASK_TYPE_MSG.equals(event.path(TASK_TYPE).asString())) {
+        if (TASK_TYPE_MSG.equals(event.path(TASK_TYPE).asString(""))) {
             handleMessageTask(event);
-        } else if (TASK_TYPE_EXEC.equals(event.path(TASK_TYPE).asString())) {
+        } else if (TASK_TYPE_EXEC.equals(event.path(TASK_TYPE).asString(""))) {
             tasks.defaultExecutor().start(() -> handleExecTask(event));
         }
     }

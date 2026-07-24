@@ -268,7 +268,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         if (Strings.isFilled(fallbackAndMap.getSecond())) {
             Json.parseObject(fallbackAndMap.getSecond())
                 .properties()
-                .forEach(entry -> texts.put(entry.getKey(), entry.getValue().asString()));
+                .forEach(entry -> texts.put(entry.getKey(), entry.getValue().asString("")));
         }
 
         return texts;

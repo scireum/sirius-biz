@@ -77,7 +77,7 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
     }
 
     private Cell determineClusterStatus(ObjectNode clusterHealth) {
-        String status = clusterHealth.path("status").asString();
+        String status = clusterHealth.path("status").asString("");
         if (Strings.areEqual(status, "green")) {
             return cells.green(status);
         }

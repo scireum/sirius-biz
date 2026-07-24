@@ -41,7 +41,7 @@ public class LinesCellFormat implements CellFormat {
         return Json.tryGetArray(data, KEY_VALUES)
                    .map(ArrayNode::valueStream)
                    .orElseGet(Stream::empty)
-                   .map(JsonNode::asString)
+                   .map(jsonNode -> jsonNode.asString(""))
                    .collect(Collectors.joining(delimiter));
     }
 

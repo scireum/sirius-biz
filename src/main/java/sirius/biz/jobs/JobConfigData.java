@@ -158,7 +158,7 @@ public class JobConfigData extends Composite {
                         configMap.put(entry.getKey(),
                                       entry.getValue()
                                            .valueStream()
-                                           .map(JsonNode::asString)
+                                           .map(jsonNode -> jsonNode.asString(""))
                                            .filter(Strings::isFilled)
                                            .toList());
                     } else {
