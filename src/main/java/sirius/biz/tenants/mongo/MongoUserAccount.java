@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants.mongo;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.codelists.LookupValue;
 import sirius.biz.mongo.CustomSortValues;
@@ -34,6 +33,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.web.controller.Message;
+import tools.jackson.core.JacksonException;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -163,7 +163,7 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
                  .where(MongoUserAccount.ID, id)
                  .executeForOne(MongoUserAccount.class);
             TenantUserManager.flushCacheForUserAccount(this);
-        } catch (JsonProcessingException exception) {
+        } catch (JacksonException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
                             .error(exception)
@@ -175,8 +175,7 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
         }
     }
 
-    private String computeUpdatedPreferences(Map<String, Object> preferences, String key, Object value)
-            throws JsonProcessingException {
+    private String computeUpdatedPreferences(Map<String, Object> preferences, String key, Object value) {
         if (Strings.isEmpty(value)) {
             preferences.remove(key);
         } else {

@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.batch;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.jobs.BasicJobFactory;

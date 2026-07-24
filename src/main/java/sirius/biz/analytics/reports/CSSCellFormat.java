@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.reports;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.StringCleanup;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
@@ -28,15 +28,15 @@ public class CSSCellFormat implements CellFormat {
     @Override
     public String format(ObjectNode data) {
         return "<div class=\""
-               + Strings.cleanup(data.path(KEY_CLASSES).asText(), StringCleanup::escapeXml)
+               + Strings.cleanup(data.path(KEY_CLASSES).asString(""), StringCleanup::escapeXml)
                + "\">"
-               + Strings.cleanup(data.path(KEY_VALUE).asText(), StringCleanup::escapeXml)
+               + Strings.cleanup(data.path(KEY_VALUE).asString(""), StringCleanup::escapeXml)
                + "</div>";
     }
 
     @Override
     public String rawValue(ObjectNode data) {
-        return data.path(KEY_VALUE).asText(null);
+        return data.path(KEY_VALUE).asString(null);
     }
 
     @Nonnull

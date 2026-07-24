@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheCoherence;

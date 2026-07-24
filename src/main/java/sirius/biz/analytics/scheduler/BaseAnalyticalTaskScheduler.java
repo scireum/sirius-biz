@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.MultiMap;

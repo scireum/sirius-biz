@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;

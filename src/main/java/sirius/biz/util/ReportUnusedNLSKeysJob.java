@@ -8,7 +8,7 @@
 
 package sirius.biz.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import sirius.biz.cluster.InterconnectClusterManager;
 import sirius.biz.jobs.StandardCategories;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
@@ -85,14 +85,14 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
                       .forEach(missingKeysOfNode -> {
                           Set<String> keysOfNode = Json.getArray(missingKeysOfNode, "unused")
                                                        .valueStream()
-                                                       .map(JsonNode::asText)
+                                                       .map(jsonNode -> jsonNode.asString(""))
                                                        .collect(Collectors.toSet());
 
                           process.log(ProcessLog.info()
                                                 .withFormattedMessage("Received %s keys from %s",
                                                                       keysOfNode.size(),
                                                                       missingKeysOfNode.path(InterconnectClusterManager.RESPONSE_NODE_NAME)
-                                                                                       .asText()));
+                                                                                       .asString("")));
                           missingKeys.retainAll(keysOfNode);
                       });
 

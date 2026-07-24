@@ -8,9 +8,9 @@
 
 package sirius.biz.cluster;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
@@ -108,7 +108,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     @Override
     public void handleEvent(ObjectNode event) {
-        String messageType = event.path(MESSAGE_TYPE).asText(null);
+        String messageType = event.path(MESSAGE_TYPE).asString(null);
         if (Strings.areEqual(messageType, TYPE_PING)) {
             lastPing = LocalDateTime.now();
             interconnect.dispatch(getName(),
@@ -117,15 +117,15 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
                                       .put(MESSAGE_NAME, CallContext.getNodeName())
                                       .put(MESSAGE_ADDRESS, getLocalAddress()));
         } else if (Strings.areEqual(messageType, TYPE_PONG)) {
-            String address = event.path(MESSAGE_ADDRESS).asText(null);
+            String address = event.path(MESSAGE_ADDRESS).asString(null);
             if (!Strings.areEqual(address, getLocalAddress()) && Strings.isFilled(address)) {
-                String nodeName = event.path(MESSAGE_NAME).asText(null);
+                String nodeName = event.path(MESSAGE_NAME).asString(null);
                 if (!Strings.areEqual(members.put(nodeName, address), address)) {
                     Cluster.LOG.INFO("Discovered a new node: %s - %s", nodeName, address);
                 }
             }
         } else if (Strings.areEqual(messageType, TYPE_KILL)) {
-            members.remove(event.path(MESSAGE_NAME).asText(null));
+            members.remove(event.path(MESSAGE_NAME).asString(null));
         }
     }
 

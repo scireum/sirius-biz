@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.db.redis.Redis;
 import sirius.db.redis.Subscriber;
 import sirius.kernel.commons.Explain;
@@ -96,7 +96,7 @@ public class Interconnect implements Subscriber {
     }
 
     private void dispatchLocally(ObjectNode event) {
-        String type = event.path(HANDLER).asText();
+        String type = event.path(HANDLER).asString("");
         if (Strings.isEmpty(type)) {
             throw new IllegalArgumentException("handler must not be empty!");
         }

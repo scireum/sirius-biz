@@ -8,10 +8,10 @@
 
 package sirius.biz.codelists;
 
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.core.JsonPointer;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
@@ -623,9 +623,9 @@ public abstract class LookupTable {
             if (translations.isObject()) {
                 return translations.properties()
                                    .stream()
-                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
+                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asString("")));
             } else {
-                return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, translations.asText());
+                return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, translations.asString(""));
             }
         }).orElseGet(() -> {
             return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, "");
@@ -668,15 +668,15 @@ public abstract class LookupTable {
         JsonNode jsonNode = optionalJsonNode.get();
         if (jsonNode.isArray()) {
             return transformArrayToStringList((ArrayNode) jsonNode);
-        } else if (jsonNode.isTextual() && Strings.isFilled(jsonNode.asText())) {
-            return Collections.singletonList(jsonNode.asText(null));
+        } else if (jsonNode.isString() && Strings.isFilled(jsonNode.asString(""))) {
+            return Collections.singletonList(jsonNode.asString(null));
         } else {
             return Collections.emptyList();
         }
     }
 
     private static List<String> transformArrayToStringList(ArrayNode array) {
-        return array.valueStream().map(JsonNode::asText).filter(Strings::isFilled).toList();
+        return array.valueStream().map(jsonNode -> jsonNode.asString("")).filter(Strings::isFilled).toList();
     }
 
     /**
@@ -697,8 +697,8 @@ public abstract class LookupTable {
         if (jsonNode.isObject()) {
             return jsonNode.properties()
                            .stream()
-                           .filter(entry -> Strings.isFilled(entry.getValue().asText()))
-                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asText()));
+                           .filter(entry -> Strings.isFilled(entry.getValue().asString("")))
+                           .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asString("")));
         } else {
             return Collections.emptyMap();
         }

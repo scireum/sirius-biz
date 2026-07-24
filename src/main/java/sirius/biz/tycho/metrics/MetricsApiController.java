@@ -8,7 +8,7 @@
 
 package sirius.biz.tycho.metrics;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Json;
 import sirius.kernel.di.std.Part;
@@ -59,7 +59,7 @@ public class MetricsApiController extends BizController {
 
     private void fetchMetric(ObjectNode obj, JSONStructuredOutput output) {
         // For now, there are only "KeyMetrics" which may be lazy-loaded, but we might add some more in the future...
-        if ("KeyMetric".equals(obj.path("type").asText())) {
+        if ("KeyMetric".equals(obj.path("type").asString(""))) {
             fetchKeyMetric(obj, output);
         } else {
             output.beginObject("task").endObject();
@@ -68,9 +68,9 @@ public class MetricsApiController extends BizController {
 
     private void fetchKeyMetric(ObjectNode obj, JSONStructuredOutput output) {
         try {
-            KeyMetric metric = keyMetrics.resolveKeyMetric(obj.path("provider").asText(null),
-                                                           obj.path("target").asText(null),
-                                                           obj.path("metric").asText(null));
+            KeyMetric metric = keyMetrics.resolveKeyMetric(obj.path("provider").asString(null),
+                                                           obj.path("target").asString(null),
+                                                           obj.path("metric").asString(null));
             metric.writeJson(output);
         } catch (Exception exception) {
             Exceptions.handle()

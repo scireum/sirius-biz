@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.batch;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.BasicJobFactory;
 import sirius.biz.jobs.Jobs;
@@ -38,8 +38,8 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
 
     @Override
     public void executeWork(ObjectNode context) throws Exception {
-        String factoryId = context.path(BatchProcessJobFactory.CONTEXT_JOB_FACTORY).asText(null);
-        String processId = context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asText(null);
+        String factoryId = context.path(BatchProcessJobFactory.CONTEXT_JOB_FACTORY).asString(null);
+        String processId = context.path(BatchProcessJobFactory.CONTEXT_PROCESS).asString(null);
 
         setupTaskContext(factoryId);
 

@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import redis.clients.jedis.params.SetParams;
 import sirius.biz.cluster.work.DistributedQueueInfo;
 import sirius.biz.cluster.work.DistributedTasks;
@@ -119,16 +119,16 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
     @Override
     public void handleEvent(ObjectNode event) {
-        String name = event.path(MESSAGE_NAME).asText(null);
+        String name = event.path(MESSAGE_NAME).asString(null);
         boolean enabled = event.path(MESSAGE_ENABLED).asBoolean();
-        String messageType = event.path(MESSAGE_TYPE).asText(null);
+        String messageType = event.path(MESSAGE_TYPE).asString(null);
         if (Strings.areEqual(messageType, TYPE_GLOBAL)) {
             globallyEnabledState.put(name, enabled);
             return;
         }
 
-        String messsageNode = event.path(MESSAGE_NODE).asText(null);
-        if (Strings.areEqual(messageType, TYPE_LOCAL) && Strings.areEqual(messsageNode, CallContext.getNodeName())) {
+        String messageNode = event.path(MESSAGE_NODE).asString(null);
+        if (Strings.areEqual(messageType, TYPE_LOCAL) && Strings.areEqual(messageNode, CallContext.getNodeName())) {
             if (enabled) {
                 localOverwrite.put(name, true);
             } else {
@@ -136,7 +136,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             }
         }
 
-        if (Strings.areEqual(messageType, TYPE_BLEED) && Strings.areEqual(messsageNode, CallContext.getNodeName())) {
+        if (Strings.areEqual(messageType, TYPE_BLEED) && Strings.areEqual(messageNode, CallContext.getNodeName())) {
             bleeding = enabled;
         }
     }
@@ -474,7 +474,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
     private BackgroundInfo parseBackgroundInfos(ObjectNode jsonObject) {
         if (jsonObject.path(InterconnectClusterManager.RESPONSE_ERROR).asBoolean()) {
-            return new BackgroundInfo(jsonObject.path(InterconnectClusterManager.RESPONSE_NODE_NAME).asText(null),
+            return new BackgroundInfo(jsonObject.path(InterconnectClusterManager.RESPONSE_NODE_NAME).asString(null),
                                       false,
                                       0,
                                       "-",
@@ -483,24 +483,24 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         }
 
         BackgroundInfo result =
-                new BackgroundInfo(jsonObject.path(InterconnectClusterManager.RESPONSE_NODE_NAME).asText(null),
+                new BackgroundInfo(jsonObject.path(InterconnectClusterManager.RESPONSE_NODE_NAME).asString(null),
                                    jsonObject.path(ClusterController.RESPONSE_BLEEDING).asBoolean(),
                                    jsonObject.path(ClusterController.RESPONSE_ACTIVE_BACKGROUND_TASKS).asInt(),
-                                   jsonObject.path(ClusterController.RESPONSE_UPTIME).asText(null),
-                                   jsonObject.path(ClusterController.RESPONSE_VERSION).asText(null),
-                                   jsonObject.path(ClusterController.RESPONSE_DETAILED_VERSION).asText(null));
+                                   jsonObject.path(ClusterController.RESPONSE_UPTIME).asString(null),
+                                   jsonObject.path(ClusterController.RESPONSE_VERSION).asString(null),
+                                   jsonObject.path(ClusterController.RESPONSE_DETAILED_VERSION).asString(null));
         Json.getArray(jsonObject, ClusterController.RESPONSE_JOBS).forEach(job -> {
             try {
-                String name = job.required(ClusterController.RESPONSE_NAME).asText();
+                String name = job.required(ClusterController.RESPONSE_NAME).asString("");
                 result.jobs.put(name,
                                 new BackgroundJobInfo(name,
-                                                      job.path(ClusterController.RESPONSE_DESCRIPTION).asText(null),
+                                                      job.path(ClusterController.RESPONSE_DESCRIPTION).asString(null),
                                                       SynchronizeType.valueOf(job.path(ClusterController.RESPONSE_LOCAL)
-                                                                                 .asText(null)),
+                                                                                 .asString(null)),
                                                       job.path(ClusterController.RESPONSE_LOCAL_OVERWRITE).asBoolean(),
                                                       job.path(ClusterController.RESPONSE_GLOBALLY_ENABLED).asBoolean(),
                                                       job.path(ClusterController.RESPONSE_EXECUTION_INFO)
-                                                         .asText(null)));
+                                                         .asString(null)));
             } catch (Exception exception) {
                 Exceptions.handle(Cluster.LOG, exception);
             }

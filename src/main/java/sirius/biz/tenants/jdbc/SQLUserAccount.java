@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants.jdbc;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.codelists.LookupValue;
 import sirius.biz.protocol.JournalData;
@@ -29,6 +28,7 @@ import sirius.kernel.di.std.Framework;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.web.controller.Message;
+import tools.jackson.core.JacksonException;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -117,7 +117,7 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
                .where(SQLUserAccount.ID, id)
                .executeUpdate();
             TenantUserManager.flushCacheForUserAccount(this);
-        } catch (SQLException | JsonProcessingException exception) {
+        } catch (SQLException | JacksonException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
                             .error(exception)
@@ -129,8 +129,7 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
         }
     }
 
-    private String computeUpdatedPreferences(Map<String, Object> preferences, String key, Object value)
-            throws JsonProcessingException {
+    private String computeUpdatedPreferences(Map<String, Object> preferences, String key, Object value) {
         if (Strings.isEmpty(value)) {
             preferences.remove(key);
         } else {

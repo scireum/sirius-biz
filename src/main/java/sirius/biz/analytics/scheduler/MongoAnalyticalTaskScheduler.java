@@ -8,7 +8,7 @@
 
 package sirius.biz.analytics.scheduler;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.commons.Explain;

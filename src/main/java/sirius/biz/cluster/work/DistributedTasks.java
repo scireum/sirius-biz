@@ -8,7 +8,7 @@
 
 package sirius.biz.cluster.work;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.NeighborhoodWatch;
 import sirius.db.redis.Redis;
 import sirius.kernel.Sirius;
@@ -160,7 +160,7 @@ public class DistributedTasks implements MetricProvider {
         protected void execute() {
             try {
                 DistributedTaskExecutor exec =
-                        ctx.getPart(task.required(KEY_EXECUTOR).asText(), DistributedTaskExecutor.class);
+                        ctx.getPart(task.required(KEY_EXECUTOR).asString(""), DistributedTaskExecutor.class);
                 tryExecute(exec);
             } catch (Exception exception) {
                 Exceptions.handle()
@@ -184,7 +184,7 @@ public class DistributedTasks implements MetricProvider {
                                   Json.write(task))
                           .handle();
             } finally {
-                releasePenaltyToken(queue.getName(), task.path(KEY_PENALTY_TOKEN).asText(null));
+                releasePenaltyToken(queue.getName(), task.path(KEY_PENALTY_TOKEN).asString(null));
                 releaseConcurrencyToken(queue.getConcurrencyToken());
             }
         }

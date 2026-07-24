@@ -8,9 +8,9 @@
 
 package sirius.biz.cluster;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import redis.clients.jedis.params.SetParams;
 import sirius.db.redis.Redis;
 import sirius.kernel.commons.Json;
@@ -72,9 +72,9 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
                    .valueStream()
                    .filter(JsonNode::isObject)
                    .map(ObjectNode.class::cast)
-                   .map(object -> new Message(Value.of(object.path(FIELD_TYPE).asText(null))
+                   .map(object -> new Message(Value.of(object.path(FIELD_TYPE).asString(null))
                                                    .getEnum(MessageLevel.class)
-                                                   .orElse(MessageLevel.INFO), object.path(FIELD_HTML).asText(null)))
+                                                   .orElse(MessageLevel.INFO), object.path(FIELD_HTML).asString(null)))
                    .toList();
     }
 
