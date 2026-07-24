@@ -127,8 +127,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             return;
         }
 
-        String messsageNode = event.path(MESSAGE_NODE).asString(null);
-        if (Strings.areEqual(messageType, TYPE_LOCAL) && Strings.areEqual(messsageNode, CallContext.getNodeName())) {
+        String messageNode = event.path(MESSAGE_NODE).asString(null);
+        if (Strings.areEqual(messageType, TYPE_LOCAL) && Strings.areEqual(messageNode, CallContext.getNodeName())) {
             if (enabled) {
                 localOverwrite.put(name, true);
             } else {
@@ -136,7 +136,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             }
         }
 
-        if (Strings.areEqual(messageType, TYPE_BLEED) && Strings.areEqual(messsageNode, CallContext.getNodeName())) {
+        if (Strings.areEqual(messageType, TYPE_BLEED) && Strings.areEqual(messageNode, CallContext.getNodeName())) {
             bleeding = enabled;
         }
     }
