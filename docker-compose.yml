@@ -12,13 +12,13 @@ services:
     hostname: redis-jupiter
 
   mongo:
-    image: mongo:8.0.10
+    image: mongo:8.3.7
     ports:
       - "27017"
     hostname: mongo
 
   mariadb:
-    image: mariadb:11.8.3-noble
+    image: mariadb:11.8.8-noble
     ports:
       - "3306"
     environment:
