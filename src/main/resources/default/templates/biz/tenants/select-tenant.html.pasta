@@ -33,6 +33,7 @@
                   tenants="tenants"
                   paginationBaseUrl="@('/tenants/select')"
                   cardBaseUrl="@('/tenants/select')"
-                  enableCardActions="false"/>
+                  enableCardActions="false"
+                  cardLinkViaPost="true"/>
     </t:sidebar>
 </t:page>
