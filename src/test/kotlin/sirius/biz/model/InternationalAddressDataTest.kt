@@ -69,6 +69,7 @@ class InternationalAddressDataTest {
             address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart", country = "de").isAnyFieldEmpty
         }
         assertTrue { address(zip = "70000", city = "Stuttgart", country = "de").isAnyFieldEmpty }
+        assertTrue { address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart").isAnyFieldEmpty }
     }
 
     @Test
@@ -150,22 +151,27 @@ class InternationalAddressDataTest {
     }
 
     @Test
-    fun `equals is reflexive`() {
-        // Note: equals() currently compares the country LookupValue by reference (Strings.areEqual falls back
-        // to Objects.equals and LookupValue has no equals/hashCode), so two value-identical instances are NOT
-        // considered equal - even though hashCode() is value based. See SIRI-1258. Hence, only reflexivity is
-        // asserted here.
+    fun `equals is true for equal addresses including the country`() {
         val one = address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart", country = "de")
-        assertEquals(one, one)
+        val other = address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart", country = "de")
+        assertEquals(one, other)
+        assertEquals(one.hashCode(), other.hashCode())
     }
 
     @Test
-    fun `hashCode is based on the field values including the country`() {
-        // Note: unlike equals(), hashCode() is value based (uses country.getValue()), so two value-identical
-        // instances share a hash code. See SIRI-1258 for the resulting equals/hashCode inconsistency.
-        val one = address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart", country = "de")
-        val other = address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart", country = "de")
-        assertEquals(one.hashCode(), other.hashCode())
+    fun `areAllFieldsEmpty is true only for a completely empty address`() {
+        assertTrue { address().areAllFieldsEmpty() }
+        assertFalse { address(country = "de").areAllFieldsEmpty() }
+        assertFalse { address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart").areAllFieldsEmpty() }
+    }
+
+    @Test
+    fun `isPartiallyFilled reflects a partially filled address`() {
+        assertFalse { address().isPartiallyFilled }
+        assertFalse {
+            address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart", country = "de").isPartiallyFilled
+        }
+        assertTrue { address(country = "de").isPartiallyFilled }
     }
 
     @Test

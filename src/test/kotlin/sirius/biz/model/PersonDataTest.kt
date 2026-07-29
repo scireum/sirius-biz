@@ -162,12 +162,11 @@ class PersonDataTest {
     }
 
     @Test
-    fun `equals is reflexive`() {
-        // Note: equals() currently compares the salutation LookupValue by reference (Strings.areEqual falls back
-        // to Objects.equals and LookupValue has no equals/hashCode), so two value-identical instances are NOT
-        // considered equal. See SIRI-1258. Hence, only reflexivity can be asserted here.
+    fun `equals is true for equal person data`() {
         val one = person(title = "Prof.", salutation = "SIR", firstname = "Skip", lastname = "Baker")
-        assertEquals(one, one)
+        val other = person(title = "Prof.", salutation = "SIR", firstname = "Skip", lastname = "Baker")
+        assertEquals(one, other)
+        assertEquals(one.hashCode(), other.hashCode())
     }
 
     @Test
