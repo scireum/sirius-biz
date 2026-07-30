@@ -739,7 +739,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         if ("main".equals(accountId)) {
             if (!isCurrentlySpying(webContext)) {
-                webContext.respondWith().redirectTemporarily(redirectTarget);
+                webContext.respondWith().redirectToGet(redirectTarget);
                 return;
             }
 
@@ -753,7 +753,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
             webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                        null);
-            webContext.respondWith().redirectTemporarily(redirectTarget);
+            webContext.respondWith().redirectToGet(redirectTarget);
             return;
         }
 
@@ -775,7 +775,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                    effectiveUser.getUniqueName());
-        webContext.respondWith().redirectTemporarily(redirectTarget);
+        webContext.respondWith().redirectToGet(redirectTarget);
     }
 
     private Optional<U> resolveSelectableUser(WebContext webContext, String accountId) {

@@ -2,6 +2,7 @@
 <i:arg type="String" name="paginationBaseUrl"/>
 <i:arg type="String" name="cardBaseUrl"/>
 <i:arg type="String" name="cardActionsType"/>
+<i:arg type="boolean" name="cardLinkViaPost" default="false"/>
 
 <t:emptyCheck data="@accounts">
     <t:datacards>
@@ -10,7 +11,8 @@
                     subTitle="@account.getUserAccountData().getLogin().getUsername()"
                     headerLeft="true"
                     headerLeftAlignmentClass="align-items-stretch text-break break-word"
-                    link="@apply('%s/%s', cardBaseUrl , account.getIdAsString())">
+                    link="@apply('%s/%s', cardBaseUrl , account.getIdAsString())"
+                    sendPostRequest="@cardLinkViaPost">
                 <i:block name="header">
                     <div class="ps-3 pe-1 align-self-center">
                         <div class="d-flex flex-column align-items-center justify-content-center"

@@ -442,7 +442,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
 
         if (isSwitchToMain) {
             switchBackToMainTenant(webContext);
-            webContext.respondWith().redirectTemporarily(redirectTarget);
+            webContext.respondWith().redirectToGet(redirectTarget);
             return;
         }
 
@@ -461,12 +461,12 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
         if (Strings.areEqual(getUser().getTenantId(), tenantId)) {
             // The tenant of the current user we are spying is the same as the one we want to switch to,
             // so we simply navigate to the target URL.
-            webContext.respondWith().redirectTemporarily(redirectTarget);
+            webContext.respondWith().redirectToGet(redirectTarget);
             return;
         }
 
         switchToTenant(webContext, effectiveTenant);
-        webContext.respondWith().redirectTemporarily(redirectTarget);
+        webContext.respondWith().redirectToGet(redirectTarget);
     }
 
     private void switchBackToMainTenant(WebContext webContext) {

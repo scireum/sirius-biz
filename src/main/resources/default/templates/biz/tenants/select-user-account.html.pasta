@@ -31,6 +31,7 @@
                   accounts="users"
                   paginationBaseUrl="@('/user-accounts/select')"
                   cardBaseUrl="@('/user-accounts/select')"
-                  cardActionsType="select"/>
+                  cardActionsType="select"
+                  cardLinkViaPost="true"/>
     </t:sidebar>
 </t:page>
