@@ -75,12 +75,12 @@ public class InternationalAddressData extends AddressData {
 
     @Override
     public boolean areAllFieldsEmpty() {
-        return super.areAllFieldsEmpty() && Strings.isEmpty(country);
+        return super.areAllFieldsEmpty() && Strings.isEmpty(country.getValue());
     }
 
     @Override
     public boolean isAnyFieldEmpty() {
-        return super.isAnyFieldEmpty() || Strings.isEmpty(country);
+        return super.isAnyFieldEmpty() || Strings.isEmpty(country.getValue());
     }
 
     @Override
@@ -203,7 +203,7 @@ public class InternationalAddressData extends AddressData {
             return false;
         }
 
-        return Strings.areEqual(country, ((InternationalAddressData) obj).country);
+        return Strings.areEqual(country.getValue(), ((InternationalAddressData) obj).country.getValue());
     }
 
     @Override

@@ -231,15 +231,14 @@ public class PersonData extends Composite {
         }
 
         return Strings.areEqual(title, ((PersonData) obj).title)
-               && Strings.areEqual(salutation,
-                                   ((PersonData) obj).salutation)
+               && Strings.areEqual(salutation.getValue(), ((PersonData) obj).salutation.getValue())
                && Strings.areEqual(firstname, ((PersonData) obj).firstname)
                && Strings.areEqual(lastname, ((PersonData) obj).lastname);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(title, salutation, firstname, lastname);
+        return Objects.hash(title, salutation.getValue(), firstname, lastname);
     }
 
     /**
