@@ -28,14 +28,6 @@ import kotlin.test.assertTrue
 @ExtendWith(SiriusExtension::class)
 class AddressDataTest {
 
-    private fun address(street: String? = null, zip: String? = null, city: String? = null): AddressData {
-        return AddressData().apply {
-            this.street = street
-            this.zip = zip
-            this.city = city
-        }
-    }
-
     @Test
     fun `toString combines all filled parts`() {
         assertEquals(
@@ -89,7 +81,11 @@ class AddressDataTest {
 
     @Test
     fun `verifyFullAddress rejects an incomplete address`() {
-        assertFailsWith<HandledException> { address(street = "Museumstraße 1", city = "Stuttgart").verifyFullAddress(null) }
+        assertFailsWith<HandledException> {
+            address(street = "Museumstraße 1", city = "Stuttgart").verifyFullAddress(
+                null
+            )
+        }
         assertFailsWith<HandledException> { address().verifyFullAddress(null) }
     }
 
@@ -171,5 +167,13 @@ class AddressDataTest {
         assertEquals("Museumstraße 1", addressData.street)
         assertEquals("70000", addressData.zip)
         assertEquals("Stuttgart", addressData.city)
+    }
+
+    private fun address(street: String? = null, zip: String? = null, city: String? = null): AddressData {
+        return AddressData().apply {
+            this.street = street
+            this.zip = zip
+            this.city = city
+        }
     }
 }

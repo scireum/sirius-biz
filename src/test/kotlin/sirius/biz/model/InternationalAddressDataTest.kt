@@ -39,20 +39,6 @@ class InternationalAddressDataTest {
         CallContext.getCurrent().setLanguage("de")
     }
 
-    private fun address(
-        street: String? = null,
-        zip: String? = null,
-        city: String? = null,
-        country: String? = null
-    ): InternationalAddressData {
-        return InternationalAddressData().apply {
-            this.street = street
-            this.zip = zip
-            this.city = city
-            country?.let { this.country.value = it }
-        }
-    }
-
     @Test
     fun `the default constructor uses the active countries lookup table`() {
         assertEquals(Countries.LOOKUP_TABLE_ACTIVE_COUNTRIES, InternationalAddressData().country.tableName)
@@ -197,5 +183,19 @@ class InternationalAddressDataTest {
         val one = address(street = "Museumstraße 1", zip = "70000", city = "Stuttgart", country = "de")
         assertFalse { one.equals(null) }
         assertFalse { one.equals("Museumstraße 1 70000 Stuttgart") }
+    }
+
+    private fun address(
+        street: String? = null,
+        zip: String? = null,
+        city: String? = null,
+        country: String? = null
+    ): InternationalAddressData {
+        return InternationalAddressData().apply {
+            this.street = street
+            this.zip = zip
+            this.city = city
+            country?.let { this.country.value = it }
+        }
     }
 }

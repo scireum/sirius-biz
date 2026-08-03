@@ -37,20 +37,6 @@ class PersonDataTest {
         CallContext.getCurrent().setLanguage("de")
     }
 
-    private fun person(
-        title: String? = null,
-        salutation: String? = null,
-        firstname: String? = null,
-        lastname: String? = null
-    ): PersonData {
-        return PersonData().apply {
-            this.title = title
-            this.firstname = firstname
-            this.lastname = lastname
-            salutation?.let { this.salutation.value = it }
-        }
-    }
-
     @Test
     fun `getShortName combines firstname and lastname`() {
         assertEquals("Skip Baker", person(firstname = "Skip", lastname = "Baker").shortName)
@@ -190,5 +176,19 @@ class PersonDataTest {
         assertEquals("Skip", personData.firstname)
         assertEquals("Baker", personData.lastname)
         assertEquals("SIR", personData.salutation.value)
+    }
+
+    private fun person(
+        title: String? = null,
+        salutation: String? = null,
+        firstname: String? = null,
+        lastname: String? = null
+    ): PersonData {
+        return PersonData().apply {
+            this.title = title
+            this.firstname = firstname
+            this.lastname = lastname
+            salutation?.let { this.salutation.value = it }
+        }
     }
 }
