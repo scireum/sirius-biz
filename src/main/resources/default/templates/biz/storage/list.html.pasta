@@ -470,9 +470,8 @@
         }
 
         <t:permission permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR">
-            // Lists all options which only have an effect if a variant is being converted...
-            const BLOB_URL_VARIANT_ONLY_OPTIONS = ["#blob-url-suppress-cache",
-                                                   "#blob-url-delay-resolve",
+            // Lists all options which only have an effect if a non-raw variant is being converted...
+            const BLOB_URL_VARIANT_ONLY_OPTIONS = ["#blob-url-delay-resolve",
                                                    "#blob-url-wait-longer"];
 
             function showBlobUrlInfo(_resultInfo, message, isError) {
