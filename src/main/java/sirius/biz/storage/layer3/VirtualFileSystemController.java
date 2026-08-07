@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Provides a web based UI for the {@link VirtualFileSystem}.
+ * Provides a web-based UI for the {@link VirtualFileSystem}.
  */
 @Register
 public class VirtualFileSystemController extends BizController {
@@ -57,7 +57,7 @@ public class VirtualFileSystemController extends BizController {
     /**
      * Names the variant which uses the {@link sirius.biz.storage.layer2.variants.IdentityConverter}.
      * <p>
-     * This variant exists to test the conversion framework and simply yields the unmodified contents. Therefore
+     * This variant exists to test the conversion framework and simply yields the unmodified contents. Therefore,
      * it isn't offered when generating URLs.
      */
     private static final String VARIANT_IDENTITY = "identity";
@@ -166,7 +166,7 @@ public class VirtualFileSystemController extends BizController {
      *
      * @param webContext  the request to handle
      * @param output      the JSON response
-     * @param inputStream the contents to process
+     * @param inputStream the file to process
      * @throws Exception in case of an error
      */
     @LoginRequired
@@ -475,7 +475,7 @@ public class VirtualFileSystemController extends BizController {
     /**
      * Generates a delivery URL for the {@link Blob} behind the given file.
      * <p>
-     * This is a diagnostic tool for administrators which permits to build a URL using the various options
+     * This is a diagnostic tool for administrators which permits building a URL using the various options
      * of the {@link URLBuilder}.
      *
      * @param webContext the request to handle
@@ -557,7 +557,7 @@ public class VirtualFileSystemController extends BizController {
     /**
      * Provides a JSON API which lists the contents of a given directory.
      * <p>
-     * This is used by the selectVFSFile or selectVFSDirectory JavaScript calls/modals.
+     * This is used by selectVFSFile or selectVFSDirectory JavaScript calls/modals.
      *
      * @param webContext the request to handle
      * @param output     the JSON response to populate
