@@ -29,6 +29,7 @@ import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -37,15 +38,15 @@ import java.util.stream.Collectors;
 /**
  * Responsible for generating {@link BlobVariant variants} of a given blob.
  * <p>
- * Each blob can have any number of variants (e.g. resized JPG images of a given raw or EPS file). Each variant has
- * a distinctive name. This name is used to lookup the appropriate conversion pipeline by inspecting the system
+ * Each blob can have any number of variants (e.g., resized JPG images of a given raw or EPS file). Each variant has
+ * a distinctive name. This name is used to look up the appropriate conversion pipeline by inspecting the system
  * config section {@link #CONFIG_KEY_VARIANTS}.
  * <p>
  * These settings will be used and passed on to the selected {@link Converter}. Note that the converter isn't
  * specified directly, but another config section in {@link #CONFIG_KEY_CONVERTERS} is used to determine the effective
  * implementation (addressing the appropriate {@link ConverterFactory} along with default settings).
  * <p>
- * Using this approach we can provide some standard converters and standard variants which can be fully customized
+ * Using this approach, we can provide some standard converters and standard variants which can be fully customized
  * in applications by either overwriting the variants or the converters.
  */
 @Register(classes = ConversionEngine.class)
@@ -75,11 +76,11 @@ public class ConversionEngine {
     private Tenants<?, ?, ?> tenants;
 
     /**
-     * When delivering files (e.g. preview images to be shown in the browser), we normally don't bother to look up the
+     * When delivering files (e.g., preview images to be shown in the browser), we normally don't bother to look up the
      * original filename of the image (as this would require a DB lookup). However, we need to generate a name with
      * the appropriate file extension so that the <tt>Content-Type</tt> is set up properly.
      * <p>
-     * Therefore we keep a map which stores the effective file extension per variant as this is both, frequently used
+     * Therefore, we keep a map which stores the effective file extension per variant as this is both, frequently used
      * and constant over the lifetime of the system.
      */
     private Map<String, String> fileExtensionPerVariant;
@@ -127,6 +128,18 @@ public class ConversionEngine {
             initializeFileExtensions();
         }
         return fileExtensionPerVariant.containsKey(variant);
+    }
+
+    /**
+     * Lists the names of all known (configured) variants.
+     *
+     * @return a sorted list containing the name of each configured variant
+     */
+    public List<String> getKnownVariants() {
+        if (fileExtensionPerVariant == null) {
+            initializeFileExtensions();
+        }
+        return fileExtensionPerVariant.keySet().stream().sorted().toList();
     }
 
     /**
@@ -216,7 +229,7 @@ public class ConversionEngine {
             result.success();
         } catch (Exception exception) {
             recordErrorInStandbyProcess(conversionProcess, exception);
-            // Already logged as standby process log entry. Fail the promise without additional log to the system protocol.
+            // Already logged as standby process log entry. Fail the promise without additional logging to the system protocol.
             result.doNotLogErrors();
             result.fail(exception);
         }

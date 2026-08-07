@@ -10,6 +10,9 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.storage.layer2.URLBuilder;
+import sirius.biz.storage.layer2.variants.ConversionEngine;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tycho.QuickAction;
 import sirius.biz.tycho.UserAssistant;
 import sirius.biz.web.BizController;
@@ -36,6 +39,7 @@ import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.util.LinkBuilder;
 
+import javax.annotation.Nonnull;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,12 +47,20 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Provides a web based UI for the {@link VirtualFileSystem}.
+ * Provides a web-based UI for the {@link VirtualFileSystem}.
  */
 @Register
 public class VirtualFileSystemController extends BizController {
 
     private static final String PARENT_DIR = "..";
+
+    /**
+     * Names the variant which uses the {@link sirius.biz.storage.layer2.variants.IdentityConverter}.
+     * <p>
+     * This variant exists to test the conversion framework and simply yields the unmodified contents. Therefore,
+     * it isn't offered when generating URLs.
+     */
+    private static final String VARIANT_IDENTITY = "identity";
 
     /**
      * Permissions required to view files.
@@ -57,6 +69,9 @@ public class VirtualFileSystemController extends BizController {
 
     @Part
     private VirtualFileSystem vfs;
+
+    @Part
+    private ConversionEngine conversionEngine;
 
     @PriorityParts(FileQuickActionProvider.class)
     private List<FileQuickActionProvider> quickActionProviders;
@@ -108,6 +123,7 @@ public class VirtualFileSystemController extends BizController {
         return quickActionList;
     }
 
+    @Nonnull
     private VirtualFile resolveToExistingFile(String path) {
         VirtualFile file = vfs.resolve(path);
         if (!file.exists()) {
@@ -121,7 +137,7 @@ public class VirtualFileSystemController extends BizController {
                 file = file.parent();
             }
 
-            if (!file.exists()) {
+            if (file == null || !file.exists()) {
                 file = vfs.root();
             }
         }
@@ -151,7 +167,7 @@ public class VirtualFileSystemController extends BizController {
      *
      * @param webContext  the request to handle
      * @param output      the JSON response
-     * @param inputStream the contents to process
+     * @param inputStream the file to process
      * @throws Exception in case of an error
      */
     @LoginRequired
@@ -303,11 +319,11 @@ public class VirtualFileSystemController extends BizController {
     @Routed("/fs/createDirectory")
     @Permission(PERMISSION_VIEW_FILES)
     public void createDirectory(WebContext webContext) {
-        VirtualFile parent = Optional.ofNullable(vfs.resolve(webContext.get("parent").asString()))
+        VirtualFile parent = Optional.of(vfs.resolve(webContext.get("parent").asString()))
                                      .filter(VirtualFile::exists)
                                      .filter(VirtualFile::isDirectory)
                                      .orElse(null);
-        if (webContext.isPostRequest()) {
+        if (parent != null && webContext.isPostRequest()) {
             try {
                 String name = webContext.get("name").asString();
                 if (Strings.isEmpty(name)) {
@@ -442,9 +458,107 @@ public class VirtualFileSystemController extends BizController {
     }
 
     /**
+     * Lists all variants which are known to the {@link ConversionEngine} and worth selecting.
+     * <p>
+     * This is used to populate the variant selection of the "generate URL" modal. Note that the
+     * {@link #VARIANT_IDENTITY identity variant} is skipped, as it delivers the unmodified contents just like
+     * {@link URLBuilder#VARIANT_RAW}.
+     *
+     * @return a sorted list of all selectable variant names
+     */
+    public List<String> getKnownVariants() {
+        return conversionEngine.getKnownVariants()
+                               .stream()
+                               .filter(variant -> !VARIANT_IDENTITY.equals(variant))
+                               .toList();
+    }
+
+    /**
+     * Generates a delivery URL for the {@link Blob} behind the given file.
+     * <p>
+     * This is a diagnostic tool for administrators which permits building a URL using the various options
+     * of the {@link URLBuilder}.
+     *
+     * @param webContext the request to handle
+     * @param output     the JSON response to populate
+     */
+    @LoginRequired
+    @Routed("/fs/blobUrl")
+    @InternalService
+    @Permission(PERMISSION_VIEW_FILES)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    public void blobUrl(WebContext webContext, JSONStructuredOutput output) {
+        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        file.assertExistingFile();
+
+        Blob blob = file.tryAs(Blob.class)
+                        .orElseThrow(() -> Exceptions.createHandled()
+                                                     .withNLSKey("VFSController.notABlob")
+                                                     .set("file", file.path())
+                                                     .handle());
+
+        URLBuilder.UrlResult urlResult = createUrlBuilder(webContext, blob).buildUrlResult();
+        output.property("url", makeUrlAbsolute(webContext, urlResult.url()));
+        output.property("urlType", urlResult.urlType().name());
+    }
+
+    /**
+     * Prefixes the base URL of the current request if the generated URL is relative.
+     * <p>
+     * If neither the storage space nor the request specify a base URL, the {@link URLBuilder} emits a URL which
+     * starts with a slash. As such a URL cannot be handed out to others, we complete it using the base URL under
+     * which the system is currently accessed.
+     *
+     * @param webContext the request to fetch the base URL from
+     * @param url        the URL which has been generated
+     * @return the absolute URL or an empty string if no URL was generated at all
+     */
+    private String makeUrlAbsolute(WebContext webContext, String url) {
+        if (Strings.isEmpty(url)) {
+            return "";
+        }
+        if (url.startsWith("/")) {
+            return webContext.getBaseURL() + url;
+        }
+
+        return url;
+    }
+
+    private URLBuilder createUrlBuilder(WebContext webContext, Blob blob) {
+        URLBuilder urlBuilder = blob.url();
+
+        urlBuilder.withVariant(webContext.get("variant").asString(URLBuilder.VARIANT_RAW));
+
+        if (webContext.get("largeFile").asBoolean()) {
+            urlBuilder.markAsLargeFile();
+        }
+        if (webContext.get("delayResolve").asBoolean()) {
+            urlBuilder.delayResolve();
+        }
+        if (webContext.get("eternallyValid").asBoolean()) {
+            urlBuilder.eternallyValid();
+        }
+        if (webContext.get("download").asBoolean()) {
+            urlBuilder.asDownload();
+        }
+        if (webContext.get("suppressCache").asBoolean()) {
+            urlBuilder.suppressCaching();
+        }
+        if (webContext.get("waitLonger").asBoolean()) {
+            urlBuilder.waitLonger();
+        }
+
+        webContext.get("fileName").ifFilled(value -> urlBuilder.withFileName(value.asString()));
+        webContext.get("baseUrl").ifFilled(value -> urlBuilder.withBaseURL(value.asString()));
+        webContext.get("addonText").ifFilled(value -> urlBuilder.withAddonText(value.asString()));
+
+        return urlBuilder;
+    }
+
+    /**
      * Provides a JSON API which lists the contents of a given directory.
      * <p>
-     * This is used by the selectVFSFile or selectVFSDirectory JavaScript calls/modals.
+     * This is used by selectVFSFile or selectVFSDirectory JavaScript calls/modals.
      *
      * @param webContext the request to handle
      * @param output     the JSON response to populate

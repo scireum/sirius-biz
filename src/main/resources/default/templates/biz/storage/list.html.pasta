@@ -192,6 +192,11 @@
                                                                         icon="fa-solid fa-copy"
                                                                         adminOnly="true"
                                                                         labelKey="VFSController.copyBlobKey"/>
+                                                                <t:dropdownItem
+                                                                        url="@apply('javascript:generateBlobUrl(\'%s\')', child.path().replace('\'', '\\\''))"
+                                                                        icon="fa-solid fa-link"
+                                                                        adminOnly="true"
+                                                                        labelKey="VFSController.generateUrl"/>
                                                             </i:else>
                                                         </i:if>
                                                     </i:if>
@@ -279,6 +284,74 @@
             <p>@i18n("template.html.confirmText")</p>
         </fieldset>
     </t:modal>
+    <t:permission permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR">
+        <t:modal class="modal-lg" name="blob-url-modal" titleKey="VFSController.generateUrl" cancelKey="NLS.close">
+            <fieldset>
+                <input type="hidden" id="blob-url-path"/>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="blob-url-variant">@i18n("URLBuilder.variant")</label>
+                            <i:local name="rawVariant" value="@sirius.biz.storage.layer2.URLBuilder.VARIANT_RAW"/>
+                            <select id="blob-url-variant" class="form-select">
+                                <option value="@rawVariant">@rawVariant</option>
+                                <i:for type="String" var="variant" items="controller.getKnownVariants()">
+                                    <option value="@variant">@variant</option>
+                                </i:for>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <t:textfield id="blob-url-file-name" name="blobUrlFileName" value=""
+                                     labelKey="URLBuilder.fileName" helpKey="URLBuilder.fileName.help"/>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <t:textfield id="blob-url-base-url" name="blobUrlBaseUrl" value=""
+                                     labelKey="URLBuilder.baseUrl" helpKey="URLBuilder.baseUrl.help"/>
+                    </div>
+                    <div class="col-md-6">
+                        <t:textfield id="blob-url-addon-text" name="blobUrlAddonText" value=""
+                                     labelKey="URLBuilder.addonText" helpKey="URLBuilder.addonText.help"/>
+                    </div>
+                </div>
+                <div class="row">
+                    <t:checkbox class="col-md-6" id="blob-url-download" name="blobUrlDownload" value="false"
+                                labelKey="URLBuilder.download" helpKey="URLBuilder.download.help"/>
+                    <t:checkbox class="col-md-6" id="blob-url-large-file" name="blobUrlLargeFile" value="false"
+                                labelKey="URLBuilder.largeFile" helpKey="URLBuilder.largeFile.help"/>
+                </div>
+                <div class="row">
+                    <t:checkbox class="col-md-6" id="blob-url-eternally-valid" name="blobUrlEternallyValid"
+                                value="false" labelKey="URLBuilder.eternallyValid"
+                                helpKey="URLBuilder.eternallyValid.help"/>
+                    <t:checkbox class="col-md-6" id="blob-url-suppress-cache" name="blobUrlSuppressCache" value="false"
+                                labelKey="URLBuilder.suppressCache" helpKey="URLBuilder.suppressCache.help"/>
+                </div>
+                <div class="row">
+                    <t:checkbox class="col-md-6" id="blob-url-delay-resolve" name="blobUrlDelayResolve" value="false"
+                                labelKey="URLBuilder.delayResolve" helpKey="URLBuilder.delayResolve.help"/>
+                    <t:checkbox class="col-md-6" id="blob-url-wait-longer" name="blobUrlWaitLonger" value="false"
+                                labelKey="URLBuilder.waitLonger" helpKey="URLBuilder.waitLonger.help"/>
+                </div>
+                <hr/>
+                <div class="form-group mb-0">
+                    <label class="form-label" for="blob-url-result">@i18n("URLBuilder.url")</label>
+                    <div class="input-group">
+                        <input type="text" id="blob-url-result" name="blobUrlResult" class="form-control" readonly/>
+                        <t:copyToClipboardAddon fieldName="blobUrlResult"/>
+                    </div>
+                    <small class="form-text text-muted" id="blob-url-result-info"></small>
+                </div>
+            </fieldset>
+            <i:block name="footer">
+                <button type="button" id="blob-url-generate-button" class="btn btn-primary">
+                    @i18n("VFSController.generate")
+                </button>
+            </i:block>
+        </t:modal>
+    </t:permission>
     <script type="text/javascript">
         function renameFile(path, name) {
             const _modalElement = document.getElementById("rename-modal");
@@ -395,6 +468,80 @@
             });
             _modalElement.modal.show();
         }
+
+        <t:permission permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR">
+            // Lists all options which only have an effect if a non-raw variant is being converted...
+            const BLOB_URL_VARIANT_ONLY_OPTIONS = ["#blob-url-delay-resolve",
+                                                   "#blob-url-wait-longer"];
+
+            function showBlobUrlInfo(_resultInfo, message, isError) {
+                _resultInfo.textContent = message;
+                _resultInfo.classList.toggle('text-danger', isError);
+                _resultInfo.classList.toggle('text-muted', !isError);
+            }
+
+            function updateBlobUrlVariantOnlyOptions() {
+                const _modalElement = document.getElementById("blob-url-modal");
+                const isRawVariant = _modalElement.querySelector("#blob-url-variant").value
+                    === '@sirius.biz.storage.layer2.URLBuilder.VARIANT_RAW';
+
+                BLOB_URL_VARIANT_ONLY_OPTIONS.forEach(function (selector) {
+                    const _checkbox = _modalElement.querySelector(selector);
+                    _checkbox.disabled = isRawVariant;
+                    if (isRawVariant) {
+                        _checkbox.checked = false;
+                    }
+                    _checkbox.closest('.form-group').classList.toggle('opacity-50', isRawVariant);
+                });
+            }
+
+            document.getElementById("blob-url-variant")
+                    .addEventListener('change', updateBlobUrlVariantOnlyOptions);
+
+            function generateBlobUrl(path) {
+                const _modalElement = document.getElementById("blob-url-modal");
+                if (!_modalElement.modal) {
+                    _modalElement.modal = new bootstrap.Modal(_modalElement);
+                }
+
+                _modalElement.querySelector("#blob-url-path").value = path;
+                _modalElement.querySelector("#blob-url-result").value = '';
+                showBlobUrlInfo(_modalElement.querySelector("#blob-url-result-info"), '', false);
+                updateBlobUrlVariantOnlyOptions();
+
+                _modalElement.modal.show();
+            }
+
+            document.getElementById("blob-url-generate-button").addEventListener('click', function () {
+                const _modalElement = document.getElementById("blob-url-modal");
+                const _result = _modalElement.querySelector("#blob-url-result");
+                const _resultInfo = _modalElement.querySelector("#blob-url-result-info");
+
+                sirius.getJSON('/fs/blobUrl', {
+                    path: _modalElement.querySelector("#blob-url-path").value,
+                    variant: _modalElement.querySelector("#blob-url-variant").value,
+                    fileName: _modalElement.querySelector("#blob-url-file-name").value,
+                    baseUrl: _modalElement.querySelector("#blob-url-base-url").value,
+                    addonText: _modalElement.querySelector("#blob-url-addon-text").value,
+                    delayResolve: _modalElement.querySelector("#blob-url-delay-resolve").checked,
+                    eternallyValid: _modalElement.querySelector("#blob-url-eternally-valid").checked,
+                    download: _modalElement.querySelector("#blob-url-download").checked,
+                    suppressCache: _modalElement.querySelector("#blob-url-suppress-cache").checked,
+                    largeFile: _modalElement.querySelector("#blob-url-large-file").checked,
+                    waitLonger: _modalElement.querySelector("#blob-url-wait-longer").checked
+                }).then(function (response) {
+                    _result.value = response.error ? '' : response.url;
+
+                    if (response.error) {
+                        showBlobUrlInfo(_resultInfo, response.message, true);
+                    } else if (response.url) {
+                        showBlobUrlInfo(_resultInfo, '___i18n("URLBuilder.urlType"): ' + response.urlType, false);
+                    } else {
+                        showBlobUrlInfo(_resultInfo, '___i18n("VFSController.noUrlGenerated")', true);
+                    }
+                });
+            });
+        </t:permission>
 
         function toggleBulkActionButtons() {
             const anyChecked = document.querySelectorAll('.select-table-row-checkbox-js:checked').length > 0;
