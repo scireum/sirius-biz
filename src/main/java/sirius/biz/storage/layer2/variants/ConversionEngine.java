@@ -29,6 +29,7 @@ import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -127,6 +128,18 @@ public class ConversionEngine {
             initializeFileExtensions();
         }
         return fileExtensionPerVariant.containsKey(variant);
+    }
+
+    /**
+     * Lists the names of all known (configured) variants.
+     *
+     * @return a sorted list containing the name of each configured variant
+     */
+    public List<String> getKnownVariants() {
+        if (fileExtensionPerVariant == null) {
+            initializeFileExtensions();
+        }
+        return fileExtensionPerVariant.keySet().stream().sorted().toList();
     }
 
     /**
