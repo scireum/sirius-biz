@@ -39,7 +39,7 @@ import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.util.LinkBuilder;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,6 +123,7 @@ public class VirtualFileSystemController extends BizController {
         return quickActionList;
     }
 
+    @Nonnull
     private VirtualFile resolveToExistingFile(String path) {
         VirtualFile file = vfs.resolve(path);
         if (!file.exists()) {
@@ -136,7 +137,7 @@ public class VirtualFileSystemController extends BizController {
                 file = file.parent();
             }
 
-            if (!file.exists()) {
+            if (file == null || !file.exists()) {
                 file = vfs.root();
             }
         }
@@ -318,11 +319,11 @@ public class VirtualFileSystemController extends BizController {
     @Routed("/fs/createDirectory")
     @Permission(PERMISSION_VIEW_FILES)
     public void createDirectory(WebContext webContext) {
-        VirtualFile parent = Optional.ofNullable(vfs.resolve(webContext.get("parent").asString()))
+        VirtualFile parent = Optional.of(vfs.resolve(webContext.get("parent").asString()))
                                      .filter(VirtualFile::exists)
                                      .filter(VirtualFile::isDirectory)
                                      .orElse(null);
-        if (webContext.isPostRequest()) {
+        if (parent != null && webContext.isPostRequest()) {
             try {
                 String name = webContext.get("name").asString();
                 if (Strings.isEmpty(name)) {
@@ -512,7 +513,7 @@ public class VirtualFileSystemController extends BizController {
      * @param url        the URL which has been generated
      * @return the absolute URL or an empty string if no URL was generated at all
      */
-    private String makeUrlAbsolute(WebContext webContext, @Nullable String url) {
+    private String makeUrlAbsolute(WebContext webContext, String url) {
         if (Strings.isEmpty(url)) {
             return "";
         }
