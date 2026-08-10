@@ -354,18 +354,18 @@
     </t:permission>
     <script type="text/javascript">
         function renameFile(path, name) {
-            const _modalElement = document.getElementById("rename-modal");
-            if (!_modalElement.modal) {
-                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            const _modal = document.getElementById("rename-modal");
+            if (!_modal.modal) {
+                _modal.modal = new bootstrap.Modal(_modal);
             }
 
-            _modalElement.querySelector("#rename-name").value = name;
-            _modalElement.querySelector("#rename-path").value = path;
+            _modal.querySelector("#rename-name").value = name;
+            _modal.querySelector("#rename-path").value = path;
 
-            _modalElement.addEventListener('shown.bs.modal', () => {
-                _modalElement.querySelector("#rename-name").focus();
+            _modal.addEventListener('shown.bs.modal', () => {
+                _modal.querySelector("#rename-name").focus();
             });
-            _modalElement.modal.show();
+            _modal.modal.show();
         }
 
         function moveFile(filePath) {
@@ -411,9 +411,9 @@
         });
 
         function deleteFiles(filePaths) {
-            const _modalElement = document.getElementById("delete-confirm-modal");
-            if (!_modalElement.modal) {
-                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            const _modal = document.getElementById("delete-confirm-modal");
+            if (!_modal.modal) {
+                _modal.modal = new bootstrap.Modal(_modal);
             }
 
             const _form = document.getElementById('delete-multiple-file-form');
@@ -425,13 +425,13 @@
                 _form.appendChild(input);
             });
 
-            _modalElement.addEventListener('shown.bs.modal', () => {
-                _modalElement.querySelector(".modal-footer .btn-primary").addEventListener('click', () => {
+            _modal.addEventListener('shown.bs.modal', () => {
+                _modal.querySelector(".modal-footer .btn-primary").addEventListener('click', () => {
                     _form.submit();
                 }, {once: true});
             });
 
-            _modalElement.modal.show();
+            _modal.modal.show();
         }
 
         document.getElementById("delete-selected-files-button").addEventListener('click', function (event) {
@@ -446,101 +446,101 @@
         }
 
         function createDirectory() {
-            const _modalElement = document.getElementById("create-directory-modal");
-            if (!_modalElement.modal) {
-                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            const _modal = document.getElementById("create-directory-modal");
+            if (!_modal.modal) {
+                _modal.modal = new bootstrap.Modal(_modal);
             }
 
-            _modalElement.addEventListener('shown.bs.modal', () => {
-                _modalElement.querySelector("#directory-name").focus();
+            _modal.addEventListener('shown.bs.modal', () => {
+                _modal.querySelector("#directory-name").focus();
             });
-            _modalElement.modal.show();
+            _modal.modal.show();
         }
 
         function createFile() {
-            const _modalElement = document.getElementById("create-file-modal");
-            if (!_modalElement.modal) {
-                _modalElement.modal = new bootstrap.Modal(_modalElement);
+            const _modal = document.getElementById("create-file-modal");
+            if (!_modal.modal) {
+                _modal.modal = new bootstrap.Modal(_modal);
             }
 
-            _modalElement.addEventListener('shown.bs.modal', () => {
-                _modalElement.querySelector("#select-file-modal-search-filter").focus();
+            _modal.addEventListener('shown.bs.modal', () => {
+                _modal.querySelector("#select-file-modal-search-filter").focus();
             });
-            _modalElement.modal.show();
+            _modal.modal.show();
         }
 
         <t:permission permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR">
             // Lists all options which only have an effect if a non-raw variant is being converted...
             const BLOB_URL_VARIANT_ONLY_OPTIONS = ["#blob-url-delay-resolve",
-                                                   "#blob-url-wait-longer"];
+            "#blob-url-wait-longer"];
 
             function showBlobUrlInfo(_resultInfo, message, isError) {
-                _resultInfo.textContent = message;
-                _resultInfo.classList.toggle('text-danger', isError);
-                _resultInfo.classList.toggle('text-muted', !isError);
-            }
+            _resultInfo.textContent = message;
+            _resultInfo.classList.toggle('text-danger', isError);
+            _resultInfo.classList.toggle('text-muted', !isError);
+        }
 
             function updateBlobUrlVariantOnlyOptions() {
-                const _modalElement = document.getElementById("blob-url-modal");
-                const isRawVariant = _modalElement.querySelector("#blob-url-variant").value
-                    === '@sirius.biz.storage.layer2.URLBuilder.VARIANT_RAW';
+            const _modal = document.getElementById("blob-url-modal");
+            const isRawVariant = _modal.querySelector("#blob-url-variant").value
+            === '@sirius.biz.storage.layer2.URLBuilder.VARIANT_RAW';
 
-                BLOB_URL_VARIANT_ONLY_OPTIONS.forEach(function (selector) {
-                    const _checkbox = _modalElement.querySelector(selector);
-                    _checkbox.disabled = isRawVariant;
-                    if (isRawVariant) {
-                        _checkbox.checked = false;
-                    }
-                    _checkbox.closest('.form-group').classList.toggle('opacity-50', isRawVariant);
-                });
-            }
+            BLOB_URL_VARIANT_ONLY_OPTIONS.forEach(function (selector) {
+            const _checkbox = _modal.querySelector(selector);
+            _checkbox.disabled = isRawVariant;
+            if (isRawVariant) {
+            _checkbox.checked = false;
+        }
+            _checkbox.closest('.form-group').classList.toggle('opacity-50', isRawVariant);
+        });
+        }
 
             document.getElementById("blob-url-variant")
-                    .addEventListener('change', updateBlobUrlVariantOnlyOptions);
+            .addEventListener('change', updateBlobUrlVariantOnlyOptions);
 
             function generateBlobUrl(path) {
-                const _modalElement = document.getElementById("blob-url-modal");
-                if (!_modalElement.modal) {
-                    _modalElement.modal = new bootstrap.Modal(_modalElement);
-                }
+            const _modal = document.getElementById("blob-url-modal");
+            if (!_modal.modal) {
+            _modal.modal = new bootstrap.Modal(_modal);
+        }
 
-                _modalElement.querySelector("#blob-url-path").value = path;
-                _modalElement.querySelector("#blob-url-result").value = '';
-                showBlobUrlInfo(_modalElement.querySelector("#blob-url-result-info"), '', false);
-                updateBlobUrlVariantOnlyOptions();
+            _modal.querySelector("#blob-url-path").value = path;
+            _modal.querySelector("#blob-url-result").value = '';
+            showBlobUrlInfo(_modal.querySelector("#blob-url-result-info"), '', false);
+            updateBlobUrlVariantOnlyOptions();
 
-                _modalElement.modal.show();
-            }
+            _modal.modal.show();
+        }
 
             document.getElementById("blob-url-generate-button").addEventListener('click', function () {
-                const _modalElement = document.getElementById("blob-url-modal");
-                const _result = _modalElement.querySelector("#blob-url-result");
-                const _resultInfo = _modalElement.querySelector("#blob-url-result-info");
+            const _modal = document.getElementById("blob-url-modal");
+            const _result = _modal.querySelector("#blob-url-result");
+            const _resultInfo = _modal.querySelector("#blob-url-result-info");
 
-                sirius.getJSON('/fs/blobUrl', {
-                    path: _modalElement.querySelector("#blob-url-path").value,
-                    variant: _modalElement.querySelector("#blob-url-variant").value,
-                    fileName: _modalElement.querySelector("#blob-url-file-name").value,
-                    baseUrl: _modalElement.querySelector("#blob-url-base-url").value,
-                    addonText: _modalElement.querySelector("#blob-url-addon-text").value,
-                    delayResolve: _modalElement.querySelector("#blob-url-delay-resolve").checked,
-                    eternallyValid: _modalElement.querySelector("#blob-url-eternally-valid").checked,
-                    download: _modalElement.querySelector("#blob-url-download").checked,
-                    suppressCache: _modalElement.querySelector("#blob-url-suppress-cache").checked,
-                    largeFile: _modalElement.querySelector("#blob-url-large-file").checked,
-                    waitLonger: _modalElement.querySelector("#blob-url-wait-longer").checked
-                }).then(function (response) {
-                    _result.value = response.error ? '' : response.url;
+            sirius.getJSON('/fs/blobUrl', {
+            path: _modal.querySelector("#blob-url-path").value,
+            variant: _modal.querySelector("#blob-url-variant").value,
+            fileName: _modal.querySelector("#blob-url-file-name").value,
+            baseUrl: _modal.querySelector("#blob-url-base-url").value,
+            addonText: _modal.querySelector("#blob-url-addon-text").value,
+            delayResolve: _modal.querySelector("#blob-url-delay-resolve").checked,
+            eternallyValid: _modal.querySelector("#blob-url-eternally-valid").checked,
+            download: _modal.querySelector("#blob-url-download").checked,
+            suppressCache: _modal.querySelector("#blob-url-suppress-cache").checked,
+            largeFile: _modal.querySelector("#blob-url-large-file").checked,
+            waitLonger: _modal.querySelector("#blob-url-wait-longer").checked
+        }).then(function (response) {
+            _result.value = response.error ? '' : response.url;
 
-                    if (response.error) {
-                        showBlobUrlInfo(_resultInfo, response.message, true);
-                    } else if (response.url) {
-                        showBlobUrlInfo(_resultInfo, '___i18n("URLBuilder.urlType"): ' + response.urlType, false);
-                    } else {
-                        showBlobUrlInfo(_resultInfo, '___i18n("VFSController.noUrlGenerated")', true);
-                    }
-                });
-            });
+            if (response.error) {
+            showBlobUrlInfo(_resultInfo, response.message, true);
+        } else if (response.url) {
+            showBlobUrlInfo(_resultInfo, '___i18n("URLBuilder.urlType"): ' + response.urlType, false);
+        } else {
+            showBlobUrlInfo(_resultInfo, '___i18n("VFSController.noUrlGenerated")', true);
+        }
+        });
+        });
         </t:permission>
 
         function toggleBulkActionButtons() {
