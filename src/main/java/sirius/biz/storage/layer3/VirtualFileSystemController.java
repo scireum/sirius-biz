@@ -467,10 +467,7 @@ public class VirtualFileSystemController extends BizController {
      * @return a sorted list of all selectable variant names
      */
     public List<String> getKnownVariants() {
-        return conversionEngine.getKnownVariants()
-                               .stream()
-                               .filter(variant -> !VARIANT_IDENTITY.equals(variant))
-                               .toList();
+        return conversionEngine.getKnownVariants().filter(variant -> !VARIANT_IDENTITY.equals(variant)).toList();
     }
 
     /**

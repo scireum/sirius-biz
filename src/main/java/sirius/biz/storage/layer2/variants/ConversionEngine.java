@@ -29,11 +29,11 @@ import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Responsible for generating {@link BlobVariant variants} of a given blob.
@@ -133,13 +133,13 @@ public class ConversionEngine {
     /**
      * Lists the names of all known (configured) variants.
      *
-     * @return a sorted list containing the name of each configured variant
+     * @return a sorted stream containing the name of each configured variant
      */
-    public List<String> getKnownVariants() {
+    public Stream<String> getKnownVariants() {
         if (fileExtensionPerVariant == null) {
             initializeFileExtensions();
         }
-        return fileExtensionPerVariant.keySet().stream().sorted().toList();
+        return fileExtensionPerVariant.keySet().stream().sorted();
     }
 
     /**
