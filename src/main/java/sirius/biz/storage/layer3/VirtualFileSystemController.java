@@ -484,7 +484,7 @@ public class VirtualFileSystemController extends BizController {
     @InternalService
     @Permission(PERMISSION_VIEW_FILES)
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    public void blobUrl(WebContext webContext, JSONStructuredOutput output) {
+    public void generateBlobUrl(WebContext webContext, JSONStructuredOutput output) {
         VirtualFile file = vfs.resolve(webContext.get("path").asString());
         file.assertExistingFile();
 
@@ -497,59 +497,6 @@ public class VirtualFileSystemController extends BizController {
         URLBuilder.UrlResult urlResult = createUrlBuilder(webContext, blob).buildUrlResult();
         output.property("url", makeUrlAbsolute(webContext, urlResult.url()));
         output.property("urlType", urlResult.urlType().name());
-    }
-
-    /**
-     * Prefixes the base URL of the current request if the generated URL is relative.
-     * <p>
-     * If neither the storage space nor the request specify a base URL, the {@link URLBuilder} emits a URL which
-     * starts with a slash. As such a URL cannot be handed out to others, we complete it using the base URL under
-     * which the system is currently accessed.
-     *
-     * @param webContext the request to fetch the base URL from
-     * @param url        the URL which has been generated
-     * @return the absolute URL or an empty string if no URL was generated at all
-     */
-    private String makeUrlAbsolute(WebContext webContext, String url) {
-        if (Strings.isEmpty(url)) {
-            return "";
-        }
-        if (url.startsWith("/")) {
-            return webContext.getBaseURL() + url;
-        }
-
-        return url;
-    }
-
-    private URLBuilder createUrlBuilder(WebContext webContext, Blob blob) {
-        URLBuilder urlBuilder = blob.url();
-
-        urlBuilder.withVariant(webContext.get("variant").asString(URLBuilder.VARIANT_RAW));
-
-        if (webContext.get("largeFile").asBoolean()) {
-            urlBuilder.markAsLargeFile();
-        }
-        if (webContext.get("delayResolve").asBoolean()) {
-            urlBuilder.delayResolve();
-        }
-        if (webContext.get("eternallyValid").asBoolean()) {
-            urlBuilder.eternallyValid();
-        }
-        if (webContext.get("download").asBoolean()) {
-            urlBuilder.asDownload();
-        }
-        if (webContext.get("suppressCache").asBoolean()) {
-            urlBuilder.suppressCaching();
-        }
-        if (webContext.get("waitLonger").asBoolean()) {
-            urlBuilder.waitLonger();
-        }
-
-        webContext.get("fileName").ifFilled(value -> urlBuilder.withFileName(value.asString()));
-        webContext.get("baseUrl").ifFilled(value -> urlBuilder.withBaseURL(value.asString()));
-        webContext.get("addonText").ifFilled(value -> urlBuilder.withAddonText(value.asString()));
-
-        return urlBuilder;
     }
 
     /**
@@ -643,5 +590,58 @@ public class VirtualFileSystemController extends BizController {
         } finally {
             output.endObject();
         }
+    }
+
+    /**
+     * Prefixes the base URL of the current request if the generated URL is relative.
+     * <p>
+     * If neither the storage space nor the request specify a base URL, the {@link URLBuilder} emits a URL which
+     * starts with a slash. As such a URL cannot be handed out to others, we complete it using the base URL under
+     * which the system is currently accessed.
+     *
+     * @param webContext the request to fetch the base URL from
+     * @param url        the URL which has been generated
+     * @return the absolute URL or an empty string if no URL was generated at all
+     */
+    private String makeUrlAbsolute(WebContext webContext, String url) {
+        if (Strings.isEmpty(url)) {
+            return "";
+        }
+        if (url.startsWith("/")) {
+            return webContext.getBaseURL() + url;
+        }
+
+        return url;
+    }
+
+    private URLBuilder createUrlBuilder(WebContext webContext, Blob blob) {
+        URLBuilder urlBuilder = blob.url();
+
+        urlBuilder.withVariant(webContext.get("variant").asString(URLBuilder.VARIANT_RAW));
+
+        if (webContext.get("largeFile").asBoolean()) {
+            urlBuilder.markAsLargeFile();
+        }
+        if (webContext.get("delayResolve").asBoolean()) {
+            urlBuilder.delayResolve();
+        }
+        if (webContext.get("eternallyValid").asBoolean()) {
+            urlBuilder.eternallyValid();
+        }
+        if (webContext.get("download").asBoolean()) {
+            urlBuilder.asDownload();
+        }
+        if (webContext.get("suppressCache").asBoolean()) {
+            urlBuilder.suppressCaching();
+        }
+        if (webContext.get("waitLonger").asBoolean()) {
+            urlBuilder.waitLonger();
+        }
+
+        webContext.get("fileName").ifFilled(value -> urlBuilder.withFileName(value.asString()));
+        webContext.get("baseUrl").ifFilled(value -> urlBuilder.withBaseURL(value.asString()));
+        webContext.get("addonText").ifFilled(value -> urlBuilder.withAddonText(value.asString()));
+
+        return urlBuilder;
     }
 }
