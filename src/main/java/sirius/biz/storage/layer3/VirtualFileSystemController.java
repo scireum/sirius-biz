@@ -490,8 +490,8 @@ public class VirtualFileSystemController extends BizController {
 
         Blob blob = file.tryAs(Blob.class)
                         .orElseThrow(() -> Exceptions.createHandled()
-                                                     .withNLSKey("VFSController.notABlob")
-                                                     .set("file", file.path())
+                                                     .withSystemErrorMessage("The file '%s' is not backed by a blob.",
+                                                                             file.path())
                                                      .handle());
 
         URLBuilder.UrlResult urlResult = createUrlBuilder(webContext, blob).buildUrlResult();

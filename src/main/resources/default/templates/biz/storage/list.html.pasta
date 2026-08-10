@@ -196,7 +196,7 @@
                                                                         url="@apply('javascript:generateBlobUrl(\'%s\')', child.path().replace('\'', '\\\''))"
                                                                         icon="fa-solid fa-link"
                                                                         adminOnly="true"
-                                                                        labelKey="VFSController.generateUrl"/>
+                                                                        label="Generate URL"/>
                                                             </i:else>
                                                         </i:if>
                                                     </i:if>
@@ -285,13 +285,13 @@
         </fieldset>
     </t:modal>
     <t:permission permission="@sirius.biz.tenants.TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR">
-        <t:modal class="modal-lg" name="blob-url-modal" titleKey="VFSController.generateUrl" cancelKey="NLS.close">
+        <t:modal class="modal-lg" name="blob-url-modal" title="Generate URL" cancelKey="NLS.close">
             <fieldset>
                 <input type="hidden" id="blob-url-path"/>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label class="form-label" for="blob-url-variant">@i18n("URLBuilder.variant")</label>
+                            <label class="form-label" for="blob-url-variant">Variant</label>
                             <i:local name="rawVariant" value="@sirius.biz.storage.layer2.URLBuilder.VARIANT_RAW"/>
                             <select id="blob-url-variant" class="form-select">
                                 <option value="@rawVariant">@rawVariant</option>
@@ -303,41 +303,49 @@
                     </div>
                     <div class="col-md-6">
                         <t:textfield id="blob-url-file-name" name="blobUrlFileName" value=""
-                                     labelKey="URLBuilder.fileName" helpKey="URLBuilder.fileName.help"/>
+                                     label="Filename"
+                                     help="Filename to send to the browser. If left empty, the name of the blob is used."/>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
                         <t:textfield id="blob-url-base-url" name="blobUrlBaseUrl" value=""
-                                     labelKey="URLBuilder.baseUrl" helpKey="URLBuilder.baseUrl.help"/>
+                                     label="Base URL"
+                                     help="Overwrites the base URL of the storage space. If left empty, the base URL of the storage space or, as a last resort, the base URL of this system is used."/>
                     </div>
                     <div class="col-md-6">
                         <t:textfield id="blob-url-addon-text" name="blobUrlAddonText" value=""
-                                     labelKey="URLBuilder.addonText" helpKey="URLBuilder.addonText.help"/>
+                                     label="Addon text"
+                                     help="Additional text which is embedded into the URL (e.g. for SEO) and ignored when delivering the file."/>
                     </div>
                 </div>
                 <div class="row">
                     <t:checkbox class="col-md-6" id="blob-url-download" name="blobUrlDownload" value="false"
-                                labelKey="URLBuilder.download" helpKey="URLBuilder.download.help"/>
+                                label="Deliver as download"
+                                help="Delivers the file as download (including its filename) instead of displaying it in the browser."/>
                     <t:checkbox class="col-md-6" id="blob-url-large-file" name="blobUrlLargeFile" value="false"
-                                labelKey="URLBuilder.largeFile" helpKey="URLBuilder.largeFile.help"/>
+                                label="Mark as large file"
+                                help="Adds the large file marker to the URL so that downstream caches can bypass the file."/>
                 </div>
                 <div class="row">
                     <t:checkbox class="col-md-6" id="blob-url-eternally-valid" name="blobUrlEternallyValid"
-                                value="false" labelKey="URLBuilder.eternallyValid"
-                                helpKey="URLBuilder.eternallyValid.help"/>
+                                value="false" label="Eternally valid"
+                                help="Generates a URL whose access token never expires."/>
                     <t:checkbox class="col-md-6" id="blob-url-suppress-cache" name="blobUrlSuppressCache" value="false"
-                                labelKey="URLBuilder.suppressCache" helpKey="URLBuilder.suppressCache.help"/>
+                                label="Suppress caching"
+                                help="Disables HTTP caching entirely. A virtual URL is always generated. Only relevant if a variant is selected."/>
                 </div>
                 <div class="row">
                     <t:checkbox class="col-md-6" id="blob-url-delay-resolve" name="blobUrlDelayResolve" value="false"
-                                labelKey="URLBuilder.delayResolve" helpKey="URLBuilder.delayResolve.help"/>
+                                label="Delay resolve"
+                                help="Generates a virtual URL instead of resolving the physical key. Only relevant if a variant is selected."/>
                     <t:checkbox class="col-md-6" id="blob-url-wait-longer" name="blobUrlWaitLonger" value="false"
-                                labelKey="URLBuilder.waitLonger" helpKey="URLBuilder.waitLonger.help"/>
+                                label="Wait longer for conversion"
+                                help="Marks virtual URLs so that the system waits longer for the conversion to complete. Only relevant if a variant is selected."/>
                 </div>
                 <hr/>
                 <div class="form-group mb-0">
-                    <label class="form-label" for="blob-url-result">@i18n("URLBuilder.url")</label>
+                    <label class="form-label" for="blob-url-result">URL</label>
                     <div class="input-group">
                         <input type="text" id="blob-url-result" name="blobUrlResult" class="form-control" readonly/>
                         <t:copyToClipboardAddon fieldName="blobUrlResult"/>
@@ -347,7 +355,7 @@
             </fieldset>
             <i:block name="footer">
                 <button type="button" id="blob-url-generate-button" class="btn btn-primary">
-                    @i18n("VFSController.generate")
+                    Generate
                 </button>
             </i:block>
         </t:modal>
@@ -535,9 +543,9 @@
             if (response.error) {
             showBlobUrlInfo(_resultInfo, response.message, true);
         } else if (response.url) {
-            showBlobUrlInfo(_resultInfo, '___i18n("URLBuilder.urlType"): ' + response.urlType, false);
+            showBlobUrlInfo(_resultInfo, 'URL type: ' + response.urlType, false);
         } else {
-            showBlobUrlInfo(_resultInfo, '___i18n("VFSController.noUrlGenerated")', true);
+            showBlobUrlInfo(_resultInfo, 'No URL could be generated. The file has no contents yet or the conversion of the selected variant failed.', true);
         }
         });
         });
