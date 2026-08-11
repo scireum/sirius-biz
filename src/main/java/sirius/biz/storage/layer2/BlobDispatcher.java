@@ -17,6 +17,8 @@ import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.web.cors.AllowedOrigin;
+import sirius.web.cors.CorsAllowOriginResolver;
 import sirius.web.http.Response;
 import sirius.web.http.WebContext;
 import sirius.web.http.WebDispatcher;
@@ -122,6 +124,9 @@ public class BlobDispatcher implements WebDispatcher {
     @Part
     private GlobalContext globalContext;
 
+    @Part
+    private CorsAllowOriginResolver corsOriginResolver;
+
     @Override
     public int getPriority() {
         return 10;
@@ -135,11 +140,13 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         if (request.checkParameterReadability().isPresent()) {
+            allowCorsForAllOrigins(request);
             request.respondWith().status(HttpResponseStatus.BAD_REQUEST);
             return DispatchDecision.DONE;
         }
 
         if (request.getRequest().method() != HttpMethod.GET && request.getRequest().method() != HttpMethod.HEAD) {
+            allowCorsForAllOrigins(request);
             request.respondWith()
                    .addHeader(HttpHeaderNames.ALLOW, HttpMethod.GET.name() + ", " + HttpMethod.HEAD.name())
                    .status(HttpResponseStatus.METHOD_NOT_ALLOWED);
@@ -149,6 +156,7 @@ public class BlobDispatcher implements WebDispatcher {
         Optional<BlobUri> blobUri = BlobUriParser.parseBlobUri(uri);
 
         if (blobUri.isPresent()) {
+            allowCorsForAllOrigins(request);
             installCompletionHook(uri, request);
 
             if (blobUri.get().isPhysical()) {
@@ -161,6 +169,24 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         return DispatchDecision.CONTINUE;
+    }
+
+    /**
+     * Permits all origins to access the delivered blob via CORS.
+     * <p>
+     * As blobs are delivered via pre-signed URLs and never rely on cookies or any other credentials, a wildcard is
+     * used here - just like the {@link sirius.web.dispatch.AssetsDispatcher} does for static assets. Note that this
+     * only has an effect if {@code http.enableCors} is enabled for the scope of the request.
+     * <p>
+     * Note that this must only be invoked for requests which are actually handled by this dispatcher, as the origin
+     * can only be resolved once per request. Resolving it for a request which is passed on to the remaining
+     * dispatchers would suppress the (potentially more restrictive) origin determined by the
+     * {@link sirius.web.controller.ControllerDispatcher}.
+     *
+     * @param request the request to permit cross-origin access for
+     */
+    private void allowCorsForAllOrigins(WebContext request) {
+        corsOriginResolver.tryResolveAndStoreOrigin(request, new AllowedOrigin.Wildcard());
     }
 
     private void installCompletionHook(String uri, WebContext request) {
