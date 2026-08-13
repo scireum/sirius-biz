@@ -78,4 +78,9 @@ public class InflateTransformer implements ByteBlockTransformer {
 
         return Optional.of(outputBuffer);
     }
+
+    @Override
+    public void close() {
+        inflater.end();
+    }
 }

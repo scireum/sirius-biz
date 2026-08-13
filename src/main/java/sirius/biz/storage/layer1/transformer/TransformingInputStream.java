@@ -77,4 +77,35 @@ public class TransformingInputStream extends InputStream {
         buffer.readBytes(b, off, bytesToRead);
         return bytesToRead;
     }
+
+    /**
+     * Closes the underlying stream and the transformer.
+     * <p>
+     * Note that the source stream is only closed by {@link #read(byte[], int, int)} once it has been read completely.
+     * Therefore this has to happen here as well, as a stream might be abandoned before reaching its end.
+     * <p>
+     * The resources are listed in reverse order, as a try-with-resources closes them from last to first. This way the
+     * failure of the source stream remains the primary exception, while a failure of the transformer is reported as a
+     * suppressed exception instead of replacing it.
+     */
+    @Override
+    public void close() throws IOException {
+        InputStream streamToClose = sourceStream;
+        sourceStream = null;
+
+        try (transformer; streamToClose) {
+            releaseBuffer();
+        }
+    }
+
+    /**
+     * Releases the current buffer unless it has already been released by {@link #read(byte[], int, int)}.
+     */
+    private void releaseBuffer() {
+        if (buffer.refCnt() > 0) {
+            buffer.release();
+        }
+
+        buffer = Unpooled.EMPTY_BUFFER;
+    }
 }

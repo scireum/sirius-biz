@@ -17,9 +17,14 @@ import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
 import sirius.web.http.TestRequest
 import sirius.web.http.WebContext
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.Instant
+import java.util.Base64
+import java.util.Optional
 import java.util.UUID
+import java.util.zip.Inflater
+import java.util.zip.InflaterInputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -560,6 +565,49 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
             SamlUserHint.withUserExtractedFromEmailAddress("lalala@blobb", listOf("blubb", "bla")))
     }
 
+    @Test
+    fun `redirect binding request is deflated using raw deflate`() {
+        val request = saml.generateAuthenticationRequestForRedirectBinding("test-issuer", "3")
+
+        val xml = inflateRedirectBindingRequest(request)
+
+        assertTrue(xml.contains("<samlp:AuthnRequest"))
+        assertTrue(xml.contains("""AssertionConsumerServiceIndex="3""""))
+        assertTrue(xml.contains("<saml:Issuer>test-issuer</saml:Issuer>"))
+    }
+
+    @Test
+    fun `redirect binding request carries an optional user hint`() {
+        val request = saml.generateAuthenticationRequestForRedirectBinding(
+            "test-issuer",
+            "0",
+            Optional.of(SamlUserHint.withEmailAddress("jvo@scireum.de"))
+        )
+
+        val xml = inflateRedirectBindingRequest(request)
+
+        assertTrue(xml.contains("""<saml:NameID Format="${SamlUserHint.FORMAT_EMAIL}">jvo@scireum.de</saml:NameID>"""))
+    }
+
+    @Test
+    fun `redirect binding request is smaller than the post binding request`() {
+        val redirectBindingRequest = saml.generateAuthenticationRequestForRedirectBinding("test-issuer", "0")
+        val postBindingRequest = saml.generateAuthenticationRequestForPostBinding("test-issuer", "0")
+
+        assertTrue(redirectBindingRequest.length < postBindingRequest.length)
+    }
+
+    @Test
+    fun `repeatedly generating redirect binding requests yields independent results`() {
+        // Each invocation has to compress into its own self-contained stream. A deflater carried over from a previous
+        // invocation would produce output which no longer inflates on its own.
+        repeat(3) { index ->
+            val request = saml.generateAuthenticationRequestForRedirectBinding("test-issuer-$index", "0")
+
+            assertTrue(inflateRedirectBindingRequest(request).contains("<saml:Issuer>test-issuer-$index</saml:Issuer>"))
+        }
+    }
+
     private fun samlResponseWithConditions(
         issueInstant: Instant,
         notBefore: Instant?,
@@ -655,6 +703,20 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
         fun assertHint(expectedFormat: String, expectedValue: String, actual: SamlUserHint) {
             assertEquals(expectedFormat, actual.format)
             assertEquals(expectedValue, actual.value)
+        }
+
+        /**
+         * Decodes a request generated for the HTTP redirect binding, i.e. reverses the Base64 encoding and the raw
+         * deflate compression applied by [SamlHelper.generateAuthenticationRequestForRedirectBinding].
+         */
+        fun inflateRedirectBindingRequest(encodedRequest: String): String {
+            val compressedRequest = Base64.getDecoder().decode(encodedRequest)
+
+            Inflater(true /* raw deflate, just like the generated request */).use { inflater ->
+                InflaterInputStream(compressedRequest.inputStream(), inflater).use { inflaterInputStream ->
+                    return inflaterInputStream.readBytes().toString(StandardCharsets.UTF_8)
+                }
+            }
         }
 
         fun unsignedSamlResponse(assertionAttributes: String): String {
