@@ -193,20 +193,18 @@ public class SamlHelper {
                                                                   Optional<SamlUserHint> userHint) {
         byte[] request = createAuthenticationRequestXML(issuer, issuerIndex, userHint);
 
-        // TODO MIO-6449: Deflater is AutoClosable in Java >= 25
-        Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION,
-                                         true /* raw deflate, zlib header and checksum are not supported by SAML */);
-
         byte[] compressedRequest;
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        // Raw deflate is requested, as the zlib header and checksum are not supported by SAML. Note that the deflater
+        // is declared first so that it is closed last - DeflaterOutputStream.close() still operates on the deflater
+        // and must therefore not encounter an already ended one.
+        try (Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
+             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(byteArrayOutputStream, deflater)) {
             deflaterOutputStream.write(request);
             deflaterOutputStream.finish();
             compressedRequest = byteArrayOutputStream.toByteArray();
         } catch (IOException exception) {
             throw Exceptions.handle(exception);
-        } finally {
-            deflater.end();
         }
 
         return Base64.getEncoder().encodeToString(compressedRequest);
