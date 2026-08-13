@@ -60,6 +60,20 @@ public class CombinedTransformer implements ByteBlockTransformer {
         }
     }
 
+    /**
+     * Closes both transformers, even if closing one of them fails.
+     * <p>
+     * The transformers are listed in reverse order, as a try-with-resources closes its resources from last to first.
+     * This way the failure of the first transformer remains the primary exception, while a failure of the second one
+     * is reported as a suppressed exception instead of replacing it.
+     */
+    @Override
+    public void close() throws IOException {
+        try (second; first) {
+            // both transformers are closed by the try-with-resources itself
+        }
+    }
+
     protected Optional<ByteBuf> forwardToSecond(ByteBuf intermediateBuffer) {
         try {
             return second.apply(intermediateBuffer);

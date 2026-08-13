@@ -18,8 +18,11 @@ import java.util.Optional;
  * Transforms a given {@link ByteBuf} into another.
  * <p>
  * This can e.g. be used to encrypt or ZIP a chunk of data while transferring it.
+ * <p>
+ * A transformer might hold resources which have to be released once it is no longer used, therefore it has to be
+ * closed by whoever applies it. A {@link TransformingInputStream} closes the transformer it wraps.
  */
-public interface ByteBlockTransformer {
+public interface ByteBlockTransformer extends AutoCloseable {
 
     /**
      * Transforms the given input buffer.
@@ -38,4 +41,16 @@ public interface ByteBlockTransformer {
      * @throws IOException in case of an error while completing the transformation
      */
     Optional<ByteBuf> complete() throws IOException;
+
+    /**
+     * Releases all resources held by this transformer.
+     * <p>
+     * Transformers which don't hold any resources can rely on this default implementation, which does nothing.
+     *
+     * @throws IOException in case of an error while releasing the resources
+     */
+    @Override
+    default void close() throws IOException {
+        // nothing to release by default
+    }
 }
