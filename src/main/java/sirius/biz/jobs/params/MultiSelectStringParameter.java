@@ -1,8 +1,6 @@
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.CachingSupplier;
-import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
@@ -11,22 +9,14 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
- * Provides a multi select parameter from a list of key-value pairs.
+ * Provides a multi select parameter from a fixed list of key-value pairs.
  */
 public class MultiSelectStringParameter extends MultiSelectParameter<String, MultiSelectStringParameter> {
-
-    /**
-     * Defines the character used to delimit multiple values while encoded in a single string.
-     */
-    private static final String DELIMITER = "|";
 
     private final Map<String, String> entries = new LinkedHashMap<>();
 
@@ -100,17 +90,30 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
     /**
      * Enumerates all values provided by the parameter.
      *
-     * @return list of {@linkplain Tuple entries} with the key as first and display value as second tuple items.
+     * @return list of {@link MultiSelectValue entries} with the key as name and display value as label
      */
     @Override
     public List<MultiSelectValue> getValues(Map<String, String> context) {
-        return fetchEntriesMap().keySet().stream().map(entry -> {
-            String contextValue = context.get(getName());
-            boolean selected =
-                    contextValue != null && Arrays.asList(contextValue.split(Pattern.quote(DELIMITER))).contains(entry);
+        String contextValue = context.get(getName());
+        List<String> selectedValues =
+                contextValue == null ? List.of() : Arrays.asList(contextValue.split(Pattern.quote(DELIMITER)));
 
-            return new MultiSelectValue(entry, NLS.smartGet(fetchEntriesMap().get(entry)), selected);
-        }).toList();
+        return fetchEntriesMap().entrySet()
+                                .stream()
+                                .map(entry -> new MultiSelectValue(entry.getKey(),
+                                                                   NLS.smartGet(entry.getValue()),
+                                                                   selectedValues.contains(entry.getKey())))
+                                .toList();
+    }
+
+    @Override
+    protected String createValueName(String value) {
+        return value;
+    }
+
+    @Override
+    protected String createValueLabel(String value) {
+        return NLS.smartGet(fetchEntriesMap().getOrDefault(value, value));
     }
 
     @Override
@@ -118,19 +121,12 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
         if (input.isNull() && defaultValueProvider != null) {
             return String.join(DELIMITER, defaultValueProvider.get());
         }
-        if (!(input.get() instanceof List<?> list)) {
-            return checkAndTransformSingleValue(input);
-        }
 
-        String verifiedInput = list.stream()
-                                   .map(Value::of)
-                                   .map(this::checkAndTransformSingleValue)
-                                   .filter(Objects::nonNull)
-                                   .collect(Collectors.joining(DELIMITER));
-        return Strings.isFilled(verifiedInput) ? verifiedInput : null;
+        return super.checkAndTransformValue(input);
     }
 
-    private String checkAndTransformSingleValue(Value input) {
+    @Override
+    protected String checkAndTransformSingleValue(Value input) {
         String rawInput = input.asString().trim();
 
         // we can not allow the delimiter within values, as we obviously use it to separate values from each other
@@ -146,12 +142,7 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
     }
 
     @Override
-    protected Optional<List<String>> resolveFromString(@Nonnull Value input) {
-        return input.asOptionalString()
-                    .map(string -> Stream.of(string.split(Pattern.quote(DELIMITER)))
-                                         .map(Value::of)
-                                         .map(this::checkAndTransformSingleValue)
-                                         .filter(Objects::nonNull)
-                                         .toList());
+    protected Optional<String> resolveSingleValueFromString(@Nonnull Value input) {
+        return Optional.ofNullable(checkAndTransformSingleValue(input));
     }
 }

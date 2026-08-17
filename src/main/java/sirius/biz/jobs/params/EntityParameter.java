@@ -9,7 +9,6 @@
 package sirius.biz.jobs.params;
 
 import sirius.biz.tenants.Tenants;
-import sirius.biz.web.TenantAware;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.BaseEntity;
@@ -21,9 +20,7 @@ import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
-import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
@@ -55,10 +52,10 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     @Nullable
     protected static Tenants<?, ?, ?> tenants;
 
-    @Part
-    private static GlobalContext globalContext;
-
-    private EntityDescriptor descriptor;
+    protected final EntityParameterUtil<V> entityParameterUtil = new EntityParameterUtil<>(this::getType,
+                                                                                           this::getAutocompleter,
+                                                                                           this::getCustomAutocompleteUri,
+                                                                                           this::getLabel);
 
     /**
      * Creates a new parameter with the given name and label.
@@ -113,14 +110,8 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     protected Optional<? extends Autocompleter<V>> findAutocompleter() {
-        return Optional.ofNullable(getAutocompleter())
-                       .flatMap(type -> globalContext.getParts(Autocompleter.class)
-                                                     .stream()
-                                                     .filter(type::isInstance)
-                                                     .map(autocompleter -> (Autocompleter<V>) autocompleter)
-                                                     .findFirst());
+        return entityParameterUtil.findAutocompleter();
     }
 
     /**
@@ -129,9 +120,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the autocomplete URL used to provide suggestions for user input
      */
     public final String getAutocompleteUrl() {
-        return findAutocompleter().map(Autocompleter::getName)
-                                  .map(name -> "/jobs/parameter-autocomplete/" + name)
-                                  .orElseGet(this::getCustomAutocompleteUri);
+        return entityParameterUtil.getAutocompleteUrl();
     }
 
     /**
@@ -147,7 +136,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the mapper of the represented entity
      */
     protected BaseMapper<V, ?, ?> getMapper() {
-        return getDescriptor().getMapper();
+        return entityParameterUtil.getMapper();
     }
 
     /**
@@ -172,7 +161,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the label or textual representation to use for the given entity
      */
     protected String createLabel(V entity) {
-        return findAutocompleter().map(autocompleter -> autocompleter.toLabel(entity)).orElseGet(entity::toString);
+        return entityParameterUtil.createLabel(entity);
     }
 
     @Override
@@ -190,21 +179,13 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
 
     @Override
     protected Optional<V> resolveFromString(Value input) {
-        return getMapper().find(getType(), input.get());
+        return entityParameterUtil.findEntity(input);
     }
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        V entity = getMapper().find(getType(), input.get()).orElse(null);
-
+        V entity = entityParameterUtil.findEntityOrFail(input);
         if (entity == null) {
-            if (input.isFilled()) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("Parameter.invalidValue")
-                                .set("name", getLabel())
-                                .set("message", NLS.get("EntityParameter.mustExist"))
-                                .handle();
-            }
             return null;
         }
 
@@ -219,9 +200,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @param entity the entity to check
      */
     protected void assertAccess(V entity) {
-        if (entity instanceof TenantAware tenantAware) {
-            tenants.assertTenant(tenantAware);
-        }
+        entityParameterUtil.assertTenantAccess(entity);
     }
 
     /**
@@ -231,10 +210,6 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the entity descriptor for the parameter type
      */
     protected EntityDescriptor getDescriptor() {
-        if (descriptor == null) {
-            descriptor = mixing.getDescriptor(getType());
-        }
-
-        return descriptor;
+        return entityParameterUtil.getDescriptor();
     }
 }
