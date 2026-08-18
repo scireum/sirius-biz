@@ -8,7 +8,10 @@
 
 package sirius.biz.importer
 
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.tenants.Tenant
 import sirius.biz.tenants.TenantData
@@ -19,11 +22,10 @@ import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
 import java.time.Duration
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-
-private const val i1 = 200
 
 /**
  * Tests the [Importer] class.

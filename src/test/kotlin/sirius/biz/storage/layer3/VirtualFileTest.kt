@@ -16,7 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import java.net.URI
-import java.util.*
+import java.util.EnumSet
 import java.util.stream.Stream
 
 @ExtendWith(SiriusExtension::class)
