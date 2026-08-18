@@ -116,21 +116,31 @@ public class EntityParameterUtil<V extends BaseEntity<?>> {
      */
     @Nullable
     public String getAutocompleteUrl() {
-        Class<? extends Autocompleter<V>> autocompleterType = autocompleterSupplier.get();
-        if (autocompleterType != null) {
-            Optional<? extends Autocompleter<V>> autocompleter = findAutocompleter();
-            if (autocompleter.isPresent()) {
-                return "/jobs/parameter-autocomplete/" + autocompleter.get().getName();
-            }
-
-            // surface the misconfiguration instead of silently degrading into a select without suggestions
-            Exceptions.handle()
-                      .withSystemErrorMessage(
-                              "The autocompleter %s used by the job parameter '%s' is not registered as part!",
-                              autocompleterType.getName(),
-                              labelSupplier.get())
-                      .handle();
+        if (autocompleterSupplier.get() == null) {
+            return customAutocompleteUriSupplier.get();
         }
+
+        return findAutocompleter().map(Autocompleter::getName)
+                                  .map(name -> "/jobs/parameter-autocomplete/" + name)
+                                  .orElseGet(this::handleUnregisteredAutocompleter);
+    }
+
+    /**
+     * Reports a configured but unregistered {@link Autocompleter} and provides the fallback URI.
+     * <p>
+     * The misconfiguration is reported as incident instead of silently degrading into a select without
+     * suggestions.
+     *
+     * @return the custom autocomplete URI as fallback (which is most probably <tt>null</tt>)
+     */
+    @Nullable
+    private String handleUnregisteredAutocompleter() {
+        Exceptions.handle()
+                  .withSystemErrorMessage(
+                          "The autocompleter %s used by the job parameter '%s' is not registered as part!",
+                          autocompleterSupplier.get().getName(),
+                          labelSupplier.get())
+                  .handle();
 
         return customAutocompleteUriSupplier.get();
     }
