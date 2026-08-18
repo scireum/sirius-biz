@@ -15,7 +15,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Provides a multi select parameter from a list of key-value pairs.
+ * Provides a base class for parameters which permit to select multiple values.
+ * <p>
+ * The selectable options are either rendered as a fixed list (as enumerated by {@link #getValues(Map)}, see
+ * {@link MultiSelectStringParameter}) or suggested dynamically via an autocomplete URI (as provided by
+ * {@link #getSuggestionUri()}, see {@link MultiSelectEntityParameter}).
  * <p>
  * The selected values are encoded in a single string, delimited by {@link #DELIMITER}. Subclasses only need to
  * provide the handling of a single value via {@link #checkAndTransformSingleValue(Value)} and

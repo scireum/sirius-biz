@@ -49,11 +49,30 @@ public class EntityParameterUtil<V extends BaseEntity<?>> {
     @Part
     private static GlobalContext globalContext;
 
+    /**
+     * Provides the type of entities handled by the parameter.
+     */
     private final Supplier<Class<V>> typeSupplier;
+
+    /**
+     * Provides the {@link Autocompleter} type used to compute suggestions (may supply <tt>null</tt>).
+     */
     private final Supplier<Class<? extends Autocompleter<V>>> autocompleterSupplier;
+
+    /**
+     * Provides the custom autocomplete URI used if no {@link Autocompleter} is configured (may supply
+     * <tt>null</tt>).
+     */
     private final Supplier<String> customAutocompleteUriSupplier;
+
+    /**
+     * Provides the label of the parameter, used in error messages.
+     */
     private final Supplier<String> labelSupplier;
 
+    /**
+     * Caches the {@link EntityDescriptor} of the entity type as determined by {@link #getDescriptor()}.
+     */
     private EntityDescriptor descriptor;
 
     /**

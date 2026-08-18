@@ -52,6 +52,10 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     @Nullable
     protected static Tenants<?, ?, ?> tenants;
 
+    /**
+     * Provides the shared mechanics of entity based parameters (autocompleter resolution, descriptor and
+     * mapper access, entity lookups and tenant checks).
+     */
     protected final EntityParameterUtil<V> entityParameterUtil = new EntityParameterUtil<>(this::getType,
                                                                                            this::getAutocompleter,
                                                                                            this::getCustomAutocompleteUri,
