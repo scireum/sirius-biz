@@ -638,7 +638,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             return null;
         }
 
-        verifyLoginRateLimitNotReached(webContext);
+        verifyLoginRateLimitNotExceeded(webContext);
 
         UserInfo result = findUserByNameForPasswordLogin(webContext, user);
         if (result == null) {
@@ -697,13 +697,13 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         return null;
     }
 
-    private void verifyLoginRateLimitNotReached(@Nullable WebContext webContext) {
+    private void verifyLoginRateLimitNotExceeded(@Nullable WebContext webContext) {
         if (webContext == null) {
             return;
         }
 
         String ip = webContext.getRemoteIP().getHostAddress();
-        if (isenguard.checkRateLimitReached(ip, SECURITY_RATE_LIMIT_REALM)) {
+        if (isenguard.checkRateLimitExceeded(ip, SECURITY_RATE_LIMIT_REALM)) {
             throw isenguard.createException(SECURITY_RATE_LIMIT_REALM);
         }
     }
@@ -714,13 +714,13 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         String ip = webContext.getRemoteIP().getHostAddress();
-        boolean rateLimitReached = isenguard.registerCallAndCheckRateLimitReached(ip,
+        boolean rateLimitExceeded = isenguard.registerCallAndCheckRateLimitExceeded(ip,
                                                                                   SECURITY_RATE_LIMIT_REALM,
                                                                                   Isenguard.USE_LIMIT_FROM_CONFIG,
                                                                                   () -> RateLimitingInfo.fromWebContext(
                                                                                           webContext,
                                                                                           null));
-        if (rateLimitReached) {
+        if (rateLimitExceeded) {
             throw isenguard.createException(SECURITY_RATE_LIMIT_REALM);
         }
     }
