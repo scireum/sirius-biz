@@ -36,10 +36,10 @@ public abstract class MultiSelectEntityParameter<V extends BaseEntity<?>, P exte
      * Provides the shared mechanics of entity based parameters (autocompleter resolution, descriptor and
      * mapper access, entity lookups and tenant checks).
      */
-    protected final EntityParameterUtil<V> entityParameterUtil = new EntityParameterUtil<>(this::getType,
-                                                                                           this::getAutocompleter,
-                                                                                           this::getCustomAutocompleteUri,
-                                                                                           this::getLabel);
+    protected final EntityParameterProxy<V> entityParameterProxy = new EntityParameterProxy<>(this::getType,
+                                                                                              this::getAutocompleter,
+                                                                                              this::getCustomAutocompleteUri,
+                                                                                              this::getLabel);
 
     /**
      * Creates a new parameter with the given name and label.
@@ -63,7 +63,7 @@ public abstract class MultiSelectEntityParameter<V extends BaseEntity<?>, P exte
     @Override
     public String getLabel() {
         if (Strings.isEmpty(label)) {
-            return entityParameterUtil.getDescriptor().getPluralLabel();
+            return entityParameterProxy.getDescriptor().getPluralLabel();
         }
 
         return super.getLabel();
@@ -96,7 +96,7 @@ public abstract class MultiSelectEntityParameter<V extends BaseEntity<?>, P exte
 
     @Override
     public String getSuggestionUri() {
-        return Optional.ofNullable(entityParameterUtil.getAutocompleteUrl()).orElse("");
+        return Optional.ofNullable(entityParameterProxy.determineAutocompleteUrl()).orElse("");
     }
 
     /**
@@ -121,13 +121,13 @@ public abstract class MultiSelectEntityParameter<V extends BaseEntity<?>, P exte
 
     @Override
     protected String createValueLabel(V entity) {
-        return entityParameterUtil.createLabel(entity);
+        return entityParameterProxy.createLabel(entity);
     }
 
     @Nullable
     @Override
     protected String checkAndTransformSingleValue(Value input) {
-        V entity = entityParameterUtil.findEntityOrFail(input);
+        V entity = entityParameterProxy.findEntityOrFail(input);
         if (entity == null) {
             return null;
         }
@@ -138,7 +138,7 @@ public abstract class MultiSelectEntityParameter<V extends BaseEntity<?>, P exte
 
     @Override
     protected Optional<V> resolveSingleValueFromString(Value input) {
-        return entityParameterUtil.findEntity(input);
+        return entityParameterProxy.findEntity(input);
     }
 
     /**
@@ -147,6 +147,6 @@ public abstract class MultiSelectEntityParameter<V extends BaseEntity<?>, P exte
      * @param entity the entity to check
      */
     protected void assertAccess(V entity) {
-        entityParameterUtil.assertTenantAccess(entity);
+        entityParameterProxy.assertTenantAccess(entity);
     }
 }

@@ -37,7 +37,7 @@ import java.util.function.Supplier;
  *
  * @param <V> the type of entities handled by the parameter
  */
-public class EntityParameterUtil<V extends BaseEntity<?>> {
+public class EntityParameterProxy<V extends BaseEntity<?>> {
 
     @Part
     private static Mixing mixing;
@@ -83,10 +83,10 @@ public class EntityParameterUtil<V extends BaseEntity<?>> {
      * @param customAutocompleteUriSupplier provides the custom autocomplete URI to use (may supply <tt>null</tt>)
      * @param labelSupplier                 provides the label of the parameter (used in error messages)
      */
-    public EntityParameterUtil(Supplier<Class<V>> typeSupplier,
-                               Supplier<Class<? extends Autocompleter<V>>> autocompleterSupplier,
-                               Supplier<String> customAutocompleteUriSupplier,
-                               Supplier<String> labelSupplier) {
+    public EntityParameterProxy(Supplier<Class<V>> typeSupplier,
+                                Supplier<Class<? extends Autocompleter<V>>> autocompleterSupplier,
+                                Supplier<String> customAutocompleteUriSupplier,
+                                Supplier<String> labelSupplier) {
         this.typeSupplier = typeSupplier;
         this.autocompleterSupplier = autocompleterSupplier;
         this.customAutocompleteUriSupplier = customAutocompleteUriSupplier;
@@ -115,7 +115,7 @@ public class EntityParameterUtil<V extends BaseEntity<?>> {
      * {@link Autocompleter} nor a custom autocomplete URI is available
      */
     @Nullable
-    public String getAutocompleteUrl() {
+    public String determineAutocompleteUrl() {
         if (autocompleterSupplier.get() == null) {
             return customAutocompleteUriSupplier.get();
         }

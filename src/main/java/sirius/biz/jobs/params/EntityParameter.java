@@ -56,10 +56,10 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * Provides the shared mechanics of entity based parameters (autocompleter resolution, descriptor and
      * mapper access, entity lookups and tenant checks).
      */
-    protected final EntityParameterUtil<V> entityParameterUtil = new EntityParameterUtil<>(this::getType,
-                                                                                           this::getAutocompleter,
-                                                                                           this::getCustomAutocompleteUri,
-                                                                                           this::getLabel);
+    protected final EntityParameterProxy<V> entityParameterProxy = new EntityParameterProxy<>(this::getType,
+                                                                                              this::getAutocompleter,
+                                                                                              this::getCustomAutocompleteUri,
+                                                                                              this::getLabel);
 
     /**
      * Creates a new parameter with the given name and label.
@@ -115,7 +115,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     }
 
     protected Optional<? extends Autocompleter<V>> findAutocompleter() {
-        return entityParameterUtil.findAutocompleter();
+        return entityParameterProxy.findAutocompleter();
     }
 
     /**
@@ -124,7 +124,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the autocomplete URL used to provide suggestions for user input
      */
     public final String getAutocompleteUrl() {
-        return entityParameterUtil.getAutocompleteUrl();
+        return entityParameterProxy.determineAutocompleteUrl();
     }
 
     /**
@@ -140,7 +140,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the mapper of the represented entity
      */
     protected BaseMapper<V, ?, ?> getMapper() {
-        return entityParameterUtil.getMapper();
+        return entityParameterProxy.getMapper();
     }
 
     /**
@@ -165,7 +165,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the label or textual representation to use for the given entity
      */
     protected String createLabel(V entity) {
-        return entityParameterUtil.createLabel(entity);
+        return entityParameterProxy.createLabel(entity);
     }
 
     @Override
@@ -183,12 +183,12 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
 
     @Override
     protected Optional<V> resolveFromString(Value input) {
-        return entityParameterUtil.findEntity(input);
+        return entityParameterProxy.findEntity(input);
     }
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        V entity = entityParameterUtil.findEntityOrFail(input);
+        V entity = entityParameterProxy.findEntityOrFail(input);
         if (entity == null) {
             return null;
         }
@@ -204,7 +204,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @param entity the entity to check
      */
     protected void assertAccess(V entity) {
-        entityParameterUtil.assertTenantAccess(entity);
+        entityParameterProxy.assertTenantAccess(entity);
     }
 
     /**
@@ -214,6 +214,6 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      * @return the entity descriptor for the parameter type
      */
     protected EntityDescriptor getDescriptor() {
-        return entityParameterUtil.getDescriptor();
+        return entityParameterProxy.getDescriptor();
     }
 }
