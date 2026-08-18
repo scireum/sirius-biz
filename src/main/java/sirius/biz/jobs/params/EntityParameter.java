@@ -3,7 +3,7 @@
  * by scireum in Remshalden, Germany
  *
  * Copyright by scireum GmbH
- * http://www.scireum.de - info@scireum.de
+ * https://www.scireum.de - info@scireum.de
  */
 
 package sirius.biz.jobs.params;

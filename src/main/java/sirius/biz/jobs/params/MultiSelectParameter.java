@@ -1,3 +1,11 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * https://www.scireum.de - info@scireum.de
+ */
+
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.Json;
