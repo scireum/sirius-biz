@@ -51,9 +51,10 @@ class TenantUserManagerTest {
         assertNotNull(userManager.findUserByCredentials(webContext, "test", "test"))
         assertNull(userManager.findUserByCredentials(webContext, "test", "wrong-password-1"))
         assertNull(userManager.findUserByCredentials(webContext, "test", "wrong-password-2"))
+        assertNull(userManager.findUserByCredentials(webContext, "test", "wrong-password-3"))
 
         assertThrows<HandledException> {
-            userManager.findUserByCredentials(webContext, "test", "wrong-password-3")
+            userManager.findUserByCredentials(webContext, "test", "wrong-password-4")
         }
     }
 }

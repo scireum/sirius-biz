@@ -29,54 +29,63 @@ class IsenguardTest {
         val realm = "test"
 
         val counter = AtomicInteger()
-        isenguard.registerCallAndCheckRateLimitReached(
+        isenguard.registerCallAndCheckRateLimitExceeded(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
-        isenguard.registerCallAndCheckRateLimitReached(
+        isenguard.registerCallAndCheckRateLimitExceeded(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
-        isenguard.registerCallAndCheckRateLimitReached(
+        isenguard.registerCallAndCheckRateLimitExceeded(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
-        val thirdCheck = isenguard.checkRateLimitReached(scope, realm)
-        val fourth = isenguard.registerCallAndCheckRateLimitReached(
+        val thirdCheck = isenguard.checkRateLimitExceeded(scope, realm)
+        val fourth = isenguard.registerCallAndCheckRateLimitExceeded(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
-        val fourthCheck = isenguard.checkRateLimitReached(scope, realm)
-        val fifth = isenguard.registerCallAndCheckRateLimitReached(
+        val fourthCheck = isenguard.checkRateLimitExceeded(scope, realm)
+        val fifth = isenguard.registerCallAndCheckRateLimitExceeded(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
-        val fifthCheck = isenguard.checkRateLimitReached(scope, realm)
-        val sixth = isenguard.registerCallAndCheckRateLimitReached(
+        val fifthCheck = isenguard.checkRateLimitExceeded(scope, realm)
+        val sixth = isenguard.registerCallAndCheckRateLimitExceeded(
             scope,
             realm,
             Isenguard.USE_LIMIT_FROM_CONFIG,
             { counter.incrementAndGet() },
             { RateLimitingInfo(null, null, null) })
-        val sixthCheck = isenguard.checkRateLimitReached(scope, realm)
+        val sixthCheck = isenguard.checkRateLimitExceeded(scope, realm)
+        val seventh = isenguard.registerCallAndCheckRateLimitExceeded(
+            scope,
+            realm,
+            Isenguard.USE_LIMIT_FROM_CONFIG,
+            { counter.incrementAndGet() },
+            { RateLimitingInfo(null, null, null) })
+        val seventhCheck = isenguard.checkRateLimitExceeded(scope, realm)
 
         assertFalse { thirdCheck }
         assertFalse { fourth }
         assertFalse { fourthCheck }
-        assertTrue { fifth }
-        assertTrue { fifthCheck }
+        assertFalse { fifth }
+        assertFalse { fifthCheck }
         assertTrue { sixth }
         assertTrue { sixthCheck }
+        assertTrue { seventh }
+        assertTrue { seventhCheck }
         assertEquals(1, counter.get())
     }
 

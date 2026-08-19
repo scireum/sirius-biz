@@ -51,6 +51,25 @@ public interface Limiter extends Named {
     boolean registerCallAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce);
 
     /**
+     * Increases the call counter for the current interval and determines if the given limit was exceeded.
+     * <p>
+     * In contrast to {@link #registerCallAndCheckLimit(String, int, int, Runnable)}, a limit of {@code n} permits
+     * exactly {@code n} calls and only the {@code (n + 1)}-th call is reported as exceeded.
+     *
+     * @param key               the unique name of this counter which represents the scope, realm and check-interval
+     * @param intervalInSeconds the duration of this interval in seconds (used to remove outdated counters)
+     * @param limit             the limit i.e. the max number of permitted calls
+     * @param limitExceededOnce the handler to execute once if the limit for this interval is exceeded
+     * @return <tt>true</tt> if the limit was exceeded, <tt>false</tt> otherwise
+     */
+    default boolean registerCallAndCheckLimitExceeded(String key,
+                                                      int intervalInSeconds,
+                                                      int limit,
+                                                      Runnable limitExceededOnce) {
+        return registerCallAndCheckLimit(key, intervalInSeconds, limit + 1, limitExceededOnce);
+    }
+
+    /**
      * Reads the current call count for the given key.
      *
      * @param key the unique name of this counter which represents the scope, realm and check-interval

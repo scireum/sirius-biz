@@ -34,13 +34,13 @@ public class IsenguardFirewall implements Firewall {
     @Override
     public boolean handleRateLimiting(WebContext webContext, String realm) {
         String ip = webContext.getRemoteIP().getHostAddress();
-        boolean rateLimitReached = isenguard.registerCallAndCheckRateLimitReached(ip,
-                                                                                  realm,
-                                                                                  Isenguard.USE_LIMIT_FROM_CONFIG,
-                                                                                  () -> RateLimitingInfo.fromWebContext(
-                                                                                          webContext,
-                                                                                          null));
-        if (rateLimitReached) {
+        boolean rateLimitExceeded = isenguard.registerCallAndCheckRateLimitExceeded(ip,
+                                                                                    realm,
+                                                                                    Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                                                    () -> RateLimitingInfo.fromWebContext(
+                                                                                            webContext,
+                                                                                            null));
+        if (rateLimitExceeded) {
             webContext.respondWith().error(HttpResponseStatus.TOO_MANY_REQUESTS);
             return true;
         }

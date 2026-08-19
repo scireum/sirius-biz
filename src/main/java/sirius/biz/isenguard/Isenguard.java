@@ -41,6 +41,8 @@ import java.util.function.Supplier;
  * ({@code epochSeconds / intervalSeconds}). Therefore, windows are globally aligned to wall clock time and not
  * "sliding" per caller.
  * <p>
+ * A limit of {@code n} permits {@code n} calls within the interval; the {@code (n + 1)}-th call is rejected.
+ * <p>
  * Caveats:
  * <ul>
  *     <li>Boundary bursts are possible: calls right before and right after a bucket switch are counted in separate windows.</li>
@@ -65,8 +67,8 @@ public class Isenguard {
     /**
      * Signals that the limit as given in the system configuration should be used.
      * <p>
-     * This is used by {@link #registerCallAndCheckRateLimitReached(String, String, int, Supplier)} and
-     * {@link #registerCallAndCheckRateLimitReached(String, String, int, Runnable, Supplier)}.
+     * This is used by {@link #registerCallAndCheckRateLimitExceeded(String, String, int, Supplier)} and
+     * {@link #registerCallAndCheckRateLimitExceeded(String, String, int, Runnable, Supplier)}.
      */
     public static final int USE_LIMIT_FROM_CONFIG = 0;
 
@@ -166,28 +168,28 @@ public class Isenguard {
                                     String realm,
                                     int explicitLimit,
                                     Supplier<RateLimitingInfo> infoSupplier) {
-        if (registerCallAndCheckRateLimitReached(scope, realm, explicitLimit, infoSupplier)) {
+        if (registerCallAndCheckRateLimitExceeded(scope, realm, explicitLimit, infoSupplier)) {
             throw createException(realm, explicitLimit);
         }
     }
 
     /**
-     * Creates an exception which indicates that the rate limit for the given realm is reached.
+     * Creates an exception which indicates that the rate limit for the given realm is exceeded.
      *
      * @param realm the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
-     * @return an exception which indicates that the rate limit for the given realm is reached
+     * @return an exception which indicates that the rate limit for the given realm is exceeded
      */
     public HandledException createException(String realm) {
         return createException(realm, USE_LIMIT_FROM_CONFIG);
     }
 
     /**
-     * Creates an exception which indicates that the rate limit for the given realm is reached.
+     * Creates an exception which indicates that the rate limit for the given realm is exceeded.
      *
      * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit the explicit limit which overwrites the limit given in the config.
      *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
-     * @return an exception which indicates that the rate limit for the given realm is reached
+     * @return an exception which indicates that the rate limit for the given realm is exceeded
      */
     public HandledException createException(String realm, int explicitLimit) {
         Limit limit = fetchLimit(realm, explicitLimit);
@@ -201,9 +203,9 @@ public class Isenguard {
     }
 
     /**
-     * Registers an event and determines if the rate limit of the given realm for the given scope is reached.
+     * Registers an event and determines if the rate limit of the given realm for the given scope is exceeded.
      * <p>
-     * Note that invoking this method counts towards the limit. Use {@link #checkRateLimitReached(String, String, int)}
+     * Note that invoking this method counts towards the limit. Use {@link #checkRateLimitExceeded(String, String, int)}
      * if you only want to check the current state without counting the call.
      *
      * @param scope         the key which is used for grouping multiple events - e.g. the IP of the caller
@@ -211,38 +213,37 @@ public class Isenguard {
      * @param explicitLimit the explicit limit which overwrites the limit given in the config.
      *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
      * @param infoSupplier  a supplier which is invoked to provide additional incident data once the rate limit is first hit
-     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
-     * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is exceeded,
+     * <tt>false</tt> otherwise. Note, that once the limit was exceeded, an {@link AuditLog audit log entry} will be
      * created.
      */
-    public boolean registerCallAndCheckRateLimitReached(String scope,
+    public boolean registerCallAndCheckRateLimitExceeded(String scope,
                                                         String realm,
                                                         int explicitLimit,
                                                         Supplier<RateLimitingInfo> infoSupplier) {
-        return registerCallAndCheckRateLimitReached(scope, realm, explicitLimit, null, infoSupplier);
+        return registerCallAndCheckRateLimitExceeded(scope, realm, explicitLimit, null, infoSupplier);
     }
 
     /**
-     * Registers an event and determines if the rate limit of the given realm for the given scope is reached.
+     * Registers an event and determines if the rate limit of the given realm for the given scope is exceeded.
      * <p>
-     * Note that invoking this method counts towards the limit. Use {@link #checkRateLimitReached(String, String, int)}
+     * Note that invoking this method counts towards the limit. Use {@link #checkRateLimitExceeded(String, String, int)}
      * if you only want to check the current state without counting the call.
      *
      * @param scope            the key which is used for grouping multiple events - e.g. the IP of the caller
      * @param realm            the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit    the explicit limit which overwrites the limit given in the config.
      *                         Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
-     * @param limitReachedOnce specifies an action which is executed once the limit was reached, but then skipped for
+     * @param limitExceededOnce specifies an action which is executed once the limit was exceeded, but then skipped for
      *                         this scope, realm and check interval.
      * @param infoSupplier     a supplier which is invoked to provide additional incident data once the rate limit is first hit
-     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
-     * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is exceeded,
+     * <tt>false</tt> otherwise. Note, that once the limit was exceeded, an {@link AuditLog audit log entry} will be
      * created.
      */
-    public boolean registerCallAndCheckRateLimitReached(String scope,
+    public boolean registerCallAndCheckRateLimitExceeded(String scope,
                                                         String realm,
-                                                        int explicitLimit,
-                                                        Runnable limitReachedOnce,
+                                                        int explicitLimit, Runnable limitExceededOnce,
                                                         Supplier<RateLimitingInfo> infoSupplier) {
         try {
             Limit limit = fetchLimit(realm, explicitLimit);
@@ -250,11 +251,11 @@ public class Isenguard {
                 return false;
             }
 
-            return registerCallAndCheckLimit(scope, realm, limit.intervalSeconds, limit.maxCalls, () -> {
-                handleLimitReached(scope, realm, limit, infoSupplier.get());
+            return registerCallAndCheckLimitExceeded(scope, realm, limit.intervalSeconds, limit.maxCalls, () -> {
+                handleLimitExceeded(scope, realm, limit, infoSupplier.get());
 
-                if (limitReachedOnce != null) {
-                    limitReachedOnce.run();
+                if (limitExceededOnce != null) {
+                    limitExceededOnce.run();
                 }
             });
         } catch (Exception exception) {
@@ -268,30 +269,30 @@ public class Isenguard {
     }
 
     /**
-     * Determines if the rate limit of the given realm for the given scope is reached. This check does not have side
+     * Determines if the rate limit of the given realm for the given scope is exceeded. This check does not have side
      * effects.
      *
      * @param scope the key which is used for grouping multiple events - e.g. the IP of the caller
      * @param realm the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
-     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is exceeded,
      * <tt>false</tt> otherwise
      */
-    public boolean checkRateLimitReached(String scope, String realm) {
-        return checkRateLimitReached(scope, realm, USE_LIMIT_FROM_CONFIG);
+    public boolean checkRateLimitExceeded(String scope, String realm) {
+        return checkRateLimitExceeded(scope, realm, USE_LIMIT_FROM_CONFIG);
     }
 
     /**
-     * Determines if the rate limit of the given realm for the given scope is reached. This check does not have side
+     * Determines if the rate limit of the given realm for the given scope is exceeded. This check does not have side
      * effects.
      *
      * @param scope         the key which is used for grouping multiple events - e.g. the IP of the caller
      * @param realm         the realm which defines the limit and check interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit the explicit limit which overwrites the limit given in the config.
      *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
-     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is reached,
+     * @return <tt>true</tt> if the rate limit for the given scope, realm and check interval is exceeded,
      * <tt>false</tt> otherwise
      */
-    public boolean checkRateLimitReached(String scope, String realm, int explicitLimit) {
+    public boolean checkRateLimitExceeded(String scope, String realm, int explicitLimit) {
         try {
             Limit limit = fetchLimit(realm, explicitLimit);
             if (!limit.isValid()) {
@@ -321,8 +322,8 @@ public class Isenguard {
         return new Limit(setting.getInt("limit"), (int) (setting.getMilliseconds("interval") / 1000));
     }
 
-    private void handleLimitReached(String scope, String realm, Limit limit, RateLimitingInfo info) {
-        LOG.WARN("Scope %s reached its rate-limit (%s) for realm '%s'. IP: %s, Tenant: %s, Location: %s",
+    private void handleLimitExceeded(String scope, String realm, Limit limit, RateLimitingInfo info) {
+        LOG.WARN("Scope %s exceeded its rate-limit (%s) for realm '%s'. IP: %s, Tenant: %s, Location: %s",
                  scope,
                  limit.format(),
                  realm,
@@ -343,16 +344,16 @@ public class Isenguard {
 
     private boolean checkLimit(String scope, String realm, int intervalInSeconds, int limit) {
         String key = computeRateLimitingKey(scope, realm, intervalInSeconds);
-        return limiter.readCallCount(key) >= limit;
+        return limiter.readCallCount(key) > limit;
     }
 
-    private boolean registerCallAndCheckLimit(String scope,
-                                              String realm,
-                                              int intervalInSeconds,
-                                              int limit,
-                                              Runnable limitReachedOnce) {
+    private boolean registerCallAndCheckLimitExceeded(String scope,
+                                                      String realm,
+                                                      int intervalInSeconds,
+                                                      int limit,
+                                                      Runnable limitExceededOnce) {
         String key = computeRateLimitingKey(scope, realm, intervalInSeconds);
-        return limiter.registerCallAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
+        return limiter.registerCallAndCheckLimitExceeded(key, intervalInSeconds, limit, limitExceededOnce);
     }
 
     private String computeRateLimitingKey(String scope, String realm, int intervalInSeconds) {
