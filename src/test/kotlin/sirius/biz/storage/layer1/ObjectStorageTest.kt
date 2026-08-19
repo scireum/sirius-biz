@@ -19,7 +19,7 @@ import sirius.kernel.di.std.Part
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.*
+import java.util.Random
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 

@@ -19,7 +19,7 @@ import sirius.kernel.SiriusExtension
 import sirius.kernel.async.BackgroundLoop
 import sirius.kernel.di.std.Part
 import java.time.Duration
-import java.util.*
+import java.util.Queue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
