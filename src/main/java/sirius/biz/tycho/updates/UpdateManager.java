@@ -124,7 +124,9 @@ public class UpdateManager {
             }
             this.globalUpdates = nextUpdates;
             this.lastFetch = LocalDateTime.now();
-        } catch (IOException | URISyntaxException exception) {
+        } catch (IOException | URISyntaxException | RuntimeException exception) {
+            // Unchecked exceptions are caught deliberately, as this runs while rendering the login page and no
+            // defect of an external feed may ever keep a user from logging in...
             Exceptions.handle()
                       .error(exception)
                       .to(Log.BACKGROUND)
