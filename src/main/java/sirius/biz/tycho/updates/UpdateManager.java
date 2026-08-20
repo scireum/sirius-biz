@@ -97,10 +97,22 @@ public class UpdateManager {
     private void fetchUpdatesFromFeed() {
         try {
             this.lastAttempt = LocalDateTime.now();
-            List<UpdateInfo> nextUpdates = new ArrayList<>();
             XMLCall call = XMLCall.to(new URI(feedUrl));
+            StructuredNode channel = call.getInput().getNode(ATOM_FEED_CHANNEL);
+            if (channel == null) {
+                Exceptions.handle()
+                          .to(Log.BACKGROUND)
+                          .withSystemErrorMessage(
+                                  "Failed to fetch updates feed: The response of '%s' contains no '%s' node.",
+                                  feedUrl,
+                                  ATOM_FEED_CHANNEL)
+                          .handle();
+                return;
+            }
+
+            List<UpdateInfo> nextUpdates = new ArrayList<>();
             Limit limit = new Limit(0, MAX_FEED_ITEMS_TO_FETCH);
-            for (StructuredNode node : call.getInput().getNode(ATOM_FEED_CHANNEL).queryNodeList(ATOM_FEED_ITEM)) {
+            for (StructuredNode node : channel.queryNodeList(ATOM_FEED_ITEM)) {
                 List<String> categories = node.queryNodeList(ATOM_ITEM_CATEGORY)
                                               .stream()
                                               .map(category -> category.queryString("."))
