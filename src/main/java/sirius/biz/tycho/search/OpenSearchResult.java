@@ -58,6 +58,7 @@ public class OpenSearchResult {
      */
     public OpenSearchResult withURL(String url) {
         this.url = url;
+        this.sendPostRequest = false;
         return this;
     }
 
