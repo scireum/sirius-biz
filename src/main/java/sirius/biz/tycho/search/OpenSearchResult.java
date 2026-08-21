@@ -34,6 +34,7 @@ public class OpenSearchResult {
 
     private String label;
     private String url;
+    private boolean sendPostRequest;
     private String htmlDescription;
 
     /**
@@ -57,6 +58,22 @@ public class OpenSearchResult {
      */
     public OpenSearchResult withURL(String url) {
         this.url = url;
+        return this;
+    }
+
+    /**
+     * Specifies the URL to post to if the result label is clicked.
+     * <p>
+     * Use this instead of {@link #withURL(String)} for routes which are only accessible via POST - e.g. as they
+     * change the state of the system. The result is then rendered as a form which submits a CSRF token along with
+     * the request, so that no additional confirmation page is required.
+     *
+     * @param url the action to post to
+     * @return the result itself for fluent method calls.
+     */
+    public OpenSearchResult withPostURL(String url) {
+        this.url = url;
+        this.sendPostRequest = true;
         return this;
     }
 
@@ -131,6 +148,10 @@ public class OpenSearchResult {
 
     public String getUrl() {
         return url;
+    }
+
+    public boolean shouldSendPostRequest() {
+        return sendPostRequest;
     }
 
     public String getHtmlDescription() {
