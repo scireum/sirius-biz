@@ -93,10 +93,10 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                 openSearchResult.withDescription(userAccount + " (" + userAccount.getTenant()
                                                                                  .fetchCachedValue()
                                                                                  .toString() + ")")
-                                .withURL("/tenants/select/"
-                                         + userAccount.getTenant().getIdAsString()
-                                         + "?goto="
-                                         + Urls.encode("/user-account/" + userAccount.getIdAsString()));
+                                .withPostURL("/tenants/select/"
+                                             + userAccount.getTenant().getIdAsString()
+                                             + "?goto="
+                                             + Urls.encode("/user-account/" + userAccount.getIdAsString()));
             }
 
             if (currentUser.hasPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)) {

@@ -106,6 +106,7 @@ public class OpenSearchController extends BizController {
     private static final String RESPONSE_LABEL = "label";
     private static final String RESPONSE_HTML_DESCRIPTION = "htmlDescription";
     private static final String RESPONSE_URL = "url";
+    private static final String RESPONSE_SEND_POST_REQUEST = "sendPostRequest";
     private static final String RESPONSE_ICON = "icon";
 
     @Parts(OpenSearchProvider.class)
@@ -231,6 +232,7 @@ public class OpenSearchController extends BizController {
         object.put(RESPONSE_LABEL, result.getLabel());
         object.put(RESPONSE_HTML_DESCRIPTION, result.getHtmlDescription());
         object.put(RESPONSE_URL, result.getUrl());
+        object.put(RESPONSE_SEND_POST_REQUEST, result.shouldSendPostRequest());
         return object;
     }
 }
