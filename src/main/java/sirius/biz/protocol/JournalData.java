@@ -136,7 +136,7 @@ public class JournalData extends Composite {
      * amounts (the only decimal property type) are formatted using their actual number of decimal places here.
      *
      * @param value the value to format
-     * @return a string representation of the given value which retains all decimal places
+     * @return a string representation of the given value which retains all significant decimal places
      */
     public static String formatValue(Object value) {
         if (value instanceof Amount amount && amount.isFilled()) {
