@@ -20,6 +20,7 @@ import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -27,6 +28,8 @@ import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
+import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.stream.Stream;
 
@@ -112,9 +115,9 @@ public class JournalData extends Composite {
         fetchJournaledAndChangedProperties().forEach(property -> {
             changes.append(property.getName());
             changes.append(": ");
-            changes.append(NLS.toUserString(owner.getPersistedValue(property), NLS.getDefaultLanguage()));
+            changes.append(formatValue(owner.getPersistedValue(property)));
             changes.append(" -> ");
-            changes.append(NLS.toUserString(property.getValue(owner), NLS.getDefaultLanguage()));
+            changes.append(formatValue(property.getValue(owner)));
             changes.append("\n");
         });
 
@@ -123,6 +126,28 @@ public class JournalData extends Composite {
         }
 
         return changes.toString();
+    }
+
+    /**
+     * Formats the given property value for the change journal.
+     * <p>
+     * {@link NLS#toUserString(Object)} would round decimal values to two decimal places. As the resulting string is
+     * persisted, a change in the third or a later decimal place would be recorded as two identical values. Therefore,
+     * amounts (the only decimal property type) are formatted using their actual number of decimal places here.
+     *
+     * @param value the value to format
+     * @return a string representation of the given value which retains all decimal places
+     */
+    public static String formatValue(Object value) {
+        if (value instanceof Amount amount && amount.isFilled()) {
+            BigDecimal decimalValue = amount.getAmount();
+            NumberFormat format = NLS.getDecimalFormat(NLS.getDefaultLanguage());
+            format.setMaximumFractionDigits(Math.max(format.getMaximumFractionDigits(),
+                                                     decimalValue.stripTrailingZeros().scale()));
+            return format.format(decimalValue);
+        }
+
+        return NLS.toUserString(value, NLS.getDefaultLanguage());
     }
 
     /**

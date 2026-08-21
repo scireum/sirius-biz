@@ -22,7 +22,6 @@ import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -218,11 +217,9 @@ public class DelegateJournalData extends Composite {
                                       changes.append("- ");
                                       changes.append(property.getName());
                                       changes.append(": ");
-                                      changes.append(NLS.toUserString(owner.getPersistedValue(property),
-                                                                      NLS.getDefaultLanguage()));
+                                      changes.append(JournalData.formatValue(owner.getPersistedValue(property)));
                                       changes.append(" -> ");
-                                      changes.append(NLS.toUserString(property.getValue(owner),
-                                                                      NLS.getDefaultLanguage()));
+                                      changes.append(JournalData.formatValue(property.getValue(owner)));
                                       changes.append("\n");
                                   });
 
@@ -244,7 +241,7 @@ public class DelegateJournalData extends Composite {
             changes.append("- ");
             changes.append(property.getName());
             changes.append(": ");
-            changes.append(NLS.toUserString(owner.getPersistedValue(property), NLS.getDefaultLanguage()));
+            changes.append(JournalData.formatValue(owner.getPersistedValue(property)));
             changes.append("\n");
         });
 
