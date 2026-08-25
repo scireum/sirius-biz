@@ -102,15 +102,15 @@ public class Jwts {
                     yield null;
                 }
             };
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException exception) {
             Log.SYSTEM.WARN("Skipping non-existent PEM file as JWKS signing key: %s", path);
-            Exceptions.ignore(e);
+            Exceptions.ignore(exception);
 
             return null;
-        } catch (IOException | JOSEException e) {
+        } catch (IOException | JOSEException exception) {
             Exceptions.handle()
                       .to(Log.SYSTEM)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to load PEM file '%s' as JWKS signing key: %s (%s)", path)
                       .handle();
 
@@ -205,10 +205,10 @@ public class Jwts {
             }
 
             return false;
-        } catch (JOSEException e) {
+        } catch (JOSEException exception) {
             Exceptions.handle()
                       .to(Log.SYSTEM)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to verify a JWT signature: %s (%s)")
                       .handle();
 
@@ -257,10 +257,10 @@ public class Jwts {
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
             return jwt.serialize();
-        } catch (JOSEException e) {
+        } catch (JOSEException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to sign JWT using key %s (%s): %s (%s)",
                                                     signingKey,
                                                     signingKey.getClass().getName())
@@ -290,10 +290,10 @@ public class Jwts {
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
             return jwt.serialize();
-        } catch (JOSEException e) {
+        } catch (JOSEException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to sign JWT using key shared secret: %s (%s)")
                             .handle();
         }
@@ -323,10 +323,10 @@ public class Jwts {
                                                                    signingKey.getClass())
                                            .handle();
             };
-        } catch (JOSEException e) {
+        } catch (JOSEException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed using JWK signing key %s (%s): %s (%s)",
                                                     signingKey,
                                                     signingKey.getClass().getName())
