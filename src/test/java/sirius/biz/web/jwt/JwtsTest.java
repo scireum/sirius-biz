@@ -85,7 +85,7 @@ class JwtsTest {
     }
 
     private static String encodeBlock(String label, byte[] data) {
-        return "-----BEGIN %s-----%n%s%n-----END %s-----%n".formatted(label,
+        return "-----BEGIN %s-----\n%s\n-----END %s-----\n".formatted(label,
                                                                       Base64.getMimeEncoder(64, LINE_SEPARATOR)
                                                                             .encodeToString(data),
                                                                       label);
