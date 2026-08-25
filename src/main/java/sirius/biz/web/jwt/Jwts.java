@@ -199,7 +199,7 @@ public class Jwts {
                 }
 
                 JWSVerifier verifier = determineVerifier(key);
-                if (verifier != null && jwt.verify(verifier)) {
+                if (verify(jwt, verifier)) {
                     return true;
                 }
             }
@@ -331,6 +331,26 @@ public class Jwts {
                                                     signingKey,
                                                     signingKey.getClass().getName())
                             .handle();
+        }
+    }
+
+    /**
+     * Applies a single verifier to the given JWT.
+     * <p>
+     * A verifier that cannot handle the algorithm of the token throws instead of reporting a mismatch. As the caller
+     * walks through all configured keys, such a rejection must not abort the whole verification - the next verifier may
+     * well be the matching one.
+     *
+     * @param jwt      the token to verify
+     * @param verifier the verifier to apply
+     * @return <tt>true</tt> if this verifier accepts the signature, <tt>false</tt> if it rejects the signature or
+     * cannot handle the token at all
+     */
+    private boolean verify(SignedJWT jwt, JWSVerifier verifier) {
+        try {
+            return verifier != null && jwt.verify(verifier);
+        } catch (JOSEException _) {
+            return false;
         }
     }
 }

@@ -12,8 +12,11 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -23,6 +26,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import sirius.kernel.Sirius;
 import sirius.kernel.SiriusExtension;
 import sirius.kernel.di.std.Part;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,6 +69,17 @@ class JwtsTest {
     }
 
     @Test
+    void acceptsATokenSignedWithASecondaryKeyOfAnotherType() throws Exception {
+        ECKey signingKey = readEllipticCurveKey();
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build(),
+                                      claims());
+        jwt.sign(new ECDSASigner(signingKey));
+
+        assertTrue(jwts.verifySignature(jwt),
+                   "The RSA verifier cannot handle ES256 and rejects the token - the EC key must still be tried");
+    }
+
+    @Test
     void acceptsATokenSignedWithTheConfiguredSharedSecret() throws Exception {
         assertTrue(jwts.verifySignature(signWithSecret(Sirius.getSettings().getString("security.jwt.sharedSecret"))));
     }
@@ -86,6 +103,15 @@ class JwtsTest {
         jwt.sign(new MACSigner(secret));
 
         return jwt;
+    }
+
+    /**
+     * Reads the secondary key of the test configuration, which is the only elliptic curve key available.
+     */
+    private ECKey readEllipticCurveKey() throws Exception {
+        String pemFile = Sirius.getSettings().getString("security.jwt.jwksPemFiles").split(";")[1];
+
+        return (ECKey) JWK.parseFromPEMEncodedObjects(Files.readString(Path.of(pemFile)));
     }
 
     private JWTClaimsSet claims() {
