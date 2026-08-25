@@ -15,20 +15,29 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.AsymmetricJWK;
+import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import sirius.kernel.Sirius;
 import sirius.kernel.SiriusExtension;
 import sirius.kernel.di.std.Part;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,15 +45,51 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Verifies that {@link Jwts#verifySignature(SignedJWT)} accepts both signing setups and rejects everything else.
  * <p>
- * The test configuration fills <tt>security.jwt.jwksPemFiles</tt> as well as <tt>security.jwt.sharedSecret</tt>, so
- * tokens created via {@link Jwts#builder()} are signed with the key. Tokens for the shared secret path are
- * therefore signed by the test itself, using the secret from the system configuration.
+ * The key pairs are generated per run and written to the PEM files named by the test configuration. This works
+ * because {@link Jwts} parses those files lazily, on the first verification - no key material is therefore
+ * committed to the repository. The RSA key is the primary one, so tokens created via {@link Jwts#builder()} are
+ * signed with it, and the shared secret path is signed by the test itself.
  */
 @ExtendWith(SiriusExtension.class)
 class JwtsTest {
 
+    private static final Path KEY_DIRECTORY = Path.of("target", "jwt-test-keys");
+
+    private static final byte[] LINE_SEPARATOR = "\n".getBytes(StandardCharsets.US_ASCII);
+
+    private static ECKey secondaryKey;
+
     @Part
     private static Jwts jwts;
+
+    @BeforeAll
+    static void generateConfiguredKeys() throws Exception {
+        secondaryKey = new ECKeyGenerator(Curve.P_256).generate();
+        Files.createDirectories(KEY_DIRECTORY);
+        writePemFile(KEY_DIRECTORY.resolve("rsa.pem"), new RSAKeyGenerator(2048).generate());
+        writePemFile(KEY_DIRECTORY.resolve("ec.pem"), secondaryKey);
+    }
+
+    /**
+     * Writes the given key pair as PEM, containing the private as well as the public key.
+     * <p>
+     * The public key is essential for elliptic curve keys, as its point cannot be derived from a PKCS#8 encoded
+     * private key - {@link JWK#parseFromPEMEncodedObjects(String)} would reject such a file.
+     */
+    private static void writePemFile(Path file, AsymmetricJWK key) throws IOException, JOSEException {
+        PrivateKey privateKey = key.toPrivateKey();
+        PublicKey publicKey = key.toPublicKey();
+
+        Files.writeString(file, encodeBlock("PRIVATE KEY", privateKey.getEncoded())
+                                + encodeBlock("PUBLIC KEY", publicKey.getEncoded()));
+    }
+
+    private static String encodeBlock(String label, byte[] data) {
+        return "-----BEGIN %s-----%n%s%n-----END %s-----%n".formatted(label,
+                                                                      Base64.getMimeEncoder(64, LINE_SEPARATOR)
+                                                                            .encodeToString(data),
+                                                                      label);
+    }
 
     @Test
     void acceptsATokenSignedWithTheConfiguredKey() throws Exception {
@@ -53,6 +98,16 @@ class JwtsTest {
         assertTrue(JWSAlgorithm.Family.RSA.contains(jwt.getHeader().getAlgorithm()),
                    "As a PEM file is configured, the token must be signed with the key");
         assertTrue(jwts.verifySignature(jwt));
+    }
+
+    @Test
+    void acceptsATokenSignedWithASecondaryKeyOfAnotherType() throws Exception {
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build(),
+                                      claims());
+        jwt.sign(new ECDSASigner(secondaryKey));
+
+        assertTrue(jwts.verifySignature(jwt),
+                   "The RSA verifier cannot handle ES256 and rejects the token - the EC key must still be tried");
     }
 
     @Test
@@ -69,19 +124,9 @@ class JwtsTest {
     }
 
     @Test
-    void acceptsATokenSignedWithASecondaryKeyOfAnotherType() throws Exception {
-        ECKey signingKey = readEllipticCurveKey();
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build(),
-                                      claims());
-        jwt.sign(new ECDSASigner(signingKey));
-
-        assertTrue(jwts.verifySignature(jwt),
-                   "The RSA verifier cannot handle ES256 and rejects the token - the EC key must still be tried");
-    }
-
-    @Test
     void acceptsATokenSignedWithTheConfiguredSharedSecret() throws Exception {
-        assertTrue(jwts.verifySignature(signWithSecret(Sirius.getSettings().getString("security.jwt.sharedSecret"))));
+        assertTrue(jwts.verifySignature(signWithSecret(Sirius.getSettings()
+                                                             .getString("security.jwt.sharedSecret"))));
     }
 
     @Test
@@ -98,20 +143,11 @@ class JwtsTest {
     }
 
     private SignedJWT signWithSecret(String secret) throws JOSEException {
-        SignedJWT jwt =
-                new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.HS256).type(JOSEObjectType.JWT).build(), claims());
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.HS256).type(JOSEObjectType.JWT).build(),
+                                      claims());
         jwt.sign(new MACSigner(secret));
 
         return jwt;
-    }
-
-    /**
-     * Reads the secondary key of the test configuration, which is the only elliptic curve key available.
-     */
-    private ECKey readEllipticCurveKey() throws Exception {
-        String pemFile = Sirius.getSettings().getString("security.jwt.jwksPemFiles").split(";")[1];
-
-        return (ECKey) JWK.parseFromPEMEncodedObjects(Files.readString(Path.of(pemFile)));
     }
 
     private JWTClaimsSet claims() {
