@@ -13,10 +13,14 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.Requirement;
 import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -48,7 +52,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
- * Helps to create and signing JWTs (JSON Web Tokens).
+ * Helps to create, sign, and verify JWTs (JSON Web Tokens).
  * <p>
  * These can be used to authenticate this server or a user against other services. There are two methods to do so.
  * Generated JWTs can be signed with a symmetrical hash function using a shared secret which is fetched from the
@@ -98,15 +102,15 @@ public class Jwts {
                     yield null;
                 }
             };
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException exception) {
             Log.SYSTEM.WARN("Skipping non-existent PEM file as JWKS signing key: %s", path);
-            Exceptions.ignore(e);
+            Exceptions.ignore(exception);
 
             return null;
-        } catch (IOException | JOSEException e) {
+        } catch (IOException | JOSEException exception) {
             Exceptions.handle()
                       .to(Log.SYSTEM)
-                      .error(e)
+                      .error(exception)
                       .withSystemErrorMessage("Failed to load PEM file '%s' as JWKS signing key: %s (%s)", path)
                       .handle();
 
@@ -168,6 +172,50 @@ public class Jwts {
         };
     }
 
+    /**
+     * Verifies the signature of the given JWT using the keys of the current system configuration.
+     * <p>
+     * This is the counterpart of {@link #builder()} and accepts the same two setups: tokens signed with a
+     * symmetrical hash function are verified against <tt>security.jwt.sharedSecret</tt>, all others against the
+     * public keys of <tt>security.jwt.jwksPemFiles</tt>. If the token names a key via its <tt>kid</tt> header, only
+     * that key is considered, which keeps a key rotation unambiguous.
+     * <p>
+     * Note that only the signature is checked. Whether the claims of the token are acceptable - especially its
+     * expiry - has to be decided by the caller.
+     *
+     * @param jwt the token to verify
+     * @return <tt>true</tt> if the signature is valid, <tt>false</tt> otherwise
+     */
+    public boolean verifySignature(SignedJWT jwt) {
+        try {
+            if (JWSAlgorithm.Family.HMAC_SHA.contains(jwt.getHeader().getAlgorithm())) {
+                return Strings.isFilled(sharedSecret) && jwt.verify(new MACVerifier(sharedSecret));
+            }
+
+            String keyId = jwt.getHeader().getKeyID();
+            for (JWK key : getPublicKeys()) {
+                if (Strings.isFilled(keyId) && !Strings.areEqual(keyId, key.getKeyID())) {
+                    continue;
+                }
+
+                JWSVerifier verifier = determineVerifier(key);
+                if (verify(jwt, verifier)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (JOSEException exception) {
+            Exceptions.handle()
+                      .to(Log.SYSTEM)
+                      .error(exception)
+                      .withSystemErrorMessage("Failed to verify a JWT signature: %s (%s)")
+                      .handle();
+
+            return false;
+        }
+    }
+
     private String sign(Map<String, Object> providedClaimsSet) {
         JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder();
         providedClaimsSet.forEach(claimsSetBuilder::claim);
@@ -209,10 +257,10 @@ public class Jwts {
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
             return jwt.serialize();
-        } catch (JOSEException e) {
+        } catch (JOSEException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to sign JWT using key %s (%s): %s (%s)",
                                                     signingKey,
                                                     signingKey.getClass().getName())
@@ -242,10 +290,10 @@ public class Jwts {
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
             return jwt.serialize();
-        } catch (JOSEException e) {
+        } catch (JOSEException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed to sign JWT using key shared secret: %s (%s)")
                             .handle();
         }
@@ -253,6 +301,15 @@ public class Jwts {
 
     private Predicate<JWSAlgorithm> isRecommendedAlgorithm() {
         return alg -> alg.getRequirement() == Requirement.RECOMMENDED;
+    }
+
+    @Nullable
+    private JWSVerifier determineVerifier(JWK key) throws JOSEException {
+        return switch (key) {
+            case RSAKey rsaKey -> new RSASSAVerifier(rsaKey);
+            case ECKey ecKey -> new ECDSAVerifier(ecKey);
+            default -> null;
+        };
     }
 
     private JWSSigner determineSigner(JWK signingKey) {
@@ -266,14 +323,34 @@ public class Jwts {
                                                                    signingKey.getClass())
                                            .handle();
             };
-        } catch (JOSEException e) {
+        } catch (JOSEException exception) {
             throw Exceptions.handle()
                             .to(Log.SYSTEM)
-                            .error(e)
+                            .error(exception)
                             .withSystemErrorMessage("Failed using JWK signing key %s (%s): %s (%s)",
                                                     signingKey,
                                                     signingKey.getClass().getName())
                             .handle();
+        }
+    }
+
+    /**
+     * Applies a single verifier to the given JWT.
+     * <p>
+     * A verifier that cannot handle the algorithm of the token throws instead of reporting a mismatch. As the caller
+     * walks through all configured keys, such a rejection must not abort the whole verification - the next verifier may
+     * well be the matching one.
+     *
+     * @param jwt      the token to verify
+     * @param verifier the verifier to apply
+     * @return <tt>true</tt> if this verifier accepts the signature, <tt>false</tt> if it rejects the signature or
+     * cannot handle the token at all
+     */
+    private boolean verify(SignedJWT jwt, JWSVerifier verifier) {
+        try {
+            return verifier != null && jwt.verify(verifier);
+        } catch (JOSEException _) {
+            return false;
         }
     }
 }
