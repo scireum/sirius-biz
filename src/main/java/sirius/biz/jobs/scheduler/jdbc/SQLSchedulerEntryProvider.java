@@ -55,6 +55,9 @@ public class SQLSchedulerEntryProvider implements SchedulerEntryProvider<SQLSche
     @Override
     public void markExecuted(SQLSchedulerEntry job, LocalDateTime timestamp) {
         job.getSchedulerData().rememberExecution(timestamp);
+        // Only user-driven changes should be journaled - the execution counters updated here must not
+        // create a journal entry per run.
+        job.getJournal().setSilent(true);
         oma.update(job);
     }
 }

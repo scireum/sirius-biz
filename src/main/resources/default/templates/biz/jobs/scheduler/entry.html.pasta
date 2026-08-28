@@ -153,6 +153,8 @@
             </div>
         </i:if>
 
-        <t:formBar/>
+        <t:formBar>
+            <t:tracing trace="entry.getTrace()" journal="entry.getJournal()"/>
+        </t:formBar>
     </t:editForm>
 </t:page>

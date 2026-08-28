@@ -11,6 +11,7 @@ package sirius.biz.jobs.scheduler.mongo;
 import sirius.biz.jobs.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
+import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
@@ -24,6 +25,7 @@ public class MongoSchedulerEntry extends MongoTenantAware implements SchedulerEn
 
     private final SchedulerData schedulerData = new SchedulerData();
     private final JobConfigData jobConfigData = new JobConfigData();
+    private final JournalData journal = new JournalData(this);
 
     @Override
     public SchedulerData getSchedulerData() {
@@ -33,6 +35,11 @@ public class MongoSchedulerEntry extends MongoTenantAware implements SchedulerEn
     @Override
     public JobConfigData getJobConfigData() {
         return jobConfigData;
+    }
+
+    @Override
+    public JournalData getJournal() {
+        return journal;
     }
 
     @Override

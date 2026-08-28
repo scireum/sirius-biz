@@ -11,6 +11,7 @@ package sirius.biz.jobs.scheduler.jdbc;
 import sirius.biz.jobs.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
+import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
@@ -24,6 +25,7 @@ public class SQLSchedulerEntry extends SQLTenantAware implements SchedulerEntry 
 
     private final SchedulerData schedulerData = new SchedulerData();
     private final JobConfigData jobConfigData = new JobConfigData();
+    private final JournalData journal = new JournalData(this);
 
     @Override
     public SchedulerData getSchedulerData() {
@@ -33,6 +35,11 @@ public class SQLSchedulerEntry extends SQLTenantAware implements SchedulerEntry 
     @Override
     public JobConfigData getJobConfigData() {
         return jobConfigData;
+    }
+
+    @Override
+    public JournalData getJournal() {
+        return journal;
     }
 
     @Override

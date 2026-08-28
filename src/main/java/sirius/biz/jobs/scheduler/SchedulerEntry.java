@@ -9,6 +9,8 @@
 package sirius.biz.jobs.scheduler;
 
 import sirius.biz.jobs.JobConfigData;
+import sirius.biz.protocol.Journaled;
+import sirius.biz.protocol.Traced;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Explain;
@@ -18,7 +20,7 @@ import sirius.kernel.commons.Explain;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
-public interface SchedulerEntry extends Entity {
+public interface SchedulerEntry extends Entity, Traced, Journaled {
 
     /**
      * Contains the scheduler data composite which describes when the job is to be executed.
