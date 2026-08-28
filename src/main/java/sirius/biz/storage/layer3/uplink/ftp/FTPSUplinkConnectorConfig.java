@@ -57,7 +57,7 @@ class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
             client.setDefaultPort(port);
 
             client.connect(host, port);
-            client.login(user, password);
+            login(client);
             client.setFileType(FTP.BINARY_FILE_TYPE);
             // Set protection buffer size
             client.execPBSZ(0);

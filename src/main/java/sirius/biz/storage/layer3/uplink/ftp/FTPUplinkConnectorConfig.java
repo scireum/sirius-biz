@@ -59,7 +59,7 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
             client.setControlEncoding(encoding);
 
             client.connect(host, port);
-            client.login(user, password);
+            login(client);
             client.setFileType(FTP.BINARY_FILE_TYPE);
             client.enterLocalPassiveMode();
 
@@ -73,6 +73,30 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
                                     this)
                             .handle();
         }
+    }
+
+    /**
+     * Logs the given client in using the configured credentials.
+     * <p>
+     * Note that {@link FTPClient#login(String, String)} doesn't throw if the destination rejects the given
+     * credentials but simply returns <tt>false</tt>. As an unauthenticated session cannot execute any command at
+     * all, we abort right here instead of letting all subsequent commands fail with misleading errors.
+     *
+     * @param client the client to log in
+     * @throws IOException                           if the login command itself fails
+     * @throws sirius.kernel.health.HandledException if the destination rejected the configured credentials
+     */
+    protected void login(FTPClient client) throws IOException {
+        if (client.login(user, password)) {
+            return;
+        }
+
+        throw Exceptions.handle()
+                        .to(StorageUtils.LOG)
+                        .withSystemErrorMessage("Layer 3/FTP: The uplink %s rejected the given credentials: %s",
+                                                this,
+                                                client.getReplyString())
+                        .handle();
     }
 
     @Override
