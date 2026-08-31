@@ -51,9 +51,7 @@
                         labelKey="Model.description"/>
         </div>
         <t:formBar>
-            <i:if test="!entry.isNew()">
-                <t:tracing trace="@entry.getCodeListEntryData().getTrace()"/>
-            </i:if>
+            <t:tracing trace="@entry.getCodeListEntryData().getTrace()"/>
         </t:formBar>
     </t:editForm>
 </t:page>

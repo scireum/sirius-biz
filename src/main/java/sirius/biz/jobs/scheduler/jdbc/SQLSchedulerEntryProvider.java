@@ -55,6 +55,9 @@ public class SQLSchedulerEntryProvider implements SchedulerEntryProvider<SQLSche
     @Override
     public void markExecuted(SQLSchedulerEntry job, LocalDateTime timestamp) {
         job.getSchedulerData().rememberExecution(timestamp);
+        // Executions must not spam the journal - especially the decremented "runs" counter, which is
+        // user-editable and therefore not annotated with @NoJournal.
+        job.getJournal().setSilent(true);
         oma.update(job);
     }
 }
