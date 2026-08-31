@@ -50,8 +50,9 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
     @SuppressWarnings("java:S5332")
     @Explain("A FTP uplink of course uses insecure FTP, which is not an issue with this code.")
     protected FTPClient create() {
+        FTPClient client = new FTPClient();
+
         try {
-            FTPClient client = new FTPClient();
             client.setConnectTimeout(connectTimeoutMillis);
             client.setDataTimeout(Duration.ofMillis(readTimeoutMillis));
             client.setDefaultTimeout(readTimeoutMillis);
@@ -64,7 +65,11 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
             client.enterLocalPassiveMode();
 
             return client;
-        } catch (IOException exception) {
+        } catch (Exception exception) {
+            // If the client couldn't be fully initialized, it is never handed over to the connector pool and would
+            // therefore keep its connection open until the JVM collects it...
+            safeClose(client);
+
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .error(exception)
