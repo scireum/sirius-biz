@@ -58,8 +58,8 @@ public class MongoSchedulerEntryProvider implements SchedulerEntryProvider<Mongo
     @Override
     public void markExecuted(MongoSchedulerEntry job, LocalDateTime timestamp) {
         job.getSchedulerData().rememberExecution(timestamp);
-        // Only user-driven changes should be journaled - the execution counters updated here must not
-        // create a journal entry per run.
+        // Executions must not spam the journal - especially the decremented "runs" counter, which is
+        // user-editable and therefore not annotated with @NoJournal.
         job.getJournal().setSilent(true);
         mango.update(job);
     }

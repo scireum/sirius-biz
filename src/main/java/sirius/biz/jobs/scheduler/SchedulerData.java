@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.scheduler;
 
+import sirius.biz.protocol.NoJournal;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
@@ -101,12 +102,14 @@ public class SchedulerData extends Composite {
      */
     public static final Mapping LAST_EXECUTION = Mapping.named("lastExecution");
     @NullAllowed
+    @NoJournal
     private LocalDateTime lastExecution;
 
     /**
      * Stores how often this task has been executed / scheduled.
      */
     public static final Mapping NUMBER_OF_EXECUTIONS = Mapping.named("numberOfExecutions");
+    @NoJournal
     private int numberOfExecutions;
 
     /**
