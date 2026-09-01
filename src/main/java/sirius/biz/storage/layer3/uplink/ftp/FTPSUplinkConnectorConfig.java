@@ -16,7 +16,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.function.Function;
 
@@ -42,9 +41,9 @@ class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
 
     @Override
     protected FTPClient create() {
-        try {
-            FTPSClient client = new FTPSClient();
+        FTPSClient client = new FTPSClient();
 
+        try {
             if (Strings.isFilled(sslProtocol)) {
                 client.setEnabledProtocols(new String[]{sslProtocol});
             }
@@ -57,7 +56,7 @@ class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
             client.setDefaultPort(port);
 
             client.connect(host, port);
-            client.login(user, password);
+            login(client);
             client.setFileType(FTP.BINARY_FILE_TYPE);
             // Set protection buffer size
             client.execPBSZ(0);
@@ -66,7 +65,11 @@ class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
             client.enterLocalPassiveMode();
 
             return client;
-        } catch (IOException exception) {
+        } catch (Exception exception) {
+            // If the client couldn't be fully initialized, it is never handed over to the connector pool and would
+            // therefore keep its connection open until the JVM collects it...
+            safeClose(client);
+
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .error(exception)

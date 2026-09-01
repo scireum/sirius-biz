@@ -50,8 +50,9 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
     @SuppressWarnings("java:S5332")
     @Explain("A FTP uplink of course uses insecure FTP, which is not an issue with this code.")
     protected FTPClient create() {
+        FTPClient client = new FTPClient();
+
         try {
-            FTPClient client = new FTPClient();
             client.setConnectTimeout(connectTimeoutMillis);
             client.setDataTimeout(Duration.ofMillis(readTimeoutMillis));
             client.setDefaultTimeout(readTimeoutMillis);
@@ -59,12 +60,16 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
             client.setControlEncoding(encoding);
 
             client.connect(host, port);
-            client.login(user, password);
+            login(client);
             client.setFileType(FTP.BINARY_FILE_TYPE);
             client.enterLocalPassiveMode();
 
             return client;
-        } catch (IOException exception) {
+        } catch (Exception exception) {
+            // If the client couldn't be fully initialized, it is never handed over to the connector pool and would
+            // therefore keep its connection open until the JVM collects it...
+            safeClose(client);
+
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .error(exception)
@@ -73,6 +78,30 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
                                     this)
                             .handle();
         }
+    }
+
+    /**
+     * Logs the given client in using the configured credentials.
+     * <p>
+     * Note that {@link FTPClient#login(String, String)} doesn't throw if the destination rejects the given
+     * credentials but simply returns <tt>false</tt>. As an unauthenticated session cannot execute any command at
+     * all, we abort right here instead of letting all subsequent commands fail with misleading errors.
+     *
+     * @param client the client to log in
+     * @throws IOException                           if the login command itself fails
+     * @throws sirius.kernel.health.HandledException if the destination rejected the configured credentials
+     */
+    protected void login(FTPClient client) throws IOException {
+        if (client.login(user, password)) {
+            return;
+        }
+
+        throw Exceptions.handle()
+                        .to(StorageUtils.LOG)
+                        .withSystemErrorMessage("Layer 3/FTP: The uplink %s rejected the given credentials: %s",
+                                                this,
+                                                client.getReplyString())
+                        .handle();
     }
 
     @Override
