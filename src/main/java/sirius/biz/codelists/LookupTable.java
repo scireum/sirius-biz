@@ -8,16 +8,16 @@
 
 package sirius.biz.codelists;
 
-import tools.jackson.core.JsonPointer;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import tools.jackson.core.JsonPointer;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -644,7 +644,8 @@ public abstract class LookupTable {
             if (translations.isObject()) {
                 return translations.properties()
                                    .stream()
-                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asString("")));
+                                   .collect(Collectors.toMap(Map.Entry::getKey,
+                                                             entry -> entry.getValue().asString("")));
             } else {
                 return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, translations.asString(""));
             }

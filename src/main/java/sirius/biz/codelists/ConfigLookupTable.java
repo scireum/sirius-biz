@@ -41,15 +41,13 @@ class ConfigLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performResolveName(String code, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.name", CONFIG_KEY_DATA, code),
-                                                                 language));
+        return Optional.of(extension.getTranslatedString(Strings.apply("%s.%s.name", CONFIG_KEY_DATA, code), language));
     }
 
     @Override
     protected Optional<String> performResolveDescription(@Nonnull String code, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.description",
-                                                                               CONFIG_KEY_DATA,
-                                                                               code), language));
+        return Optional.of(extension.getTranslatedString(Strings.apply("%s.%s.description", CONFIG_KEY_DATA, code),
+                                                         language));
     }
 
     @Override
@@ -60,10 +58,8 @@ class ConfigLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performFetchTranslatedField(String code, String targetField, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.%s",
-                                                                               CONFIG_KEY_DATA,
-                                                                               code,
-                                                                               targetField), language));
+        return Optional.of(extension.getTranslatedString(Strings.apply("%s.%s.%s", CONFIG_KEY_DATA, code, targetField),
+                                                         language));
     }
 
     @Override
