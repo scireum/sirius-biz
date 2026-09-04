@@ -21,6 +21,7 @@ import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -606,6 +607,26 @@ public abstract class LookupTable {
     }
 
     protected abstract <T> Optional<T> performFetchObject(Class<T> type, @Nonnull String code, boolean useCache);
+
+    /**
+     * Instantiates the given type using the JSON data of a lookup table entry.
+     *
+     * @param type     the type to instantiate; a public constructor accepting an {@link ObjectNode} is required
+     * @param jsonData the data of the entry to hand to that constructor
+     * @param <T>      the generic type to instantiate
+     * @return the created object
+     * @throws IllegalArgumentException if the type has no public constructor accepting an {@link ObjectNode}
+     */
+    protected <T> T makeObject(Class<T> type, ObjectNode jsonData) {
+        try {
+            Constructor<T> constructor = type.getConstructor(ObjectNode.class);
+            return constructor.newInstance(jsonData);
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(Strings.apply(
+                    "Cannot create a payload object for %s - a public constructor accepting an ObjectNode is required.",
+                    type.getName()), exception);
+        }
+    }
 
     /**
      * Provides a helper method to extract a translation table as used by Jupiter.

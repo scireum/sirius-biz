@@ -8,7 +8,6 @@
 
 package sirius.biz.codelists;
 
-import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.jupiter.IDBTable;
 import sirius.biz.jupiter.Jupiter;
 import sirius.kernel.commons.Json;
@@ -23,7 +22,6 @@ import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.lang.reflect.Constructor;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -262,17 +260,6 @@ class IDBLookupTable extends LookupTable {
                                               table.getName())
                       .handle();
             return Optional.empty();
-        }
-    }
-
-    protected <T> T makeObject(Class<T> type, ObjectNode jsonData) {
-        try {
-            Constructor<T> constructor = type.getConstructor(ObjectNode.class);
-            return constructor.newInstance(jsonData);
-        } catch (Exception exception) {
-            throw new IllegalArgumentException(
-                    "Cannot create a payload object for %s - A public accessible constructor accepting a value is required!",
-                    exception);
         }
     }
 
