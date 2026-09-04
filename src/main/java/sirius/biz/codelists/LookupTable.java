@@ -8,19 +8,20 @@
 
 package sirius.biz.codelists;
 
-import tools.jackson.core.JsonPointer;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.ObjectNode;
 import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import tools.jackson.core.JsonPointer;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -608,6 +609,26 @@ public abstract class LookupTable {
     protected abstract <T> Optional<T> performFetchObject(Class<T> type, @Nonnull String code, boolean useCache);
 
     /**
+     * Instantiates the given type using the JSON data of a lookup table entry.
+     *
+     * @param type     the type to instantiate; a public constructor accepting an {@link ObjectNode} is required
+     * @param jsonData the data of the entry to hand to that constructor
+     * @param <T>      the generic type to instantiate
+     * @return the created object
+     * @throws IllegalArgumentException if the type has no public constructor accepting an {@link ObjectNode}
+     */
+    protected <T> T makeObject(Class<T> type, ObjectNode jsonData) {
+        try {
+            Constructor<T> constructor = type.getConstructor(ObjectNode.class);
+            return constructor.newInstance(jsonData);
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(Strings.apply(
+                    "Cannot create a payload object for %s - a public constructor accepting an ObjectNode is required.",
+                    type.getName()), exception);
+        }
+    }
+
+    /**
      * Provides a helper method to extract a translation table as used by Jupiter.
      * <p>
      * When querying a whole record a JSON using {@link #fetchObject(Class, String)}, we have to handle these
@@ -623,7 +644,8 @@ public abstract class LookupTable {
             if (translations.isObject()) {
                 return translations.properties()
                                    .stream()
-                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asString("")));
+                                   .collect(Collectors.toMap(Map.Entry::getKey,
+                                                             entry -> entry.getValue().asString("")));
             } else {
                 return Collections.singletonMap(FALLBACK_LANGUAGE_CODE, translations.asString(""));
             }
