@@ -9,11 +9,13 @@
 package sirius.biz.codelists;
 
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Json;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import tools.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -39,15 +41,13 @@ class ConfigLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performResolveName(String code, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.name", CONFIG_KEY_DATA, code),
-                                                                 language));
+        return Optional.of(extension.getTranslatedString(Strings.apply("%s.%s.name", CONFIG_KEY_DATA, code), language));
     }
 
     @Override
     protected Optional<String> performResolveDescription(@Nonnull String code, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.description",
-                                                                               CONFIG_KEY_DATA,
-                                                                               code), language));
+        return Optional.of(extension.getTranslatedString(Strings.apply("%s.%s.description", CONFIG_KEY_DATA, code),
+                                                         language));
     }
 
     @Override
@@ -58,10 +58,8 @@ class ConfigLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performFetchTranslatedField(String code, String targetField, String language) {
-        return Optional.ofNullable(extension.getTranslatedString(Strings.apply("%s.%s.%s",
-                                                                               CONFIG_KEY_DATA,
-                                                                               code,
-                                                                               targetField), language));
+        return Optional.of(extension.getTranslatedString(Strings.apply("%s.%s.%s", CONFIG_KEY_DATA, code, targetField),
+                                                         language));
     }
 
     @Override
@@ -86,9 +84,17 @@ class ConfigLookupTable extends LookupTable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    @Explain("The data is provided in the configuration as String keys with assigned value objects.")
     protected <T> Optional<T> performFetchObject(Class<T> type, String code, boolean useCache) {
-        // Not supported yet
-        return Optional.empty();
+        if (!performContains(code)) {
+            return Optional.empty();
+        }
+
+        ObjectNode data = Json.convertFromMap(extension.get(Strings.apply("%s.%s", CONFIG_KEY_DATA, code))
+                                                       .get(Map.class, Collections.emptyMap()));
+
+        return Optional.of(makeObject(type, data));
     }
 
     @SuppressWarnings("unchecked")
