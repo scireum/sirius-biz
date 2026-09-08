@@ -175,7 +175,7 @@ public class TenantData extends Composite implements Journaled {
     @Autoloaded
     @AutoImport
     @NullAllowed
-    @Length(50)
+    @Length(1024)
     private String samlRequestIssuerName;
 
     /**
@@ -210,7 +210,7 @@ public class TenantData extends Composite implements Journaled {
     @Autoloaded
     @AutoImport
     @NullAllowed
-    @Length(50)
+    @Length(1024)
     private String samlIssuerName;
 
     /**
@@ -224,7 +224,7 @@ public class TenantData extends Composite implements Journaled {
     @Autoloaded
     @AutoImport
     @NullAllowed
-    @Length(255)
+    @Length(1024)
     private String samlFingerprint;
 
     /**
