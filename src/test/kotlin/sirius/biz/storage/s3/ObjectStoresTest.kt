@@ -14,12 +14,19 @@ import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Files
 import sirius.kernel.commons.Tuple
 import sirius.kernel.di.std.Part
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.time.Duration
+import java.util.Random
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import java.nio.file.Files as files_
 
 /**
@@ -106,9 +113,133 @@ class ObjectStoresTest {
         )
     }
 
+    @Test
+    fun `Multipart upload of a stream with an unknown length works`() {
+        val bucket = stores.store().getBucketName("multipart")
+        // Chunks are flushed once they exceed 10 MiB, hence 21 MiB yields three parts and covers the chunking loop.
+        val payload = generateRandomData(21 * 1024 * 1024)
+
+        stores.store().upload(bucket, "large", ByteArrayInputStream(payload))
+
+        val download = stores.store().download(bucket, "large")
+        // Compares digests instead of the arrays themselves: a failed content assertion over 21 MiB renders a message
+        // so large that the surefire reporter fails while writing it and drops this test from its report entirely.
+        assertEquals(payload.size.toLong(), download.length())
+        assertEquals(sha256(payload), sha256(files_.readAllBytes(download.toPath())))
+        Files.delete(download)
+    }
+
+    @Test
+    fun `Multipart upload of an empty stream creates an empty object`() {
+        val bucket = stores.store().getBucketName("multipart")
+
+        stores.store().upload(bucket, "empty", ByteArrayInputStream(ByteArray(0)))
+
+        val download = stores.store().download(bucket, "empty")
+        assertEquals(0, download.length())
+        Files.delete(download)
+    }
+
+    @Test
+    fun `Listing objects honours the given prefix`() {
+        val bucket = stores.store().getBucketName("listing")
+        uploadSmallObject(bucket, "prefixed/a")
+        uploadSmallObject(bucket, "prefixed/b")
+        uploadSmallObject(bucket, "other/c")
+
+        val keys = mutableListOf<String>()
+        stores.store().listObjects(bucket, "prefixed/") { keys.add(it.key()); true }
+
+        assertEquals(listOf("prefixed/a", "prefixed/b"), keys.sorted())
+    }
+
+    @Test
+    fun `Listing objects stops once the consumer returns false`() {
+        val bucket = stores.store().getBucketName("listing-abort")
+        uploadSmallObject(bucket, "a")
+        uploadSmallObject(bucket, "b")
+
+        var seen = 0
+        stores.store().listObjects(bucket, null) {
+            seen++
+            false
+        }
+
+        assertEquals(1, seen)
+    }
+
+    @Test
+    fun `Listing objects pages through truncated responses`() {
+        val bucket = stores.store().getBucketName("paging")
+        // A single response is capped at 1000 keys, so 1001 objects force a second request via the continuation token.
+        repeat(1001) { uploadSmallObject(bucket, "page-$it") }
+
+        // Guards the premise of this test: if the store ever stopped truncating, the continuation handling below
+        // would silently go unexercised while the assertion on the object count still passed.
+        assertTrue {
+            stores.store().client.listObjectsV2(
+                ListObjectsV2Request.builder().bucket(bucket.name).prefix("page-").build()
+            ).isTruncated
+        }
+
+        var seen = 0
+        stores.store().listObjects(bucket, "page-") { seen++; true }
+
+        assertEquals(1001, seen)
+    }
+
+    @Test
+    fun `Copying an object between buckets works`() {
+        val sourceBucket = stores.store().getBucketName("copy-source")
+        val targetBucket = stores.store().getBucketName("copy-target")
+        uploadSmallObject(sourceBucket, "original")
+        stores.store().ensureBucketExists(targetBucket)
+
+        stores.store().copyObject(sourceBucket, "original", targetBucket, "copy")
+
+        val download = stores.store().download(targetBucket, "copy")
+        assertEquals("original", files_.readString(download.toPath(), StandardCharsets.UTF_8))
+        Files.delete(download)
+    }
+
+    @Test
+    fun `Async download fulfills the promise with the object data`() {
+        val bucket = stores.store().getBucketName("async")
+        uploadSmallObject(bucket, "async-test")
+
+        val promise = stores.store().downloadAsync(bucket, "async-test")
+
+        assertTrue { promise.await(Duration.ofSeconds(30)) }
+        promise.get().use { handle ->
+            assertContentEquals("async-test".toByteArray(StandardCharsets.UTF_8), handle.file.readBytes())
+        }
+    }
+
     companion object {
         @Part
         @JvmStatic
         private lateinit var stores: ObjectStores
+
+        /**
+         * Uploads a small object whose contents are its own key, so that assertions can identify it.
+         */
+        private fun uploadSmallObject(bucket: BucketName, key: String) {
+            val data = key.toByteArray(StandardCharsets.UTF_8)
+            stores.store().upload(bucket, key, ByteArrayInputStream(data), data.size.toLong())
+        }
+
+        private fun generateRandomData(length: Int): ByteArray {
+            val result = ByteArray(length)
+            Random().nextBytes(result)
+            return result
+        }
+
+        /**
+         * Digests the given payload so that large contents can be compared without rendering them into an assertion
+         * message.
+         */
+        private fun sha256(data: ByteArray): String {
+            return MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) }
+        }
     }
 }
