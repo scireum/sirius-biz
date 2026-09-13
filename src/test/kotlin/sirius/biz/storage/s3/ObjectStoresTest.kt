@@ -9,6 +9,7 @@
 package sirius.biz.storage.s3
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Files
@@ -17,14 +18,17 @@ import sirius.kernel.di.std.Part
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.Duration
 import java.util.Random
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import java.nio.file.Files as files_
@@ -116,17 +120,25 @@ class ObjectStoresTest {
     @Test
     fun `Multipart upload of a stream with an unknown length works`() {
         val bucket = stores.store().getBucketName("multipart")
-        // Chunks are flushed once they exceed 10 MiB, hence 21 MiB yields three parts and covers the chunking loop.
-        val payload = generateRandomData(21 * 1024 * 1024)
+        // Sizing the payload from the production threshold rather than from a literal keeps it spanning at least three
+        // chunks even if that threshold is ever changed, so the chunking loop cannot quietly fall out of coverage.
+        // Asserting the part count directly is not an option here: s3-ninja answers with a plain hash instead of the
+        // "<hash>-<parts>" ETag that S3 itself returns for a multipart object.
+        val payload = generateRandomData(3 * multipartChunkThreshold())
 
-        stores.store().upload(bucket, "large", ByteArrayInputStream(payload))
+        // Passing a length of zero is the documented way of announcing an unknown length and is what routes into the
+        // multipart path, so uploading this way covers the dispatch as well as the chunking itself.
+        stores.store().upload(bucket, "large", ByteArrayInputStream(payload), 0L)
 
         val download = stores.store().download(bucket, "large")
-        // Compares digests instead of the arrays themselves: a failed content assertion over 21 MiB renders a message
-        // so large that the surefire reporter fails while writing it and drops this test from its report entirely.
-        assertEquals(payload.size.toLong(), download.length())
-        assertEquals(sha256(payload), sha256(files_.readAllBytes(download.toPath())))
-        Files.delete(download)
+        try {
+            // Compares digests instead of the arrays themselves: a failed content assertion over 21 MiB renders a
+            // message so large that the surefire reporter fails while writing it and drops the test from its report.
+            assertEquals(payload.size.toLong(), download.length())
+            assertEquals(sha256(payload), sha256(files_.readAllBytes(download.toPath())))
+        } finally {
+            Files.delete(download)
+        }
     }
 
     @Test
@@ -136,8 +148,11 @@ class ObjectStoresTest {
         stores.store().upload(bucket, "empty", ByteArrayInputStream(ByteArray(0)))
 
         val download = stores.store().download(bucket, "empty")
-        assertEquals(0, download.length())
-        Files.delete(download)
+        try {
+            assertEquals(0, download.length())
+        } finally {
+            Files.delete(download)
+        }
     }
 
     @Test
@@ -148,7 +163,10 @@ class ObjectStoresTest {
         uploadSmallObject(bucket, "other/c")
 
         val keys = mutableListOf<String>()
-        stores.store().listObjects(bucket, "prefixed/") { keys.add(it.key()); true }
+        stores.store().listObjects(bucket, "prefixed/") {
+            keys.add(it.key())
+            true
+        }
 
         assertEquals(listOf("prefixed/a", "prefixed/b"), keys.sorted())
     }
@@ -168,7 +186,10 @@ class ObjectStoresTest {
         assertEquals(1, seen)
     }
 
+    // Broken continuation handling makes the loop in listObjects re-fetch the first page forever rather than fail, so
+    // the timeout is what turns that regression into a red build instead of a stalled pipeline.
     @Test
+    @Timeout(value = 2, unit = TimeUnit.MINUTES, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     fun `Listing objects pages through truncated responses`() {
         val bucket = stores.store().getBucketName("paging")
         // A single response is capped at 1000 keys, so 1001 objects force a second request via the continuation token.
@@ -176,16 +197,21 @@ class ObjectStoresTest {
 
         // Guards the premise of this test: if the store ever stopped truncating, the continuation handling below
         // would silently go unexercised while the assertion on the object count still passed.
-        assertTrue {
-            stores.store().client.listObjectsV2(
+        val firstPage = stores.store()
+            .getClient()
+            .listObjectsV2(
                 ListObjectsV2Request.builder().bucket(bucket.name).prefix("page-").build()
-            ).isTruncated
+            )
+        assertTrue(firstPage.isTruncated == true, "Expected a truncated response, but the store returned all keys")
+
+        // Collects the keys rather than counting calls, so that a page served twice cannot be mistaken for progress.
+        val keys = mutableSetOf<String>()
+        stores.store().listObjects(bucket, "page-") {
+            keys.add(it.key())
+            true
         }
 
-        var seen = 0
-        stores.store().listObjects(bucket, "page-") { seen++; true }
-
-        assertEquals(1001, seen)
+        assertEquals(1001, keys.size)
     }
 
     @Test
@@ -198,8 +224,19 @@ class ObjectStoresTest {
         stores.store().copyObject(sourceBucket, "original", targetBucket, "copy")
 
         val download = stores.store().download(targetBucket, "copy")
-        assertEquals("original", files_.readString(download.toPath(), StandardCharsets.UTF_8))
-        Files.delete(download)
+        try {
+            assertEquals("original", files_.readString(download.toPath(), StandardCharsets.UTF_8))
+        } finally {
+            Files.delete(download)
+        }
+    }
+
+    @Test
+    fun `Downloading a missing object is reported as a missing file`() {
+        val bucket = stores.store().getBucketName("missing")
+        stores.store().ensureBucketExists(bucket)
+
+        assertFailsWith<FileNotFoundException> { stores.store().download(bucket, "no-such-object") }
     }
 
     @Test
@@ -209,13 +246,18 @@ class ObjectStoresTest {
 
         val promise = stores.store().downloadAsync(bucket, "async-test")
 
-        assertTrue { promise.await(Duration.ofSeconds(30)) }
+        assertTrue(promise.await(Duration.ofSeconds(30)), "The download did not complete within the timeout")
+        // await() only reports completion, which a failed download satisfies as well - hence the explicit check,
+        // without which a failing download would surface as a bare NPE on the handle below.
+        assertTrue(promise.isSuccessful, "The download failed: ${promise.failure}")
         promise.get().use { handle ->
             assertContentEquals("async-test".toByteArray(StandardCharsets.UTF_8), handle.file.readBytes())
         }
     }
 
     companion object {
+        private const val RANDOM_SEED = 42L
+
         @Part
         @JvmStatic
         private lateinit var stores: ObjectStores
@@ -228,9 +270,23 @@ class ObjectStoresTest {
             stores.store().upload(bucket, key, ByteArrayInputStream(data), data.size.toLong())
         }
 
+        /**
+         * Determines the size at which [ObjectStore] flushes an aggregated chunk, so that a payload can be sized to
+         * span several of them without restating the constant.
+         */
+        private fun multipartChunkThreshold(): Int {
+            val field = ObjectStore::class.java.getDeclaredField("MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE")
+            field.isAccessible = true
+            return field.getInt(null)
+        }
+
+        /**
+         * Generates deterministic pseudo random data, so that a failed content comparison can be reproduced by
+         * simply running the test again.
+         */
         private fun generateRandomData(length: Int): ByteArray {
             val result = ByteArray(length)
-            Random().nextBytes(result)
+            Random(RANDOM_SEED).nextBytes(result)
             return result
         }
 
