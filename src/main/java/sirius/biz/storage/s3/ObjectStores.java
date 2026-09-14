@@ -176,7 +176,14 @@ public class ObjectStores {
                                                                        .connectionTimeout(extension.getDuration(
                                                                                KEY_CONNECTION_TIMEOUT))
                                                                        .maxConnections(extension.getInt(
-                                                                               KEY_MAX_CONNECTIONS));
+                                                                               KEY_MAX_CONNECTIONS))
+                                                                       // Apache HttpClient 5 disables this by
+                                                                       // default, while 4.x had it enabled. Without
+                                                                       // it a rejected upload (expired credentials,
+                                                                       // bucket policy, region redirect) is only
+                                                                       // learned once the whole part has gone over
+                                                                       // the wire, and again on every retry.
+                                                                       .expectContinueEnabled(true);
         Duration connectionTTL = extension.getDuration(KEY_CONNECTION_TTL);
         if (connectionTTL.isPositive()) {
             httpClientBuilder.connectionTimeToLive(connectionTTL);
