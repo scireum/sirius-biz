@@ -21,6 +21,7 @@ import sirius.kernel.commons.Files
 import sirius.kernel.commons.Tuple
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
+import sirius.kernel.settings.PortMapper
 import sirius.kernel.settings.Settings
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
@@ -267,6 +268,9 @@ class ObjectStoresTest {
     @Test
     fun `Only stores with a configured endpoint are reported as configured`() {
         assertTrue(stores.isConfigured(SYSTEM_STORE))
+        // A store which is absent from the configuration and one which is present but lacks an endpoint leave
+        // isConfigured through different branches, hence both are checked.
+        assertFalse(stores.isConfigured("unconfigured"))
         assertFalse(stores.isConfigured("no-such-store"))
     }
 
@@ -275,35 +279,43 @@ class ObjectStoresTest {
         assertFailsWith<HandledException> { stores.getStore("no-such-store") }
     }
 
+    // The configured time to live cannot be read back: neither the SDK's service client configuration nor the HTTP
+    // client expose it, so this only asserts that the branch applying it yields a client which still talks to the
+    // store. A regression which drops the call entirely would not be caught here.
     @Test
-    fun `A configured connection time to live yields a usable client`() {
+    @Timeout(value = 1, unit = TimeUnit.MINUTES, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    fun `A connection time to live is accepted by the client`() {
         stores.createClient(SYSTEM_STORE, systemStoreSettings("connectionTTL" to "30s")).use { client ->
-            assertNotNull(client.listBuckets().buckets())
+            assertTrue(client.listBuckets().sdkHttpResponse().isSuccessful)
         }
     }
 
     @Test
-    fun `A configured connection time to live yields a usable async client`() {
+    @Timeout(value = 1, unit = TimeUnit.MINUTES, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    fun `A connection time to live is accepted by the async client`() {
         stores.createAsyncClient(SYSTEM_STORE, systemStoreSettings("connectionTTL" to "30s")).use { client ->
-            assertNotNull(client.listBuckets().join().buckets())
+            assertTrue(client.listBuckets().join().sdkHttpResponse().isSuccessful)
         }
     }
 
+    // Ignoring the legacy setting is the SDK's doing rather than ours, so this guards against the configuration being
+    // rejected again - it deliberately says nothing about the warning which accompanies it.
     @Test
-    fun `A legacy signer override is ignored instead of failing the client creation`() {
+    @Timeout(value = 1, unit = TimeUnit.MINUTES, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    fun `A legacy signer override does not break the client creation`() {
         stores.createClient(SYSTEM_STORE, systemStoreSettings("signer" to "S3SignerType")).use { client ->
-            assertNotNull(client.listBuckets().buckets())
+            assertTrue(client.listBuckets().sdkHttpResponse().isSuccessful)
         }
     }
 
-    // The port of every endpoint below is the one the test store uses, because the endpoint is also run through the
-    // PortMapper, which can only translate ports the s3-ninja container actually exposes. The host, which is what the
-    // region is derived from, is unaffected by that mapping.
+    // The region is read from the configured endpoint before it is run through the PortMapper, so the fabricated
+    // hosts below reach the region derivation unchanged no matter what the test setup maps them to.
     @ParameterizedTest
     @CsvSource(
-        "https://s3.eu-west-1.amazonaws.com:9000, eu-west-1",
-        "https://s3-eu-west-1.amazonaws.com:9000, eu-west-1",
-        "https://s3.amazonaws.com:9000, eu-central-1",
+        "https://s3.eu-west-1.amazonaws.com, eu-west-1",
+        "https://s3-eu-west-1.amazonaws.com, eu-west-1",
+        "https://s3.amazonaws.com, eu-central-1",
+        "https://s3-eu-west-1, eu-central-1",
         "http://localhost:9000/s3, eu-central-1"
     )
     fun `The region is derived from the endpoint host`(endPoint: String, expectedRegion: String) {
@@ -313,18 +325,24 @@ class ObjectStoresTest {
     }
 
     @Test
-    fun `The endpoint of a client is mapped to the host and port the store is reachable at`() {
-        val expectedEndpoint = URI(
+    fun `The endpoint of a client is mapped to the address the store is reachable at`() {
+        val configuredEndpoint = URI(
             Sirius.getSettings().getExtension(STORES_EXTENSION_POINT, SYSTEM_STORE)!!.get("endPoint").asString()
+        )
+        // Asking the PortMapper is the only way of naming the address to expect, as the test setup publishes the
+        // container on a port which is picked at runtime.
+        val expectedAddress = PortMapper.mapPort(
+            "s3-$SYSTEM_STORE", configuredEndpoint.host, configuredEndpoint.port
         )
 
         stores.createClient(SYSTEM_STORE, systemStoreSettings()).use { client ->
             val endpoint = client.serviceClientConfiguration().endpointOverride().orElseThrow()
-            // The test setup maps the configured port onto the one the container was published at, so only the parts
-            // left untouched by that mapping can be compared literally.
-            assertEquals(expectedEndpoint.scheme, endpoint.scheme)
-            assertEquals(expectedEndpoint.path, endpoint.path)
-            assertTrue(endpoint.port > 0, "Expected a mapped port, but got: $endpoint")
+            assertEquals(expectedAddress.first, endpoint.host)
+            // Published ports are picked from the ephemeral range, so the mapped port is never the default one for
+            // the scheme - which mapEndpoint would drop from the URI instead of spelling it out.
+            assertEquals(expectedAddress.second, endpoint.port)
+            assertEquals(configuredEndpoint.scheme, endpoint.scheme)
+            assertEquals(configuredEndpoint.path, endpoint.path)
         }
     }
 
