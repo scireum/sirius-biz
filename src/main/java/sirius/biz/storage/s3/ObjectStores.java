@@ -25,7 +25,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
 import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
-import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.http.apache5.Apache5HttpClient;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
@@ -166,15 +166,17 @@ public class ObjectStores {
         }
 
         StaticCredentialsProvider credentialsProvider = createCredentialsProvider(extension);
-        S3Configuration serviceConfiguration =
-                S3Configuration.builder().pathStyleAccessEnabled(extension.get(KEY_PATH_STYLE_ACCESS).asBoolean()).build();
-        ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder()
-                                                                     .socketTimeout(extension.getDuration(
-                                                                             KEY_SOCKET_TIMEOUT))
-                                                                     .connectionTimeout(extension.getDuration(
-                                                                             KEY_CONNECTION_TIMEOUT))
-                                                                     .maxConnections(extension.getInt(
-                                                                             KEY_MAX_CONNECTIONS));
+        S3Configuration serviceConfiguration = S3Configuration.builder()
+                                                              .pathStyleAccessEnabled(extension.get(
+                                                                      KEY_PATH_STYLE_ACCESS).asBoolean())
+                                                              .build();
+        Apache5HttpClient.Builder httpClientBuilder = Apache5HttpClient.builder()
+                                                                       .socketTimeout(extension.getDuration(
+                                                                               KEY_SOCKET_TIMEOUT))
+                                                                       .connectionTimeout(extension.getDuration(
+                                                                               KEY_CONNECTION_TIMEOUT))
+                                                                       .maxConnections(extension.getInt(
+                                                                               KEY_MAX_CONNECTIONS));
         Duration connectionTTL = extension.getDuration(KEY_CONNECTION_TTL);
         if (connectionTTL.isPositive()) {
             httpClientBuilder.connectionTimeToLive(connectionTTL);
@@ -191,8 +193,7 @@ public class ObjectStores {
             URI endpoint = new URI(extension.get(KEY_END_POINT).asString());
             int defaultPort =
                     PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getScheme()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
-            clientBuilder.endpointOverride(mapEndpoint(name, endpoint, defaultPort))
-                         .region(determineRegion(endpoint));
+            clientBuilder.endpointOverride(mapEndpoint(name, endpoint, defaultPort)).region(determineRegion(endpoint));
         } catch (URISyntaxException exception) {
             throw Exceptions.handle()
                             .error(exception)
@@ -208,8 +209,10 @@ public class ObjectStores {
 
     protected S3AsyncClient createAsyncClient(String name, Settings extension) {
         StaticCredentialsProvider credentialsProvider = createCredentialsProvider(extension);
-        S3Configuration serviceConfiguration =
-                S3Configuration.builder().pathStyleAccessEnabled(extension.get(KEY_PATH_STYLE_ACCESS).asBoolean()).build();
+        S3Configuration serviceConfiguration = S3Configuration.builder()
+                                                              .pathStyleAccessEnabled(extension.get(
+                                                                      KEY_PATH_STYLE_ACCESS).asBoolean())
+                                                              .build();
         NettyNioAsyncHttpClient.Builder httpClientBuilder = NettyNioAsyncHttpClient.builder()
                                                                                    .readTimeout(extension.getDuration(
                                                                                            KEY_SOCKET_TIMEOUT))
@@ -232,8 +235,7 @@ public class ObjectStores {
             URI endpoint = new URI(extension.get(KEY_END_POINT).asString());
             int defaultPort =
                     PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getScheme()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
-            clientBuilder.endpointOverride(mapEndpoint(name, endpoint, defaultPort))
-                         .region(determineRegion(endpoint));
+            clientBuilder.endpointOverride(mapEndpoint(name, endpoint, defaultPort)).region(determineRegion(endpoint));
         } catch (URISyntaxException exception) {
             throw Exceptions.handle()
                             .error(exception)
@@ -249,8 +251,10 @@ public class ObjectStores {
 
     protected S3Presigner createPresigner(String name, Settings extension) {
         StaticCredentialsProvider credentialsProvider = createCredentialsProvider(extension);
-        S3Configuration serviceConfiguration =
-                S3Configuration.builder().pathStyleAccessEnabled(extension.get(KEY_PATH_STYLE_ACCESS).asBoolean()).build();
+        S3Configuration serviceConfiguration = S3Configuration.builder()
+                                                              .pathStyleAccessEnabled(extension.get(
+                                                                      KEY_PATH_STYLE_ACCESS).asBoolean())
+                                                              .build();
         Builder presignerBuilder = S3Presigner.builder()
                                               .serviceConfiguration(serviceConfiguration)
                                               .credentialsProvider(credentialsProvider);
@@ -275,7 +279,7 @@ public class ObjectStores {
 
     private StaticCredentialsProvider createCredentialsProvider(Settings extension) {
         return StaticCredentialsProvider.create(AwsBasicCredentials.create(extension.get(KEY_ACCESS_KEY).asString(),
-                                                                          extension.get(KEY_SECRET_KEY).asString()));
+                                                                           extension.get(KEY_SECRET_KEY).asString()));
     }
 
     private Region determineRegion(URI endpoint) {
@@ -286,7 +290,9 @@ public class ObjectStores {
 
         if (host.startsWith("s3.")) {
             String region = extractRegion(host, "s3.".length());
-            return Strings.isFilled(region) && !Strings.areEqual(region, "amazonaws") ? Region.of(region) : DEFAULT_REGION;
+            return Strings.isFilled(region) && !Strings.areEqual(region, "amazonaws") ?
+                   Region.of(region) :
+                   DEFAULT_REGION;
         }
 
         if (host.startsWith("s3-")) {
