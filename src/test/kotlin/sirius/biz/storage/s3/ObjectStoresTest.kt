@@ -8,13 +8,22 @@
 
 package sirius.biz.storage.s3
 
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigValueFactory
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import sirius.kernel.Sirius
 import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Files
 import sirius.kernel.commons.Tuple
 import sirius.kernel.di.std.Part
+import sirius.kernel.health.HandledException
+import sirius.kernel.settings.PortMapper
+import sirius.kernel.settings.Settings
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -30,6 +39,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import java.nio.file.Files as files_
 
@@ -255,12 +265,109 @@ class ObjectStoresTest {
         }
     }
 
+    @Test
+    fun `Only stores with a configured endpoint are reported as configured`() {
+        assertTrue(stores.isConfigured(SYSTEM_STORE))
+        // A store which is absent from the configuration and one which is present but lacks an endpoint leave
+        // isConfigured through different branches, hence both are checked.
+        assertFalse(stores.isConfigured("unconfigured"))
+        assertFalse(stores.isConfigured("no-such-store"))
+    }
+
+    @Test
+    fun `Requesting a store without a configuration is rejected`() {
+        assertFailsWith<HandledException> { stores.getStore("no-such-store") }
+    }
+
+    // The configured time to live cannot be read back: neither the SDK's service client configuration nor the HTTP
+    // client expose it, so this only asserts that the branch applying it yields a client which still talks to the
+    // store. A regression which drops the call entirely would not be caught here.
+    @Test
+    @Timeout(value = 1, unit = TimeUnit.MINUTES, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    fun `A connection time to live is accepted by the client`() {
+        stores.createClient(SYSTEM_STORE, systemStoreSettings("connectionTTL" to "30s")).use { client ->
+            assertTrue(client.listBuckets().sdkHttpResponse().isSuccessful)
+        }
+    }
+
+    @Test
+    @Timeout(value = 1, unit = TimeUnit.MINUTES, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    fun `A connection time to live is accepted by the async client`() {
+        stores.createAsyncClient(SYSTEM_STORE, systemStoreSettings("connectionTTL" to "30s")).use { client ->
+            assertTrue(client.listBuckets().join().sdkHttpResponse().isSuccessful)
+        }
+    }
+
+    // Ignoring the legacy setting is the SDK's doing rather than ours, so this guards against the configuration being
+    // rejected again - it deliberately says nothing about the warning which accompanies it.
+    @Test
+    @Timeout(value = 1, unit = TimeUnit.MINUTES, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    fun `A legacy signer override does not break the client creation`() {
+        stores.createClient(SYSTEM_STORE, systemStoreSettings("signer" to "S3SignerType")).use { client ->
+            assertTrue(client.listBuckets().sdkHttpResponse().isSuccessful)
+        }
+    }
+
+    // The region is read from the configured endpoint before it is run through the PortMapper, so the fabricated
+    // hosts below reach the region derivation unchanged no matter what the test setup maps them to.
+    @ParameterizedTest
+    @CsvSource(
+        "https://s3.eu-west-1.amazonaws.com, eu-west-1",
+        "https://s3-eu-west-1.amazonaws.com, eu-west-1",
+        "https://s3.amazonaws.com, eu-central-1",
+        "https://s3-eu-west-1, eu-central-1",
+        "http://localhost:9000/s3, eu-central-1"
+    )
+    fun `The region is derived from the endpoint host`(endPoint: String, expectedRegion: String) {
+        stores.createClient(SYSTEM_STORE, systemStoreSettings("endPoint" to endPoint)).use { client ->
+            assertEquals(Region.of(expectedRegion), client.serviceClientConfiguration().region())
+        }
+    }
+
+    @Test
+    fun `The endpoint of a client is mapped to the address the store is reachable at`() {
+        val configuredEndpoint = URI(
+            Sirius.getSettings().getExtension(STORES_EXTENSION_POINT, SYSTEM_STORE)!!.get("endPoint").asString()
+        )
+        // Asking the PortMapper is the only way of naming the address to expect, as the test setup publishes the
+        // container on a port which is picked at runtime.
+        val expectedAddress = PortMapper.mapPort(
+            "s3-$SYSTEM_STORE", configuredEndpoint.host, configuredEndpoint.port
+        )
+
+        stores.createClient(SYSTEM_STORE, systemStoreSettings()).use { client ->
+            val endpoint = client.serviceClientConfiguration().endpointOverride().orElseThrow()
+            assertEquals(expectedAddress.first, endpoint.host)
+            // Published ports are picked from the ephemeral range, so the mapped port is never the default one for
+            // the scheme - which mapEndpoint would drop from the URI instead of spelling it out.
+            assertEquals(expectedAddress.second, endpoint.port)
+            assertEquals(configuredEndpoint.scheme, endpoint.scheme)
+            assertEquals(configuredEndpoint.path, endpoint.path)
+        }
+    }
+
     companion object {
         private const val RANDOM_SEED = 42L
+        private const val STORES_EXTENSION_POINT = "s3.stores"
+        private const val SYSTEM_STORE = "system"
 
         @Part
         @JvmStatic
         private lateinit var stores: ObjectStores
+
+        /**
+         * Derives the settings of the system store with the given keys replaced, so that client creation can be
+         * exercised for configurations the test setup itself does not provide.
+         */
+        private fun systemStoreSettings(vararg overrides: Pair<String, String>): Settings {
+            val extension = Sirius.getSettings().getExtension(STORES_EXTENSION_POINT, SYSTEM_STORE)
+            assertNotNull(extension, "The system store is not configured")
+            val config = overrides.fold(extension.config) { current: Config, (key, value) ->
+                current.withValue(key, ConfigValueFactory.fromAnyRef(value))
+            }
+
+            return Settings(config, false)
+        }
 
         /**
          * Uploads a small object whose contents are its own key, so that assertions can identify it.

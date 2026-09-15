@@ -20,7 +20,7 @@
         <sirius.kernel>54.2.0</sirius.kernel>
         <sirius.web>110.0.0</sirius.web>
         <sirius.db>71.0.1</sirius.db>
-        <aws.sdk>2.54.14</aws.sdk>
+        <aws.sdk>2.54.17</aws.sdk>
         <commonmark>0.30.0</commonmark>
     </properties>
 
@@ -133,7 +133,7 @@
         </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
-            <artifactId>apache-client</artifactId>
+            <artifactId>apache5-client</artifactId>
             <version>${aws.sdk}</version>
         </dependency>
         <dependency>
