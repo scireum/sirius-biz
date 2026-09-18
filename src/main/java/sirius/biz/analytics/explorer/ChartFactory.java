@@ -23,7 +23,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -237,6 +236,10 @@ public abstract class ChartFactory<O> implements Named, Priorized {
 
     /**
      * Computes the effectively visible referenced providers.
+     * <p>
+     * Which factories are referenced never changes, so the lookup is cached. Which of them the
+     * reader may open does change, so that is decided per call: a factory is a singleton, and
+     * caching the filtered list let whoever asked first decide what everyone else was offered.
      *
      * @return a list of recommended {@link ChartFactory factories} which are known to be visible to the user.
      */
@@ -245,7 +248,7 @@ public abstract class ChartFactory<O> implements Named, Priorized {
             List<ChartFactory<O>> providers = new ArrayList<>();
             collectReferencedCharts(providerType -> {
                 ChartFactory<O> provider = globalContext.getPartByType(ChartFactory.class, providerType);
-                if (provider != null && provider.isAccessibleToCurrentUser()) {
+                if (provider != null) {
                     providers.add(provider);
                 }
             });
@@ -253,7 +256,7 @@ public abstract class ChartFactory<O> implements Named, Priorized {
             referencedProviders = providers;
         }
 
-        return Collections.unmodifiableList(referencedProviders);
+        return referencedProviders.stream().filter(ChartFactory::isAccessibleToCurrentUser).toList();
     }
 
     /**
