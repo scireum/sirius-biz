@@ -56,7 +56,7 @@ public class AlertNodeRenderer implements NodeRenderer {
 
         htmlWriter.line();
 
-        htmlWriter.tag(TAG_DIV, Map.of(ARGUMENT_CLASS, "card mb-4 full-border " + alertType.sectionClass));
+        htmlWriter.tag(TAG_DIV, Map.of(ARGUMENT_CLASS, "card mb-4 kb-section full-border " + alertType.sectionClass));
         htmlWriter.line();
 
         htmlWriter.tag(TAG_DIV, Map.of(ARGUMENT_CLASS, "card-body"));
