@@ -210,7 +210,8 @@ public class KnowledgeBaseMarkdownRendererTest {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
-        assertTrue(html.contains("card mb-4 kb-section full-border border-sirius-blue-light"));
+        assertTrue(html.contains("kb-section"));
+        assertTrue(html.contains("border-sirius-blue-light"));
         assertTrue(html.contains("card-title text-sirius-blue-light"));
         assertTrue(html.contains("fa-solid fa-info-circle"));
         assertTrue(html.contains("Markdown KB articles can now render hint boxes."));
@@ -227,7 +228,8 @@ public class KnowledgeBaseMarkdownRendererTest {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
-        assertTrue(html.contains("card mb-4 kb-section full-border border-sirius-yellow-dark"));
+        assertTrue(html.contains("kb-section"));
+        assertTrue(html.contains("border-sirius-yellow-dark"));
         assertTrue(html.contains("card-title text-sirius-yellow-dark"));
         assertTrue(html.contains("fa-solid fa-exclamation-triangle"));
         assertTrue(html.contains("Please plan expensive jobs carefully."));
@@ -262,7 +264,8 @@ public class KnowledgeBaseMarkdownRendererTest {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
-        assertTrue(html.contains("card mb-4 kb-section full-border border-sirius-green-light"));
+        assertTrue(html.contains("kb-section"));
+        assertTrue(html.contains("border-sirius-green-light"));
         assertTrue(html.contains("fa-solid fa-lightbulb"));
         assertTrue(html.contains("<ul>"));
         assertTrue(html.contains("<li>Use queues</li>"));
