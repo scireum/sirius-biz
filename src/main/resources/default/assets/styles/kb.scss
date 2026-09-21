@@ -16,24 +16,43 @@
 // articles work around it with a manual "mb-0" on the closing element; Markdown articles cannot,
 // since Markdown carries no class syntax and the renderer escapes raw HTML.
 //
-// The nesting is what makes "*:last-child" reachable: the SASS parser rejects a bare or starred
-// pseudo-class directly after a combinator, but accepts it written as "&:" inside a nested block.
+// The reset has to walk down the whole trailing chain, not just the outermost element: a container
+// without bottom padding collapses its last child's margin outwards, so a list of paragraphs, or a
+// list nested inside one, keeps its gap however often the container itself is zeroed. Six levels
+// cover what the two article formats can produce.
+//
+// The nesting is also what makes "*:last-child" reachable at all: the SASS parser rejects a starred
+// pseudo-class directly after a combinator and accepts it only written as "&:" inside a block.
 .kb-section > .card-body {
   > * {
     &:last-child {
       margin-bottom: 0;
+      > * {
+        &:last-child {
+          margin-bottom: 0;
+          > * {
+            &:last-child {
+              margin-bottom: 0;
+              > * {
+                &:last-child {
+                  margin-bottom: 0;
+                  > * {
+                    &:last-child {
+                      margin-bottom: 0;
+                      > * {
+                        &:last-child {
+                          margin-bottom: 0;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
-  }
-
-  // A container with no bottom padding collapses its last child's bottom margin outwards, so
-  // zeroing the container alone leaves the gap in place. These are the containers the two article
-  // formats actually produce; a list only needs this when its items are loose enough to be wrapped
-  // in paragraphs.
-  > blockquote:last-child > p:last-child,
-  > ul:last-child > li:last-child > p:last-child,
-  > ol:last-child > li:last-child > p:last-child,
-  > dl:last-child > dd:last-child {
-    margin-bottom: 0;
   }
 
   // A hint box closing a section is a card in its own right and carries Bootstrap's "mb-4". The
