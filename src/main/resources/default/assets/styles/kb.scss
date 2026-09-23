@@ -10,3 +10,55 @@
 .kb-code {
 
 }
+
+// A KB card pads itself, and Bootstrap gives a trailing paragraph or list a bottom margin of its
+// own, so the two stack up and every section and hint box ends in an empty strip. Tagliatelle
+// articles work around it with a manual "mb-0" on the closing element; Markdown articles cannot,
+// since Markdown carries no class syntax and the renderer escapes raw HTML.
+//
+// The reset has to walk down the whole trailing chain, not just the outermost element: a container
+// without bottom padding collapses its last child's margin outwards, so a list of paragraphs, or a
+// list nested inside one, keeps its gap however often the container itself is zeroed. Six levels
+// cover what the two article formats can produce.
+//
+// The nesting is also what makes "*:last-child" reachable at all: the SASS parser rejects a starred
+// pseudo-class directly after a combinator and accepts it only written as "&:" inside a block.
+.kb-section > .card-body {
+  > * {
+    &:last-child {
+      margin-bottom: 0;
+      > * {
+        &:last-child {
+          margin-bottom: 0;
+          > * {
+            &:last-child {
+              margin-bottom: 0;
+              > * {
+                &:last-child {
+                  margin-bottom: 0;
+                  > * {
+                    &:last-child {
+                      margin-bottom: 0;
+                      > * {
+                        &:last-child {
+                          margin-bottom: 0;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // A hint box closing a section is a card in its own right and carries Bootstrap's "mb-4". The
+  // spacing utilities are declared "!important", so that margin outlives the reset above and has to
+  // be overridden in kind.
+  > .kb-section:last-child {
+    margin-bottom: 0 !important;
+  }
+}
