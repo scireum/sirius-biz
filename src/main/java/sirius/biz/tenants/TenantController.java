@@ -391,6 +391,11 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
         T currentTenant = determineCurrentTenant(webContext);
 
         if (isSwitchToMain) {
+            if (!isCurrentlySpying(webContext)) {
+                // We are already in the main tenant, so there is nothing to confirm...
+                webContext.respondWith().redirectToGet(redirectTarget);
+                return;
+            }
             renderSelectTenantConfirmation(webContext,
                                            tenantId,
                                            currentTenant.getIdAsString(),
@@ -408,6 +413,12 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
             UserContext.get()
                        .addMessage(Message.error().withTextMessage(NLS.get("TenantController.cannotBecomeTenant")));
             selectTenants(webContext);
+            return;
+        }
+
+        if (Strings.areEqual(getUser().getTenantId(), tenantId)) {
+            // We already switched to the requested tenant, so there is nothing to confirm...
+            webContext.respondWith().redirectToGet(redirectTarget);
             return;
         }
 
