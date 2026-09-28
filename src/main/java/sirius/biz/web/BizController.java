@@ -673,6 +673,43 @@ public class BizController extends BasicController {
     }
 
     /**
+     * Reads the redirect target from the <tt>goto</tt> parameter, as long as it points to this server.
+     * <p>
+     * This prevents the parameter from being abused as an open redirect to a foreign host.
+     *
+     * @param webContext the current request
+     * @param fallback   the location to use if the parameter is empty or points to a foreign host
+     * @return the redirect target to use
+     */
+    protected String readLocalGotoTarget(WebContext webContext, String fallback) {
+        String target = webContext.get("goto").asString();
+        return isLocalUrl(target, webContext.getBaseURL()) ? target : fallback;
+    }
+
+    /**
+     * Determines if the given URL is either an absolute path or points to the host of the given base URL.
+     *
+     * @param url     the URL to check
+     * @param baseUrl the base URL of the current request like <tt>https://www.mydomain.stuff</tt>
+     * @return <tt>true</tt> if the URL is local, <tt>false</tt> otherwise
+     */
+    public static boolean isLocalUrl(@Nullable String url, @Nullable String baseUrl) {
+        if (Strings.isEmpty(url) || url.contains("\\") || url.chars().anyMatch(Character::isISOControl)) {
+            // Browsers treat backslashes like slashes and strip control characters, so a seemingly local path
+            // like "/\evil.stuff" or "/\t/evil.stuff" would actually point to a foreign host...
+            return false;
+        }
+
+        if (url.startsWith("/")) {
+            return !url.startsWith("//");
+        }
+
+        String authority = Strings.split(baseUrl, "://").getSecond();
+        return Strings.isFilled(authority) && (url.startsWith("https://" + authority + "/")
+                                               || url.startsWith("http://" + authority + "/"));
+    }
+
+    /**
      * Creates a pattern which matches overview and detail page routes.
      * <p>
      * We often have the combination of an overview page and detail pages in the backend that allow to edit entities of

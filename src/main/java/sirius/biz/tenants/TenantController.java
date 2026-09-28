@@ -387,7 +387,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     public void selectTenantConfirmation(final WebContext webContext, String tenantId) {
         boolean isSwitchToMain =
                 "main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId);
-        String redirectTarget = webContext.get("goto").asString(isSwitchToMain ? "/tenants/select" : wondergemRoot);
+        String redirectTarget = readLocalGotoTarget(webContext, isSwitchToMain ? "/tenants/select" : wondergemRoot);
         T currentTenant = determineCurrentTenant(webContext);
 
         if (isSwitchToMain) {
@@ -449,7 +449,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     public void selectTenant(final WebContext webContext, String tenantId) {
         boolean isSwitchToMain =
                 "main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId);
-        String redirectTarget = webContext.get("goto").asString(isSwitchToMain ? "/tenants/select" : wondergemRoot);
+        String redirectTarget = readLocalGotoTarget(webContext, isSwitchToMain ? "/tenants/select" : wondergemRoot);
 
         if (isSwitchToMain) {
             switchBackToMainTenant(webContext);

@@ -697,7 +697,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @Routed(value = "/user-accounts/select/:1", methods = HttpMethod.GET)
     public void selectUserAccountConfirmation(final WebContext webContext, String accountId) {
         String redirectTarget =
-                webContext.get("goto").asString("main".equals(accountId) ? "/user-accounts/select" : wondergemRoot);
+                readLocalGotoTarget(webContext, "main".equals(accountId) ? "/user-accounts/select" : wondergemRoot);
 
         if ("main".equals(accountId)) {
             if (!isCurrentlySpying(webContext)) {
@@ -735,7 +735,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @Routed(value = "/user-accounts/select/:1", methods = HttpMethod.POST)
     public void selectUserAccount(final WebContext webContext, String accountId) {
         String redirectTarget =
-                webContext.get("goto").asString("main".equals(accountId) ? "/user-accounts/select" : wondergemRoot);
+                readLocalGotoTarget(webContext, "main".equals(accountId) ? "/user-accounts/select" : wondergemRoot);
 
         if ("main".equals(accountId)) {
             if (!isCurrentlySpying(webContext)) {
