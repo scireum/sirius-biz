@@ -14,3 +14,10 @@
   max-height: 400px;
   overflow-y: auto;
 }
+
+// Unlike word-break, overflow-wrap keeps the min-content width, so wide tables scroll instead of
+// squeezing their columns down to a single character. The max-width still wraps overlong values.
+.process-output-cell {
+  max-width: 25rem;
+  overflow-wrap: break-word;
+}
