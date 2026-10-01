@@ -2,6 +2,7 @@
 <i:arg type="Map" name="context"/>
 <i:arg type="boolean" name="optional" default="true"/>
 <i:arg type="String" name="suggestionUri" default=""/>
+<i:arg type="boolean" name="allowCustomEntries" default="false"/>
 
 <!--@ setting optional=true because we don't want the multi select to prefill automatically-->
 <!--@ this keeps the behavior of the (old) wondergem template-->
@@ -11,7 +12,8 @@
                label="@param.getLabel()"
                help="@param.getDescription()"
                optional="@optional"
-               suggestionUri="@suggestionUri">
+               suggestionUri="@suggestionUri"
+               allowCustomEntries="@allowCustomEntries">
 
     <i:render name="body"/>
 
