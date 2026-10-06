@@ -31,7 +31,10 @@ import java.util.function.Predicate;
 
 /**
  * Defines an implementation of the {@link IArchiveExtractCallback} to be used during archive extraction.
+ *
+ * @deprecated Only used by the deprecated {@link ArchiveHelper}, use {@link ArchiveExtractor} instead.
  */
+@Deprecated
 public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
 
     private final IInArchive inArchive;
