@@ -127,44 +127,46 @@ class SevenZipAdapter implements IArchiveExtractCallback {
 
     @Override
     public void setOperationResult(ExtractOperationResult extractOperationResult) throws SevenZipException {
-        if (!stop) {
-            try {
-                if (extractOperationResult != ExtractOperationResult.OK) {
-                    // This is most likely an invalid archive. Therefore we use a handled exception here
-                    // as there is no point in throwing this into the syslog...
-                    throw Exceptions.createHandled()
-                                    .withSystemErrorMessage("7-ZIP failed to extract file %s from archive: %s",
-                                                            currentFilePath,
-                                                            extractOperationResult.name())
-                                    .handle();
-                }
+        try {
+            if (stop) {
+                return;
+            }
 
-                // Directories, hidden and filtered entries have no buffer and are not reported, just like
-                // ArchiveExtractor does it for ZIP files.
-                if (currentBuffer != null) {
-                    // Notify our callback about the current result.
-                    // If this returns false, we abort any additional processing. We chose to use a flag here, which
-                    // is then checked in getStream() as well...
-                    Amount progress = Amount.of(filesExtracted).divideBy(Amount.of(totalFiles));
-                    LocalDateTime lastModified = LocalDateTime.ofInstant(currentLastModified, ZoneId.systemDefault());
-                    stop = !extractCallback.apply(new Extracted7ZFile(currentBuffer,
-                                                                      currentFilePath,
-                                                                      lastModified,
-                                                                      progress));
-                }
-            } catch (Exception exception) {
-                throw Exceptions.handle()
-                                .to(Log.SYSTEM)
-                                .error(exception)
-                                .withSystemErrorMessage(
-                                        "An error occurred while handling an extracted file: %s - %s (%s)",
-                                        currentFilePath)
+            if (extractOperationResult != ExtractOperationResult.OK) {
+                // This is most likely an invalid archive. Therefore we use a handled exception here
+                // as there is no point in throwing this into the syslog...
+                throw Exceptions.createHandled()
+                                .withSystemErrorMessage("7-ZIP failed to extract file %s from archive: %s",
+                                                        currentFilePath,
+                                                        extractOperationResult.name())
                                 .handle();
             }
-        }
 
-        // We need to always close the buffer (if it is open) as it might drag a temporary file along...
-        releaseCurrentBuffer();
+            // Directories, hidden and filtered entries have no buffer and are not reported, just like
+            // ArchiveExtractor does it for ZIP files.
+            if (currentBuffer != null) {
+                // Notify our callback about the current result.
+                // If this returns false, we abort any additional processing. We chose to use a flag here, which
+                // is then checked in getStream() as well...
+                Amount progress = Amount.of(filesExtracted).divideBy(Amount.of(totalFiles));
+                LocalDateTime lastModified = LocalDateTime.ofInstant(currentLastModified, ZoneId.systemDefault());
+                stop = !extractCallback.apply(new Extracted7ZFile(currentBuffer,
+                                                                  currentFilePath,
+                                                                  lastModified,
+                                                                  progress));
+            }
+        } catch (Exception exception) {
+            throw Exceptions.handle()
+                            .to(Log.SYSTEM)
+                            .error(exception)
+                            .withSystemErrorMessage("An error occurred while handling an extracted file: %s - %s (%s)",
+                                                    currentFilePath)
+                            .handle();
+        } finally {
+            // We need to always close the buffer (if it is open) as it might drag a temporary file along - even if
+            // 7-ZIP reported an error or our callback failed, as 7-ZIP aborts the extraction in this case...
+            releaseCurrentBuffer();
+        }
     }
 
     /**
