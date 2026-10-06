@@ -19,6 +19,7 @@ import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 
 import java.io.IOException;
@@ -48,6 +49,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     private ExtractedFileBuffer currentBuffer;
     private String currentFilePath;
     private Instant currentLastModified;
+    private HandledException failure;
 
     SevenZipAdapter(IInArchive inArchive, Predicate<String> filter, Processor<ExtractedFile, Boolean> extractCallback)
             throws SevenZipException {
@@ -125,8 +127,18 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         // Ignored
     }
 
+    /**
+     * Hands the extracted file to our callback once 7-ZIP has finished extracting it.
+     * <p>
+     * Note that this method must never throw an exception: 7-Zip-JBinding 23.01-2.2 aborts the whole JVM if this
+     * callback fails for the last file of a 7z block, as it then tries to invoke {@code reportExtractResult} using
+     * a malformed JNI signature. Therefore, any failure is recorded and extraction is stopped instead. The failure
+     * is then thrown by {@link #throwIfFailed()} once 7-ZIP has returned control.
+     *
+     * @param extractOperationResult the result of extracting the current entry as reported by 7-ZIP
+     */
     @Override
-    public void setOperationResult(ExtractOperationResult extractOperationResult) throws SevenZipException {
+    public void setOperationResult(ExtractOperationResult extractOperationResult) {
         try {
             if (stop) {
                 return;
@@ -135,11 +147,12 @@ class SevenZipAdapter implements IArchiveExtractCallback {
             if (extractOperationResult != ExtractOperationResult.OK) {
                 // This is most likely an invalid archive. Therefore we use a handled exception here
                 // as there is no point in throwing this into the syslog...
-                throw Exceptions.createHandled()
-                                .withSystemErrorMessage("7-ZIP failed to extract file %s from archive: %s",
-                                                        currentFilePath,
-                                                        extractOperationResult.name())
-                                .handle();
+                fail(Exceptions.createHandled()
+                               .withSystemErrorMessage("7-ZIP failed to extract file %s from archive: %s",
+                                                       currentFilePath,
+                                                       extractOperationResult.name())
+                               .handle());
+                return;
             }
 
             // Directories, hidden and filtered entries have no buffer and are not reported, just like
@@ -156,16 +169,35 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                                                                   progress));
             }
         } catch (Exception exception) {
-            throw Exceptions.handle()
-                            .to(Log.SYSTEM)
-                            .error(exception)
-                            .withSystemErrorMessage("An error occurred while handling an extracted file: %s - %s (%s)",
-                                                    currentFilePath)
-                            .handle();
+            fail(Exceptions.handle()
+                           .to(Log.SYSTEM)
+                           .error(exception)
+                           .withSystemErrorMessage("An error occurred while handling an extracted file: %s - %s (%s)",
+                                                   currentFilePath)
+                           .handle());
         } finally {
             // We need to always close the buffer (if it is open) as it might drag a temporary file along - even if
             // 7-ZIP reported an error or our callback failed, as 7-ZIP aborts the extraction in this case...
             releaseCurrentBuffer();
+        }
+    }
+
+    private void fail(HandledException exception) {
+        failure = exception;
+        stop = true;
+    }
+
+    /**
+     * Throws the failure which occurred while handling an extracted file, if there was one.
+     * <p>
+     * Must be invoked once {@link IInArchive#extract(int[], boolean, IArchiveExtractCallback)} has returned, as
+     * {@link #setOperationResult(ExtractOperationResult)} must not throw any exception itself.
+     *
+     * @throws HandledException the failure which aborted the extraction
+     */
+    void throwIfFailed() {
+        if (failure != null) {
+            throw failure;
         }
     }
 

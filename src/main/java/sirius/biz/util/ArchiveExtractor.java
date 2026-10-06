@@ -311,7 +311,9 @@ public class ArchiveExtractor {
         try (RandomAccessFile randomAccessFile = new RandomAccessFile(archiveFile, "r")) {
             RandomAccessFileInStream inputStream = new RandomAccessFileInStream(randomAccessFile);
             try (IInArchive archive = SevenZip.openInArchive(null, inputStream)) {
-                archive.extract(null, false, new SevenZipAdapter(archive, filter, extractedFileConsumer));
+                SevenZipAdapter adapter = new SevenZipAdapter(archive, filter, extractedFileConsumer);
+                archive.extract(null, false, adapter);
+                adapter.throwIfFailed();
             } catch (SevenZipException sevenZipException) {
                 // This is most probably an error indicating an inconsistent archive. We therefore directly throw
                 // a handled exception to avoid jamming the syslog...
