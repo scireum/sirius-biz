@@ -17,8 +17,10 @@ import net.sf.sevenzipjbinding.PropID;
 import net.sf.sevenzipjbinding.SevenZipException;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Amount;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 
 import java.io.IOException;
@@ -48,6 +50,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     private ExtractedFileBuffer currentBuffer;
     private String currentFilePath;
     private Instant currentLastModified;
+    private Throwable failure;
 
     SevenZipAdapter(IInArchive inArchive, Predicate<String> filter, Processor<ExtractedFile, Boolean> extractCallback)
             throws SevenZipException {
@@ -61,9 +64,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     @Override
     public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException {
         // Just to be sure, set all shared variables to a known state...
-        if (currentBuffer != null) {
-            currentBuffer.cleanup();
-        }
+        releaseCurrentBuffer();
         currentFilePath = null;
 
         currentLastModified = Optional.ofNullable((Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME))
@@ -127,47 +128,101 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         // Ignored
     }
 
+    /**
+     * Hands the extracted file to our callback once 7-ZIP has finished extracting it.
+     * <p>
+     * Note that this method must never throw an exception: 7-Zip-JBinding 23.01-2.2 aborts the whole JVM if this
+     * callback fails for the last file of a 7z block, as it then tries to invoke {@code reportExtractResult} using
+     * a malformed JNI signature. This applies to any {@link Throwable}, including {@link Error errors}. Therefore,
+     * any failure is recorded and extraction is stopped instead. The failure is then thrown by
+     * {@link #throwIfFailed()} once 7-ZIP has returned control.
+     *
+     * @param extractOperationResult the result of extracting the current entry as reported by 7-ZIP
+     */
     @Override
-    public void setOperationResult(ExtractOperationResult extractOperationResult) throws SevenZipException {
-        if (!stop) {
-            try {
-                if (extractOperationResult != ExtractOperationResult.OK) {
-                    // This is most likely an invalid archive. Therefore we use a handled exception here
-                    // as there is no point in throwing this into the syslog...
-                    throw Exceptions.createHandled()
-                                    .withSystemErrorMessage("7-ZIP failed to extract file %s from archive: %s",
-                                                            currentFilePath,
-                                                            extractOperationResult.name())
-                                    .handle();
-                }
+    @SuppressWarnings("java:S1181")
+    @Explain("Errors must not escape into the native 7-ZIP code either, they are rethrown unchanged by throwIfFailed.")
+    public void setOperationResult(ExtractOperationResult extractOperationResult) {
+        try {
+            if (stop) {
+                return;
+            }
 
+            if (extractOperationResult != ExtractOperationResult.OK) {
+                // This is most likely an invalid archive. Therefore we use a handled exception here
+                // as there is no point in throwing this into the syslog...
+                fail(Exceptions.createHandled()
+                               .withSystemErrorMessage("7-ZIP failed to extract file %s from archive: %s",
+                                                       currentFilePath,
+                                                       extractOperationResult.name())
+                               .handle());
+                return;
+            }
+
+            // Directories, hidden and filtered entries have no buffer and are not reported, just like
+            // ArchiveExtractor does it for ZIP files.
+            if (currentBuffer != null) {
                 // Notify our callback about the current result.
                 // If this returns false, we abort any additional processing. We chose to use a flag here, which
                 // is then checked in getStream() as well...
                 Amount progress = Amount.of(filesExtracted).divideBy(Amount.of(totalFiles));
                 LocalDateTime lastModified = LocalDateTime.ofInstant(currentLastModified, ZoneId.systemDefault());
-
-                Extracted7ZFile extracted7ZFile = currentBuffer == null ?
-                                                  null :
-                                                  new Extracted7ZFile(currentBuffer,
-                                                                      currentFilePath,
-                                                                      lastModified,
-                                                                      progress);
-                stop = !extractCallback.apply(extracted7ZFile);
-            } catch (Exception exception) {
-                throw Exceptions.handle()
-                                .to(Log.SYSTEM)
-                                .error(exception)
-                                .withSystemErrorMessage(
-                                        "An error occurred while handling an extracted file: %s - %s (%s)",
-                                        currentFilePath)
-                                .handle();
+                stop = !extractCallback.apply(new Extracted7ZFile(currentBuffer,
+                                                                  currentFilePath,
+                                                                  lastModified,
+                                                                  progress));
             }
+        } catch (Exception exception) {
+            fail(Exceptions.handle()
+                           .to(Log.SYSTEM)
+                           .error(exception)
+                           .withSystemErrorMessage("An error occurred while handling an extracted file: %s - %s (%s)",
+                                                   currentFilePath)
+                           .handle());
+        } catch (Error error) {
+            // Deliberately neither wrapped nor logged, as this might well be an OutOfMemoryError...
+            fail(error);
+        } finally {
+            // We need to always close the buffer (if it is open) as it might drag a temporary file along - even if
+            // 7-ZIP reported an error or our callback failed, as 7-ZIP aborts the extraction in this case...
+            releaseCurrentBuffer();
         }
+    }
 
-        // We need to always close the buffer (if it is open) as it might drag a temporary file along...
+    private void fail(Throwable throwable) {
+        failure = throwable;
+        stop = true;
+    }
+
+    /**
+     * Throws the failure which occurred while handling an extracted file, if there was one.
+     * <p>
+     * Must be invoked once {@link IInArchive#extract(int[], boolean, IArchiveExtractCallback)} has returned, as
+     * {@link #setOperationResult(ExtractOperationResult)} must not throw any exception itself.
+     *
+     * @throws HandledException the failure which aborted the extraction
+     * @throws Error            an error which aborted the extraction, rethrown unchanged
+     */
+    void throwIfFailed() {
+        if (failure instanceof Error error) {
+            throw error;
+        }
+        if (failure instanceof HandledException handledException) {
+            throw handledException;
+        }
+    }
+
+    /**
+     * Cleans up and forgets the buffer of the current entry, if there is one.
+     * <p>
+     * Resetting the field is essential: {@link #setOperationResult(ExtractOperationResult)} only reports entries
+     * which have a buffer. A stale buffer would make skipped entries (directories, hidden or filtered files) show up
+     * with the contents of the previously extracted file.
+     */
+    private void releaseCurrentBuffer() {
         if (currentBuffer != null) {
             currentBuffer.cleanup();
+            currentBuffer = null;
         }
     }
 

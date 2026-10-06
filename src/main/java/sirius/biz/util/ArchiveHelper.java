@@ -34,7 +34,15 @@ import java.util.function.Predicate;
  * Utility to handle and extract archive files like zip, 7z, tar, ...
  * <p>
  * For a list of supported formats have a look at {@link ArchiveFormat#values()}.
+ *
+ * @deprecated Use {@link ArchiveExtractor} instead. This helper feeds every archive, ZIP files included, through
+ * 7-Zip. Since 7-Zip 23.01, 7-Zip drops the non-ASCII characters of entry names in legacy ZIP files created on
+ * Windows (CP437 encoded, without the UTF-8 flag) on Linux, so that e.g. {@code Grüße.txt} becomes
+ * {@code Gre.txt}. The heuristics in {@link LocalArchiveExtractCallback} can no longer repair this, as the
+ * characters are already lost. {@link ArchiveExtractor} reads ZIP files using the Java APIs instead, which keep
+ * these characters (although they decode them as ISO-8859-1 instead of CP437).
  */
+@Deprecated
 public class ArchiveHelper {
 
     private ArchiveHelper() {

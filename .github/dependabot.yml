@@ -34,6 +34,11 @@ updates:
     apache-sshd:
       patterns:
         - "org.apache.sshd:sshd-*"
+    # The 7-Zip-JBinding API jar and its native platform jar must stay on the same version, so they only ever
+    # move together.
+    sevenzipjbinding:
+      patterns:
+        - "net.sf.sevenzipjbinding:*"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
