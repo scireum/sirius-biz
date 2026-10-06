@@ -141,6 +141,22 @@ class ArchiveExtractorTest {
     }
 
     @Test
+    fun `error thrown by the consumer is rethrown unchanged`() {
+        // An Error must not escape into the native 7-ZIP code either, as 7-Zip-JBinding 23.01-2.2 would abort the JVM
+        // (large.7z stores its only file in a block of its own). Instead, it is rethrown once 7-ZIP has returned.
+        val temporaryFilesBefore = countTemporaryBufferFiles()
+
+        val error = assertThrows<AssertionError> {
+            archiveExtractor.extractAll("large.7z", archive("large.7z"), null) {
+                throw AssertionError("Simulated error while importing the file")
+            }
+        }
+
+        assertEquals("Simulated error while importing the file", error.message)
+        assertEquals(temporaryFilesBefore, countTemporaryBufferFiles())
+    }
+
+    @Test
     fun `ZIP which cannot be read by Java falls back to 7-Zip`() {
         // A 7z archive disguised as ZIP is rejected by the Java APIs (with both charsets), so ArchiveExtractor has to
         // retry using 7-Zip, which detects the actual format by itself.

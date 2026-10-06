@@ -17,6 +17,7 @@ import net.sf.sevenzipjbinding.PropID;
 import net.sf.sevenzipjbinding.SevenZipException;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Amount;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
@@ -49,7 +50,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     private ExtractedFileBuffer currentBuffer;
     private String currentFilePath;
     private Instant currentLastModified;
-    private HandledException failure;
+    private Throwable failure;
 
     SevenZipAdapter(IInArchive inArchive, Predicate<String> filter, Processor<ExtractedFile, Boolean> extractCallback)
             throws SevenZipException {
@@ -132,12 +133,15 @@ class SevenZipAdapter implements IArchiveExtractCallback {
      * <p>
      * Note that this method must never throw an exception: 7-Zip-JBinding 23.01-2.2 aborts the whole JVM if this
      * callback fails for the last file of a 7z block, as it then tries to invoke {@code reportExtractResult} using
-     * a malformed JNI signature. Therefore, any failure is recorded and extraction is stopped instead. The failure
-     * is then thrown by {@link #throwIfFailed()} once 7-ZIP has returned control.
+     * a malformed JNI signature. This applies to any {@link Throwable}, including {@link Error errors}. Therefore,
+     * any failure is recorded and extraction is stopped instead. The failure is then thrown by
+     * {@link #throwIfFailed()} once 7-ZIP has returned control.
      *
      * @param extractOperationResult the result of extracting the current entry as reported by 7-ZIP
      */
     @Override
+    @SuppressWarnings("java:S1181")
+    @Explain("Errors must not escape into the native 7-ZIP code either, they are rethrown unchanged by throwIfFailed.")
     public void setOperationResult(ExtractOperationResult extractOperationResult) {
         try {
             if (stop) {
@@ -175,6 +179,9 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                            .withSystemErrorMessage("An error occurred while handling an extracted file: %s - %s (%s)",
                                                    currentFilePath)
                            .handle());
+        } catch (Error error) {
+            // Deliberately neither wrapped nor logged, as this might well be an OutOfMemoryError...
+            fail(error);
         } finally {
             // We need to always close the buffer (if it is open) as it might drag a temporary file along - even if
             // 7-ZIP reported an error or our callback failed, as 7-ZIP aborts the extraction in this case...
@@ -182,8 +189,8 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
     }
 
-    private void fail(HandledException exception) {
-        failure = exception;
+    private void fail(Throwable throwable) {
+        failure = throwable;
         stop = true;
     }
 
@@ -194,10 +201,14 @@ class SevenZipAdapter implements IArchiveExtractCallback {
      * {@link #setOperationResult(ExtractOperationResult)} must not throw any exception itself.
      *
      * @throws HandledException the failure which aborted the extraction
+     * @throws Error            an error which aborted the extraction, rethrown unchanged
      */
     void throwIfFailed() {
-        if (failure != null) {
-            throw failure;
+        if (failure instanceof Error error) {
+            throw error;
+        }
+        if (failure instanceof HandledException handledException) {
+            throw handledException;
         }
     }
 
