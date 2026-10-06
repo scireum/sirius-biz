@@ -106,7 +106,8 @@ class ExtractedFileBuffer {
                       .to(Log.SYSTEM)
                       .error(exception)
                       .withSystemErrorMessage(
-                              "Failed to close a temporary buffer created when extracting an archive: %s (%s)");
+                              "Failed to close a temporary buffer created when extracting an archive: %s (%s)")
+                      .handle();
         }
     }
 }
