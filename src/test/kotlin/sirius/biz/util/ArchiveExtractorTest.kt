@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.time.Instant
@@ -89,7 +90,7 @@ class ArchiveExtractorTest {
 
     @Test
     fun `7z archive only yields entries accepted by the filter`() {
-        val files = extract("sample.7z") { path -> path.endsWith(".csv") }
+        val files = extract("sample.7z", filter = { path -> path.endsWith(".csv") })
 
         assertEquals(setOf("docs/data.csv"), files.keys)
     }
@@ -114,18 +115,75 @@ class ArchiveExtractorTest {
     }
 
     @Test
-    fun `corrupt 7z archive results in a handled exception`() {
+    fun `7z entry above the in-memory threshold is extracted via a temporary file`() {
+        // large.txt has 5 MB, which exceeds the 4 MB that ExtractedFileBuffer keeps in memory.
+        val files = extract("large.7z")
+
+        val expected = "0123456789abcdef".repeat(5 * 1024 * 1024 / 16)
+        assertEquals(setOf("large.txt"), files.keys)
+        assertEquals(expected, files["large.txt"])
+    }
+
+    @Test
+    fun `temporary file is removed when the consumer fails`() {
+        // large.7z stores its only file in a block of its own. Therefore, this also ensures that a failing consumer
+        // does not abort the JVM, which 7-Zip-JBinding 23.01-2.2 does if the 7-ZIP callback fails for the last file
+        // of a block.
+        val temporaryFilesBefore = countTemporaryBufferFiles()
+
         assertThrows<HandledException> {
+            archiveExtractor.extractAll("large.7z", archive("large.7z"), null) {
+                throw IllegalStateException("Simulated failure while importing the file")
+            }
+        }
+
+        assertEquals(temporaryFilesBefore, countTemporaryBufferFiles())
+    }
+
+    @Test
+    fun `ZIP which cannot be read by Java falls back to 7-Zip`() {
+        // A 7z archive disguised as ZIP is rejected by the Java APIs (with both charsets), so ArchiveExtractor has to
+        // retry using 7-Zip, which detects the actual format by itself.
+        val files = extract("sample.7z", fileName = "sample.zip")
+
+        assertEquals(setOf("readme.txt", "docs/Grüße.txt", "docs/data.csv"), files.keys)
+    }
+
+    @Test
+    fun `corrupt 7z archive results in a handled exception`() {
+        val exception = assertThrows<HandledException> {
             extract("corrupt.7z")
         }
+
+        // Ensures that 7-Zip itself rejected the archive, and not some unrelated error along the way.
+        assertTrue(exception.message!!.contains("probably corrupted"), exception.message)
+    }
+
+    @Test
+    fun `damaged data in a 7z archive results in a handled exception`() {
+        // In contrast to corrupt.7z, the headers of this archive are intact, but its packed data has been damaged.
+        // 7-ZIP therefore opens it fine, but reports a DATAERROR for its only file. This result has to reach the
+        // caller instead of a generic "Error extracting all items" from 7-Zip-JBinding.
+        val exception = assertThrows<HandledException> {
+            extract("damaged-data.7z")
+        }
+
+        assertTrue(exception.message!!.contains("DATAERROR"), exception.message)
     }
 
     /**
      * Extracts the given test archive and returns the contents of all extracted files, keyed by their path.
+     *
+     * @param fileName the file name to report to the extractor, which determines the processing based on its
+     * extension. Defaults to the name of the test archive itself.
      */
-    private fun extract(archiveName: String, filter: Predicate<String>? = null): Map<String, String> {
+    private fun extract(
+        archiveName: String,
+        filter: Predicate<String>? = null,
+        fileName: String = archiveName
+    ): Map<String, String> {
         val files = LinkedHashMap<String, String>()
-        archiveExtractor.extractAll(archiveName, archive(archiveName), filter) { file ->
+        archiveExtractor.extractAll(fileName, archive(archiveName), filter) { file ->
             // The content has to be read right away, as the underlying buffer is released after the callback.
             files[file.filePath] = file.openInputStream().use { it.readBytes().toString(StandardCharsets.UTF_8) }
         }
@@ -133,6 +191,13 @@ class ArchiveExtractorTest {
     }
 
     private fun archive(archiveName: String) = Paths.get("src/test/resources/test-data/archives", archiveName).toFile()
+
+    /**
+     * Counts the temporary files created by [ExtractedFileBuffer] once an entry exceeds its in-memory threshold.
+     */
+    private fun countTemporaryBufferFiles() =
+        File(System.getProperty("java.io.tmpdir")).listFiles { file -> file.name.startsWith("sirius_archive_") }
+            ?.size ?: 0
 
     companion object {
         @Part
