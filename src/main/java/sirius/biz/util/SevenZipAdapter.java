@@ -61,9 +61,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     @Override
     public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException {
         // Just to be sure, set all shared variables to a known state...
-        if (currentBuffer != null) {
-            currentBuffer.cleanup();
-        }
+        releaseCurrentBuffer();
         currentFilePath = null;
 
         currentLastModified = Optional.ofNullable((Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME))
@@ -141,19 +139,19 @@ class SevenZipAdapter implements IArchiveExtractCallback {
                                     .handle();
                 }
 
-                // Notify our callback about the current result.
-                // If this returns false, we abort any additional processing. We chose to use a flag here, which
-                // is then checked in getStream() as well...
-                Amount progress = Amount.of(filesExtracted).divideBy(Amount.of(totalFiles));
-                LocalDateTime lastModified = LocalDateTime.ofInstant(currentLastModified, ZoneId.systemDefault());
-
-                Extracted7ZFile extracted7ZFile = currentBuffer == null ?
-                                                  null :
-                                                  new Extracted7ZFile(currentBuffer,
+                // Directories, hidden and filtered entries have no buffer and are not reported, just like
+                // ArchiveExtractor does it for ZIP files.
+                if (currentBuffer != null) {
+                    // Notify our callback about the current result.
+                    // If this returns false, we abort any additional processing. We chose to use a flag here, which
+                    // is then checked in getStream() as well...
+                    Amount progress = Amount.of(filesExtracted).divideBy(Amount.of(totalFiles));
+                    LocalDateTime lastModified = LocalDateTime.ofInstant(currentLastModified, ZoneId.systemDefault());
+                    stop = !extractCallback.apply(new Extracted7ZFile(currentBuffer,
                                                                       currentFilePath,
                                                                       lastModified,
-                                                                      progress);
-                stop = !extractCallback.apply(extracted7ZFile);
+                                                                      progress));
+                }
             } catch (Exception exception) {
                 throw Exceptions.handle()
                                 .to(Log.SYSTEM)
@@ -166,8 +164,20 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
 
         // We need to always close the buffer (if it is open) as it might drag a temporary file along...
+        releaseCurrentBuffer();
+    }
+
+    /**
+     * Cleans up and forgets the buffer of the current entry, if there is one.
+     * <p>
+     * Resetting the field is essential: {@link #setOperationResult(ExtractOperationResult)} only reports entries
+     * which have a buffer. A stale buffer would make skipped entries (directories, hidden or filtered files) show up
+     * with the contents of the previously extracted file.
+     */
+    private void releaseCurrentBuffer() {
         if (currentBuffer != null) {
             currentBuffer.cleanup();
+            currentBuffer = null;
         }
     }
 
