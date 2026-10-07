@@ -3,7 +3,8 @@
 
 <i:invoke template="/templates/biz/jobs/params/paramMultiSelect.html.pasta" param="param" context="context"
           optional="!param.isRequired()"
-          suggestionUri="@param.as(sirius.biz.jobs.params.MultiSelectParameter.class).getSuggestionUri()">
+          suggestionUri="@param.as(sirius.biz.jobs.params.MultiSelectParameter.class).getSuggestionUri()"
+          allowCustomEntries="param.as(sirius.biz.jobs.params.MultiSelectParameter.class).isAllowCustomEntries()">
     <i:for var="entry"
            type="sirius.biz.jobs.params.MultiSelectParameter$MultiSelectValue"
            items="@param.as(sirius.biz.jobs.params.MultiSelectParameter.class).getValues(context)">

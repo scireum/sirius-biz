@@ -1,10 +1,12 @@
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.CachingSupplier;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,6 +17,9 @@ import java.util.regex.Pattern;
 
 /**
  * Provides a multi select parameter from a fixed list of key-value pairs.
+ * <p>
+ * Using {@link #allowCustomEntries()}, the user may additionally enter arbitrary values which are not part of the
+ * list. The list may then also be left empty to provide a free text multi select.
  */
 public class MultiSelectStringParameter extends MultiSelectParameter<String, MultiSelectStringParameter> {
 
@@ -22,6 +27,7 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
 
     private Supplier<Map<String, String>> entriesProvider;
     private Supplier<List<String>> defaultValueProvider;
+    private boolean allowCustomEntries = false;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -80,6 +86,21 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
         return this;
     }
 
+    /**
+     * Permits the user to enter values which are not part of the list of entries.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public MultiSelectStringParameter allowCustomEntries() {
+        this.allowCustomEntries = true;
+        return self();
+    }
+
+    @Override
+    public boolean isAllowCustomEntries() {
+        return allowCustomEntries;
+    }
+
     private Map<String, String> fetchEntriesMap() {
         if (entriesProvider != null) {
             return entriesProvider.get();
@@ -89,6 +110,9 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
 
     /**
      * Enumerates all values provided by the parameter.
+     * <p>
+     * If {@linkplain #allowCustomEntries() custom entries} are permitted, selected values which are not part of the
+     * list of entries are appended, so that they are still displayed when the form is rendered again.
      *
      * @return list of {@link MultiSelectValue entries} with the key as name and display value as label
      */
@@ -98,12 +122,22 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
         List<String> selectedValues =
                 contextValue == null ? List.of() : Arrays.asList(contextValue.split(Pattern.quote(DELIMITER)));
 
-        return fetchEntriesMap().entrySet()
-                                .stream()
-                                .map(entry -> new MultiSelectValue(entry.getKey(),
-                                                                   NLS.smartGet(entry.getValue()),
-                                                                   selectedValues.contains(entry.getKey())))
-                                .toList();
+        Map<String, String> entriesMap = fetchEntriesMap();
+        List<MultiSelectValue> values = new ArrayList<>();
+        entriesMap.forEach((key, label) -> values.add(new MultiSelectValue(key,
+                                                                           NLS.smartGet(label),
+                                                                           selectedValues.contains(key))));
+
+        if (allowCustomEntries) {
+            selectedValues.stream()
+                          .filter(Strings::isFilled)
+                          .filter(value -> !entriesMap.containsKey(value))
+                          .distinct()
+                          .map(value -> new MultiSelectValue(value, value, true))
+                          .forEach(values::add);
+        }
+
+        return values;
     }
 
     @Override
@@ -132,6 +166,10 @@ public class MultiSelectStringParameter extends MultiSelectParameter<String, Mul
         // we can not allow the delimiter within values, as we obviously use it to separate values from each other
         if (rawInput.contains(DELIMITER)) {
             return null;
+        }
+
+        if (allowCustomEntries) {
+            return Strings.isFilled(rawInput) ? rawInput : null;
         }
 
         if (!fetchEntriesMap().containsKey(rawInput)) {

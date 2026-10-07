@@ -75,6 +75,15 @@ public abstract class MultiSelectParameter<V, P extends MultiSelectParameter<V, 
         return "";
     }
 
+    /**
+     * Determines if the user may enter values which are not part of the selectable options.
+     *
+     * @return <tt>true</tt> if custom entries are permitted, <tt>false</tt> otherwise
+     */
+    public boolean isAllowCustomEntries() {
+        return false;
+    }
+
     @Override
     public String getTemplateName() {
         return "/templates/biz/jobs/params/selectMulti.html.pasta";
