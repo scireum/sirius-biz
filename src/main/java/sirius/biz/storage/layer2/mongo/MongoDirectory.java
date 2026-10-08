@@ -41,7 +41,7 @@ import java.util.function.Predicate;
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 @Index(name = "directory_tenant_lookup",
-        columns = {"spaceName", "tenant", "deleted"},
+        columns = {"spaceName", "tenantId", "deleted"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 @Index(name = "directory_name_lookup",
         columns = {"spaceName", "parent", "deleted", "directoryName"},
