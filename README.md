@@ -1,6 +1,6 @@
 # sirius-biz
 ![sirius](https://raw.githubusercontent.com/scireum/sirius-kernel/main/docs/sirius.jpg)
-[![Build Status](https://drone.scireum.com/api/badges/scireum/sirius-biz/status.svg?ref=refs/heads/main)](https://drone.scireum.com/scireum/sirius-biz)
+[![Build Status](https://github.com/scireum/sirius-biz/actions/workflows/push-master.yml/badge.svg?branch=main)](https://github.com/scireum/sirius-biz/actions/workflows/push-master.yml)
 
 Welcome to the **business module** of the SIRIUS OpenSource framework created by [scireum GmbH](https://www.scireum.de). 
 To learn more about what SIRIUS is please refer to documentation of the [kernel module](https://github.com/scireum/sirius-kernel).
