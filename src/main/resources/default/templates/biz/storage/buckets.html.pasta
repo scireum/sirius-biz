@@ -29,7 +29,7 @@
                     <small class="muted">@bucket.getDescription()</small>
                 </td>
                 <td class="align-right">
-                    @bucket.getNumberOfObjects()
+                    @formatNumber(bucket.getNumberOfObjects())
                 </td>
             </tr>
         </i:for>
