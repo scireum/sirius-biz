@@ -1,9 +1,8 @@
 <i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
-<i:local name="additionalClasses" value="@param.buildCssClasses()"/>
 <i:local name="fileParam" value="param.as(sirius.biz.jobs.params.FileParameter.class)"/>
-<t:fileField class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
+<t:fileField class="@apply('col-md-12 col-xs-12 %s', param.buildCssClasses())"
              name="@param.getName()"
              allowFiles="@fileParam.allowsFiles()"
              allowDirectories="@fileParam.allowsDirectories()"
