@@ -5,8 +5,7 @@
 
 <!--@ setting optional=true because we don't want the singleselect to prefill automatically-->
 <!--@ this keeps the behavior of the (old) wondergem template-->
-<i:local name="additionalClasses" value="@apply('param-%s %s', param.getName(), param.isRequired() ? 'required' : '')"/>
-<t:singleSelect class="@apply('col-md-12 col-xs-12 %s', additionalClasses)"
+<t:singleSelect class="@apply('col-md-12 col-xs-12 %s', param.buildCssClasses())"
                 name="@param.getName()"
                 label="@param.getLabel()"
                 help="@param.getDescription()"
