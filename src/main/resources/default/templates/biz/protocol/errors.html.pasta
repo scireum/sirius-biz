@@ -58,7 +58,7 @@
                                             <div class="text-muted">@toUserString(incident.getFirstOccurrence())</div>
                                         </div>
                                         <div class="col-md-4 text-small text-muted">
-                                            <div>@incident.getNumberOfOccurrences()</div>
+                                            <div>@formatNumber(incident.getNumberOfOccurrences())</div>
                                             <div>@incident.getCategory()</div>
                                         </div>
                                         <div class="col-md-4 text-small text-muted">
