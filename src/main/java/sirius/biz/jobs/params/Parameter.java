@@ -176,6 +176,35 @@ public class Parameter<V> extends Composable {
     }
 
     /**
+     * Determines if this parameter is marked as admin-only.
+     *
+     * @return <tt>true</tt> if the parameter is marked as admin-only, <tt>false</tt> otherwise
+     * @see ParameterBuilder#markAdminOnly()
+     */
+    public boolean isAdminOnly() {
+        return delegate.isAdminOnly();
+    }
+
+    /**
+     * Builds the CSS classes to apply to the form group rendering this parameter.
+     * <p>
+     * Next to <tt>param-NAME</tt>, which the parameter logic uses to locate the field, this contains the markers
+     * <tt>required</tt> and <tt>admin-only</tt> where applicable.
+     *
+     * @return the CSS classes separated by spaces
+     */
+    public String buildCssClasses() {
+        StringBuilder classes = new StringBuilder("param-").append(getName());
+        if (isRequired()) {
+            classes.append(" required");
+        }
+        if (isAdminOnly()) {
+            classes.append(" admin-only");
+        }
+        return classes.toString();
+    }
+
+    /**
      * Returns a {@link LogVisibility} value which indicates in which log this parameter should be logged.
      *
      * @return an enum value indicating the log behavior of this parameter

@@ -41,6 +41,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     protected String label;
     protected String description;
     protected boolean required;
+    protected boolean adminOnly;
     protected Visibility visibility = Visibility.NORMAL;
     protected Parameter.LogVisibility logVisibility = Parameter.LogVisibility.NORMAL;
     protected Predicate<Map<String, String>> shouldHide = map -> false;
@@ -255,6 +256,21 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     }
 
     /**
+     * Marks the parameter as admin-only, which renders a lock icon next to its label, just like the
+     * <tt>admin-link</tt> class does for links and menu items.
+     * <p>
+     * This is a visual hint only and does not restrict access to the parameter in any way. A job factory still has to
+     * restrict the parameter to the intended users, typically by only collecting it if the current user holds the
+     * required permission.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public P markAdminOnly() {
+        this.adminOnly = true;
+        return self();
+    }
+
+    /**
      * Marks this parameter as visible.
      *
      * @return the parameter itself for fluent method calls
@@ -448,6 +464,15 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      */
     protected boolean isRequired() {
         return required;
+    }
+
+    /**
+     * Determines if this parameter is marked as admin-only.
+     *
+     * @return <tt>true</tt> if the parameter is marked as admin-only, <tt>false</tt> otherwise
+     */
+    protected boolean isAdminOnly() {
+        return adminOnly;
     }
 
     /**
