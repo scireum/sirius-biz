@@ -48,7 +48,7 @@
                 </tr>
                 <tr>
                     <td>@i18n("StoredIncident.numberOfOccurrences")</td>
-                    <td>@toUserString(incident.getNumberOfOccurrences())</td>
+                    <td>@formatNumber(incident.getNumberOfOccurrences())</td>
                 </tr>
                 <tr>
                     <td>@i18n("StoredIncident.user")</td>
