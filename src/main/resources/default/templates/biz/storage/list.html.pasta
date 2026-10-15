@@ -26,7 +26,8 @@
                         @i18n("VFSController.createDirectory")
                     </span>
                 </a>
-                <t:fileUpload btnClass="btn-outline-primary" uploadUrl="@apply('/fs/upload?path=%s', dir.path())"
+                <t:fileUpload btnClass="btn-outline-primary"
+                              uploadUrl="@apply('/fs/upload?path=%s', urlEncode(dir.path()))"
                               previewsContainer="#sirius-upload-progress"/>
             </i:if>
         </i:block>
@@ -34,7 +35,7 @@
 
     <div class="row">
         <div class="col">
-            <t:searchHeader page="children" baseUrl="@apply('/fs?path=%s', dir.path())">
+            <t:searchHeader page="children" baseUrl="@apply('/fs?path=%s', urlEncode(dir.path()))">
                 <div class="btn-group me-4"
                      role="group">
                     <a id="move-selected-files-button"
@@ -64,7 +65,7 @@
 
             <t:sidebar>
                 <i:block name="sidebar">
-                    <t:filterbox page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
+                    <t:filterbox page="children" baseUrl="@apply('/fs?path=%s', urlEncode(dir.path()))"/>
                 </i:block>
 
                 <div class="card mb-4">
@@ -222,7 +223,7 @@
                         </table>
                     </div>
                 </div>
-                <t:pagination page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
+                <t:pagination page="children" baseUrl="@apply('/fs?path=%s', urlEncode(dir.path()))"/>
             </t:sidebar>
         </div>
     </div>
