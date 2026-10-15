@@ -17,8 +17,8 @@
     <url>https://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>54.4.0</sirius.kernel>
-        <sirius.web>111.0.0</sirius.web>
+        <sirius.kernel>54.4.1</sirius.kernel>
+        <sirius.web>111.1.0</sirius.web>
         <sirius.db>71.0.3</sirius.db>
         <aws.sdk>2.55.14</aws.sdk>
         <commonmark>0.30.1</commonmark>
