@@ -194,7 +194,7 @@ function createDropzone(dropzoneId, config, modal, resolve) {
             '</div>',
         url: function (files) {
             return '/fs/upload?filename=' + encodeURIComponent(files[0].name)
-                + '&path=' + path
+                + '&path=' + encodeURIComponent(path)
                 + '&CSRFToken=' + encodeURIComponent(tycho_csrf_token);
         },
         error: function (file, message) {
