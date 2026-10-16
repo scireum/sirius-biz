@@ -209,7 +209,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
      * (especially no distributed tasks will be started).
      * <p>
      * In order to check if a node is most probably fully bled out, {@link ClusterController#halted(WebContext)}
-     * can be invoked.
+     * can be invoked. It waits for the running distributed tasks as well as for the uploads still in progress, as
+     * requests which have already been accepted keep running while bleeding out.
      * <p>
      * If a restart or patch script is used to perform a rolling upgrade of a cluster, the process for a node would be
      * to first invoke {@link ClusterController#apiBleed(WebContext, String, String, String)} then wait some time and

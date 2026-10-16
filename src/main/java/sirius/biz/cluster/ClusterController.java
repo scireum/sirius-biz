@@ -39,6 +39,7 @@ import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
 import sirius.web.http.WebContext;
+import sirius.web.http.WebServer;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.services.Format;
@@ -411,32 +412,43 @@ public class ClusterController extends BasicController {
     /**
      * Determines if the system is fully bled out and can be stopped.
      * <p>
-     * Returns a 200 OK if the system can (most probably) be restarted, or a 417 EXPECTATION FAILED otherwise.
+     * Returns a 200 OK if the system can (most probably) be restarted, or a 417 EXPECTATION FAILED otherwise. Next
+     * to the distributed tasks, this also waits for uploads which are still in progress, as the load balancer only
+     * stops sending new requests to a bleeding node, but running ones are only interrupted once the node is stopped.
      *
      * @param webContext the request to handle
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
+     * @see WebServer#countActiveUploads()
      */
     @Routed("/system/cluster/halted")
     @PublicService(apiName = "cluster", priority = 300, format = Format.RAW)
     @Operation(summary = "Node halted", description = """
             Determines if the node is the node has fully halted after a bleeding has been requested. This ensures that
-            all background tasks have been completed and therefore the node can be restarted in a safe manner.
-            Returns an HTTP 200 OK if the node has halted or HTTP 417 EXPECTATION FAILED, if the node is still running
-            background tasks.
+            all background tasks and all uploads have been completed and therefore the node can be restarted in a safe
+            manner. Returns an HTTP 200 OK if the node has halted or HTTP 417 EXPECTATION FAILED, if the node is still
+            running background tasks or receiving uploads.
             """)
     @ApiResponse(responseCode = "200",
             description = "Node is completely halted",
             content = @Content(mediaType = "text/plain", examples = @ExampleObject("OK")))
     @ApiResponse(responseCode = "417",
-            description = "Tasks are still running on the node",
-            content = @Content(mediaType = "text/plain", examples = @ExampleObject("Tasks running: 5")))
+            description = "Tasks or uploads are still running on the node",
+            content = @Content(mediaType = "text/plain",
+                    examples = @ExampleObject("Tasks running: 5, Uploads running: 1")))
     public void halted(WebContext webContext) {
-        if (!Sirius.isRunning() || (neighborhoodWatch.isBleeding() && distributedTasks.getNumberOfActiveTasks() == 0)) {
+        if (!Sirius.isRunning()) {
+            webContext.respondWith().direct(HttpResponseStatus.OK, HttpResponseStatus.OK.reasonPhrase());
+            return;
+        }
+
+        int activeTasks = distributedTasks.getNumberOfActiveTasks();
+        long activeUploads = WebServer.countActiveUploads();
+        if (neighborhoodWatch.isBleeding() && activeTasks == 0 && activeUploads == 0) {
             webContext.respondWith().direct(HttpResponseStatus.OK, HttpResponseStatus.OK.reasonPhrase());
         } else {
             webContext.respondWith()
                       .direct(HttpResponseStatus.EXPECTATION_FAILED,
-                              "Tasks running: " + distributedTasks.getNumberOfActiveTasks());
+                              Strings.apply("Tasks running: %s, Uploads running: %s", activeTasks, activeUploads));
         }
     }
 
