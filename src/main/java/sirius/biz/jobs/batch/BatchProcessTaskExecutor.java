@@ -12,12 +12,15 @@ import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.BasicJobFactory;
 import sirius.biz.jobs.Jobs;
+import sirius.biz.mailsubscriptions.JobCompletionMails;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +39,10 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
     @Part
     private Jobs jobs;
 
+    @Part
+    @Nullable
+    private JobCompletionMails jobCompletionMails;
+
     @Override
     public void executeWork(ObjectNode context) throws Exception {
         String factoryId = context.path(BatchProcessJobFactory.CONTEXT_JOB_FACTORY).asString(null);
@@ -47,6 +54,19 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
             processes.partiallyExecute(processId, process -> partiallyExecuteInProcess(factoryId, process));
         } else {
             processes.execute(processId, process -> executeInProcess(factoryId, process));
+            notifyAboutCompletion(processId);
+        }
+    }
+
+    private void notifyAboutCompletion(String processId) {
+        if (jobCompletionMails == null) {
+            return;
+        }
+
+        try {
+            processes.fetchProcess(processId).ifPresent(jobCompletionMails::handleCompletedJob);
+        } catch (Exception exception) {
+            Exceptions.handle(Log.BACKGROUND, exception);
         }
     }
 
