@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.mailsubscriptions.MailSubscriptions;
 import sirius.biz.model.LoginData;
 import sirius.biz.password.PasswordValidator;
 import sirius.biz.protocol.AuditLog;
@@ -26,7 +27,10 @@ import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserManager;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Provides functionality to modify accounts.
@@ -55,6 +59,10 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
     @Part
     private UserAccountController<?, ?, ?> userAccountController;
 
+    @Part
+    @Nullable
+    private MailSubscriptions mailSubscriptions;
+
     /**
      * Shows a page where an account can change the user information, e.g. mail, name, ...
      *
@@ -63,16 +71,39 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
     @LoginRequired
     @Routed("/profile")
     public void profile(WebContext webContext) {
-        U userAccount = getUser().getUserObject(getUserClass());
-        userAccount = userAccount.getMapper().refreshOrFail(userAccount);
+        U currentAccount = getUser().getUserObject(getUserClass());
+        U userAccount = currentAccount.getMapper().refreshOrFail(currentAccount);
         assertNotNew(userAccount);
 
-        boolean requestHandled = prepareSave(webContext).saveEntity(userAccount);
+        boolean requestHandled = prepareSave(webContext).withPostSaveHandler(isNew -> updateMailSubscriptions(webContext,
+                                                                                                              userAccount))
+                                                        .withAfterSaveURI("/profile")
+                                                        .saveEntity(userAccount);
 
         if (!requestHandled) {
             webContext.respondWith()
                       .template("/templates/biz/tenants/profile.html.pasta", userAccount, userAccountController);
         }
+    }
+
+    private void updateMailSubscriptions(WebContext webContext, U userAccount) {
+        if (mailSubscriptions == null) {
+            return;
+        }
+
+        Set<String> subscribedMailTypes = new HashSet<>(mailSubscriptions.getSubscribedMailTypes(userAccount));
+        for (String mailType : mailSubscriptions.getMailTypes()) {
+            String parameterName = mailSubscriptions.computeParameterName(mailType);
+            if (webContext.hasParameter(parameterName + "_marker")) {
+                if (webContext.get(parameterName).asBoolean()) {
+                    subscribedMailTypes.add(mailType);
+                } else {
+                    subscribedMailTypes.remove(mailType);
+                }
+            }
+        }
+
+        mailSubscriptions.updateSubscriptions(userAccount, subscribedMailTypes);
     }
 
     @SuppressWarnings("unchecked")
