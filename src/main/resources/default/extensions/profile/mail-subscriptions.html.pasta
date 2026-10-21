@@ -1,0 +1,23 @@
+<i:arg type="String" name="point"/>
+<i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
+
+<i:pragma name="priority" value="100"/>
+
+<i:switch test="@point">
+    <i:block name="details">
+        <i:local name="mailSubscriptions"
+                 value="Injector.context().getPart(sirius.biz.mailsubscriptions.MailSubscriptions.class)"/>
+        <i:if test="mailSubscriptions != null">
+            <t:heading labelKey="MailSubscriptions.heading"/>
+            <div class="row">
+                <i:for type="String" var="mailType" items="mailSubscriptions.getMailTypes()">
+                    <t:checkbox class="col-12"
+                                name="@mailSubscriptions.computeParameterName(mailType)"
+                                value="@mailSubscriptions.isSubscribed(account, mailType)"
+                                label="@mailSubscriptions.getMailTypeLabel(mailType)"
+                                help="@mailSubscriptions.getMailTypeHelpText(mailType)"/>
+                </i:for>
+            </div>
+        </i:if>
+    </i:block>
+</i:switch>
