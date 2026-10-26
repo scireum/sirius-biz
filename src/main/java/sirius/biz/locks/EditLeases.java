@@ -125,7 +125,7 @@ public class EditLeases {
      * @return whether the session now holds the lease, and otherwise whether another session does
      */
     public EditLeaseStatus acquire(String scope, String id, @Nullable String session) {
-        String key = key(scope, id);
+        String key = buildKey(scope, id);
         if (Strings.isEmpty(session)) {
             return statusFor(readHolder(key), session);
         }
@@ -158,7 +158,7 @@ public class EditLeases {
      * @return whether the session still holds the lease, and otherwise whether another session does
      */
     public EditLeaseStatus heartbeat(String scope, String id, @Nullable String session) {
-        String key = key(scope, id);
+        String key = buildKey(scope, id);
         return updateIfHeldBy(key, session, transaction -> transaction.expire(key, leaseTimeout.getSeconds()));
     }
 
@@ -172,7 +172,7 @@ public class EditLeases {
      * hold (e.g. as another session holds it)
      */
     public EditLeaseStatus release(String scope, String id, @Nullable String session) {
-        String key = key(scope, id);
+        String key = buildKey(scope, id);
         EditLeaseStatus status = updateIfHeldBy(key, session, transaction -> transaction.del(key));
         return status.heldByMe() ? FREE : status;
     }
@@ -189,7 +189,7 @@ public class EditLeases {
      * session is blank or yet another session took the lease over in the meantime
      */
     public EditLeaseStatus takeover(String scope, String id, @Nullable String session) {
-        String key = key(scope, id);
+        String key = buildKey(scope, id);
         if (Strings.isEmpty(session)) {
             return statusFor(readHolder(key), session);
         }
@@ -211,7 +211,7 @@ public class EditLeases {
      *                                               does not hold the lease, in which case the write is not applied
      */
     public void runWhileHeldBy(String scope, String id, @Nullable String session, Runnable write) {
-        String key = key(scope, id);
+        String key = buildKey(scope, id);
         String writeId = beginWrite(key, session);
         try {
             write.run();
@@ -233,7 +233,7 @@ public class EditLeases {
      *                                               does not hold the lease
      */
     public void assertHeldBy(WebContext webContext, String scope, String id) {
-        String key = key(scope, id);
+        String key = buildKey(scope, id);
         String writeId = beginWrite(key, webContext.get(PARAM_EDITOR_SESSION).asString());
         webContext.getCompletionPromise().onComplete(new CompletionHandler<>() {
             @Override
@@ -408,7 +408,7 @@ public class EditLeases {
         return jedis.get(key);
     }
 
-    private String key(String scope, String id) {
+    private String buildKey(String scope, String id) {
         // As the scope is the first segment and contains no separator, the key stays unique for ids containing one.
         if (Strings.isEmpty(scope) || scope.contains(SCOPE_SEPARATOR)) {
             throw new IllegalArgumentException(Strings.apply("Invalid edit lease scope: '%s'", scope));
