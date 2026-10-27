@@ -33,7 +33,7 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     /**
      * Permits to change, delete, lock and unlock locked presets.
      */
-    public static final String PERMISSION_MANAGE_LOCKED_JOB_PRESETS = "permission-manage-locked-job-presets";
+    public static final String PERMISSION_JOB_PRESET_LOCK = "permission-job-preset-lock";
 
     private static final String PARAM_JOB_FACTORY = "jobFactory";
     private static final String PARAM_PRESET = "preset";
@@ -161,7 +161,7 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     }
 
     private boolean canManageLockedPresets() {
-        return getUser().hasPermission(PERMISSION_MANAGE_LOCKED_JOB_PRESETS);
+        return getUser().hasPermission(PERMISSION_JOB_PRESET_LOCK);
     }
 
     private void assertNotLocked(P preset) {

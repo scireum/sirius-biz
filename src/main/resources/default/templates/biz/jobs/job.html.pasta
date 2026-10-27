@@ -74,7 +74,7 @@
                                                 @i18n("JobsController.usePreset")
                                             </span>
                                         </a>
-                                        <i:if test="!preset.isLocked() || user().hasPermission(sirius.biz.jobs.presets.JobPresetsController.PERMISSION_MANAGE_LOCKED_JOB_PRESETS)">
+                                        <i:if test="!preset.isLocked() || user().hasPermission(sirius.biz.jobs.presets.JobPresetsController.PERMISSION_JOB_PRESET_LOCK)">
                                             <a class="btn btn-outline-danger pull-right text-nowrap"
                                                href="javascript:deletePreset('@preset.getIdAsString()')">
                                                 <i class="fa-solid fa-trash"></i>
@@ -115,7 +115,7 @@
                         <option value="@period.name()">@period.toString()</option>
                     </i:for>
                 </t:singleSelect>
-                <t:permission permission="@sirius.biz.jobs.presets.JobPresetsController.PERMISSION_MANAGE_LOCKED_JOB_PRESETS">
+                <t:permission permission="@sirius.biz.jobs.presets.JobPresetsController.PERMISSION_JOB_PRESET_LOCK">
                     <t:checkbox class="col-md-12" name="presetLocked" value="false"
                                 labelKey="JobsController.presetLocked"
                                 helpKey="JobsController.presetLocked.help"/>
