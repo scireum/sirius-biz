@@ -10,7 +10,6 @@ package sirius.biz.jobs.presets;
 
 import sirius.biz.jobs.JobConfigData;
 import sirius.biz.process.PersistencePeriod;
-import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
@@ -30,6 +29,11 @@ import java.util.Set;
  * @param <P> the generic entity type on which the actual controller will operate on
  */
 public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> extends BizController {
+
+    /**
+     * Permits to change, delete, lock and unlock locked presets.
+     */
+    public static final String PERMISSION_MANAGE_LOCKED_JOB_PRESETS = "permission-manage-locked-job-presets";
 
     private static final String PARAM_JOB_FACTORY = "jobFactory";
     private static final String PARAM_PRESET = "preset";
@@ -84,7 +88,7 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
             preset.getJobConfigData().getConfigMap().clear();
         }
 
-        if (isSystemAdministrator()) {
+        if (canManageLockedPresets()) {
             preset.setLocked(webContext.get(PARAM_LOCKED).asBoolean());
         }
 
@@ -156,12 +160,12 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
         }
     }
 
-    private boolean isSystemAdministrator() {
-        return getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR);
+    private boolean canManageLockedPresets() {
+        return getUser().hasPermission(PERMISSION_MANAGE_LOCKED_JOB_PRESETS);
     }
 
     private void assertNotLocked(P preset) {
-        if (preset.isLocked() && !isSystemAdministrator()) {
+        if (preset.isLocked() && !canManageLockedPresets()) {
             throw Exceptions.createHandled().withNLSKey("JobPresetsController.presetLocked").handle();
         }
     }
