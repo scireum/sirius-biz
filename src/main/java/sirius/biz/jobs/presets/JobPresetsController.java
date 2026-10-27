@@ -31,7 +31,10 @@ import java.util.Set;
 public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> extends BizController {
 
     /**
-     * Permits to change, delete, lock and unlock locked presets.
+     * Permits to change and delete locked presets and to lock or unlock presets.
+     * <p>
+     * By default, this is granted to system administrators. Other user groups can be granted this permission via
+     * the profile configuration.
      */
     public static final String PERMISSION_JOB_PRESET_LOCK = "permission-job-preset-lock";
 
@@ -60,6 +63,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * Updates or creates the preset for the submitted job and name.
      * <p>
      * This will create or update the job preset with the given name (and job factory) for the current tenant.
+     * Locked presets can only be updated by users having {@link #PERMISSION_JOB_PRESET_LOCK}. The same applies to
+     * locking or unlocking a preset.
      *
      * @param webContext the request to handle
      * @param output     the JSON response to populate (in this case no actual output is expected)
@@ -142,6 +147,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
 
     /**
      * Deletes the requested job preset.
+     * <p>
+     * Locked presets can only be deleted by users having {@link #PERMISSION_JOB_PRESET_LOCK}.
      *
      * @param webContext the request to handle
      * @param output     the JSON response to populate (in this case no actual output is expected)
