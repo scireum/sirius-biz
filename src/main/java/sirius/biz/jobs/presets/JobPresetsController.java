@@ -10,10 +10,12 @@ package sirius.biz.jobs.presets;
 
 import sirius.biz.jobs.JobConfigData;
 import sirius.biz.process.PersistencePeriod;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Json;
+import sirius.kernel.health.Exceptions;
 import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -33,9 +35,10 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     private static final String PARAM_PRESET = "preset";
     private static final String PARAM_PRESET_NAME = "presetName";
     private static final String PARAM_CUSTOM_PERSISTENCE_PERIOD = "customPersistencePeriod";
+    private static final String PARAM_LOCKED = "presetLocked";
 
     private static final Set<String> IGNORED_PARAMETERS =
-            Set.of(PARAM_JOB_FACTORY, PARAM_PRESET_NAME, PARAM_CUSTOM_PERSISTENCE_PERIOD, "CSRFToken", "updateOnly");
+            Set.of(PARAM_JOB_FACTORY, PARAM_PRESET_NAME, PARAM_CUSTOM_PERSISTENCE_PERIOD, PARAM_LOCKED, "CSRFToken", "updateOnly");
 
     private static final String RESPONSE_PARAMS = "params";
     private static final String RESPONSE_PARAM = "param";
@@ -77,7 +80,12 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
             preset.getJobConfigData().setLabel(webContext.get(PARAM_PRESET_NAME).asString());
             preset.fillWithCurrentTenant();
         } else {
+            assertNotLocked(preset);
             preset.getJobConfigData().getConfigMap().clear();
+        }
+
+        if (isSystemAdministrator()) {
+            preset.setLocked(webContext.get(PARAM_LOCKED).asBoolean());
         }
 
         preset.getJobConfigData()
@@ -143,7 +151,18 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
                          .orElse(null);
         if (preset != null) {
             assertTenant(preset);
+            assertNotLocked(preset);
             preset.getMapper().delete(preset);
+        }
+    }
+
+    private boolean isSystemAdministrator() {
+        return getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR);
+    }
+
+    private void assertNotLocked(P preset) {
+        if (preset.isLocked() && !isSystemAdministrator()) {
+            throw Exceptions.createHandled().withNLSKey("JobPresetsController.presetLocked").handle();
         }
     }
 }
