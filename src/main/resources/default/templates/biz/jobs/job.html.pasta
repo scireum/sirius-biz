@@ -60,7 +60,9 @@
                                 <li class="list-group-item d-flex flex-row justify-content-between align-items-baseline">
                                     <div class="text-truncate">
                                         <i:if test="preset.isLocked()">
-                                            <i class="fa-solid fa-lock text-muted"></i>
+                                            <i class="fa-solid fa-lock text-muted" aria-hidden="true"
+                                               title="@i18n('JobPreset.locked')"></i>
+                                            <span class="visually-hidden">@i18n("JobPreset.locked")</span>
                                         </i:if>
                                         <b>@preset.getJobConfigData().getLabel()</b>
                                     </div>
