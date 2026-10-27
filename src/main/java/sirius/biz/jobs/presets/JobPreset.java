@@ -27,11 +27,32 @@ public interface JobPreset extends TenantAware, Journaled {
     Mapping JOB_CONFIG_DATA = Mapping.named("jobConfigData");
 
     /**
+     * Determines if the preset is locked.
+     * <p>
+     * Locked presets can only be changed or deleted by system administrators.
+     */
+    Mapping LOCKED = Mapping.named("locked");
+
+    /**
      * Provides access to the job configuration stored in the underlying entity.
      *
      * @return the job configuration of this entry.
      */
     JobConfigData getJobConfigData();
+
+    /**
+     * Determines if this preset is locked against changes and deletion by non-system administrators.
+     *
+     * @return <tt>true</tt> if the preset is locked, <tt>false</tt> otherwise
+     */
+    boolean isLocked();
+
+    /**
+     * Specifies if this preset is locked against changes and deletion by non-system administrators.
+     *
+     * @param locked <tt>true</tt> to lock the preset, <tt>false</tt> otherwise
+     */
+    void setLocked(boolean locked);
 
     @Override
     String toString();
