@@ -14,6 +14,7 @@ import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Json;
+import sirius.kernel.health.Exceptions;
 import sirius.web.controller.HttpMethod;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -29,13 +30,22 @@ import java.util.Set;
  */
 public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> extends BizController {
 
+    /**
+     * Permits to change and delete locked presets and to lock or unlock presets.
+     * <p>
+     * By default, this is granted to system administrators. Other user groups can be granted this permission via
+     * the profile configuration.
+     */
+    public static final String PERMISSION_JOB_PRESET_LOCK = "permission-job-preset-lock";
+
     private static final String PARAM_JOB_FACTORY = "jobFactory";
     private static final String PARAM_PRESET = "preset";
     private static final String PARAM_PRESET_NAME = "presetName";
     private static final String PARAM_CUSTOM_PERSISTENCE_PERIOD = "customPersistencePeriod";
+    private static final String PARAM_LOCKED = "presetLocked";
 
     private static final Set<String> IGNORED_PARAMETERS =
-            Set.of(PARAM_JOB_FACTORY, PARAM_PRESET_NAME, PARAM_CUSTOM_PERSISTENCE_PERIOD, "CSRFToken", "updateOnly");
+            Set.of(PARAM_JOB_FACTORY, PARAM_PRESET_NAME, PARAM_CUSTOM_PERSISTENCE_PERIOD, PARAM_LOCKED, "CSRFToken", "updateOnly");
 
     private static final String RESPONSE_PARAMS = "params";
     private static final String RESPONSE_PARAM = "param";
@@ -53,6 +63,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * Updates or creates the preset for the submitted job and name.
      * <p>
      * This will create or update the job preset with the given name (and job factory) for the current tenant.
+     * Locked presets can only be updated by users having {@link #PERMISSION_JOB_PRESET_LOCK}. The same applies to
+     * locking or unlocking a preset.
      *
      * @param webContext the request to handle
      * @param output     the JSON response to populate (in this case no actual output is expected)
@@ -77,7 +89,12 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
             preset.getJobConfigData().setLabel(webContext.get(PARAM_PRESET_NAME).asString());
             preset.fillWithCurrentTenant();
         } else {
+            assertNotLocked(preset);
             preset.getJobConfigData().getConfigMap().clear();
+        }
+
+        if (canManageLockedPresets()) {
+            preset.setLocked(webContext.get(PARAM_LOCKED).asBoolean());
         }
 
         preset.getJobConfigData()
@@ -130,6 +147,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
 
     /**
      * Deletes the requested job preset.
+     * <p>
+     * Locked presets can only be deleted by users having {@link #PERMISSION_JOB_PRESET_LOCK}.
      *
      * @param webContext the request to handle
      * @param output     the JSON response to populate (in this case no actual output is expected)
@@ -143,7 +162,18 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
                          .orElse(null);
         if (preset != null) {
             assertTenant(preset);
+            assertNotLocked(preset);
             preset.getMapper().delete(preset);
+        }
+    }
+
+    private boolean canManageLockedPresets() {
+        return getUser().hasPermission(PERMISSION_JOB_PRESET_LOCK);
+    }
+
+    private void assertNotLocked(P preset) {
+        if (preset.isLocked() && !canManageLockedPresets()) {
+            throw Exceptions.createHandled().withNLSKey("JobPresetsController.presetLocked").handle();
         }
     }
 }

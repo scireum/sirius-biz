@@ -58,7 +58,14 @@
                             <i:for type="sirius.biz.jobs.presets.JobPreset" var="preset"
                                    items="presets.fetchPresets(job)">
                                 <li class="list-group-item d-flex flex-row justify-content-between align-items-baseline">
-                                    <div class="text-truncate"><b>@preset.getJobConfigData().getLabel()</b></div>
+                                    <div class="text-truncate">
+                                        <i:if test="preset.isLocked()">
+                                            <i class="fa-solid fa-lock text-muted" aria-hidden="true"
+                                               title="@i18n('JobPreset.locked')"></i>
+                                            <span class="visually-hidden">@i18n("JobPreset.locked")</span>
+                                        </i:if>
+                                        <b>@preset.getJobConfigData().getLabel()</b>
+                                    </div>
                                     <div class="btn-group" role="group">
                                         <a class="btn btn-outline-link text-nowrap"
                                            href="javascript:loadPreset('@preset.getIdAsString()')">
@@ -67,13 +74,15 @@
                                                 @i18n("JobsController.usePreset")
                                             </span>
                                         </a>
-                                        <a class="btn btn-outline-danger pull-right text-nowrap"
-                                           href="javascript:deletePreset('@preset.getIdAsString()')">
-                                            <i class="fa-solid fa-trash"></i>
-                                            <span class="d-sm-inline-block d-md-none d-xl-inline-block">
-                                                @i18n("NLS.delete")
-                                            </span>
-                                        </a>
+                                        <i:if test="!preset.isLocked() || user().hasPermission(sirius.biz.jobs.presets.JobPresetsController.PERMISSION_JOB_PRESET_LOCK)">
+                                            <a class="btn btn-outline-danger pull-right text-nowrap"
+                                               href="javascript:deletePreset('@preset.getIdAsString()')">
+                                                <i class="fa-solid fa-trash"></i>
+                                                <span class="d-sm-inline-block d-md-none d-xl-inline-block">
+                                                    @i18n("NLS.delete")
+                                                </span>
+                                            </a>
+                                        </i:if>
                                     </div>
                                 </li>
                             </i:for>
@@ -106,6 +115,11 @@
                         <option value="@period.name()">@period.toString()</option>
                     </i:for>
                 </t:singleSelect>
+                <t:permission permission="@sirius.biz.jobs.presets.JobPresetsController.PERMISSION_JOB_PRESET_LOCK">
+                    <t:checkbox class="col-md-12" name="presetLocked" value="false"
+                                labelKey="JobsController.presetLocked"
+                                helpKey="JobsController.presetLocked.help"/>
+                </t:permission>
             </fieldset>
             <i:block name="footer">
                 <a onclick="createPreset()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
