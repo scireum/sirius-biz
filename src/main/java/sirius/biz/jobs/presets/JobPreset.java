@@ -29,7 +29,8 @@ public interface JobPreset extends TenantAware, Journaled {
     /**
      * Determines if the preset is locked.
      * <p>
-     * Locked presets can only be changed or deleted by system administrators.
+     * Locked presets can only be changed or deleted by users having the permission
+     * {@link JobPresetsController#PERMISSION_JOB_PRESET_LOCK}.
      */
     Mapping LOCKED = Mapping.named("locked");
 
@@ -41,14 +42,16 @@ public interface JobPreset extends TenantAware, Journaled {
     JobConfigData getJobConfigData();
 
     /**
-     * Determines if this preset is locked against changes and deletion by non-system administrators.
+     * Determines if this preset is locked against changes and deletion by users lacking
+     * {@link JobPresetsController#PERMISSION_JOB_PRESET_LOCK}.
      *
      * @return <tt>true</tt> if the preset is locked, <tt>false</tt> otherwise
      */
     boolean isLocked();
 
     /**
-     * Specifies if this preset is locked against changes and deletion by non-system administrators.
+     * Specifies if this preset is locked against changes and deletion by users lacking
+     * {@link JobPresetsController#PERMISSION_JOB_PRESET_LOCK}.
      *
      * @param locked <tt>true</tt> to lock the preset, <tt>false</tt> otherwise
      */
