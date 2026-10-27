@@ -25,6 +25,8 @@ public class MongoJobPreset extends MongoTenantAware implements JobPreset {
     private final JobConfigData jobConfigData = new JobConfigData();
     private final JournalData journal = new JournalData(this);
 
+    private boolean locked;
+
     @Override
     public JobConfigData getJobConfigData() {
         return jobConfigData;
@@ -33,5 +35,15 @@ public class MongoJobPreset extends MongoTenantAware implements JobPreset {
     @Override
     public JournalData getJournal() {
         return journal;
+    }
+
+    @Override
+    public boolean isLocked() {
+        return locked;
+    }
+
+    @Override
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 }
