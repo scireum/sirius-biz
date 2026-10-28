@@ -9,9 +9,9 @@
                         {CSRFToken: '@part(CSRFHelper.class).getCSRFToken()'},
                         options.params || {});
                     var element = this;
-                    var button = $(this).find('.qq-upload-button-js').get(0);
+                    var _button = $(this).find('.file-upload-button-js').get(0);
 
-                    var $dropArea = $(this).find('.qq-upload-drop-area-js');
+                    var $dropArea = $(this).find('.file-upload-drop-area-js');
                     var $file = $(this).find('.file-upload-file-js');
                     var $filename = $(this).find('.file-upload-name-js');
                     var $preview = $(this).find('.file-upload-preview-js');
@@ -22,93 +22,119 @@
                     var $resetButton = $(this).find('.btn-reset-js');
                     var $storedObjectInput = $('#' + options.inputId);
 
-                    var allowedExtensions = [];
+                    var acceptedFiles = null;
 
                     if (options.allowedExtensions.length > 0) {
-                        allowedExtensions = options.allowedExtensions.toLowerCase().replace(' ', '').split(',');
+                        acceptedFiles = options.allowedExtensions.toLowerCase().replace(' ', '').split(',')
+                            .map(function (extension) {
+                                return '.' + extension;
+                            }).join(',');
                     }
 
-                    var uploader = new qq.FileUploaderBasic({
-                        element: element,
-                        button: button,
-                        action: options.action,
-                        debug: false,
-                        allowedExtensions: allowedExtensions,
-                        multiple: false,
-                        params: options.params,
-                        messages: {
-                            typeError: '@i18n("StoredObject.errInvalidExtension")',
-                            sizeError: '@i18n("StoredObject.errTooLarge")',
-                            minSizeError: '@i18n("StoredObject.errTooSmall")',
-                            emptyError: '@i18n("StoredObject.errEmpty")'
+                    disableDropOutside();
+
+                    var uploader = new Dropzone($dropArea.get(0), {
+                        // sendFileAsBody drops all params, so they have to be part of the URL.
+                        url: function (files) {
+                            var query = new URLSearchParams(Object.assign({}, options.params, {filename: files[0].name}));
+                            return options.action + (options.action.indexOf('?') >= 0 ? '&' : '?') + query.toString();
                         },
-                        showMessage: function (message) {
-                            // We generally send a flag "error" which is true or false as part of the response. Sadly,
-                            // fileUploader.js checks for this flag (expecting a string) and invokes showMessage is present.
-                            // Therefore we have to filter this here :-/
-                            if (message !== true) {
-                                clearMessages();
-                                addError(message);
+                        sendFileAsBody: true,
+                        maxFiles: 1,
+                        // Dropzone limits uploads to 256 MB by default.
+                        maxFilesize: null,
+                        acceptedFiles: acceptedFiles,
+                        dictInvalidFileType: '@i18n("StoredObject.errInvalidExtension")',
+                        clickable: _button,
+                        previewsContainer: false,
+                        init: function () {
+                            this.on('dragover', function () {
+                                $dropArea.addClass('qq-upload-drop-area-active');
+                            });
+                            this.on('dragleave', function () {
+                                $dropArea.removeClass('qq-upload-drop-area-active');
+                            });
+                            this.on('drop', function () {
+                                $dropArea.removeClass('qq-upload-drop-area-active');
+                            });
+                        },
+                        accept: function (file, done) {
+                            if (file.size === 0) {
+                                done('@i18n("StoredObject.errEmpty")');
+                            } else {
+                                done();
                             }
                         },
-                        onSubmit: function (id, filename) {
-                            if ($(element).data('id') !== undefined) {
-                                uploader._handler.cancel($(element).data('id'));
-                            }
-
-                            $(element).data('id', id);
-
-                            $progress.find('.file-upload-progress-name-js').text(filename);
+                        addedfile: function (file) {
+                            // Only the latest file is kept, so a new one cancels a running upload.
+                            this.files.filter(function (otherFile) {
+                                return otherFile !== file;
+                            }).forEach(this.removeFile, this);
+                        },
+                        processing: function (file) {
+                            $progress.find('.file-upload-progress-name-js').text(file.name);
 
                             $progress.removeClass('hide');
                             $file.addClass('hide');
                         },
-                        onProgress: function (id, filename, loaded, total) {
-                            var progress = Math.round(loaded / total * 100);
-
-                            $percent.text(progress + '%');
+                        uploadprogress: function (file, progress) {
+                            $percent.text(Math.round(progress) + '%');
                         },
-                        onCancel: function (id, filename) {
-                            $(element).removeData('id');
-
+                        canceled: function () {
                             $progress.addClass('hide');
                             $file.removeClass('hide');
                             showOrHideResetButton();
                         },
-                        onComplete: function (id, filename, responseJSON) {
+                        error: function (file, message, xhr) {
+                            if (file.status === Dropzone.CANCELED) {
+                                return;
+                            }
+
+                            $progress.addClass('hide');
+                            $file.removeClass('hide');
+                            showOrHideResetButton();
+
                             clearMessages();
-                            $(element).removeData('id');
+                            if (message.message) {
+                                addError(message.message);
+                            } else if (!xhr) {
+                                addError(message);
+                            } else {
+                                addError('@i18n("StoredObject.uploadFailed")');
+                            }
+                        },
+                        success: function (file, response) {
+                            clearMessages();
 
                             $progress.addClass('hide');
                             $file.removeClass('hide');
 
-                            if (responseJSON.error) {
-                                addError(responseJSON.message);
-                            } else if (responseJSON.message) {
-                                addInfo(responseJSON.message);
+                            if (response.error) {
+                                addError(response.message);
+                            } else if (response.message) {
+                                addInfo(response.message);
                             }
 
-                            if (responseJSON.previewUrl) {
-                                $filename.text(filename).attr('href', responseJSON.previewUrl);
+                            if (response.previewUrl) {
+                                $filename.text(file.name).attr('href', response.previewUrl);
 
-                                updatePreview(element, responseJSON.previewUrl);
+                                updatePreview(element, response.previewUrl);
                             }
 
-                            if (responseJSON.fileId) {
-                                $storedObjectInput.val(responseJSON.fileId);
+                            if (response.fileId) {
+                                $storedObjectInput.val(response.fileId);
                             }
 
                             showOrHideResetButton();
                         }
                     });
 
-                    setupDragDrop(uploader, $dropArea);
                     updatePreview(element, $filename.attr('href'));
 
                     $progress.find('a').click(function (e) {
                         e.preventDefault();
 
-                        uploader._handler.cancel($(element).data('id'));
+                        uploader.removeAllFiles(true);
                     });
 
                     $urlButton.popover({
@@ -188,31 +214,23 @@
                     return this;
                 };
 
-                var setupDragDrop = function (uploader, $dropArea) {
-                    var dz = new qq.UploadDropZone({
-                        element: $dropArea.get(0),
-                        onEnter: function (e) {
-                            $dropArea.addClass('qq-upload-drop-area-active');
-                            e.stopPropagation();
-                        },
-                        onLeave: function (e) {
-                            e.stopPropagation();
-                        },
-                        onLeaveNotDescendants: function (e) {
-                            $dropArea.removeClass('qq-upload-drop-area-active');
-                        },
-                        onDrop: function (e) {
-                            $dropArea.removeClass('qq-upload-drop-area-active');
-                            uploader._uploadFileList(e.dataTransfer.files);
+                var dropOutsideDisabled = false;
+
+                /**
+                 * Prevents the browser from opening a file which is dropped next to an upload area.
+                 */
+                var disableDropOutside = function () {
+                    if (dropOutsideDisabled) {
+                        return;
+                    }
+
+                    document.addEventListener('dragover', function (e) {
+                        if (e.dataTransfer) {
+                            e.dataTransfer.dropEffect = 'none';
+                            e.preventDefault();
                         }
                     });
-
-                    qq.attach(document, 'dragenter', function (e) {
-                        if (!dz._isValidFileDrag(e)) return;
-                    });
-                    qq.attach(document, 'dragleave', function (e) {
-                        if (!dz._isValidFileDrag(e)) return;
-                    });
+                    dropOutsideDisabled = true;
                 };
 
                 /**
