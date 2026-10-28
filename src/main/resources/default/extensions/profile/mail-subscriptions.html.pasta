@@ -7,7 +7,7 @@
     <i:block name="details">
         <i:local name="mailSubscriptions"
                  value="Injector.context().getPart(sirius.biz.mailsubscriptions.MailSubscriptions.class)"/>
-        <i:if test="mailSubscriptions != null">
+        <i:if test="isFrameworkEnabled('biz.mail-subscriptions')">
             <t:heading labelKey="MailSubscriptions.heading"/>
             <div class="row">
                 <i:for type="String" var="mailType" items="mailSubscriptions.getMailTypes()">
