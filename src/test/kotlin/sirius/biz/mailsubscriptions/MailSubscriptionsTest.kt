@@ -30,37 +30,7 @@ import kotlin.test.assertTrue
 @ExtendWith(SiriusExtension::class)
 class MailSubscriptionsTest {
 
-    companion object {
-        @Part
-        @JvmStatic
-        private lateinit var oma: OMA
-
-        @Part
-        @JvmStatic
-        private lateinit var mailSubscriptions: MailSubscriptions
-
-        @BeforeAll
-        @JvmStatic
-        fun setup() {
-            oma.readyFuture.await(Duration.ofSeconds(60))
-        }
-    }
-
     private lateinit var userAccount: SQLUserAccount
-
-    @BeforeEach
-    fun createUserAccount() {
-        // A separate account is used, as the shared test user must not be modified.
-        userAccount = SQLUserAccount()
-        userAccount.tenant.setValue(TenantsHelper.getTestTenant())
-        userAccount.userAccountData.login.username = "mail-subscriptions-" + UUID.randomUUID()
-        oma.update(userAccount)
-    }
-
-    @AfterEach
-    fun deleteUserAccount() {
-        oma.delete(userAccount)
-    }
 
     @Test
     fun `mail types are read from the config and ordered by their priority`() {
@@ -100,5 +70,35 @@ class MailSubscriptionsTest {
 
         val reloadedAccount = oma.refreshOrFail(userAccount)
         assertTrue(mailSubscriptions.getSubscribedMailTypes(reloadedAccount).isEmpty())
+    }
+
+    @BeforeEach
+    fun createUserAccount() {
+        // A separate account is used, as the shared test user must not be modified.
+        userAccount = SQLUserAccount()
+        userAccount.tenant.setValue(TenantsHelper.getTestTenant())
+        userAccount.userAccountData.login.username = "mail-subscriptions-" + UUID.randomUUID()
+        oma.update(userAccount)
+    }
+
+    @AfterEach
+    fun deleteUserAccount() {
+        oma.delete(userAccount)
+    }
+
+    companion object {
+        @Part
+        @JvmStatic
+        private lateinit var oma: OMA
+
+        @Part
+        @JvmStatic
+        private lateinit var mailSubscriptions: MailSubscriptions
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            oma.readyFuture.await(Duration.ofSeconds(60))
+        }
     }
 }
