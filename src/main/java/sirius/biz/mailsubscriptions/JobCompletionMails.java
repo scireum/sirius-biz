@@ -55,8 +55,12 @@ public class JobCompletionMails {
             return;
         }
 
-        fetchRecipient(process.getUserId()).filter(recipient -> mailSubscriptions.isSubscribed(recipient, mailType))
+        fetchRecipient(process.getUserId()).filter(recipient -> isSubscribed(recipient, mailType))
                                            .ifPresent(recipient -> sendMail(recipient, process, mailType));
+    }
+
+    private boolean isSubscribed(UserInfo recipient, String mailType) {
+        return mailSubscriptions.isSubscribed(recipient.getUserObject(UserAccount.class), mailType);
     }
 
     private Optional<String> determineMailType(Process process) {
@@ -74,21 +78,17 @@ public class JobCompletionMails {
         return Optional.of(MAIL_TYPE_JOB_SUCCESS);
     }
 
-    private Optional<UserAccount<?, ?>> fetchRecipient(String userId) {
+    private Optional<UserInfo> fetchRecipient(String userId) {
         if (Strings.isEmpty(userId)) {
             return Optional.empty();
         }
 
-        UserInfo user = UserContext.get().getUserManager().findUserByUserId(userId);
-        if (user == null) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(user.getUserObject(UserAccount.class));
+        return Optional.ofNullable(UserContext.get().getUserManager().findUserByUserId(userId))
+                       .filter(user -> user.getUserObject(UserAccount.class) != null);
     }
 
-    private void sendMail(UserAccount<?, ?> recipient, Process process, String mailType) {
-        UserAccountData userAccountData = recipient.getUserAccountData();
+    private void sendMail(UserInfo recipient, Process process, String mailType) {
+        UserAccountData userAccountData = recipient.getUserObject(UserAccount.class).getUserAccountData();
         if (Strings.isEmpty(userAccountData.getEmail())) {
             return;
         }
@@ -101,9 +101,8 @@ public class JobCompletionMails {
 
         mails.createEmail()
              .to(userAccountData.getEmail(), userAccountData.toString())
-             .setLanguage(userAccountData.getLanguage().getValue())
-             .nlsSubject(Strings.apply("JobCompletionMails.%s.subject", mailType),
-                         Map.of("title", process.getTitle()))
+             .setLanguage(recipient.getLanguage())
+             .nlsSubject(Strings.apply("JobCompletionMails.%s.subject", mailType), Map.of("title", process.getTitle()))
              .textTemplate("/mail/jobs/job-completion.pasta", mailContext)
              .htmlTemplate("/mail/jobs/job-completion.html.pasta", mailContext)
              .send();
