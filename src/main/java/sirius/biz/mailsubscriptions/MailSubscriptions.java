@@ -42,7 +42,7 @@ public class MailSubscriptions {
     /**
      * Returns all mail types a user can subscribe to.
      *
-     * @return the ids of all configured mail types, ordered by their priority
+     * @return the IDs of all configured mail types, ordered by their priority
      */
     public List<String> getMailTypes() {
         return Sirius.getSettings()
