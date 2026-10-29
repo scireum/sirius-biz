@@ -27,6 +27,9 @@ import java.util.stream.Collectors;
  * The available types are defined in the system configuration under <tt>mail-subscriptions.types</tt> and can be
  * extended by applications and customizations. All types are disabled by default, so a user only receives mails
  * for the types they explicitly subscribed to.
+ * <p>
+ * Each type needs the NLS keys <tt>MailSubscriptions.&lt;type&gt;.label</tt> and
+ * <tt>MailSubscriptions.&lt;type&gt;.help</tt>.
  */
 @Register(classes = MailSubscriptions.class, framework = MailSubscriptions.FRAMEWORK_MAIL_SUBSCRIPTIONS)
 public class MailSubscriptions {
