@@ -84,7 +84,11 @@ public class JobCompletionMails {
         }
 
         return Optional.ofNullable(UserContext.get().getUserManager().findUserByUserId(userId))
-                       .filter(user -> user.getUserObject(UserAccount.class) != null);
+                       .filter(user -> {
+                           UserAccount<?, ?> account = user.getUserObject(UserAccount.class);
+                           return account != null
+                                  && !account.getUserAccountData().getLogin().isAccountLocked();
+                       });
     }
 
     private void sendMail(UserInfo recipient, Process process, String mailType) {
