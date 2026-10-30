@@ -66,6 +66,10 @@ class SFTPUplinkTest {
 
     @Test
     fun `SFTP uplink with a wrong password is rejected by the SSH server`() {
+        // Both uplinks only differ in their password. As the correct one succeeds, the server is reachable and
+        // the failure below can only be caused by the authentication...
+        vfs!!.resolve(SFTP_DIRECTORY).children(FileSearch.iterateAll {})
+
         val directory = vfs!!.resolve("/sftp-test-wrong-password/$DIRECTORY_NAME")
 
         assertThrows(HandledException::class.java) {
