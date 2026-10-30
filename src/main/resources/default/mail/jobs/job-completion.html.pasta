@@ -1,0 +1,42 @@
+<i:arg type="sirius.web.mails.MailSender" name="mailContext"/>
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="String" name="mailType"/>
+<i:arg type="String" name="name"/>
+<i:arg type="String" name="url"/>
+
+<mail:template mailContext="@mailContext">
+    <mail:tableInline align="left" class="templateContainer">
+        <mail:tableContent valign="top" class="bodyContainer">
+            <mail:table class="mcnTextBlock">
+                <mail:tableContent valign="top" class="mcnTextBlockInner">
+
+                    <mail:greeting>
+                        @i18n('mail.hello') @name,
+                    </mail:greeting>
+
+                    <mail:tableContent>
+                        <p>@i18n(apply('JobCompletionMails.%s.text', mailType))</p>
+                        <p><b>@process.getTitle()</b></p>
+                        <p>@i18n('JobCompletionMails.duration'): @process.getRuntimeAsString()</p>
+                    </mail:tableContent>
+
+                    <mail:tableContent>
+                        <mail:table class="mcnButtonBlock">
+                            <mail:tableContent valign="top" class="mcnButtonBlockInner">
+                                <mail:button class="mcnButtonContentContainer padded-top" align="left"
+                                             href="@url"
+                                             labelKey="JobCompletionMails.showDetails">
+                                </mail:button>
+                            </mail:tableContent>
+                        </mail:table>
+                    </mail:tableContent>
+
+                    <mail:tableContent>
+                        <p><small>@i18n('JobCompletionMails.reason')</small></p>
+                    </mail:tableContent>
+
+                </mail:tableContent>
+            </mail:table>
+        </mail:tableContent>
+    </mail:tableInline>
+</mail:template>
