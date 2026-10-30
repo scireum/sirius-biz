@@ -10,7 +10,7 @@
 <i:arg type="String" name="params" default="{}" description="the parameters to be sent with the upload request"/>
 
 <div id="@id" class="file-upload">
-    <div class="qq-upload-drop-area qq-image-area qq-upload-drop-area-js">
+    <div class="qq-upload-drop-area qq-image-area file-upload-drop-area-js">
         <div class="file-upload-file file-upload-file-js">
             <i:if test="@showStorageKey">
                 <p style="word-wrap: break-word">
@@ -44,7 +44,7 @@
         <p>@i18n("StoredObject.uploadArea")</p>
     </div>
 
-    <div class="qq-upload-button qq-upload-button-js btn btn-primary btn-block">@i18n("StoredObject.uploadBtn")</div>
+    <div class="qq-upload-button file-upload-button-js btn btn-primary btn-block">@i18n("StoredObject.uploadBtn")</div>
 
     <i:if test="@urlAllowed">
         <button type="button" class="btn btn-block" data-placement="top" data-toggle="popover">
