@@ -29,6 +29,13 @@
 window.sirius.editLease = (function () {
     const DEFAULT_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
     const DEFAULT_HEARTBEAT_MS = 30 * 1000;
+    // A malformed or sub-second heartbeat interval must never make the setTimeout chain spin.
+    const MIN_HEARTBEAT_MS = 1000;
+    // Heartbeats and releases answer right away, so a request taking longer is considered hung.
+    const REQUEST_TIMEOUT_MS = 15 * 1000;
+    // Acquire and takeover wait server-side for writes of the previous holder (edit-leases.maxWriteDuration).
+    const GRANT_TIMEOUT_MS = 60 * 1000;
+    const GRANT_ACTIONS = ['acquire', 'takeover'];
     const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'scroll'];
     // Capture phase: a component stopping propagation must not hide activity; `scroll` does not bubble anyway.
     const ACTIVITY_LISTENER_OPTIONS = {passive: true, capture: true};
@@ -58,7 +65,7 @@ window.sirius.editLease = (function () {
      * @returns {{session: string, request: function(string): Promise<Object>, releaseOnUnload: function()}}
      */
     function httpApi(url, params, session) {
-        const editorSession = session || crypto.randomUUID();
+        const editorSession = session || generateSession();
 
         function body(action) {
             return new URLSearchParams({...(params || {}), action: action, editorSession: editorSession});
@@ -67,7 +74,13 @@ window.sirius.editLease = (function () {
         return {
             session: editorSession,
             request: function (action) {
-                return fetch(url, {method: 'POST', body: body(action)}).then(response => {
+                // Requests are queued, so a hung request would otherwise block all further lease requests.
+                const timeout = GRANT_ACTIONS.includes(action) ? GRANT_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
+                return fetch(url, {
+                    method: 'POST',
+                    body: body(action),
+                    signal: AbortSignal.timeout(timeout)
+                }).then(response => {
                     if (!response.ok) {
                         throw new Error('Edit lease request failed with HTTP ' + response.status);
                     }
@@ -81,17 +94,34 @@ window.sirius.editLease = (function () {
     }
 
     /**
+     * Generates a random editor session. Unlike crypto.randomUUID(), crypto.getRandomValues() is also available
+     * outside of secure contexts (e.g. plain HTTP).
+     */
+    function generateSession() {
+        return Array.from(crypto.getRandomValues(new Uint8Array(16)),
+            byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    function toMillis(seconds, fallbackMs) {
+        const millis = Number(seconds) * 1000;
+        return Number.isFinite(millis) && millis > 0 ? Math.max(millis, MIN_HEARTBEAT_MS) : fallbackMs;
+    }
+
+    /**
      * Creates the lease client for one edited object.
+     * <p>
+     * A client may be started again after it was disposed.
      *
      * @param api     the server access: <tt>request(action)</tt> resolving to <tt>{heldByMe, heldByOther,
-     *                heartbeatSeconds}</tt> and <tt>releaseOnUnload()</tt> as a best-effort release while the page
-     *                is being unloaded (see httpApi)
+     *                heartbeatSeconds, leaseSeconds}</tt> and <tt>releaseOnUnload()</tt> as a best-effort release
+     *                which also works while the page is being unloaded (see httpApi)
      * @param options <tt>onChange()</tt>: invoked whenever getState() or isRechecking() changed;
      *                <tt>onStale()</tt>: invoked whenever locally shown data may be outdated: the lease was lost,
      *                taken over, resumed or re-checked; <tt>idleTimeoutMs</tt>: time without pointer, keyboard,
      *                wheel or scroll activity after which an editing page releases the lease
      */
     function create(api, options) {
+        options = options || {};
         const onChange = options.onChange || function () {
         };
         const onStale = options.onStale || function () {
@@ -102,6 +132,11 @@ window.sirius.editLease = (function () {
         // Set synchronously by refresh(), i.e. before the rejected request's caller sees the error.
         let pendingRefresh = null;
         let heartbeatMs = DEFAULT_HEARTBEAT_MS;
+        // Unknown until the first answer; until then the lease is assumed to last three heartbeats.
+        let leaseMs = null;
+        // When the last request was sent which the server answered with heldByMe: the server lease lasts at least
+        // until leaseMs after this.
+        let confirmedAt = 0;
         let timer = null;
         let lastActivity = Date.now();
         // Set on pagehide and dispose: no further heartbeats are scheduled until a back-forward cache restore.
@@ -124,7 +159,11 @@ window.sirius.editLease = (function () {
             onChange();
         }
 
-        function enqueue(task) {
+        /**
+         * Queues a task. A failure is logged and retried by the next tick; with `rethrow` the returned promise
+         * also rejects, so a consumer can report failures of actions the user triggered.
+         */
+        function enqueue(task, rethrow) {
             // Captured when queued, not when started: a task queued before a dispose/pagehide/idle must be dropped.
             const startGeneration = generation;
             const isCurrent = () => startGeneration === generation;
@@ -138,16 +177,47 @@ window.sirius.editLease = (function () {
                     // A failed request leaves the state as it is; the next tick retries (unless it became obsolete).
                     console.error('Edit lease request failed', error);
                     if (isCurrent()) {
+                        expireUnconfirmedLease();
                         schedule();
+                    }
+                    if (rethrow) {
+                        throw error;
                     }
                 }
             });
-            queue = run;
+            // A rejected task must not break the chain for the tasks queued after it.
+            queue = run.catch(() => {
+            });
             return run;
         }
 
+        /**
+         * Sends a lease request and records when a granted lease was last confirmed.
+         */
+        async function send(action) {
+            const sentAt = Date.now();
+            const status = await api.request(action);
+            if (status.heldByMe) {
+                confirmedAt = sentAt;
+            }
+            return status;
+        }
+
+        /**
+         * Stops editing once the server lease has expired for sure as no heartbeat got through (e.g. after a 401, a
+         * CSRF 403 or a 5xx): the retry then runs on the acquisition path in tick(), which reloads once the lease is
+         * held again.
+         */
+        function expireUnconfirmedLease() {
+            const timeoutMs = leaseMs || 3 * heartbeatMs;
+            if (state === STATES.EDITING && Date.now() - confirmedAt >= timeoutMs) {
+                setState(STATES.ACQUIRING);
+            }
+        }
+
         function apply(status) {
-            heartbeatMs = status.heartbeatSeconds * 1000;
+            heartbeatMs = toMillis(status.heartbeatSeconds, DEFAULT_HEARTBEAT_MS);
+            leaseMs = toMillis(status.leaseSeconds, null);
             setState(status.heldByMe ? STATES.EDITING : STATES.READ_ONLY);
             schedule();
         }
@@ -179,7 +249,7 @@ window.sirius.editLease = (function () {
                 generation++;
                 if (wasEditing) {
                     void enqueue(async () => {
-                        await api.request('release');
+                        await send('release');
                     });
                 }
                 return;
@@ -195,21 +265,22 @@ window.sirius.editLease = (function () {
         /**
          * Queues an acquire/takeover; `stale` decides from the answer whether the shown data may be outdated.
          */
-        function requestLease(action, stale) {
+        function requestLease(action, stale, rethrow) {
             return enqueue(async isCurrent => {
-                const status = await api.request(action);
+                const status = await send(action);
                 if (!isCurrent()) {
+                    releaseLateGrant(status);
                     return;
                 }
                 apply(status);
                 if (stale(status)) {
                     onStale();
                 }
-            });
+            }, rethrow);
         }
 
         async function heartbeat(isCurrent) {
-            const status = await api.request('heartbeat');
+            const status = await send('heartbeat');
             if (!isCurrent()) {
                 return;
             }
@@ -227,8 +298,9 @@ window.sirius.editLease = (function () {
             // Take a free lease back right away, but stop editing until it is ours again: should the acquire
             // fail, the retry then runs on the acquisition path in tick(), which reloads once the lease is held.
             setState(STATES.ACQUIRING);
-            const next = await api.request('acquire');
+            const next = await send('acquire');
             if (!isCurrent()) {
+                releaseLateGrant(next);
                 return;
             }
             apply(next);
@@ -248,11 +320,35 @@ window.sirius.editLease = (function () {
             suspended = true;
         }
 
+        /**
+         * Releases the lease whatever the state: the server only releases it for its holder, and an acquire which
+         * was granted but not yet answered (state <tt>acquiring</tt>) must not block the object either.
+         */
+        function release() {
+            api.releaseOnUnload();
+        }
+
+        /**
+         * Releases a lease granted by an acquire which was still in flight when the page was hidden or the client
+         * disposed: the release sent back then was processed first, so the lease would otherwise stay blocked.
+         */
+        function releaseLateGrant(status) {
+            if (suspended && status.heldByMe) {
+                release();
+            }
+        }
+
         function onPageHide() {
             suspend();
-            if (state === STATES.EDITING) {
-                api.releaseOnUnload();
-            }
+            release();
+        }
+
+        function removeListeners() {
+            ACTIVITY_EVENTS.forEach(eventName => document.removeEventListener(eventName,
+                onActivity,
+                ACTIVITY_LISTENER_OPTIONS));
+            window.removeEventListener('pagehide', onPageHide);
+            window.removeEventListener('pageshow', onPageShow);
         }
 
         function onPageShow(event) {
@@ -270,6 +366,10 @@ window.sirius.editLease = (function () {
              * Registers the activity and page lifecycle listeners and acquires the lease.
              */
             start: function () {
+                // Revives a disposed client: dispose() suspended it and bumped the generation.
+                suspended = false;
+                lastActivity = Date.now();
+                setState(STATES.ACQUIRING);
                 ACTIVITY_EVENTS.forEach(eventName => document.addEventListener(eventName,
                     onActivity,
                     ACTIVITY_LISTENER_OPTIONS));
@@ -278,16 +378,18 @@ window.sirius.editLease = (function () {
                 return requestLease('acquire', () => false);
             },
             /**
-             * Stops all heartbeats and removes all listeners. The lease itself is left to expire or to the
-             * pagehide release.
+             * Releases the lease, stops all heartbeats and removes all listeners, e.g. when a modal editor is
+             * closed. The client may be started again afterwards.
              */
             dispose: function () {
+                if (suspended) {
+                    // Already disposed, or the page is being hidden, which released the lease already.
+                    removeListeners();
+                    return;
+                }
                 suspend();
-                ACTIVITY_EVENTS.forEach(eventName => document.removeEventListener(eventName,
-                    onActivity,
-                    ACTIVITY_LISTENER_OPTIONS));
-                window.removeEventListener('pagehide', onPageHide);
-                window.removeEventListener('pageshow', onPageShow);
+                release();
+                removeListeners();
             },
             /**
              * Returns the current state, one of sirius.editLease.STATES.
@@ -309,16 +411,25 @@ window.sirius.editLease = (function () {
             },
             /**
              * Moves the lease to this page after the user confirmed; the previous holder can no longer save.
+             * <p>
+             * The returned promise rejects if the request failed, so the failure can be reported to the user. The
+             * page then stays read-only and keeps polling the lease.
              */
             takeover: function () {
-                return requestLease('takeover', () => true);
+                return requestLease('takeover', () => true, true);
             },
             /**
              * Re-acquires the lease after an inactivity pause.
+             * <p>
+             * The returned promise rejects if the request failed, so the failure can be reported to the user. The
+             * page then keeps retrying to acquire the lease.
              */
             resume: function () {
                 lastActivity = Date.now();
-                return requestLease('acquire', () => true);
+                // Leaves idle right away, so a failed request is retried on the acquisition path in tick().
+                stop();
+                setState(STATES.ACQUIRING);
+                return requestLease('acquire', () => true, true);
             },
             /**
              * Re-checks the lease after the server rejected a write with `editLocked`. Only an editing page
@@ -338,6 +449,9 @@ window.sirius.editLease = (function () {
                 // pending heartbeat is cancelled, as it would queue a second acquire; apply() or the failure
                 // reschedules.
                 stop();
+                // Drops the answer of a heartbeat which is still in flight: sent before the write was rejected, it
+                // could still report heldByMe and switch back to editing before the re-check answers.
+                generation++;
                 setState(STATES.ACQUIRING);
                 setPendingRefresh(requestLease('acquire', () => true).finally(() => {
                     setPendingRefresh(null);

@@ -16,13 +16,15 @@ import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
 import sirius.web.controller.Controller
+import sirius.web.http.TestRequest
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
-private const val SCOPE = "test-editor"
+private const val SCOPE = EditLeasesTestController.SCOPE
 
 /**
  * Verifies the lease semantics of [EditLeases] against the real Redis of the test environment.
@@ -62,6 +64,36 @@ class EditLeasesTest {
         assertTrue(status.heldByMe)
         val ttl = ttl(id)
         assertTrue(ttl in 1..90, "TTL must follow leaseTimeout, was $ttl")
+    }
+
+    @Test
+    fun `an abandoned lease expires in Redis and is then granted to another session`() {
+        val id = uniqueId()
+        leases.acquire(SCOPE, id, "session-a")
+        // Keeps the TTL set by acquire, only shortens it - so this verifies the key is created as an expiring one.
+        redis.exec({ "shorten ttl" }) { jedis -> jedis.pexpire(key(id), 300) }
+
+        awaitCondition("the lease must expire") { holder(id) == null }
+
+        assertTrue(leases.acquire(SCOPE, id, "session-b").heldByMe)
+    }
+
+    @Test
+    fun `of sessions acquiring a free lease at once exactly one gets it`() {
+        val id = uniqueId()
+        val start = CountDownLatch(1)
+        val acquires = (1..8).map { index ->
+            CompletableFuture.supplyAsync {
+                start.await(5, TimeUnit.SECONDS)
+                leases.acquire(SCOPE, id, "session-$index")
+            }
+        }
+
+        start.countDown()
+        val statuses = acquires.map { it.get(10, TimeUnit.SECONDS) }
+
+        assertEquals(1, statuses.count { it.heldByMe }, "exactly one session must hold the lease")
+        assertTrue(statuses.filter { !it.heldByMe }.all { it.heldByOther })
     }
 
     @Test
@@ -260,7 +292,8 @@ class EditLeasesTest {
         val (finishWrite, writer) = startWrite(id, "session-a")
 
         val first = CompletableFuture.supplyAsync { leases.takeover(SCOPE, id, "session-b") }
-        Thread.sleep(200)
+        // The second takeover must only start once the first one moved the lease and is waiting for the write.
+        awaitCondition("the first takeover must have moved the lease") { holder(id) == "session-b" }
         val second = CompletableFuture.supplyAsync { leases.takeover(SCOPE, id, "session-c") }
         Thread.sleep(200)
 
@@ -294,6 +327,152 @@ class EditLeasesTest {
         finishWrite.countDown()
         writer.join(5000)
         assertTrue(acquire.get(5, TimeUnit.SECONDS).heldByMe)
+    }
+
+    @Test
+    fun `a takeover stops waiting for a write running longer than the max write duration`() {
+        // test.conf shortens edit-leases.maxWriteDuration to 2 seconds.
+        val id = uniqueId()
+        leases.acquire(SCOPE, id, "session-a")
+        val (finishWrite, writer) = startWrite(id, "session-a")
+
+        try {
+            val startedAt = System.currentTimeMillis()
+            val status = leases.takeover(SCOPE, id, "session-b")
+            val waited = System.currentTimeMillis() - startedAt
+
+            assertTrue(status.heldByMe)
+            assertTrue(
+                waited in 1500..6000,
+                "the takeover must wait for about the max write duration, waited $waited ms"
+            )
+        } finally {
+            finishWrite.countDown()
+            writer.join(5000)
+        }
+    }
+
+    @Test
+    fun `write deadlines are based on the clock of Redis`() {
+        val id = uniqueId()
+        leases.acquire(SCOPE, id, "session-a")
+        val (finishWrite, writer) = startWrite(id, "session-a")
+
+        try {
+            val deadline = redis.query({ "read write deadline" }) { jedis ->
+                jedis.zrangeWithScores(writesKey(id), 0, -1).single().score.toLong()
+            }
+            val redisNow = redis.query({ "read redis time" }) { jedis ->
+                jedis.eval("local t = redis.call('TIME') return t[1] * 1000 + math.floor(t[2] / 1000)") as Long
+            }
+            // test.conf sets maxWriteDuration to 2 seconds.
+            assertTrue(deadline - redisNow in 1000..2000, "deadline must be Redis time + maxWriteDuration")
+        } finally {
+            finishWrite.countDown()
+            writer.join(5000)
+        }
+    }
+
+    @Test
+    fun `the lease route reports the status the client relies on`() {
+        val id = uniqueId()
+
+        val acquired = leaseAction(id, "acquire", "session-a")
+        assertTrue(acquired.path("heldByMe").asBoolean())
+        assertFalse(acquired.path("heldByOther").asBoolean())
+        assertEquals(30, acquired.path("heartbeatSeconds").asInt())
+        assertEquals(90, acquired.path("leaseSeconds").asInt())
+
+        val refused = leaseAction(id, "acquire", "session-b")
+        assertFalse(refused.path("heldByMe").asBoolean())
+        assertTrue(refused.path("heldByOther").asBoolean())
+
+        assertTrue(leaseAction(id, "heartbeat", "session-a").path("heldByMe").asBoolean())
+        assertTrue(leaseAction(id, "takeover", "session-b").path("heldByMe").asBoolean())
+        assertTrue(leaseAction(id, "heartbeat", "session-a").path("heldByOther").asBoolean())
+
+        val released = leaseAction(id, "release", "session-b")
+        assertFalse(released.path("heldByMe").asBoolean())
+        assertFalse(released.path("heldByOther").asBoolean())
+        assertNull(holder(id))
+    }
+
+    @Test
+    fun `the lease route rejects an unknown action`() {
+        val response = TestRequest.SAFEPOST("/test/edit-lease/${uniqueId()}")
+            .withParameter(EditLeases.PARAM_ACTION, "steal")
+            .withParameter(EditLeases.PARAM_EDITOR_SESSION, "session-a")
+            .execute()
+
+        assertFalse(response.contentAsJson.path("success").asBoolean())
+    }
+
+    @Test
+    fun `a write route rejects a session not holding the lease with the editLocked code`() {
+        val id = uniqueId()
+        leases.acquire(SCOPE, id, "session-a")
+
+        val accepted = writeRequest(id, "session-a").execute()
+        val rejected = writeRequest(id, "session-b").execute()
+
+        assertTrue(accepted.contentAsJson.path("written").asBoolean())
+        assertFalse(rejected.contentAsJson.path("success").asBoolean())
+        assertEquals(EditLeases.ERROR_CODE_EDIT_LOCKED, rejected.contentAsJson.path("code").asString())
+        awaitCondition("the completed write must no longer count as in flight") { pendingWrites(id) == 0L }
+    }
+
+    @Test
+    fun `a takeover waits until a write request of the previous holder is completely handled`() {
+        val id = uniqueId()
+        leases.acquire(SCOPE, id, "session-a")
+        val writeStarted = CountDownLatch(1)
+        val finishWrite = CountDownLatch(1)
+        EditLeasesTestController.writeStarted = writeStarted
+        EditLeasesTestController.finishWrite = finishWrite
+
+        try {
+            val write = writeRequest(id, "session-a").executeAsync()
+            assertTrue(writeStarted.await(5, TimeUnit.SECONDS))
+
+            val takeover = CompletableFuture.supplyAsync { leases.takeover(SCOPE, id, "session-b") }
+            Thread.sleep(500)
+            assertFalse(takeover.isDone, "the takeover must wait for the write request in flight")
+
+            finishWrite.countDown()
+            assertTrue(write.await(Duration.ofSeconds(5)), "the write request must complete")
+            assertTrue(write.get().contentAsJson.path("written").asBoolean())
+            // Released by the completion promise of the request, i.e. via endWriteAsync.
+            assertTrue(takeover.get(5, TimeUnit.SECONDS).heldByMe)
+            assertEquals(0, pendingWrites(id))
+        } finally {
+            finishWrite.countDown()
+            EditLeasesTestController.writeStarted = null
+            EditLeasesTestController.finishWrite = null
+        }
+    }
+
+    private fun leaseAction(id: String, action: String, session: String) =
+        TestRequest.SAFEPOST("/test/edit-lease/$id")
+            .withParameter(EditLeases.PARAM_ACTION, action)
+            .withParameter(EditLeases.PARAM_EDITOR_SESSION, session)
+            .execute()
+            .contentAsJson
+
+    private fun writeRequest(id: String, session: String) =
+        TestRequest.SAFEPOST("/test/edit-lease/$id/write")
+            .withParameter(EditLeases.PARAM_EDITOR_SESSION, session)
+
+    private fun holder(id: String): String? = redis.query({ "read holder" }) { jedis -> jedis.get(key(id)) }
+
+    /**
+     * Polls until the given condition holds, failing after five seconds.
+     */
+    private fun awaitCondition(message: String, condition: () -> Boolean) {
+        val deadline = System.currentTimeMillis() + 5000
+        while (!condition()) {
+            assertTrue(System.currentTimeMillis() < deadline, message)
+            Thread.sleep(20)
+        }
     }
 
     private fun uniqueId() = "EDIT-LEASE-TEST-" + UUID.randomUUID()

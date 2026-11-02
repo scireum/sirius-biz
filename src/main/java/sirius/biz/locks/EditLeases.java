@@ -9,6 +9,10 @@
 package sirius.biz.locks;
 
 import redis.clients.jedis.AbstractTransaction;
+import redis.clients.jedis.BuilderFactory;
+import redis.clients.jedis.CommandArguments;
+import redis.clients.jedis.CommandObject;
+import redis.clients.jedis.Protocol;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.params.SetParams;
 import sirius.db.redis.Redis;
@@ -54,7 +58,11 @@ import java.util.function.Function;
  * most {@code edit-leases.maxWriteDuration}). Once a takeover or acquire returns, no write of a previous holder which
  * completes within {@code edit-leases.maxWriteDuration} can be applied anymore, so the data the new holder loads
  * afterwards is final. A write running longer is no longer waited for and may still be applied after the handover, so
- * the max write duration has to cover the slowest write route.
+ * the max write duration has to cover the slowest write route. The deadlines of in-flight writes are based on the
+ * clock of Redis, so that clock skew between the nodes cannot shorten the wait.
+ * <p>
+ * Waiting for these writes happens in the thread handling the acquire or takeover, which is therefore blocked for up
+ * to {@code edit-leases.maxWriteDuration}, e.g. while a slow upload of the previous holder is still running.
  */
 @Register(classes = EditLeases.class)
 public class EditLeases {
@@ -118,6 +126,9 @@ public class EditLeases {
 
     /**
      * Grants the lease if it is free or already held by the given session.
+     * <p>
+     * If the lease was free, this returns only once all writes of the previous holder which are still in flight are
+     * done, so the calling thread may be blocked for up to {@code edit-leases.maxWriteDuration}.
      *
      * @param scope   the scope of the lease, e.g. the kind of editor
      * @param id      the id of the object to edit
@@ -180,7 +191,8 @@ public class EditLeases {
     /**
      * Unconditionally moves the lease to the given session, so the previous holder can no longer save.
      * <p>
-     * Returns only once all writes of the previous holder which are still in flight are done.
+     * Returns only once all writes of the previous holder which are still in flight are done, so the calling thread
+     * may be blocked for up to {@code edit-leases.maxWriteDuration}.
      *
      * @param scope   the scope of the lease
      * @param id      the id of the object to edit
@@ -253,10 +265,12 @@ public class EditLeases {
      * writes the resulting status.
      * <p>
      * This implements the server side of <tt>sirius.editLease</tt>. The calling route is responsible for checking
-     * that the current user may edit the object at all.
+     * that the current user may edit the object at all. As acquire and takeover wait for in-flight writes of the
+     * previous holder, the request thread may be blocked for up to {@code edit-leases.maxWriteDuration}.
      *
      * @param webContext the current request, carrying {@link #PARAM_ACTION} and {@link #PARAM_EDITOR_SESSION}
-     * @param output     the JSON output to write {@code heldByMe}, {@code heldByOther} and {@code heartbeatSeconds} to
+     * @param output     the JSON output to write {@code heldByMe}, {@code heldByOther}, {@code heartbeatSeconds} and
+     *                   {@code leaseSeconds} to
      * @param scope      the scope of the lease
      * @param id         the id of the edited object
      */
@@ -277,6 +291,7 @@ public class EditLeases {
         output.property("heldByMe", status.heldByMe());
         output.property("heldByOther", status.heldByOther());
         output.property("heartbeatSeconds", getHeartbeatSeconds());
+        output.property("leaseSeconds", leaseTimeout.getSeconds());
     }
 
     /**
@@ -302,8 +317,8 @@ public class EditLeases {
      */
     private String beginWrite(String key, @Nullable String session) {
         String writeId = UUID.randomUUID().toString();
-        long now = System.currentTimeMillis();
         boolean registered = redis.query(() -> "Register edit lease write", jedis -> {
+            long now = redisMillis(jedis);
             try (AbstractTransaction transaction = jedis.transaction(false)) {
                 transaction.watch(key);
                 if (!statusFor(readHolder(jedis, key), session).heldByMe()) {
@@ -342,6 +357,7 @@ public class EditLeases {
      * then reports the lease as seen by the given session, which may have lost it to another takeover meanwhile.
      */
     private EditLeaseStatus grantAfterPendingWrites(String key, String session) {
+        // Only bounds the local wait, so the local clock is fine here - the write deadlines use the clock of Redis.
         long deadline = System.currentTimeMillis() + maxWriteDuration.toMillis();
         while (hasPendingWrites(key) && System.currentTimeMillis() < deadline) {
             Wait.millis(PENDING_WRITES_POLL_MILLIS);
@@ -350,10 +366,18 @@ public class EditLeases {
     }
 
     private boolean hasPendingWrites(String key) {
-        String now = String.valueOf(System.currentTimeMillis());
         long pending = redis.query(() -> "Read edit lease writes",
-                                   jedis -> jedis.zcount(writesKey(key), now, "+inf"));
+                                   jedis -> jedis.zcount(writesKey(key), String.valueOf(redisMillis(jedis)), "+inf"));
         return pending > 0;
+    }
+
+    /**
+     * Reads the clock of Redis, which all nodes share - unlike their own clocks, which may be skewed.
+     */
+    private long redisMillis(UnifiedJedis jedis) {
+        List<String> time = jedis.executeCommand(new CommandObject<>(new CommandArguments(Protocol.Command.TIME),
+                                                                     BuilderFactory.STRING_LIST));
+        return Long.parseLong(time.get(0)) * 1000 + Long.parseLong(time.get(1)) / 1000;
     }
 
     private boolean setIfAbsent(String key, String session) {
