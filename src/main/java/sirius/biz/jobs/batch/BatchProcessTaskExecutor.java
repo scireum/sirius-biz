@@ -8,7 +8,6 @@
 
 package sirius.biz.jobs.batch;
 
-import tools.jackson.databind.node.ObjectNode;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.BasicJobFactory;
 import sirius.biz.jobs.Jobs;
@@ -21,6 +20,7 @@ import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
+import tools.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +58,14 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
         }
     }
 
+    /**
+     * Loads the completed process and passes it to {@link JobCompletionMails}.
+     * <p>
+     * Does nothing if mail subscriptions are disabled. Errors are only logged, so that sending a mail never lets
+     * the job itself fail.
+     *
+     * @param processId the id of the process which has just completed
+     */
     private void notifyAboutCompletion(String processId) {
         if (jobCompletionMails == null) {
             return;

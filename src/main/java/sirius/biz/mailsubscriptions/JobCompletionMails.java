@@ -63,6 +63,13 @@ public class JobCompletionMails {
         return mailSubscriptions.isSubscribed(recipient.getUserObject(UserAccount.class), mailType);
     }
 
+    /**
+     * Selects the mail type which matches the outcome of the given process.
+     *
+     * @param process the process to inspect
+     * @return the matching mail type or an empty optional if the process did not terminate regularly, e.g. as it
+     * was canceled
+     */
     private Optional<String> determineMailType(Process process) {
         // Canceled jobs were stopped by the user, standby processes never complete.
         if (process.getState() != ProcessState.TERMINATED) {
@@ -78,6 +85,13 @@ public class JobCompletionMails {
         return Optional.of(MAIL_TYPE_JOB_SUCCESS);
     }
 
+    /**
+     * Fetches the user who started the job.
+     *
+     * @param userId the id of the user who started the job
+     * @return the user or an empty optional if there is no such user, the user has no account or the account is
+     * locked
+     */
     private Optional<UserInfo> fetchRecipient(String userId) {
         if (Strings.isEmpty(userId)) {
             return Optional.empty();
@@ -91,6 +105,15 @@ public class JobCompletionMails {
                        });
     }
 
+    /**
+     * Sends the mail of the given type about the given process to the recipient.
+     * <p>
+     * The mail is written in the language of the recipient. Users without an email address are skipped.
+     *
+     * @param recipient the user to notify
+     * @param process   the process of the completed job
+     * @param mailType  the mail type which determines the subject and the text of the mail
+     */
     private void sendMail(UserInfo recipient, Process process, String mailType) {
         UserAccountData userAccountData = recipient.getUserObject(UserAccount.class).getUserAccountData();
         if (Strings.isEmpty(userAccountData.getEmail())) {

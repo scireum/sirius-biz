@@ -86,6 +86,15 @@ public class ProfileController<I extends Serializable, T extends BaseEntity<I> &
         }
     }
 
+    /**
+     * Stores the mail types the user selected in the profile form.
+     * <p>
+     * Only mail types whose checkbox was part of the submitted form (detected via its <tt>_marker</tt> parameter)
+     * are changed, all other subscriptions remain untouched. Does nothing if mail subscriptions are disabled.
+     *
+     * @param webContext  the request containing the submitted profile form
+     * @param userAccount the user to update the subscriptions for
+     */
     private void updateMailSubscriptions(WebContext webContext, U userAccount) {
         if (mailSubscriptions == null) {
             return;
