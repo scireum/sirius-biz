@@ -25,7 +25,7 @@
                     var acceptedFiles = null;
 
                     if (options.allowedExtensions.length > 0) {
-                        acceptedFiles = options.allowedExtensions.toLowerCase().replace(' ', '').split(',')
+                        acceptedFiles = options.allowedExtensions.toLowerCase().replace(/\s/g, '').split(',')
                             .map(function (extension) {
                                 return '.' + extension;
                             }).join(',');
