@@ -16,23 +16,26 @@ import sirius.biz.web.BizController;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.web.mails.Mails;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * Sends a short mail to the user who started a job once the job has completed.
  * <p>
- * Depending on the outcome of the job, one of the mail types <tt>job-failed</tt>, <tt>job-warnings</tt> or
- * <tt>job-success</tt> is selected. A mail is only sent if the user subscribed to this type via
+ * Provides the mail types <tt>job-failed</tt>, <tt>job-warnings</tt> and <tt>job-success</tt> and selects one of
+ * them depending on the outcome of the job. A mail is only sent if the user subscribed to this type via
  * {@link MailSubscriptions}.
  */
-@Register(classes = JobCompletionMails.class, framework = MailSubscriptions.FRAMEWORK_MAIL_SUBSCRIPTIONS)
-public class JobCompletionMails {
+@Register(classes = {JobCompletionMails.class, MailTypeProvider.class},
+        framework = MailSubscriptions.FRAMEWORK_MAIL_SUBSCRIPTIONS)
+public class JobCompletionMails implements MailTypeProvider {
 
     private static final String MAIL_TYPE_JOB_FAILED = "job-failed";
     private static final String MAIL_TYPE_JOB_WARNINGS = "job-warnings";
@@ -43,6 +46,16 @@ public class JobCompletionMails {
 
     @Part
     private Mails mails;
+
+    @Override
+    public List<String> getMailTypes() {
+        return List.of(MAIL_TYPE_JOB_FAILED, MAIL_TYPE_JOB_WARNINGS, MAIL_TYPE_JOB_SUCCESS);
+    }
+
+    @Override
+    public int getPriority() {
+        return Priorized.DEFAULT_PRIORITY;
+    }
 
     /**
      * Notifies the user who started the given job about its outcome, if they subscribed to the matching mail type.

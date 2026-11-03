@@ -33,7 +33,7 @@ class MailSubscriptionsTest {
     private lateinit var userAccount: SQLUserAccount
 
     @Test
-    fun `mail types are read from the config and ordered by their priority`() {
+    fun `mail types are collected from the providers`() {
         assertEquals(listOf("job-failed", "job-warnings", "job-success"), mailSubscriptions.mailTypes)
     }
 

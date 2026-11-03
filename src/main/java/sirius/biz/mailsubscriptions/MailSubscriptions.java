@@ -9,11 +9,10 @@
 package sirius.biz.mailsubscriptions;
 
 import sirius.biz.tenants.UserAccount;
-import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
-import sirius.kernel.settings.Extension;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,12 +23,9 @@ import java.util.stream.Collectors;
 /**
  * Manages the mail types a user can subscribe to.
  * <p>
- * The available types are defined in the system configuration under <tt>mail-subscriptions.types</tt> and can be
- * extended by applications and customizations. All types are disabled by default, so a user only receives mails
- * for the types they explicitly subscribed to.
- * <p>
- * Each type needs the NLS keys <tt>MailSubscriptions.&lt;type&gt;.label</tt> and
- * <tt>MailSubscriptions.&lt;type&gt;.help</tt>.
+ * The available types are collected from all {@link MailTypeProvider providers}, so applications and
+ * customizations can add their own types by registering a provider. All types are disabled by default, so a user
+ * only receives mails for the types they explicitly subscribed to.
  */
 @Register(classes = MailSubscriptions.class, framework = MailSubscriptions.FRAMEWORK_MAIL_SUBSCRIPTIONS)
 public class MailSubscriptions {
@@ -42,17 +38,16 @@ public class MailSubscriptions {
     private static final String PREFERENCE_KEY = "mail-subscriptions";
     private static final String PARAMETER_PREFIX = "mailSubscriptions_";
 
+    @PriorityParts(MailTypeProvider.class)
+    private List<MailTypeProvider> mailTypeProviders;
+
     /**
      * Returns all mail types a user can subscribe to.
      *
-     * @return the IDs of all configured mail types, ordered by their priority
+     * @return the IDs of all mail types of all providers, ordered by the priority of their provider
      */
     public List<String> getMailTypes() {
-        return Sirius.getSettings()
-                     .getExtensions("mail-subscriptions.types")
-                     .stream()
-                     .map(Extension::getId)
-                     .toList();
+        return mailTypeProviders.stream().flatMap(provider -> provider.getMailTypes().stream()).toList();
     }
 
     /**
