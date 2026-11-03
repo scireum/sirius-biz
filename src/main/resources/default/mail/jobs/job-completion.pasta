@@ -1,0 +1,17 @@
+<i:arg type="sirius.web.mails.MailSender" name="mailContext"/>
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="String" name="mailType"/>
+<i:arg type="String" name="name"/>
+<i:arg type="String" name="url"/>
+<i:invoke template="/mail/mail-header.pasta"/>
+@i18n('mail.hello') @name,
+
+@i18n(apply('JobCompletionMails.%s.text', mailType))
+@process.getTitle()
+
+@i18n('JobCompletionMails.duration'): @process.getRuntimeAsString()
+
+@i18n('JobCompletionMails.showDetails'): @url
+
+@i18n('JobCompletionMails.reason')
+<i:invoke template="/mail/mail-footer.pasta"/>
