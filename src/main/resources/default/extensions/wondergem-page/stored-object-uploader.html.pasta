@@ -56,8 +56,11 @@
                             this.on('dragover', function () {
                                 $dropArea.addClass('qq-upload-drop-area-active');
                             });
-                            this.on('dragleave', function () {
-                                $dropArea.removeClass('qq-upload-drop-area-active');
+                            this.on('dragleave', function (e) {
+                                // Moving onto a child of the drop area also fires dragleave.
+                                if (!this.element.contains(e.relatedTarget)) {
+                                    $dropArea.removeClass('qq-upload-drop-area-active');
+                                }
                             });
                             this.on('drop', function () {
                                 $dropArea.removeClass('qq-upload-drop-area-active');
