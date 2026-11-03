@@ -204,34 +204,70 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
     }
 
     /**
-     * Finds the matching SAML tenant and verifies that the signing fingerprint is trusted for it.
+     * Finds the tenant for which the given SAML response was issued and which trusts its signing fingerprint.
+     * <p>
+     * Several tenants may share the same SAML provider (e.g. multiple enterprise applications within the same
+     * Entra ID directory) and therefore the same issuer. Each of these applications signs with its own certificate,
+     * so the fingerprint is used to pick the matching tenant. If even the fingerprint is shared, the audience of the
+     * response is compared against the {@link TenantData#getSamlRequestIssuerName() request issuer} of each tenant.
      *
      * @param response the SAML response to verify
      * @return the trusted tenant matching the response
      */
     T findTrustedTenant(SamlResponse response) {
-        T tenant = findTenant(response);
-        verifyFingerprint(tenant, response);
-        return tenant;
+        List<T> issuerMatches = findTenantsByIssuer(response);
+        if (issuerMatches.isEmpty()) {
+            throw Exceptions.createHandled()
+                            .withSystemErrorMessage("SAML Error: No matching tenant found for issuer: %s",
+                                                    response.getIssuer())
+                            .handle();
+        }
+
+        T trustedTenant = selectTrustedTenant(issuerMatches, response);
+        if (trustedTenant == null) {
+            throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
+        }
+
+        return trustedTenant;
     }
 
     /**
-     * Finds the tenant whose configured SAML issuer matches the response issuer.
+     * Finds all tenants whose configured SAML issuer matches the response issuer.
      *
      * @param response the SAML response to inspect
-     * @return the tenant matching the response issuer
+     * @return all tenants matching the response issuer, ordered by name
      */
-    private T findTenant(SamlResponse response) {
-        for (T tenant : querySAMLTenants()) {
-            if (checkIssuer(tenant, response)) {
-                return tenant;
-            }
+    private List<T> findTenantsByIssuer(SamlResponse response) {
+        return querySAMLTenants().stream().filter(tenant -> checkIssuer(tenant, response)).toList();
+    }
+
+    /**
+     * Selects the tenant which trusts the signing fingerprint of the response from the given candidates.
+     *
+     * @param candidates the tenants whose issuer matches the response, ordered by name
+     * @param response   the SAML response to verify
+     * @return the tenant matching the response or <tt>null</tt> if no candidate trusts the signing fingerprint
+     */
+    private T selectTrustedTenant(List<T> candidates, SamlResponse response) {
+        List<T> trustedTenants = candidates.stream()
+                                           .filter(tenant -> isTrustedFingerprint(tenant.getTenantData()
+                                                                                        .getSamlFingerprint(),
+                                                                                  response))
+                                           .toList();
+        if (trustedTenants.isEmpty()) {
+            return null;
+        }
+        if (trustedTenants.size() == 1) {
+            return trustedTenants.getFirst();
         }
 
-        throw Exceptions.createHandled()
-                        .withSystemErrorMessage("SAML Error: No matching tenant found for issuer: %s",
-                                                response.getIssuer())
-                        .handle();
+        // If several tenants also share the signing certificate, we prefer the one whose request issuer matches the
+        // audience. If the audience is missing or doesn't match, we stick to the first tenant (by name), as this has
+        // always been the behaviour for such setups...
+        return trustedTenants.stream()
+                             .filter(tenant -> checkAudience(tenant, response))
+                             .findFirst()
+                             .orElse(trustedTenants.getFirst());
     }
 
     @SuppressWarnings("unchecked")
@@ -256,9 +292,13 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
         T tenant = account.getTenant().forceFetchValue();
 
         if (!checkIssuer(tenant, response)) {
+            logTenantMismatch(user, tenant, response);
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Issuer mismatch!").handle();
         }
-        verifyFingerprint(tenant, response);
+        if (!isTrustedFingerprint(tenant.getTenantData().getSamlFingerprint(), response)) {
+            logTenantMismatch(user, tenant, response);
+            throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
+        }
 
         UserContext userContext = UserContext.get();
         userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
@@ -269,15 +309,34 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
     }
 
     /**
-     * Verifies that the response fingerprint is trusted for the given tenant.
+     * Logs a hint if an existing user is rejected, but the response would have been trusted by another tenant.
+     * <p>
+     * This either means that the user has been created within the wrong tenant (older versions picked the first
+     * tenant with a matching issuer without verifying its fingerprint) or that the same user name is used by several
+     * tenants (as user names are unique across all tenants, a user can only belong to one of them). Without this hint,
+     * such a setup is hard to diagnose, as the identity provider reports a successful login.
      *
-     * @param tenant   the tenant whose SAML configuration is used
-     * @param response the response to verify
+     * @param user     the existing user which is rejected
+     * @param tenant   the tenant the user belongs to
+     * @param response the rejected response
      */
-    private void verifyFingerprint(T tenant, SamlResponse response) {
-        if (!isTrustedFingerprint(tenant.getTenantData().getSamlFingerprint(), response)) {
-            throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
+    private void logTenantMismatch(UserInfo user, T tenant, SamlResponse response) {
+        T expectedTenant = selectTrustedTenant(findTenantsByIssuer(response), response);
+        if (expectedTenant == null || Strings.areEqual(expectedTenant.getIdAsString(), tenant.getIdAsString())) {
+            return;
         }
+
+        LOG.WARN("SAML login of user %s was rejected: The user belongs to tenant %s (%s), but the response "
+                 + "(issuer: %s, audience: %s) was issued for tenant %s (%s). "
+                 + "The user was probably created within the wrong tenant or the same name is used by several "
+                 + "tenants.",
+                 user.getUserName(),
+                 tenant.getTenantData().getName(),
+                 tenant.getIdAsString(),
+                 response.getIssuer(),
+                 response.getAudience(),
+                 expectedTenant.getTenantData().getName(),
+                 expectedTenant.getIdAsString());
     }
 
     /**
@@ -310,6 +369,22 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
      */
     private boolean checkIssuer(T tenant, SamlResponse response) {
         return isInList(tenant.getTenantData().getSamlIssuerName(), response.getIssuer());
+    }
+
+    /**
+     * Determines if the response audience matches the tenant's request issuer.
+     * <p>
+     * In contrast to {@link #checkIssuer(BaseEntity, SamlResponse)}, this comparison is case-sensitive, as the
+     * audience is a URI (or plain identifier) which has to match exactly according to the SAML specification.
+     *
+     * @param tenant   the tenant whose SAML configuration is used
+     * @param response the response to verify
+     * @return <tt>true</tt> if the audience matches the request issuer, <tt>false</tt> otherwise
+     */
+    private boolean checkAudience(T tenant, SamlResponse response) {
+        String audience = response.getAudience();
+        return Strings.isFilled(audience) && Strings.areEqual(tenant.getTenantData().getSamlRequestIssuerName(),
+                                                              audience);
     }
 
     /**

@@ -49,6 +49,7 @@ class SamlTest {
                 "https://sso.hq.scireum.com/adfs/services/trust",
                 response.issuer
         )
+        assertEquals("memoio-staging", response.audience)
     }
 
     @Test
@@ -98,6 +99,7 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
                 "https://sso.hq.scireum.com/adfs/services/trust",
                 response.issuer
         )
+        assertEquals("sellsite-test", response.audience)
     }
 
     @Test
@@ -529,6 +531,7 @@ UtS2kvA28X4ToQg3REfK8K+MroixIpwVfdyHRCP4CsLrz4w+EJw4VlWAzJ45HFHg
     fun `SAML response fingerprint comparison normalizes configured trust source`() {
         val response = SamlResponse(
             "issuer",
+            null,
             "c5fbeb487860c8e3cbe56409617021d01be371ff",
             "name-id",
             MultiMap.create()

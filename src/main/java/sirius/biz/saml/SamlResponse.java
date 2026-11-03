@@ -22,6 +22,7 @@ import java.util.Locale;
 public class SamlResponse {
 
     private final String issuer;
+    private final String audience;
     private final String fingerprint;
     private final String nameId;
     private final MultiMap<String, String> attributes;
@@ -59,12 +60,18 @@ public class SamlResponse {
      * Creates a new SAML response.
      *
      * @param issuer      the issuer which created the SAML response
+     * @param audience    the (first) audience the assertion is restricted to (if present)
      * @param fingerprint the fingerprint of the certificate which was used to sign the response
      * @param nameId      the name of the user
      * @param attributes  the attributes within the <tt>Assertion</tt>
      */
-    public SamlResponse(String issuer, String fingerprint, String nameId, MultiMap<String, String> attributes) {
+    public SamlResponse(String issuer,
+                        @Nullable String audience,
+                        String fingerprint,
+                        String nameId,
+                        MultiMap<String, String> attributes) {
         this.issuer = issuer;
+        this.audience = audience;
         this.fingerprint = fingerprint;
         this.nameId = nameId;
         this.attributes = attributes;
@@ -77,6 +84,23 @@ public class SamlResponse {
      */
     public String getIssuer() {
         return issuer;
+    }
+
+    /**
+     * Returns the first audience the assertion is restricted to.
+     * <p>
+     * This is the name under which the requesting system is registered at the identity provider (the "Identifier" or
+     * "Entity ID" of the application). Therefore, it can be compared against
+     * {@link sirius.biz.tenants.TenantData#getSamlRequestIssuerName()}.
+     * <p>
+     * Note that SAML permits several <tt>Audience</tt> elements (also within several <tt>AudienceRestriction</tt>
+     * elements). As common identity providers (e.g. Entra ID or ADFS) only emit a single one, only the first audience
+     * is provided here.
+     *
+     * @return the first audience of the assertion or <tt>null</tt> if no audience restriction is present
+     */
+    public String getAudience() {
+        return audience;
     }
 
     /**
