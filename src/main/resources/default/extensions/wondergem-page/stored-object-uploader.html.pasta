@@ -225,7 +225,8 @@
                     }
 
                     document.addEventListener('dragover', function (e) {
-                        if (e.dataTransfer) {
+                        // Only file drags, so text and links can still be dragged into inputs.
+                        if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types, 'Files') >= 0) {
                             e.dataTransfer.dropEffect = 'none';
                             e.preventDefault();
                         }
