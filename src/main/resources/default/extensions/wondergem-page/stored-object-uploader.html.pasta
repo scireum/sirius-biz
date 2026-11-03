@@ -33,6 +33,11 @@
 
                     disableDropOutside();
 
+                    // Dropzone refuses to attach twice to the same element.
+                    if ($dropArea.get(0).dropzone) {
+                        $dropArea.get(0).dropzone.destroy();
+                    }
+
                     var uploader = new Dropzone($dropArea.get(0), {
                         // sendFileAsBody drops all params, so they have to be part of the URL.
                         url: function (files) {
