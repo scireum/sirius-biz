@@ -15,7 +15,10 @@ import sirius.biz.mailsubscriptions.JobCompletionMails;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.scripting.ScriptableEventHandler;
+import sirius.biz.scripting.Scripting;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -91,16 +94,48 @@ public abstract class BatchProcessTaskExecutor implements DistributedTaskExecuto
     protected void executeInProcess(String factoryId, ProcessContext process) {
         process.markRunning();
         process.log(ProcessLog.info().withNLSKey("BatchProcessTaskExecutor.started"));
+        BatchProcessJobFactory factory = null;
         try {
-            jobs.findFactory(factoryId, BatchProcessJobFactory.class).executeTask(process);
+            factory = jobs.findFactory(factoryId, BatchProcessJobFactory.class);
+            factory.executeTask(process);
         } catch (Exception exception) {
             process.handle(exception);
         } finally {
+            if (factory != null) {
+                fireFinishedEvent(factory, process);
+            }
             if (process.isErroneous()) {
                 process.log(ProcessLog.warn().withNLSKey("BatchProcessTaskExecutor.completedButFailed"));
             } else {
                 process.log(ProcessLog.success().withNLSKey("BatchProcessTaskExecutor.completedSuccessfully"));
             }
+        }
+    }
+
+    /**
+     * Fires a {@link BatchJobFinishedEvent} if the factory {@linkplain BatchProcessJobFactory#enableScriptableEvents()
+     * enables scriptable events}.
+     * <p>
+     * Errors of the event handlers are logged by the dispatcher itself. Anything else, including an {@link Error}, is
+     * only logged here, as this runs in a <tt>finally</tt> block and must neither let the job fail nor replace an
+     * exception which is already being propagated.
+     *
+     * @param factory the factory which has executed the job
+     * @param process the process in which the job has been executed
+     */
+    @SuppressWarnings("java:S1181")
+    @Explain("Runs in a finally block and must never replace the outcome of the job.")
+    private void fireFinishedEvent(BatchProcessJobFactory factory, ProcessContext process) {
+        if (!factory.enableScriptableEvents()) {
+            return;
+        }
+
+        try {
+            ScriptableEventHandler eventHandler = new ScriptableEventHandler();
+            eventHandler.initializeEventDispatchers();
+            eventHandler.handleEvent(new BatchJobFinishedEvent(factory, process));
+        } catch (Throwable throwable) {
+            Exceptions.handle(Scripting.LOG, throwable);
         }
     }
 
