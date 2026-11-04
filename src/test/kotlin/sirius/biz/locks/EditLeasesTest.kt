@@ -295,7 +295,7 @@ class EditLeasesTest {
         // The second takeover must only start once the first one moved the lease and is waiting for the write.
         awaitCondition("the first takeover must have moved the lease") { holder(id) == "session-b" }
         val second = CompletableFuture.supplyAsync { leases.takeover(SCOPE, id, "session-c") }
-        Thread.sleep(200)
+        awaitCondition("the second takeover must have moved the lease") { holder(id) == "session-c" }
 
         finishWrite.countDown()
         writer.join(5000)

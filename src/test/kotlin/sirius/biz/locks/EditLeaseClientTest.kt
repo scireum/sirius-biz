@@ -53,6 +53,18 @@ class EditLeaseClientTest {
 
         assertTrue(browser.bool("fetches.every(fetch => fetch.signal)"), "every request must be abortable")
         assertEquals("15000,15000,60000,60000", browser.string("abortTimeouts.join()"))
+        assertEquals("false,true,false,false", browser.string("fetches.map(fetch => fetch.keepalive).join()"))
+    }
+
+    @Test
+    fun `httpApi works in browsers without AbortSignal timeout`() {
+        browser = Browser()
+        browser.js("delete AbortSignal.timeout")
+
+        browser.js("result = track(sirius.editLease.httpApi('/editor/lease', {}, 'session-1').request('heartbeat'))")
+
+        assertEquals("resolved", browser.string("result.state"))
+        assertTrue(browser.bool("fetches[0].signal === undefined"))
     }
 
     @Test
@@ -218,6 +230,39 @@ class EditLeaseClientTest {
     }
 
     @Test
+    fun `a takeover drops the answer of a poll in flight and reloads once`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+        browser.advance(30_000)
+        assertEquals("acquire", browser.pending())
+
+        browser.js("lease.takeover()")
+        browser.answer("OTHER")
+        browser.advance(60_000)
+        assertEquals("takeover", browser.pending(), "the poll's answer must not schedule another poll")
+
+        browser.answer("HELD")
+        assertEquals("editing", browser.state())
+        assertEquals("", browser.pending())
+        assertEquals(1, browser.reloads())
+    }
+
+    @Test
+    fun `a takeover waiting for pending writes is not followed by a poll and reloads once`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+
+        browser.js("lease.takeover()")
+        browser.advance(60_000)
+        assertEquals("takeover", browser.pending(), "no poll may be queued behind the pending takeover")
+
+        browser.answer("HELD")
+        assertEquals("editing", browser.state())
+        assertEquals("", browser.pending())
+        assertEquals(1, browser.reloads())
+    }
+
+    @Test
     fun `inactivity releases the lease, a failed resume rejects and keeps retrying`() {
         browser = Browser()
         browser.startLease()
@@ -242,21 +287,36 @@ class EditLeaseClientTest {
 
         browser.js("lease.dispose(); lease.dispose()")
 
-        assertEquals(1, browser.js("api.releases").asInt())
+        assertEquals("release", browser.pending())
+        assertEquals(0, browser.js("api.releases").asInt(), "no beacon, which could overtake a later acquire")
         assertEquals(0, browser.js("timers.length").asInt())
     }
 
     @Test
-    fun `a disposed client can be started again`() {
+    fun `a disposed client can be started again, acquiring only after its release`() {
         browser = Browser()
         browser.startLease()
         browser.js("lease.dispose()")
 
         browser.js("lease.start()")
-        browser.answer("HELD")
+        assertEquals("release", browser.answer("FREE"))
+        assertEquals("acquire", browser.answer("HELD"))
 
         assertEquals("editing", browser.state())
         assertEquals(1, browser.js("timers.length").asInt(), "heartbeats must run again")
+    }
+
+    @Test
+    fun `dispose also frees a lease granted to an acquire which was still in flight`() {
+        browser = Browser()
+        browser.js("lease = sirius.editLease.create(api = createApi()); lease.start()")
+        assertEquals("acquire", browser.pending())
+        browser.js("lease.dispose()")
+
+        assertEquals("acquire", browser.answer("HELD"))
+
+        assertEquals("release", browser.pending())
+        assertEquals(0, browser.js("api.releases").asInt())
     }
 
     @Test
@@ -279,6 +339,19 @@ class EditLeaseClientTest {
         browser.answer("HELD")
 
         assertEquals(2, browser.js("api.releases").asInt())
+    }
+
+    @Test
+    fun `a page paused for inactivity stays paused when restored from the back-forward cache`() {
+        browser = Browser()
+        browser.startLease()
+        browser.goIdle()
+
+        browser.js("fire(window, 'pagehide'); fire(window, 'pageshow', {persisted: true})")
+        browser.advance(60_000)
+
+        assertEquals("idle", browser.state())
+        assertEquals("", browser.pending(), "the lease must only be taken back via resume()")
     }
 
     @Test
@@ -553,7 +626,8 @@ class EditLeaseClientTest {
             var fetches = [];
             var response = {ok: true, status: 200};
             function fetch(url, init) {
-                fetches.push({url, method: init.method, signal: init.signal, body: String(init.body)});
+                fetches.push({url, method: init.method, signal: init.signal, keepalive: init.keepalive,
+                    body: String(init.body)});
                 return Promise.resolve({...response, json: () => Promise.resolve(HELD)});
             }
 

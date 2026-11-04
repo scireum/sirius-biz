@@ -87,6 +87,12 @@ public class EditLeases {
     private static final String ACTION_TAKEOVER = "takeover";
     private static final String ACTION_RELEASE = "release";
 
+    /**
+     * Ends in-flight writes registered by {@link #assertHeldBy(WebContext, String, String)} once their request is
+     * done.
+     */
+    private static final String EXECUTOR_END_WRITES = "edit-leases-end-writes";
+
     private static final String KEY_PREFIX = "edit-lease:";
     private static final String WRITES_KEY_PREFIX = "edit-lease-writes:";
     private static final String SCOPE_SEPARATOR = ":";
@@ -348,8 +354,9 @@ public class EditLeases {
     }
 
     private void endWriteAsync(String key, String writeId) {
-        // Completion handlers run in the IO thread pool, which must not be blocked by Redis calls.
-        tasks.defaultExecutor().start(() -> endWrite(key, writeId));
+        // Completion handlers run in the IO thread pool, which must not be blocked by Redis calls. A dedicated
+        // executor keeps a busy default executor from delaying the end of the write, which takeovers wait for.
+        tasks.executor(EXECUTOR_END_WRITES).start(() -> endWrite(key, writeId));
     }
 
     /**

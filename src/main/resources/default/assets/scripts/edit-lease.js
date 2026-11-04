@@ -79,7 +79,10 @@ window.sirius.editLease = (function () {
                 return fetch(url, {
                     method: 'POST',
                     body: body(action),
-                    signal: AbortSignal.timeout(timeout)
+                    // Older browsers (e.g. Safari < 16) lack AbortSignal.timeout: requests then simply never time out.
+                    signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(timeout) : undefined,
+                    // Lets a release of a disposed editor complete even if the page is left right afterwards.
+                    keepalive: action === 'release'
                 }).then(response => {
                     if (!response.ok) {
                         throw new Error('Edit lease request failed with HTTP ' + response.status);
@@ -114,7 +117,8 @@ window.sirius.editLease = (function () {
      *
      * @param api     the server access: <tt>request(action)</tt> resolving to <tt>{heldByMe, heldByOther,
      *                heartbeatSeconds, leaseSeconds}</tt> and <tt>releaseOnUnload()</tt> as a best-effort release
-     *                which also works while the page is being unloaded (see httpApi)
+     *                which also works while the page is being unloaded (see httpApi). Outside of pagehide, releases
+     *                are sent via <tt>request('release')</tt>, so they cannot overtake a later acquire
      * @param options <tt>onChange()</tt>: invoked whenever getState() or isRechecking() changed;
      *                <tt>onStale()</tt>: invoked whenever locally shown data may be outdated: the lease was lost,
      *                taken over, resumed or re-checked; <tt>idleTimeoutMs</tt>: time without pointer, keyboard,
@@ -141,9 +145,11 @@ window.sirius.editLease = (function () {
         let lastActivity = Date.now();
         // Set on pagehide and dispose: no further heartbeats are scheduled until a back-forward cache restore.
         let suspended = false;
+        // Set on pagehide until a back-forward cache restore: releases can then only be sent via a beacon.
+        let hidden = false;
         let queue = Promise.resolve();
-        // Bumped whenever answers of requests already issued must no longer be applied: on dispose, on pagehide
-        // and when going idle. Every queued task captures it when it is queued and is skipped, or drops its
+        // Bumped whenever answers of requests already issued must no longer be applied: on dispose, on pagehide,
+        // when going idle and on refresh and takeover. Every queued task captures it when it is queued and is skipped, or drops its
         // result, if it changed.
         let generation = 0;
 
@@ -321,26 +327,40 @@ window.sirius.editLease = (function () {
         }
 
         /**
-         * Releases the lease whatever the state: the server only releases it for its holder, and an acquire which
-         * was granted but not yet answered (state <tt>acquiring</tt>) must not block the object either.
+         * Releases the lease whatever the state while the page is being hidden: the server only releases it for its
+         * holder, and an acquire which was granted but not yet answered (state <tt>acquiring</tt>) must not block the
+         * object either.
          */
-        function release() {
+        function releaseOnUnload() {
             api.releaseOnUnload();
         }
 
         /**
-         * Releases a lease granted by an acquire which was still in flight when the page was hidden or the client
-         * disposed: the release sent back then was processed first, so the lease would otherwise stay blocked.
+         * Releases the lease whatever the state when the client is disposed. Unlike a beacon, the release is queued:
+         * it is sent after the requests already issued (so it also frees a lease they are granted) and before the
+         * acquire of a start() following right away, which a late release would otherwise delete again.
+         */
+        function releaseQueued() {
+            queue = queue.then(() => api.request('release')).catch(error => {
+                console.error('Edit lease request failed', error);
+            });
+        }
+
+        /**
+         * Releases a lease granted by an acquire which was still in flight when the page was hidden: the beacon sent
+         * back then was processed first, so the lease would otherwise stay blocked. After dispose() nothing is to be
+         * done, as its queued release is sent after the acquire.
          */
         function releaseLateGrant(status) {
-            if (suspended && status.heldByMe) {
-                release();
+            if (suspended && hidden && status.heldByMe) {
+                releaseOnUnload();
             }
         }
 
         function onPageHide() {
             suspend();
-            release();
+            hidden = true;
+            releaseOnUnload();
         }
 
         function removeListeners() {
@@ -355,6 +375,12 @@ window.sirius.editLease = (function () {
             // Never fires after dispose (the listener is removed), so clearing `suspended` cannot revive the lease.
             if (event.persisted) {
                 suspended = false;
+                hidden = false;
+                if (state === STATES.IDLE) {
+                    // Paused for inactivity before the page was hidden: the lease is only taken back via resume(),
+                    // as someone else may have started editing meanwhile.
+                    return;
+                }
                 lastActivity = Date.now();
                 setState(STATES.ACQUIRING);
                 void requestLease('acquire', () => true);
@@ -368,6 +394,7 @@ window.sirius.editLease = (function () {
             start: function () {
                 // Revives a disposed client: dispose() suspended it and bumped the generation.
                 suspended = false;
+                hidden = false;
                 lastActivity = Date.now();
                 setState(STATES.ACQUIRING);
                 ACTIVITY_EVENTS.forEach(eventName => document.addEventListener(eventName,
@@ -388,7 +415,7 @@ window.sirius.editLease = (function () {
                     return;
                 }
                 suspend();
-                release();
+                releaseQueued();
                 removeListeners();
             },
             /**
@@ -416,6 +443,12 @@ window.sirius.editLease = (function () {
              * page then stays read-only and keeps polling the lease.
              */
             takeover: function () {
+                // A poll firing while the takeover waits for pending writes would queue an acquire behind it, which
+                // then reports the lease as held and reloads a second time. So the next poll is cancelled and the
+                // answer of one already in flight dropped (it would schedule the next poll). The answer of the
+                // takeover schedules again.
+                stop();
+                generation++;
                 return requestLease('takeover', () => true, true);
             },
             /**
