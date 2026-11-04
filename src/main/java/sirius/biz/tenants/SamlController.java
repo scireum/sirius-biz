@@ -24,6 +24,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
@@ -228,6 +229,7 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
         }
 
+        logAudienceMismatch(trustedTenant, response);
         return trustedTenant;
     }
 
@@ -299,6 +301,7 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
             logTenantMismatch(user, tenant, response);
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
         }
+        logAudienceMismatch(tenant, response);
 
         UserContext userContext = UserContext.get();
         userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
@@ -321,8 +324,8 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
      * @param response the rejected response
      */
     private void logTenantMismatch(UserInfo user, T tenant, SamlResponse response) {
-        T expectedTenant = selectTrustedTenant(findTenantsByIssuer(response), response);
-        if (expectedTenant == null || Strings.areEqual(expectedTenant.getIdAsString(), tenant.getIdAsString())) {
+        T expectedTenant = findOtherTrustedTenant(tenant, response);
+        if (expectedTenant == null) {
             return;
         }
 
@@ -337,6 +340,47 @@ public class SamlController<I extends Serializable, T extends BaseEntity<I> & Te
                  response.getAudience(),
                  expectedTenant.getTenantData().getName(),
                  expectedTenant.getIdAsString());
+    }
+
+    /**
+     * Determines the tenant the response would have been selected for, if this isn't the given tenant.
+     *
+     * @param tenant   the tenant the user belongs to
+     * @param response the response to inspect
+     * @return the tenant which would have been selected for the response or <tt>null</tt> if no tenant trusts the
+     * response or if it is the given tenant anyway
+     */
+    @Nullable
+    T findOtherTrustedTenant(T tenant, SamlResponse response) {
+        T expectedTenant = selectTrustedTenant(findTenantsByIssuer(response), response);
+        if (expectedTenant == null || Strings.areEqual(expectedTenant.getIdAsString(), tenant.getIdAsString())) {
+            return null;
+        }
+
+        return expectedTenant;
+    }
+
+    /**
+     * Logs a warning if the response carries an audience which doesn't match the request issuer of the given tenant.
+     * <p>
+     * The audience isn't enforced (yet), therefore such a response is still accepted. However, this most probably
+     * hints at a misconfiguration (e.g. a typo or a case mismatch in the request issuer), which would otherwise go
+     * unnoticed, as the tenant is then selected via the fallback.
+     *
+     * @param tenant   the tenant which accepted the response
+     * @param response the accepted response
+     */
+    private void logAudienceMismatch(T tenant, SamlResponse response) {
+        if (Strings.isEmpty(response.getAudience()) || checkAudience(tenant, response)) {
+            return;
+        }
+
+        LOG.WARN("SAML response for tenant %s (%s) has the audience '%s', which doesn't match the configured request "
+                 + "issuer '%s'. Please check the SAML configuration.",
+                 tenant.getTenantData().getName(),
+                 tenant.getIdAsString(),
+                 response.getAudience(),
+                 tenant.getTenantData().getSamlRequestIssuerName());
     }
 
     /**

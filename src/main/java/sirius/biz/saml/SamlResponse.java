@@ -99,6 +99,7 @@ public class SamlResponse {
      *
      * @return the first audience of the assertion or <tt>null</tt> if no audience restriction is present
      */
+    @Nullable
     public String getAudience() {
         return audience;
     }

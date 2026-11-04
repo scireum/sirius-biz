@@ -20,6 +20,7 @@ import sirius.kernel.health.HandledException
 import sirius.web.http.TestRequest
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -118,6 +119,20 @@ class SamlControllerTest {
     }
 
     @Test
+    fun `SAML controller detects users of another tenant trusting the response`() {
+        val userTenant = samlTenant(OTHER_FINGERPRINT, requestIssuer = "app-first")
+        userTenant.setId(1)
+        val expectedTenant = samlTenant(FINGERPRINT, requestIssuer = "app-second")
+        expectedTenant.setId(2)
+        val controller = TestSamlController(listOf(userTenant, expectedTenant))
+
+        assertSame(expectedTenant, controller.findOtherTrustedTenant(userTenant, samlResponse()))
+        assertNull(controller.findOtherTrustedTenant(expectedTenant, samlResponse()))
+        assertNull(controller.findOtherTrustedTenant(userTenant, samlResponse(fingerprint = UNKNOWN_FINGERPRINT)))
+        assertNull(controller.findOtherTrustedTenant(userTenant, samlResponse(issuer = "unknown-issuer")))
+    }
+
+    @Test
     fun `SAML controller starts login for samlTenantId parameter`() {
         val tenant = samlTenant("C5:FB:EB:48:78:60:C8:E3:CB:E5:64:09:61:70:21:D0:1B:E3:71:FF")
         tenant.setId(4711)
@@ -161,6 +176,7 @@ class SamlControllerTest {
     companion object {
         private const val FINGERPRINT = "C5:FB:EB:48:78:60:C8:E3:CB:E5:64:09:61:70:21:D0:1B:E3:71:FF"
         private const val OTHER_FINGERPRINT = "71038506714cb316a8cb6500b26551b1c29375ce"
+        private const val UNKNOWN_FINGERPRINT = "0000000000000000000000000000000000000000"
     }
 
     private class TestSamlController(private val tenants: List<SQLTenant>) :
