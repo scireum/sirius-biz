@@ -100,6 +100,13 @@
             <artifactId>bcprov-jdk18on</artifactId>
             <version>1.86</version>
         </dependency>
+        <!-- Required by the FTPS uplink to resume the TLS session of the control connection for data connections -->
+        <!-- https://www.bouncycastle.org/download/bouncy-castle-java/#release-notes -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bctls-jdk18on</artifactId>
+            <version>1.86.2</version>
+        </dependency>
 
         <dependency>
             <groupId>com.scireum</groupId>

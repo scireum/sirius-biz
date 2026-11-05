@@ -11,11 +11,19 @@ package sirius.biz.storage.layer3.uplink.ftp;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPSClient;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jsse.BCSSLSocket;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
+import java.net.Socket;
+import java.security.GeneralSecurityException;
+import java.security.Provider;
 import java.time.Duration;
 import java.util.function.Function;
 
@@ -32,16 +40,48 @@ class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
      */
     public static final String CONFIG_SSL_PROTOCOL = "sslProtocol";
 
+    /**
+     * Determines if data connections resume the TLS session of the control connection.
+     * <p>
+     * Many FTPS servers (e.g. FileZilla Server or vsftpd) reject data connections which do not resume the TLS session
+     * of the control connection. If enabled, Bouncy Castle JSSE is used instead of the TLS implementation of the JDK,
+     * as only the former permits to specify the session to resume.
+     * <p>
+     * Unless {@link #CONFIG_SSL_PROTOCOL} is set explicitly, this also enforces {@link #SESSION_REUSE_SSL_PROTOCOL},
+     * as Bouncy Castle JSSE discards TLS 1.3 session tickets and therefore can only resume TLS 1.2 sessions.
+     */
+    public static final String CONFIG_SSL_SESSION_REUSE = "sslSessionReuse";
+
+    /**
+     * Contains the SSL protocol used by default if {@link #CONFIG_SSL_SESSION_REUSE} is enabled.
+     */
+    public static final String SESSION_REUSE_SSL_PROTOCOL = "TLSv1.2";
+
+    /**
+     * Contains the Bouncy Castle JSSE provider used if {@link #CONFIG_SSL_SESSION_REUSE} is enabled.
+     * <p>
+     * Note that the provider is intentionally not registered globally, so that all other TLS connections keep using
+     * the implementation of the JDK. Therefore, the crypto provider has to be passed in explicitly, as the default
+     * one fails to create its random generator unless Bouncy Castle is registered globally.
+     */
+    private static final Provider BOUNCY_CASTLE_JSSE_PROVIDER =
+            new BouncyCastleJsseProvider(new BouncyCastleProvider());
+
+    private static final String SSL_CONTEXT_PROTOCOL = "TLS";
+
     private final String sslProtocol;
+    private final boolean sslSessionReuse;
 
     protected FTPSUplinkConnectorConfig(String id, Function<String, Value> config) {
         super(id, config);
-        this.sslProtocol = config.apply(CONFIG_SSL_PROTOCOL).asString();
+        this.sslSessionReuse = config.apply(CONFIG_SSL_SESSION_REUSE).asBoolean();
+        this.sslProtocol = Strings.firstFilled(config.apply(CONFIG_SSL_PROTOCOL).asString(),
+                                               sslSessionReuse ? SESSION_REUSE_SSL_PROTOCOL : null);
     }
 
     @Override
     protected FTPClient create() {
-        FTPSClient client = new FTPSClient();
+        FTPSClient client = createClient();
 
         try {
             if (Strings.isFilled(sslProtocol)) {
@@ -77,6 +117,48 @@ class FTPSUplinkConnectorConfig extends FTPUplinkConnectorConfig {
                                     "Layer 3/FTP: An error occurred while connecting the uplink %s: %s (%s)",
                                     this)
                             .handle();
+        }
+    }
+
+    private FTPSClient createClient() {
+        if (!sslSessionReuse) {
+            return new FTPSClient();
+        }
+
+        try {
+            SSLContext sslContext = SSLContext.getInstance(SSL_CONTEXT_PROTOCOL, BOUNCY_CASTLE_JSSE_PROVIDER);
+            sslContext.init(null, null, null);
+            return new SessionResumingFTPSClient(sslContext);
+        } catch (GeneralSecurityException exception) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(exception)
+                            .withSystemErrorMessage(
+                                    "Layer 3/FTP: Failed to create the TLS context for the uplink %s: %s (%s)",
+                                    this)
+                            .handle();
+        }
+    }
+
+    /**
+     * Resumes the TLS session of the control connection for each data connection.
+     * <p>
+     * The JDK only looks up sessions to resume by host and port, which never matches as the data connection uses
+     * another port than the control connection. Therefore, the session is explicitly handed over using Bouncy Castle
+     * JSSE, which requires the client to be created with an {@link SSLContext} provided by
+     * {@link BouncyCastleJsseProvider}.
+     */
+    private static class SessionResumingFTPSClient extends FTPSClient {
+
+        private SessionResumingFTPSClient(SSLContext sslContext) {
+            super(sslContext);
+        }
+
+        @Override
+        protected void _prepareDataSocket_(Socket socket) throws IOException {
+            if (socket instanceof BCSSLSocket dataSocket && _socket_ instanceof BCSSLSocket controlSocket) {
+                dataSocket.setBCSessionToResume(controlSocket.getBCSession());
+            }
         }
     }
 }
