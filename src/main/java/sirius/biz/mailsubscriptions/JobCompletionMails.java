@@ -68,8 +68,12 @@ public class JobCompletionMails implements MailTypeProvider {
             return;
         }
 
-        fetchRecipient(process.getUserId()).filter(recipient -> isSubscribed(recipient, mailType))
-                                           .ifPresent(recipient -> sendMail(recipient, process, mailType));
+        UserInfo recipient =
+                fetchRecipient(process.getUserId()).filter(user -> isSubscribed(user, mailType)).orElse(null);
+        if (recipient == null) {
+            return;
+        }
+        UserContext.get().runAs(recipient, () -> sendMail(recipient, process, mailType));
     }
 
     private boolean isSubscribed(UserInfo recipient, String mailType) {
@@ -110,12 +114,10 @@ public class JobCompletionMails implements MailTypeProvider {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(UserContext.get().getUserManager().findUserByUserId(userId))
-                       .filter(user -> {
-                           UserAccount<?, ?> account = user.getUserObject(UserAccount.class);
-                           return account != null
-                                  && !account.getUserAccountData().getLogin().isAccountLocked();
-                       });
+        return Optional.ofNullable(UserContext.get().getUserManager().findUserByUserId(userId)).filter(user -> {
+            UserAccount<?, ?> account = user.getUserObject(UserAccount.class);
+            return account != null && !account.getUserAccountData().getLogin().isAccountLocked();
+        });
     }
 
     /**
