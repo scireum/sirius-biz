@@ -68,12 +68,8 @@ public class JobCompletionMails implements MailTypeProvider {
             return;
         }
 
-        UserInfo recipient =
-                fetchRecipient(process.getUserId()).filter(user -> isSubscribed(user, mailType)).orElse(null);
-        if (recipient == null) {
-            return;
-        }
-        UserContext.get().runAs(recipient, () -> sendMail(recipient, process, mailType));
+        fetchRecipient(process.getUserId()).filter(recipient -> isSubscribed(recipient, mailType))
+                                           .ifPresent(recipient -> sendMail(recipient, process, mailType));
     }
 
     private boolean isSubscribed(UserInfo recipient, String mailType) {
@@ -135,18 +131,22 @@ public class JobCompletionMails implements MailTypeProvider {
             return;
         }
 
-        Context mailContext = Context.create()
-                                     .set("process", process)
-                                     .set("mailType", mailType)
-                                     .set("name", userAccountData.getAddressableName())
-                                     .set("url", BizController.getBaseUrl() + "/ps/" + process.getIdAsString());
+        // Runs as the recipient, so that the salutation is translated via their tenant and into their language.
+        UserContext.get().runAs(recipient, () -> {
+            Context mailContext = Context.create()
+                                         .set("process", process)
+                                         .set("mailType", mailType)
+                                         .set("name", userAccountData.getAddressableName())
+                                         .set("url", BizController.getBaseUrl() + "/ps/" + process.getIdAsString());
 
-        mails.createEmail()
-             .to(userAccountData.getEmail(), userAccountData.toString())
-             .setLanguage(recipient.getLanguage())
-             .nlsSubject(Strings.apply("JobCompletionMails.%s.subject", mailType), Map.of("title", process.getTitle()))
-             .textTemplate("/mail/jobs/job-completion.pasta", mailContext)
-             .htmlTemplate("/mail/jobs/job-completion.html.pasta", mailContext)
-             .send();
+            mails.createEmail()
+                 .to(userAccountData.getEmail(), userAccountData.toString())
+                 .setLanguage(recipient.getLanguage())
+                 .nlsSubject(Strings.apply("JobCompletionMails.%s.subject", mailType),
+                             Map.of("title", process.getTitle()))
+                 .textTemplate("/mail/jobs/job-completion.pasta", mailContext)
+                 .htmlTemplate("/mail/jobs/job-completion.html.pasta", mailContext)
+                 .send();
+        });
     }
 }
