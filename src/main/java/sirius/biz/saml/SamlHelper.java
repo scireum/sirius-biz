@@ -587,6 +587,8 @@ public class SamlHelper {
         }
 
         return new SamlResponse(node.queryString("*[local-name()='Issuer']"),
+                                node.queryString(
+                                        "*[local-name()='Conditions']/*[local-name()='AudienceRestriction']/*[local-name()='Audience']"),
                                 fingerprint,
                                 node.queryString("*[local-name()='Subject']/*[local-name()='NameID']"),
                                 attributes);

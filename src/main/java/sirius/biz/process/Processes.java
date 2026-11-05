@@ -419,7 +419,7 @@ public class Processes {
      * @param processId the id of the process to fetch
      * @return the process with the given id wrapped as optional or an empty optional if no such process exists
      */
-    protected Optional<Process> fetchProcess(String processId) {
+    public Optional<Process> fetchProcess(String processId) {
         Process process = process1stLevelCache.get(processId);
         if (process != null) {
             return Optional.of(process);

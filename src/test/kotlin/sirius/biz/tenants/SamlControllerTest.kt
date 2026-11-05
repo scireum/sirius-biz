@@ -18,7 +18,9 @@ import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.MultiMap
 import sirius.kernel.health.HandledException
 import sirius.web.http.TestRequest
+import kotlin.test.assertContains
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -30,12 +32,7 @@ class SamlControllerTest {
 
     @Test
     fun `SAML controller fingerprint check normalizes configured fingerprints`() {
-        val response = SamlResponse(
-            "issuer",
-            "c5fbeb487860c8e3cbe56409617021d01be371ff",
-            "name-id",
-            MultiMap.create()
-        )
+        val response = samlResponse()
 
         assertTrue(
             SamlController.isTrustedFingerprint(
@@ -60,6 +57,82 @@ class SamlControllerTest {
     }
 
     @Test
+    fun `SAML controller picks the tenant trusting the fingerprint among tenants sharing the issuer`() {
+        val firstTenant = samlTenant(OTHER_FINGERPRINT, requestIssuer = "app-first")
+        val secondTenant = samlTenant(FINGERPRINT, requestIssuer = "app-second")
+        val controller = TestSamlController(listOf(firstTenant, secondTenant))
+
+        assertSame(secondTenant, controller.findTrustedTenant(samlResponse()))
+        assertSame(firstTenant, controller.findTrustedTenant(samlResponse(fingerprint = OTHER_FINGERPRINT)))
+    }
+
+    @Test
+    fun `SAML controller picks the tenant matching the audience among tenants sharing issuer and fingerprint`() {
+        val firstTenant = samlTenant(FINGERPRINT, requestIssuer = "app-first")
+        val secondTenant = samlTenant(FINGERPRINT, requestIssuer = "app-second")
+        val controller = TestSamlController(listOf(firstTenant, secondTenant))
+
+        assertSame(secondTenant, controller.findTrustedTenant(samlResponse(audience = "app-second")))
+        assertSame(firstTenant, controller.findTrustedTenant(samlResponse(audience = "app-first")))
+    }
+
+    @Test
+    fun `SAML controller falls back to the first trusted tenant if the audience does not decide`() {
+        val firstTenant = samlTenant(FINGERPRINT, requestIssuer = "app-first")
+        val secondTenant = samlTenant(FINGERPRINT, requestIssuer = "app-second")
+        val controller = TestSamlController(listOf(firstTenant, secondTenant))
+
+        assertSame(firstTenant, controller.findTrustedTenant(samlResponse()))
+        assertSame(firstTenant, controller.findTrustedTenant(samlResponse(audience = "app-unknown")))
+    }
+
+    @Test
+    fun `SAML controller ignores trusted tenants with another issuer`() {
+        val foreignTenant = samlTenant(FINGERPRINT, issuer = "other-issuer", requestIssuer = "app-second")
+        val tenant = samlTenant(FINGERPRINT, requestIssuer = "app-first")
+        val controller = TestSamlController(listOf(foreignTenant, tenant))
+
+        assertSame(tenant, controller.findTrustedTenant(samlResponse(audience = "app-second")))
+    }
+
+    @Test
+    fun `SAML controller rejects responses without matching issuer or fingerprint`() {
+        val controller = TestSamlController(
+            listOf(
+                samlTenant(OTHER_FINGERPRINT, requestIssuer = "app-first"),
+                samlTenant(OTHER_FINGERPRINT, requestIssuer = "app-second")
+            )
+        )
+
+        assertContains(
+            assertThrows<HandledException> {
+                controller.findTrustedTenant(samlResponse(audience = "app-second"))
+            }.message.orEmpty(),
+            "Fingerprint mismatch"
+        )
+        assertContains(
+            assertThrows<HandledException> {
+                controller.findTrustedTenant(samlResponse(issuer = "unknown-issuer"))
+            }.message.orEmpty(),
+            "No matching tenant found for issuer: unknown-issuer"
+        )
+    }
+
+    @Test
+    fun `SAML controller detects users of another tenant trusting the response`() {
+        val userTenant = samlTenant(OTHER_FINGERPRINT, requestIssuer = "app-first")
+        userTenant.setId(1)
+        val expectedTenant = samlTenant(FINGERPRINT, requestIssuer = "app-second")
+        expectedTenant.setId(2)
+        val controller = TestSamlController(listOf(userTenant, expectedTenant))
+
+        assertSame(expectedTenant, controller.findOtherTrustedTenant(userTenant, samlResponse()))
+        assertNull(controller.findOtherTrustedTenant(expectedTenant, samlResponse()))
+        assertNull(controller.findOtherTrustedTenant(userTenant, samlResponse(fingerprint = UNKNOWN_FINGERPRINT)))
+        assertNull(controller.findOtherTrustedTenant(userTenant, samlResponse(issuer = "unknown-issuer")))
+    }
+
+    @Test
     fun `SAML controller starts login for samlTenantId parameter`() {
         val tenant = samlTenant("C5:FB:EB:48:78:60:C8:E3:CB:E5:64:09:61:70:21:D0:1B:E3:71:FF")
         tenant.setId(4711)
@@ -79,22 +152,31 @@ class SamlControllerTest {
         )
     }
 
-    private fun samlTenant(fingerprint: String): SQLTenant {
+    private fun samlTenant(
+        fingerprint: String,
+        issuer: String = "issuer",
+        requestIssuer: String = "request-issuer"
+    ): SQLTenant {
         val tenant = SQLTenant()
-        tenant.tenantData.samlIssuerName = "issuer"
+        tenant.tenantData.samlIssuerName = issuer
         tenant.tenantData.samlIssuerUrl = "https://sso.example.test/login"
-        tenant.tenantData.samlRequestIssuerName = "request-issuer"
+        tenant.tenantData.samlRequestIssuerName = requestIssuer
         tenant.tenantData.samlFingerprint = fingerprint
         return tenant
     }
 
-    private fun samlResponse(): SamlResponse {
-        return SamlResponse(
-            "issuer",
-            "c5fbeb487860c8e3cbe56409617021d01be371ff",
-            "name-id",
-            MultiMap.create()
-        )
+    private fun samlResponse(
+        issuer: String = "issuer",
+        audience: String? = null,
+        fingerprint: String = "c5fbeb487860c8e3cbe56409617021d01be371ff"
+    ): SamlResponse {
+        return SamlResponse(issuer, audience, fingerprint, "name-id", MultiMap.create())
+    }
+
+    companion object {
+        private const val FINGERPRINT = "C5:FB:EB:48:78:60:C8:E3:CB:E5:64:09:61:70:21:D0:1B:E3:71:FF"
+        private const val OTHER_FINGERPRINT = "71038506714cb316a8cb6500b26551b1c29375ce"
+        private const val UNKNOWN_FINGERPRINT = "0000000000000000000000000000000000000000"
     }
 
     private class TestSamlController(private val tenants: List<SQLTenant>) :
