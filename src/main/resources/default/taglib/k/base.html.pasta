@@ -161,10 +161,55 @@
         </t:sidebar>
 
         <script>
-            sirius.ready(function () {
-                PR.prettyPrint();
-                mermaid.initialize({startOnLoad: true});
-            });
+            (function () {
+                // Prettify's core knows only a handful of languages, such as Java, JavaScript, JSON, shell and
+                // markup. All others ship as separate files next to it. Loading them all would cost every page
+                // dozens of requests, so only the files for the languages a page actually names are fetched, before
+                // highlighting.
+                const PRETTIFY_LANGUAGE_FILES = new Set([
+                    'Splus', 'aea', 'agc', 'apollo', 'basic', 'cbm', 'cl', 'clj', 'css', 'dart', 'el', 'erl', 'erlang',
+                    'ex', 'exs', 'fs', 'go', 'hs', 'kotlin', 'lasso', 'lassoscript', 'latex', 'lgt', 'lisp', 'll',
+                    'llvm', 'logtalk', 'ls', 'lsp', 'lua', 'matlab', 'ml', 'mumps', 'n', 'nemerle', 'pascal', 'proto',
+                    'r', 'rd', 'rkt', 'rust', 's', 'scala', 'scm', 'sql', 'ss', 'swift', 'tcl', 'tex', 'vb', 'vbs',
+                    'vhd', 'vhdl', 'wiki', 'xq', 'xquery', 'yaml', 'yml'
+                ]);
+
+                // A language file which fails or stalls only falls back to guessing, so it must not keep the page
+                // from highlighting for longer than this.
+                const LANGUAGE_FILE_TIMEOUT_MILLIS = 2000;
+
+                function loadLanguageFile(language) {
+                    return new Promise(function (resolve) {
+                        const script = document.createElement('script');
+                        script.src = '/assets/libs/prettify/lang-' + language + '.js';
+                        script.onload = resolve;
+                        script.onerror = resolve;
+                        setTimeout(resolve, LANGUAGE_FILE_TIMEOUT_MILLIS);
+                        document.head.appendChild(script);
+                    });
+                }
+
+                sirius.ready(function () {
+                    const languages = new Set();
+                    document.querySelectorAll('pre.prettyprint').forEach(function (block) {
+                        block.classList.forEach(function (cssClass) {
+                            const language = cssClass.startsWith('lang-') ? cssClass.substring(5) : null;
+                            if (PRETTIFY_LANGUAGE_FILES.has(language)) {
+                                languages.add(language);
+                            }
+                        });
+                    });
+                    if (languages.size === 0) {
+                        // nothing to load: highlight right away, as the page always did
+                        PR.prettyPrint();
+                    } else {
+                        Promise.all(Array.from(languages).map(loadLanguageFile)).then(function () {
+                            PR.prettyPrint();
+                        });
+                    }
+                    mermaid.initialize({startOnLoad: true});
+                });
+            })();
         </script>
     </t:page>
 </i:if>
