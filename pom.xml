@@ -22,7 +22,7 @@
         <sirius.db>71.0.3</sirius.db>
         <aws.sdk>2.57.11</aws.sdk>
         <commonmark>0.32.0</commonmark>
-        <graalvm.polyglot>25.4.4.1.1</graalvm.polyglot>
+        <graalvm.polyglot>25.5.5.0.3</graalvm.polyglot>
     </properties>
 
     <repositories>
