@@ -106,7 +106,7 @@ public class KnowledgeBaseMarkdownRendererTest {
         KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
 
         String html = document.sections().getFirst().html();
-        assertTrue(html.contains("<pre class=\"prettyprint p-2 lang-java\">"));
+        assertTrue(html.contains("<pre class=\"kb-code prettyprint p-2 lang-java\">"));
         assertTrue(html.contains("if (left &lt; right)"));
         assertFalse(html.contains("<code>"));
         assertFalse(html.contains("language-java"));

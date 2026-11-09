@@ -7,4 +7,4 @@
     Renders a chunk of code with appropriate highlighting.
 </i:pragma>
 
-<pre class="prettyprint p-2 @class"><i:raw>@content</i:raw></pre>
+<pre class="kb-code prettyprint p-2 @class"><i:raw>@content</i:raw></pre>

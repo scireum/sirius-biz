@@ -1,0 +1,3 @@
+<i:arg type="String" name="language"/>
+
+<k:code class="@language">Neue Störung gemeldet: ${text}</k:code>

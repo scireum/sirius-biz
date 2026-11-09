@@ -7,8 +7,21 @@
   margin: 0 2px;
 }
 
+// Prettify's "desert" skin, which the knowledge base loads, gives the code block only its dark background and colours
+// nothing but the tokens it creates. Text it leaves alone -- a plain-text block marked "nocode" -- would therefore
+// keep the page's dark text colour on the dark background. Printed, the text turns dark; the background is cleared
+// explicitly, as the skin's own print rule ("background-color: none") is invalid and ignored by browsers, which
+// would leave dark text on the dark background whenever background graphics are printed. The skin sets that background
+// on "pre.prettyprint", so the print rule has to be at least as specific to override it.
 .kb-code {
+  color: #fff;
+}
 
+@media print {
+  pre.prettyprint.kb-code {
+    color: #000;
+    background-color: transparent;
+  }
 }
 
 // A KB card pads itself, and Bootstrap gives a trailing paragraph or list a bottom margin of its
