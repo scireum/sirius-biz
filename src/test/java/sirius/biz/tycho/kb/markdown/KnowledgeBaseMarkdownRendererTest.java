@@ -113,6 +113,21 @@ public class KnowledgeBaseMarkdownRendererTest {
     }
 
     @Test
+    public void renderDocumentRendersTextFencedCodeBlocksAsPlainText() {
+        String articleMarkdown = """
+                ## Template
+                
+                ```text
+                Neue Störung gemeldet: ${text}
+                ```
+                """;
+        KnowledgeBaseMarkdownDocument document = renderer.renderDocument(createArticle(articleMarkdown));
+
+        String html = document.sections().getFirst().html();
+        assertTrue(html.contains("<pre class=\"kb-code prettyprint p-2 lang-text nocode\">"), html);
+    }
+
+    @Test
     public void renderDocumentEscapesMermaidFencedCodeBlocks() {
         String articleMarkdown = """
                 ## Diagram
