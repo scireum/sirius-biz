@@ -1,4 +1,7 @@
-<i:arg type="String" name="class" default="" description="Permits adding additional CSS classes to the generated pre tag" />
+<i:arg type="String"
+       name="class"
+       default=""
+       description="Permits adding additional CSS classes to the generated pre tag. A language class such as lang-java selects the highlighting; lang-text, lang-txt, lang-plain, lang-plaintext or lang-none, in any case, show the code as plain text. Without a language class, the language is guessed."/>
 <i:arg type="String"
        name="content"
        default="@renderToString('body')"
@@ -7,4 +10,6 @@
     Renders a chunk of code with appropriate highlighting.
 </i:pragma>
 
-<pre class="prettyprint p-2 @class"><i:raw>@content</i:raw></pre>
+<i:local name="plainText" value="class.matches('(?i)(.* )?lang-(text|txt|plain|plaintext|none)( .*)?')"/>
+
+<pre class="kb-code prettyprint p-2 @class@(plainText ? ' nocode' : '')"><i:raw>@content</i:raw></pre>

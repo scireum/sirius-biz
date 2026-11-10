@@ -161,10 +161,45 @@
         </t:sidebar>
 
         <script>
-            sirius.ready(function () {
-                PR.prettyPrint();
-                mermaid.initialize({startOnLoad: true});
-            });
+            {
+                // Prettify's core knows only a handful of languages, such as Java, JavaScript, JSON, shell and
+                // markup. All others ship as separate files next to it. Loading them all would cost every page
+                // dozens of requests, so only the files for the languages a page actually names are fetched, before
+                // highlighting. A language file is a classic script which registers itself with Prettify, so it is
+                // loaded through a script element, as Prettify's own auto-loader does; import() only takes modules.
+                const PRETTIFY_LANGUAGE_FILES = new Set([
+                    'Splus', 'aea', 'agc', 'apollo', 'basic', 'cbm', 'cl', 'clj', 'css', 'dart', 'el', 'erl', 'erlang',
+                    'ex', 'exs', 'fs', 'go', 'hs', 'kotlin', 'lasso', 'lassoscript', 'latex', 'lgt', 'lisp', 'll',
+                    'llvm', 'logtalk', 'ls', 'lsp', 'lua', 'matlab', 'ml', 'mumps', 'n', 'nemerle', 'pascal', 'proto',
+                    'r', 'rd', 'rkt', 'rust', 's', 'scala', 'scm', 'sql', 'ss', 'swift', 'tcl', 'tex', 'vb', 'vbs',
+                    'vhd', 'vhdl', 'wiki', 'xq', 'xquery', 'yaml', 'yml'
+                ]);
+
+                // A language file which fails or stalls only falls back to guessing, so it must not keep the page
+                // from highlighting for longer than this.
+                const LANGUAGE_FILE_TIMEOUT_MILLIS = 2000;
+
+                const loadLanguageFile = language => new Promise(resolve => {
+                    const script = document.createElement('script');
+                    script.src = `/assets/libs/prettify/lang-${language}.js`;
+                    script.onload = script.onerror = resolve;
+                    setTimeout(resolve, LANGUAGE_FILE_TIMEOUT_MILLIS);
+                    document.head.append(script);
+                });
+
+                sirius.ready(async () => {
+                    mermaid.initialize({startOnLoad: true});
+
+                    const languages = new Set([...document.querySelectorAll('pre.prettyprint')]
+                                                  .flatMap(block => [...block.classList])
+                                                  .filter(cssClass => cssClass.startsWith('lang-'))
+                                                  .map(cssClass => cssClass.substring('lang-'.length))
+                                                  .filter(language => PRETTIFY_LANGUAGE_FILES.has(language)));
+                    // with no language to load, this resolves at once, so highlighting starts right away as before
+                    await Promise.all([...languages].map(loadLanguageFile));
+                    PR.prettyPrint();
+                });
+            }
         </script>
     </t:page>
 </i:if>
