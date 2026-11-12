@@ -8,11 +8,9 @@
 
 package sirius.biz.importer;
 
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
-import sirius.db.mongo.MongoEntity;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -26,8 +24,7 @@ import java.lang.annotation.Target;
  * If during an update, only fields marked as {@link IgnoreInImportChangedCheck} are changed, the entity won't be
  * updated.
  *
- * @see SQLEntityImportHandler#isChanged(SQLEntity)
- * @see MongoEntityImportHandler#isChanged(MongoEntity)
+ * @see BaseImportHandler#isChanged(BaseEntity)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

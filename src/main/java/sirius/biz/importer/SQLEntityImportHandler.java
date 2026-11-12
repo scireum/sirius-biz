@@ -51,7 +51,6 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected Mapping[] mappingsToLoad;
     protected Mapping[] mappingsToUpdate;
     protected Mapping[] mappingsToCompare;
-    protected Mapping[] mappingsToCheckForChanges;
 
     /**
      * Creates a new instance for the given type of entities and import context.
@@ -68,7 +67,6 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         this.mappingsToLoad = getAutoImportMappings().toArray(MAPPING_ARRAY);
         this.mappingsToUpdate = getMappingsToUpdate().toArray(MAPPING_ARRAY);
         this.mappingsToLoadForFind = getMappingsToLoadForFind().toArray(MAPPING_ARRAY);
-        this.mappingsToCheckForChanges = getMappingsToCheckForChanges().toArray(MAPPING_ARRAY);
     }
 
     @SuppressWarnings("unchecked")
@@ -342,16 +340,6 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         }
 
         return entity;
-    }
-
-    /**
-     * Checks whether any property of the entity has changed.
-     *
-     * @param entity the entity to check
-     * @return <tt>true</tt> if any property checked is changed, <tt>false</tt> otherwise
-     */
-    protected boolean isChanged(E entity) {
-        return entity.isChanged(mappingsToCheckForChanges);
     }
 
     /**

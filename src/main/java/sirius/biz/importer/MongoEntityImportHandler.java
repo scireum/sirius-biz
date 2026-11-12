@@ -33,7 +33,6 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     protected static Mango mango;
 
     protected Mapping[] mappingsToLoad;
-    protected Mapping[] mappingsToCheckForChanges;
 
     /**
      * Creates a new instance for the given type of entities and import context.
@@ -44,7 +43,6 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     protected MongoEntityImportHandler(Class<?> clazz, ImporterContext context) {
         super(clazz, context);
         this.mappingsToLoad = getAutoImportMappings().toArray(MAPPING_ARRAY);
-        this.mappingsToCheckForChanges = getMappingsToCheckForChanges().toArray(MAPPING_ARRAY);
     }
 
     @Override
@@ -189,16 +187,6 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
                                                           .handle();
             throw enhanceExceptionWithHints(handledException);
         }
-    }
-
-    /**
-     * Checks whether any property of the entity has changed.
-     *
-     * @param entity the entity to check
-     * @return <tt>true</tt> if any property checked is changed, <tt>false</tt> otherwise
-     */
-    protected boolean isChanged(E entity) {
-        return entity.isChanged(mappingsToCheckForChanges);
     }
 
     @Override

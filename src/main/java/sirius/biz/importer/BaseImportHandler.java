@@ -83,6 +83,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     private final Extension aliases;
 
     /**
+     * Contains the mappings to check for changes, as determined by {@link #getMappingsToCheckForChanges()}.
+     */
+    protected Mapping[] mappingsToCheckForChanges;
+
+    /**
      * Defines a context key used to skip loading entities aborted via {@linkplain sirius.biz.scripting.ScriptableEvent script}
      */
     public static final String SCRIPT_ABORTED = "_SCRIPT_ABORTED_";
@@ -103,6 +108,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         for (EntityImportHandlerExtender extender : extenders) {
             extender.collectLoaders(this, descriptor, context, loaders::put);
         }
+
+        this.mappingsToCheckForChanges = getMappingsToCheckForChanges().toArray(Mapping[]::new);
     }
 
     /**
@@ -247,6 +254,17 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         if (importTransactionHelper.isActive()) {
             importTransactionHelper.mark(transactionalEntity);
         }
+    }
+
+    /**
+     * Checks whether any property of the entity, which is relevant for imports, has changed.
+     *
+     * @param entity the entity to check
+     * @return <tt>true</tt> if any property checked is changed, <tt>false</tt> otherwise
+     * @see #getMappingsToCheckForChanges()
+     */
+    protected boolean isChanged(E entity) {
+        return entity.isChanged(mappingsToCheckForChanges);
     }
 
     /**
