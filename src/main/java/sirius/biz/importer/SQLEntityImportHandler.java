@@ -283,6 +283,8 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
             // computed properties...
             descriptor.beforeSave(entity);
 
+            markImportTransaction(entity);
+
             if (entity.isNew()) {
                 return createIfChanged(entity, batch);
             } else {

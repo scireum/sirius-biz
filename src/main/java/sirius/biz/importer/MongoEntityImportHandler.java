@@ -169,6 +169,8 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
             // computed properties...
             descriptor.beforeSave(entity);
 
+            markImportTransaction(entity);
+
             if (isChanged(entity)) {
                 mango.update(entity);
 

@@ -118,6 +118,98 @@ class ImportTransactionHelperTest {
     }
 
     @Test
+    fun `keeping the source leaves unchanged entities with their source`() {
+        startTransaction("A", SyncSourceDeleteMode.ALL)
+        var entity = create("x")
+
+        val txnB = startTransaction("B", SyncSourceDeleteMode.SAME_SOURCE)
+        helper.keepSourceOfUnchangedEntities()
+        update(entity)
+
+        entity = oma.refreshOrFail(entity)
+        assertEquals(txnB, entity.importTransactionData.txnId)
+        assertEquals("A", entity.importTransactionData.source)
+    }
+
+    @Test
+    fun `keeping the source assigns changed entities to the source`() {
+        startTransaction("A", SyncSourceDeleteMode.ALL)
+        var entity = create("x")
+
+        val txnB = startTransaction("B", SyncSourceDeleteMode.SAME_SOURCE)
+        helper.keepSourceOfUnchangedEntities()
+        update(entity) { it.name = "y" }
+
+        entity = oma.refreshOrFail(entity)
+        assertEquals("y", entity.name)
+        assertEquals(txnB, entity.importTransactionData.txnId)
+        assertEquals("B", entity.importTransactionData.source)
+    }
+
+    @Test
+    fun `keeping the source assigns entities changed in beforeSave to the source`() {
+        startTransaction("A", SyncSourceDeleteMode.ALL)
+        var entity = create("x")
+
+        startTransaction("B", SyncSourceDeleteMode.SAME_SOURCE)
+        helper.keepSourceOfUnchangedEntities()
+        update(entity) { it.derivedNameSuffix = "!" }
+
+        entity = oma.refreshOrFail(entity)
+        assertEquals("x!", entity.derivedName)
+        assertEquals("B", entity.importTransactionData.source)
+    }
+
+    @Test
+    fun `keeping the source assigns new entities to the source`() {
+        val txnB = startTransaction("B", SyncSourceDeleteMode.SAME_SOURCE)
+        helper.keepSourceOfUnchangedEntities()
+        var entity = create("x")
+
+        entity = oma.refreshOrFail(entity)
+        assertEquals(txnB, entity.importTransactionData.txnId)
+        assertEquals("B", entity.importTransactionData.source)
+    }
+
+    @Test
+    fun `keeping the source permits the original source to delete unchanged entities`() {
+        startTransaction("A", SyncSourceDeleteMode.ALL)
+        val x = create("x")
+        val y = create("y")
+
+        // B confirms x without changing it and therefore must not delete it, nor take it over...
+        startTransaction("B", SyncSourceDeleteMode.SAME_SOURCE)
+        helper.keepSourceOfUnchangedEntities()
+        update(x)
+        deleteUnmarked()
+        assertTrue { exists(x) }
+        assertTrue { exists(y) }
+
+        // ...so that A can delete it, once it no longer provides it
+        startTransaction("A", SyncSourceDeleteMode.SAME_SOURCE)
+        update(y)
+        deleteUnmarked()
+        assertFalse { exists(x) }
+        assertTrue { exists(y) }
+    }
+
+    @Test
+    fun `starting a transaction resets keeping the source`() {
+        startTransaction("A", SyncSourceDeleteMode.ALL)
+        var entity = create("x")
+
+        startTransaction("B", SyncSourceDeleteMode.ALL)
+        helper.keepSourceOfUnchangedEntities()
+        // Start a new transaction without finishing the previous one, as e.g. done by RelationalEntityImportJob...
+        awaitNextTransactionId()
+        helper.start("B", SyncSourceDeleteMode.ALL)
+        update(entity)
+
+        entity = oma.refreshOrFail(entity)
+        assertEquals("B", entity.importTransactionData.source)
+    }
+
+    @Test
     fun `finishing a transaction resets the source`() {
         startTransaction("A", SyncSourceDeleteMode.ALL)
         helper.finish()
@@ -128,6 +220,54 @@ class ImportTransactionHelperTest {
 
         entity = oma.refreshOrFail(entity)
         assertNull(entity.importTransactionData.source)
+    }
+
+    @Test
+    fun `marking nested entities assigns the source without checking for changes by default`() {
+        val txnA = startTransaction("A", SyncSourceDeleteMode.ALL)
+        val nested = NestedTestEntity()
+
+        helper.mark(nested) { error("The change check must only be invoked when keeping the source") }
+
+        assertEquals(txnA, nested.importTransactionData.txnId)
+        assertEquals("A", nested.importTransactionData.source)
+    }
+
+    @Test
+    fun `keeping the source leaves unchanged nested entities with their source`() {
+        val nested = NestedTestEntity()
+        nested.importTransactionData.source = "A"
+
+        val txnB = startTransaction("B", SyncSourceDeleteMode.SAME_SOURCE)
+        helper.keepSourceOfUnchangedEntities()
+        helper.mark(nested) { false }
+
+        assertEquals(txnB, nested.importTransactionData.txnId)
+        assertEquals("A", nested.importTransactionData.source)
+    }
+
+    @Test
+    fun `keeping the source assigns changed nested entities to the source`() {
+        val nested = NestedTestEntity()
+        nested.importTransactionData.source = "A"
+
+        startTransaction("B", SyncSourceDeleteMode.SAME_SOURCE)
+        helper.keepSourceOfUnchangedEntities()
+        helper.mark(nested) { true }
+
+        assertEquals("B", nested.importTransactionData.source)
+    }
+
+    @Test
+    fun `keeping the source assigns nested entities marked without a change check to the source`() {
+        val nested = NestedTestEntity()
+        nested.importTransactionData.source = "A"
+
+        startTransaction("B", SyncSourceDeleteMode.SAME_SOURCE)
+        helper.keepSourceOfUnchangedEntities()
+        helper.mark(nested)
+
+        assertEquals("B", nested.importTransactionData.source)
     }
 
     /**
@@ -154,10 +294,13 @@ class ImportTransactionHelperTest {
         importer.createOrUpdateNow(SQLImportTransactionTestEntity().apply { this.name = name })
 
     /**
-     * Reloads the given entity and imports it again.
+     * Reloads the given entity, applies the given changes and imports it again.
      */
-    private fun update(entity: SQLImportTransactionTestEntity) {
-        importer.createOrUpdateNow(oma.refreshOrFail(entity))
+    private fun update(
+        entity: SQLImportTransactionTestEntity,
+        changes: (SQLImportTransactionTestEntity) -> Unit = {}
+    ) {
+        importer.createOrUpdateNow(oma.refreshOrFail(entity).also(changes))
     }
 
     private fun deleteUnmarked() {
@@ -170,6 +313,15 @@ class ImportTransactionHelperTest {
 
     private fun exists(entity: SQLImportTransactionTestEntity) =
         oma.find(SQLImportTransactionTestEntity::class.java, entity.id).isPresent
+
+    /**
+     * Represents an entity which is nested in another one and therefore not persisted on its own.
+     */
+    private class NestedTestEntity : ImportTransactionalEntity {
+        private val importTransactionData = ImportTransactionData()
+
+        override fun getImportTransactionData() = importTransactionData
+    }
 
     companion object {
         @Part
