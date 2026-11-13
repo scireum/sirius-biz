@@ -99,10 +99,14 @@ public class ImportTransactionHelper extends ImportHelper {
      * transaction id, so that {@link #deleteUnmarked(Class, Consumer, Consumer)} keeps them. This is useful for imports
      * which write back data originating from other sources.
      * <p>
-     * Whether an entity has been changed is determined via {@link #mark(ImportTransactionalEntity, BooleanSupplier)},
-     * which the standard import handlers invoke once the <tt>beforeSave</tt> handlers computed all properties. As
-     * {@link #mark(ImportTransactionalEntity)} cannot detect changes, it keeps the source of all existing entities,
-     * even of changed ones. The setting is reset by {@link #start()} and {@link #finish()}.
+     * Whether an entity has been changed is determined by the change check passed to
+     * {@link #mark(ImportTransactionalEntity, BooleanSupplier)}. The standard import handlers provide it for the
+     * entities they persist, once the <tt>beforeSave</tt> handlers computed all properties. Import handlers which mark
+     * additional entities, e.g. nested ones, have to provide their own check via
+     * <tt>markTransaction(ImportTransactionalEntity, BooleanSupplier)</tt>. Entities marked without a check are handled
+     * as described in {@link #mark(ImportTransactionalEntity)}.
+     * <p>
+     * The setting is reset by {@link #start()} and {@link #finish()}.
      *
      * @return the helper itself for fluent method calls
      */
@@ -149,13 +153,24 @@ public class ImportTransactionHelper extends ImportHelper {
     /**
      * Installs the current transaction id in the given entity and assigns it to the source of the transaction.
      * <p>
+     * If {@link #keepSourceOfUnchangedEntities()} is enabled, existing entities keep their source, even changed ones,
+     * as changes cannot be detected here. Entities which aren't a {@link BaseEntity}, like those nested in others,
+     * cannot tell whether they are new and are therefore always assigned to the source. Use
+     * {@link #mark(ImportTransactionalEntity, BooleanSupplier)} to decide this by a change check instead.
+     * <p>
      * Note that the entity still has to be persisted after this call.
      *
      * @param entity the entity to write the current transaction id into
      * @see #keepSourceOfUnchangedEntities()
      */
     public void mark(ImportTransactionalEntity entity) {
-        mark(entity, () -> !(entity instanceof BaseEntity<?> baseEntity) || baseEntity.isNew());
+        mark(entity, () -> {
+            if (entity instanceof BaseEntity<?> baseEntity) {
+                return baseEntity.isNew();
+            }
+
+            return true;
+        });
     }
 
     /**

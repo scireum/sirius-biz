@@ -240,9 +240,12 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     /**
      * Marks the given entity with the current opened transaction id.
+     * <p>
+     * As changes cannot be detected here, use {@link #markTransaction(ImportTransactionalEntity, BooleanSupplier)} to
+     * support {@link ImportTransactionHelper#keepSourceOfUnchangedEntities()}.
      *
      * @param transactionalEntity the entity to mark
-     * @see ImportTransactionHelper
+     * @see ImportTransactionHelper#mark(ImportTransactionalEntity)
      */
     protected void markTransaction(ImportTransactionalEntity transactionalEntity) {
         ImportTransactionHelper importTransactionHelper =
