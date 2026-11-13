@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 /**
@@ -83,6 +84,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     private final Extension aliases;
 
     /**
+     * Contains the mappings to check for changes, as determined by {@link #getMappingsToCheckForChanges()}.
+     */
+    protected Mapping[] mappingsToCheckForChanges;
+
+    /**
      * Defines a context key used to skip loading entities aborted via {@linkplain sirius.biz.scripting.ScriptableEvent script}
      */
     public static final String SCRIPT_ABORTED = "_SCRIPT_ABORTED_";
@@ -103,6 +109,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         for (EntityImportHandlerExtender extender : extenders) {
             extender.collectLoaders(this, descriptor, context, loaders::put);
         }
+
+        this.mappingsToCheckForChanges = getMappingsToCheckForChanges().toArray(Mapping[]::new);
     }
 
     /**
@@ -228,17 +236,16 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         if (entity instanceof Journaled journaledEntity) {
             journaledEntity.getJournal().enableBatchLog();
         }
-
-        if (entity instanceof ImportTransactionalEntity transactionalEntity) {
-            markTransaction(transactionalEntity);
-        }
     }
 
     /**
      * Marks the given entity with the current opened transaction id.
+     * <p>
+     * As changes cannot be detected here, use {@link #markTransaction(ImportTransactionalEntity, BooleanSupplier)} to
+     * support {@link ImportTransactionHelper#keepSourceOfUnchangedEntities()}.
      *
      * @param transactionalEntity the entity to mark
-     * @see ImportTransactionHelper
+     * @see ImportTransactionHelper#mark(ImportTransactionalEntity)
      */
     protected void markTransaction(ImportTransactionalEntity transactionalEntity) {
         ImportTransactionHelper importTransactionHelper =
@@ -247,6 +254,52 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         if (importTransactionHelper.isActive()) {
             importTransactionHelper.mark(transactionalEntity);
         }
+    }
+
+    /**
+     * Marks the given entity with the current opened transaction id.
+     *
+     * @param transactionalEntity the entity to mark
+     * @param changeChecker       determines if the entity is new or has been changed
+     * @see ImportTransactionHelper#mark(ImportTransactionalEntity, BooleanSupplier)
+     */
+    protected void markTransaction(ImportTransactionalEntity transactionalEntity, BooleanSupplier changeChecker) {
+        ImportTransactionHelper importTransactionHelper =
+                context.getImporter().findHelper(ImportTransactionHelper.class);
+
+        if (importTransactionHelper.isActive()) {
+            importTransactionHelper.mark(transactionalEntity, changeChecker);
+        }
+    }
+
+    /**
+     * Marks the given entity with the current opened transaction id, if it supports import transactions.
+     * <p>
+     * This has to be invoked after the <tt>beforeSave</tt> handlers of the entity, so that changes of computed
+     * properties are detected, but before the entity is checked for changes and persisted.
+     *
+     * @param entity the entity which is about to be persisted
+     * @see #isChanged(BaseEntity)
+     */
+    protected void markImportTransaction(E entity) {
+        if (entity instanceof ImportTransactionalEntity transactionalEntity) {
+            markTransaction(transactionalEntity, () -> entity.isNew() || isChanged(entity));
+        }
+    }
+
+    /**
+     * Checks whether any property of the entity, which is relevant for imports, has changed.
+     * <p>
+     * This decides whether an entity is persisted. Also, as it is invoked before the entity is marked by the current
+     * import transaction, it decides whether the entity is assigned to the source of the transaction, if
+     * {@link ImportTransactionHelper#keepSourceOfUnchangedEntities()} is enabled.
+     *
+     * @param entity the entity to check
+     * @return <tt>true</tt> if any property checked is changed, <tt>false</tt> otherwise
+     * @see #getMappingsToCheckForChanges()
+     */
+    protected boolean isChanged(E entity) {
+        return entity.isChanged(mappingsToCheckForChanges);
     }
 
     /**

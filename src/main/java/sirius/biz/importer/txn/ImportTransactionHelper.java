@@ -23,6 +23,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 /**
@@ -46,6 +47,7 @@ public class ImportTransactionHelper extends ImportHelper {
     private long transactionId = NO_TRANSACTION;
     private String source;
     private SyncSourceDeleteMode deleteMode = SyncSourceDeleteMode.ALL;
+    private boolean keepSourceOfUnchangedEntities;
 
     /**
      * Creates a new instance.
@@ -66,6 +68,7 @@ public class ImportTransactionHelper extends ImportHelper {
      */
     public ImportTransactionHelper start() {
         this.transactionId = System.currentTimeMillis();
+        this.keepSourceOfUnchangedEntities = false;
         return this;
     }
 
@@ -83,6 +86,32 @@ public class ImportTransactionHelper extends ImportHelper {
             this.source = source.trim();
         }
         this.deleteMode = deleteMode;
+        return this;
+    }
+
+    /**
+     * Keeps the source of entities which are marked by the current transaction but remain unchanged otherwise.
+     * <p>
+     * By default, every marked entity is assigned to the source of the transaction, even if the import merely confirms
+     * its values. Imports which only delete entities of their own source (see {@link SyncSourceDeleteMode}) then no
+     * longer delete these entities once they stop providing them. When enabled, only new or changed entities are
+     * assigned to the source, whereas unchanged ones keep theirs. Still, all of them are marked with the current
+     * transaction id, so that {@link #deleteUnmarked(Class, Consumer, Consumer)} keeps them. This is useful for imports
+     * which write back data originating from other sources.
+     * <p>
+     * Whether an entity has been changed is determined by the change check passed to
+     * {@link #mark(ImportTransactionalEntity, BooleanSupplier)}. The standard import handlers provide it for the
+     * entities they persist, once the <tt>beforeSave</tt> handlers computed all properties. Import handlers which mark
+     * additional entities, e.g. nested ones, have to provide their own check via
+     * <tt>markTransaction(ImportTransactionalEntity, BooleanSupplier)</tt>. Entities marked without a check are handled
+     * as described in {@link #mark(ImportTransactionalEntity)}.
+     * <p>
+     * The setting is reset by {@link #start()} and {@link #finish()}.
+     *
+     * @return the helper itself for fluent method calls
+     */
+    public ImportTransactionHelper keepSourceOfUnchangedEntities() {
+        this.keepSourceOfUnchangedEntities = true;
         return this;
     }
 
@@ -118,18 +147,50 @@ public class ImportTransactionHelper extends ImportHelper {
         this.transactionId = NO_TRANSACTION;
         this.source = null;
         this.deleteMode = SyncSourceDeleteMode.ALL;
+        this.keepSourceOfUnchangedEntities = false;
     }
 
     /**
-     * Installs the current transaction id in the given entity.
+     * Installs the current transaction id in the given entity and assigns it to the source of the transaction.
+     * <p>
+     * If {@link #keepSourceOfUnchangedEntities()} is enabled, existing entities keep their source, even changed ones,
+     * as changes cannot be detected here. Entities which aren't a {@link BaseEntity}, like those nested in others,
+     * cannot tell whether they are new and are therefore always assigned to the source. Use
+     * {@link #mark(ImportTransactionalEntity, BooleanSupplier)} to decide this by a change check instead.
      * <p>
      * Note that the entity still has to be persisted after this call.
      *
      * @param entity the entity to write the current transaction id into
+     * @see #keepSourceOfUnchangedEntities()
      */
     public void mark(ImportTransactionalEntity entity) {
+        mark(entity, () -> {
+            if (entity instanceof BaseEntity<?> baseEntity) {
+                return baseEntity.isNew();
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Installs the current transaction id in the given entity and assigns it to the source of the transaction, unless
+     * {@link #keepSourceOfUnchangedEntities()} is enabled and the entity is unchanged.
+     * <p>
+     * Note that the entity still has to be persisted after this call.
+     *
+     * @param entity        the entity to write the current transaction id into
+     * @param changeChecker determines if the entity is new or has been changed. It is only invoked if
+     *                      {@link #keepSourceOfUnchangedEntities()} is enabled, before the transaction data is updated
+     */
+    public void mark(ImportTransactionalEntity entity, BooleanSupplier changeChecker) {
+        boolean assignSource = !keepSourceOfUnchangedEntities || changeChecker.getAsBoolean();
+
         entity.getImportTransactionData().setTxnId(getCurrentTransaction());
-        entity.getImportTransactionData().setSource(source);
+
+        if (assignSource) {
+            entity.getImportTransactionData().setSource(source);
+        }
     }
 
     /**
