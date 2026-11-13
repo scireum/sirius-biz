@@ -16,9 +16,9 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 
 /**
- * Provides a JDBC based entity used by {@link ImportTransactionHelperTest}.
+ * Provides a JDBC based entity used by {@link SQLImportTransactionHelperTest}.
  */
-public class SQLImportTransactionTestEntity extends SQLEntity implements ImportTransactionalEntity {
+public class SQLImportTransactionTestEntity extends SQLEntity implements ImportTransactionTestEntity {
 
     public static final Mapping NAME = Mapping.named("name");
     @NullAllowed
@@ -32,29 +32,37 @@ public class SQLImportTransactionTestEntity extends SQLEntity implements ImportT
 
     private final ImportTransactionData importTransactionData = new ImportTransactionData();
 
-    /**
-     * Contains a suffix which is appended to the {@link #DERIVED_NAME} in {@link #fillDerivedName()}.
-     * <p>
-     * This permits to change an entity solely within its <tt>beforeSave</tt> handler.
-     */
     @Transient
-    public String derivedNameSuffix = "";
+    private String derivedNameSuffix = "";
 
     @BeforeSave
     protected void fillDerivedName() {
         derivedName = name + derivedNameSuffix;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public void setName(String name) {
         this.name = name;
     }
 
+    @Override
     public String getDerivedName() {
         return derivedName;
+    }
+
+    @Override
+    public String getDerivedNameSuffix() {
+        return derivedNameSuffix;
+    }
+
+    @Override
+    public void setDerivedNameSuffix(String derivedNameSuffix) {
+        this.derivedNameSuffix = derivedNameSuffix;
     }
 
     @Override

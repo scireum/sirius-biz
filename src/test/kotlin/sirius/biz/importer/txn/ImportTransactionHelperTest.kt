@@ -9,30 +9,37 @@
 package sirius.biz.importer.txn
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import sirius.biz.importer.Importer
 import sirius.biz.jobs.batch.file.SyncSourceDeleteMode
-import sirius.db.jdbc.OMA
-import sirius.db.jdbc.constraints.SQLConstraint
+import sirius.db.mixing.BaseEntity
+import sirius.db.mixing.BaseMapper
+import sirius.db.mixing.query.constraints.Constraint
 import sirius.kernel.SiriusExtension
-import sirius.kernel.di.std.Part
-import java.time.Duration
 import kotlin.test.*
 
 /**
- * Tests the [ImportTransactionHelper] along with the import handlers marking the imported entities.
+ * Provides a base for testing the [ImportTransactionHelper] along with the import handlers marking the imported
+ * entities.
+ *
+ * @param entityType the type of entities to import
  */
 @ExtendWith(SiriusExtension::class)
-class ImportTransactionHelperTest {
+abstract class ImportTransactionHelperTest<E>(private val entityType: Class<E>)
+        where E : BaseEntity<*>, E : ImportTransactionTestEntity {
+
+    /**
+     * Provides the mapper used to persist the entities.
+     */
+    protected abstract val mapper: BaseMapper<in E, *, *>
 
     private lateinit var importer: Importer
     private lateinit var helper: ImportTransactionHelper
 
     @BeforeEach
     fun setup() {
-        oma.select(SQLImportTransactionTestEntity::class.java).delete()
+        mapper.select(entityType).delete()
         importer = Importer("ImportTransactionHelperTest")
         helper = importer.findHelper(ImportTransactionHelper::class.java)
     }
@@ -47,14 +54,14 @@ class ImportTransactionHelperTest {
         val txnA = startTransaction("A", SyncSourceDeleteMode.ALL)
         var entity = create("x")
 
-        entity = oma.refreshOrFail(entity)
+        entity = mapper.refreshOrFail(entity)
         assertEquals(txnA, entity.importTransactionData.txnId)
         assertEquals("A", entity.importTransactionData.source)
 
         val txnB = startTransaction("B", SyncSourceDeleteMode.ALL)
         update(entity)
 
-        entity = oma.refreshOrFail(entity)
+        entity = mapper.refreshOrFail(entity)
         assertEquals(txnB, entity.importTransactionData.txnId)
         assertEquals("B", entity.importTransactionData.source)
     }
@@ -126,7 +133,7 @@ class ImportTransactionHelperTest {
         helper.keepSourceOfUnchangedEntities()
         update(entity)
 
-        entity = oma.refreshOrFail(entity)
+        entity = mapper.refreshOrFail(entity)
         assertEquals(txnB, entity.importTransactionData.txnId)
         assertEquals("A", entity.importTransactionData.source)
     }
@@ -140,7 +147,7 @@ class ImportTransactionHelperTest {
         helper.keepSourceOfUnchangedEntities()
         update(entity) { it.name = "y" }
 
-        entity = oma.refreshOrFail(entity)
+        entity = mapper.refreshOrFail(entity)
         assertEquals("y", entity.name)
         assertEquals(txnB, entity.importTransactionData.txnId)
         assertEquals("B", entity.importTransactionData.source)
@@ -155,7 +162,7 @@ class ImportTransactionHelperTest {
         helper.keepSourceOfUnchangedEntities()
         update(entity) { it.derivedNameSuffix = "!" }
 
-        entity = oma.refreshOrFail(entity)
+        entity = mapper.refreshOrFail(entity)
         assertEquals("x!", entity.derivedName)
         assertEquals("B", entity.importTransactionData.source)
     }
@@ -166,7 +173,7 @@ class ImportTransactionHelperTest {
         helper.keepSourceOfUnchangedEntities()
         var entity = create("x")
 
-        entity = oma.refreshOrFail(entity)
+        entity = mapper.refreshOrFail(entity)
         assertEquals(txnB, entity.importTransactionData.txnId)
         assertEquals("B", entity.importTransactionData.source)
     }
@@ -205,7 +212,7 @@ class ImportTransactionHelperTest {
         helper.start("B", SyncSourceDeleteMode.ALL)
         update(entity)
 
-        entity = oma.refreshOrFail(entity)
+        entity = mapper.refreshOrFail(entity)
         assertEquals("B", entity.importTransactionData.source)
     }
 
@@ -218,7 +225,7 @@ class ImportTransactionHelperTest {
         helper.start()
         var entity = create("x")
 
-        entity = oma.refreshOrFail(entity)
+        entity = mapper.refreshOrFail(entity)
         assertNull(entity.importTransactionData.source)
     }
 
@@ -290,29 +297,24 @@ class ImportTransactionHelperTest {
         }
     }
 
-    private fun create(name: String) =
-        importer.createOrUpdateNow(SQLImportTransactionTestEntity().apply { this.name = name })
+    private fun create(name: String): E =
+        importer.createOrUpdateNow(entityType.getDeclaredConstructor().newInstance().apply { this.name = name })
 
     /**
      * Reloads the given entity, applies the given changes and imports it again.
      */
     private fun update(
-        entity: SQLImportTransactionTestEntity,
-        changes: (SQLImportTransactionTestEntity) -> Unit = {}
+        entity: E,
+        changes: (E) -> Unit = {}
     ) {
-        importer.createOrUpdateNow(oma.refreshOrFail(entity).also(changes))
+        importer.createOrUpdateNow(mapper.refreshOrFail(entity).also(changes))
     }
 
     private fun deleteUnmarked() {
-        helper.deleteUnmarked<SQLImportTransactionTestEntity, SQLConstraint>(
-            SQLImportTransactionTestEntity::class.java,
-            {},
-            null
-        )
+        helper.deleteUnmarked<E, Constraint>(entityType, {}, null)
     }
 
-    private fun exists(entity: SQLImportTransactionTestEntity) =
-        oma.find(SQLImportTransactionTestEntity::class.java, entity.id).isPresent
+    private fun exists(entity: E) = mapper.find(entityType, entity.id).isPresent
 
     /**
      * Represents an entity which is nested in another one and therefore not persisted on its own.
@@ -321,17 +323,5 @@ class ImportTransactionHelperTest {
         private val importTransactionData = ImportTransactionData()
 
         override fun getImportTransactionData() = importTransactionData
-    }
-
-    companion object {
-        @Part
-        @JvmStatic
-        private lateinit var oma: OMA
-
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            oma.readyFuture.await(Duration.ofSeconds(60))
-        }
     }
 }
