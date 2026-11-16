@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>17.1.1</version>
+        <version>17.2.0</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -18,7 +18,7 @@
 
     <properties>
         <sirius.kernel>54.5.0</sirius.kernel>
-        <sirius.web>113.0.0</sirius.web>
+        <sirius.web>113.1.0</sirius.web>
         <sirius.db>71.0.3</sirius.db>
         <aws.sdk>2.57.13</aws.sdk>
         <commonmark>0.32.0</commonmark>
