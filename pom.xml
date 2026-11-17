@@ -18,9 +18,9 @@
 
     <properties>
         <sirius.kernel>54.5.1</sirius.kernel>
-        <sirius.web>113.1.0</sirius.web>
+        <sirius.web>113.1.1</sirius.web>
         <sirius.db>72.0.0</sirius.db>
-        <aws.sdk>2.57.13</aws.sdk>
+        <aws.sdk>2.58.0</aws.sdk>
         <commonmark>0.32.0</commonmark>
         <graalvm.polyglot>25.5.5.0.3</graalvm.polyglot>
     </properties>
@@ -98,14 +98,14 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.86</version>
+            <version>1.87</version>
         </dependency>
         <!-- Required by the FTPS uplink to resume the TLS session of the control connection for data connections -->
         <!-- https://www.bouncycastle.org/download/bouncy-castle-java/#release-notes -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bctls-jdk18on</artifactId>
-            <version>1.86.2</version>
+            <version>1.87</version>
         </dependency>
 
         <dependency>

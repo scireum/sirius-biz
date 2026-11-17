@@ -46,6 +46,11 @@ updates:
     sevenzipjbinding:
       patterns:
         - "net.sf.sevenzipjbinding:*"
+    # The Bouncy Castle jars are released together and only supported as a matching set, so they only ever
+    # move together.
+    bouncycastle:
+      patterns:
+        - "org.bouncycastle:*"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
