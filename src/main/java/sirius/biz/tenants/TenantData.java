@@ -12,6 +12,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
+import sirius.biz.model.CustomConfigs;
 import sirius.biz.model.InternationalAddressData;
 import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.mongo.SortValue;
@@ -326,6 +327,11 @@ public class TenantData extends Composite implements Journaled {
         if (Strings.isFilled(samlFingerprint)) {
             samlFingerprint = samlFingerprint.replace(" ", "").toLowerCase();
         }
+    }
+
+    @BeforeSave
+    protected void verifyConfig() {
+        CustomConfigs.verifyIfChanged(tenantObject, this, CONFIG_STRING, configString);
     }
 
     @AfterSave

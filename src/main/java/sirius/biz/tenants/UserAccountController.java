@@ -280,8 +280,6 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             // Reads configuration manually to prevent altering other fields
             String config = webContext.getParameter(configFieldName);
             userAccount.getUserAccountData().getPermissions().setConfigString(config);
-            // parses the config to make sure it is valid
-            userAccount.getUserAccountData().getPermissions().getConfig();
         }
 
         userAccount.getMapper().update(userAccount);
