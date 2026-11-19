@@ -19,6 +19,7 @@ import sirius.biz.tenants.jdbc.SQLTenant
 import sirius.biz.tenants.jdbc.SQLUserAccount
 import sirius.db.jdbc.OMA
 import sirius.db.jdbc.SQLEntity
+import sirius.db.mixing.Mixing
 import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Strings
 import sirius.kernel.di.std.Part
@@ -26,6 +27,7 @@ import sirius.kernel.health.HandledException
 import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 /**
  * Tests the [CustomConfigs] class.
@@ -81,6 +83,29 @@ class CustomConfigsTest {
         oma.update(reloadedUser)
     }
 
+    @Test
+    fun `Stored invalid configs are reported`() {
+        val tenant = createTenant()
+        storeConfigWithoutValidation(tenant, INVALID_CONFIG)
+        val user = createUser()
+        storeConfigWithoutValidation(user, INVALID_CONFIG)
+
+        val invalidConfigs = mutableListOf<CustomConfigs.InvalidCustomConfig>()
+        mixing.descriptors.forEach { descriptor ->
+            CustomConfigs.findConfigProperties(descriptor).forEach { property ->
+                CustomConfigs.checkStoredConfigs(descriptor, property) { invalidConfigs.add(it) }
+            }
+        }
+
+        val invalidTenantConfig = invalidConfigs.find { it.entity.uniqueName == tenant.uniqueName }
+        assertNotNull(invalidTenantConfig)
+        assertEquals("tenantData_configString", invalidTenantConfig.property.name)
+
+        val invalidUserConfig = invalidConfigs.find { it.entity.uniqueName == user.uniqueName }
+        assertNotNull(invalidUserConfig)
+        assertEquals("userAccountData_permissions_configString", invalidUserConfig.property.name)
+    }
+
     @AfterEach
     fun cleanup() {
         createdEntities.reversed().forEach { oma.forceDelete(it) }
@@ -132,6 +157,9 @@ class CustomConfigsTest {
 
         @Part
         private lateinit var oma: OMA
+
+        @Part
+        private lateinit var mixing: Mixing
 
         @BeforeAll
         @JvmStatic
