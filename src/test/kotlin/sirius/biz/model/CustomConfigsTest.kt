@@ -20,6 +20,8 @@ import sirius.biz.tenants.jdbc.SQLUserAccount
 import sirius.db.jdbc.OMA
 import sirius.db.jdbc.SQLEntity
 import sirius.db.mixing.Mixing
+import sirius.db.mongo.Mango
+import sirius.db.mongo.Mongo
 import sirius.kernel.SiriusExtension
 import sirius.kernel.commons.Strings
 import sirius.kernel.di.std.Part
@@ -36,6 +38,8 @@ import kotlin.test.assertNotNull
 class CustomConfigsTest {
 
     private val createdEntities = mutableListOf<SQLEntity>()
+
+    private val createdMongoEntities = mutableListOf<MongoCustomConfigTestEntity>()
 
     @Test
     fun `Saving an invalid tenant config is rejected`() {
@@ -106,10 +110,48 @@ class CustomConfigsTest {
         assertEquals("userAccountData_permissions_configString", invalidUserConfig.property.name)
     }
 
+    @Test
+    fun `Saving an invalid config in a Mongo entity is rejected`() {
+        val entity = MongoCustomConfigTestEntity()
+        entity.permissions.configString = INVALID_CONFIG
+
+        assertFailsWith<HandledException> { mango.update(entity) }
+    }
+
+    @Test
+    fun `Stored invalid configs in Mongo entities are reported`() {
+        val invalidEntity = createMongoEntity()
+        storeConfigWithoutValidation(invalidEntity, INVALID_CONFIG)
+        val validEntity = createMongoEntity()
+        validEntity.permissions.configString = VALID_CONFIG
+        mango.update(validEntity)
+
+        val invalidConfigs = mutableListOf<CustomConfigs.InvalidCustomConfig>()
+        val checkedConfigs = checkMongoConfigs { invalidConfigs.add(it) }
+
+        assertEquals(2L, checkedConfigs)
+        assertEquals(listOf(invalidEntity.id), invalidConfigs.map { it.entity.idAsString })
+        assertEquals("permissions_configString", invalidConfigs.single().property.name)
+    }
+
+    @Test
+    fun `Empty configs in Mongo entities are not checked`() {
+        val entity = createMongoEntity()
+        storeConfigWithoutValidation(entity, "")
+
+        val invalidConfigs = mutableListOf<CustomConfigs.InvalidCustomConfig>()
+        val checkedConfigs = checkMongoConfigs { invalidConfigs.add(it) }
+
+        assertEquals(0L, checkedConfigs)
+        assertEquals(emptyList(), invalidConfigs)
+    }
+
     @AfterEach
     fun cleanup() {
         createdEntities.reversed().forEach { oma.forceDelete(it) }
         createdEntities.clear()
+        createdMongoEntities.forEach { mango.forceDelete(it) }
+        createdMongoEntities.clear()
     }
 
     private fun createTenant(): SQLTenant {
@@ -147,6 +189,25 @@ class CustomConfigsTest {
             .executeUpdate()
     }
 
+    private fun createMongoEntity(): MongoCustomConfigTestEntity {
+        val entity = MongoCustomConfigTestEntity()
+        mango.update(entity)
+        createdMongoEntities.add(entity)
+        return entity
+    }
+
+    private fun storeConfigWithoutValidation(entity: MongoCustomConfigTestEntity, config: String) {
+        mongo.update()
+            .set(MongoCustomConfigTestEntity.PERMISSIONS.inner(PermissionData.CONFIG_STRING), config)
+            .executeFor(entity)
+    }
+
+    private fun checkMongoConfigs(invalidConsumer: (CustomConfigs.InvalidCustomConfig) -> Unit): Long {
+        val descriptor = mixing.getDescriptor(MongoCustomConfigTestEntity::class.java)
+        val property = CustomConfigs.findConfigProperties(descriptor).toList().single()
+        return CustomConfigs.checkStoredConfigs(descriptor, property, invalidConsumer)
+    }
+
     companion object {
         /**
          * Rejected since com.typesafe:config 1.4.10, as the trailing semicolon is unquoted text after a list.
@@ -160,6 +221,12 @@ class CustomConfigsTest {
 
         @Part
         private lateinit var mixing: Mixing
+
+        @Part
+        private lateinit var mango: Mango
+
+        @Part
+        private lateinit var mongo: Mongo
 
         @BeforeAll
         @JvmStatic
