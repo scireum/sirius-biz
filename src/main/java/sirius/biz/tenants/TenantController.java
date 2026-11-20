@@ -261,8 +261,6 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
             // Reads configuration manually to prevent altering other fields
             String config = webContext.getParameter(configFieldName);
             tenant.getTenantData().setConfigString(config);
-            // parses the config to make sure it is valid
-            tenant.getTenantData().getConfig();
         }
 
         tenant.getMapper().update(tenant);
