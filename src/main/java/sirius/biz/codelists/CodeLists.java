@@ -145,8 +145,9 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
 
         L codeList = createCodeList(currentTenant, codeListName);
         if (ext != null && !ext.isDefault()) {
-            codeList.getCodeListData().setName(ext.get(CONFIG_KEY_NAME).asString());
-            codeList.getCodeListData().setDescription(ext.get(CONFIG_KEY_DESCRIPTION).asString());
+            // name and description are stored as text which can be edited, so they are translated right away
+            codeList.getCodeListData().setName(ext.getTranslatedString(CONFIG_KEY_NAME));
+            codeList.getCodeListData().setDescription(ext.getTranslatedString(CONFIG_KEY_DESCRIPTION));
             codeList.getCodeListData().setAutofill(ext.get(CONFIG_KEY_AUTOFILL).asBoolean());
         }
 

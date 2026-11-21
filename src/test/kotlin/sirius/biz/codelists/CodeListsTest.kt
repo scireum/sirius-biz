@@ -58,4 +58,14 @@ class CodeListsTest {
         assertTrue(codeLists.tryGetValue("test", "unknownCode").isPresent)
         assertTrue(codeLists.tryGetValue("hard-test", "unknownCode").isEmpty)
     }
+
+    @Test
+    fun `A code list configured with translation keys is created with their translations`() {
+        TenantsHelper.installTestTenant()
+        codeLists.getEntries("translated-test")
+
+        val data = codeLists.findCodelist("translated-test").orElseThrow().codeListData
+        assertEquals("Übersetzungstest", data.name)
+        assertEquals("Wird zum Test der Übersetzung verwendet.", data.description)
+    }
 }
