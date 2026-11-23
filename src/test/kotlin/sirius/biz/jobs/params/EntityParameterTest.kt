@@ -80,6 +80,14 @@ class EntityParameterTest {
     }
 
     @Test
+    fun `formatValue outputs the label of the selected entity`() {
+        val entity = createEntity("First")
+        val parameter = LabeledParameterTestEntityParameter("test", "Test").build()
+
+        assertEquals("Label: First", parameter.formatValue(entity))
+    }
+
+    @Test
     fun `the custom autocomplete uri is used as autocomplete url`() {
         assertEquals(
             "/test/autocomplete",
@@ -124,5 +132,21 @@ private class ParameterTestEntityParameter(
 
     override fun getCustomAutocompleteUri(): String? {
         return autocompleteUri
+    }
+}
+
+/**
+ * Provides an [EntityParameter] for [ParameterTestEntity] which derives its own label, as e.g. done by parameters
+ * which show more than the string representation of an entity.
+ */
+private class LabeledParameterTestEntityParameter(name: String, label: String) :
+    EntityParameter<ParameterTestEntity, LabeledParameterTestEntityParameter>(name, label) {
+
+    override fun getType(): Class<ParameterTestEntity> {
+        return ParameterTestEntity::class.java
+    }
+
+    override fun createLabel(entity: ParameterTestEntity): String {
+        return "Label: ${entity.name}"
     }
 }

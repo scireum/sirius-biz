@@ -168,6 +168,17 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
         return entityParameterProxy.createLabel(entity);
     }
 
+    /**
+     * Outputs the label of the selected entity (as shown in the editor) instead of its string representation.
+     *
+     * @param value the selected entity
+     * @return the label of the selected entity
+     */
+    @Override
+    protected String formatValue(V value) {
+        return createLabel(value);
+    }
+
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext)

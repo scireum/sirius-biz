@@ -488,8 +488,8 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * Formats the given value of this parameter so that it can be shown to the user, e.g. in the parameter log of a
      * process.
      * <p>
-     * By default, {@link NLS#toUserString(Object)} is used. Parameters whose values are technical keys or collections
-     * override this to output the labels known to the user instead.
+     * By default, {@link NLS#toUserString(Object)} is used. Parameters whose values are technical keys, entities or
+     * collections override this to output the labels known to the user instead.
      *
      * @param value the resolved value of this parameter
      * @return the value as shown to the user
