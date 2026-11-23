@@ -214,6 +214,18 @@ public class Parameter<V> extends Composable {
     }
 
     /**
+     * Formats the given value of this parameter so that it can be shown to the user, e.g. in the parameter log of a
+     * process.
+     *
+     * @param value the resolved value of this parameter
+     * @return the value as shown to the user
+     * @see ParameterBuilder#formatValue(Object)
+     */
+    public String formatValue(V value) {
+        return delegate.formatValue(value);
+    }
+
+    /**
      * Reveals the type of the underlying parameter builder to determine what type of parameter is present.
      *
      * @return the type of the builder which was used to create this parameter.

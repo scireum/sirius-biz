@@ -109,4 +109,15 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
     protected Optional<String> resolveFromString(@Nonnull Value input) {
         return input.asOptionalString();
     }
+
+    /**
+     * Outputs the label of the selected entry instead of its key.
+     *
+     * @param value the key of the selected entry
+     * @return the label of the selected entry or the key itself if the entry is unknown
+     */
+    @Override
+    protected String formatValue(String value) {
+        return NLS.smartGet(fetchEntriesMap().getOrDefault(value, value));
+    }
 }

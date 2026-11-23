@@ -125,6 +125,20 @@ class MultiSelectStringParameterTest {
         assertEquals("Label B", update.get(1).get("text").asString(""))
     }
 
+    @Test
+    fun `formatValue joins the labels of the selected values`() {
+        val parameter = createParameter().build()
+
+        assertEquals("Label A; Label C", parameter.formatValue(listOf("a", "c")))
+    }
+
+    @Test
+    fun `formatValue outputs custom entries as they are`() {
+        val parameter = createParameter().allowCustomEntries().build()
+
+        assertEquals("Label A; custom", parameter.formatValue(listOf("a", "custom")))
+    }
+
     private fun createParameter(): MultiSelectStringParameter {
         return MultiSelectStringParameter("test", "Test").withEntry("a", "Label A")
                                                                         .withEntry("b", "Label B")
