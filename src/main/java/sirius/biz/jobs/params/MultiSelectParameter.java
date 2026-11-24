@@ -105,6 +105,20 @@ public abstract class MultiSelectParameter<V, P extends MultiSelectParameter<V, 
      */
     protected abstract String createValueLabel(V value);
 
+    /**
+     * Joins the labels of all selected values, as the default representation of a list would only output the
+     * technical values.
+     * <p>
+     * The labels are separated by a semicolon, as a label might contain commas itself.
+     *
+     * @param values the selected values
+     * @return the labels of the selected values
+     */
+    @Override
+    protected String formatValue(List<V> values) {
+        return values.stream().map(this::createValueLabel).collect(Collectors.joining("; "));
+    }
+
     @Override
     public Optional<?> computeValueUpdate(Map<String, String> parameterContext) {
         return updater.apply(parameterContext).map(values -> {

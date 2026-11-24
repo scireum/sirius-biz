@@ -301,13 +301,16 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
         output.append(":\n\n");
 
         parameters.stream().filter(parameter -> logVisibility == parameter.getLogVisibility()).forEach(param -> {
-            String value = process.getParameter(param).map(NLS::toUserString).orElse("-");
             output.append(param.getLabel());
             output.append(": ");
-            output.append(value);
+            output.append(formatParameterValue(process, param));
             output.append("\n");
         });
 
         return Optional.of(ProcessLog.info().withMessage(output.toString().trim()));
+    }
+
+    private <V> String formatParameterValue(ProcessContext process, Parameter<V> parameter) {
+        return process.getParameter(parameter).map(parameter::formatValue).orElse("-");
     }
 }
