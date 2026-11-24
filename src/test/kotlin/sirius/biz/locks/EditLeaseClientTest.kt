@@ -530,6 +530,49 @@ class EditLeaseClientTest {
     }
 
     @Test
+    fun `a hidden page ignores an announced release and checks once it becomes visible`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+        browser.advance(10_000)
+
+        browser.js("document.visibilityState = 'hidden'; fire(document, 'visibilitychange')")
+        browser.js("api.listeners.released()")
+        assertEquals("", browser.pending(), "a reloading page of the same user must get the lease back first")
+
+        browser.js("document.visibilityState = 'visible'; fire(document, 'visibilitychange')")
+        assertEquals("acquire", browser.answer("HELD"))
+        assertEquals("editing", browser.state())
+    }
+
+    @Test
+    fun `an idle page stops checking after a while and checks again once visible or used`() {
+        browser = Browser()
+        browser.startLease()
+        browser.goIdle()
+        browser.js("requestsBefore = api.requests.length")
+
+        browser.advanceAnswering(15 * 60_000, "FREE")
+        val checks = browser.js("actionsSince(requestsBefore).filter(action => action === 'heartbeat').length").asInt()
+        assertTrue(checks in 19..20, "checks every 30 s for 10 minutes only, but checked $checks times")
+        assertEquals("", browser.pending())
+
+        browser.js("document.visibilityState = 'visible'; fire(document, 'visibilitychange')")
+        assertEquals("heartbeat", browser.answer("OTHER"))
+        assertTrue(browser.bool("lease.isHeldByOther()"))
+        assertEquals("idle", browser.state(), "a check never takes the lease back")
+
+        browser.advanceAnswering(15 * 60_000, "OTHER")
+        browser.js("requestsBefore = api.requests.length")
+        browser.advance(60_000)
+        assertEquals("", browser.pending(), "paused again 10 minutes after the restart")
+        browser.js("fire(document, 'pointerdown')")
+        assertEquals("heartbeat", browser.answer("FREE"))
+        browser.js("fire(document, 'pointerdown')")
+        assertEquals("", browser.pending(), "activity only restarts paused checks")
+        assertEquals("idle", browser.state())
+    }
+
+    @Test
     fun `a change announced by another page refreshes a read-only page once per burst`() {
         browser = Browser()
         browser.startLease("OTHER")
@@ -625,12 +668,13 @@ class EditLeaseClientTest {
         assertEquals("second changed", browser.string("heard.join()"), "a change is announced right away")
 
         browser.js("heard.length = 0; second.releaseOnUnload()")
+        browser.advance(2999)
         assertEquals("", browser.string("heard.join()"), "a beacon may not have been processed yet")
-        browser.advance(1000)
+        browser.advance(1)
         assertEquals("first", browser.string("heard.join()"))
 
         browser.js("heard.length = 0; stopFirst(); second.releaseOnUnload()")
-        browser.advance(1000)
+        browser.advance(3000)
         assertEquals("", browser.string("heard.join()"))
         assertTrue(browser.bool("channels.every(channel => channel.closed || channel.onmessage)"),
                    "announcing channels must be closed")

@@ -45,8 +45,12 @@ window.sirius.editLease = (function () {
     const GRANT_TIMEOUT_MS = 60 * 1000;
     const GRANT_ACTIONS = ['acquire', 'takeover'];
     // A release sent via a beacon is announced before the server processed it: other pages wait a moment before
-    // they check the lease, so their acquire does not overtake the release.
-    const UNCONFIRMED_RELEASE_DELAY_MS = 1000;
+    // they check the lease, so their acquire does not overtake the release. Long enough for a reloading page to
+    // acquire again first, so reloading does not hand the lease to another page of the same user.
+    const UNCONFIRMED_RELEASE_DELAY_MS = 3000;
+    // An idle page checks the lease for this long; afterwards only once it becomes visible or is used again, so a
+    // forgotten page neither keeps the session alive nor keeps sending requests.
+    const IDLE_CHECK_DURATION_MS = 10 * 60 * 1000;
     const CHANNEL_PREFIX = 'sirius-edit-lease:';
     // A burst of writes (e.g. reordering) is shown to read-only pages with one refresh.
     const CHANGE_DEBOUNCE_MS = 250;
@@ -63,7 +67,8 @@ window.sirius.editLease = (function () {
      *     <li><tt>editing</tt>: this page holds the lease and may modify the object</li>
      *     <li><tt>readOnly</tt>: another session holds the lease, the lease is polled until it becomes free</li>
      *     <li><tt>idle</tt>: the lease was released due to inactivity, see resume(); it is still checked (but never
-     *     taken back), so isHeldByOther() reports whether another session started editing meanwhile</li>
+     *     taken back) for a while and whenever the page becomes visible or is used again, so isHeldByOther() reports
+     *     whether another session started editing meanwhile</li>
      * </ul>
      */
     const STATES = Object.freeze({
@@ -244,6 +249,10 @@ window.sirius.editLease = (function () {
         let queue = Promise.resolve();
         // Whether the last check of an idle page found the lease held by another session.
         let idleHeldByOther = false;
+        // When the page went idle, or its checks were last restarted, see IDLE_CHECK_DURATION_MS.
+        let idleSince = 0;
+        // Whether an idle page stopped checking the lease, see IDLE_CHECK_DURATION_MS.
+        let idleChecksPaused = false;
         // Stops listening to other pages, see api.listen.
         let stopListeningToOtherPages = null;
         // Pending refresh of a read-only page after another page announced a change, see onChangedElsewhere.
@@ -256,8 +265,11 @@ window.sirius.editLease = (function () {
         function setState(newState) {
             if (state !== newState) {
                 state = newState;
-                if (newState !== STATES.IDLE) {
+                if (newState === STATES.IDLE) {
+                    idleSince = Date.now();
+                } else {
                     idleHeldByOther = false;
+                    idleChecksPaused = false;
                 }
                 onChange();
             }
@@ -360,6 +372,11 @@ window.sirius.editLease = (function () {
                 return;
             }
             if (state === STATES.IDLE) {
+                if (Date.now() - idleSince >= IDLE_CHECK_DURATION_MS) {
+                    // Restarted by checkNow once the page becomes visible or is used again.
+                    idleChecksPaused = true;
+                    return;
+                }
                 void enqueue(checkWhileIdle);
                 return;
             }
@@ -442,11 +459,16 @@ window.sirius.editLease = (function () {
         }
 
         /**
-         * Runs the next tick right away instead of waiting for its timer. Does nothing while a request is in
-         * flight (its answer schedules the next tick) or while suspended.
+         * Runs the next tick right away instead of waiting for its timer, also restarting the paused checks of an
+         * idle page. Does nothing while a request is in flight (its answer schedules the next tick) or while
+         * suspended.
          */
         function checkNow() {
-            if (timer) {
+            if (idleChecksPaused && !suspended) {
+                idleChecksPaused = false;
+                idleSince = Date.now();
+                tick();
+            } else if (timer) {
                 stop();
                 tick();
             }
@@ -460,7 +482,9 @@ window.sirius.editLease = (function () {
         }
 
         function onReleasedElsewhere() {
-            if (state === STATES.READ_ONLY || state === STATES.IDLE) {
+            // A hidden page checks once it becomes visible again: right now, it might take the lease from a page
+            // of the same user which is just reloading, and which the user is looking at.
+            if ((state === STATES.READ_ONLY || state === STATES.IDLE) && document.visibilityState !== 'hidden') {
                 checkNow();
             }
         }
@@ -524,6 +548,9 @@ window.sirius.editLease = (function () {
 
         function onActivity() {
             lastActivity = Date.now();
+            if (idleChecksPaused) {
+                checkNow();
+            }
         }
 
         /**
@@ -593,6 +620,8 @@ window.sirius.editLease = (function () {
                 if (state === STATES.IDLE) {
                     // Paused for inactivity before the page was hidden: the lease is only taken back via resume(),
                     // as someone else may have started editing meanwhile. Checking it goes on, though.
+                    idleChecksPaused = false;
+                    idleSince = Date.now();
                     schedule();
                     return;
                 }
