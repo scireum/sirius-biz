@@ -81,8 +81,11 @@ window.sirius.editLease = (function () {
     /**
      * Creates the server access for a route which invokes EditLeases#handleAction.
      *
-     * @param url     the route of the lease endpoint
-     * @param params  additional parameters sent with every lease request (e.g. the CSRFToken)
+     * @param url     the route of the lease endpoint, which has to identify the edited object (e.g.
+     *                <tt>/portal/1/playlist/2/edit-lock</tt>): pages of the same browser tell each other about
+     *                releases and changes via a channel named after this route alone
+     * @param params  additional parameters sent with every lease request (e.g. the CSRFToken); not part of the
+     *                channel name, so they must not be what tells the edited objects apart
      * @param session the editor session to use; a fresh one per page is generated if omitted
      * @returns {{session: string, request: function(string): Promise<Object>, releaseOnUnload: function(),
      * announceChange: function(), listen: function(Object): function()}}
@@ -257,9 +260,8 @@ window.sirius.editLease = (function () {
         let stopListeningToOtherPages = null;
         // Pending refresh of a read-only page after another page announced a change, see onChangedElsewhere.
         let changeTimer = null;
-        // Bumped whenever answers of requests already issued must no longer be applied: on dispose, on pagehide,
-        // when going idle and on refresh and takeover. Every queued task captures it when it is queued and is skipped, or drops its
-        // result, if it changed.
+        // Bumped by cancelPending() whenever answers of requests already issued must no longer be applied. Every
+        // queued task captures it when it is queued and is skipped, or drops its result, if it changed.
         let generation = 0;
 
         function setState(newState) {
@@ -364,6 +366,16 @@ window.sirius.editLease = (function () {
             }
         }
 
+        /**
+         * Cancels the next tick and drops the answers of all requests already issued: called whenever the state
+         * changes in a way those answers must not undo (dispose, pagehide, going idle, resume, refresh, takeover).
+         * Whoever calls it schedules again, directly or via the answer of its own request.
+         */
+        function cancelPending() {
+            stop();
+            generation++;
+        }
+
         function tick() {
             timer = null;
             if (state === STATES.ACQUIRING) {
@@ -385,7 +397,7 @@ window.sirius.editLease = (function () {
                 // A read-only page knows that another session holds the lease, before its first idle check.
                 idleHeldByOther = state === STATES.READ_ONLY;
                 setState(STATES.IDLE);
-                generation++;
+                cancelPending();
                 if (wasEditing) {
                     void enqueue(async () => {
                         await send('release');
@@ -557,8 +569,7 @@ window.sirius.editLease = (function () {
          * Stops heartbeats and drops the answers of all requests already issued.
          */
         function suspend() {
-            stop();
-            generation++;
+            cancelPending();
             suspended = true;
         }
 
@@ -711,8 +722,7 @@ window.sirius.editLease = (function () {
                 // then reports the lease as held and reloads a second time. So the next poll is cancelled and the
                 // answer of one already in flight dropped (it would schedule the next poll). The answer of the
                 // takeover schedules again.
-                stop();
-                generation++;
+                cancelPending();
                 // May be called from an idle page, whose inactivity must not end the lease right away.
                 lastActivity = Date.now();
                 return requestLease('takeover', () => true, true);
@@ -725,8 +735,9 @@ window.sirius.editLease = (function () {
              */
             resume: function () {
                 lastActivity = Date.now();
-                // Leaves idle right away, so a failed request is retried on the acquisition path in tick().
-                stop();
+                // Leaves idle right away, so a failed request is retried on the acquisition path in tick(). The
+                // answer of an idle check still in flight is dropped: it must not schedule another check.
+                cancelPending();
                 setState(STATES.ACQUIRING);
                 return requestLease('acquire', () => true, true);
             },
@@ -746,11 +757,9 @@ window.sirius.editLease = (function () {
                 // Stop editing until the re-check answered: should it fail (even if it took the lease server-side),
                 // the retry runs on the acquisition path in tick(), which reloads once the lease is held. The
                 // pending heartbeat is cancelled, as it would queue a second acquire; apply() or the failure
-                // reschedules.
-                stop();
-                // Drops the answer of a heartbeat which is still in flight: sent before the write was rejected, it
-                // could still report heldByMe and switch back to editing before the re-check answers.
-                generation++;
+                // reschedules. The answer of a heartbeat still in flight is dropped: sent before the write was
+                // rejected, it could still report heldByMe and switch back to editing before the re-check answers.
+                cancelPending();
                 setState(STATES.ACQUIRING);
                 setPendingRefresh(requestLease('acquire', () => true).finally(() => {
                     setPendingRefresh(null);

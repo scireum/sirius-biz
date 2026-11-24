@@ -478,6 +478,20 @@ class EditLeaseClientTest {
     }
 
     @Test
+    fun `resume drops the answer of an idle check still in flight`() {
+        browser = Browser()
+        browser.startLease()
+        browser.goIdle()
+        browser.advance(30_000)
+        assertEquals("heartbeat", browser.pending())
+
+        browser.js("lease.resume()")
+        assertEquals("heartbeat", browser.answer("HELD"))
+        assertEquals("acquire", browser.answer("HELD"), "the resumed page must not release the lease it acquires")
+        assertEquals("editing", browser.state())
+    }
+
+    @Test
     fun `a read-only page reports every poll which found the lease still held elsewhere`() {
         browser = Browser()
         browser.startLease("OTHER")
