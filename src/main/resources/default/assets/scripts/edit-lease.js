@@ -13,18 +13,26 @@
  * <pre>
  * const api = sirius.editLease.httpApi('/my/editor/edit-lease', {CSRFToken: token});
  * const lease = sirius.editLease.create(api, {
- *     onChange: () => render(lease.getState(), lease.isRechecking()),
- *     onStale: () => reloadContent()
+ *     onChange: () => render(lease.getState(), lease.isRechecking(), lease.isHeldByOther()),
+ *     onStale: () => reloadContent(),
+ *     onReadOnlyPoll: () => refreshContent()
  * });
  * lease.start();
  * </pre>
  * Every write request of the editor has to carry <tt>editorSession=api.session</tt>, and the editor should call
- * <tt>lease.refresh()</tt> whenever the server rejects a write with the error code <tt>editLocked</tt>.
+ * <tt>lease.refresh()</tt> whenever the server rejects a write with the error code <tt>editLocked</tt>, and
+ * <tt>lease.notifyChanged()</tt> after every successful write.
  * <p>
  * The lease is acquired by <tt>start()</tt> and renewed via a <tt>setTimeout</tt> chain, where the next heartbeat is
  * only scheduled once the previous answer arrived, and all lease requests run through one queue, so requests never
  * overlap or overtake each other. Inactivity is checked in the same tick; the page lifecycle releases the lease on
  * <tt>pagehide</tt> and re-acquires it when the page comes back from the back-forward cache.
+ * <p>
+ * As browsers throttle or even pause timers of hidden pages (e.g. Safari), a page which becomes visible again checks
+ * the lease right away instead of waiting for its next tick. Pages of the same browser editing the same object also
+ * tell each other via a <tt>BroadcastChannel</tt> when they release the lease, so a waiting page takes it over at
+ * once instead of with its next poll, and when they changed the object, so a read-only page shows the change at once
+ * instead of with its next poll. Changes made in other browsers are still shown with the next poll.
  */
 window.sirius.editLease = (function () {
     const DEFAULT_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
@@ -36,6 +44,18 @@ window.sirius.editLease = (function () {
     // Acquire and takeover wait server-side for writes of the previous holder (edit-leases.maxWriteDuration).
     const GRANT_TIMEOUT_MS = 60 * 1000;
     const GRANT_ACTIONS = ['acquire', 'takeover'];
+    // A release sent via a beacon is announced before the server processed it: other pages wait a moment before
+    // they check the lease, so their acquire does not overtake the release. Long enough for a reloading page to
+    // acquire again first, so reloading does not hand the lease to another page of the same user.
+    const UNCONFIRMED_RELEASE_DELAY_MS = 3000;
+    // An idle page checks the lease for this long; afterwards only once it becomes visible or is used again, so a
+    // forgotten page neither keeps the session alive nor keeps sending requests.
+    const IDLE_CHECK_DURATION_MS = 10 * 60 * 1000;
+    const CHANNEL_PREFIX = 'sirius-edit-lease:';
+    // A burst of writes (e.g. reordering) is shown to read-only pages with one refresh.
+    const CHANGE_DEBOUNCE_MS = 250;
+    const MESSAGE_RELEASED = 'released';
+    const MESSAGE_CHANGED = 'changed';
     const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'scroll'];
     // Capture phase: a component stopping propagation must not hide activity; `scroll` does not bubble anyway.
     const ACTIVITY_LISTENER_OPTIONS = {passive: true, capture: true};
@@ -46,7 +66,9 @@ window.sirius.editLease = (function () {
      *     <li><tt>acquiring</tt>: waiting for the server, editing is not permitted yet</li>
      *     <li><tt>editing</tt>: this page holds the lease and may modify the object</li>
      *     <li><tt>readOnly</tt>: another session holds the lease, the lease is polled until it becomes free</li>
-     *     <li><tt>idle</tt>: the lease was released due to inactivity, see resume()</li>
+     *     <li><tt>idle</tt>: the lease was released due to inactivity, see resume(); it is still checked (but never
+     *     taken back) for a while and whenever the page becomes visible or is used again, so isHeldByOther() reports
+     *     whether another session started editing meanwhile</li>
      * </ul>
      */
     const STATES = Object.freeze({
@@ -59,16 +81,36 @@ window.sirius.editLease = (function () {
     /**
      * Creates the server access for a route which invokes EditLeases#handleAction.
      *
-     * @param url     the route of the lease endpoint
-     * @param params  additional parameters sent with every lease request (e.g. the CSRFToken)
+     * @param url     the route of the lease endpoint, which has to identify the edited object (e.g.
+     *                <tt>/portal/1/playlist/2/edit-lock</tt>): pages of the same browser tell each other about
+     *                releases and changes via a channel named after this route alone
+     * @param params  additional parameters sent with every lease request (e.g. the CSRFToken); not part of the
+     *                channel name, so they must not be what tells the edited objects apart
      * @param session the editor session to use; a fresh one per page is generated if omitted
-     * @returns {{session: string, request: function(string): Promise<Object>, releaseOnUnload: function()}}
+     * @returns {{session: string, request: function(string): Promise<Object>, releaseOnUnload: function(),
+     * announceChange: function(), listen: function(Object): function()}}
      */
     function httpApi(url, params, session) {
         const editorSession = session || generateSession();
+        const channelName = CHANNEL_PREFIX + url;
 
         function body(action) {
             return new URLSearchParams({...(params || {}), action: action, editorSession: editorSession});
+        }
+
+        /**
+         * Tells other pages of this browser using the same lease route that this page released the lease or
+         * changed the object.
+         */
+        function announce(type, confirmed) {
+            if (typeof BroadcastChannel !== 'function') {
+                return;
+            }
+            // A short-lived channel: an open one keeps some browsers from putting the page into the back-forward
+            // cache. Messages already posted are still delivered after close().
+            const channel = new BroadcastChannel(channelName);
+            channel.postMessage({type: type, session: editorSession, confirmed: confirmed});
+            channel.close();
         }
 
         return {
@@ -88,10 +130,62 @@ window.sirius.editLease = (function () {
                         throw new Error('Edit lease request failed with HTTP ' + response.status);
                     }
                     return response.json();
+                }).then(status => {
+                    if (action === 'release' && !status.heldByOther) {
+                        announce(MESSAGE_RELEASED, true);
+                    }
+                    return status;
                 });
             },
             releaseOnUnload: function () {
                 navigator.sendBeacon(url, body('release'));
+                announce(MESSAGE_RELEASED, false);
+            },
+            /**
+             * Tells other pages of this browser using the same lease route that the object was just changed.
+             */
+            announceChange: function () {
+                announce(MESSAGE_CHANGED, true);
+            },
+            /**
+             * Listens to other pages of this browser using the same lease route: <tt>listeners.released()</tt> is
+             * invoked once one released the lease, <tt>listeners.changed()</tt> once one changed the object.
+             * Returns a function which stops listening.
+             */
+            listen: function (listeners) {
+                if (typeof BroadcastChannel !== 'function') {
+                    return function () {
+                    };
+                }
+                const released = listeners.released || function () {
+                };
+                const changed = listeners.changed || function () {
+                };
+                const channel = new BroadcastChannel(channelName);
+                const delayed = new Set();
+                channel.onmessage = event => {
+                    if (!event.data || event.data.session === editorSession) {
+                        return;
+                    }
+                    if (event.data.type === MESSAGE_CHANGED) {
+                        changed();
+                        return;
+                    }
+                    if (event.data.confirmed) {
+                        released();
+                        return;
+                    }
+                    const timeout = setTimeout(() => {
+                        delayed.delete(timeout);
+                        released();
+                    }, UNCONFIRMED_RELEASE_DELAY_MS);
+                    delayed.add(timeout);
+                };
+                return function () {
+                    channel.close();
+                    delayed.forEach(clearTimeout);
+                    delayed.clear();
+                };
             }
         };
     }
@@ -118,17 +212,25 @@ window.sirius.editLease = (function () {
      * @param api     the server access: <tt>request(action)</tt> resolving to <tt>{heldByMe, heldByOther,
      *                heartbeatSeconds, leaseSeconds}</tt> and <tt>releaseOnUnload()</tt> as a best-effort release
      *                which also works while the page is being unloaded (see httpApi). Outside of pagehide, releases
-     *                are sent via <tt>request('release')</tt>, so they cannot overtake a later acquire
-     * @param options <tt>onChange()</tt>: invoked whenever getState() or isRechecking() changed;
+     *                are sent via <tt>request('release')</tt>, so they cannot overtake a later acquire. Optionally
+     *                <tt>listen({released, changed})</tt>, returning a function which stops listening, to learn right
+     *                away when another page of this browser released the lease or changed the object, and
+     *                <tt>announceChange()</tt> to tell those pages about a change of this page
+     * @param options <tt>onChange()</tt>: invoked whenever getState(), isRechecking() or isHeldByOther() changed;
      *                <tt>onStale()</tt>: invoked whenever locally shown data may be outdated: the lease was lost,
-     *                taken over, resumed or re-checked; <tt>idleTimeoutMs</tt>: time without pointer, keyboard,
-     *                wheel or scroll activity after which an editing page releases the lease
+     *                taken over, resumed or re-checked; <tt>onReadOnlyPoll()</tt>: invoked after every poll of a
+     *                read-only page which found the lease still held by another session, and whenever another page of
+     *                this browser announced a change, so the page can show the changes made by the holder;
+     *                <tt>idleTimeoutMs</tt>: time without pointer, keyboard, wheel or
+     *                scroll activity after which an editing page releases the lease
      */
     function create(api, options) {
         options = options || {};
         const onChange = options.onChange || function () {
         };
         const onStale = options.onStale || function () {
+        };
+        const onReadOnlyPoll = options.onReadOnlyPoll || function () {
         };
         const idleTimeoutMs = options.idleTimeoutMs || DEFAULT_IDLE_TIMEOUT_MS;
 
@@ -148,14 +250,36 @@ window.sirius.editLease = (function () {
         // Set on pagehide until a back-forward cache restore: releases can then only be sent via a beacon.
         let hidden = false;
         let queue = Promise.resolve();
-        // Bumped whenever answers of requests already issued must no longer be applied: on dispose, on pagehide,
-        // when going idle and on refresh and takeover. Every queued task captures it when it is queued and is skipped, or drops its
-        // result, if it changed.
+        // Whether the last check of an idle page found the lease held by another session.
+        let idleHeldByOther = false;
+        // When the page went idle, or its checks were last restarted, see IDLE_CHECK_DURATION_MS.
+        let idleSince = 0;
+        // Whether an idle page stopped checking the lease, see IDLE_CHECK_DURATION_MS.
+        let idleChecksPaused = false;
+        // Stops listening to other pages, see api.listen.
+        let stopListeningToOtherPages = null;
+        // Pending refresh of a read-only page after another page announced a change, see onChangedElsewhere.
+        let changeTimer = null;
+        // Bumped by cancelPending() whenever answers of requests already issued must no longer be applied. Every
+        // queued task captures it when it is queued and is skipped, or drops its result, if it changed.
         let generation = 0;
 
         function setState(newState) {
             if (state !== newState) {
                 state = newState;
+                if (newState === STATES.IDLE) {
+                    idleSince = Date.now();
+                } else {
+                    idleHeldByOther = false;
+                    idleChecksPaused = false;
+                }
+                onChange();
+            }
+        }
+
+        function setIdleHeldByOther(heldByOther) {
+            if (idleHeldByOther !== heldByOther) {
+                idleHeldByOther = heldByOther;
                 onChange();
             }
         }
@@ -230,7 +354,7 @@ window.sirius.editLease = (function () {
 
         function schedule() {
             stop();
-            if (!suspended && state !== STATES.IDLE) {
+            if (!suspended) {
                 timer = setTimeout(tick, heartbeatMs);
             }
         }
@@ -242,6 +366,16 @@ window.sirius.editLease = (function () {
             }
         }
 
+        /**
+         * Cancels the next tick and drops the answers of all requests already issued: called whenever the state
+         * changes in a way those answers must not undo (dispose, pagehide, going idle, resume, refresh, takeover).
+         * Whoever calls it schedules again, directly or via the answer of its own request.
+         */
+        function cancelPending() {
+            stop();
+            generation++;
+        }
+
         function tick() {
             timer = null;
             if (state === STATES.ACQUIRING) {
@@ -249,20 +383,31 @@ window.sirius.editLease = (function () {
                 void requestLease('acquire', status => status.heldByMe);
                 return;
             }
+            if (state === STATES.IDLE) {
+                if (Date.now() - idleSince >= IDLE_CHECK_DURATION_MS) {
+                    // Restarted by checkNow once the page becomes visible or is used again.
+                    idleChecksPaused = true;
+                    return;
+                }
+                void enqueue(checkWhileIdle);
+                return;
+            }
             if (Date.now() - lastActivity >= idleTimeoutMs) {
                 const wasEditing = state === STATES.EDITING;
+                // A read-only page knows that another session holds the lease, before its first idle check.
+                idleHeldByOther = state === STATES.READ_ONLY;
                 setState(STATES.IDLE);
-                generation++;
+                cancelPending();
                 if (wasEditing) {
                     void enqueue(async () => {
                         await send('release');
                     });
                 }
+                schedule();
                 return;
             }
             if (state === STATES.READ_ONLY) {
-                // Polls a read-only page, so it takes the lease over once the holder freed it or it expired.
-                void requestLease('acquire', status => status.heldByMe);
+                void enqueue(poll);
                 return;
             }
             void enqueue(heartbeat);
@@ -283,6 +428,106 @@ window.sirius.editLease = (function () {
                     onStale();
                 }
             }, rethrow);
+        }
+
+        /**
+         * Polls a read-only page, so it takes the lease over once the holder freed it or it expired.
+         */
+        async function poll(isCurrent) {
+            const status = await send('acquire');
+            if (!isCurrent()) {
+                releaseLateGrant(status);
+                return;
+            }
+            apply(status);
+            if (status.heldByMe) {
+                onStale();
+            } else if (status.heldByOther) {
+                onReadOnlyPoll();
+            }
+        }
+
+        /**
+         * Checks the lease of an idle page, so it can offer a takeover instead of resume() once another session
+         * started editing.
+         */
+        async function checkWhileIdle(isCurrent) {
+            // Unlike an acquire, a heartbeat never grants a lease, so the lease is not taken back behind the
+            // user's back.
+            const status = await api.request('heartbeat');
+            if (!isCurrent()) {
+                return;
+            }
+            if (status.heldByMe) {
+                // The release sent when going idle did not get through, and the heartbeat just renewed the lease.
+                await api.request('release');
+                if (!isCurrent()) {
+                    return;
+                }
+            }
+            heartbeatMs = toMillis(status.heartbeatSeconds, DEFAULT_HEARTBEAT_MS);
+            setIdleHeldByOther(status.heldByOther === true);
+            schedule();
+        }
+
+        /**
+         * Runs the next tick right away instead of waiting for its timer, also restarting the paused checks of an
+         * idle page. Does nothing while a request is in flight (its answer schedules the next tick) or while
+         * suspended.
+         */
+        function checkNow() {
+            if (idleChecksPaused && !suspended) {
+                idleChecksPaused = false;
+                idleSince = Date.now();
+                tick();
+            } else if (timer) {
+                stop();
+                tick();
+            }
+        }
+
+        function onVisibilityChange() {
+            // The timers of a hidden page may have been throttled or paused, so what is shown may be outdated.
+            if (document.visibilityState === 'visible') {
+                checkNow();
+            }
+        }
+
+        function onReleasedElsewhere() {
+            // A hidden page checks once it becomes visible again: right now, it might take the lease from a page
+            // of the same user which is just reloading, and which the user is looking at.
+            if ((state === STATES.READ_ONLY || state === STATES.IDLE) && document.visibilityState !== 'hidden') {
+                checkNow();
+            }
+        }
+
+        function onChangedElsewhere() {
+            if (state !== STATES.READ_ONLY || changeTimer) {
+                return;
+            }
+            changeTimer = setTimeout(() => {
+                changeTimer = null;
+                if (state === STATES.READ_ONLY && !suspended) {
+                    onReadOnlyPoll();
+                }
+            }, CHANGE_DEBOUNCE_MS);
+        }
+
+        function listenToOtherPages() {
+            if (!stopListeningToOtherPages && typeof api.listen === 'function') {
+                stopListeningToOtherPages = api.listen({released: onReleasedElsewhere, changed: onChangedElsewhere});
+            }
+        }
+
+        function stopListening() {
+            if (stopListeningToOtherPages) {
+                stopListeningToOtherPages();
+                stopListeningToOtherPages = null;
+            }
+            if (changeTimer) {
+                clearTimeout(changeTimer);
+                changeTimer = null;
+            }
         }
 
         async function heartbeat(isCurrent) {
@@ -315,14 +560,16 @@ window.sirius.editLease = (function () {
 
         function onActivity() {
             lastActivity = Date.now();
+            if (idleChecksPaused) {
+                checkNow();
+            }
         }
 
         /**
          * Stops heartbeats and drops the answers of all requests already issued.
          */
         function suspend() {
-            stop();
-            generation++;
+            cancelPending();
             suspended = true;
         }
 
@@ -360,6 +607,8 @@ window.sirius.editLease = (function () {
         function onPageHide() {
             suspend();
             hidden = true;
+            // An open BroadcastChannel keeps some browsers from putting the page into the back-forward cache.
+            stopListening();
             releaseOnUnload();
         }
 
@@ -367,8 +616,10 @@ window.sirius.editLease = (function () {
             ACTIVITY_EVENTS.forEach(eventName => document.removeEventListener(eventName,
                 onActivity,
                 ACTIVITY_LISTENER_OPTIONS));
+            document.removeEventListener('visibilitychange', onVisibilityChange);
             window.removeEventListener('pagehide', onPageHide);
             window.removeEventListener('pageshow', onPageShow);
+            stopListening();
         }
 
         function onPageShow(event) {
@@ -376,9 +627,13 @@ window.sirius.editLease = (function () {
             if (event.persisted) {
                 suspended = false;
                 hidden = false;
+                listenToOtherPages();
                 if (state === STATES.IDLE) {
                     // Paused for inactivity before the page was hidden: the lease is only taken back via resume(),
-                    // as someone else may have started editing meanwhile.
+                    // as someone else may have started editing meanwhile. Checking it goes on, though.
+                    idleChecksPaused = false;
+                    idleSince = Date.now();
+                    schedule();
                     return;
                 }
                 lastActivity = Date.now();
@@ -400,8 +655,10 @@ window.sirius.editLease = (function () {
                 ACTIVITY_EVENTS.forEach(eventName => document.addEventListener(eventName,
                     onActivity,
                     ACTIVITY_LISTENER_OPTIONS));
+                document.addEventListener('visibilitychange', onVisibilityChange);
                 window.addEventListener('pagehide', onPageHide);
                 window.addEventListener('pageshow', onPageShow);
+                listenToOtherPages();
                 return requestLease('acquire', () => false);
             },
             /**
@@ -437,6 +694,24 @@ window.sirius.editLease = (function () {
                 return pendingRefresh !== null;
             },
             /**
+             * Tells the other pages of this browser editing the same object that this page just changed it, so
+             * read-only ones show the change right away. To be called after every successful write; does nothing
+             * unless this page holds the lease.
+             */
+            notifyChanged: function () {
+                if (state === STATES.EDITING && typeof api.announceChange === 'function') {
+                    api.announceChange();
+                }
+            },
+            /**
+             * Determines if another session holds the lease: always while read-only, and while idle if the last
+             * check found that another session started editing meanwhile (so a takeover is to be offered instead of
+             * resume()).
+             */
+            isHeldByOther: function () {
+                return state === STATES.READ_ONLY || (state === STATES.IDLE && idleHeldByOther);
+            },
+            /**
              * Moves the lease to this page after the user confirmed; the previous holder can no longer save.
              * <p>
              * The returned promise rejects if the request failed, so the failure can be reported to the user. The
@@ -447,8 +722,9 @@ window.sirius.editLease = (function () {
                 // then reports the lease as held and reloads a second time. So the next poll is cancelled and the
                 // answer of one already in flight dropped (it would schedule the next poll). The answer of the
                 // takeover schedules again.
-                stop();
-                generation++;
+                cancelPending();
+                // May be called from an idle page, whose inactivity must not end the lease right away.
+                lastActivity = Date.now();
                 return requestLease('takeover', () => true, true);
             },
             /**
@@ -459,8 +735,9 @@ window.sirius.editLease = (function () {
              */
             resume: function () {
                 lastActivity = Date.now();
-                // Leaves idle right away, so a failed request is retried on the acquisition path in tick().
-                stop();
+                // Leaves idle right away, so a failed request is retried on the acquisition path in tick(). The
+                // answer of an idle check still in flight is dropped: it must not schedule another check.
+                cancelPending();
                 setState(STATES.ACQUIRING);
                 return requestLease('acquire', () => true, true);
             },
@@ -480,11 +757,9 @@ window.sirius.editLease = (function () {
                 // Stop editing until the re-check answered: should it fail (even if it took the lease server-side),
                 // the retry runs on the acquisition path in tick(), which reloads once the lease is held. The
                 // pending heartbeat is cancelled, as it would queue a second acquire; apply() or the failure
-                // reschedules.
-                stop();
-                // Drops the answer of a heartbeat which is still in flight: sent before the write was rejected, it
-                // could still report heldByMe and switch back to editing before the re-check answers.
-                generation++;
+                // reschedules. The answer of a heartbeat still in flight is dropped: sent before the write was
+                // rejected, it could still report heldByMe and switch back to editing before the re-check answers.
+                cancelPending();
                 setState(STATES.ACQUIRING);
                 setPendingRefresh(requestLease('acquire', () => true).finally(() => {
                     setPendingRefresh(null);

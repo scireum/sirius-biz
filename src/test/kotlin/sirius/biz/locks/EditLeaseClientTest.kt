@@ -347,11 +347,14 @@ class EditLeaseClientTest {
         browser.startLease()
         browser.goIdle()
 
+        browser.js("requestsBefore = api.requests.length")
         browser.js("fire(window, 'pagehide'); fire(window, 'pageshow', {persisted: true})")
-        browser.advance(60_000)
+        browser.advanceAnswering(60_000, "FREE")
 
         assertEquals("idle", browser.state())
-        assertEquals("", browser.pending(), "the lease must only be taken back via resume()")
+        assertFalse(browser.bool("actionsSince(requestsBefore).includes('acquire')"),
+                    "the lease must only be taken back via resume()")
+        assertTrue(browser.bool("actionsSince(requestsBefore).includes('heartbeat')"), "the lease is still checked")
     }
 
     @Test
@@ -415,16 +418,291 @@ class EditLeaseClientTest {
     }
 
     @Test
-    fun `an inactive read-only page goes idle without releasing or polling`() {
+    fun `an inactive read-only page goes idle without releasing or acquiring`() {
         browser = Browser()
         browser.startLease("OTHER")
 
         browser.goIdle("OTHER")
-        browser.advance(5 * 60_000)
+        assertTrue(browser.bool("lease.isHeldByOther()"), "must offer a takeover right away")
+        browser.js("requestsBefore = api.requests.length")
+        browser.advanceAnswering(5 * 60_000, "FREE")
 
-        assertEquals("", browser.pending())
-        assertFalse(browser.bool("api.requests.some(request => request.action === 'release')"))
+        assertEquals("idle", browser.state())
+        assertFalse(browser.bool("lease.isHeldByOther()"))
+        assertFalse(browser.bool("actionsSince(0).includes('release')"))
+        assertFalse(browser.bool("actionsSince(requestsBefore).includes('acquire')"), "the lease must not be taken back")
         assertEquals(0, browser.js("api.releases").asInt())
+    }
+
+    @Test
+    fun `an idle page reports when another session takes the lease and offers a takeover`() {
+        browser = Browser()
+        browser.startLease()
+        browser.goIdle()
+        browser.js("requestsBefore = api.requests.length")
+        assertFalse(browser.bool("lease.isHeldByOther()"))
+
+        browser.advance(30_000)
+        assertEquals("heartbeat", browser.answer("OTHER"))
+        assertEquals("idle", browser.state())
+        assertTrue(browser.bool("lease.isHeldByOther()"))
+        assertTrue(browser.bool("changes[changes.length - 1] === 'idle'"), "onChange must report the new holder")
+
+        browser.advance(30_000)
+        assertEquals("heartbeat", browser.answer("FREE"))
+        assertFalse(browser.bool("lease.isHeldByOther()"), "resume must be offered again once the lease is free")
+        assertFalse(browser.bool("actionsSince(requestsBefore).includes('acquire')"))
+
+        browser.advance(30_000)
+        browser.answer("OTHER")
+        browser.js("lease.takeover()")
+        assertEquals("takeover", browser.answer("HELD"))
+        assertEquals("editing", browser.state())
+        assertFalse(browser.bool("lease.isHeldByOther()"))
+        browser.advanceAnswering(2 * 60_000)
+        assertEquals("editing", browser.state(), "a takeover from an idle page counts as activity")
+    }
+
+    @Test
+    fun `an idle page whose release did not get through frees the lease renewed by its check`() {
+        browser = Browser()
+        browser.startLease()
+        browser.goIdle()
+
+        browser.advance(30_000)
+        assertEquals("heartbeat", browser.answer("HELD"))
+
+        assertEquals("release", browser.answer("FREE"))
+        assertEquals("idle", browser.state())
+        assertFalse(browser.bool("lease.isHeldByOther()"))
+    }
+
+    @Test
+    fun `resume drops the answer of an idle check still in flight`() {
+        browser = Browser()
+        browser.startLease()
+        browser.goIdle()
+        browser.advance(30_000)
+        assertEquals("heartbeat", browser.pending())
+
+        browser.js("lease.resume()")
+        assertEquals("heartbeat", browser.answer("HELD"))
+        assertEquals("acquire", browser.answer("HELD"), "the resumed page must not release the lease it acquires")
+        assertEquals("editing", browser.state())
+    }
+
+    @Test
+    fun `a read-only page reports every poll which found the lease still held elsewhere`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+
+        repeat(3) {
+            browser.advance(30_000)
+            assertEquals("acquire", browser.answer("OTHER"))
+        }
+
+        assertEquals(3, browser.js("polls.length").asInt())
+        assertEquals(0, browser.reloads())
+    }
+
+    @Test
+    fun `a page becoming visible checks the lease right away`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+        browser.advance(10_000)
+
+        browser.js("document.visibilityState = 'hidden'; fire(document, 'visibilitychange')")
+        assertEquals("", browser.pending(), "becoming hidden must not check")
+        browser.js("document.visibilityState = 'visible'; fire(document, 'visibilitychange')")
+        assertEquals("acquire", browser.pending())
+
+        browser.js("fire(document, 'visibilitychange')")
+        assertEquals("acquire", browser.pending(), "no second request while the first is unanswered")
+        browser.answer("HELD")
+        assertEquals("editing", browser.state())
+        assertEquals(1, browser.reloads())
+    }
+
+    @Test
+    fun `a release announced by another page is checked right away by read-only and idle pages only`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+        browser.advance(10_000)
+
+        browser.js("api.listeners.released()")
+        assertEquals("acquire", browser.answer("HELD"))
+        assertEquals("editing", browser.state())
+
+        browser.advance(10_000)
+        browser.js("api.listeners.released()")
+        assertEquals("", browser.pending(), "an editing page holds the lease anyway")
+
+        browser.goIdle()
+        browser.advance(10_000)
+        browser.js("api.listeners.released()")
+        assertEquals("heartbeat", browser.pending())
+    }
+
+    @Test
+    fun `a hidden page ignores an announced release and checks once it becomes visible`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+        browser.advance(10_000)
+
+        browser.js("document.visibilityState = 'hidden'; fire(document, 'visibilitychange')")
+        browser.js("api.listeners.released()")
+        assertEquals("", browser.pending(), "a reloading page of the same user must get the lease back first")
+
+        browser.js("document.visibilityState = 'visible'; fire(document, 'visibilitychange')")
+        assertEquals("acquire", browser.answer("HELD"))
+        assertEquals("editing", browser.state())
+    }
+
+    @Test
+    fun `an idle page stops checking after a while and checks again once visible or used`() {
+        browser = Browser()
+        browser.startLease()
+        browser.goIdle()
+        browser.js("requestsBefore = api.requests.length")
+
+        browser.advanceAnswering(15 * 60_000, "FREE")
+        val checks = browser.js("actionsSince(requestsBefore).filter(action => action === 'heartbeat').length").asInt()
+        assertTrue(checks in 19..20, "checks every 30 s for 10 minutes only, but checked $checks times")
+        assertEquals("", browser.pending())
+
+        browser.js("document.visibilityState = 'visible'; fire(document, 'visibilitychange')")
+        assertEquals("heartbeat", browser.answer("OTHER"))
+        assertTrue(browser.bool("lease.isHeldByOther()"))
+        assertEquals("idle", browser.state(), "a check never takes the lease back")
+
+        browser.advanceAnswering(15 * 60_000, "OTHER")
+        browser.js("requestsBefore = api.requests.length")
+        browser.advance(60_000)
+        assertEquals("", browser.pending(), "paused again 10 minutes after the restart")
+        browser.js("fire(document, 'pointerdown')")
+        assertEquals("heartbeat", browser.answer("FREE"))
+        browser.js("fire(document, 'pointerdown')")
+        assertEquals("", browser.pending(), "activity only restarts paused checks")
+        assertEquals("idle", browser.state())
+    }
+
+    @Test
+    fun `a change announced by another page refreshes a read-only page once per burst`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+
+        browser.js("api.listeners.changed(); api.listeners.changed()")
+        assertEquals(0, browser.js("polls.length").asInt(), "the refresh waits for the end of the burst")
+        browser.advance(250)
+        browser.js("api.listeners.changed()")
+        browser.advance(250)
+
+        assertEquals(2, browser.js("polls.length").asInt())
+        assertEquals("", browser.pending(), "showing a change needs no lease request")
+        assertEquals(0, browser.reloads())
+    }
+
+    @Test
+    fun `a change announced by another page is ignored unless read-only`() {
+        browser = Browser()
+        browser.startLease()
+
+        browser.js("api.listeners.changed()")
+        browser.advance(250)
+        browser.goIdle()
+        browser.js("api.listeners.changed()")
+        browser.advance(250)
+
+        assertEquals(0, browser.js("polls.length").asInt())
+    }
+
+    @Test
+    fun `a pending refresh after an announced change is dropped when the page is hidden`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+
+        browser.js("api.listeners.changed(); fire(window, 'pagehide')")
+        browser.advance(1000)
+
+        assertEquals(0, browser.js("polls.length").asInt())
+    }
+
+    @Test
+    fun `notifyChanged announces a change only while editing`() {
+        browser = Browser()
+        browser.startLease("OTHER")
+        browser.js("lease.notifyChanged()")
+        assertEquals(0, browser.js("api.changes").asInt(), "a read-only page cannot have changed anything")
+
+        browser.js("lease.takeover()")
+        browser.answer("HELD")
+        browser.js("lease.notifyChanged()")
+        assertEquals(1, browser.js("api.changes").asInt())
+
+        browser.js("sirius.editLease.create({request: () => new Promise(() => {}), releaseOnUnload() {}}).notifyChanged()")
+    }
+
+    @Test
+    fun `release announcements are only listened to while the page is shown and the client started`() {
+        browser = Browser()
+        browser.startLease()
+        assertTrue(browser.bool("api.listeners !== null"))
+
+        browser.js("fire(window, 'pagehide')")
+        assertTrue(browser.bool("api.listeners === null"), "an open channel may prevent the bfcache")
+        browser.js("fire(window, 'pageshow', {persisted: true})")
+        assertTrue(browser.bool("api.listeners !== null"))
+
+        browser.js("lease.dispose()")
+        assertTrue(browser.bool("api.listeners === null"))
+    }
+
+    @Test
+    fun `httpApi announces releases to other pages using the same route`() {
+        browser = Browser()
+        browser.js(
+            """
+            heard = [];
+            first = sirius.editLease.httpApi('/editor/lease', {}, 'session-1');
+            second = sirius.editLease.httpApi('/editor/lease', {}, 'session-2');
+            other = sirius.editLease.httpApi('/other/lease', {}, 'session-3');
+            stopFirst = first.listen({released: () => heard.push('first'), changed: () => heard.push('first changed')});
+            second.listen({released: () => heard.push('second'), changed: () => heard.push('second changed')});
+            other.listen({released: () => heard.push('other'), changed: () => heard.push('other changed')});
+            """.trimIndent()
+        )
+
+        browser.js("first.request('release')")
+        assertEquals("second", browser.string("heard.join()"), "only other pages of the same route are told")
+
+        browser.js("heard.length = 0; second.request('heartbeat')")
+        assertEquals("", browser.string("heard.join()"), "only releases and changes are announced")
+
+        browser.js("first.announceChange()")
+        assertEquals("second changed", browser.string("heard.join()"), "a change is announced right away")
+
+        browser.js("heard.length = 0; second.releaseOnUnload()")
+        browser.advance(2999)
+        assertEquals("", browser.string("heard.join()"), "a beacon may not have been processed yet")
+        browser.advance(1)
+        assertEquals("first", browser.string("heard.join()"))
+
+        browser.js("heard.length = 0; stopFirst(); second.releaseOnUnload()")
+        browser.advance(3000)
+        assertEquals("", browser.string("heard.join()"))
+        assertTrue(browser.bool("channels.every(channel => channel.closed || channel.onmessage)"),
+                   "announcing channels must be closed")
+    }
+
+    @Test
+    fun `httpApi works in browsers without BroadcastChannel`() {
+        browser = Browser()
+        browser.js("delete globalThis.BroadcastChannel")
+
+        browser.js("api = sirius.editLease.httpApi('/editor/lease', {}, 'session-1'); api.listen({})()")
+        browser.js("result = track(api.request('release')); api.releaseOnUnload(); api.announceChange()")
+
+        assertEquals("resolved", browser.string("result.state"))
     }
 
     @Test
@@ -586,6 +864,7 @@ class EditLeaseClientTest {
             window.sirius = {};
             var sirius = window.sirius;
             var document = eventTarget();
+            document.visibilityState = 'visible';
             function fire(target, type, event = {}) {
                 [...(target.listeners[type] || [])].forEach(listener => listener(event));
             }
@@ -623,6 +902,28 @@ class EditLeaseClientTest {
                     return true;
                 }
             };
+            var channels = [];
+            // A property of globalThis, so a test can delete it.
+            globalThis.BroadcastChannel = class {
+                constructor(name) {
+                    this.name = name;
+                    this.closed = false;
+                    this.onmessage = null;
+                    channels.push(this);
+                }
+                postMessage(data) {
+                    channels.filter(channel => channel !== this && channel.name === this.name && !channel.closed)
+                        .forEach(channel => Promise.resolve().then(() => {
+                            if (!channel.closed && channel.onmessage) {
+                                channel.onmessage({data});
+                            }
+                        }));
+                }
+                close() {
+                    this.closed = true;
+                }
+            }
+
             var fetches = [];
             var response = {ok: true, status: 200};
             function fetch(url, init) {
@@ -658,6 +959,15 @@ class EditLeaseClientTest {
                     session: 'test-session',
                     requests,
                     releases: 0,
+                    listeners: null,
+                    changes: 0,
+                    listen(listeners) {
+                        api.listeners = listeners;
+                        return () => api.listeners = null;
+                    },
+                    announceChange() {
+                        api.changes++;
+                    },
                     request(action) {
                         return new Promise((resolve, reject) => requests.push({action, resolve, reject}));
                     },
@@ -681,14 +991,19 @@ class EditLeaseClientTest {
                 return api;
             }
 
-            var api, lease, changes, reloads;
+            var api, lease, changes, reloads, polls;
+            function actionsSince(index) {
+                return api.requests.slice(index).map(request => request.action);
+            }
             function startLease() {
                 api = createApi();
                 changes = [];
                 reloads = [];
+                polls = [];
                 lease = sirius.editLease.create(api, {
                     onChange: () => changes.push(lease.getState()),
-                    onStale: () => reloads.push(lease.getState())
+                    onStale: () => reloads.push(lease.getState()),
+                    onReadOnlyPoll: () => polls.push(lease.getState())
                 });
                 lease.start();
             }
