@@ -26,6 +26,7 @@ import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Counter;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
 import sirius.web.controller.Page;
@@ -123,9 +124,42 @@ public class VirtualFileSystemController extends BizController {
         return quickActionList;
     }
 
+    /**
+     * Resolves the given path, as provided by a request, within the virtual file system.
+     *
+     * @param path the absolute path to resolve
+     * @return the resolved file, which may not exist
+     * @throws HandledException if the path is invalid, e.g. as it leaves the file system
+     */
+    @Nonnull
+    private VirtualFile resolvePath(String path) {
+        try {
+            return vfs.resolve(path);
+        } catch (IllegalArgumentException _) {
+            throw Exceptions.createHandled().withNLSKey("VFSController.unknownPath").set("path", path).handle();
+        }
+    }
+
+    /**
+     * Resolves the given path, as provided by a request, within the given directory.
+     *
+     * @param directory the directory to resolve the path in
+     * @param path      the relative path to resolve
+     * @return the resolved file, which may not exist
+     * @throws HandledException if the path is invalid, e.g. as it leaves the directory
+     */
+    @Nonnull
+    private VirtualFile resolvePath(VirtualFile directory, String path) {
+        try {
+            return directory.resolve(path);
+        } catch (IllegalArgumentException _) {
+            throw Exceptions.createHandled().withNLSKey("VFSController.unknownPath").set("path", path).handle();
+        }
+    }
+
     @Nonnull
     private VirtualFile resolveToExistingFile(String path) {
-        VirtualFile file = vfs.resolve(path);
+        VirtualFile file = resolvePath(path);
         if (!file.exists()) {
             UserContext.get()
                        .addMessage(Message.error()
@@ -176,11 +210,11 @@ public class VirtualFileSystemController extends BizController {
     @Permission(PERMISSION_VIEW_FILES)
     public void upload(WebContext webContext, JSONStructuredOutput output, InputStreamHandler inputStream)
             throws Exception {
-        VirtualFile parent = vfs.resolve(webContext.get("path").asString());
+        VirtualFile parent = resolvePath(webContext.get("path").asString());
         parent.assertExistingDirectory();
 
         String filename = webContext.get("filename").asString(webContext.get("qqfile").asString());
-        VirtualFile file = parent.resolve(filename);
+        VirtualFile file = resolvePath(parent, filename);
 
         boolean exists = file.exists();
         if (exists) {
@@ -223,7 +257,7 @@ public class VirtualFileSystemController extends BizController {
     @Routed("/fs/delete")
     @Permission(PERMISSION_VIEW_FILES)
     public void delete(WebContext webContext) {
-        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        VirtualFile file = resolvePath(webContext.get("path").asString());
         if (webContext.isPostRequest()) {
             try {
                 if (file.exists()) {
@@ -254,7 +288,7 @@ public class VirtualFileSystemController extends BizController {
         Counter failedDeletions = new Counter();
         ValueHolder<String> workingDirectory = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
-            VirtualFile file = vfs.resolve(filePath);
+            VirtualFile file = resolvePath(filePath);
             workingDirectory.set(file.parent.path());
             try {
                 if (file.exists()) {
@@ -292,7 +326,7 @@ public class VirtualFileSystemController extends BizController {
     @Routed("/fs/rename")
     @Permission(PERMISSION_VIEW_FILES)
     public void rename(WebContext webContext) {
-        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        VirtualFile file = resolvePath(webContext.get("path").asString());
         if (webContext.isPostRequest()) {
             try {
                 String name = webContext.get("name").asString();
@@ -319,7 +353,7 @@ public class VirtualFileSystemController extends BizController {
     @Routed("/fs/createDirectory")
     @Permission(PERMISSION_VIEW_FILES)
     public void createDirectory(WebContext webContext) {
-        VirtualFile parent = Optional.of(vfs.resolve(webContext.get("parent").asString()))
+        VirtualFile parent = Optional.of(resolvePath(webContext.get("parent").asString()))
                                      .filter(VirtualFile::exists)
                                      .filter(VirtualFile::isDirectory)
                                      .orElse(null);
@@ -329,7 +363,7 @@ public class VirtualFileSystemController extends BizController {
                 if (Strings.isEmpty(name)) {
                     name = NLS.get("VFSController.createDirectory");
                 }
-                VirtualFile newDirectory = parent.resolve(name);
+                VirtualFile newDirectory = resolvePath(parent, name);
                 newDirectory.createAsDirectory();
                 UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
                 webContext.respondWith()
@@ -352,8 +386,8 @@ public class VirtualFileSystemController extends BizController {
     @Routed("/fs/move")
     @Permission(PERMISSION_VIEW_FILES)
     public void move(WebContext webContext) {
-        VirtualFile file = vfs.resolve(webContext.get("path").asString());
-        VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
+        VirtualFile file = resolvePath(webContext.get("path").asString());
+        VirtualFile newParent = resolvePath(webContext.get("newParent").asString());
         if (!file.exists()) {
             webContext.respondWith().redirectToGet("/fs");
             return;
@@ -392,8 +426,8 @@ public class VirtualFileSystemController extends BizController {
         Counter failedMoves = new Counter();
         ValueHolder<String> path = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
-            VirtualFile file = vfs.resolve(filePath);
-            VirtualFile newParent = vfs.resolve(webContext.get("newParent").asString());
+            VirtualFile file = resolvePath(filePath);
+            VirtualFile newParent = resolvePath(webContext.get("newParent").asString());
             path.set(file.parent().path());
             if (!file.exists()) {
                 webContext.respondWith().redirectToGet("/fs");
@@ -442,7 +476,7 @@ public class VirtualFileSystemController extends BizController {
     @Routed("/fs/unlock")
     @Permission(VirtualFileSystem.PERMISSION_UNLOCK_FILES)
     public void unlock(WebContext webContext) {
-        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        VirtualFile file = resolvePath(webContext.get("path").asString());
         if (!file.exists()) {
             webContext.respondWith().redirectToGet("/fs");
             return;
@@ -485,7 +519,7 @@ public class VirtualFileSystemController extends BizController {
     @Permission(PERMISSION_VIEW_FILES)
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     public void generateBlobUrl(WebContext webContext, JSONStructuredOutput output) {
-        VirtualFile file = vfs.resolve(webContext.get("path").asString());
+        VirtualFile file = resolvePath(webContext.get("path").asString());
         file.assertExistingFile();
 
         Blob blob = file.tryAs(Blob.class)
@@ -512,7 +546,7 @@ public class VirtualFileSystemController extends BizController {
     @InternalService
     @Permission(PERMISSION_VIEW_FILES)
     public void listAPI(WebContext webContext, JSONStructuredOutput output) {
-        VirtualFile parent = vfs.resolve(webContext.get("path").asString("/"));
+        VirtualFile parent = resolvePath(webContext.get("path").asString("/"));
         if (parent.exists() && !parent.isDirectory()) {
             parent = parent.parent();
         }

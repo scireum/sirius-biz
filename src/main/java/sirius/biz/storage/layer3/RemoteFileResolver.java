@@ -110,7 +110,8 @@ public abstract class RemoteFileResolver implements Priorized {
         }
 
         if (options.contains(Options.INCLUDE_HOST_NAME)) {
-            return parent.resolve(cleanHostName(host) + "/" + path);
+            // The path is resolved within the directory of its host, so that it cannot reach those of other hosts
+            return parent.resolve(cleanHostName(host)).resolve(path);
         }
 
         return parent.resolve(path);

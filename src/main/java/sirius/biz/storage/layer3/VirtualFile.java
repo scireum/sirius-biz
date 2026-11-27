@@ -35,6 +35,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.http.MimeHelper;
 import sirius.web.http.Response;
 import sirius.web.http.WebContext;
+import sirius.web.resources.ResourcePaths;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -79,6 +80,8 @@ import java.util.stream.Collectors;
  */
 public abstract class VirtualFile extends Composable implements Comparable<VirtualFile> {
 
+    private static final String CURRENT_DIRECTORY = ".";
+    private static final String PARENT_DIRECTORY = "..";
     private static final String HANDLER_OUTPUT_STREAM_SUPPLIER = "outputStreamSupplier";
     private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
     private static final String MESSAGE_KEY_LOAD_FROM_URL_FAILED = "$VirtualFile.loadFromUrlFailed";
@@ -441,11 +444,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * Tries to rename this file.
      *
      * @param newName the new name of the file
-     * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise, which includes a new name
+     * that is empty, contains a slash, a backslash or a control character, or consists of dots and spaces only
      */
     public boolean tryRename(String newName) {
         try {
-            if (!canRename()) {
+            if (!canRename() || !isPlainName(newName)) {
                 return false;
             }
 
@@ -477,10 +481,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * Renames this file.
      *
      * @param newName the new name of the file
-     * @throws HandledException if the file cannot be renamed
+     * @throws HandledException if the file cannot be renamed, which includes a new name that is empty, contains
+     *                          a slash, a backslash, a control character or a character reserved by file systems,
+     *                          or consists of dots and spaces only
      */
     public void rename(String newName) {
-        if (utils.containsIllegalFileChars(newName)) {
+        if (utils.containsIllegalFileChars(newName) || !isPlainName(newName)) {
             throw Exceptions.createHandled()
                             .withNLSKey("VirtualFile.cannotRename.invalidName")
                             .set("file", path())
@@ -633,11 +639,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * <p>
      * Note that the given file can be non-existent.
      *
-     * @param name the name of the child to find
+     * @param name the name of the child to find, which must be a plain name and not a path
      * @return the child which may be a non-existing file
+     * @throws IllegalArgumentException if the given name is empty, contains a slash, a backslash or a control
+     *                                  character, or consists of dots and spaces only, like <tt>..</tt>
+     * @throws HandledException         if the uplink fails or refuses to resolve the name
      */
     @Nonnull
     public VirtualFile findChild(String name) {
+        if (!isPlainName(name)) {
+            throw new IllegalArgumentException("Invalid name: A child must be addressed by its plain name.");
+        }
+
         try {
             if (childProvider != null) {
                 VirtualFile child = childProvider.findChild(this, name);
@@ -654,10 +667,20 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
     /**
      * Tries to resolve the relative path within this directory.
+     * <p>
+     * The path is normalized beforehand, so that <tt>.</tt> and <tt>..</tt> are resolved within the path itself and
+     * never reach an uplink, where they would be interpreted by the underlying file system or server. A path which
+     * would leave this directory, like <tt>../other</tt>, is rejected. A path which leads back to this directory,
+     * like <tt>.</tt> or <tt>sub/..</tt>, yields this directory itself.
+     * <p>
+     * Note that this is a purely lexical operation: <tt>link/..</tt> yields this directory, even if <tt>link</tt>
+     * is a symbolic link on a remote server which points elsewhere.
      *
      * @param relativePath the path to resolve
      * @return the relative path wrapped as a VirtualFile
-     * @throws IllegalArgumentException when the given path is empty after sanitization
+     * @throws IllegalArgumentException when the given path is empty after sanitization, leaves this directory or
+     *                                  contains a name which {@link #findChild(String)} rejects
+     * @throws HandledException         if an uplink fails or refuses to resolve one of the names
      */
     @Nonnull
     public VirtualFile resolve(String relativePath) {
@@ -667,13 +690,61 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             throw new IllegalArgumentException("Invalid path: " + sanitizedPath);
         }
 
-        Tuple<String, String> nameAndRest = Strings.split(sanitizedPath, "/");
-        VirtualFile child = findChild(nameAndRest.getFirst());
-        if (Strings.isFilled(nameAndRest.getSecond())) {
-            return child.resolve(nameAndRest.getSecond());
+        VirtualFile result = this;
+        for (String childName : normalizePath(sanitizedPath)) {
+            result = result.findChild(childName);
         }
 
-        return child;
+        return result;
+    }
+
+    /**
+     * Splits the given path into the names to follow, with all <tt>.</tt> and <tt>..</tt> segments being resolved.
+     *
+     * @param path the sanitized path to normalize
+     * @return the names of the children to resolve one after another, which is empty if the path points to its
+     * starting directory
+     * @throws IllegalArgumentException if the path leaves its starting directory
+     */
+    private static List<String> normalizePath(String path) {
+        List<String> names = new ArrayList<>();
+        for (String segment : path.split("/")) {
+            // Leading whitespace is dropped, as a path has always been sanitized anew for each of its remaining
+            // segments. Trailing whitespace is kept, as it may be part of the name of an existing directory.
+            String name = segment.stripLeading();
+            if (PARENT_DIRECTORY.equals(name)) {
+                if (names.isEmpty()) {
+                    throw new IllegalArgumentException("Invalid path: A path must not leave its directory.");
+                }
+                names.removeLast();
+            } else if (!name.isEmpty() && !CURRENT_DIRECTORY.equals(name)) {
+                names.add(name);
+            }
+        }
+
+        return names;
+    }
+
+    /**
+     * Determines if the given name addresses a file by its name rather than by a path.
+     * <p>
+     * The uplinks hand a name to the underlying file system or server as is. There, <tt>..</tt> points to the parent
+     * directory, a slash or backslash descends into other directories, and a leading double slash can even address
+     * another server. A control character, like a line break, can smuggle additional commands into a text based
+     * protocol such as FTP. An empty name finally addresses the directory itself. A name must therefore be filled,
+     * contain neither a separator nor a control character, and must not consist of dots and spaces only, as some
+     * file systems strip trailing dots and spaces and thus treat <tt>".. "</tt> like <tt>..</tt>.
+     *
+     * @param name the name of a child or the new name of a file to check
+     * @return <tt>true</tt> if the name can be passed to an uplink, <tt>false</tt> otherwise
+     * @see ResourcePaths#isUnsafe(String)
+     */
+    private static boolean isPlainName(@Nullable String name) {
+        if (Strings.isEmpty(name)) {
+            return false;
+        }
+
+        return name.indexOf('/') < 0 && !ResourcePaths.isUnsafe(name);
     }
 
     /**
@@ -1625,6 +1696,14 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                 .handle();
             }
 
+            throw Exceptions.createHandled()
+                            .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
+                            .hint(ProcessLog.HINT_MESSAGE_TYPE, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
+                            .hint(ProcessLog.HINT_MESSAGE_COUNT, ProcessLog.MESSAGE_TYPE_COUNT_MEDIUM)
+                            .set("url", uri.toString())
+                            .handle();
+        } catch (IllegalArgumentException _) {
+            // The path of the URL cannot be mapped to a file, e.g. as it tries to leave this directory
             throw Exceptions.createHandled()
                             .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
                             .hint(ProcessLog.HINT_MESSAGE_TYPE, MESSAGE_KEY_LOAD_FROM_URL_FAILED)
