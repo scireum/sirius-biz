@@ -88,6 +88,22 @@ class SSHServerTest {
         assertTrue { File(localDirectory, "sub/inside.txt").exists() }
     }
 
+    @Test
+    fun `a path ending in a parent reference addresses the parent directory`() {
+        assertEquals(listOf("inside.txt", "sub"), names("$DIRECTORY/sub/.."))
+    }
+
+    @Test
+    fun `a name ending in two dots is not mistaken for a parent reference`() {
+        File(localDirectory, "sub/x..").mkdirs()
+
+        sftp().rmdir("$DIRECTORY/sub/x..")
+
+        assertFalse { File(localDirectory, "sub/x..").exists() }
+        assertTrue { File(localDirectory, "sub").exists() }
+        assertTrue { File(localDirectory, "inside.txt").exists() }
+    }
+
     @BeforeEach
     fun setUp() {
         localDirectory.deleteRecursively()
@@ -115,6 +131,9 @@ class SSHServerTest {
     }
 
     private fun sftp() = checkNotNull(sftp)
+
+    private fun names(path: String) =
+        sftp().readDir(path).map { it.filename }.filter { it != "." && it != ".." }.sorted()
 
     private var client: SshClient? = null
     private var session: ClientSession? = null
