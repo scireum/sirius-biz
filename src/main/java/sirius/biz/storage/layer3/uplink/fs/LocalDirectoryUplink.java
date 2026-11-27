@@ -33,6 +33,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
@@ -40,8 +42,10 @@ import java.util.function.Function;
  * <p>
  * The uplink is confined to its base directory. This also applies to symbolic links: a link which resides within
  * the base directory but points out of it is neither listed nor followed. To provide another directory, mount it as
- * an uplink of its own. The base directory itself may be given via a symbolic link, which is resolved once when the
- * uplink is created.
+ * an uplink of its own. An ignored link is reported once in the log.
+ * <p>
+ * The base directory itself may be given via a symbolic link. Note that this link is resolved once when the uplink
+ * is created, so that pointing it to another directory requires a restart.
  */
 public class LocalDirectoryUplink extends ConfigBasedUplink {
 
@@ -69,6 +73,11 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     }
 
     private static final Comparator<File> SORT_BY_DIRECTORY = Comparator.comparing(file -> file.isDirectory() ? 0 : 1);
+    /**
+     * Limits the number of ignored links to remember, and thereby also the number of log entries written for them.
+     */
+    private static final int MAX_REPORTED_LINKS = 1000;
+
     private static final Comparator<File> SORT_BY_NAME = Comparator.comparing(file -> file.getName().toLowerCase());
 
     private final File root;
@@ -78,6 +87,12 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
      * every accessed file is {@link #isWithinRoot(File) compared against}.
      */
     private final Path canonicalRoot;
+
+    /**
+     * Contains the paths of the ignored symbolic links which have already been {@link #reportIgnoredLink(File)
+     * reported}.
+     */
+    private final Set<String> reportedLinks = ConcurrentHashMap.newKeySet();
 
     protected LocalDirectoryUplink(String id, Function<String, Value> extension, File root) {
         super(id, extension);
@@ -109,10 +124,30 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private File resolveWithinRoot(File directory, String name) throws IOException {
         File file = new File(directory, name);
         if (!isWithinRoot(file)) {
+            reportIgnoredLink(file);
             throw outsideOfRoot(name);
         }
 
         return file;
+    }
+
+    /**
+     * Reports a symbolic link which is ignored as it points out of the base directory or has no target.
+     * <p>
+     * As a hidden file is hard to diagnose otherwise, each link is logged, but only once, as it would otherwise be
+     * reported with each listing of its directory.
+     *
+     * @param file the refused file, which is only reported if it is a symbolic link
+     */
+    private void reportIgnoredLink(File file) {
+        if (Files.isSymbolicLink(file.toPath())
+            && reportedLinks.size() < MAX_REPORTED_LINKS
+            && reportedLinks.add(file.getPath())) {
+            StorageUtils.LOG.WARN(
+                    "Layer 3/FS: The symbolic link '%s' points out of the base directory '%s' or has no target, and is therefore ignored.",
+                    file.getPath(),
+                    canonicalRoot);
+        }
     }
 
     /**
@@ -423,6 +458,7 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
             for (File file : children) {
                 // The parent has just been verified, so that only a link can point elsewhere
                 if (Files.isSymbolicLink(file.toPath()) && !isWithinRoot(file)) {
+                    reportIgnoredLink(file);
                     continue;
                 }
 
