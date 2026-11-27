@@ -145,7 +145,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                 }
                 handleExtractedFile(file, process, overrideMode, targetDirectory, flattenDirs);
             });
-            if(processes.fetchProcessForUser(process.getProcessId()).orElse(null).getCanceled() == null){
+            if (processes.fetchProcessForUser(process.getProcessId()).orElse(null).getCanceled() == null) {
                 process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
             }
         } catch (Exception exception) {
