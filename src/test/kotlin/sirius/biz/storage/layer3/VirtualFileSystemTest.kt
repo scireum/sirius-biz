@@ -327,6 +327,32 @@ class VirtualFileSystemTest {
         assertTrue { decoy.exists() }
     }
 
+    @Test
+    fun `the web interface deletes all valid files of a selection which contains an invalid path`() {
+        val paths = listOf("$DIRECTORY/inside.txt", "/sftp-test-target/../../pom.xml", "$DIRECTORY/sub/nested.txt")
+
+        val content = postRequest("/fs/delete/multiple", "paths" to paths).rawContent?.decodeToString().orEmpty()
+
+        assertFalse { File(localDirectory, "inside.txt").exists() }
+        assertFalse { File(localDirectory, "sub/nested.txt").exists() }
+        assertFalse { content.contains("Exception") }
+    }
+
+    @ValueSource(strings = ["/fs/delete", "/fs/rename", "/fs/move", "/fs/delete/multiple", "/fs/move/multiple"])
+    @ParameterizedTest
+    fun `the web interface copes with a path which points to the root of the file system`(uri: String) {
+        val content = postRequest(
+            uri,
+            "path" to "/sftp-test-target/..",
+            "paths" to listOf("/sftp-test-target/.."),
+            "name" to "renamed",
+            "newParent" to DIRECTORY
+        ).rawContent?.decodeToString().orEmpty()
+
+        assertFalse { content.contains("Exception") }
+        assertTrue { File(localDirectory, "inside.txt").exists() }
+    }
+
     @ValueSource(strings = ["/sftp-test-target/..", "/sftp-test-target/vfs-test/../.."])
     @ParameterizedTest
     fun `the web interface does not move files out of a root`(newParent: String) {
@@ -362,7 +388,7 @@ class VirtualFileSystemTest {
         TenantsHelper.installBackendUser(it)
     }.execute()
 
-    private fun postRequest(uri: String, vararg parameters: Pair<String, String>) = TestRequest.SAFEPOST(uri).also {
+    private fun postRequest(uri: String, vararg parameters: Pair<String, Any>) = TestRequest.SAFEPOST(uri).also {
         parameters.forEach { (name, value) -> it.withParameter(name, value) }
         TenantsHelper.installBackendUser(it)
     }.execute()

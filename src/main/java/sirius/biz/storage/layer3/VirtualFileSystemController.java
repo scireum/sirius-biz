@@ -157,6 +157,17 @@ public class VirtualFileSystemController extends BizController {
         }
     }
 
+    /**
+     * Determines the path of the directory to show once the given file has been processed.
+     *
+     * @param file the file which has been processed
+     * @return the path of the parent directory, or of the file itself if it is the root of the file system, which
+     * a path like <tt>/directory/..</tt> resolves to
+     */
+    private String parentPath(VirtualFile file) {
+        return file.parent() != null ? file.parent().path() : file.path();
+    }
+
     @Nonnull
     private VirtualFile resolveToExistingFile(String path) {
         VirtualFile file = resolvePath(path);
@@ -267,8 +278,7 @@ public class VirtualFileSystemController extends BizController {
             } catch (Exception exception) {
                 UserContext.handle(exception);
             }
-            webContext.respondWith()
-                      .redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+            webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", parentPath(file)).toString());
         } else {
             webContext.respondWith().redirectToGet("/fs");
         }
@@ -288,9 +298,10 @@ public class VirtualFileSystemController extends BizController {
         Counter failedDeletions = new Counter();
         ValueHolder<String> workingDirectory = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
-            VirtualFile file = resolvePath(filePath);
-            workingDirectory.set(file.parent.path());
             try {
+                // An invalid path must only fail its own file, and not abort after others have been deleted
+                VirtualFile file = resolvePath(filePath);
+                workingDirectory.set(parentPath(file));
                 if (file.exists()) {
                     if (file.canDelete()) {
                         file.delete();
@@ -337,8 +348,7 @@ public class VirtualFileSystemController extends BizController {
             } catch (Exception exception) {
                 UserContext.handle(exception);
             }
-            webContext.respondWith()
-                      .redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+            webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", parentPath(file)).toString());
         } else {
             webContext.respondWith().redirectToGet("/fs");
         }
@@ -409,7 +419,7 @@ public class VirtualFileSystemController extends BizController {
             UserContext.handle(exception);
         }
 
-        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", parentPath(file)).toString());
     }
 
     /**
@@ -426,15 +436,16 @@ public class VirtualFileSystemController extends BizController {
         Counter failedMoves = new Counter();
         ValueHolder<String> path = new ValueHolder<>("");
         filePaths.forEach(filePath -> {
-            VirtualFile file = resolvePath(filePath);
-            VirtualFile newParent = resolvePath(webContext.get("newParent").asString());
-            path.set(file.parent().path());
-            if (!file.exists()) {
-                webContext.respondWith().redirectToGet("/fs");
-                return;
-            }
-
             try {
+                // An invalid path must only fail its own file, and not abort after others have been moved
+                VirtualFile file = resolvePath(filePath);
+                VirtualFile newParent = resolvePath(webContext.get("newParent").asString());
+                path.set(parentPath(file));
+                if (!file.exists()) {
+                    webContext.respondWith().redirectToGet("/fs");
+                    return;
+                }
+
                 if (newParent.exists() && newParent.isDirectory()) {
                     if (file.canMove()) {
                         Optional<String> processId = file.transferTo(newParent).move();
@@ -488,7 +499,7 @@ public class VirtualFileSystemController extends BizController {
             UserContext.handle(exception);
         }
 
-        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
+        webContext.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", parentPath(file)).toString());
     }
 
     /**
