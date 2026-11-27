@@ -51,7 +51,7 @@ public class BridgePath implements Path {
      * Creates a new instance which wraps the virtual file and carries along the associated file system.
      *
      * @param virtualFile the file to wrap
-     * @param fileSystem the associated file system
+     * @param fileSystem  the associated file system
      */
     public BridgePath(VirtualFile virtualFile, BridgeFileSystem fileSystem) {
         this.virtualFile = virtualFile;
@@ -162,11 +162,8 @@ public class BridgePath implements Path {
         }
 
         if (Strings.isFilled(other) && other.startsWith("/")) {
-            if (other.endsWith("..")) {
-                return new BridgePath(vfs.resolve(other.substring(0, other.length() - 3)).parent(), fileSystem);
-            } else {
-                return new BridgePath(vfs.resolve(other), fileSystem);
-            }
+            // Relative segments like ".." are resolved by the virtual file system itself
+            return new BridgePath(vfs.resolve(other), fileSystem);
         }
 
         if ("..".equals(other)) {

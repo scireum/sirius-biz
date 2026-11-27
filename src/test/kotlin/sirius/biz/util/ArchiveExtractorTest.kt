@@ -11,10 +11,15 @@ package sirius.biz.util
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import sirius.kernel.SiriusExtension
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.time.Instant
@@ -54,17 +59,48 @@ class ArchiveExtractorTest {
     }
 
     @Test
-    fun `legacy Windows ZIP falls back to ISO-8859-1 file names`() {
-        // Windows used to store ZIP entry names as CP437 without setting the UTF-8 flag. The Java APIs reject these
-        // names as invalid UTF-8, so ArchiveExtractor retries using ISO-8859-1. This keeps all characters, but
-        // decodes non-ASCII ones incorrectly ("ü" is 0x81 and "ß" is 0xE1 in CP437). This test documents that
-        // behavior. Note that 7-Zip 23.01 would even drop these characters entirely, which is why ZIP files must
-        // not be routed through 7-Zip.
+    fun `legacy Windows ZIP is extracted with its original file names`() {
+        // Windows used to store ZIP entry names in its DOS charset without setting the UTF-8 flag. The Java APIs
+        // reject these names as invalid UTF-8, so ArchiveExtractor detects the charset and retries. Note that
+        // 7-Zip 23.01 would drop these characters entirely, which is why ZIP files must not be routed through 7-Zip.
         val files = extract("sample-cp437.zip")
 
-        val expectedName = String("Grüße.txt".toByteArray(charset("IBM437")), StandardCharsets.ISO_8859_1)
-        assertEquals(setOf(expectedName), files.keys)
-        assertEquals("Windows", files[expectedName])
+        assertEquals(setOf("Grüße.txt"), files.keys)
+        assertEquals("Windows", files["Grüße.txt"])
+    }
+
+    @ValueSource(strings = ["IBM850", "IBM437", "windows-1252", "ISO-8859-1"])
+    @ParameterizedTest
+    fun `ZIP without UTF-8 file names is extracted with its original file names`(charsetName: String) {
+        val names = listOf("Bilder/Grüße Übersicht.jpg", "Bilder/Größe.jpg", "Bilder/Tür außen.jpg", "plain.txt")
+        val archive = zip(names.map { it.toByteArray(charset(charsetName)) to false })
+
+        assertEquals(names.toSet(), extractNames(archive))
+    }
+
+    @ValueSource(strings = ["windows-1252", "ISO-8859-1"])
+    @ParameterizedTest
+    fun `ZIP with Windows file names keeps letters which are also letters in the DOS charset`(charsetName: String) {
+        // These names only contain bytes which are letters in both charsets, so that nothing speaks for the DOS
+        // charset. They have always been read correctly, and must not be turned into "Kõse.txt" and the like.
+        val names = listOf("Käse.txt", "Café.txt", "Mädchen.jpg", "Geräte.pdf")
+        val archive = zip(names.map { it.toByteArray(charset(charsetName)) to false })
+
+        assertEquals(names.toSet(), extractNames(archive))
+    }
+
+    @Test
+    fun `ZIP which mixes DOS and UTF-8 file names is extracted with its original file names`() {
+        // 7-Zip only stores a name as UTF-8 if the DOS charset cannot represent it. Such names must not be taken
+        // as evidence for the charset of the others.
+        val archive = zip(
+            listOf(
+                "Tür.txt".toByteArray(charset("IBM850")) to false,
+                "Größenübersicht – Übergrößen.txt".toByteArray(StandardCharsets.UTF_8) to true
+            )
+        )
+
+        assertEquals(setOf("Tür.txt", "Größenübersicht – Übergrößen.txt"), extractNames(archive))
     }
 
     @Test
@@ -205,6 +241,59 @@ class ArchiveExtractorTest {
         }
         return files
     }
+
+    private fun extractNames(archive: File): Set<String> {
+        try {
+            val names = mutableSetOf<String>()
+            archiveExtractor.extractAll("archive.zip", archive, null) { names.add(it.filePath) }
+            return names
+        } finally {
+            archive.delete()
+        }
+    }
+
+    /**
+     * Creates a ZIP archive with empty files of the given names.
+     *
+     * The archive is written by hand, as the Java APIs neither permit to store a name in an arbitrary charset
+     * without marking it, nor to mix names with and without the UTF-8 flag.
+     *
+     * @param entries the encoded names along with a flag which tells if the name is marked as UTF-8
+     * @return the temporary archive file
+     */
+    private fun zip(entries: List<Pair<ByteArray, Boolean>>): File {
+        val localHeaders = ByteArrayOutputStream()
+        val centralDirectory = ByteArrayOutputStream()
+        entries.forEach { (name, utf8) ->
+            val flags = if (utf8) 0x0800 else 0
+            val offset = localHeaders.size()
+            localHeaders.write(
+                header(30).putInt(0x04034b50).putShort(20).putShort(flags.toShort()).putShort(0).putShort(0)
+                    .putShort(0x21).putInt(0).putInt(0).putInt(0).putShort(name.size.toShort()).putShort(0).array()
+            )
+            localHeaders.write(name)
+            centralDirectory.write(
+                header(46).putInt(0x02014b50).putShort(20).putShort(20).putShort(flags.toShort()).putShort(0)
+                    .putShort(0).putShort(0x21).putInt(0).putInt(0).putInt(0).putShort(name.size.toShort())
+                    .putShort(0).putShort(0).putShort(0).putShort(0).putInt(0).putInt(offset).array()
+            )
+            centralDirectory.write(name)
+        }
+
+        val archive = File.createTempFile("archive-extractor-test", ".zip")
+        archive.outputStream().use { output ->
+            output.write(localHeaders.toByteArray())
+            output.write(centralDirectory.toByteArray())
+            output.write(
+                header(22).putInt(0x06054b50).putShort(0).putShort(0).putShort(entries.size.toShort())
+                    .putShort(entries.size.toShort()).putInt(centralDirectory.size()).putInt(localHeaders.size())
+                    .putShort(0).array()
+            )
+        }
+        return archive
+    }
+
+    private fun header(size: Int) = ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN)
 
     private fun archive(archiveName: String) = Paths.get("src/test/resources/test-data/archives", archiveName).toFile()
 

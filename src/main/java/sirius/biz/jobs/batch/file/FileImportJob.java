@@ -387,7 +387,8 @@ public abstract class FileImportJob extends ImportJob {
             return rootPath;
         }
 
-        return virtualFileSystem.resolve(rootPath + "/" + auxFilesParentDirectory);
+        // The directory is resolved within the root path, so that it cannot point to another place
+        return rootPath.resolve(auxFilesParentDirectory);
     }
 
     /**

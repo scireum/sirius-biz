@@ -67,6 +67,11 @@ public class ArchiveExtractor {
     private static final String FRAMEWORK_SEVEN_ZIP = "biz.seven-zip";
     private static final String ZIP_EXTENSION = "zip";
 
+    /**
+     * Names the charset used by DOS, and thus by most ZIP tools on Windows, in Western Europe.
+     */
+    private static final String DOS_CHARSET = "IBM850";
+
     private Set<String> supportedExtensions;
     private Boolean sevenZipEnabled = null;
 
@@ -213,7 +218,7 @@ public class ArchiveExtractor {
                            enhanceFileFilter(filter),
                            extractedFileConsumer,
                            StandardCharsets.UTF_8,
-                           StandardCharsets.ISO_8859_1);
+                           true);
             } else {
                 extract7z(filename, archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             }
@@ -244,12 +249,13 @@ public class ArchiveExtractor {
                             Predicate<String> filter,
                             Processor<ExtractedFile, Boolean> extractedFileConsumer,
                             Charset charset,
-                            Charset fallbackCharset) throws Exception {
+                            boolean retryWithLegacyCharset) throws Exception {
         try (ZipFile zipFile = new ZipFile(archiveFile, charset)) {
             extractZipEntriesFromZipFile(filter, extractedFileConsumer, zipFile);
         } catch (ZipException zipException) {
-            if (fallbackCharset != null) {
-                // Retry extraction using the fallback charset
+            if (retryWithLegacyCharset) {
+                // Retry extraction using the charset of the tool which most probably created the archive
+                Charset fallbackCharset = detectLegacyCharset(archiveFile);
                 TaskContext.get()
                            .log("Cannot unzip the archive '"
                                 + filename
@@ -258,7 +264,7 @@ public class ArchiveExtractor {
                                 + ".\nFalling back to charset: "
                                 + fallbackCharset.displayName());
                 Exceptions.ignore(zipException);
-                extractZip(filename, archiveFile, filter, extractedFileConsumer, fallbackCharset, null);
+                extractZip(filename, archiveFile, filter, extractedFileConsumer, fallbackCharset, false);
                 return;
             }
 
@@ -280,6 +286,68 @@ public class ArchiveExtractor {
             Exceptions.ignore(zipException);
             extract7z(filename, archiveFile, filter, extractedFileConsumer);
         }
+    }
+
+    /**
+     * Determines the charset of the file names in a ZIP archive which does not store them as UTF-8.
+     * <p>
+     * Such an archive does not tell its charset. In practice, it is either the DOS charset of the system which
+     * created it, as used by the Windows Explorer and most tools on Windows, or its Windows charset. For Western
+     * European systems, these are {@link #DOS_CHARSET CP850} and CP1252, where the latter is read as ISO-8859-1, as
+     * both agree on all letters.
+     * <p>
+     * ISO-8859-1 remains the default, so that an archive which has been read correctly so far keeps its names. The
+     * DOS charset is only used if the names give more evidence for it than against it:
+     * <ul>
+     * <li>A byte in the range of <tt>0x80</tt> to <tt>0x9F</tt> speaks for the DOS charset, which places most of its
+     * accented letters there. In ISO-8859-1, these are control characters which do not appear in file names.</li>
+     * <li>A byte which is a letter in ISO-8859-1 but a graphical symbol in the DOS charset speaks against it.</li>
+     * </ul>
+     * A byte which is a letter in both charsets tells nothing. Names which are stored as UTF-8 by an archive which
+     * mixes both kinds of names are skipped, as they are decoded independently of the given charset.
+     *
+     * @param archiveFile the archive to inspect
+     * @return the charset to decode the file names with
+     * @throws IOException if the archive cannot be read
+     */
+    private Charset detectLegacyCharset(File archiveFile) throws IOException {
+        if (!Charset.isSupported(DOS_CHARSET)) {
+            return StandardCharsets.ISO_8859_1;
+        }
+
+        Charset dosCharset = Charset.forName(DOS_CHARSET);
+        int evidenceForDos = 0;
+        int evidenceAgainstDos = 0;
+
+        try (ZipFile latinZipFile = new ZipFile(archiveFile, StandardCharsets.ISO_8859_1);
+             ZipFile dosZipFile = new ZipFile(archiveFile, dosCharset)) {
+            Enumeration<? extends ZipEntry> latinEntries = latinZipFile.entries();
+            Enumeration<? extends ZipEntry> dosEntries = dosZipFile.entries();
+            while (latinEntries.hasMoreElements() && dosEntries.hasMoreElements()) {
+                String latinName = latinEntries.nextElement().getName();
+                String dosName = dosEntries.nextElement().getName();
+
+                // Equal names either only consist of ASCII characters, or are stored as UTF-8
+                if (!latinName.equals(dosName) && latinName.length() == dosName.length()) {
+                    for (int index = 0; index < latinName.length(); index++) {
+                        // ISO-8859-1 maps each byte to the character with the same code
+                        char rawByte = latinName.charAt(index);
+                        if (rawByte >= 0x80 && rawByte <= 0x9F) {
+                            evidenceForDos++;
+                        } else if (rawByte > 0x9F && Character.isLetter(rawByte) && !Character.isLetter(dosName.charAt(
+                                index))) {
+                            evidenceAgainstDos++;
+                        }
+                    }
+                }
+            }
+        } catch (ZipException zipException) {
+            // The archive is unreadable for other reasons than its file names, which is handled by the caller
+            Exceptions.ignore(zipException);
+            return StandardCharsets.ISO_8859_1;
+        }
+
+        return evidenceForDos > evidenceAgainstDos ? dosCharset : StandardCharsets.ISO_8859_1;
     }
 
     private void extractZipEntriesFromZipFile(Predicate<String> filter,

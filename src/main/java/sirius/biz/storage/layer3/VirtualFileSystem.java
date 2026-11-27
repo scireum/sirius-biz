@@ -120,6 +120,8 @@ public class VirtualFileSystem {
      *
      * @param path the path to resolve.
      * @return the resolved file
+     * @throws IllegalArgumentException if the path leaves the file system or contains a name which
+     *                                  {@link VirtualFile#findChild(String)} rejects
      */
     @Nonnull
     public VirtualFile resolve(String path) {

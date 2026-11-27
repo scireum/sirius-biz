@@ -145,7 +145,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                 }
                 handleExtractedFile(file, process, overrideMode, targetDirectory, flattenDirs);
             });
-            if(processes.fetchProcessForUser(process.getProcessId()).orElse(null).getCanceled() == null){
+            if (processes.fetchProcessForUser(process.getProcessId()).orElse(null).getCanceled() == null) {
                 process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
             }
         } catch (Exception exception) {
@@ -190,7 +190,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         VirtualFile targetFile = fetchTargetFile(targetDirectory, targetPath);
         if (targetFile == null) {
             process.log(ProcessLog.warn()
-                                  .withNLSKey(ARCHIVE_JOB_EMPTY_FILE)
+                                  .withNLSKey("ExtractArchiveJob.invalidPath")
                                   .withContext(FILENAME, extractedFile.getFilePath()));
             process.addTiming(FILE_SKIPPED_COUNTER, watch.elapsedMillis());
             return;
