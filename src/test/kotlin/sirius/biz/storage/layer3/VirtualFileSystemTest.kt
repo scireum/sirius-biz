@@ -171,7 +171,8 @@ class VirtualFileSystemTest {
             "tab\there.txt",
             "x\r\nDELE victim.txt",
             "x\nCWD ..",
-            "x\u0000.txt"]
+            "x\u0000.txt",
+            "x\u007F.txt"]
     )
     @ParameterizedTest
     fun `a child cannot be addressed by a path, a relative reference or a name with control characters`(name: String) {
@@ -180,7 +181,17 @@ class VirtualFileSystemTest {
         assertThrows<IllegalArgumentException> { directory.findChild(name) }
     }
 
-    @ValueSource(strings = ["..data.txt", ".hidden", "data..txt", "data.", "my file.txt", "ünïcödé.txt"])
+    @ValueSource(
+        strings = [
+            "..data.txt",
+            ".hidden",
+            "data..txt",
+            "data.",
+            "my file.txt",
+            "ünïcödé.txt",
+            // "Grüße.txt" as stored by an old Windows tool (CP850) and decoded as ISO-8859-1
+            "Gr\u0081\u00E1e.txt"]
+    )
     @ParameterizedTest
     fun `unusual but plain names are accepted as child`(name: String) {
         val child = vfs.resolve(DIRECTORY).findChild(name)

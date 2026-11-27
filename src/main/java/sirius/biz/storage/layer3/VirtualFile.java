@@ -35,7 +35,6 @@ import sirius.kernel.nls.NLS;
 import sirius.web.http.MimeHelper;
 import sirius.web.http.Response;
 import sirius.web.http.WebContext;
-import sirius.web.resources.ResourcePaths;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -734,17 +733,32 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * protocol such as FTP. An empty name finally addresses the directory itself. A name must therefore be filled,
      * contain neither a separator nor a control character, and must not consist of dots and spaces only, as some
      * file systems strip trailing dots and spaces and thus treat <tt>".. "</tt> like <tt>..</tt>.
+     * <p>
+     * Only the ASCII control characters (below <tt>0x20</tt>, and <tt>0x7F</tt>) are rejected. Those in the range
+     * of <tt>0x80</tt> to <tt>0x9F</tt> are neither separators nor line breaks for the uplinks, but do appear in names
+     * which have been decoded using a wrong charset, e.g. the umlauts of an archive created by an old tool. Such
+     * files must remain accessible.
      *
      * @param name the name of a child or the new name of a file to check
      * @return <tt>true</tt> if the name can be passed to an uplink, <tt>false</tt> otherwise
-     * @see ResourcePaths#isUnsafe(String)
      */
     private static boolean isPlainName(@Nullable String name) {
         if (Strings.isEmpty(name)) {
             return false;
         }
 
-        return name.indexOf('/') < 0 && !ResourcePaths.isUnsafe(name);
+        boolean onlyDotsAndSpaces = true;
+        for (int index = 0; index < name.length(); index++) {
+            char current = name.charAt(index);
+            if (current == '/' || current == '\\' || current < 0x20 || current == 0x7F) {
+                return false;
+            }
+            if (current != '.' && current != ' ') {
+                onlyDotsAndSpaces = false;
+            }
+        }
+
+        return !onlyDotsAndSpaces;
     }
 
     /**
